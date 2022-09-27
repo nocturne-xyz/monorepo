@@ -1,0 +1,16 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "FLAX contracts",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.24.0",
+    "eslint-config-prettier": "^8.5.0",
+    "typescript": "^4.8.3"
+  },
+  "scripts": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  }
+}

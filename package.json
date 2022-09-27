@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "name": "monorepo",
+  "workspaces": [],
+  "scripts": {}
+}

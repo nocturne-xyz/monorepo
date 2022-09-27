@@ -1,0 +1,30 @@
+[profile.default]
+solc_version = '0.7.6'        # Version of solc that we use
+remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
+"forge-std/=lib/forge-std/src/"
+]
+optimizer = true              # Enable or disable the solc optimizer
+optimizer_runs = 999999       # The number of optimizer runs
+verbosity = 3                 # The verbosity of tests
+bytecode_hash = "none"        # For deterministic code
+block_timestamp = 1622400000  # Timestamp for tests (non-zero)
+
+# silence warnings
+# 2462 - ignored constructor visibility in OZ dependency
+# 5868 - Failure condition of 'send' ignored in bridge
+# 9302 - Failure condition of 'call' ignored in bridge
+ignored_error_codes = [2462, 5878, 9302]
+libs = ["node_modules", "lib"]
+
+
+[profile.contracts]
+src = 'packages/contracts/contracts'
+test = 'packages/contracts/contracts/test'
+out = 'packages/contracts/foundry_artifacts'
+ffi = true
+
+[profile.core-ci]
+src = 'packages/contracts/contracts'
+test = 'packages/contracts/contracts/test'
+out = 'packages/contracts/foundry_artifacts'
+ffi = true
