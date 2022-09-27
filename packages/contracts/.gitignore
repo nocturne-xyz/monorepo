@@ -1,10 +1,13 @@
-node_modules/
+# Compiler files
 cache/
-artifacts/
-coverage/
-coverage.json
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*
+/broadcast/*/31337/
+
+# Dotenv file
 .env
-src.ts/
-src/
-dist/
-foundry_artifacts/
+
+lib/

@@ -1,11 +1,15 @@
-# Compiler files
+node_modules/
+lib/
+yarn-error.log
+**/tsconfig.tsbuildinfo
+dist/
 cache/
-out/
+scripts/accumulator-cli
 
-# Ignores development broadcast logs
-!/broadcast
-/broadcast/*
-/broadcast/*/31337/
-
-# Dotenv file
-.env
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
