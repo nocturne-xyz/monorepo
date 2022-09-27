@@ -4,7 +4,7 @@ import "./interfaces/IWallet.sol";
 import "./interfaces/IVerifier.sol";
 import "./BatchBinaryMerkleTree.sol";
 
-import {PoseidonT6} from "@zk-kit/incremental-merkle-tree.sol/contracts/Hashes.sol";
+import {IPoseidonT6} from "./interfaces/IPoseidon.sol";
 
 contract CommitmentTreeManager {
     using BatchBinaryMerkleTree for IncrementalTreeData;
@@ -15,10 +15,16 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     IVerifier public verifier;
+    IPoseidonT6 poseidonT6;
 
-    constructor(address _verifier) {
+    constructor(
+        address _verifier,
+        address _poseidonT3,
+        address _poseidonT6
+    ) {
         verifier = IVerifier(_verifier);
-        noteCommitmentTree.init(32, 0);
+        noteCommitmentTree.init(32, 0, _poseidonT3);
+        poseidonT6 = IPoseidonT6(_poseidonT6);
     }
 
     function commit8FromQueue() external {
@@ -78,7 +84,7 @@ contract CommitmentTreeManager {
         uint256 id,
         uint256 value
     ) internal {
-        uint256 noteCommitment = PoseidonT6.poseidon(
+        uint256 noteCommitment = poseidonT6.poseidon(
             [refundAddrHash, nonce, uint256(uint160(assetType)), id, value]
         );
 

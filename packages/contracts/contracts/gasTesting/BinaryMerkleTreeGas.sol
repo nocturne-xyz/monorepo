@@ -10,8 +10,8 @@ contract BinaryMerkleTreeGas {
 
     uint256 public constant ZERO = 123498798;
 
-    constructor() {
-        binaryTree.init(32, ZERO);
+    constructor(address _poseidonT3) {
+        binaryTree.init(32, ZERO, _poseidonT3);
     }
 
     function insertLeaf(uint256 leaf) public {

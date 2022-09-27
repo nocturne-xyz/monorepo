@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {PoseidonT3} from "@zk-kit/incremental-merkle-tree.sol/contracts/Hashes.sol";
+import {IPoseidonT3} from "./interfaces/IPoseidon.sol";
 
 //TODO: test new functions added to ensure proper merkle roots are computed
 
@@ -11,6 +11,7 @@ struct IncrementalTreeData {
     uint8 depth; // Depth of the tree (levels - 1).
     uint256 root; // Root hash of the tree.
     uint256 numberOfLeaves; // Number of leaves of the tree.
+    IPoseidonT3 poseidonT3; // PoseidonT3 contract
     mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [left node, right node]).
     mapping(uint256 => uint256[2]) lastSubtrees; // Caching these values is essential to efficient appends.
@@ -35,7 +36,8 @@ library BatchBinaryMerkleTree {
     function init(
         IncrementalTreeData storage self,
         uint8 depth,
-        uint256 zero
+        uint256 zero,
+        address _poseidonT3
     ) public {
         require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
@@ -47,10 +49,11 @@ library BatchBinaryMerkleTree {
 
         for (uint8 i = 0; i < depth; i++) {
             self.zeroes[i] = zero;
-            zero = PoseidonT3.poseidon([zero, zero]);
+            zero = self.poseidonT3.poseidon([zero, zero]);
         }
 
         self.root = zero;
+        self.poseidonT3 = IPoseidonT3(_poseidonT3);
     }
 
     /// @dev Inserts a leaf in the tree.
@@ -73,7 +76,7 @@ library BatchBinaryMerkleTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = PoseidonT3.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -97,7 +100,7 @@ library BatchBinaryMerkleTree {
         );
 
         uint256 index = self.numberOfLeaves / 2;
-        uint256 hash = PoseidonT3.poseidon(leaves);
+        uint256 hash = self.poseidonT3.poseidon(leaves);
 
         for (uint8 i = 1; i < self.depth; i++) {
             if (index % 2 == 0) {
@@ -106,7 +109,7 @@ library BatchBinaryMerkleTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = PoseidonT3.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -130,7 +133,7 @@ library BatchBinaryMerkleTree {
 
         uint256 index = self.numberOfLeaves / 8;
 
-        uint256 hash = getRootFrom8(leaves);
+        uint256 hash = getRootFrom8(self, leaves);
 
         for (uint8 i = 2; i < self.depth; i++) {
             if (index % 2 == 0) {
@@ -139,7 +142,7 @@ library BatchBinaryMerkleTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = PoseidonT3.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -163,7 +166,7 @@ library BatchBinaryMerkleTree {
             "BinaryTree: tree is full"
         );
 
-        uint256 hash = getRootFrom16(leaves);
+        uint256 hash = getRootFrom16(self, leaves);
         uint256 index = self.numberOfLeaves / 16;
 
         for (uint8 i = 3; i < self.depth; i++) {
@@ -173,7 +176,7 @@ library BatchBinaryMerkleTree {
                 self.lastSubtrees[i][1] = hash;
             }
 
-            hash = PoseidonT3.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT3.poseidon(self.lastSubtrees[i]);
             index /= 2;
         }
 
@@ -233,33 +236,31 @@ library BatchBinaryMerkleTree {
         self.queueLength = qLength + 1;
     }
 
-    function getRootFrom8(uint256[8] memory leaves)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 leftHash = PoseidonT3.poseidon(
+    function getRootFrom8(
+        IncrementalTreeData storage self,
+        uint256[8] memory leaves
+    ) internal view returns (uint256) {
+        uint256 leftHash = self.poseidonT3.poseidon(
             [
-                PoseidonT3.poseidon([leaves[0], leaves[1]]),
-                PoseidonT3.poseidon([leaves[2], leaves[3]])
+                self.poseidonT3.poseidon([leaves[0], leaves[1]]),
+                self.poseidonT3.poseidon([leaves[2], leaves[3]])
             ]
         );
 
-        uint256 rightHash = PoseidonT3.poseidon(
+        uint256 rightHash = self.poseidonT3.poseidon(
             [
-                PoseidonT3.poseidon([leaves[4], leaves[5]]),
-                PoseidonT3.poseidon([leaves[6], leaves[7]])
+                self.poseidonT3.poseidon([leaves[4], leaves[5]]),
+                self.poseidonT3.poseidon([leaves[6], leaves[7]])
             ]
         );
 
-        return PoseidonT3.poseidon([leftHash, rightHash]);
+        return self.poseidonT3.poseidon([leftHash, rightHash]);
     }
 
-    function getRootFrom16(uint256[16] memory leaves)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getRootFrom16(
+        IncrementalTreeData storage self,
+        uint256[16] memory leaves
+    ) internal view returns (uint256) {
         uint256[8] memory leftHalf;
         uint256[8] memory rightHalf;
         for (uint256 i = 0; i < 8; i++) {
@@ -267,8 +268,8 @@ library BatchBinaryMerkleTree {
             rightHalf[i] = leaves[i * 2];
         }
         return
-            PoseidonT3.poseidon(
-                [getRootFrom8(leftHalf), getRootFrom8(rightHalf)]
+            self.poseidonT3.poseidon(
+                [getRootFrom8(self, leftHalf), getRootFrom8(self, rightHalf)]
             );
     }
 }

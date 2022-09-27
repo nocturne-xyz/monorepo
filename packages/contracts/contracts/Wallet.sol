@@ -16,8 +16,14 @@ import "hardhat/console.sol";
 // TODO: add gas handling
 // TODO: make sure all values given to proofs < SNARK_SCALAR_FIELD
 contract Wallet is IWallet, BalanceManager {
-    constructor(address _vault, address _verifier)
-        BalanceManager(_vault, _verifier)
+    constructor(
+        address _vault,
+        address _verifier,
+        address _poseidonT3,
+        address _poseidonT4,
+        address _poseidonT6
+    )
+        BalanceManager(_vault, _verifier, _poseidonT3, _poseidonT4, _poseidonT6)
     {}
 
     modifier onlyThis() {

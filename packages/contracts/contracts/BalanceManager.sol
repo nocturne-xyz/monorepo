@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-import {PoseidonT4} from "@zk-kit/incremental-merkle-tree.sol/contracts/Hashes.sol";
+import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "./interfaces/IPoseidon.sol";
 
 contract BalanceManager is
     IERC721Receiver,
@@ -21,11 +21,17 @@ contract BalanceManager is
 
     IWallet.WalletBalanceInfo balanceInfo;
     IVault public vault;
+    IPoseidonT4 public poseidonT4;
 
-    constructor(address _vault, address _verifier)
-        CommitmentTreeManager(_verifier)
-    {
+    constructor(
+        address _vault,
+        address _verifier,
+        address _poseidonT3,
+        address _poseidonT4,
+        address _poseidonT6
+    ) CommitmentTreeManager(_verifier, _poseidonT3, _poseidonT6) {
         vault = IVault(_vault);
+        poseidonT4 = IPoseidonT4(_poseidonT4);
     }
 
     function onERC721Received(
@@ -94,7 +100,7 @@ contract BalanceManager is
             uint256 index = successfulTransfers[i];
             IWallet.FLAXAddress memory depositAddr = approvedDeposits[index]
                 .depositAddr;
-            uint256 depositAddrHash = PoseidonT4.poseidon(
+            uint256 depositAddrHash = poseidonT4.poseidon(
                 [depositAddr.H1, depositAddr.H2, depositAddr.H3]
             );
 
@@ -109,7 +115,7 @@ contract BalanceManager is
 
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
-        uint256 depositAddrHash = PoseidonT4.poseidon(
+        uint256 depositAddrHash = poseidonT4.poseidon(
             [depositAddr.H1, depositAddr.H2, depositAddr.H3]
         );
 
@@ -159,7 +165,7 @@ contract BalanceManager is
         address[] calldata refundTokens,
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
-        uint256 refundAddrHash = PoseidonT4.poseidon(
+        uint256 refundAddrHash = poseidonT4.poseidon(
             [refundAddr.H1, refundAddr.H2, refundAddr.H3]
         );
 

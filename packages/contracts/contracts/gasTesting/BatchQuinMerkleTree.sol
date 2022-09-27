@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import {PoseidonT6} from "@zk-kit/incremental-merkle-tree.sol/contracts/Hashes.sol";
+import {IPoseidonT6} from "../interfaces/IPoseidon.sol";
 
 // Each incremental tree has certain properties and data that will
 // be used to add new leaves.
@@ -9,6 +9,7 @@ struct IncrementalTreeData {
     uint8 depth; // Depth of the tree (levels - 1).
     uint256 root; // Root hash of the tree.
     uint256 numberOfLeaves; // Number of leaves of the tree.
+    IPoseidonT6 poseidonT6; // PoseidonT3 contract
     mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [nodes]).
     mapping(uint256 => uint256[5]) lastSubtrees; // Caching these values is essential to efficient appends.
@@ -52,7 +53,7 @@ library BatchQuinMerkleTree {
                 zeroChildren[j] = zero;
             }
 
-            zero = PoseidonT6.poseidon(zeroChildren);
+            zero = self.poseidonT6.poseidon(zeroChildren);
         }
 
         self.root = zero;
@@ -85,7 +86,7 @@ library BatchQuinMerkleTree {
                 }
             }
 
-            hash = PoseidonT6.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT6.poseidon(self.lastSubtrees[i]);
             index /= 5;
         }
 
@@ -109,7 +110,7 @@ library BatchQuinMerkleTree {
         );
 
         uint256 index = self.numberOfLeaves / 5;
-        uint256 hash = PoseidonT6.poseidon(leaves);
+        uint256 hash = self.poseidonT6.poseidon(leaves);
 
         for (uint8 i = 1; i < self.depth; i++) {
             uint8 position = uint8(index % 5);
@@ -122,7 +123,7 @@ library BatchQuinMerkleTree {
                 }
             }
 
-            hash = PoseidonT6.poseidon(self.lastSubtrees[i]);
+            hash = self.poseidonT6.poseidon(self.lastSubtrees[i]);
             index /= 5;
         }
 
@@ -195,7 +196,7 @@ library BatchQuinMerkleTree {
                 self.lastSubtrees[i][proofPathIndices[i]] = hash;
             }
 
-            hash = PoseidonT6.poseidon(nodes);
+            hash = self.poseidonT6.poseidon(nodes);
         }
 
         self.root = hash;
@@ -248,7 +249,7 @@ library BatchQuinMerkleTree {
                 }
             }
 
-            hash = PoseidonT6.poseidon(nodes);
+            hash = self.poseidonT6.poseidon(nodes);
         }
 
         return hash == self.root;
