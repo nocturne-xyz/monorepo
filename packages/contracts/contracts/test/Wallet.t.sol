@@ -3,9 +3,10 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IPoseidonT4} from "../interfaces/IPoseidon.sol";
+import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "../interfaces/IPoseidon.sol";
 import {Wallet} from "../Wallet.sol";
 
 contract WalletTest is Test {
@@ -19,7 +20,9 @@ contract WalletTest is Test {
     address constant POSEIDON_T4_ADDRESS = address(1);
 
     Wallet wallet;
-    IPoseidonT4 poseidonT4 = IPoseidonT4(POSEIDON_T4_ADDRESS);
+    IPoseidonT3 poseidonT3;
+    IPoseidonT4 poseidonT4;
+    IPoseidonT6 poseidonT6;
 
     function defaultFlaxAddress()
         internal
@@ -60,11 +63,29 @@ contract WalletTest is Test {
 
     function setUp() public virtual {
         string memory root = vm.projectRoot();
-        bytes memory path = string.concat(
-            bytes(root),
-            "/poseidonInterfaces/PoseidonT4Bytecode.txt"
-        );
-        string memory t4Bytecode = vm.readFile(string(path));
-        vm.etch(POSEIDON_T4_ADDRESS, bytes(t4Bytecode));
+
+        address[4] memory poseidonAddrs;
+        for (uint8 i = 0; i < 3; i++) {
+            bytes memory path = string.concat(
+                bytes(root),
+                "/packages/contracts/poseidonInterfaces/PoseidonT"
+            );
+            path = string.concat(path, bytes(Strings.toString(i + 3)));
+            path = string.concat(path, "Bytecode.txt");
+
+            bytes memory bytecode = abi.encode(vm.readFile(string(path)));
+
+            address deployed;
+            assembly {
+                deployed := create(0, add(bytecode, 0x20), mload(bytecode))
+            }
+            poseidonAddrs[i] = deployed;
+        }
+
+        poseidonT3 = IPoseidonT3(poseidonAddrs[0]);
+        poseidonT4 = IPoseidonT4(poseidonAddrs[1]);
+        poseidonT6 = IPoseidonT6(poseidonAddrs[2]);
     }
+
+    function testIt() public {}
 }
