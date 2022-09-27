@@ -23,8 +23,9 @@ test = 'packages/contracts/contracts/test'
 out = 'packages/contracts/foundry_artifacts'
 ffi = true
 
-[profile.core-ci]
+[profile.contracts-ci]
 src = 'packages/contracts/contracts'
 test = 'packages/contracts/contracts/test'
 out = 'packages/contracts/foundry_artifacts'
+fuzz-runs = 10_000
 ffi = true

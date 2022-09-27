@@ -1,16 +1,48 @@
 {
-  "name": "contracts",
-  "version": "1.0.0",
+  "name": "@flax/contracts",
+  "version": "0.1.0",
   "description": "FLAX contracts",
-  "main": "index.js",
-  "license": "MIT",
-  "devDependencies": {
-    "eslint": "^8.24.0",
-    "eslint-config-prettier": "^8.5.0",
-    "typescript": "^4.8.3"
-  },
+  "license": "MIT OR Apache-2.0",
+  "author": "Luke Tchang",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts"
+    "bootstrap": "yarn clean && yarn build",
+    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
+    "clean": "hardhat clean && rm -rf dist && rm -rf src",
+    "compile": "hardhat compile",
+    "copy-definitions": "cp src/*.d.ts dist/src",
+    "lint": "solhint contracts/*.sol",
+    "lint:fix": "solhint --fix contracts/*.sol",
+    "prettier": "prettier --write './contracts'",
+    "prepublish": "yarn bootstrap && yarn build",
+    "test:unit": "FOUNDRY_PROFILE=contracts-ci forge test",
+    "test:unit-local": "FOUNDRY_PROFILE=contracts forge test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "~3.4.2",
+    "@openzeppelin/contracts-upgradeable": "~3.4.2"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-etherscan": "^2.1.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "7.2.0",
+    "@typechain/hardhat": "^2.0.1",
+    "@types/node": "^17.0.14",
+    "dotenv": "^10.0.0",
+    "eslint": "^7.20.0",
+    "ethereum-waffle": "^3.2.2",
+    "ethers": "^5.4.4",
+    "hardhat": "^2.9.0",
+    "hardhat-gas-reporter": "^1.0.4",
+    "hardhat-packager": "~1.2.1",
+    "prettier": "^2.2.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.5",
+    "solhint": "^3.3.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "ts-node": "^10.1.0",
+    "typechain": "^5.0.0",
+    "typescript": "^4.5.5"
   }
 }
