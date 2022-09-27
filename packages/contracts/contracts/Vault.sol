@@ -69,17 +69,18 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         );
     }
 
-    function approveFunds(
-        uint256[] calldata values,
-        address[] calldata assetTypes
-    ) external override onlyTeller {
+    function approveFunds(uint256[] calldata values, address[] calldata assets)
+        external
+        override
+        onlyTeller
+    {
         require(
-            values.length == assetTypes.length,
+            values.length == assets.length,
             "Non matching input array lengths"
         );
         for (uint256 i = 0; i < values.length; i++) {
             require(
-                IERC20(assetTypes[i]).approve(wallet, values[i]),
+                IERC20(assets[i]).approve(wallet, values[i]),
                 "Approval failed"
             );
         }
@@ -112,14 +113,14 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
     {
         if (deposit.id == SNARK_SCALAR_FIELD - 1) {
             return
-                IERC20(deposit.assetType).transferFrom(
+                IERC20(deposit.asset).transferFrom(
                     deposit.spender,
                     address(this),
                     deposit.value
                 );
         } else if (deposit.value == 0) {
             try
-                IERC721(deposit.assetType).transferFrom(
+                IERC721(deposit.asset).transferFrom(
                     deposit.spender,
                     address(this),
                     deposit.id
@@ -131,7 +132,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
             }
         } else {
             try
-                IERC1155(deposit.assetType).safeTransferFrom(
+                IERC1155(deposit.asset).safeTransferFrom(
                     deposit.spender,
                     address(this),
                     deposit.id,

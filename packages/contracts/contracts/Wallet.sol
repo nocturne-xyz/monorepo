@@ -164,7 +164,7 @@ contract Wallet is IWallet, BalanceManager {
     ) private view returns (bool valid) {
         bytes32 payloadHash = keccak256(
             abi.encodePacked(
-                deposit.assetType,
+                deposit.asset,
                 deposit.value,
                 deposit.spender,
                 deposit.id,

@@ -20,7 +20,7 @@ interface IWallet {
         uint256 noteCommitment;
         uint256[8] proof;
         uint256 value; // 0 for ERC721
-        address assetType;
+        address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
     }
 
@@ -56,7 +56,7 @@ interface IWallet {
 
     struct Deposit {
         address spender;
-        address assetType;
+        address asset;
         uint256 value;
         uint256 id;
         FLAXAddress depositAddr;

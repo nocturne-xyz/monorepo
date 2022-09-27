@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./CommitmentTreeManager.sol";
@@ -106,7 +107,7 @@ contract BalanceManager is
 
             _handleRefund(
                 depositAddrHash,
-                approvedDeposits[index].assetType,
+                approvedDeposits[index].asset,
                 approvedDeposits[index].id,
                 approvedDeposits[index].value
             );
@@ -121,7 +122,7 @@ contract BalanceManager is
 
         _handleRefund(
             depositAddrHash,
-            deposit.assetType,
+            deposit.asset,
             deposit.id,
             deposit.value
         );
@@ -139,13 +140,13 @@ contract BalanceManager is
         for (uint256 i = 0; i < numSpendTxs; i++) {
             _handleSpend(spendTxs[i], operationHash);
             if (spendTxs[i].id == SNARK_SCALAR_FIELD - 1) {
-                balanceInfo.erc20Balances[spendTxs[i].assetType] += spendTxs[i]
+                balanceInfo.erc20Balances[spendTxs[i].asset] += spendTxs[i]
                     .value;
             } else if (spendTxs[i].value == 0) {
-                _gatherERC721(spendTxs[i].assetType, spendTxs[i].id);
+                _gatherERC721(spendTxs[i].asset, spendTxs[i].id);
             } else {
                 _gatherERC1155(
-                    spendTxs[i].assetType,
+                    spendTxs[i].asset,
                     spendTxs[i].id,
                     spendTxs[i].value
                 );
@@ -156,7 +157,7 @@ contract BalanceManager is
 
         // reset ERC20 balances
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            balanceInfo.erc20Balances[spendTxs[i].assetType] = 0;
+            balanceInfo.erc20Balances[spendTxs[i].asset] = 0;
         }
     }
 

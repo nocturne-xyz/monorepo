@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./interfaces/IWallet.sol";
@@ -63,7 +64,7 @@ contract CommitmentTreeManager {
                 [
                     spendTx.noteCommitment,
                     spendTx.nullifier,
-                    uint256(uint160(spendTx.assetType)),
+                    uint256(uint160(spendTx.asset)),
                     spendTx.value,
                     spendTx.commitmentTreeRoot,
                     spendTx.id,
@@ -80,12 +81,12 @@ contract CommitmentTreeManager {
 
     function _handleRefund(
         uint256 refundAddrHash,
-        address assetType,
+        address asset,
         uint256 id,
         uint256 value
     ) internal {
         uint256 noteCommitment = poseidonT6.poseidon(
-            [refundAddrHash, nonce, uint256(uint160(assetType)), id, value]
+            [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
         );
 
         nonce++;
@@ -103,7 +104,7 @@ contract CommitmentTreeManager {
             spend.nullifier,
             spend.noteCommitment,
             spend.value,
-            spend.assetType,
+            spend.asset,
             spend.id
         );
 
