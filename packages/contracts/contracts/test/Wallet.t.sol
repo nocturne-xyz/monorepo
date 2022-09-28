@@ -6,13 +6,14 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IVault} from "../interfaces/IVault.sol";
 import {IVerifier} from "../interfaces/IVerifier.sol";
 import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "../interfaces/IPoseidon.sol";
 import {TestVerifier} from "./utils/TestVerifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {HexUtils} from "./utils/HexUtils.sol";
+import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 
 contract WalletTest is Test {
     using stdJson for string;
@@ -22,14 +23,16 @@ contract WalletTest is Test {
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 constant ERC20_ID = SNARK_SCALAR_FIELD - 1;
 
-    address constant POSEIDON_T4_ADDRESS = address(1);
+    address constant ALICE = address(1);
 
     Wallet wallet;
-    IVault vault;
+    Vault vault;
     IVerifier verifier;
     IPoseidonT3 poseidonT3;
     IPoseidonT4 poseidonT4;
     IPoseidonT6 poseidonT6;
+    SimpleERC20Token[3] ERC20s;
+    SimpleERC721Token[3] ERC721s;
 
     function defaultFlaxAddress()
         internal
@@ -94,8 +97,24 @@ contract WalletTest is Test {
         poseidonT4 = IPoseidonT4(poseidonAddrs[1]);
         poseidonT6 = IPoseidonT6(poseidonAddrs[3]);
 
+        // Instantiate vault, verifier, and wallet
         vault = new Vault();
         verifier = new TestVerifier();
+        wallet = new Wallet(
+            address(vault),
+            address(verifier),
+            address(poseidonT3),
+            address(poseidonT4),
+            address(poseidonT6)
+        );
+
+        vault.initialize(address(wallet));
+
+        // Instantiate token contracts
+        for (uint256 i = 0; i < 3; i++) {
+            ERC20s[i] = new SimpleERC20Token();
+            ERC721s[i] = new SimpleERC721Token();
+        }
     }
 
     function testPoseidon() public {
@@ -106,5 +125,38 @@ contract WalletTest is Test {
                 [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
             )
         );
+    }
+
+    function testProcessOneBundle() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, 1000);
+
+        vm.prank(ALICE);
+        token.approve(address(vault), 800);
+
+        for (uint256 i = 0; i < 8; i++) {
+            vm.prank(ALICE);
+            depositFunds(
+                wallet,
+                ALICE,
+                address(token),
+                100,
+                ERC20_ID,
+                defaultFlaxAddress()
+            );
+        }
+
+        wallet.commit8FromQueue();
+
+        bytes4 selector = bytes4(keccak256("transfer(address,uint256)"));
+        bytes memory encodedFunction = abi.encodeWithSelector(
+            selector,
+            ALICE,
+            100
+        );
+        IWallet.Action memory transfer = IWallet.Action({
+            contractAddress: address(token),
+            encodedFunction: encodedFunction
+        });
     }
 }
