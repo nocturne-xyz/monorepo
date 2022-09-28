@@ -13,7 +13,7 @@ library HexUtils {
         if (bytes1(c) >= bytes1("A") && bytes1(c) <= bytes1("F")) {
             return 10 + c - uint8(bytes1("A"));
         }
-        revert("fail");
+        revert("Hex to char failed");
     }
 
     // Convert an hexadecimal string to raw bytes

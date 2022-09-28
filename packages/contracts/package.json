@@ -24,7 +24,7 @@
     "@openzeppelin/contracts-upgradeable": "~3.4.2"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@typechain/ethers-v5": "7.2.0",
@@ -34,7 +34,7 @@
     "eslint": "^7.20.0",
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.4.4",
-    "hardhat": "^2.9.0",
+    "hardhat": "^2.8.3",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-packager": "~1.2.1",
     "prettier": "^2.2.1",

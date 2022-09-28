@@ -24,6 +24,7 @@ contract WalletTest is Test {
     uint256 constant ERC20_ID = SNARK_SCALAR_FIELD - 1;
 
     address constant ALICE = address(1);
+    address constant BOB = address(2);
 
     Wallet wallet;
     Vault vault;
@@ -134,6 +135,7 @@ contract WalletTest is Test {
         vm.prank(ALICE);
         token.approve(address(vault), 800);
 
+        // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
             vm.prank(ALICE);
             depositFunds(
@@ -148,15 +150,66 @@ contract WalletTest is Test {
 
         wallet.commit8FromQueue();
 
-        bytes4 selector = bytes4(keccak256("transfer(address,uint256)"));
+        // Create transaction to withdraw 100 token from vault and transfer
+        // to bob
         bytes memory encodedFunction = abi.encodeWithSelector(
-            selector,
-            ALICE,
-            100
+            token.transfer.selector,
+            BOB,
+            uint256(100)
         );
-        IWallet.Action memory transfer = IWallet.Action({
+        IWallet.Action memory transferAction = IWallet.Action({
             contractAddress: address(token),
             encodedFunction: encodedFunction
         });
+
+        uint256 root = wallet.getRoot();
+        IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
+            commitmentTreeRoot: root,
+            nullifier: uint256(182),
+            noteCommitment: uint256(1038),
+            proof: defaultSpendProof(),
+            value: uint256(100),
+            asset: address(token),
+            id: ERC20_ID
+        });
+
+        address[] memory spendTokens = new address[](1);
+        spendTokens[0] = address(token);
+        address[] memory refundTokens = new address[](0);
+        IWallet.Tokens memory tokens = IWallet.Tokens({
+            spendTokens: spendTokens,
+            refundTokens: refundTokens
+        });
+
+        IWallet.SpendTransaction[]
+            memory spendTxs = new IWallet.SpendTransaction[](1);
+        spendTxs[0] = spendTx;
+        IWallet.Action[] memory actions = new IWallet.Action[](1);
+        actions[0] = transferAction;
+        IWallet.Operation memory op = IWallet.Operation({
+            spendTxs: spendTxs,
+            refundAddr: defaultFlaxAddress(),
+            tokens: tokens,
+            actions: actions,
+            gasLimit: DEFAULT_GAS_LIMIT
+        });
+
+        IWallet.Operation[] memory ops = new IWallet.Operation[](1);
+        ops[0] = op;
+        IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
+
+        // Ensure 100 tokens have changed hands
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(800));
+        assertEq(token.balanceOf(address(ALICE)), uint256(200));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        vm.prank(ALICE);
+        wallet.processBundle(bundle);
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(700));
+        assertEq(token.balanceOf(address(ALICE)), uint256(200));
+        assertEq(token.balanceOf(address(BOB)), uint256(100));
     }
 }

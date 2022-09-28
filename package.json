@@ -4,5 +4,6 @@
   "workspaces": [
     "packages/*"
   ],
-  "scripts": {}
+  "scripts": {},
+  "packageManager": "yarn@3.2.0"
 }
