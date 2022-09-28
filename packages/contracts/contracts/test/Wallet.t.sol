@@ -6,8 +6,13 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
+import {IVault} from "../interfaces/IVault.sol";
+import {IVerifier} from "../interfaces/IVerifier.sol";
 import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "../interfaces/IPoseidon.sol";
+import {TestVerifier} from "./utils/TestVerifier.sol";
+import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
+import {HexUtils} from "./utils/HexUtils.sol";
 
 contract WalletTest is Test {
     using stdJson for string;
@@ -20,6 +25,8 @@ contract WalletTest is Test {
     address constant POSEIDON_T4_ADDRESS = address(1);
 
     Wallet wallet;
+    IVault vault;
+    IVerifier verifier;
     IPoseidonT3 poseidonT3;
     IPoseidonT4 poseidonT4;
     IPoseidonT6 poseidonT6;
@@ -62,18 +69,19 @@ contract WalletTest is Test {
     }
 
     function setUp() public virtual {
+        // Deploy poseidon hasher libraries
         string memory root = vm.projectRoot();
-
         address[4] memory poseidonAddrs;
-        for (uint8 i = 0; i < 3; i++) {
+        for (uint8 i = 0; i < 4; i++) {
             bytes memory path = string.concat(
                 bytes(root),
-                "/packages/contracts/poseidonInterfaces/PoseidonT"
+                "/packages/contracts/poseidonBytecode/PoseidonT"
             );
             path = string.concat(path, bytes(Strings.toString(i + 3)));
-            path = string.concat(path, "Bytecode.txt");
+            path = string.concat(path, ".txt");
 
-            bytes memory bytecode = abi.encode(vm.readFile(string(path)));
+            string memory bytecodeStr = vm.readFile(string(path));
+            bytes memory bytecode = HexUtils.hexToBytes(bytecodeStr);
 
             address deployed;
             assembly {
@@ -84,8 +92,19 @@ contract WalletTest is Test {
 
         poseidonT3 = IPoseidonT3(poseidonAddrs[0]);
         poseidonT4 = IPoseidonT4(poseidonAddrs[1]);
-        poseidonT6 = IPoseidonT6(poseidonAddrs[2]);
+        poseidonT6 = IPoseidonT6(poseidonAddrs[3]);
+
+        vault = new Vault();
+        verifier = new TestVerifier();
     }
 
-    function testIt() public {}
+    function testPoseidon() public {
+        console.log(poseidonT3.poseidon([uint256(0), uint256(1)]));
+        console.log(poseidonT4.poseidon([uint256(0), uint256(1), uint256(2)]));
+        console.log(
+            poseidonT6.poseidon(
+                [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
+            )
+        );
+    }
 }

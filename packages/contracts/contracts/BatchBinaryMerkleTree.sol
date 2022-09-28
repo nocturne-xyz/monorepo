@@ -46,6 +46,7 @@ library BatchBinaryMerkleTree {
         );
 
         self.depth = depth;
+        self.poseidonT3 = IPoseidonT3(_poseidonT3);
 
         for (uint8 i = 0; i < depth; i++) {
             self.zeroes[i] = zero;
@@ -53,7 +54,6 @@ library BatchBinaryMerkleTree {
         }
 
         self.root = zero;
-        self.poseidonT3 = IPoseidonT3(_poseidonT3);
     }
 
     /// @dev Inserts a leaf in the tree.
