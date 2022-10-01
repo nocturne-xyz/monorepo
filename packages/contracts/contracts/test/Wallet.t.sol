@@ -72,6 +72,26 @@ contract WalletTest is Test {
         );
     }
 
+    function aliceDepositFunds(SimpleERC20Token token) public {
+        token.reserveTokens(ALICE, 1000);
+
+        vm.prank(ALICE);
+        token.approve(address(vault), 800);
+
+        // Deposit funds to vault
+        for (uint256 i = 0; i < 8; i++) {
+            vm.prank(ALICE);
+            depositFunds(
+                wallet,
+                ALICE,
+                address(token),
+                100,
+                ERC20_ID,
+                defaultFlaxAddress()
+            );
+        }
+    }
+
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
         string memory root = vm.projectRoot();
@@ -128,25 +148,9 @@ contract WalletTest is Test {
         );
     }
 
-    function testProcessOneBundle() public {
+    function testOneTransferNoRefund() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, 1000);
-
-        vm.prank(ALICE);
-        token.approve(address(vault), 800);
-
-        // Deposit funds to vault
-        for (uint256 i = 0; i < 8; i++) {
-            vm.prank(ALICE);
-            depositFunds(
-                wallet,
-                ALICE,
-                address(token),
-                100,
-                ERC20_ID,
-                defaultFlaxAddress()
-            );
-        }
+        aliceDepositFunds(token);
 
         wallet.commit8FromQueue();
 
@@ -155,7 +159,7 @@ contract WalletTest is Test {
         bytes memory encodedFunction = abi.encodeWithSelector(
             token.transfer.selector,
             BOB,
-            uint256(100)
+            100
         );
         IWallet.Action memory transferAction = IWallet.Action({
             contractAddress: address(token),
@@ -204,7 +208,6 @@ contract WalletTest is Test {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.prank(ALICE);
         wallet.processBundle(bundle);
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
