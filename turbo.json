@@ -11,6 +11,10 @@
 	},
 	"lint": {
 		"outputs": []
+	},
+	"@flax/circuits#compile-circuits": {
+		"dependsOn": [],
+		"outputs": [".circom/**"]
 	}
   }
 }

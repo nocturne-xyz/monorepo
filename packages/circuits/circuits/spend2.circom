@@ -1,8 +1,8 @@
 pragma circom 2.0.0;
 
-include "node_modules/circomlib/circuits/babyjub.circom";
-include "node_modules/circomlib/circuits/poseidon.circom";
-include "node_modules/circomlib/circuits/escalarmulany.circom";
+include "include/babyjub.circom";
+include "include/poseidon.circom";
+include "include/escalarmulany.circom";
 
 include "tree.circom";
 include "note2.circom";

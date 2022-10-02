@@ -574,6 +574,11 @@ __metadata:
   resolution: "@flax/circuits@workspace:packages/circuits"
   dependencies:
     "@flax/tsconfig": "workspace:^"
+    "@types/node": ^18.8.0
+    circomlib: ^2.0.5
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -1466,6 +1471,13 @@ __metadata:
   version: 17.0.45
   resolution: "@types/node@npm:17.0.45"
   checksum: aa04366b9103b7d6cfd6b2ef64182e0eaa7d4462c3f817618486ea0422984c51fc69fd0d436eae6c9e696ddfdbec9ccaa27a917f7c2e8c75c5d57827fe3d95e8
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.8.0":
+  version: 18.8.0
+  resolution: "@types/node@npm:18.8.0"
+  checksum: 3433cbc22e90fafb047f93b3ef05ba01a07f780a24ff1af393f435f807537b533fe9e8a816586825f4c5fd5336c3e80225571f44ec3b6479c463408c072773e7
   languageName: node
   linkType: hard
 
@@ -3517,6 +3529,13 @@ __metadata:
     inherits: ^2.0.1
     safe-buffer: ^5.0.1
   checksum: 47d3568dbc17431a339bad1fe7dff83ac0891be8206911ace3d3b818fc695f376df809bea406e759cdea07fff4b454fa25f1013e648851bec790c1d75763032e
+  languageName: node
+  linkType: hard
+
+"circomlib@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "circomlib@npm:2.0.5"
+  checksum: df8c3e0d51007758e30bb7ebad059ce692836420c85179088a20581c0adbf8f969d8cf901f9047adfcb80d45741eef4abe4d0d5e4c46748ace06e04256b5bfe7
   languageName: node
   linkType: hard
 
@@ -11874,7 +11893,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-node@npm:^10.1.0":
+"ts-node@npm:^10.1.0, ts-node@npm:^10.9.1":
   version: 10.9.1
   resolution: "ts-node@npm:10.9.1"
   dependencies:
@@ -12152,7 +12171,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.5.5":
+"typescript@npm:^4.5.5, typescript@npm:^4.8.4":
   version: 4.8.4
   resolution: "typescript@npm:4.8.4"
   bin:
@@ -12162,7 +12181,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>":
   version: 4.8.4
   resolution: "typescript@patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=bda367"
   bin:
@@ -12436,6 +12455,15 @@ __metadata:
   bin:
     uuid: dist/bin/uuid
   checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "uuid@npm:9.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
   languageName: node
   linkType: hard
 
