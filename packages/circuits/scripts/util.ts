@@ -6,14 +6,9 @@ export const CIRCOM_OUTPUT_DIR = `${__dirname}/../.circom`;
 export const PTAU_DIR = `${__dirname}/../.ptau`;
 export const SETUP_DIR = `${__dirname}/../.setup`;
 
-// TODO: read from dir and get all .circom files
 export const CIRCUIT_NAMES = [
-	"note",
-	"note2",
-	"sig",
 	"spend",
-	"send2",
-	"tree"
+	// "send2",
 ];
 
 export const asyncExec = (command: string) => new Promise((resolve, reject) => {
