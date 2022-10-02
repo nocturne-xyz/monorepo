@@ -14,5 +14,10 @@ scripts/accumulator-cli
 !.yarn/sdks
 !.yarn/versions
 
-.include
+# turbo logs
 .turbo
+
+# circom build artifacts
+.circom
+.ptau
+.setup
