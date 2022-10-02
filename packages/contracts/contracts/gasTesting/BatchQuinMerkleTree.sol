@@ -9,7 +9,7 @@ struct IncrementalTreeData {
     uint8 depth; // Depth of the tree (levels - 1).
     uint256 root; // Root hash of the tree.
     uint256 numberOfLeaves; // Number of leaves of the tree.
-    IHasherT6 hasherT6; // PoseidonT3 contract
+    IHasherT6 hasherT6; // HasherT6 contract
     mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [nodes]).
     mapping(uint256 => uint256[5]) lastSubtrees; // Caching these values is essential to efficient appends.

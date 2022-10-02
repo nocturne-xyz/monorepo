@@ -3,13 +3,12 @@ pragma solidity ^0.8.0;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/IVerifier.sol";
-import "./libs/BatchBinaryMerkle.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
 import {IHasherT6} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
-    IBatchMerkle public merkle;
+    IBatchMerkle public noteCommitmentTree;
     mapping(uint256 => bool) public pastRoots;
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
@@ -19,21 +18,21 @@ contract CommitmentTreeManager {
 
     constructor(
         address _verifier,
-        address _merkle,
+        address _noteCommitmentTree,
         address _hasherT6
     ) {
         verifier = IVerifier(_verifier);
-        merkle = IBatchMerkle(_merkle);
+        noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
         hasherT6 = IHasherT6(_hasherT6);
     }
 
     function commit8FromQueue() external {
-        merkle.commit8FromQueue();
-        pastRoots[merkle.root()] = true;
+        noteCommitmentTree.commit8FromQueue();
+        pastRoots[noteCommitmentTree.root()] = true;
     }
 
     function getRoot() external view returns (uint256) {
-        return merkle.root();
+        return noteCommitmentTree.root();
     }
 
     // TODO: add default noteCommitment for when there is no output note.
@@ -73,7 +72,7 @@ contract CommitmentTreeManager {
             "Spend proof invalid"
         );
 
-        merkle.insertLeafToQueue(spendTx.noteCommitment);
+        noteCommitmentTree.insertLeafToQueue(spendTx.noteCommitment);
 
         nullifierSet[spendTx.nullifier] = true;
     }
@@ -90,7 +89,7 @@ contract CommitmentTreeManager {
 
         nonce++;
 
-        merkle.insertLeafToQueue(noteCommitment);
+        noteCommitmentTree.insertLeafToQueue(noteCommitment);
     }
 
     function _hashSpend(IWallet.SpendTransaction calldata spend)
