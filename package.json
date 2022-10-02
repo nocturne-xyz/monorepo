@@ -1,6 +1,9 @@
 {
   "private": true,
   "name": "monorepo",
+  "scripts": {
+    "compile-circuits": "yarn turbo run compile-circuits"
+  },
   "workspaces": [
     "packages/*"
   ],
