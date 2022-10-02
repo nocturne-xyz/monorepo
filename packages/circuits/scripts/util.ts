@@ -11,6 +11,11 @@ export const CIRCUIT_NAMES = [
 	// "send2",
 ];
 
+// log2 of the number of r1cs constraints needed for ptau
+export const CIRCUIT_LOG2_NUM_CONSTRAINTS = [
+	16
+];
+
 export const asyncExec = (command: string) => new Promise((resolve, reject) => {
 	let stdout = '';
 	let stderr = '';
@@ -28,9 +33,3 @@ export const asyncExec = (command: string) => new Promise((resolve, reject) => {
 	child.on('error', reject);
 	child.on('exit', () => resolve([stdout, stderr]));
 });
-
-export const fileExists = (fileName: string): Promise<boolean>  => {
-	return new Promise((res, rej) => {
-		fs.exists(fileName, (exists) => res(exists));
-	})
-}

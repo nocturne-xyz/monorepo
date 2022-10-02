@@ -15,6 +15,18 @@
 	"@flax/circuits#compile-circuits": {
 		"dependsOn": [],
 		"outputs": [".circom/**"]
+	},
+	"@flax/circuits#ptau": {
+		"dependsOn": [],
+		"outputs": [".ptau/**"]
+	},
+	"@flax/circuits#setup": {
+		"dependsOn": ["compile-circuits", "ptau"],
+		"outputs": [".setup/**"]
+	},
+	"@flax/circuits#build": {
+		"dependsOn": ["setup"],
+		"outputs": ["dist/**"]
 	}
   }
 }

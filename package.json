@@ -2,7 +2,7 @@
   "private": true,
   "name": "monorepo",
   "scripts": {
-    "compile-circuits": "yarn turbo run compile-circuits"
+    "build-circuits": "yarn turbo run test --filter=@flax/circuits..."
   },
   "workspaces": [
     "packages/*"
