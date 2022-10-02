@@ -10,6 +10,7 @@ import {IVerifier} from "../interfaces/IVerifier.sol";
 import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT4, IHasherT6} from "../interfaces/IHasher.sol";
+import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestVerifier} from "./utils/TestVerifier.sol";
 import {Vault} from "../Vault.sol";
@@ -124,7 +125,11 @@ contract WalletTest is Test {
 
         // Instantiate vault, verifier, tree, and wallet
         vault = new Vault();
-        merkle = new PoseidonBatchBinaryMerkle(32, 0, address(hasherT3));
+        merkle = new PoseidonBatchBinaryMerkle(
+            32,
+            0,
+            IPoseidonT3(address(hasherT3))
+        );
         verifier = new TestVerifier();
         wallet = new Wallet(
             address(vault),

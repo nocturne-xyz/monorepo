@@ -6,6 +6,7 @@ import "./interfaces/IVerifier.sol";
 import "./libs/BatchBinaryMerkle.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
+import {IPoseidonT3} from "./interfaces/IPoseidon.sol";
 
 contract PoseidonBatchBinaryMerkle is IBatchMerkle {
     using BatchBinaryMerkle for IncrementalTreeData;
@@ -15,9 +16,9 @@ contract PoseidonBatchBinaryMerkle is IBatchMerkle {
     constructor(
         uint8 depth,
         uint256 zero,
-        address _hasherT3
+        IPoseidonT3 _poseidonT3
     ) {
-        self.init(depth, zero, _hasherT3);
+        self.init(depth, zero, address(_poseidonT3));
     }
 
     function root() external view override returns (uint256) {
