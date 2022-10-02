@@ -1,17 +1,17 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "../BatchBinaryMerkleTree.sol";
+import "../libs/BatchBinaryMerkle.sol";
 
 contract BinaryMerkleTreeGas {
-    using BatchBinaryMerkleTree for IncrementalTreeData;
+    using BatchBinaryMerkle for IncrementalTreeData;
 
     IncrementalTreeData binaryTree;
 
     uint256 public constant ZERO = 123498798;
 
-    constructor(address _poseidonT3) {
-        binaryTree.init(32, ZERO, _poseidonT3);
+    constructor(address _hasherT3) {
+        binaryTree.init(32, ZERO, _hasherT3);
     }
 
     function insertLeaf(uint256 leaf) public {

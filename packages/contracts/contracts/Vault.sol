@@ -145,8 +145,6 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
                 return false;
             }
         }
-
-        return false;
     }
 
     function onERC721Received(
