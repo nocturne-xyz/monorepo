@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "install-circom": "./scripts/install_circom.sh"
+  }
 }
