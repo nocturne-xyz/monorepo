@@ -1,0 +1,5 @@
+[35m@flax/contracts:build[0m: cache hit, replaying output [2m7135007084558b2c[0m
+[35m@flax/contracts:build: [0mAn unexpected error occurred:
+[35m@flax/contracts:build: [0m
+[35m@flax/contracts:build: [0merror TS5083: Cannot read file '/home/sladuca/flax/monorepo/packages/tsconfig.package.json'.
+[35m@flax/contracts:build: [0m

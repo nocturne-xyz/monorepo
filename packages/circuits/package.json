@@ -6,5 +6,8 @@
   "license": "MIT",
   "scripts": {
     "install-circom": "./scripts/install_circom.sh"
+  },
+  "devDependencies": {
+    "@flax/tsconfig": "workspace:^"
   }
 }
