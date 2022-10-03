@@ -6,7 +6,8 @@
     "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
     "circuits:build": "yarn turbo run build",
 	lint": "yarn workspaces run lint",
-	"build": "yarn workspaces run build"
+	"build": "yarn workspaces run build",
+	"test:unit": "yarn workspaces run test:unit"
   },
   "workspaces": [
     "packages/*"
