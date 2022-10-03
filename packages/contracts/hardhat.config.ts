@@ -1,6 +1,8 @@
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
 import "hardhat-packager";
+import "hardhat-preprocessor";
+import * as fs from "fs";
 
 import { subtask } from "hardhat/config";
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
@@ -18,12 +20,20 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   }
 );
 
+function getRemappings() {
+  return fs
+    .readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean) // remove empty lines
+    .map((line) => line.trim().split("="));
+}
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
   solidity: {
-    version: "0.8.0",
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,
@@ -63,7 +73,26 @@ module.exports = {
   // config for hardhat-packager
   // https://www.npmjs.com/package/hardhat-packager
   packager: {
-    contracts: ["Router"],
+    contracts: ["Wallet", "Vault"],
     includeFactories: true,
+  },
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          for (const [from, to] of getRemappings()) {
+            if (line.includes(from)) {
+              line = line.replace(from, to);
+              break;
+            }
+          }
+        }
+        return line;
+      },
+    }),
+  },
+  paths: {
+    sources: "./contracts",
+    cache: "./cache_hardhat",
   },
 };
