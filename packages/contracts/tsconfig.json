@@ -1,7 +1,7 @@
 {
-  "extends": "@flax/tsconfig/base.json",
+  "extends": "../tsconfig.package.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "dist"
   },
   "exclude": [
     "artifacts",
@@ -15,9 +15,5 @@
     "tmp.ts",
     "hardhat.config.ts"
   ],
-  "include": [
-    "index.ts",
-    "src/**/*.ts",
-    "package.json"
-  ]
+  "include": ["index.ts", "src/**/*.ts", "package.json"]
 }
