@@ -1,4 +1,1223 @@
 {
   "_format": "hh-sol-cache-2",
-  "files": {}
+  "files": {
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/gasTesting/PoseidonGas.sol": {
+      "lastModificationDate": 1664763871046,
+      "contentHash": "dc521b4666935eec051e802ae9d34d10",
+      "sourceName": "contracts/gasTesting/PoseidonGas.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": []
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/BalanceManager.sol": {
+      "lastModificationDate": 1664764165629,
+      "contentHash": "660bd8645af0405f4353340a849f734d",
+      "sourceName": "contracts/BalanceManager.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./CommitmentTreeManager.sol",
+        "./interfaces/IVault.sol",
+        "./interfaces/IWallet.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+        "@openzeppelin/contracts/token/ERC1155/IERC1155.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol",
+        "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol",
+        "./interfaces/IHasher.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "BalanceManager"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/CommitmentTreeManager.sol": {
+      "lastModificationDate": 1664763870697,
+      "contentHash": "a8516e7cba24b8c3b162e6baa3354886",
+      "sourceName": "contracts/CommitmentTreeManager.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IWallet.sol",
+        "./interfaces/IVerifier.sol",
+        "./interfaces/IBatchMerkle.sol",
+        "./interfaces/IHasher.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "CommitmentTreeManager"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IVault.sol": {
+      "lastModificationDate": 1664764159592,
+      "contentHash": "505af9ce72801804840c7b81371dc248",
+      "sourceName": "contracts/interfaces/IVault.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IWallet.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IVault"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IWallet.sol": {
+      "lastModificationDate": 1664764144860,
+      "contentHash": "540ac7453f3ea8dea20d47dc56663345",
+      "sourceName": "contracts/interfaces/IWallet.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IWallet"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IHasher.sol": {
+      "lastModificationDate": 1664763871719,
+      "contentHash": "03d6d9891547de85b350e721c669f55a",
+      "sourceName": "contracts/interfaces/IHasher.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IHasherT3",
+        "IHasherT4",
+        "IHasherT5",
+        "IHasherT6",
+        "IHasherT7"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1664254419593,
+      "contentHash": "e0a41531d159d3a32f84b7a3ecf9fabb",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC20"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155.sol": {
+      "lastModificationDate": 1664254419583,
+      "contentHash": "cb9dc62067a205eeab4f390c72c7fe14",
+      "sourceName": "@openzeppelin/contracts/token/ERC1155/IERC1155.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC1155"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
+      "lastModificationDate": 1664254419589,
+      "contentHash": "e82621b83943f11c44988c60e83d6ebc",
+      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC721"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol": {
+      "lastModificationDate": 1664254419590,
+      "contentHash": "fad0b3f4424bdbb4b35467b29ea8d334",
+      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC721Receiver"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol": {
+      "lastModificationDate": 1664254419583,
+      "contentHash": "27af002e8fc1118d099c99fc8852bb73",
+      "sourceName": "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC1155Receiver"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IVerifier.sol": {
+      "lastModificationDate": 1664763871719,
+      "contentHash": "bb9efa169ffc6e6aff480ccdd0bb4071",
+      "sourceName": "contracts/interfaces/IVerifier.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IVerifier"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IBatchMerkle.sol": {
+      "lastModificationDate": 1664763871719,
+      "contentHash": "ec9e16f89a0ff4a496956226c7923476",
+      "sourceName": "contracts/interfaces/IBatchMerkle.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IWallet.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IBatchMerkle"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/introspection/IERC165.sol": {
+      "lastModificationDate": 1664254416636,
+      "contentHash": "0d62a8380952235f135dae91590f90a3",
+      "sourceName": "@openzeppelin/contracts/introspection/IERC165.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC165"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/Wallet.sol": {
+      "lastModificationDate": 1664764177883,
+      "contentHash": "07f1828aa1587936352bc7a516b65969",
+      "sourceName": "contracts/Wallet.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IWallet.sol",
+        "./interfaces/IVault.sol",
+        "./BalanceManager.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+        "@openzeppelin/contracts/token/ERC1155/IERC1155.sol",
+        "hardhat/console.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "Wallet"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1664254415101,
+      "contentHash": "4ff3cd2f6272c9a6516e9ee4f2b967d3",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">= 0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/Vault.sol": {
+      "lastModificationDate": 1664764180978,
+      "contentHash": "c10a9d84cd2aaa8b1b99b612bee3a055",
+      "sourceName": "contracts/Vault.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IVault.sol",
+        "./interfaces/IWallet.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+        "@openzeppelin/contracts/token/ERC1155/IERC1155.sol",
+        "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol",
+        "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol",
+        "hardhat/console.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "Vault"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/PoseidonBatchBinaryMerkle.sol": {
+      "lastModificationDate": 1664763870698,
+      "contentHash": "b567719f1e59a1f87a3ab79a23f2cc43",
+      "sourceName": "contracts/PoseidonBatchBinaryMerkle.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IWallet.sol",
+        "./interfaces/IVerifier.sol",
+        "./libs/BatchBinaryMerkle.sol",
+        "./interfaces/IBatchMerkle.sol",
+        "./interfaces/IPoseidon.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "PoseidonBatchBinaryMerkle"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/libs/BatchBinaryMerkle.sol": {
+      "lastModificationDate": 1664763871719,
+      "contentHash": "f5b1a8e5a17d23971ab971223a012140",
+      "sourceName": "contracts/libs/BatchBinaryMerkle.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IHasher.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "BatchBinaryMerkle"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/interfaces/IPoseidon.sol": {
+      "lastModificationDate": 1664763871719,
+      "contentHash": "cdf73c576f924b70aff6ad622f465221",
+      "sourceName": "contracts/interfaces/IPoseidon.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "IPoseidonT3",
+        "IPoseidonT4",
+        "IPoseidonT5",
+        "IPoseidonT6",
+        "IPoseidonT7"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/PoseidonHashers.sol": {
+      "lastModificationDate": 1664763870698,
+      "contentHash": "0a4532fc6f4d08d643b86b99819949f9",
+      "sourceName": "contracts/PoseidonHashers.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IHasher.sol",
+        "./interfaces/IPoseidon.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "PoseidonHasherT3",
+        "PoseidonHasherT4",
+        "PoseidonHasherT5",
+        "PoseidonHasherT6",
+        "PoseidonHasherT7"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/gasTesting/BinaryMerkleTreeGas.sol": {
+      "lastModificationDate": 1664763871045,
+      "contentHash": "7cbb4735260b43e986a132f3ddf6aebd",
+      "sourceName": "contracts/gasTesting/BinaryMerkleTreeGas.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../libs/BatchBinaryMerkle.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "BinaryMerkleTreeGas"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/gasTesting/BatchQuinMerkleTree.sol": {
+      "lastModificationDate": 1664763871045,
+      "contentHash": "93027099ee71a92118925d40bfcf2f3c",
+      "sourceName": "contracts/gasTesting/BatchQuinMerkleTree.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IHasher.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "BatchQuinMerkleTree"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/gasTesting/QuinMerkleTreeGas.sol": {
+      "lastModificationDate": 1664763871162,
+      "contentHash": "aa94df49a5ad51459e76924fff03eebb",
+      "sourceName": "contracts/gasTesting/QuinMerkleTreeGas.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./BatchQuinMerkleTree.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "QuinMerkleTreeGas"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/BatchBinaryMerkleTree.sol": {
+      "lastModificationDate": 1664763870720,
+      "contentHash": "7e20b5699f4f0a65c9e3a2283b932d8a",
+      "sourceName": "contracts/BatchBinaryMerkleTree.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IPoseidon.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "BatchBinaryMerkleTree"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/packages/contracts/contracts/gasTesting/ProxyDeployer.sol": {
+      "lastModificationDate": 1664763871045,
+      "contentHash": "f64b1db5b1394c440804b4d2902eacf5",
+      "sourceName": "contracts/gasTesting/ProxyDeployer.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol"
+      ],
+      "versionPragmas": [
+        "0.7.6"
+      ],
+      "artifacts": [
+        "ProxyDeployer"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol": {
+      "lastModificationDate": 1664254416639,
+      "contentHash": "572da86d0eb185b41f85df7d2d75378b",
+      "sourceName": "@openzeppelin/contracts/proxy/TransparentUpgradeableProxy.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./UpgradeableProxy.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "TransparentUpgradeableProxy"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/proxy/UpgradeableProxy.sol": {
+      "lastModificationDate": 1664254416640,
+      "contentHash": "c163cbd51d0173b71c8137b0ddf1e0ba",
+      "sourceName": "@openzeppelin/contracts/proxy/UpgradeableProxy.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Proxy.sol",
+        "../utils/Address.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "UpgradeableProxy"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/proxy/Proxy.sol": {
+      "lastModificationDate": 1664254416641,
+      "contentHash": "52841a5095656ecbf7bc86cd6c114699",
+      "sourceName": "@openzeppelin/contracts/proxy/Proxy.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "Proxy"
+      ]
+    },
+    "/Users/luketchang/code/flax/monorepo/node_modules/@openzeppelin/contracts/utils/Address.sol": {
+      "lastModificationDate": 1664254416650,
+      "contentHash": "7aa46886ff5abe7515496208a5e2ce5a",
+      "sourceName": "@openzeppelin/contracts/utils/Address.sol",
+      "solcConfig": {
+        "version": "0.7.6",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 999999
+          },
+          "metadata": {
+            "bytecodeHash": "none"
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.2 <0.8.0"
+      ],
+      "artifacts": [
+        "Address"
+      ]
+    }
+  }
 }

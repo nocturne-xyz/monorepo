@@ -20,20 +20,12 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   }
 );
 
-function getRemappings() {
-  return fs
-    .readFileSync("remappings.txt", "utf8")
-    .split("\n")
-    .filter(Boolean) // remove empty lines
-    .map((line) => line.trim().split("="));
-}
-
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
   solidity: {
-    version: "0.8.4",
+    version: "0.7.6",
     settings: {
       optimizer: {
         enabled: true,
@@ -75,21 +67,6 @@ module.exports = {
   packager: {
     contracts: ["Wallet", "Vault"],
     includeFactories: true,
-  },
-  preprocess: {
-    eachLine: (hre) => ({
-      transform: (line: string) => {
-        if (line.match(/^\s*import /i)) {
-          for (const [from, to] of getRemappings()) {
-            if (line.includes(from)) {
-              line = line.replace(from, to);
-              break;
-            }
-          }
-        }
-        return line;
-      },
-    }),
   },
   paths: {
     sources: "./contracts",
