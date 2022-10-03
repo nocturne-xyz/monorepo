@@ -7,13 +7,13 @@ export const PTAU_DIR = `${__dirname}/../.ptau`;
 export const SETUP_DIR = `${__dirname}/../.setup`;
 
 export const CIRCUIT_NAMES = [
-	"spend",
-	// "send2",
+	// "spend",
+	"spend2",
 ];
 
 // log2 of the number of r1cs constraints needed for ptau
 export const CIRCUIT_LOG2_NUM_CONSTRAINTS = [
-	16
+	17
 ];
 
 export const asyncExec = (command: string) => new Promise((resolve, reject) => {
