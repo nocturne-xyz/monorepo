@@ -1,9 +1,16 @@
 {
   "private": true,
   "name": "monorepo",
+  "scripts": {
+    "circuits:compile": "yarn turbo run compile-circuits --filter=@flax/circuits...",
+    "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
+    "build": "yarn turbo run build"
+  },
   "workspaces": [
     "packages/*"
   ],
-  "scripts": {},
-  "packageManager": "yarn@3.2.0"
+  "packageManager": "yarn@3.2.0",
+  "devDependencies": {
+    "turbo": "^1.5.5"
+  }
 }

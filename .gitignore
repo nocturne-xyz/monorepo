@@ -12,3 +12,11 @@ lib/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# turbo logs
+.turbo
+
+# circom build artifacts
+.circom
+.ptau
+.setup
