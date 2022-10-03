@@ -8,7 +8,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
+    "build:deps": "../../scripts/install-deps.sh",
+    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
     "clean": "hardhat clean && rm -rf dist && rm -rf src",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
@@ -17,7 +18,8 @@
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
     "test:unit": "FOUNDRY_PROFILE=contracts-ci forge test",
-    "test:unit-local": "FOUNDRY_PROFILE=contracts forge test"
+    "test:unit-local": "FOUNDRY_PROFILE=contracts forge test",
+    "link:node_modules": "ln -s ../../node_modules"
   },
   "dependencies": {
     "@openzeppelin/contracts": "~3.4.2",
@@ -34,9 +36,10 @@
     "eslint": "^7.20.0",
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.4.4",
-    "hardhat": "^2.8.3",
+    "hardhat": "^2.11.2",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-packager": "~1.2.1",
+    "hardhat-preprocessor": "^0.1.5",
     "prettier": "^2.2.1",
     "prettier-plugin-solidity": "^1.0.0-beta.5",
     "solhint": "^3.3.2",

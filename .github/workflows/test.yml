@@ -1,34 +1,25 @@
-name: test
-
-on: workflow_dispatch
-
-env:
-  FOUNDRY_PROFILE: ci
-
+name: Build and Test Packages
+on: [push]
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
-    name: Foundry project
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
         with:
-          submodules: recursive
-
+          node-version: "16.13.2"
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+      - run: |
+          yarn install --immutable --immutable-cache
+      - run: |
+          yarn lint
+      - run: |
+          yarn build
+      - run: |
+          yarn test:unit

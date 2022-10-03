@@ -1,9 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.4;
+pragma solidity 0.7.6;
 
 library Pairing {
-    error InvalidProof();
-
     // The prime q in the base field F_q for G1
     uint256 constant BASE_MODULUS =
         21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -47,7 +45,8 @@ library Pairing {
     function negate(G1Point memory p) internal pure returns (G1Point memory r) {
         if (p.X == 0 && p.Y == 0) return G1Point(0, 0);
         // Validate input or revert
-        if (p.X >= BASE_MODULUS || p.Y >= BASE_MODULUS) revert InvalidProof();
+        if (p.X >= BASE_MODULUS || p.Y >= BASE_MODULUS)
+            revert("Pairing invalid proof");
         // We know p.Y > 0 and p.Y < BASE_MODULUS.
         return G1Point(p.X, BASE_MODULUS - p.Y);
     }
@@ -70,7 +69,7 @@ library Pairing {
         assembly {
             success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
         }
-        if (!success) revert InvalidProof();
+        if (!success) revert("Pairing invalid proof");
     }
 
     /// @return r the product of a point on G1 and a scalar, i.e.
@@ -82,7 +81,7 @@ library Pairing {
     {
         // By EIP-196 the values p.X and p.Y are verified to less than the BASE_MODULUS and
         // form a valid point on the curve. But the scalar is not verified, so we do that explicitelly.
-        if (s >= SCALAR_MODULUS) revert InvalidProof();
+        if (s >= SCALAR_MODULUS) revert("Pairing invalid proof");
         uint256[3] memory input;
         input[0] = p.X;
         input[1] = p.Y;
@@ -92,7 +91,7 @@ library Pairing {
         assembly {
             success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
         }
-        if (!success) revert InvalidProof();
+        if (!success) revert("Pairing invalid proof");
     }
 
     /// Asserts the pairing check
@@ -104,7 +103,7 @@ library Pairing {
     {
         // By EIP-197 all input is verified to be less than the BASE_MODULUS and form elements in their
         // respective groups of the right order.
-        if (p1.length != p2.length) revert InvalidProof();
+        if (p1.length != p2.length) revert("Pairing invalid proof");
         uint256 elements = p1.length;
         uint256 inputSize = elements * 6;
         uint256[] memory input = new uint256[](inputSize);
@@ -129,6 +128,6 @@ library Pairing {
                 0x20
             )
         }
-        if (!success || out[0] != 1) revert InvalidProof();
+        if (!success || out[0] != 1) revert("Pairing invalid proof");
     }
 }

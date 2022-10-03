@@ -1,5 +1,5 @@
-// //SPDX-License-Identifier: Unlicense
-// pragma solidity ^0.8.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity 0.7.6;
 
 // import {IHasherT3, IHasherT4, IHasherT5, IHasherT6, IHasherT7} from "../interfaces/IPoseidon.sol";
 // import "hardhat/console.sol";
