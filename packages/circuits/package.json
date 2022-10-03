@@ -11,7 +11,7 @@
     "setup": "yarn ts-node ./scripts/setup.ts",
     "build": "",
     "test": "",
-    "lin": ""
+    "lint": ""
   },
   "devDependencies": {
     "@types/node": "^18.8.0",
