@@ -5,7 +5,7 @@ import "./interfaces/IHasher.sol";
 import "./interfaces/IPoseidon.sol";
 
 contract PoseidonHasherT3 is IHasherT3 {
-    IPoseidonT3 poseidonT3;
+    IPoseidonT3 public poseidonT3;
 
     constructor(address _poseidonT3) {
         poseidonT3 = IPoseidonT3(_poseidonT3);
@@ -22,7 +22,7 @@ contract PoseidonHasherT3 is IHasherT3 {
 }
 
 contract PoseidonHasherT4 is IHasherT4 {
-    IPoseidonT4 poseidonT4;
+    IPoseidonT4 public poseidonT4;
 
     constructor(address _poseidonT4) {
         poseidonT4 = IPoseidonT4(_poseidonT4);
@@ -39,7 +39,7 @@ contract PoseidonHasherT4 is IHasherT4 {
 }
 
 contract PoseidonHasherT5 is IHasherT5 {
-    IPoseidonT5 poseidonT5;
+    IPoseidonT5 public poseidonT5;
 
     constructor(address _poseidonT5) {
         poseidonT5 = IPoseidonT5(_poseidonT5);
@@ -56,7 +56,7 @@ contract PoseidonHasherT5 is IHasherT5 {
 }
 
 contract PoseidonHasherT6 is IHasherT6 {
-    IPoseidonT6 poseidonT6;
+    IPoseidonT6 public poseidonT6;
 
     constructor(address _poseidonT6) {
         poseidonT6 = IPoseidonT6(_poseidonT6);
@@ -73,7 +73,7 @@ contract PoseidonHasherT6 is IHasherT6 {
 }
 
 contract PoseidonHasherT7 is IHasherT7 {
-    IPoseidonT7 poseidonT7;
+    IPoseidonT7 public poseidonT7;
 
     constructor(address _poseidonT7) {
         poseidonT7 = IPoseidonT7(_poseidonT7);

@@ -23,7 +23,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
  */
 module.exports = {
   solidity: {
-    version: "0.7.6",
+    version: "0.8.0",
     settings: {
       optimizer: {
         enabled: true,

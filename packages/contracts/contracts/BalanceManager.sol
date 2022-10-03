@@ -20,7 +20,7 @@ contract BalanceManager is
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-    IWallet.WalletBalanceInfo balanceInfo;
+    IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
     IVault public vault;
     IHasherT4 public hasherT4;
 
@@ -36,10 +36,10 @@ contract BalanceManager is
     }
 
     function onERC721Received(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256 tokenId,
-        bytes calldata data
+        bytes calldata // data
     ) external override returns (bytes4) {
         if (balanceInfo.erc721Ids[msg.sender].length == 0) {
             balanceInfo.erc721Addresses.push(msg.sender);
@@ -49,11 +49,11 @@ contract BalanceManager is
     }
 
     function onERC1155Received(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256 id,
-        uint256 value,
-        bytes calldata data
+        uint256, // value
+        bytes calldata // data
     ) external override returns (bytes4) {
         if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
             balanceInfo.erc1155Addresses.push(msg.sender);
@@ -63,11 +63,11 @@ contract BalanceManager is
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        uint256[] calldata, // values
+        bytes calldata // data
     ) external override returns (bytes4) {
         for (uint256 i = 0; i < ids.length; i++) {
             if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
@@ -79,12 +79,9 @@ contract BalanceManager is
     }
 
     // TODO: fix this
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 // interfaceId
+    ) external view override returns (bool) {
         return false;
     }
 

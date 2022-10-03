@@ -14,7 +14,7 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     IVerifier public verifier;
-    IHasherT6 hasherT6;
+    IHasherT6 public hasherT6;
 
     constructor(
         address _verifier,

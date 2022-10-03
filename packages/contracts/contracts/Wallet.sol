@@ -22,7 +22,7 @@ contract Wallet is IWallet, BalanceManager {
         address _merkle,
         address _hasherT4,
         address _hasherT6
-    ) BalanceManager(_vault, _verifier, _merkle, _hasherT4, _hasherT6) {}
+    ) BalanceManager(_vault, _verifier, _merkle, _hasherT4, _hasherT6) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");

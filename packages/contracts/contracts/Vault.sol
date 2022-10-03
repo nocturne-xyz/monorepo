@@ -148,41 +148,38 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
     }
 
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
+        address, // operator
+        address, // from
+        uint256, // tokenId
+        bytes calldata // data
     ) external override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 
     function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
+        address, // operator
+        address, // from
+        uint256, // id
+        uint256, // value
+        bytes calldata // data
     ) external override returns (bytes4) {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
-        uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        address, // operator
+        address, // from
+        uint256[] calldata, // ids
+        uint256[] calldata, // values
+        bytes calldata // data
     ) external override returns (bytes4) {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
     // TODO: fix this
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 // interfaceId
+    ) external view override returns (bool) {
         return false;
     }
 }
