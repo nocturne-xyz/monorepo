@@ -1,40 +1,38 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/IVerifier.sol";
-import "./BatchBinaryMerkleTree.sol";
 
-import {IPoseidonT6} from "./interfaces/IPoseidon.sol";
+import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
+import {IHasherT6} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
-    using BatchBinaryMerkleTree for IncrementalTreeData;
-
-    IncrementalTreeData public noteCommitmentTree;
+    IBatchMerkle public noteCommitmentTree;
     mapping(uint256 => bool) public pastRoots;
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
 
     IVerifier public verifier;
-    IPoseidonT6 poseidonT6;
+    IHasherT6 public hasherT6;
 
     constructor(
         address _verifier,
-        address _poseidonT3,
-        address _poseidonT6
+        address _noteCommitmentTree,
+        address _hasherT6
     ) {
         verifier = IVerifier(_verifier);
-        noteCommitmentTree.init(32, 0, _poseidonT3);
-        poseidonT6 = IPoseidonT6(_poseidonT6);
+        noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
+        hasherT6 = IHasherT6(_hasherT6);
     }
 
     function commit8FromQueue() external {
         noteCommitmentTree.commit8FromQueue();
-        pastRoots[noteCommitmentTree.root] = true;
+        pastRoots[noteCommitmentTree.root()] = true;
     }
 
     function getRoot() external view returns (uint256) {
-        return noteCommitmentTree.root;
+        return noteCommitmentTree.root();
     }
 
     // TODO: add default noteCommitment for when there is no output note.
@@ -85,7 +83,7 @@ contract CommitmentTreeManager {
         uint256 id,
         uint256 value
     ) internal {
-        uint256 noteCommitment = poseidonT6.poseidon(
+        uint256 noteCommitment = hasherT6.hash(
             [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
         );
 

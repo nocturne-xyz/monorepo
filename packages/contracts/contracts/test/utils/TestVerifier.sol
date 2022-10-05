@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.4;
+pragma solidity 0.7.6;
 
 import "../../interfaces/IVerifier.sol";
 import "./Pairing.sol";
@@ -101,7 +101,7 @@ contract TestVerifier is IVerifier {
         VerifyingKey memory vk = verifyingKey();
 
         // Compute the linear combination vk_x of inputs times IC
-        if (input.length + 1 != vk.IC.length) revert Pairing.InvalidProof();
+        if (input.length + 1 != vk.IC.length) revert("Pairing invalid proof");
         Pairing.G1Point memory vk_x = vk.IC[0];
         vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[1], input[0]));
         vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[2], input[1]));

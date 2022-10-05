@@ -15,7 +15,6 @@
     "lint": ""
   },
   "devDependencies": {
-    "@flax/tsconfig": "workspace:^",
     "@types/bn.js": "^5.1.1",
     "@types/jest": "^29.1.1",
     "@types/node": "^18.8.0",

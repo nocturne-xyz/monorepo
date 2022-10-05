@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
+pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
 import "./interfaces/IVault.sol";
@@ -10,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "./interfaces/IPoseidon.sol";
+import {IHasherT3, IHasherT4, IHasherT6} from "./interfaces/IHasher.sol";
 
 contract BalanceManager is
     IERC721Receiver,
@@ -20,26 +21,26 @@ contract BalanceManager is
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-    IWallet.WalletBalanceInfo balanceInfo;
+    IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
     IVault public vault;
-    IPoseidonT4 public poseidonT4;
+    IHasherT4 public hasherT4;
 
     constructor(
         address _vault,
         address _verifier,
-        address _poseidonT3,
-        address _poseidonT4,
-        address _poseidonT6
-    ) CommitmentTreeManager(_verifier, _poseidonT3, _poseidonT6) {
+        address _merkle,
+        address _hasherT4,
+        address _hasherT6
+    ) CommitmentTreeManager(_verifier, _merkle, _hasherT6) {
         vault = IVault(_vault);
-        poseidonT4 = IPoseidonT4(_poseidonT4);
+        hasherT4 = IHasherT4(_hasherT4);
     }
 
     function onERC721Received(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256 tokenId,
-        bytes calldata data
+        bytes calldata // data
     ) external override returns (bytes4) {
         if (balanceInfo.erc721Ids[msg.sender].length == 0) {
             balanceInfo.erc721Addresses.push(msg.sender);
@@ -49,11 +50,11 @@ contract BalanceManager is
     }
 
     function onERC1155Received(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256 id,
-        uint256 value,
-        bytes calldata data
+        uint256, // value
+        bytes calldata // data
     ) external override returns (bytes4) {
         if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
             balanceInfo.erc1155Addresses.push(msg.sender);
@@ -63,11 +64,11 @@ contract BalanceManager is
     }
 
     function onERC1155BatchReceived(
-        address operator,
-        address from,
+        address, // operator
+        address, // from
         uint256[] calldata ids,
-        uint256[] calldata values,
-        bytes calldata data
+        uint256[] calldata, // values
+        bytes calldata // data
     ) external override returns (bytes4) {
         for (uint256 i = 0; i < ids.length; i++) {
             if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
@@ -79,12 +80,9 @@ contract BalanceManager is
     }
 
     // TODO: fix this
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 // interfaceId
+    ) external view override returns (bool) {
         return false;
     }
 
@@ -101,7 +99,7 @@ contract BalanceManager is
             uint256 index = successfulTransfers[i];
             IWallet.FLAXAddress memory depositAddr = approvedDeposits[index]
                 .depositAddr;
-            uint256 depositAddrHash = poseidonT4.poseidon(
+            uint256 depositAddrHash = hasherT4.hash(
                 [depositAddr.H1, depositAddr.H2, depositAddr.H3]
             );
 
@@ -116,7 +114,7 @@ contract BalanceManager is
 
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
-        uint256 depositAddrHash = poseidonT4.poseidon(
+        uint256 depositAddrHash = hasherT4.hash(
             [depositAddr.H1, depositAddr.H2, depositAddr.H3]
         );
 
@@ -166,7 +164,7 @@ contract BalanceManager is
         address[] calldata refundTokens,
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
-        uint256 refundAddrHash = poseidonT4.poseidon(
+        uint256 refundAddrHash = hasherT4.hash(
             [refundAddr.H1, refundAddr.H2, refundAddr.H3]
         );
 

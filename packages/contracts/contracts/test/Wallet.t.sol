@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.7.6;
+pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
@@ -7,7 +8,11 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
 import {IVerifier} from "../interfaces/IVerifier.sol";
-import {IPoseidonT3, IPoseidonT4, IPoseidonT6} from "../interfaces/IPoseidon.sol";
+import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
+import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT6} from "../PoseidonHashers.sol";
+import {IHasherT3, IHasherT4, IHasherT6} from "../interfaces/IHasher.sol";
+import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
+import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestVerifier} from "./utils/TestVerifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
@@ -28,10 +33,11 @@ contract WalletTest is Test {
 
     Wallet wallet;
     Vault vault;
+    IBatchMerkle merkle;
     IVerifier verifier;
-    IPoseidonT3 poseidonT3;
-    IPoseidonT4 poseidonT4;
-    IPoseidonT6 poseidonT6;
+    IHasherT3 hasherT3;
+    IHasherT4 hasherT4;
+    IHasherT6 hasherT6;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
 
@@ -97,12 +103,12 @@ contract WalletTest is Test {
         string memory root = vm.projectRoot();
         address[4] memory poseidonAddrs;
         for (uint8 i = 0; i < 4; i++) {
-            bytes memory path = string.concat(
+            bytes memory path = abi.encodePacked(
                 bytes(root),
                 "/packages/contracts/poseidonBytecode/PoseidonT"
             );
-            path = string.concat(path, bytes(Strings.toString(i + 3)));
-            path = string.concat(path, ".txt");
+            path = abi.encodePacked(path, bytes(Strings.toString(i + 3)));
+            path = abi.encodePacked(path, ".txt");
 
             string memory bytecodeStr = vm.readFile(string(path));
             bytes memory bytecode = HexUtils.hexToBytes(bytecodeStr);
@@ -114,19 +120,24 @@ contract WalletTest is Test {
             poseidonAddrs[i] = deployed;
         }
 
-        poseidonT3 = IPoseidonT3(poseidonAddrs[0]);
-        poseidonT4 = IPoseidonT4(poseidonAddrs[1]);
-        poseidonT6 = IPoseidonT6(poseidonAddrs[3]);
+        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonAddrs[0]));
+        hasherT4 = IHasherT4(new PoseidonHasherT4(poseidonAddrs[1]));
+        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonAddrs[3]));
 
-        // Instantiate vault, verifier, and wallet
+        // Instantiate vault, verifier, tree, and wallet
         vault = new Vault();
+        merkle = new PoseidonBatchBinaryMerkle(
+            32,
+            0,
+            IPoseidonT3(address(hasherT3))
+        );
         verifier = new TestVerifier();
         wallet = new Wallet(
             address(vault),
             address(verifier),
-            address(poseidonT3),
-            address(poseidonT4),
-            address(poseidonT6)
+            address(merkle),
+            address(hasherT4),
+            address(hasherT6)
         );
 
         vault.initialize(address(wallet));
@@ -139,10 +150,10 @@ contract WalletTest is Test {
     }
 
     function testPoseidon() public {
-        console.log(poseidonT3.poseidon([uint256(0), uint256(1)]));
-        console.log(poseidonT4.poseidon([uint256(0), uint256(1), uint256(2)]));
+        console.log(hasherT3.hash([uint256(0), uint256(1)]));
+        console.log(hasherT4.hash([uint256(0), uint256(1), uint256(2)]));
         console.log(
-            poseidonT6.poseidon(
+            hasherT6.hash(
                 [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
             )
         );
