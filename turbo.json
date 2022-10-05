@@ -5,6 +5,10 @@
 		"dependsOn": ["^build"],
 		"outputs": ["dist/**"]
 	},
+	"test:unit": {
+		"dependsOn": ["build"],
+		"outputs": []
+	},
 	"test": {
 		"dependsOn": ["build"],
 		"outputs": []
@@ -14,19 +18,23 @@
 	},
 	"@flax/circuits#compile-circuits": {
 		"dependsOn": [],
-		"outputs": [".circom/**"]
+		"outputs": [".circom/**"],
+		"inputs": ["circuits"]
 	},
 	"@flax/circuits#ptau": {
 		"dependsOn": [],
-		"outputs": [".ptau/**"]
+		"outputs": [".ptau/**"],
+		"inputs": ["scripts/util.ts"]
 	},
 	"@flax/circuits#setup": {
 		"dependsOn": ["compile-circuits", "ptau"],
-		"outputs": [".setup/**"]
+		"outputs": [".setup/**"],
+		"inputs": ["circuits/**", "scripts/util.ts"]
 	},
 	"@flax/circuits#build": {
-		"dependsOn": ["setup"],
-		"outputs": ["dist/**"]
+		"dependsOn": ["^build", "setup"],
+		"outputs": ["dist/**"],
+		"inputs": ["circuits/**", "scripts/util.ts", "src/**.ts", "src/**.spec.ts"]
 	}
   }
 }

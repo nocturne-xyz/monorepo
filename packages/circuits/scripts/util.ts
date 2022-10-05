@@ -1,10 +1,10 @@
 import { spawn } from "child_process";
-import * as fs from "fs";
 
 export const CIRCUIT_DIR = `${__dirname}/../circuits`;
 export const CIRCOM_OUTPUT_DIR = `${__dirname}/../.circom`;
 export const PTAU_DIR = `${__dirname}/../.ptau`;
 export const SETUP_DIR = `${__dirname}/../.setup`;
+export const DIST_DIR = `${__dirname}/../dist`;
 
 export const CIRCUIT_NAMES = [
 	// "spend",

@@ -4,9 +4,13 @@
   "scripts": {
     "circuits:compile": "yarn turbo run compile-circuits --filter=@flax/circuits...",
     "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
-    "lint": "yarn workspaces foreach --exclude @flax/circuits run lint",
-    "build": "yarn workspaces foreach --exclude @flax/circuits run build",
-    "test:unit": "yarn workspaces foreach --exclude @flax/circuits run test:unit"
+    "circuits:test": "yarn turbo run test --filter=@flax/circuits...",
+    "build": "yarn turbo run build",
+    "test": "yarn turbo run test",
+    "lint": "yarn turbo run lint",
+    "test:unit": "yarn turbo run test:unit",
+    "ci:build": "yarn turbo run build --filter=!@flax/circuits...",
+    "ci:test:unit": "yarn turbo run test:unit --filter=!@flax/circuits..."
   },
   "workspaces": [
     "packages/*"
