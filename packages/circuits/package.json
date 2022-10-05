@@ -11,7 +11,7 @@
     "setup": "yarn ts-node ./scripts/setup.ts",
     "emit": "yarn ts-node ./scripts/emit.ts",
     "build": "yarn tsc && yarn emit",
-    "test": "jest",
+    "test:unit": "jest",
     "lint": ""
   },
   "devDependencies": {
