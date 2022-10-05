@@ -2,7 +2,6 @@
   "extends": "../tsconfig.package.json",
   "compilerOptions": {
     "outDir": "dist",
-    "module": "commonJs",
     "allowJs": true
   },
   "exclude": [

@@ -17,6 +17,8 @@ export interface FlaxAddressInput {
 	h1Y: bigint,
 	h2X: bigint,
 	h2Y: bigint,
+	h3X: bigint,
+	h3Y: bigint,
 }
 
 export interface NoteInput {
@@ -54,6 +56,8 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		oldNoteOwnerH1Y: oldNote.owner.h1Y,
 		oldNoteOwnerH2X: oldNote.owner.h2X,
 		oldNoteOwnerH2Y: oldNote.owner.h2Y,
+		oldNoteOwnerH3X: oldNote.owner.h3X,
+		oldNoteOwnerH3Y: oldNote.owner.h3Y,
 		oldNoteNonce: oldNote.nonce,
 		oldNoteType: oldNote.type,
 		oldNoteId: oldNote.id,
@@ -66,6 +70,8 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		newNoteOwnerH1Y: newNote.owner.h1Y,
 		newNoteOwnerH2X: newNote.owner.h2X,
 		newNoteOwnerH2Y: newNote.owner.h2Y,
+		newNoteOwnerH3X: newNote.owner.h3X,
+		newNoteOwnerH3Y: newNote.owner.h3Y,
 		newNoteNonce: newNote.nonce,
 		newNoteType: newNote.type,
 		newNoteId: newNote.id,

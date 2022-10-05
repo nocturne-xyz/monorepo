@@ -7,6 +7,8 @@ test("it builds properly", async () => {
 			h1Y: 0n,
 			h2X: 0n,
 			h2Y: 0n,
+			h3X: 0n,
+			h3Y: 0n,
 		},
 		nonce: 0n,
 		type: 0n,
@@ -20,6 +22,8 @@ test("it builds properly", async () => {
 			h1Y: 0n,
 			h2X: 0n,
 			h2Y: 0n,
+			h3X: 0n,
+			h3Y: 0n,
 		},
 		nonce: 0n,
 		type: 0n,
@@ -48,8 +52,8 @@ test("it builds properly", async () => {
 	};
 
 	const isInDist = __dirname.includes("dist") ? true : false;
-	const wasmPath = isInDist ? `${__dirname}/spend2.wasm`: `${__dirname}/../.circom/spend2_js/spend2.wasm`;
-	const provingKeyPath = isInDist ? `${__dirname}/spend2_final.zkey`: `${__dirname}/../.setup/spend2_final.zkey`;
+	const wasmPath = isInDist ? undefined : `${__dirname}/../.circom/spend2_js/spend2.wasm`;
+	const provingKeyPath = isInDist ? undefined : `${__dirname}/../.setup/spend2_final.zkey`;
 
 	try {
 		await proveSpend2(inputs, wasmPath, provingKeyPath);
