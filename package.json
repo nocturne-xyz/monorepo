@@ -6,6 +6,7 @@
     "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
     "circuits:test": "yarn turbo run test --filter=@flax/circuits...",
     "build": "yarn turbo run build",
+    "test": "yarn turbo run test",
     "lint": "yarn turbo run lint",
     "test:unit": "yarn turbo run run test:unit"
   },

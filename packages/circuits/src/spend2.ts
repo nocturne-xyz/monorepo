@@ -24,6 +24,7 @@ export interface NoteInput {
 	nonce: bigint,
 	type: bigint,
 	value: bigint,
+	id: bigint,
 }
 
 export interface MerkleProofInput {
@@ -47,6 +48,7 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		vk,
 		c,
 		z,
+		operationDigest,
 
 		oldNoteOwnerH1X: oldNote.owner.h1X,
 		oldNoteOwnerH1Y: oldNote.owner.h1Y,
@@ -54,6 +56,7 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		oldNoteOwnerH2Y: oldNote.owner.h2Y,
 		oldNoteNonce: oldNote.nonce,
 		oldNoteType: oldNote.type,
+		oldNoteId: oldNote.id,
 		oldNoteValue: oldNote.value,
 
 		path: merkleProof.path,
@@ -65,6 +68,7 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		newNoteOwnerH2Y: newNote.owner.h2Y,
 		newNoteNonce: newNote.nonce,
 		newNoteType: newNote.type,
+		newNoteId: newNote.id,
 		newNoteValue: newNote.value
 	}
 

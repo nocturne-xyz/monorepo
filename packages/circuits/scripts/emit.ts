@@ -1,7 +1,5 @@
-import { CIRCUIT_NAMES, SETUP_DIR, DIST_DIR, CIRCOM_OUTPUT_DIR, asyncExec } from "./util";
+import { CIRCUIT_NAMES, SETUP_DIR, DIST_DIR, CIRCOM_OUTPUT_DIR } from "./util";
 import * as fs from "fs";
-
-const wasmsnark_conversion_tool = "node_modules/wasmsnark/tools/buildpkey.js"
 
 async function main() {
 	if (!fs.existsSync(DIST_DIR)) {

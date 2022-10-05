@@ -1,5 +1,4 @@
 import { spawn } from "child_process";
-import * as fs from "fs";
 
 export const CIRCUIT_DIR = `${__dirname}/../circuits`;
 export const CIRCOM_OUTPUT_DIR = `${__dirname}/../.circom`;

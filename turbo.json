@@ -30,7 +30,7 @@
 	"@flax/circuits#build": {
 		"dependsOn": ["^build", "setup"],
 		"outputs": ["dist/**"],
-		"inputs": ["circuits/**", "scripts/util.ts", "src/**.ts"]
+		"inputs": ["circuits/**", "scripts/util.ts", "src/**.ts", "src/**.spec.ts"]
 	}
   }
 }

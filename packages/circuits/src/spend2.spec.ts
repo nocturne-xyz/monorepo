@@ -1,6 +1,5 @@
 import { proveSpend2, NoteInput, Spend2Inputs } from "./spend2";
 
-
 test("it builds properly", async () => {
 	const oldNote: NoteInput = {
 		owner: {
@@ -11,6 +10,7 @@ test("it builds properly", async () => {
 		},
 		nonce: 0n,
 		type: 0n,
+		id: 0n,
 		value: 0n,
 	}
 
@@ -23,6 +23,7 @@ test("it builds properly", async () => {
 		},
 		nonce: 0n,
 		type: 0n,
+		id: 0n,
 		value: 0n,
 	}
 
@@ -32,8 +33,8 @@ test("it builds properly", async () => {
 	const z = 0n;
 
 	const merkleProof = {
-		path: [0n],
-		siblings: [0n],
+		path: (new Array(32)).fill(0n),
+		siblings: (new Array(32)).fill(0n),
 	}
 
 	const inputs: Spend2Inputs = {
@@ -47,13 +48,11 @@ test("it builds properly", async () => {
 	};
 
 	const isInDist = __dirname.includes("dist") ? true : false;
-	console.log("isInDist", isInDist);
 	const wasmPath = isInDist ? `${__dirname}/spend2.wasm`: `${__dirname}/../.circom/spend2_js/spend2.wasm`;
 	const provingKeyPath = isInDist ? `${__dirname}/spend2_final.zkey`: `${__dirname}/../.setup/spend2_final.zkey`;
 
 	try {
-		const proof = await proveSpend2(inputs, wasmPath, provingKeyPath);
-		console.log(proof);
+		await proveSpend2(inputs, wasmPath, provingKeyPath);
 	} catch (e) {
 		throw e;
 	}
