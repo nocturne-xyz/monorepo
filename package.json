@@ -4,6 +4,7 @@
   "scripts": {
     "circuits:compile": "yarn turbo run compile-circuits --filter=@flax/circuits...",
     "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
+    "circuits:test": "yarn turbo run test --filter=@flax/circuits...",
     "build": "yarn turbo run build"
   },
   "workspaces": [

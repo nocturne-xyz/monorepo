@@ -1,7 +1,9 @@
 {
   "extends": "@flax/tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "module": "commonJs",
+    "allowJs": true
   },
   "exclude": [
     "artifacts",
