@@ -55,11 +55,13 @@ export async function proveSpend2(
   _provingKeyPath?: string
 ): Promise<ProofWithPublicSignals> {
   const { vk, operationDigest, c, z, oldNote, newNote, merkleProof } = inputs;
-  const partialWitness = {
+  const signals = {
     vk,
+
+    operationDigest,
+
     c,
     z,
-    operationDigest,
 
     oldNoteOwnerH1X: oldNote.owner.h1X,
     oldNoteOwnerH1Y: oldNote.owner.h1Y,
@@ -87,5 +89,5 @@ export async function proveSpend2(
     newNoteValue: newNote.value,
   };
 
-  return await snarkjs.groth16.fullProve(partialWitness, WASM_PATH, ZKEY_PATH);
+  return await snarkjs.groth16.fullProve(signals, WASM_PATH, ZKEY_PATH);
 }
