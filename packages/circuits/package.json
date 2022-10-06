@@ -6,11 +6,7 @@
   "license": "MIT",
   "scripts": {
     "install-circom": "./scripts/install_circom.sh",
-    "compile-circuits": "yarn ts-node ./scripts/compile.ts",
-    "ptau": "yarn ts-node ./scripts/ptau.ts",
-    "setup": "yarn ts-node ./scripts/setup.ts",
-    "emit": "yarn ts-node ./scripts/emit.ts",
-    "build": "yarn tsc && yarn emit",
+    "build": "./scripts/spend2/build_spend2.sh",
     "test:unit": "jest",
     "lint": ""
   },
