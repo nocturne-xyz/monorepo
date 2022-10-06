@@ -78,9 +78,7 @@ export async function proveSpend2(inputs: Spend2Inputs, _wasmPath?: string, _pro
 		newNoteValue: newNote.value
 	}
 
-	const wasmPath = _wasmPath || "spend2.wasm";
-	const provingKeyPath = _provingKeyPath || "spend2_final.zkey";
+	const wasmPath = _wasmPath || `${__dirname}/../spend2.wasm`;
+	const provingKeyPath = _provingKeyPath || `${__dirname}/../spend2_final.zkey`;
 	return await snarkjs.groth16.fullProve(partialWitness, wasmPath, provingKeyPath);
 }
-
-
