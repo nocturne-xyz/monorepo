@@ -1,8 +1,7 @@
 {
-  "extends": "../tsconfig.package.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "allowJs": true
+    "outDir": "dist"
   },
   "exclude": [
     "artifacts",
@@ -16,5 +15,5 @@
     "tmp.ts",
     "hardhat.config.ts"
   ],
-  "include": ["index.ts", "src/**/*.ts", "package.json"]
+  "include": ["index.ts", "src/**/*.ts", "scripts/*.ts", "package.json"]
 }

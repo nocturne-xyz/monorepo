@@ -5,7 +5,7 @@
     "circuits:compile": "yarn turbo run compile-circuits --filter=@flax/circuits...",
     "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
     "circuits:test": "yarn turbo run test --filter=@flax/circuits...",
-    "build": "yarn turbo run build",
+    "build": "yarn turbo run build --filter=!@flax/circuits...",
     "test": "yarn turbo run test",
     "lint": "yarn turbo run lint",
     "test:unit": "yarn turbo run test:unit",
@@ -17,6 +17,7 @@
   ],
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
+    "circomlibjs": "0.0.8",
     "turbo": "^1.5.5"
   }
 }
