@@ -1,8 +1,11 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
+    "lint": {
+      "outputs": []
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": [],
       "outputs": ["dist/**"]
     },
     "test:unit": {
@@ -11,9 +14,6 @@
     },
     "test": {
       "dependsOn": ["build"],
-      "outputs": []
-    },
-    "lint": {
       "outputs": []
     },
     "@flax/circuits#circuits:build": {

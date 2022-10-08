@@ -8,7 +8,7 @@
     "build": "yarn turbo run build --filter=!@flax/circuits...",
     "test": "yarn turbo run test --filter=!@flax/circuits...",
     "lint": "yarn turbo run lint",
-    "test:unit": "yarn turbo run test:unit",
+    "test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
     "ci:build": "yarn turbo run build --filter=!@flax/circuits...",
     "ci:test:unit": "yarn turbo run test:unit --filter=!@flax/circuits..."
   },

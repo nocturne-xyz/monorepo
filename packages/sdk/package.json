@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "test:unit": "jest",
+    "test:unit": "jest --passWithNoTests",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts"
   },
