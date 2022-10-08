@@ -1,12 +1,20 @@
-import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
-import { BabyJub, buildBabyJub } from "circomlibjs";
+// import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
+import buildFlaxCrypto from "../src/crypto";
 
-const tree = new BinaryPoseidonTree();
-tree.insert(5n);
-console.log(tree.createProof(tree.count - 1));
+// const tree = new BinaryPoseidonTree();
+// tree.insert(5n);
+// console.log(tree.createProof(tree.count - 1));
 
-const babyJub = buildBabyJub();
-const h1 = babyJub.mulPointEscalar(babyJub.Base8);
+// const babyJub = buildBabyJub();
+// const h1 = babyJub.mulPointEscalar(babyJub.Base8);
+
+var main = async () => {
+    var flaxCrypto = await buildFlaxCrypto()
+    console.log(flaxCrypto.genKey())
+}
+
+main()
+
 
 /*
 export interface FlaxAddressInput {
