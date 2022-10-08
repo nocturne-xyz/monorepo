@@ -51,9 +51,5 @@ test("it builds properly", async () => {
     merkleProof,
   };
 
-  try {
-    await proveSpend2(inputs);
-  } catch (e) {
-    throw e;
-  }
+  await proveSpend2(inputs);
 });

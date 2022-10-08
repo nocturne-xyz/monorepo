@@ -51,8 +51,8 @@ export interface Spend2Inputs {
 
 export async function proveSpend2(
   inputs: Spend2Inputs,
-  _wasmPath?: string,
-  _provingKeyPath?: string
+  wasmPath = WASM_PATH,
+  zkeyPath = ZKEY_PATH
 ): Promise<ProofWithPublicSignals> {
   const { vk, operationDigest, c, z, oldNote, newNote, merkleProof } = inputs;
   const signals = {
@@ -89,5 +89,5 @@ export async function proveSpend2(
     newNoteValue: newNote.value,
   };
 
-  return await snarkjs.groth16.fullProve(signals, WASM_PATH, ZKEY_PATH);
+  return await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
 }

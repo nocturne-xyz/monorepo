@@ -20,7 +20,7 @@ export class BinaryPoseidonTree {
     this.count = 0;
   }
 
-  insert(leaf: Node) {
+  insert(leaf: Node): void {
     this.tree.insert(leaf);
     this.count += 1;
   }

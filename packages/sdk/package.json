@@ -1,14 +1,14 @@
 {
-  "name": "@flax/circuits",
+  "name": "@flax/sdk",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
   "scripts": {
-    "install-circom": "./scripts/install_circom.sh",
-    "build": "./scripts/spend2/build_spend2.sh",
+    "build": "tsc --build",
     "test:unit": "jest",
-    "lint": "eslint src --fix --ext .ts"
+    "check": "tsc --noEmit",
+    "lint": "eslint --fix src --ext .ts"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

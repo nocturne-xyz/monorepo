@@ -6,5 +6,3 @@ export type {
   MerkleProofInput,
   Spend2Inputs,
 } from "./src/spend2";
-
-export type { BinaryPoseidonTree } from "./src/utils/BinaryPoseidonTree";
