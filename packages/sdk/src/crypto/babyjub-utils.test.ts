@@ -1,4 +1,6 @@
-import { genPriv, privToAddr, testOwn } from "./babyjub-utils";
+import { BigInteger } from "big-integer";
+import bigInt = require("big-integer");
+import { genPriv, privToAddr, testOwn, sign, verify } from "./babyjub-utils";
 import { bytesToHex, hexToBytes } from "../utils";
 
 describe("[bayjub utils]", () => {
@@ -8,6 +10,14 @@ describe("[bayjub utils]", () => {
     let priv2 = genPriv();
     expect(testOwn(priv, addr)).toEqual(true);
     expect(testOwn(priv2, addr)).toEqual(false);
+  });
+
+  test("Sign / verify", () => {
+    let priv = genPriv();
+    let addr = privToAddr(priv);
+    let m = bigInt(123);
+    let sig = sign(priv, m);
+    expect(verify(addr, m, sig)).toEqual(true);
   });
 
   // const privKey =
