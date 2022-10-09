@@ -1,5 +1,3 @@
-import { BigInteger } from "big-integer";
-import bigInt = require("big-integer");
 import { genPriv, privToAddr, testOwn, sign, verify } from "./babyjub-utils";
 import { bytesToHex, hexToBytes } from "../utils";
 
@@ -15,8 +13,8 @@ describe("[bayjub utils]", () => {
   test("Sign / verify", () => {
     let priv = genPriv();
     let addr = privToAddr(priv);
-    let m = bigInt(123);
-    let sig = sign(priv, m);
+    let m = BigInt(123);
+    let sig = sign(priv, addr, m);
     expect(verify(addr, m, sig)).toEqual(true);
   });
 
