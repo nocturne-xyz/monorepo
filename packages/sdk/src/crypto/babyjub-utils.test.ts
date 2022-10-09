@@ -1,9 +1,13 @@
-import { privToPub, genPriv } from "./babyjub-utils";
+import { genPriv, privToAddr, testOwn } from "./babyjub-utils";
 import { bytesToHex, hexToBytes } from "../utils";
 
 describe("[bayjub utils]", () => {
-  test("Dummy test", () => {
-    expect(true);
+  test("View key should work", () => {
+    let priv = genPriv();
+    let addr = privToAddr(priv);
+    let priv2 = genPriv();
+    expect(testOwn(priv, addr)).toEqual(true);
+    expect(testOwn(priv2, addr)).toEqual(false);
   });
 
   // const privKey =

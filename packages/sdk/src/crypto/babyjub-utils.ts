@@ -13,6 +13,48 @@ import {
   bigIntToBufferBE,
 } from "../utils";
 
+export interface FlaxPrivKey {
+    vk: bigint;
+    sk: bigint;
+}
+
+export interface FlaxAddr {
+    H1: [bigint, bigint];
+    H2: [bigint, bigint];
+    H3: [bigint, bigint];
+}
+
+export function genPriv(): FlaxPrivKey {
+    let vk_buf = crypto.randomBytes(Math.floor(256 / 8));
+    let sk_buf = crypto.randomBytes(Math.floor(256 / 8));
+    let vk = bufferToBigIntBE(vk_buf, 0, 32);
+    let sk = bufferToBigIntBE(sk_buf, 0, 32);
+    let priv: FlaxPrivKey = {
+        vk: vk,
+        sk: sk,
+    }
+    return priv;
+}
+
+export function privToAddr(priv: FlaxPrivKey): FlaxAddr {
+    let r_buf = crypto.randomBytes(Math.floor(256 / 8));
+    let r = bufferToBigIntBE(r_buf, 0, 32);
+    let H1 = babyjub.mulPointEscalar(babyjub.Base8, r);
+    let H2 = babyjub.mulPointEscalar(H1, priv.vk);
+    let H3 = babyjub.mulPointEscalar(H1, priv.sk);
+    let addr: FlaxAddr = {
+        H1: H1,
+        H2: H2,
+        H3: H3,
+    }
+    return addr;
+}
+
+export function testOwn(priv: FlaxPrivKey, addr: FlaxAddr): boolean {
+    let H2prime = babyjub.mulPointEscalar(addr.H1, priv.vk);
+    return (addr.H2[0] === H2prime[0]) && (addr.H2[1] === H2prime[1]);
+}
+
 // /**
 //  * Get compressed point given a public key compsed by coordinate X and Y
 //  * @param {Buffer} pubKeyX - Coordinate X of public key
