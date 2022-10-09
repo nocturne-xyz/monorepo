@@ -1,6 +1,6 @@
 // @flow
 
-import { babyjub, eddsa, poseidon } from "circomlibjs";
+import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 
