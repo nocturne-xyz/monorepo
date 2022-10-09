@@ -28,13 +28,13 @@
   },
   "references": [
     {
-      "path": "./contracts"
+      "path": "./packages/contracts"
     },
     {
-      "path": "./circuits"
+      "path": "./packages/circuits"
     },
     {
-      "path": "./sdk"
+      "path": "./packages/sdk"
     }
   ]
 }

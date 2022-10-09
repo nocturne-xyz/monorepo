@@ -17,7 +17,7 @@
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "circomlib": "^2.0.5",
-    "circomlibjs": "0.0.8",
+    "circomlibjs": "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "jest": "^29.1.2",
