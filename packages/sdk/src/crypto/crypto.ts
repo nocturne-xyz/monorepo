@@ -55,7 +55,7 @@ export function sign(priv: FlaxPrivKey, addr: FlaxAddr, m: BigInt) {
     let r_buf = randomBytes(Math.floor(256 / 8));
     let r = Scalar.fromRprLE(r_buf, 0, 32);
     let R = babyjub.mulPointEscalar(addr.H1, r);
-    let c = poseidon([addr.H1[0], addr.H3[0], R[0], R[1], m]);
+    let c = poseidon([R[0], R[1], m]);
     let z = (r - priv.sk * c) % babyjub.subOrder;
     if (z < 0) {
         z += babyjub.subOrder
@@ -69,7 +69,7 @@ export function verify(addr: FlaxAddr, m: BigInt, sig): boolean {
     let Z = babyjub.mulPointEscalar(addr.H1, z);
     let P = babyjub.mulPointEscalar(addr.H3, c);
     let R = babyjub.addPoint(Z, P)
-    let cp = poseidon([addr.H1[0], addr.H3[0], R[0], R[1], m]);
+    let cp = poseidon([R[0], R[1], m]);
     return c == cp
 }
 
