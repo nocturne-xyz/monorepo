@@ -7,29 +7,29 @@ import { Scalar } from "ffjavascript";
 // TODO: rewrite Babyjub library to have constant time crypto
 
 export interface FlaxPrivKey {
-  vk: BigInt; // a number between 0 and babyjub.subOrder - 1
-  sk: BigInt; // a number between 0 and babyjub.subOrder - 1
+  vk: bigint; // a number between 0 and babyjub.subOrder - 1
+  sk: bigint; // a number between 0 and babyjub.subOrder - 1
 }
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export interface FlaxAddress {
-  H1: [BigInt, BigInt];
-  H2: [BigInt, BigInt];
-  H3: [BigInt, BigInt];
+  H1: [bigint, bigint];
+  H2: [bigint, bigint];
+  H3: [bigint, bigint];
 }
 
 export interface FlaxSignature {
-  c: BigInt;
-  z: BigInt;
+  c: bigint;
+  z: bigint;
 }
 
 export function genPriv(): FlaxPrivKey {
   // TODO make vk and sk acutally uniformly distributed
-  let vk_buf = randomBytes(Math.floor(256 / 8));
-  let sk_buf = randomBytes(Math.floor(256 / 8));
-  let vk = Scalar.fromRprBE(vk_buf, 0, 32) % babyjub.subOrder;
-  let sk = Scalar.fromRprBE(sk_buf, 0, 32) % babyjub.subOrder;
-  let priv: FlaxPrivKey = {
+  const vk_buf = randomBytes(Math.floor(256 / 8));
+  const sk_buf = randomBytes(Math.floor(256 / 8));
+  const vk = Scalar.fromRprBE(vk_buf, 0, 32) % babyjub.subOrder;
+  const sk = Scalar.fromRprBE(sk_buf, 0, 32) % babyjub.subOrder;
+  const priv: FlaxPrivKey = {
     vk: BigInt(vk),
     sk: BigInt(sk),
   };
@@ -37,12 +37,12 @@ export function genPriv(): FlaxPrivKey {
 }
 
 export function privToAddr(priv: FlaxPrivKey): FlaxAddress {
-  let r_buf = randomBytes(Math.floor(256 / 8));
-  let r = Scalar.fromRprBE(r_buf, 0, 32);
-  let H1 = babyjub.mulPointEscalar(babyjub.Base8, r);
-  let H2 = babyjub.mulPointEscalar(H1, priv.vk);
-  let H3 = babyjub.mulPointEscalar(H1, priv.sk);
-  let addr: FlaxAddress = {
+  const r_buf = randomBytes(Math.floor(256 / 8));
+  const r = Scalar.fromRprBE(r_buf, 0, 32);
+  const H1 = babyjub.mulPointEscalar(babyjub.Base8, r);
+  const H2 = babyjub.mulPointEscalar(H1, priv.vk);
+  const H3 = babyjub.mulPointEscalar(H1, priv.sk);
+  const addr: FlaxAddress = {
     H1: H1,
     H2: H2,
     H3: H3,
@@ -51,11 +51,11 @@ export function privToAddr(priv: FlaxPrivKey): FlaxAddress {
 }
 
 export function rerandAddr(addr: FlaxAddress): FlaxAddress {
-  let r_buf = randomBytes(Math.floor(256 / 8));
-  let r = Scalar.fromRprBE(r_buf, 0, 32);
-  let H1 = babyjub.mulPointEscalar(addr.H1, r);
-  let H2 = babyjub.mulPointEscalar(addr.H2, r);
-  let H3 = babyjub.mulPointEscalar(addr.H3, r);
+  const r_buf = randomBytes(Math.floor(256 / 8));
+  const r = Scalar.fromRprBE(r_buf, 0, 32);
+  const H1 = babyjub.mulPointEscalar(addr.H1, r);
+  const H2 = babyjub.mulPointEscalar(addr.H2, r);
+  const H3 = babyjub.mulPointEscalar(addr.H3, r);
   return {
     H1: H1,
     H2: H2,
@@ -65,23 +65,23 @@ export function rerandAddr(addr: FlaxAddress): FlaxAddress {
 
 const FlaxAddrPrefix = "0f";
 
-export function addrToString(addr: FlaxAddress): String {
-  let b1 = Buffer.from(babyjub.packPoint(addr.H1));
-  let b2 = Buffer.from(babyjub.packPoint(addr.H2));
-  let b3 = Buffer.from(babyjub.packPoint(addr.H3));
-  let b = Buffer.concat([b1, b2, b3]);
+export function addrToString(addr: FlaxAddress): string {
+  const b1 = Buffer.from(babyjub.packPoint(addr.H1));
+  const b2 = Buffer.from(babyjub.packPoint(addr.H2));
+  const b3 = Buffer.from(babyjub.packPoint(addr.H3));
+  const b = Buffer.concat([b1, b2, b3]);
   return FlaxAddrPrefix + b.toString("base64");
 }
 
-export function parseAddr(str: String): FlaxAddress {
-  let base64str = str.slice(FlaxAddrPrefix.length);
-  let b = Buffer.from(base64str, "base64");
-  let b1 = b.slice(0, 32);
-  let b2 = b.slice(32, 64);
-  let b3 = b.slice(64, 96);
-  let H1 = babyjub.unpackPoint(b1);
-  let H2 = babyjub.unpackPoint(b2);
-  let H3 = babyjub.unpackPoint(b3);
+export function parseAddr(str: string): FlaxAddress {
+  const base64str = str.slice(FlaxAddrPrefix.length);
+  const b = Buffer.from(base64str, "base64");
+  const b1 = b.slice(0, 32);
+  const b2 = b.slice(32, 64);
+  const b3 = b.slice(64, 96);
+  const H1 = babyjub.unpackPoint(b1);
+  const H2 = babyjub.unpackPoint(b2);
+  const H3 = babyjub.unpackPoint(b3);
   return {
     H1: H1,
     H2: H2,
@@ -90,20 +90,20 @@ export function parseAddr(str: String): FlaxAddress {
 }
 
 export function testOwn(priv: FlaxPrivKey, addr: FlaxAddress): boolean {
-  let H2prime = babyjub.mulPointEscalar(addr.H1, priv.vk);
+  const H2prime = babyjub.mulPointEscalar(addr.H1, priv.vk);
   return addr.H2[0] === H2prime[0] && addr.H2[1] === H2prime[1];
 }
 
 export function sign(
   priv: FlaxPrivKey,
   addr: FlaxAddress,
-  m: BigInt
+  m: bigint
 ): FlaxSignature {
   // TODO: make this deterministic
-  let r_buf = randomBytes(Math.floor(256 / 8));
-  let r = Scalar.fromRprBE(r_buf, 0, 32);
-  let R = babyjub.mulPointEscalar(addr.H1, r);
-  let c = poseidon([R[0], R[1], m]);
+  const r_buf = randomBytes(Math.floor(256 / 8));
+  const r = Scalar.fromRprBE(r_buf, 0, 32);
+  const R = babyjub.mulPointEscalar(addr.H1, r);
+  const c = poseidon([R[0], R[1], m]);
   let z = (r - (priv.sk as any) * c) % babyjub.subOrder; // TODO: remove any cast
   if (z < 0) {
     z += babyjub.subOrder;
@@ -117,14 +117,14 @@ export function sign(
 
 export function verify(
   addr: FlaxAddress,
-  m: BigInt,
+  m: bigint,
   sig: FlaxSignature
 ): boolean {
-  let c = sig.c;
-  let z = sig.z;
-  let Z = babyjub.mulPointEscalar(addr.H1, z);
-  let P = babyjub.mulPointEscalar(addr.H3, c);
-  let R = babyjub.addPoint(Z, P);
-  let cp = poseidon([R[0], R[1], m]);
+  const c = sig.c;
+  const z = sig.z;
+  const Z = babyjub.mulPointEscalar(addr.H1, z);
+  const P = babyjub.mulPointEscalar(addr.H3, c);
+  const R = babyjub.addPoint(Z, P);
+  const cp = poseidon([R[0], R[1], m]);
   return c == cp;
 }
