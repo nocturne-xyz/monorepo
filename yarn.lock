@@ -1036,8 +1036,9 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ffjavascript: ^0.2.38
+    find-yarn-workspace-root: ^2.0.0
     jest: ^29.1.2
-    snarkjs: ^0.5.0
+    snarkjs: 0.5.0
     ts-jest: ^29.0.3
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -13785,24 +13786,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snarkjs@npm:^0.1.20":
-  version: 0.1.31
-  resolution: "snarkjs@npm:0.1.31"
-  dependencies:
-    chai: ^4.2.0
-    circom_runtime: 0.0.6
-    escape-string-regexp: ^1.0.5
-    ffjavascript: 0.1.0
-    keccak: ^3.0.0
-    r1csfile: 0.0.5
-    yargs: ^12.0.5
-  bin:
-    snarkjs: cli.js
-  checksum: c11bcace02569a57d60931f82815da1ca63c83097570ef7fdde12994aff8d73fce2409a45184cb2b7321a62927b8cc9f6f108afd7c8d0e0b6db4b1101c56b113
-  languageName: node
-  linkType: hard
-
-"snarkjs@npm:^0.5.0":
+"snarkjs@npm:0.5.0, snarkjs@npm:^0.5.0":
   version: 0.5.0
   resolution: "snarkjs@npm:0.5.0"
   dependencies:
@@ -13819,6 +13803,23 @@ __metadata:
   bin:
     snarkjs: build/cli.cjs
   checksum: f0233103548bcd0f75b2ff8998ba02437e5131486d126c4a6a31355cd3558c7ce4311e21d5f24ea9ca198d0556e91e63e2ec6aef8da44014c16b29b6a7086ca2
+  languageName: node
+  linkType: hard
+
+"snarkjs@npm:^0.1.20":
+  version: 0.1.31
+  resolution: "snarkjs@npm:0.1.31"
+  dependencies:
+    chai: ^4.2.0
+    circom_runtime: 0.0.6
+    escape-string-regexp: ^1.0.5
+    ffjavascript: 0.1.0
+    keccak: ^3.0.0
+    r1csfile: 0.0.5
+    yargs: ^12.0.5
+  bin:
+    snarkjs: cli.js
+  checksum: c11bcace02569a57d60931f82815da1ca63c83097570ef7fdde12994aff8d73fce2409a45184cb2b7321a62927b8cc9f6f108afd7c8d0e0b6db4b1101c56b113
   languageName: node
   linkType: hard
 

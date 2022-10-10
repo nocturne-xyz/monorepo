@@ -1,13 +1,16 @@
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
 import { Proof } from "./common";
 import * as fs from "fs";
 
-const BUILD_DIR = path.join(__dirname, "../../build");
-const WASM_PATH = `${BUILD_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${BUILD_DIR}/spend2/spend2_cpp/spend2.zkey`;
-const VKEY_PATH = `${BUILD_DIR}/spend2/vkey.json`;
+const ROOT_DIR = findWorkspaceRoot()!;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export interface Spend2ProofWithPublicSignals {
   proof: Proof;

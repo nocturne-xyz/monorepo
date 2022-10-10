@@ -7,7 +7,7 @@ import {
   NoteInput,
   FlaxAddressInput,
   Spend2Inputs,
-} from "@flax/circuits";
+} from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
 
 const vk = BigInt(
@@ -88,7 +88,7 @@ console.log(spend2Inputs);
 
 (async () => {
   const proof = await proveSpend2(spend2Inputs);
-  if (await verifySpend2Proof(proof)) {
+  if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
   console.log(proof);

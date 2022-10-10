@@ -30,7 +30,8 @@
     "circomlib": "0.0.18",
     "circomlibjs": "0.0.8",
     "ffjavascript": "^0.2.38",
-    "snarkjs": "^0.5.0",
+    "find-yarn-workspace-root": "^2.0.0",
+    "snarkjs": "0.5.0",
     "wasmsnark": "^0.0.10"
   }
 }
