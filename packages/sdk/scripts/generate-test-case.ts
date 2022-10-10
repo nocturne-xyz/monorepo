@@ -2,6 +2,7 @@ import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
   proveSpend2,
+  verifySpend2Proof,
   MerkleProofInput,
   NoteInput,
   FlaxAddressInput,
@@ -85,38 +86,10 @@ const spend2Inputs: Spend2Inputs = {
 };
 console.log(spend2Inputs);
 
-proveSpend2(spend2Inputs).then((proof) => console.log(proof));
-/*
-export interface FlaxAddressInput {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-  h3X: bigint;
-  h3Y: bigint;
-}
-
-export interface NoteInput {
-  owner: FlaxAddressInput;
-  nonce: bigint;
-  type: bigint;
-  value: bigint;
-  id: bigint;
-}
-
-export interface MerkleProofInput {
-  path: bigint[];
-  siblings: bigint[];
-}
-
-export interface Spend2Inputs {
-  vk: bigint;
-  operationDigest: bigint;
-  c: bigint;
-  z: bigint;
-  oldNote: NoteInput;
-  newNote: NoteInput;
-  merkleProof: MerkleProofInput;
-}
-
-*/
+(async () => {
+  const proof = await proveSpend2(spend2Inputs);
+  if (await verifySpend2Proof(proof)) {
+    throw new Error("Proof invalid!");
+  }
+  console.log(proof);
+})();

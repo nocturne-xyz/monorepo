@@ -1,6 +1,7 @@
-export { proveSpend2 } from "./src/spend2";
+export type { Proof } from "./src/common";
+export { proveSpend2, verifySpend2Proof } from "./src/spend2";
 export type {
-  ProofWithPublicSignals,
+  Spend2ProofWithPublicSignals,
   FlaxAddressInput,
   NoteInput,
   MerkleProofInput,
