@@ -1,4 +1,13 @@
-import { genPriv, privToAddr, testOwn, sign, verify, rerandAddr, addrToString, parseAddr } from "./crypto";
+import {
+  genPriv,
+  privToAddr,
+  testOwn,
+  sign,
+  verify,
+  rerandAddr,
+  addrToString,
+  parseAddr,
+} from "./crypto";
 
 describe("[crypto]", () => {
   test("View key should work", () => {
@@ -15,7 +24,9 @@ describe("[crypto]", () => {
     let addr2 = rerandAddr(addr);
     let priv2 = genPriv();
     expect(testOwn(priv, addr)).toEqual(true);
+    expect(testOwn(priv, addr2)).toEqual(true);
     expect(testOwn(priv2, addr)).toEqual(false);
+    expect(testOwn(priv2, addr2)).toEqual(false);
   });
 
   test("Test address (de)serielization", () => {
@@ -32,5 +43,4 @@ describe("[crypto]", () => {
     let sig = sign(priv, addr, m);
     expect(verify(addr, m, sig)).toEqual(true);
   });
-
 });

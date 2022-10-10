@@ -2,7 +2,7 @@
 import * as snarkjs from "snarkjs";
 import * as path from "path";
 
-const BUILD_DIR = path.join(__dirname, "../build");
+const BUILD_DIR = path.join(__dirname, "../../build");
 const WASM_PATH = `${BUILD_DIR}/spend2/spend2_js/spend2.wasm`;
 const ZKEY_PATH = `${BUILD_DIR}/spend2/spend2.zkey`;
 
@@ -18,32 +18,32 @@ export interface ProofWithPublicSignals {
 }
 
 export interface FlaxAddressInput {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-  h3X: bigint;
-  h3Y: bigint;
+  h1X: BigInt;
+  h1Y: BigInt;
+  h2X: BigInt;
+  h2Y: BigInt;
+  h3X: BigInt;
+  h3Y: BigInt;
 }
 
 export interface NoteInput {
   owner: FlaxAddressInput;
-  nonce: bigint;
-  type: bigint;
-  value: bigint;
-  id: bigint;
+  nonce: BigInt;
+  type: BigInt;
+  value: BigInt;
+  id: BigInt;
 }
 
 export interface MerkleProofInput {
-  path: bigint[];
-  siblings: bigint[];
+  path: BigInt[];
+  siblings: BigInt[];
 }
 
 export interface Spend2Inputs {
-  vk: bigint;
-  operationDigest: bigint;
-  c: bigint;
-  z: bigint;
+  vk: BigInt;
+  operationDigest: BigInt;
+  c: BigInt;
+  z: BigInt;
   oldNote: NoteInput;
   newNote: NoteInput;
   merkleProof: MerkleProofInput;

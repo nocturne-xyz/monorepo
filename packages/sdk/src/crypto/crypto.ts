@@ -18,6 +18,11 @@ export interface FlaxAddress {
   H3: [BigInt, BigInt];
 }
 
+export interface FlaxSignature {
+  c: BigInt;
+  z: BigInt;
+}
+
 export function genPriv(): FlaxPrivKey {
   // TODO make vk and sk acutally uniformly distributed
   let vk_buf = randomBytes(Math.floor(256 / 8));
@@ -93,7 +98,7 @@ export function sign(
   priv: FlaxPrivKey,
   addr: FlaxAddress,
   m: BigInt
-): [any, number] {
+): FlaxSignature {
   // TODO: make this deterministic
   let r_buf = randomBytes(Math.floor(256 / 8));
   let r = Scalar.fromRprBE(r_buf, 0, 32);
@@ -103,16 +108,20 @@ export function sign(
   if (z < 0) {
     z += babyjub.subOrder;
   }
-  return [c, z];
+
+  return {
+    c,
+    z: BigInt(z),
+  };
 }
 
 export function verify(
   addr: FlaxAddress,
   m: BigInt,
-  sig: [any, number]
+  sig: FlaxSignature
 ): boolean {
-  let c = sig[0];
-  let z = sig[1];
+  let c = sig.c;
+  let z = sig.z;
   let Z = babyjub.mulPointEscalar(addr.H1, z);
   let P = babyjub.mulPointEscalar(addr.H3, c);
   let R = babyjub.addPoint(Z, P);
