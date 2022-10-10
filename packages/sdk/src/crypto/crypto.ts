@@ -7,20 +7,20 @@ import { Scalar } from "ffjavascript";
 // TODO: rewrite Babyjub library to have constant time crypto
 
 export interface FlaxPrivKey {
-  vk: bigint; // a number between 0 and babyjub.subOrder - 1
-  sk: bigint; // a number between 0 and babyjub.subOrder - 1
+  vk: BigInt; // a number between 0 and babyjub.subOrder - 1
+  sk: BigInt; // a number between 0 and babyjub.subOrder - 1
 }
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export interface FlaxAddress {
-  H1: [bigint, bigint];
-  H2: [bigint, bigint];
-  H3: [bigint, bigint];
+  H1: [BigInt, BigInt];
+  H2: [BigInt, BigInt];
+  H3: [BigInt, BigInt];
 }
 
 export interface FlaxSignature {
-  c: bigint;
-  z: bigint;
+  c: BigInt;
+  z: BigInt;
 }
 
 export function genPriv(): FlaxPrivKey {
@@ -97,7 +97,7 @@ export function testOwn(priv: FlaxPrivKey, addr: FlaxAddress): boolean {
 export function sign(
   priv: FlaxPrivKey,
   addr: FlaxAddress,
-  m: bigint
+  m: BigInt
 ): FlaxSignature {
   // TODO: make this deterministic
   const r_buf = randomBytes(Math.floor(256 / 8));
@@ -117,7 +117,7 @@ export function sign(
 
 export function verify(
   addr: FlaxAddress,
-  m: bigint,
+  m: BigInt,
   sig: FlaxSignature
 ): boolean {
   const c = sig.c;
