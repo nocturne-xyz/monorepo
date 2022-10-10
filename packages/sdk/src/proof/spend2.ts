@@ -1,20 +1,33 @@
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
+import { Proof } from "./common";
+import * as fs from "fs";
 
-const BUILD_DIR = path.join(__dirname, "../build");
-const WASM_PATH = `${BUILD_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${BUILD_DIR}/spend2/spend2.zkey`;
+// eslint-disable-next-line
+const ROOT_DIR = findWorkspaceRoot()!;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
-export interface ProofWithPublicSignals {
-  proof: {
-    pi_a: any;
-    pi_b: any;
-    pi_c: any;
-    protocol: string;
-    curve: any;
-  };
-  publicSignals: any;
+export interface Spend2ProofWithPublicSignals {
+  proof: Proof;
+  publicSignals: Spend2PublicSignals;
+}
+
+export interface Spend2PublicSignals {
+  newNoteCommitment: bigint;
+  anchor: bigint;
+  type: bigint;
+  id: bigint;
+  value: bigint;
+  nullifier: bigint;
+  operationDigest: bigint;
+  c: bigint;
+  z: bigint;
 }
 
 export interface FlaxAddressInput {
@@ -51,9 +64,9 @@ export interface Spend2Inputs {
 
 export async function proveSpend2(
   inputs: Spend2Inputs,
-  _wasmPath?: string,
-  _provingKeyPath?: string
-): Promise<ProofWithPublicSignals> {
+  wasmPath = WASM_PATH,
+  zkeyPath = ZKEY_PATH
+): Promise<Spend2ProofWithPublicSignals> {
   const { vk, operationDigest, c, z, oldNote, newNote, merkleProof } = inputs;
   const signals = {
     vk,
@@ -89,5 +102,13 @@ export async function proveSpend2(
     newNoteValue: newNote.value,
   };
 
-  return await snarkjs.groth16.fullProve(signals, WASM_PATH, ZKEY_PATH);
+  return await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
+}
+
+export async function verifySpend2Proof(
+  { proof, publicSignals }: Spend2ProofWithPublicSignals,
+  vkeyPath = VKEY_PATH
+): Promise<boolean> {
+  const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
+  return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
 }

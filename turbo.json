@@ -1,40 +1,24 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
-	"build": {
-		"dependsOn": ["^build"],
-		"outputs": ["dist/**"]
-	},
-	"test:unit": {
-		"dependsOn": ["build"],
-		"outputs": []
-	},
-	"test": {
-		"dependsOn": ["build"],
-		"outputs": []
-	},
-	"lint": {
-		"outputs": []
-	},
-	"@flax/circuits#compile-circuits": {
-		"dependsOn": [],
-		"outputs": [".circom/**"],
-		"inputs": ["circuits"]
-	},
-	"@flax/circuits#ptau": {
-		"dependsOn": [],
-		"outputs": [".ptau/**"],
-		"inputs": ["scripts/util.ts"]
-	},
-	"@flax/circuits#setup": {
-		"dependsOn": ["compile-circuits", "ptau"],
-		"outputs": [".setup/**"],
-		"inputs": ["circuits/**", "scripts/util.ts"]
-	},
-	"@flax/circuits#build": {
-		"dependsOn": ["^build", "setup"],
-		"outputs": ["dist/**"],
-		"inputs": ["circuits/**", "scripts/util.ts", "src/**.ts", "src/**.spec.ts"]
-	}
+    "lint": {
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": [],
+      "outputs": ["dist/**"]
+    },
+    "test:unit": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "@flax/circuits#circuits:build": {
+      "dependsOn": [],
+      "outputs": ["dist/**"]
+    }
   }
 }

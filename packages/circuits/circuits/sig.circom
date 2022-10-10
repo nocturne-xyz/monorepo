@@ -37,12 +37,10 @@ template Verify() {
     R.x2 <== pk1c.out[0];
     R.y2 <== pk1c.out[1];
 
-    component hash = Poseidon(5);
-    hash.inputs[0] <== pk0x; // TODO changed to compressed format
-    hash.inputs[1] <== pk1x; // TODO changed to compressed format
-    hash.inputs[2] <== R.xout;
-    hash.inputs[3] <== R.yout;
-    hash.inputs[4] <== m;
+    component hash = Poseidon(3);
+    hash.inputs[0] <== R.xout; // TODO changed to compressed format
+    hash.inputs[1] <== R.yout; // TODO changed to compressed format
+    hash.inputs[2] <== m;
 
     hash.out === c;
 }

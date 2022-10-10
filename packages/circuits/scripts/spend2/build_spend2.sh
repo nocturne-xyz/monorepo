@@ -1,11 +1,15 @@
 #!/bin/bash
 CIRCUIT_NAME=spend2
 SCRIPT_DIR=$(dirname "$0")
+ROOT_DIR="$SCRIPT_DIR/../../../../"
+CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
 PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_15.ptau"
 CIRCUIT_PATH="$SCRIPT_DIR/../../circuits/$CIRCUIT_NAME.circom"
-BUILD_DIR="$SCRIPT_DIR/../../build/spend2"
+BUILD_DIR="$CIRCUIT_ARTIFACTS_DIR/$CIRCUIT_NAME"
 OUTPUT_DIR="$BUILD_DIR"/"$CIRCUIT_NAME"_cpp
-CONTRACTS_DIR="$SCRIPT_DIR/../../../contracts/contracts"
+CONTRACTS_DIR="$ROOT_DIR/packages/contracts/contracts"
+
+ls $ROOT_DIR
 
 if [ -f "$PHASE1_PATH" ]; then
     echo "Found Phase 1 ptau file"
@@ -73,8 +77,8 @@ echo "DONE ($((end-start))s)"
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
-echo "****EXPORTING SOLIDITY SMART CONTRACT****"
-start=`date +%s`
-npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR"/"$CIRCUIT_NAME/Spend2Verifier.sol"
-end=`date +%s`
-echo "DONE ($((end-start))s)"
+# echo "****EXPORTING SOLIDITY SMART CONTRACT****"
+# start=`date +%s`
+# npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR"/"$CIRCUIT_NAME/Spend2Verifier.sol""
+# end=`date +%s`
+# echo "DONE ($((end-start))s)"
