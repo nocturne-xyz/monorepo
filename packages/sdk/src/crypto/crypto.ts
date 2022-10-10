@@ -9,10 +9,10 @@ import { Scalar } from "ffjavascript";
 const FlaxAddrPrefix = "0f";
 
 export class FlaxPrivKey {
-  vk: BigInt; // a number between 0 and babyjub.subOrder - 1
-  sk: BigInt; // a number between 0 and babyjub.subOrder - 1
+  vk: bigint; // a number between 0 and babyjub.subOrder - 1
+  sk: bigint; // a number between 0 and babyjub.subOrder - 1
 
-  constructor(vk: BigInt, sk: BigInt) {
+  constructor(vk: bigint, sk: bigint) {
     this.vk = vk;
     this.sk = sk;
   }
@@ -38,14 +38,14 @@ export class FlaxPrivKey {
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export class FlaxAddress {
-  H1: [BigInt, BigInt];
-  H2: [BigInt, BigInt];
-  H3: [BigInt, BigInt];
+  H1: [bigint, bigint];
+  H2: [bigint, bigint];
+  H3: [bigint, bigint];
 
   constructor(
-    h1: [BigInt, BigInt],
-    h2: [BigInt, BigInt],
-    h3: [BigInt, BigInt]
+    h1: [bigint, bigint],
+    h2: [bigint, bigint],
+    h3: [bigint, bigint]
   ) {
     this.H1 = h1;
     this.H2 = h2;
@@ -74,8 +74,8 @@ export class FlaxAddress {
 }
 
 export interface FlaxSignature {
-  c: BigInt;
-  z: BigInt;
+  c: bigint;
+  z: bigint;
 }
 
 export class FlaxSigner {
@@ -89,12 +89,14 @@ export class FlaxSigner {
     this.address = address;
   }
 
-  sign(m: BigInt): FlaxSignature {
+  sign(m: bigint): FlaxSignature {
     // TODO: make this deterministic
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
     const R = babyjub.mulPointEscalar(this.address.H1, r);
     const c = poseidon([R[0], R[1], m]);
+
+    // eslint-disable-next-line
     let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder; // TODO: remove any cast
     if (z < 0) {
       z += babyjub.subOrder;
@@ -106,7 +108,7 @@ export class FlaxSigner {
     };
   }
 
-  static verify(addr: FlaxAddress, m: BigInt, sig: FlaxSignature): boolean {
+  static verify(addr: FlaxAddress, m: bigint, sig: FlaxSignature): boolean {
     const c = sig.c;
     const z = sig.z;
     const Z = babyjub.mulPointEscalar(addr.H1, z);

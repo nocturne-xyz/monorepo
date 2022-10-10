@@ -9,7 +9,7 @@
     "circuits:build": "./scripts/spend2/build_spend2.sh",
     "build": "tsc --build",
     "test:unit": "jest --passWithNoTests",
-    "lint": "eslint src --fix --ext .ts"
+    "lint": ""
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

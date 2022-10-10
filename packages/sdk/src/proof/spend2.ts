@@ -6,6 +6,7 @@ import * as path from "path";
 import { Proof } from "./common";
 import * as fs from "fs";
 
+// eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
@@ -18,44 +19,44 @@ export interface Spend2ProofWithPublicSignals {
 }
 
 export interface Spend2PublicSignals {
-  newNoteCommitment: BigInt;
-  anchor: BigInt;
-  type: BigInt;
-  id: BigInt;
-  value: BigInt;
-  nullifier: BigInt;
-  operationDigest: BigInt;
-  c: BigInt;
-  z: BigInt;
+  newNoteCommitment: bigint;
+  anchor: bigint;
+  type: bigint;
+  id: bigint;
+  value: bigint;
+  nullifier: bigint;
+  operationDigest: bigint;
+  c: bigint;
+  z: bigint;
 }
 
 export interface FlaxAddressInput {
-  h1X: BigInt;
-  h1Y: BigInt;
-  h2X: BigInt;
-  h2Y: BigInt;
-  h3X: BigInt;
-  h3Y: BigInt;
+  h1X: bigint;
+  h1Y: bigint;
+  h2X: bigint;
+  h2Y: bigint;
+  h3X: bigint;
+  h3Y: bigint;
 }
 
 export interface NoteInput {
   owner: FlaxAddressInput;
-  nonce: BigInt;
-  type: BigInt;
-  value: BigInt;
-  id: BigInt;
+  nonce: bigint;
+  type: bigint;
+  value: bigint;
+  id: bigint;
 }
 
 export interface MerkleProofInput {
-  path: BigInt[];
-  siblings: BigInt[];
+  path: bigint[];
+  siblings: bigint[];
 }
 
 export interface Spend2Inputs {
-  vk: BigInt;
-  operationDigest: BigInt;
-  c: BigInt;
-  z: BigInt;
+  vk: bigint;
+  operationDigest: bigint;
+  c: bigint;
+  z: bigint;
   oldNote: NoteInput;
   newNote: NoteInput;
   merkleProof: MerkleProofInput;

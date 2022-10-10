@@ -1,3 +1,4 @@
+/* eslint-disable */
 export interface Proof {
   pi_a: any;
   pi_b: any;
