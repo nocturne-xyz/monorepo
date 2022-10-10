@@ -1,5 +1,5 @@
 import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
-import { privToAddr, FlaxPrivKey, sign } from "../src/crypto/crypto";
+import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
   proveSpend2,
   MerkleProofInput,
@@ -17,8 +17,9 @@ const sk = BigInt(
 );
 
 // Instantiate flax keypair and addr
-const flaxPrivKey: FlaxPrivKey = { vk, sk };
-const flaxAddr = privToAddr(flaxPrivKey);
+const flaxPrivKey = new FlaxPrivKey(vk, sk);
+const flaxSigner = new FlaxSigner(flaxPrivKey);
+const flaxAddr = flaxSigner.address;
 
 const flaxAddrInput: FlaxAddressInput = {
   h1X: flaxAddr.H1[0],
@@ -70,7 +71,7 @@ console.log(newNote);
 
 // Sign operation hash
 const operationDigest = BigInt(12345);
-const opSig = sign(flaxPrivKey, flaxAddr, operationDigest);
+const opSig = flaxSigner.sign(operationDigest);
 console.log(opSig);
 
 const spend2Inputs: Spend2Inputs = {
@@ -84,11 +85,7 @@ const spend2Inputs: Spend2Inputs = {
 };
 console.log(spend2Inputs);
 
-(async () => {
-  const proof = await proveSpend2(spend2Inputs);
-  console.log(proof);
-})();
-
+proveSpend2(spend2Inputs).then((proof) => console.log(proof));
 /*
 export interface FlaxAddressInput {
   h1X: bigint;
