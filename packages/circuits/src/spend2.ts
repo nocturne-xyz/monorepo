@@ -4,7 +4,7 @@ import * as path from "path";
 
 const BUILD_DIR = path.join(__dirname, "../../build");
 const WASM_PATH = `${BUILD_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${BUILD_DIR}/spend2/spend2.zkey`;
+const ZKEY_PATH = `${BUILD_DIR}/spend2/spend2_cpp/spend2.zkey`;
 
 export interface ProofWithPublicSignals {
   proof: {
