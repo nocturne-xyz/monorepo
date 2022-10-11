@@ -16,11 +16,11 @@ import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
-import {HexUtils} from "./utils/HexUtils.sol";
+import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 
-contract WalletTest is Test {
+contract WalletTest is Test, TestUtils {
     using stdJson for string;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
@@ -111,7 +111,7 @@ contract WalletTest is Test {
             path = abi.encodePacked(path, ".txt");
 
             string memory bytecodeStr = vm.readFile(string(path));
-            bytes memory bytecode = HexUtils.hexToBytes(bytecodeStr);
+            bytes memory bytecode = hexToBytes(bytecodeStr);
 
             address deployed;
             assembly {
