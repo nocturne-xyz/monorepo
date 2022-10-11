@@ -1,4 +1,4 @@
-import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
+import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
   proveSpend2,
@@ -91,5 +91,5 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  console.log(proof);
+  console.log(JSON.stringify(proof));
 })();

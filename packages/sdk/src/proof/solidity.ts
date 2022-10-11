@@ -1,0 +1,25 @@
+import { Proof } from "./common";
+
+export type SolidityProof = [
+  BigInt,
+  BigInt,
+  BigInt,
+  BigInt,
+  BigInt,
+  BigInt,
+  BigInt,
+  BigInt
+];
+
+export default function packToSolidityProof(proof: Proof): SolidityProof {
+  return [
+    proof.pi_a[0],
+    proof.pi_a[1],
+    proof.pi_b[0][1],
+    proof.pi_b[0][0],
+    proof.pi_b[1][1],
+    proof.pi_b[1][0],
+    proof.pi_c[0],
+    proof.pi_c[1],
+  ];
+}
