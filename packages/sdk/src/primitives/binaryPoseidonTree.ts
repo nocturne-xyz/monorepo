@@ -20,6 +20,10 @@ export class BinaryPoseidonTree {
     this.count = 0;
   }
 
+  root(): any {
+    return this.tree.root;
+  }
+
   insert(leaf: Node): void {
     this.tree.insert(leaf);
     this.count += 1;

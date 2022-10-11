@@ -23,6 +23,8 @@ interface IWallet {
         uint256 value; // 0 for ERC721
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
+        uint256 c; // c, z auth sig fields
+        uint256 z;
     }
 
     struct Tokens {

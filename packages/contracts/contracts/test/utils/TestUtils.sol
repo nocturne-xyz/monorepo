@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.7.6;
 
-library HexUtils {
+contract TestUtils {
     // Convert an hexadecimal character to their value
     function fromHexChar(uint8 c) public pure returns (uint8) {
         if (bytes1(c) >= bytes1("0") && bytes1(c) <= bytes1("9")) {
@@ -29,5 +29,20 @@ library HexUtils {
             );
         }
         return r;
+    }
+
+    // Parse string into int
+    function parseInt(string memory _value) public pure returns (uint256 _ret) {
+        bytes memory _bytesValue = bytes(_value);
+        uint256 j = 1;
+        for (
+            uint256 i = _bytesValue.length - 1;
+            i >= 0 && i < _bytesValue.length;
+            i--
+        ) {
+            assert(uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57);
+            _ret += (uint8(_bytesValue[i]) - 48) * j;
+            j *= 10;
+        }
     }
 }

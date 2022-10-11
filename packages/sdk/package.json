@@ -4,11 +4,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "src/**/*"
+  ],
   "scripts": {
     "build": "tsc --build",
     "test:unit": "jest --passWithNoTests",
     "check": "tsc --noEmit",
-    "lint": "eslint --fix src --ext .ts"
+    "lint": "eslint --fix src --ext .ts",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/jest": "^29.1.1",

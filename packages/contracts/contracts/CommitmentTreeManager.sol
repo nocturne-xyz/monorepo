@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 
 import "./interfaces/IWallet.sol";
-import "./interfaces/IVerifier.sol";
+import "./interfaces/ISpend2Verifier.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
 import {IHasherT6} from "./interfaces/IHasher.sol";
@@ -13,7 +13,7 @@ contract CommitmentTreeManager {
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
 
-    IVerifier public verifier;
+    ISpend2Verifier public verifier;
     IHasherT6 public hasherT6;
 
     constructor(
@@ -21,7 +21,7 @@ contract CommitmentTreeManager {
         address _noteCommitmentTree,
         address _hasherT6
     ) {
-        verifier = IVerifier(_verifier);
+        verifier = ISpend2Verifier(_verifier);
         noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
         hasherT6 = IHasherT6(_hasherT6);
     }
@@ -52,7 +52,7 @@ contract CommitmentTreeManager {
         );
 
         require(
-            verifier.verifyActionProof(
+            verifier.verifyProof(
                 [spendTx.proof[0], spendTx.proof[1]],
                 [
                     [spendTx.proof[2], spendTx.proof[3]],
@@ -66,7 +66,9 @@ contract CommitmentTreeManager {
                     spendTx.value,
                     spendTx.commitmentTreeRoot,
                     spendTx.id,
-                    operationDigest
+                    operationDigest,
+                    spendTx.c,
+                    spendTx.z
                 ]
             ),
             "Spend proof invalid"

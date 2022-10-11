@@ -1,1 +1,1 @@
-export type { BinaryPoseidonTree } from "./src/primitives/BinaryPoseidonTree";
+export type { BinaryPoseidonTree } from "./src/primitives/binaryPoseidonTree";

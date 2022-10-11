@@ -3,7 +3,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
-import { Proof } from "./common";
+import { BaseProof } from "./common";
 import * as fs from "fs";
 
 // eslint-disable-next-line
@@ -14,7 +14,7 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export interface Spend2ProofWithPublicSignals {
-  proof: Proof;
+  proof: BaseProof;
   publicSignals: Spend2PublicSignals;
 }
 

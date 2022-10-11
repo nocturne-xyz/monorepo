@@ -1,4 +1,4 @@
-import { BinaryPoseidonTree } from "../src/primitives/BinaryPoseidonTree";
+import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
   proveSpend2,
@@ -39,20 +39,22 @@ const oldNote: NoteInput = {
   value: 100n,
   id: 5n,
 };
-console.log(oldNote);
+console.log("OLD NOTE: ", oldNote);
 
-// H(H(owner), type, id, value)
-const ownerHash = poseidon([flaxAddr.H1[0], flaxAddr.H2[0], flaxAddr.H1[0]]);
+const ownerHash = poseidon([flaxAddr.H1[0], flaxAddr.H2[0], flaxAddr.H3[0]]);
 const oldNoteCommitment = poseidon([
   ownerHash,
   oldNote.type,
   oldNote.id,
   oldNote.value,
 ]);
+console.log("OLD NOTE COMMITMENT: ", oldNoteCommitment);
 
 // Generate valid merkle proof
 const tree = new BinaryPoseidonTree();
 tree.insert(oldNoteCommitment);
+console.log("MERKLE ROOT: ", tree.root());
+
 const merkleProof = tree.createProof(tree.count - 1);
 const merkleProofInput: MerkleProofInput = {
   path: merkleProof.pathIndices.map((n) => BigInt(n)),
@@ -68,7 +70,15 @@ const newNote: NoteInput = {
   value: 50n,
   id: 5n,
 };
-console.log(newNote);
+console.log("NEW NOTE: ", newNote);
+
+const newNoteCommitment = poseidon([
+  ownerHash,
+  newNote.type,
+  newNote.id,
+  newNote.value,
+]);
+console.log("NEW NOTE COMMITMENT: ", newNoteCommitment);
 
 // Sign operation hash
 const operationDigest = BigInt(12345);
@@ -91,5 +101,5 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  console.log(proof);
+  console.log(JSON.stringify(proof));
 })();

@@ -1,5 +1,5 @@
 /* eslint-disable */
-export interface Proof {
+export interface BaseProof {
   pi_a: any;
   pi_b: any;
   pi_c: any;
