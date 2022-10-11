@@ -1,4 +1,4 @@
-import { Proof } from "./common";
+import { BaseProof } from "./common";
 
 export type SolidityProof = [
   BigInt,
@@ -11,7 +11,7 @@ export type SolidityProof = [
   BigInt
 ];
 
-export default function packToSolidityProof(proof: Proof): SolidityProof {
+export default function packToSolidityProof(proof: BaseProof): SolidityProof {
   return [
     proof.pi_a[0],
     proof.pi_a[1],

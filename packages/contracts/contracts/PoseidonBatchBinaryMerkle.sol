@@ -2,7 +2,7 @@
 pragma solidity 0.7.6;
 
 import "./interfaces/IWallet.sol";
-import "./interfaces/IVerifier.sol";
+import "./interfaces/ISpend2Verifier.sol";
 import "./libs/BatchBinaryMerkle.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";

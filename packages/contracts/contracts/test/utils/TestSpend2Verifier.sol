@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.7.6;
 
-import "../../interfaces/IVerifier.sol";
+import "../../interfaces/ISpend2Verifier.sol";
 import "./Pairing.sol";
 
-contract TestVerifier is IVerifier {
+contract TestSpend2Verifier is ISpend2Verifier {
     using Pairing for *;
 
     struct VerifyingKey {
@@ -85,66 +85,11 @@ contract TestVerifier is IVerifier {
         );
     }
 
-    /// @dev Verifies a Semaphore proof. Reverts with InvalidProof if the proof is invalid.
     function verifyProof(
         uint256[2] memory a,
         uint256[2][2] memory b,
         uint256[2] memory c,
-        uint256[4] memory input
-    ) public view {
-        // If the values are not in the correct range, the Pairing contract will revert.
-        Proof memory proof;
-        proof.A = Pairing.G1Point(a[0], a[1]);
-        proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
-        proof.C = Pairing.G1Point(c[0], c[1]);
-
-        VerifyingKey memory vk = verifyingKey();
-
-        // Compute the linear combination vk_x of inputs times IC
-        if (input.length + 1 != vk.IC.length) revert("Pairing invalid proof");
-        Pairing.G1Point memory vk_x = vk.IC[0];
-        vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[1], input[0]));
-        vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[2], input[1]));
-        vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[3], input[2]));
-        vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[4], input[3]));
-
-        // Check pairing
-        Pairing.G1Point[] memory p1 = new Pairing.G1Point[](4);
-        Pairing.G2Point[] memory p2 = new Pairing.G2Point[](4);
-        p1[0] = Pairing.negate(proof.A);
-        p2[0] = proof.B;
-        p1[1] = vk.alfa1;
-        p2[1] = vk.beta2;
-        p1[2] = vk_x;
-        p2[2] = vk.gamma2;
-        p1[3] = proof.C;
-        p2[3] = vk.delta2;
-        Pairing.pairingCheck(p1, p2);
-    }
-
-    function verifyActionProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[7] memory input
-    ) external view override returns (bool) {
-        return true;
-    }
-
-    function verifyRefundProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[2] memory input
-    ) external view override returns (bool) {
-        return true;
-    }
-
-    function verifySigProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[] memory input
+        uint256[9] memory input
     ) external view override returns (bool) {
         return true;
     }

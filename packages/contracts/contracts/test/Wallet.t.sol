@@ -7,13 +7,13 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT4, IHasherT6} from "../interfaces/IHasher.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
-import {TestVerifier} from "./utils/TestVerifier.sol";
+import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {HexUtils} from "./utils/HexUtils.sol";
@@ -34,7 +34,7 @@ contract WalletTest is Test {
     Wallet wallet;
     Vault vault;
     IBatchMerkle merkle;
-    IVerifier verifier;
+    ISpend2Verifier verifier;
     IHasherT3 hasherT3;
     IHasherT4 hasherT4;
     IHasherT6 hasherT6;
@@ -131,7 +131,7 @@ contract WalletTest is Test {
             0,
             IPoseidonT3(address(hasherT3))
         );
-        verifier = new TestVerifier();
+        verifier = new TestSpend2Verifier();
         wallet = new Wallet(
             address(vault),
             address(verifier),
@@ -185,7 +185,9 @@ contract WalletTest is Test {
             proof: defaultSpendProof(),
             value: uint256(100),
             asset: address(token),
-            id: ERC20_ID
+            id: ERC20_ID,
+            c: uint256(0xc),
+            z: uint256(0xd)
         });
 
         address[] memory spendTokens = new address[](1);

@@ -13,6 +13,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.7.6;
 
+import {ISpend2Verifier} from "./interfaces/ISpend2Verifier.sol";
+
 library Pairing {
     struct G1Point {
         uint256 X;
@@ -215,7 +217,7 @@ library Pairing {
     }
 }
 
-contract Verifier {
+contract Spend2Verifier is ISpend2Verifier {
     using Pairing for *;
     struct VerifyingKey {
         Pairing.G1Point alfa1;
@@ -361,7 +363,7 @@ contract Verifier {
         uint256[2][2] memory b,
         uint256[2] memory c,
         uint256[9] memory input
-    ) public view returns (bool r) {
+    ) external view override returns (bool r) {
         Proof memory proof;
         proof.A = Pairing.G1Point(a[0], a[1]);
         proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
