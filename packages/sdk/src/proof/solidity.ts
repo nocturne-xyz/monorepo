@@ -1,14 +1,14 @@
 import { BaseProof } from "./common";
 
 export type SolidityProof = [
-  BigInt,
-  BigInt,
-  BigInt,
-  BigInt,
-  BigInt,
-  BigInt,
-  BigInt,
-  BigInt
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
 ];
 
 export default function packToSolidityProof(proof: BaseProof): SolidityProof {
