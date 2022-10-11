@@ -5,7 +5,7 @@
       "outputs": []
     },
     "build": {
-      "dependsOn": [],
+      "dependsOn": ["lint"],
       "outputs": ["dist/**"]
     },
     "test:unit": {
