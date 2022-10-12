@@ -3,7 +3,7 @@ pragma solidity 0.7.6;
 pragma abicoder v2;
 
 struct Spend2ProofWithPublicSignals {
-    string[9] publicSignals;
+    string[7] publicSignals;
     BaseProof proof;
 }
 
