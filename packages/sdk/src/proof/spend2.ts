@@ -55,11 +55,11 @@ export interface MerkleProofInput {
 export interface Spend2Inputs {
   vk: bigint;
   operationDigest: bigint;
-  c: bigint;
-  z: bigint;
   oldNote: NoteInput;
   newNote: NoteInput;
   merkleProof: MerkleProofInput;
+  c: bigint;
+  z: bigint;
 }
 
 export async function proveSpend2(
@@ -67,7 +67,7 @@ export async function proveSpend2(
   wasmPath = WASM_PATH,
   zkeyPath = ZKEY_PATH
 ): Promise<Spend2ProofWithPublicSignals> {
-  const { vk, operationDigest, c, z, oldNote, newNote, merkleProof } = inputs;
+  const { vk, operationDigest, oldNote, newNote, merkleProof, c, z } = inputs;
   const signals = {
     vk,
 

@@ -181,7 +181,7 @@ contract WalletTest is Test, TestUtils {
         IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
             commitmentTreeRoot: root,
             nullifier: uint256(182),
-            noteCommitment: uint256(1038),
+            newNoteCommitment: uint256(1038),
             proof: defaultSpendProof(),
             value: uint256(100),
             asset: address(token),
