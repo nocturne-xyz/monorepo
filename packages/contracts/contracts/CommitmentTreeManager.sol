@@ -60,7 +60,7 @@ contract CommitmentTreeManager {
                 ],
                 [spendTx.proof[6], spendTx.proof[7]],
                 [
-                    spendTx.noteCommitment,
+                    spendTx.newNoteCommitment,
                     spendTx.nullifier,
                     uint256(uint160(spendTx.asset)),
                     spendTx.value,
@@ -74,7 +74,7 @@ contract CommitmentTreeManager {
             "Spend proof invalid"
         );
 
-        noteCommitmentTree.insertLeafToQueue(spendTx.noteCommitment);
+        noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
 
         nullifierSet[spendTx.nullifier] = true;
     }
@@ -102,7 +102,7 @@ contract CommitmentTreeManager {
         bytes memory payload = abi.encodePacked(
             spend.commitmentTreeRoot,
             spend.nullifier,
-            spend.noteCommitment,
+            spend.newNoteCommitment,
             spend.value,
             spend.asset,
             spend.id

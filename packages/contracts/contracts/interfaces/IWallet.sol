@@ -18,7 +18,7 @@ interface IWallet {
     struct SpendTransaction {
         uint256 commitmentTreeRoot;
         uint256 nullifier;
-        uint256 noteCommitment;
+        uint256 newNoteCommitment;
         uint256[8] proof;
         uint256 value; // 0 for ERC721
         address asset;
