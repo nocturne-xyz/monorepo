@@ -66,9 +66,7 @@ contract CommitmentTreeManager {
                     spendTx.value,
                     spendTx.commitmentTreeRoot,
                     spendTx.id,
-                    operationDigest,
-                    spendTx.c,
-                    spendTx.z
+                    operationDigest
                 ]
             ),
             "Spend proof invalid"

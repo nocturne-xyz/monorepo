@@ -61,9 +61,7 @@ contract TestSpend2Verifier is Test, TestUtils {
                     signals[3],
                     signals[4],
                     signals[5],
-                    signals[6],
-                    signals[7],
-                    signals[8]
+                    signals[6]
                 ]
             ),
             "Invalid proof"
