@@ -15,10 +15,6 @@
     "test": {
       "dependsOn": ["build"],
       "outputs": []
-    },
-    "@flax/circuits#circuits:build": {
-      "dependsOn": [],
-      "outputs": ["dist/**"]
     }
   }
 }

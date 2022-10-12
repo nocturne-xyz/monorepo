@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
+    "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts",
     "test:unit": "jest --passWithNoTests",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",

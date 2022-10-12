@@ -1,3 +1,6 @@
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import * as path from "path";
+import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
@@ -9,6 +12,9 @@ import {
   Spend2Inputs,
 } from "../src/proof/spend2";
 import { babyjub, poseidon } from "circomlibjs";
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
@@ -100,5 +106,12 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  console.log(JSON.stringify(proof));
+  const json = JSON.stringify(proof);
+  console.log(json);
+
+  fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+    encoding: "utf8",
+    flag: "w",
+  });
+  process.exit(0);
 })();

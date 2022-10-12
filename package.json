@@ -2,9 +2,9 @@
   "private": true,
   "name": "monorepo",
   "scripts": {
-    "circuits:compile": "yarn turbo run compile-circuits --filter=@flax/circuits...",
-    "circuits:build": "yarn turbo run build --filter=@flax/circuits...",
-    "circuits:test": "yarn turbo run test --filter=@flax/circuits...",
+    "circuits:build": "yarn workspaces foreach run circuits-build --include @flax/circuits",
+    "sdk:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @flax/sdk",
+    "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn sdk:gen-test-cases",
     "build": "yarn turbo run build",
     "test": "yarn turbo run test --filter=!@flax/circuits...",
     "lint": "yarn turbo run lint",
