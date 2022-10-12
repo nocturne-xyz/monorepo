@@ -10,9 +10,9 @@ interface IWallet {
     }
 
     struct FLAXAddress {
-        uint256 H1;
-        uint256 H2;
-        uint256 H3;
+        uint256 H1X;
+        uint256 H1Y;
+        uint256 H2Hash;
     }
 
     struct SpendTransaction {

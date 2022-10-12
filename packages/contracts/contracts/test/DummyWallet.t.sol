@@ -46,7 +46,8 @@ contract DummyWalletTest is Test, TestUtils {
         pure
         returns (IWallet.FLAXAddress memory)
     {
-        return IWallet.FLAXAddress({H1: 1938477, H2: 9104058, H3: 103048217});
+        return
+            IWallet.FLAXAddress({H1X: 1938477, H1Y: 9104058, H2Hash: 1032988});
     }
 
     function defaultSpendProof()

@@ -146,9 +146,9 @@ contract Wallet is IWallet, BalanceManager {
 
         payload = abi.encodePacked(
             payload,
-            op.refundAddr.H1,
-            op.refundAddr.H2,
-            op.refundAddr.H3,
+            op.refundAddr.H1X,
+            op.refundAddr.H1Y,
+            op.refundAddr.H2Hash,
             spendTokensHash,
             refundTokensHash,
             op.gasLimit
@@ -167,9 +167,9 @@ contract Wallet is IWallet, BalanceManager {
                 deposit.value,
                 deposit.spender,
                 deposit.id,
-                deposit.depositAddr.H1,
-                deposit.depositAddr.H2,
-                deposit.depositAddr.H3
+                deposit.depositAddr.H1X,
+                deposit.depositAddr.H1Y,
+                deposit.depositAddr.H2Hash
             )
         );
 
