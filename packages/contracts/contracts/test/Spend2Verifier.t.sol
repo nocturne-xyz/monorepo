@@ -34,7 +34,7 @@ contract TestSpend2Verifier is Test, TestUtils {
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
 
         uint256[9] memory signals;
-        for (uint256 i = 0; i < 9; i++) {
+        for (uint256 i = 0; i < 7; i++) {
             bytes memory jsonSelector = abi.encodePacked(
                 bytes(".publicSignals["),
                 Strings.toString(i)
@@ -61,9 +61,7 @@ contract TestSpend2Verifier is Test, TestUtils {
                     signals[3],
                     signals[4],
                     signals[5],
-                    signals[6],
-                    signals[7],
-                    signals[8]
+                    signals[6]
                 ]
             ),
             "Invalid proof"

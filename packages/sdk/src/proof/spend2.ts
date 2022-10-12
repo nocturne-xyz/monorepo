@@ -26,8 +26,6 @@ export interface Spend2PublicSignals {
   value: bigint;
   nullifier: bigint;
   operationDigest: bigint;
-  c: bigint;
-  z: bigint;
 }
 
 export interface FlaxAddressInput {
@@ -35,8 +33,6 @@ export interface FlaxAddressInput {
   h1Y: bigint;
   h2X: bigint;
   h2Y: bigint;
-  h3X: bigint;
-  h3Y: bigint;
 }
 
 export interface NoteInput {
@@ -56,6 +52,7 @@ export interface Spend2Inputs {
   vk: bigint;
   operationDigest: bigint;
   oldNote: NoteInput;
+  spendPk: [bigint, bigint];
   newNote: NoteInput;
   merkleProof: MerkleProofInput;
   c: bigint;
@@ -67,9 +64,13 @@ export async function proveSpend2(
   wasmPath = WASM_PATH,
   zkeyPath = ZKEY_PATH
 ): Promise<Spend2ProofWithPublicSignals> {
-  const { vk, operationDigest, oldNote, newNote, merkleProof, c, z } = inputs;
+  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } = inputs;
   const signals = {
     vk,
+
+    spendPkX: spendPk[0],
+    spendPkY: spendPk[1],
+    spendPkNonce: BigInt(1),
 
     operationDigest,
 
@@ -80,8 +81,6 @@ export async function proveSpend2(
     oldNoteOwnerH1Y: oldNote.owner.h1Y,
     oldNoteOwnerH2X: oldNote.owner.h2X,
     oldNoteOwnerH2Y: oldNote.owner.h2Y,
-    oldNoteOwnerH3X: oldNote.owner.h3X,
-    oldNoteOwnerH3Y: oldNote.owner.h3Y,
     oldNoteNonce: oldNote.nonce,
     oldNoteType: oldNote.type,
     oldNoteId: oldNote.id,
@@ -94,8 +93,6 @@ export async function proveSpend2(
     newNoteOwnerH1Y: newNote.owner.h1Y,
     newNoteOwnerH2X: newNote.owner.h2X,
     newNoteOwnerH2Y: newNote.owner.h2Y,
-    newNoteOwnerH3X: newNote.owner.h3X,
-    newNoteOwnerH3Y: newNote.owner.h3Y,
     newNoteNonce: newNote.nonce,
     newNoteType: newNote.type,
     newNoteId: newNote.id,

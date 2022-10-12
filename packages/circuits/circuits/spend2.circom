@@ -12,6 +12,11 @@ template Spend(levels) {
     // viewing / nullifier key
     signal input vk;
 
+    // Spend Pk
+    signal input spendPkX;
+    signal input spendPkY;
+    signal input spendPkNonce;
+
     // Opeartion digest
     signal input operationDigest;
 
@@ -24,8 +29,6 @@ template Spend(levels) {
     signal input oldNoteOwnerH1Y;
     signal input oldNoteOwnerH2X;
     signal input oldNoteOwnerH2Y;
-    signal input oldNoteOwnerH3X;
-    signal input oldNoteOwnerH3Y;
     signal input oldNoteNonce;
     signal input oldNoteType;
     signal input oldNoteId;
@@ -40,8 +43,6 @@ template Spend(levels) {
     signal input newNoteOwnerH1Y;
     signal input newNoteOwnerH2X;
     signal input newNoteOwnerH2Y;
-    signal input newNoteOwnerH3X;
-    signal input newNoteOwnerH3Y;
     signal input newNoteNonce;
     signal input newNoteType;
     signal input newNoteId;
@@ -60,7 +61,6 @@ template Spend(levels) {
     component oldNoteCommit = NoteCommit();
     oldNoteCommit.ownerH1X <== oldNoteOwnerH1X; // TODO: change to compressed format
     oldNoteCommit.ownerH2X <== oldNoteOwnerH2X; // TODO: change to compressed format
-    oldNoteCommit.ownerH3X <== oldNoteOwnerH3X; // TODO: change to compressed format
     oldNoteCommit.nonce <== oldNoteNonce;
     oldNoteCommit.type <== oldNoteType;
     oldNoteCommit.id <== oldNoteId;
@@ -92,27 +92,17 @@ template Spend(levels) {
     component vkBits = Num2Bits(254);
     vkBits.in <== vk;
 
-    component SpendingKeyCheck = EscalarMulAny(254);
-    for (var i=0; i < 254; i++) {
-        SpendingKeyCheck.e[i] <== vkBits.out[i];
-    }
-    SpendingKeyCheck.p[0] <== oldNoteOwnerH1X;
-    SpendingKeyCheck.p[1] <== oldNoteOwnerH1Y;
-    // SpendingKeyCheck.out[0] === oldNoteOwnerH2X;
-    // SpendingKeyCheck.out[1] === oldNoteOwnerH2Y;
-    signal temp0;
-    signal temp1;
-    temp0 <== SpendingKeyCheck.out[0];
-    temp0 === oldNoteOwnerH2X;
-    temp1 <== SpendingKeyCheck.out[1];
-    temp1 === oldNoteOwnerH2Y;
+    // Derive spending public key
+    component vkHasher = Poseidon(3);
+    vkHasher.inputs[0] <== spendPkX;
+    vkHasher.inputs[1] <== spendPkY;
+    vkHasher.inputs[2] <== spendPkNonce;
+    vkHasher.out === vk;
 
     // AuthSig validity
     component sigVerify = Verify();
-    sigVerify.pk0x <== oldNoteOwnerH1X;
-    sigVerify.pk0y <== oldNoteOwnerH1Y;
-    sigVerify.pk1x <== oldNoteOwnerH3X;
-    sigVerify.pk1y <== oldNoteOwnerH3Y;
+    sigVerify.pkx <== spendPkX;
+    sigVerify.pky <== spendPkY;
     sigVerify.m <== operationDigest;
     sigVerify.c <== c;
     sigVerify.z <== z;
@@ -121,7 +111,6 @@ template Spend(levels) {
     component newNoteCommit = NoteCommit();
     newNoteCommit.ownerH1X <== newNoteOwnerH1X; // TODO: change to compressed format
     newNoteCommit.ownerH2X <== newNoteOwnerH2X; // TODO: change to compressed format
-    newNoteCommit.ownerH3X <== newNoteOwnerH3X; // TODO: change to compressed format
     newNoteCommit.nonce <== newNoteNonce;
     newNoteCommit.type <== newNoteType;
     newNoteCommit.id <== newNoteId;
@@ -129,4 +118,4 @@ template Spend(levels) {
     newNoteCommitment <== newNoteCommit.out;
 }
 
-component main { public [operationDigest, c, z] } = Spend(32);
+component main { public [operationDigest] } = Spend(32);
