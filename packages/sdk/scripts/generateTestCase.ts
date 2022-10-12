@@ -8,17 +8,17 @@ import {
   FlaxAddressInput,
   Spend2Inputs,
 } from "../src/proof/spend2";
-import { poseidon } from "circomlibjs";
+import { babyjub, poseidon } from "circomlibjs";
 
-const vk = BigInt(
-  "0x28156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-);
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
 );
 
+const spendPk = babyjub.mulPointEscalar(babyjub.Base8, sk);
+
 // Instantiate flax keypair and addr
-const flaxPrivKey = new FlaxPrivKey(vk, sk);
+const flaxPrivKey = new FlaxPrivKey(sk);
+const vk = flaxPrivKey.vk;
 const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 
@@ -27,8 +27,6 @@ const flaxAddrInput: FlaxAddressInput = {
   h1Y: flaxAddr.H1[1],
   h2X: flaxAddr.H2[0],
   h2Y: flaxAddr.H2[1],
-  h3X: flaxAddr.H3[0],
-  h3Y: flaxAddr.H3[1],
 };
 
 // Old note input to spend
@@ -41,7 +39,7 @@ const oldNote: NoteInput = {
 };
 console.log("OLD NOTE: ", oldNote);
 
-const ownerHash = poseidon([flaxAddr.H1[0], flaxAddr.H2[0], flaxAddr.H3[0]]);
+const ownerHash = poseidon([flaxAddr.H1[0], flaxAddr.H2[0]]);
 const oldNoteCommitment = poseidon([
   ownerHash,
   oldNote.type,
@@ -87,6 +85,7 @@ console.log(opSig);
 
 const spend2Inputs: Spend2Inputs = {
   vk,
+  spendPk,
   operationDigest,
   c: opSig.c,
   z: opSig.z,

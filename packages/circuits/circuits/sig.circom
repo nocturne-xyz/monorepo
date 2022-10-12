@@ -4,38 +4,38 @@ include "include/escalarmulany.circom";
 include "include/poseidon.circom";
 
 template Verify() {
-    signal input pk0x;
-    signal input pk0y;
-    signal input pk1x;
-    signal input pk1y;
+    signal input pkx;
+    signal input pky;
     signal input m;
     signal input c;
     signal input z;
 
-    component pk0z = EscalarMulAny(254);
-    component pk1c = EscalarMulAny(254);
+    var BASE8[2] = [
+        5299619240641551281634865583518297030282874472190772894086521144482721001553,
+        16950150798460657717958625567821834550301663161624707787222815936182638968203
+    ];
+    component gz = EscalarMulFix(253, BASE8);
+    component pkc = EscalarMulAny(254);
     component zBits = Num2Bits(254);
     component cBits = Num2Bits(254);
 
-    pk0z.p[0] <== pk0x;
-    pk0z.p[1] <== pk0y;
     zBits.in <== z;
-    for (var i = 0; i < 254; i++) {
-        pk0z.e[i] <== zBits.out[i];
+    for (var i = 0; i < 253; i++) {
+        gz.e[i] <== zBits.out[i];
     }
 
-    pk1c.p[0] <== pk1x;
-    pk1c.p[1] <== pk1y;
+    pkc.p[0] <== pkx;
+    pkc.p[1] <== pky;
     cBits.in <== c;
     for (var i = 0; i < 254; i++) {
-        pk1c.e[i] <== cBits.out[i];
+        pkc.e[i] <== cBits.out[i];
     }
 
     component R = BabyAdd();
-    R.x1 <== pk0z.out[0];
-    R.y1 <== pk0z.out[1];
-    R.x2 <== pk1c.out[0];
-    R.y2 <== pk1c.out[1];
+    R.x1 <== gz.out[0];
+    R.y1 <== gz.out[1];
+    R.x2 <== pkc.out[0];
+    R.y2 <== pkc.out[1];
 
     component hash = Poseidon(3);
     hash.inputs[0] <== R.xout; // TODO changed to compressed format
