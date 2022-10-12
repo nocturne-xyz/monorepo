@@ -6,8 +6,8 @@ include "include/poseidon.circom";
 // owner, nonce, type, value
 
 template NoteCommit() {
-    signal input ownerH1X;
-    signal input ownerH2X;
+    signal input ownerH1Hash;
+    signal input ownerH2Hash;
     signal input nonce;
     signal input type;
     signal input id;
@@ -18,8 +18,8 @@ template NoteCommit() {
     component addrHash = Poseidon(2);
     component noteHash = Poseidon(4);
 
-    addrHash.inputs[0] <== ownerH1X; // TODO change to compressed format
-    addrHash.inputs[1] <== ownerH2X; // TODO change to compressed format
+    addrHash.inputs[0] <== ownerH1Hash;
+    addrHash.inputs[1] <== ownerH2Hash;
     noteHash.inputs[0] <== addrHash.out;
     noteHash.inputs[1] <== type;
     noteHash.inputs[2] <== id;

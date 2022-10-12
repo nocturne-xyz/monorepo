@@ -56,11 +56,21 @@ template Spend(levels) {
     signal output value;
     signal output nullifier;
 
+    // Compute hash of oldNoteOwnerH1 x and y
+    component oldNoteOwnerH1Hash = Poseidon(2);
+    oldNoteOwnerH1Hash.inputs[0] <== oldNoteOwnerH1X;
+    oldNoteOwnerH1Hash.inputs[1] <== oldNoteOwnerH1Y;
+
+    // Compute hash of oldNoteOwnerH2 x and y
+    component oldNoteOwnerH2Hash = Poseidon(2);
+    oldNoteOwnerH2Hash.inputs[0] <== oldNoteOwnerH2X;
+    oldNoteOwnerH2Hash.inputs[1] <== oldNoteOwnerH2Y;
+
     // Computing oldNoteCommitment
     signal oldNoteCommitment;
     component oldNoteCommit = NoteCommit();
-    oldNoteCommit.ownerH1X <== oldNoteOwnerH1X; // TODO: change to compressed format
-    oldNoteCommit.ownerH2X <== oldNoteOwnerH2X; // TODO: change to compressed format
+    oldNoteCommit.ownerH1Hash <== oldNoteOwnerH1Hash.out;
+    oldNoteCommit.ownerH2Hash <== oldNoteOwnerH2Hash.out;
     oldNoteCommit.nonce <== oldNoteNonce;
     oldNoteCommit.type <== oldNoteType;
     oldNoteCommit.id <== oldNoteId;
@@ -107,10 +117,20 @@ template Spend(levels) {
     sigVerify.c <== c;
     sigVerify.z <== z;
 
+    // Compute hash of newNoteOwnerH1 x and y
+    component newNoteOwnerH1Hash = Poseidon(2);
+    newNoteOwnerH1Hash.inputs[0] <== oldNoteOwnerH1X;
+    newNoteOwnerH1Hash.inputs[1] <== oldNoteOwnerH1Y;
+
+    // Compute hash of newNoteOwnerH2 x and y
+    component newNoteOwnerH2Hash = Poseidon(2);
+    newNoteOwnerH2Hash.inputs[0] <== oldNoteOwnerH2X;
+    newNoteOwnerH2Hash.inputs[1] <== oldNoteOwnerH2Y;
+
     // Computing newNoteCommitment
     component newNoteCommit = NoteCommit();
-    newNoteCommit.ownerH1X <== newNoteOwnerH1X; // TODO: change to compressed format
-    newNoteCommit.ownerH2X <== newNoteOwnerH2X; // TODO: change to compressed format
+    newNoteCommit.ownerH1Hash <== newNoteOwnerH1Hash.out;
+    newNoteCommit.ownerH2Hash <== newNoteOwnerH2Hash.out;
     newNoteCommit.nonce <== newNoteNonce;
     newNoteCommit.type <== newNoteType;
     newNoteCommit.id <== newNoteId;
