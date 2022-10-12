@@ -9,8 +9,6 @@ BUILD_DIR="$CIRCUIT_ARTIFACTS_DIR/$CIRCUIT_NAME"
 OUTPUT_DIR="$BUILD_DIR"/"$CIRCUIT_NAME"_cpp
 CONTRACTS_DIR="$ROOT_DIR/packages/contracts/contracts"
 
-ls $ROOT_DIR
-
 if [ -f "$PHASE1_PATH" ]; then
     echo "Found Phase 1 ptau file"
 else
@@ -82,3 +80,5 @@ start=`date +%s`
 npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR/Spend2Verifier.sol""
 end=`date +%s`
 echo "DONE ($((end-start))s)"
+
+\cp "$OUTPUT_DIR/Spend2Verifier.sol" "$CONTRACTS_DIR/Spend2Verifier.sol"
