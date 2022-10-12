@@ -44,12 +44,15 @@ export class FlaxAddress {
   H1: [bigint, bigint];
   H2: [bigint, bigint];
 
-  constructor(
-    h1: [bigint, bigint],
-    h2: [bigint, bigint],
-  ) {
+  constructor(h1: [bigint, bigint], h2: [bigint, bigint]) {
     this.H1 = h1;
     this.H2 = h2;
+  }
+
+  hash(): bigint {
+    const H1Hash = poseidon([this.H1[0], this.H1[1]]);
+    const H2Hash = poseidon([this.H2[0], this.H2[1]]);
+    return BigInt(poseidon([H1Hash, H2Hash]));
   }
 
   static parse(str: string): FlaxAddress {
