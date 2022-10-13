@@ -56,21 +56,17 @@ template Spend(levels) {
     signal output value;
     signal output nullifier;
 
-    // Compute hash of oldNoteOwnerH1 x and y
-    component oldNoteOwnerH1Hash = Poseidon(2);
-    oldNoteOwnerH1Hash.inputs[0] <== oldNoteOwnerH1X;
-    oldNoteOwnerH1Hash.inputs[1] <== oldNoteOwnerH1Y;
-
-    // Compute hash of oldNoteOwnerH2 x and y
-    component oldNoteOwnerH2Hash = Poseidon(2);
-    oldNoteOwnerH2Hash.inputs[0] <== oldNoteOwnerH2X;
-    oldNoteOwnerH2Hash.inputs[1] <== oldNoteOwnerH2Y;
+    // Compute hash of oldNoteOwner as H(h1X, h1Y, h2X, h2Y)
+    component oldNoteOwnerHash = Poseidon(4);
+    oldNoteOwnerHash.inputs[0] <== oldNoteOwnerH1X;
+    oldNoteOwnerHash.inputs[1] <== oldNoteOwnerH1Y;
+    oldNoteOwnerHash.inputs[2] <== oldNoteOwnerH2X;
+    oldNoteOwnerHash.inputs[3] <== oldNoteOwnerH2Y;
 
     // Computing oldNoteCommitment
     signal oldNoteCommitment;
     component oldNoteCommit = NoteCommit();
-    oldNoteCommit.ownerH1Hash <== oldNoteOwnerH1Hash.out;
-    oldNoteCommit.ownerH2Hash <== oldNoteOwnerH2Hash.out;
+    oldNoteCommit.ownerHash <== oldNoteOwnerHash.out;
     oldNoteCommit.nonce <== oldNoteNonce;
     oldNoteCommit.type <== oldNoteType;
     oldNoteCommit.id <== oldNoteId;
@@ -117,20 +113,17 @@ template Spend(levels) {
     sigVerify.c <== c;
     sigVerify.z <== z;
 
-    // Compute hash of newNoteOwnerH1 x and y
-    component newNoteOwnerH1Hash = Poseidon(2);
-    newNoteOwnerH1Hash.inputs[0] <== newNoteOwnerH1X;
-    newNoteOwnerH1Hash.inputs[1] <== newNoteOwnerH1Y;
+    // Compute hash of newNoteOwner as H(h1X, h1Y, h2X, h2Y)
+    component newNoteOwnerHash = Poseidon(4);
+    newNoteOwnerHash.inputs[0] <== newNoteOwnerH1X;
+    newNoteOwnerHash.inputs[1] <== newNoteOwnerH1Y;
+    newNoteOwnerHash.inputs[2] <== newNoteOwnerH2X;
+    newNoteOwnerHash.inputs[3] <== newNoteOwnerH2Y;
 
-    // Compute hash of newNoteOwnerH2 x and y
-    component newNoteOwnerH2Hash = Poseidon(2);
-    newNoteOwnerH2Hash.inputs[0] <== newNoteOwnerH2X;
-    newNoteOwnerH2Hash.inputs[1] <== newNoteOwnerH2Y;
 
     // Computing newNoteCommitment
     component newNoteCommit = NoteCommit();
-    newNoteCommit.ownerH1Hash <== newNoteOwnerH1Hash.out;
-    newNoteCommit.ownerH2Hash <== newNoteOwnerH2Hash.out;
+    newNoteCommit.ownerHash <== newNoteOwnerHash.out;
     newNoteCommit.nonce <== newNoteNonce;
     newNoteCommit.type <== newNoteType;
     newNoteCommit.id <== newNoteId;
