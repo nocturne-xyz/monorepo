@@ -119,13 +119,13 @@ template Spend(levels) {
 
     // Compute hash of newNoteOwnerH1 x and y
     component newNoteOwnerH1Hash = Poseidon(2);
-    newNoteOwnerH1Hash.inputs[0] <== oldNoteOwnerH1X;
-    newNoteOwnerH1Hash.inputs[1] <== oldNoteOwnerH1Y;
+    newNoteOwnerH1Hash.inputs[0] <== newNoteOwnerH1X;
+    newNoteOwnerH1Hash.inputs[1] <== newNoteOwnerH1Y;
 
     // Compute hash of newNoteOwnerH2 x and y
     component newNoteOwnerH2Hash = Poseidon(2);
-    newNoteOwnerH2Hash.inputs[0] <== oldNoteOwnerH2X;
-    newNoteOwnerH2Hash.inputs[1] <== oldNoteOwnerH2Y;
+    newNoteOwnerH2Hash.inputs[0] <== newNoteOwnerH2X;
+    newNoteOwnerH2Hash.inputs[1] <== newNoteOwnerH2Y;
 
     // Computing newNoteCommitment
     component newNoteCommit = NoteCommit();
