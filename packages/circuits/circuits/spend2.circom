@@ -97,6 +97,14 @@ template Spend(levels) {
     // Viewing key integrity: h1^{vk} == h2
     component vkBits = Num2Bits(254);
     vkBits.in <== vk;
+    component H1vk = EscalarMulAny(254);
+    H1vk.p[0] <== oldNoteOwnerH1X;
+    H1vk.p[1] <== oldNoteOwnerH2X;
+    for (var i = 0; i < 254; i++) {
+        H1vk.e[i] <== vkBits.out[i];
+    }
+    H1vk.out[0] === oldNoteOwnerH2X;
+    H1vk.out[1] === oldNoteOwnerH2Y;
 
     // Derive spending public key
     component vkHasher = Poseidon(3);
