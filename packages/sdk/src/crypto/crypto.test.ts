@@ -39,7 +39,7 @@ describe("[crypto]", () => {
 
   test("Test Sign / verify", () => {
     const priv = FlaxPrivKey.genPriv();
-    const pk = priv.getSpendPk();
+    const pk = priv.spendPk();
     const signer = new FlaxSigner(priv);
     const m = BigInt(123);
     const sig = signer.sign(m);

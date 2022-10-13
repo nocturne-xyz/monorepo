@@ -56,11 +56,17 @@ template Spend(levels) {
     signal output value;
     signal output nullifier;
 
+    // Compute hash of oldNoteOwner as H(h1X, h1Y, h2X, h2Y)
+    component oldNoteOwnerHash = Poseidon(4);
+    oldNoteOwnerHash.inputs[0] <== oldNoteOwnerH1X;
+    oldNoteOwnerHash.inputs[1] <== oldNoteOwnerH1Y;
+    oldNoteOwnerHash.inputs[2] <== oldNoteOwnerH2X;
+    oldNoteOwnerHash.inputs[3] <== oldNoteOwnerH2Y;
+
     // Computing oldNoteCommitment
     signal oldNoteCommitment;
     component oldNoteCommit = NoteCommit();
-    oldNoteCommit.ownerH1X <== oldNoteOwnerH1X; // TODO: change to compressed format
-    oldNoteCommit.ownerH2X <== oldNoteOwnerH2X; // TODO: change to compressed format
+    oldNoteCommit.ownerHash <== oldNoteOwnerHash.out;
     oldNoteCommit.nonce <== oldNoteNonce;
     oldNoteCommit.type <== oldNoteType;
     oldNoteCommit.id <== oldNoteId;
@@ -107,10 +113,17 @@ template Spend(levels) {
     sigVerify.c <== c;
     sigVerify.z <== z;
 
+    // Compute hash of newNoteOwner as H(h1X, h1Y, h2X, h2Y)
+    component newNoteOwnerHash = Poseidon(4);
+    newNoteOwnerHash.inputs[0] <== newNoteOwnerH1X;
+    newNoteOwnerHash.inputs[1] <== newNoteOwnerH1Y;
+    newNoteOwnerHash.inputs[2] <== newNoteOwnerH2X;
+    newNoteOwnerHash.inputs[3] <== newNoteOwnerH2Y;
+
+
     // Computing newNoteCommitment
     component newNoteCommit = NoteCommit();
-    newNoteCommit.ownerH1X <== newNoteOwnerH1X; // TODO: change to compressed format
-    newNoteCommit.ownerH2X <== newNoteOwnerH2X; // TODO: change to compressed format
+    newNoteCommit.ownerHash <== newNoteOwnerHash.out;
     newNoteCommit.nonce <== newNoteNonce;
     newNoteCommit.type <== newNoteType;
     newNoteCommit.id <== newNoteId;

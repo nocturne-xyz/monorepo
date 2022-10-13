@@ -20,7 +20,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 
-contract WalletTest is Test, TestUtils {
+contract DummyWalletTest is Test, TestUtils {
     using stdJson for string;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
@@ -159,7 +159,7 @@ contract WalletTest is Test, TestUtils {
         );
     }
 
-    function testOneTransferNoRefund() public {
+    function testDummyTransferNoRefund() public {
         SimpleERC20Token token = ERC20s[0];
         aliceDepositFunds(token);
 
