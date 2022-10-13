@@ -41,17 +41,17 @@ export class FlaxPrivKey {
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export class FlaxAddress {
-  H1: [bigint, bigint];
-  H2: [bigint, bigint];
+  h1: [bigint, bigint];
+  h2: [bigint, bigint];
 
   constructor(h1: [bigint, bigint], h2: [bigint, bigint]) {
-    this.H1 = h1;
-    this.H2 = h2;
+    this.h1 = h1;
+    this.h2 = h2;
   }
 
   hash(): bigint {
-    const H1Hash = poseidon([this.H1[0], this.H1[1]]);
-    const H2Hash = poseidon([this.H2[0], this.H2[1]]);
+    const H1Hash = poseidon([this.h1[0], this.h1[1]]);
+    const H2Hash = poseidon([this.h2[0], this.h2[1]]);
     return BigInt(poseidon([H1Hash, H2Hash]));
   }
 
@@ -66,8 +66,8 @@ export class FlaxAddress {
   }
 
   toString(): string {
-    const b1 = Buffer.from(babyjub.packPoint(this.H1));
-    const b2 = Buffer.from(babyjub.packPoint(this.H2));
+    const b1 = Buffer.from(babyjub.packPoint(this.h1));
+    const b2 = Buffer.from(babyjub.packPoint(this.h2));
     const b = Buffer.concat([b1, b2]);
     return FlaxAddrPrefix + b.toString("base64");
   }
@@ -119,15 +119,15 @@ export class FlaxSigner {
   }
 
   testOwn(addr: FlaxAddress): boolean {
-    const H2prime = babyjub.mulPointEscalar(addr.H1, this.privkey.vk);
-    return addr.H2[0] === H2prime[0] && addr.H2[1] === H2prime[1];
+    const H2prime = babyjub.mulPointEscalar(addr.h1, this.privkey.vk);
+    return addr.h2[0] === H2prime[0] && addr.h2[1] === H2prime[1];
   }
 }
 
 export function rerandAddr(addr: FlaxAddress): FlaxAddress {
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Scalar.fromRprBE(r_buf, 0, 32);
-  const H1 = babyjub.mulPointEscalar(addr.H1, r);
-  const H2 = babyjub.mulPointEscalar(addr.H2, r);
+  const H1 = babyjub.mulPointEscalar(addr.h1, r);
+  const H2 = babyjub.mulPointEscalar(addr.h2, r);
   return new FlaxAddress(H1, H2);
 }

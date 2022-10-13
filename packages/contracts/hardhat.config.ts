@@ -65,7 +65,7 @@ module.exports = {
   // config for hardhat-packager
   // https://www.npmjs.com/package/hardhat-packager
   packager: {
-    contracts: ["Wallet", "Vault"],
+    contracts: ["Wallet", "Vault", "IERC20"],
     includeFactories: true,
   },
   paths: {
