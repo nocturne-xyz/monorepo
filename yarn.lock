@@ -965,7 +965,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@flax/circuits@workspace:^, @flax/circuits@workspace:packages/circuits":
+"@flax/circuits@workspace:packages/circuits":
   version: 0.0.0-use.local
   resolution: "@flax/circuits@workspace:packages/circuits"
   dependencies:
@@ -989,7 +989,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@flax/contracts@workspace:packages/contracts":
+"@flax/contracts@workspace:^, @flax/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@flax/contracts@workspace:packages/contracts"
   dependencies:
@@ -1023,7 +1023,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@flax/sdk@workspace:packages/sdk"
   dependencies:
-    "@flax/circuits": "workspace:^"
+    "@flax/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/jest": ^29.1.1
     "@types/node": ^18.8.0

@@ -1,22 +1,22 @@
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as path from "path";
-import * as fs from "fs";
+// import findWorkspaceRoot from "find-yarn-workspace-root";
+// import * as path from "path";
+// import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
-  proveSpend2,
-  verifySpend2Proof,
+  // proveSpend2,
+  // verifySpend2Proof,
   MerkleProofInput,
   NoteInput,
   FlaxAddressInput,
   Spend2Inputs,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
-import { Note } from "../src/contract/inputs";
+import { Note } from "../src/contract/types";
 import { IERC20__factory } from "@flax/contracts";
 
-const ROOT_DIR = findWorkspaceRoot()!;
-const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
+// const ROOT_DIR = findWorkspaceRoot()!;
+// const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 const SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
 const sk = BigInt(
@@ -71,7 +71,12 @@ const oldNoteCommitment = poseidon([
 console.log("OLD NOTE COMMITMENT: ", oldNoteCommitment);
 
 // EXPORT encoded function data
-// const contractEncodedFunction = IERC20__factory.createInterface().encodeFunctionData();
+const contractEncodedFunction =
+  IERC20__factory.createInterface().encodeFunctionData("transfer", [
+    "0x0000000000000000000000000000000000000001",
+    100,
+  ]);
+console.log("ENCODED FUNCTION: ", contractEncodedFunction);
 
 // Generate valid merkle proof
 const tree = new BinaryPoseidonTree();
@@ -120,20 +125,20 @@ const spend2Inputs: Spend2Inputs = {
 };
 console.log(spend2Inputs);
 
-(async () => {
-  const proof = await proveSpend2(spend2Inputs);
-  if (!(await verifySpend2Proof(proof))) {
-    throw new Error("Proof invalid!");
-  }
-  const json = JSON.stringify(proof);
-  console.log(json);
+// (async () => {
+//   const proof = await proveSpend2(spend2Inputs);
+//   if (!(await verifySpend2Proof(proof))) {
+//     throw new Error("Proof invalid!");
+//   }
+//   const json = JSON.stringify(proof);
+//   console.log(json);
 
-  fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
-    encoding: "utf8",
-    flag: "w",
-  });
-  process.exit(0);
-})();
+//   fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+//     encoding: "utf8",
+//     flag: "w",
+//   });
+//   process.exit(0);
+// })();
 
 /*
 bytes memory encodedFunction = abi.encodeWithSelector(
