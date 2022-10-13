@@ -34,7 +34,7 @@ export class FlaxPrivKey {
     return new FlaxAddress(H1, H2);
   }
 
-  getSpendPk(): [bigint, bigint] {
+  spendPk(): [bigint, bigint] {
     return babyjub.mulPointEscalar(babyjub.Base8, this.sk);
   }
 }

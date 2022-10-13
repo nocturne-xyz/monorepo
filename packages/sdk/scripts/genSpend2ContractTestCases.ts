@@ -11,7 +11,7 @@ import {
   FlaxAddressInput,
   Spend2Inputs,
 } from "../src/proof/spend2";
-import { babyjub, poseidon } from "circomlibjs";
+import { poseidon } from "circomlibjs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
@@ -20,13 +20,12 @@ const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
 );
 
-const spendPk = babyjub.mulPointEscalar(babyjub.Base8, sk);
-
 // Instantiate flax keypair and addr
 const flaxPrivKey = new FlaxPrivKey(sk);
 const vk = flaxPrivKey.vk;
 const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
+const spendPk = flaxSigner.privkey.spendPk();
 
 const flaxAddrInput: FlaxAddressInput = {
   h1X: flaxAddr.H1[0],
