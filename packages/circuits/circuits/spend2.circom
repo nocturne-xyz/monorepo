@@ -93,7 +93,7 @@ template Spend(levels) {
     vkBits.in <== vk;
     component H1vk = EscalarMulAny(254);
     H1vk.p[0] <== oldNoteOwnerH1X;
-    H1vk.p[1] <== oldNoteOwnerH2X;
+    H1vk.p[1] <== oldNoteOwnerH1Y;
     for (var i = 0; i < 254; i++) {
         H1vk.e[i] <== vkBits.out[i];
     }
