@@ -193,9 +193,7 @@ contract DummyWalletTest is Test, TestUtils {
             proof: defaultSpendProof(),
             value: uint256(100),
             asset: address(token),
-            id: ERC20_ID,
-            c: uint256(0xc),
-            z: uint256(0xd)
+            id: ERC20_ID
         });
 
         address[] memory spendTokens = new address[](1);
