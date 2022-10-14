@@ -16,6 +16,8 @@ import { poseidon } from "circomlibjs";
 const ROOT_DIR = findWorkspaceRoot()!;
 const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 
+const writeToFixture = process.argv[2] == "--writeFixture";
+
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
 );
@@ -108,9 +110,11 @@ console.log(spend2Inputs);
   const json = JSON.stringify(proof);
   console.log(json);
 
-  fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
-    encoding: "utf8",
-    flag: "w",
-  });
+  if (writeToFixture) {
+    fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  }
   process.exit(0);
 })();

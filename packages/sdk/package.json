@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts",
+    "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
     "test:unit": "jest --passWithNoTests",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",
@@ -35,9 +35,9 @@
     "big-integer": "^1.6.42",
     "circomlib": "0.0.18",
     "circomlibjs": "0.0.8",
+    "ethers": "^5.0.0",
     "ffjavascript": "^0.2.38",
     "find-yarn-workspace-root": "^2.0.0",
-    "snarkjs": "0.5.0",
-    "wasmsnark": "^0.0.10"
+    "snarkjs": "0.5.0"
   }
 }

@@ -1,6 +1,6 @@
-// import findWorkspaceRoot from "find-yarn-workspace-root";
-// import * as path from "path";
-// import * as fs from "fs";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import * as path from "path";
+import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
 import {
@@ -10,10 +10,23 @@ import {
   NoteInput,
   FlaxAddressInput,
   Spend2Inputs,
+  proveSpend2,
+  verifySpend2Proof,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
-import { Note } from "../src/contract/types";
+import {
+  Action,
+  // Note,
+  Tokens,
+  UnprovenOperation,
+  UnprovenSpendTransaction,
+} from "../src/contract/types";
 import { IERC20__factory } from "@flax/contracts";
+import {
+  calculateOperationDigest,
+  hashOperation,
+  hashSpend,
+} from "../src/contract/utils";
 
 /* Summary:
  *  - Alice = address(1), Bob = address(2)
@@ -24,16 +37,19 @@ import { IERC20__factory } from "@flax/contracts";
  *  - Operation is to transfer 50 A tokens to Bob
  */
 
-// const ROOT_DIR = findWorkspaceRoot()!;
-// const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
+const ROOT_DIR = findWorkspaceRoot()!;
+const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 const SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
 // EXPORT - sender/receiver addrs
-const ALICE = "0x0000000000000000000000000000000000000001";
+// const ALICE = "0x0000000000000000000000000000000000000001";
 const BOB = "0x0000000000000000000000000000000000000002";
 
 // EXPORT - token address
-const TOKEN_ADDR = 3;
+const TOKEN_ADDR_STR = "0x0000000000000000000000000000000000000003";
+const TOKEN_ADDR_INT = 3;
+
+const writeToFixture = process.argv[2] == "--writeFixture";
 
 const sk = BigInt(1);
 
@@ -58,8 +74,8 @@ const flaxAddrInput: FlaxAddressInput = {
 const oldNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 0n,
-  type: BigInt(TOKEN_ADDR),
-  value: 50n,
+  type: BigInt(TOKEN_ADDR_INT),
+  value: 100n,
   id: BigInt(SNARK_SCALAR_FIELD - 1),
 };
 console.log("OLD NOTE: ", oldNote);
@@ -67,39 +83,34 @@ console.log("OLD NOTE: ", oldNote);
 const ownerHash = flaxAddr.hash();
 const oldNoteCommitment = poseidon([
   ownerHash,
+  0n,
   oldNote.type,
   oldNote.id,
   oldNote.value,
 ]);
 console.log("OLD NOTE COMMITMENT: ", oldNoteCommitment);
 
-// EXPORT encoded function data
-const contractEncodedFunction =
-  IERC20__factory.createInterface().encodeFunctionData("transfer", [
-    "0x0000000000000000000000000000000000000001",
-    100,
-  ]);
-console.log("ENCODED FUNCTION: ", contractEncodedFunction);
+const nullifier = poseidon([flaxSigner.privkey.vk, oldNoteCommitment]);
 
-// Generate valid merkle proof
+// EXPORT valid merkle proof
 const tree = new BinaryPoseidonTree();
 tree.insert(oldNoteCommitment);
 console.log("MERKLE ROOT: ", tree.root());
 
-const merkleProof = tree.createProof(tree.count - 1);
+const merkleProof = tree.createProof(0);
 const merkleProofInput: MerkleProofInput = {
   path: merkleProof.pathIndices.map((n) => BigInt(n)),
   siblings: merkleProof.siblings,
 };
-console.log(merkleProofInput);
+console.log("MERKLE PROOF: ", merkleProofInput);
 
 // New note resulting from spend of 50 units
 const newNote: NoteInput = {
   owner: flaxAddrInput,
-  nonce: 2n,
-  type: 10n,
+  nonce: 1n,
+  type: oldNote.type,
+  id: oldNote.id,
   value: 50n,
-  id: 5n,
 };
 console.log("NEW NOTE: ", newNote);
 
@@ -111,8 +122,55 @@ const newNoteCommitment = poseidon([
 ]);
 console.log("NEW NOTE COMMITMENT: ", newNoteCommitment);
 
+// EXPORT encoded function data
+const encodedFunction = IERC20__factory.createInterface().encodeFunctionData(
+  "transfer",
+  [BOB, 50]
+);
+console.log("ENCODED FUNCTION: ", encodedFunction);
+const action: Action = {
+  contractAddress: TOKEN_ADDR_STR,
+  encodedFunction: encodedFunction,
+};
+
+// _________ Operation __________
+
+const unprovenSpendTransaction: UnprovenSpendTransaction = {
+  commitmentTreeRoot: merkleProof.root,
+  nullifier: nullifier,
+  newNoteCommitment: newNoteCommitment,
+  asset: TOKEN_ADDR_STR,
+  value: oldNote.value,
+  id: BigInt(SNARK_SCALAR_FIELD - 1),
+};
+console.log("UNPROVEN SPEND: ", unprovenSpendTransaction);
+
+const tokens: Tokens = {
+  spendTokens: [TOKEN_ADDR_STR],
+  refundTokens: [TOKEN_ADDR_STR],
+};
+console.log("TOKENS: ", tokens);
+
+const unprovenOperation: UnprovenOperation = {
+  refundAddr: flaxAddrInput,
+  tokens: tokens,
+  actions: [action],
+  gasLimit: 1_000_000n,
+};
+console.log("UNPROVEN OPERATION: ", unprovenOperation);
+
 // Sign operation hash
-const operationDigest = BigInt(12345);
+const operationHash = hashOperation(unprovenOperation);
+console.log("OPERATION HASH: ", operationHash);
+
+const spendHash = hashSpend(unprovenSpendTransaction);
+console.log("SPEND HASH: ", spendHash);
+
+const operationDigest = BigInt(
+  calculateOperationDigest(operationHash, spendHash)
+);
+console.log("OPERATION DIGEST: ", operationDigest);
+
 const opSig = flaxSigner.sign(operationDigest);
 console.log(opSig);
 
@@ -128,20 +186,22 @@ const spend2Inputs: Spend2Inputs = {
 };
 console.log(spend2Inputs);
 
-// (async () => {
-//   const proof = await proveSpend2(spend2Inputs);
-//   if (!(await verifySpend2Proof(proof))) {
-//     throw new Error("Proof invalid!");
-//   }
-//   const json = JSON.stringify(proof);
-//   console.log(json);
+(async () => {
+  const proof = await proveSpend2(spend2Inputs);
+  if (!(await verifySpend2Proof(proof))) {
+    throw new Error("Proof invalid!");
+  }
+  const json = JSON.stringify(proof);
+  console.log(json);
 
-//   fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
-//     encoding: "utf8",
-//     flag: "w",
-//   });
-//   process.exit(0);
-// })();
+  if (writeToFixture) {
+    fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  }
+  process.exit(0);
+})();
 
 /*
 bytes memory encodedFunction = abi.encodeWithSelector(
