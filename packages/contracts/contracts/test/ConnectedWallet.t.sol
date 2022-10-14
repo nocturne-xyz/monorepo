@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -167,71 +167,71 @@ contract DummyWalletTest is Test, TestUtils {
         );
     }
 
-    function testDummyTransferNoRefund() public {
-        SimpleERC20Token token = ERC20s[0];
-        aliceDepositFunds(token);
+    // function testConnectedTransferNoRefund() public {
+    //     SimpleERC20Token token = ERC20s[0];
+    //     aliceDepositFunds(token);
 
-        wallet.commit8FromQueue();
+    //     wallet.commit8FromQueue();
 
-        // Create transaction to withdraw 100 token from vault and transfer
-        // to bob
-        bytes memory encodedFunction = abi.encodeWithSelector(
-            token.transfer.selector,
-            BOB,
-            100
-        );
-        IWallet.Action memory transferAction = IWallet.Action({
-            contractAddress: address(token),
-            encodedFunction: encodedFunction
-        });
+    //     // Create transaction to withdraw 100 token from vault and transfer
+    //     // to bob
+    //     bytes memory encodedFunction = abi.encodeWithSelector(
+    //         token.transfer.selector,
+    //         BOB,
+    //         100
+    //     );
+    //     IWallet.Action memory transferAction = IWallet.Action({
+    //         contractAddress: address(token),
+    //         encodedFunction: encodedFunction
+    //     });
 
-        uint256 root = wallet.getRoot();
-        IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
-            commitmentTreeRoot: root,
-            nullifier: uint256(182),
-            newNoteCommitment: uint256(1038),
-            proof: defaultSpendProof(),
-            value: uint256(100),
-            asset: address(token),
-            id: ERC20_ID
-        });
+    //     uint256 root = wallet.getRoot();
+    //     IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
+    //         commitmentTreeRoot: root,
+    //         nullifier: uint256(182),
+    //         newNoteCommitment: uint256(1038),
+    //         proof: defaultSpendProof(),
+    //         value: uint256(100),
+    //         asset: address(token),
+    //         id: ERC20_ID
+    //     });
 
-        address[] memory spendTokens = new address[](1);
-        spendTokens[0] = address(token);
-        address[] memory refundTokens = new address[](0);
-        IWallet.Tokens memory tokens = IWallet.Tokens({
-            spendTokens: spendTokens,
-            refundTokens: refundTokens
-        });
+    //     address[] memory spendTokens = new address[](1);
+    //     spendTokens[0] = address(token);
+    //     address[] memory refundTokens = new address[](0);
+    //     IWallet.Tokens memory tokens = IWallet.Tokens({
+    //         spendTokens: spendTokens,
+    //         refundTokens: refundTokens
+    //     });
 
-        IWallet.SpendTransaction[]
-            memory spendTxs = new IWallet.SpendTransaction[](1);
-        spendTxs[0] = spendTx;
-        IWallet.Action[] memory actions = new IWallet.Action[](1);
-        actions[0] = transferAction;
-        IWallet.Operation memory op = IWallet.Operation({
-            spendTxs: spendTxs,
-            refundAddr: defaultFlaxAddress(),
-            tokens: tokens,
-            actions: actions,
-            gasLimit: DEFAULT_GAS_LIMIT
-        });
+    //     IWallet.SpendTransaction[]
+    //         memory spendTxs = new IWallet.SpendTransaction[](1);
+    //     spendTxs[0] = spendTx;
+    //     IWallet.Action[] memory actions = new IWallet.Action[](1);
+    //     actions[0] = transferAction;
+    //     IWallet.Operation memory op = IWallet.Operation({
+    //         spendTxs: spendTxs,
+    //         refundAddr: defaultFlaxAddress(),
+    //         tokens: tokens,
+    //         actions: actions,
+    //         gasLimit: DEFAULT_GAS_LIMIT
+    //     });
 
-        IWallet.Operation[] memory ops = new IWallet.Operation[](1);
-        ops[0] = op;
-        IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
+    //     IWallet.Operation[] memory ops = new IWallet.Operation[](1);
+    //     ops[0] = op;
+    //     IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
 
-        // Ensure 100 tokens have changed hands
-        assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(800));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
-        assertEq(token.balanceOf(address(BOB)), uint256(0));
+    //     // Ensure 100 tokens have changed hands
+    //     assertEq(token.balanceOf(address(wallet)), uint256(0));
+    //     assertEq(token.balanceOf(address(vault)), uint256(800));
+    //     assertEq(token.balanceOf(address(ALICE)), uint256(200));
+    //     assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        wallet.processBundle(bundle);
+    //     wallet.processBundle(bundle);
 
-        assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(700));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
-        assertEq(token.balanceOf(address(BOB)), uint256(100));
-    }
+    //     assertEq(token.balanceOf(address(wallet)), uint256(0));
+    //     assertEq(token.balanceOf(address(vault)), uint256(700));
+    //     assertEq(token.balanceOf(address(ALICE)), uint256(200));
+    //     assertEq(token.balanceOf(address(BOB)), uint256(100));
+    // }
 }

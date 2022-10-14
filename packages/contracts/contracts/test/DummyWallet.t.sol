@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 interface IHasherT3 {
     function hash(uint256[2] memory _elems) external view returns (uint256);

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 library Pairing {
     // The prime q in the base field F_q for G1

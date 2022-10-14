@@ -11,7 +11,7 @@
 //
 //
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 import {ISpend2Verifier} from "./interfaces/ISpend2Verifier.sol";
 
