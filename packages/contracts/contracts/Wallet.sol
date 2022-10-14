@@ -21,9 +21,9 @@ contract Wallet is IWallet, BalanceManager {
         address _vault,
         address _verifier,
         address _merkle,
-        address _hasherT4,
+        address _hasherT5,
         address _hasherT6
-    ) BalanceManager(_vault, _verifier, _merkle, _hasherT4, _hasherT6) {} // solhint-disable-line no-empty-blocks
+    ) BalanceManager(_vault, _verifier, _merkle, _hasherT5, _hasherT6) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
@@ -148,7 +148,8 @@ contract Wallet is IWallet, BalanceManager {
             payload,
             op.refundAddr.H1X,
             op.refundAddr.H1Y,
-            op.refundAddr.H2Hash,
+            op.refundAddr.H2X,
+            op.refundAddr.H2Y,
             spendTokensHash,
             refundTokensHash,
             op.gasLimit
@@ -169,7 +170,8 @@ contract Wallet is IWallet, BalanceManager {
                 deposit.id,
                 deposit.depositAddr.H1X,
                 deposit.depositAddr.H1Y,
-                deposit.depositAddr.H2Hash
+                deposit.depositAddr.H2X,
+                deposit.depositAddr.H2Y
             )
         );
 

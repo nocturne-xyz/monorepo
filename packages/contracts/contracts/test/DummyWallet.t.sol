@@ -9,8 +9,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT6} from "../PoseidonHashers.sol";
-import {IHasherT3, IHasherT4, IHasherT6} from "../interfaces/IHasher.sol";
+import {PoseidonHasherT3, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
+import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
@@ -36,7 +36,7 @@ contract DummyWalletTest is Test, TestUtils {
     IBatchMerkle merkle;
     ISpend2Verifier verifier;
     IHasherT3 hasherT3;
-    IHasherT4 hasherT4;
+    IHasherT5 hasherT5;
     IHasherT6 hasherT6;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -47,7 +47,12 @@ contract DummyWalletTest is Test, TestUtils {
         returns (IWallet.FLAXAddress memory)
     {
         return
-            IWallet.FLAXAddress({H1X: 1938477, H1Y: 9104058, H2Hash: 1032988});
+            IWallet.FLAXAddress({
+                H1X: 1938477,
+                H1Y: 9104058,
+                H2X: 1032988,
+                H2Y: 1032988
+            });
     }
 
     function defaultSpendProof()
@@ -122,7 +127,7 @@ contract DummyWalletTest is Test, TestUtils {
         }
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonAddrs[0]));
-        hasherT4 = IHasherT4(new PoseidonHasherT4(poseidonAddrs[1]));
+        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonAddrs[2]));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonAddrs[3]));
 
         // Instantiate vault, verifier, tree, and wallet
@@ -137,7 +142,7 @@ contract DummyWalletTest is Test, TestUtils {
             address(vault),
             address(verifier),
             address(merkle),
-            address(hasherT4),
+            address(hasherT5),
             address(hasherT6)
         );
 
@@ -152,7 +157,9 @@ contract DummyWalletTest is Test, TestUtils {
 
     function testPoseidon() public {
         console.log(hasherT3.hash([uint256(0), uint256(1)]));
-        console.log(hasherT4.hash([uint256(0), uint256(1), uint256(2)]));
+        console.log(
+            hasherT5.hash([uint256(0), uint256(1), uint256(2), uint256(3)])
+        );
         console.log(
             hasherT6.hash(
                 [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]

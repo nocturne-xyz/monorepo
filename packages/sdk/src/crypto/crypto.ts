@@ -50,9 +50,7 @@ export class FlaxAddress {
   }
 
   hash(): bigint {
-    const H1Hash = poseidon([this.h1[0], this.h1[1]]);
-    const H2Hash = poseidon([this.h2[0], this.h2[1]]);
-    return BigInt(poseidon([H1Hash, H2Hash]));
+    return BigInt(poseidon([this.h1[0], this.h1[1], this.h2[0], this.h2[1]]));
   }
 
   static parse(str: string): FlaxAddress {
