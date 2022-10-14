@@ -15,13 +15,27 @@ import { poseidon } from "circomlibjs";
 import { Note } from "../src/contract/types";
 import { IERC20__factory } from "@flax/contracts";
 
+/* Summary:
+ *  - Alice = address(1), Bob = address(2)
+ *  - Alice FlaxAddress seeds from sk = BigInt(1) (printed to console)
+ *  - Token A = address(3)
+ *  - Alice deposits 8 sets of 100 A tokens to vault
+ *  - Alice is spends 100 A tokens for an operation
+ *  - Operation is to transfer 50 A tokens to Bob
+ */
+
 // const ROOT_DIR = findWorkspaceRoot()!;
 // const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 const SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-const sk = BigInt(
-  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-);
+// EXPORT - sender/receiver addrs
+const ALICE = "0x0000000000000000000000000000000000000001";
+const BOB = "0x0000000000000000000000000000000000000002";
+
+// EXPORT - token address
+const TOKEN_ADDR = 3;
+
+const sk = BigInt(1);
 
 // Instantiate flax keypair and addr
 const flaxPrivKey = new FlaxPrivKey(sk);
@@ -29,6 +43,8 @@ const vk = flaxPrivKey.vk;
 const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
+
+console.log("FLAXAddress: ", flaxAddr);
 
 // EXPORT flax address
 const flaxAddrInput: FlaxAddressInput = {
@@ -38,25 +54,12 @@ const flaxAddrInput: FlaxAddressInput = {
   h2Y: flaxAddr.h2[1],
 };
 
-// EXPORT token address
-const tokenAddr = 1;
-
 // EXPORT old note, which will determine initial deposits and be put in tree
-const contractOldNote: Note = {
-  owner: flaxAddr,
-  nonce: 1n,
-  type: BigInt(tokenAddr),
-  value: 10n,
-  id: BigInt(SNARK_SCALAR_FIELD - 1),
-};
-console.log("CONTRACT OLD NOTE: ", contractOldNote);
-
-// Old note input to spend
 const oldNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 0n,
-  type: BigInt(tokenAddr),
-  value: 10n,
+  type: BigInt(TOKEN_ADDR),
+  value: 50n,
   id: BigInt(SNARK_SCALAR_FIELD - 1),
 };
 console.log("OLD NOTE: ", oldNote);
