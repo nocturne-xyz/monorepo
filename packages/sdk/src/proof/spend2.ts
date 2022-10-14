@@ -3,7 +3,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
-import { BaseProof } from "./common";
+import { BaseProof, normalizePublicSignals } from "./common";
 import * as fs from "fs";
 
 // eslint-disable-next-line
@@ -15,17 +15,15 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export interface Spend2ProofWithPublicSignals {
   proof: BaseProof;
-  publicSignals: Spend2PublicSignals;
-}
-
-export interface Spend2PublicSignals {
-  newNoteCommitment: bigint;
-  anchor: bigint;
-  type: bigint;
-  id: bigint;
-  value: bigint;
-  nullifier: bigint;
-  operationDigest: bigint;
+  publicSignals: [
+    bigint, // newNoteCommitment
+    bigint, // anchor
+    bigint, // type
+    bigint, // id
+    bigint, // value
+    bigint, // nullifier
+    bigint // operationDigest
+  ];
 }
 
 export interface FlaxAddressInput {
@@ -64,7 +62,8 @@ export async function proveSpend2(
   wasmPath = WASM_PATH,
   zkeyPath = ZKEY_PATH
 ): Promise<Spend2ProofWithPublicSignals> {
-  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } = inputs;
+  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
+    inputs;
   const signals = {
     vk,
 
@@ -99,7 +98,9 @@ export async function proveSpend2(
     newNoteValue: newNote.value,
   };
 
-  return await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
+  let proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
+  proof.publicSignals = normalizePublicSignals(proof.publicSignals);
+  return proof;
 }
 
 export async function verifySpend2Proof(
@@ -108,4 +109,11 @@ export async function verifySpend2Proof(
 ): Promise<boolean> {
   const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
   return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
+}
+
+export function spend2ProofToJson(proof: Spend2ProofWithPublicSignals): string {
+  return JSON.stringify(
+    proof,
+    (_, value) => (typeof value === "bigint" ? value.toString() : value) // return everything else unchanged
+  );
 }

@@ -12,6 +12,7 @@ import {
   Spend2Inputs,
   proveSpend2,
   verifySpend2Proof,
+  spend2ProofToJson,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
 import {
@@ -38,8 +39,12 @@ import {
  */
 
 const ROOT_DIR = findWorkspaceRoot()!;
-const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
-const SNARK_SCALAR_FIELD = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+const SPEND2_E2E_FIXTURE_PATH = path.join(
+  ROOT_DIR,
+  "fixtures/spend2E2EProof.json"
+);
+const SNARK_SCALAR_FIELD =
+  21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 
 // EXPORT - sender/receiver addrs
 // const ALICE = "0x0000000000000000000000000000000000000001";
@@ -76,7 +81,7 @@ const oldNote: NoteInput = {
   nonce: 0n,
   type: BigInt(TOKEN_ADDR_INT),
   value: 100n,
-  id: BigInt(SNARK_SCALAR_FIELD - 1),
+  id: SNARK_SCALAR_FIELD - 1n,
 };
 console.log("OLD NOTE: ", oldNote);
 
@@ -141,7 +146,7 @@ const unprovenSpendTransaction: UnprovenSpendTransaction = {
   newNoteCommitment: newNoteCommitment,
   asset: TOKEN_ADDR_STR,
   value: oldNote.value,
-  id: BigInt(SNARK_SCALAR_FIELD - 1),
+  id: SNARK_SCALAR_FIELD - 1n,
 };
 console.log("UNPROVEN SPEND: ", unprovenSpendTransaction);
 
@@ -191,64 +196,14 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  const json = JSON.stringify(proof);
+  const json = spend2ProofToJson(proof);
   console.log(json);
 
   if (writeToFixture) {
-    fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+    fs.writeFileSync(SPEND2_E2E_FIXTURE_PATH, json, {
       encoding: "utf8",
       flag: "w",
     });
   }
   process.exit(0);
 })();
-
-/*
-bytes memory encodedFunction = abi.encodeWithSelector(
-    token.transfer.selector,
-    BOB,
-    100
-);
-IWallet.Action memory transferAction = IWallet.Action({
-    contractAddress: address(token),
-    encodedFunction: encodedFunction
-});
-
-uint256 root = wallet.getRoot();
-IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
-    commitmentTreeRoot: root,
-    nullifier: uint256(182),
-    newNoteCommitment: uint256(1038),
-    proof: defaultSpendProof(),
-    value: uint256(100),
-    asset: address(token),
-    id: ERC20_ID,
-    c: uint256(0xc),
-    z: uint256(0xd)
-});
-
-address[] memory spendTokens = new address[](1);
-spendTokens[0] = address(token);
-address[] memory refundTokens = new address[](0);
-IWallet.Tokens memory tokens = IWallet.Tokens({
-    spendTokens: spendTokens,
-    refundTokens: refundTokens
-});
-
-IWallet.SpendTransaction[]
-    memory spendTxs = new IWallet.SpendTransaction[](1);
-spendTxs[0] = spendTx;
-IWallet.Action[] memory actions = new IWallet.Action[](1);
-actions[0] = transferAction;
-IWallet.Operation memory op = IWallet.Operation({
-    spendTxs: spendTxs,
-    refundAddr: defaultFlaxAddress(),
-    tokens: tokens,
-    actions: actions,
-    gasLimit: DEFAULT_GAS_LIMIT
-});
-
-IWallet.Operation[] memory ops = new IWallet.Operation[](1);
-ops[0] = op;
-IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
-*/
