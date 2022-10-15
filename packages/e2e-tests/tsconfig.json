@@ -1,19 +1,10 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
-  },
-  "exclude": [
-    "artifacts",
-    "cache",
-    "foundry_artifacts",
-    "contracts",
-    "node_modules",
-    "dist",
-    "config",
-    "scripts",
-    "tmp.ts"
-  ],
-  "include": ["index.ts", "src/**/*.ts", "package.json"],
-  "files": ["./hardhat.config.ts"]
+    "target": "es2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
 }

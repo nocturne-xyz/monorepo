@@ -83,6 +83,7 @@ module.exports = {
       "ISpend2Verifier",
       "IVault",
       "IWallet",
+      "Pairing",
       "PoseidonHasherT3",
       "PoseidonHasherT4",
       "PoseidonHasherT5",

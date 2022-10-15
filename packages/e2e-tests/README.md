@@ -1,12 +1,13 @@
-## Nomad Router
+# Sample Hardhat Project
 
-Solidity implementations of the Nomad Router.
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
 
-### Setup
+Try running some of the following tasks:
 
-- See repo setup
-- `brew install jq` &nbsp; OR &nbsp; `sudo apt-get install jq`
-
-### Build
-
-- `yarn build`
+```shell
+npx hardhat help
+npx hardhat test
+REPORT_GAS=true npx hardhat test
+npx hardhat node
+npx hardhat run scripts/deploy.ts
+```

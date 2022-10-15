@@ -1,25 +1,19 @@
+import "solhint";
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
-import "hardhat-gas-reporter";
-import "hardhat-abi-exporter";
+import { HardhatUserConfig } from "hardhat/config";
 import "hardhat-deploy";
 
-import * as dotenv from "dotenv";
-dotenv.config();
-
-module.exports = {
+const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.2",
     settings: {
-      optimizer: {
-        enabled: true,
-        runs: 999999,
-      },
-      metadata: {
-        bytecodeHash: "none",
-      },
+      optimizer: { enabled: true, runs: 999999 },
     },
   },
+  namedAccounts: {
+    owner: 0,
+    user: 1,
+  },
 };
+
+export default config;
