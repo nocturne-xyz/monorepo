@@ -1,5 +1,5 @@
 {
-  "name": "@flax/contracts",
+  "name": "@flax/e2e-tests",
   "version": "0.1.0",
   "description": "FLAX contracts",
   "license": "MIT OR Apache-2.0",
@@ -7,25 +7,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "bootstrap": "yarn clean && yarn build",
-    "build:deps": "../../scripts/install-deps.sh",
-    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
-    "clean": "hardhat clean && rm -rf dist && rm -rf src",
-    "compile": "hardhat compile",
-    "copy-definitions": "cp src/*.d.ts dist/src",
-    "lint": "solhint contracts/*.sol",
-    "lint:fix": "solhint --fix contracts/*.sol",
-    "prettier": "prettier --write './contracts'",
-    "prepublish": "yarn bootstrap && yarn build",
-    "test:unit": "FOUNDRY_PROFILE=contracts-ci forge test",
-    "test:unit-local": "FOUNDRY_PROFILE=contracts forge test",
-    "link:node_modules": "ln -s ../../node_modules"
+    "check": "tsc --noEmit",
+    "prettier": "prettier --write ./test ./lib",
+    "test:e2e": "hardhat test",
+    "testNoCompile": "hardhat test",
+    "relink-contracts": "cd ../contracts && yarn build && yarn link && cd ../e2e-tests && yarn link contracts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.7.3",
     "@openzeppelin/contracts-upgradeable": "4.7.3"
   },
   "devDependencies": {
+    "@flax/contracts": "workspace:^",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",

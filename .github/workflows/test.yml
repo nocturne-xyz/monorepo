@@ -23,3 +23,5 @@ jobs:
           yarn ci:build
       - run: |
           yarn ci:test:unit
+      - run: |
+          yarn ci:test:e2e

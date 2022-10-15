@@ -10,7 +10,8 @@
     "lint": "yarn turbo run lint",
     "test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
     "ci:build": "yarn turbo run build",
-    "ci:test:unit": "yarn turbo run test:unit --filter=!@flax/circuits..."
+    "ci:test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
+    "ci:test:e2e": "yarn turbo run test:e2e --filter=@flax/e2e-tests"
   },
   "workspaces": [
     "packages/*"
