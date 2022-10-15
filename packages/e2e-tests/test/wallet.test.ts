@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import hre from "hardhat";
+import { ethers, deployments } from "hardhat";
 import { expect } from "chai";
 import * as contracts from "@flax/contracts";
 
