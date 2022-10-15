@@ -8,12 +8,11 @@
     "install-circom": "./scripts/install_circom.sh",
     "circuits-build": "./scripts/spend2/build_spend2.sh",
     "build": "tsc --build",
-    "test:unit": "jest --passWithNoTests",
+    "test:unit": "",
     "lint": ""
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
-    "@types/jest": "^29.1.1",
     "@types/node": "^18.8.0",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
@@ -21,8 +20,6 @@
     "circomlibjs": "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "jest": "^29.1.2",
-    "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   },

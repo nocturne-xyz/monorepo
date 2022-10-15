@@ -1,25 +1,11 @@
 import "hardhat-gas-reporter";
 import "@nomiclabs/hardhat-etherscan";
+import "@nomiclabs/hardhat-waffle";
 import "hardhat-packager";
 import "hardhat-preprocessor";
-import * as fs from "fs";
-
-import { subtask } from "hardhat/config";
-import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 
 import * as dotenv from "dotenv";
 dotenv.config();
-
-const infuraKey = process.env.INFURA_API_KEY;
-
-subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
-  async (_, __, runSuper) => {
-    const paths: string[] = await runSuper();
-
-    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
-  }
-);
-
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -35,41 +21,5 @@ module.exports = {
         bytecodeHash: "none",
       },
     },
-  },
-
-  gasReporter: {
-    currency: "USD",
-  },
-
-  networks: {
-    localhost: {
-      url: "http://localhost:8545",
-    },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${infuraKey}`,
-    },
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
-    },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${infuraKey}`,
-    },
-  },
-
-  typechain: {
-    outDir: "./src",
-    target: "ethers-v5",
-    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
-  },
-
-  // config for hardhat-packager
-  // https://www.npmjs.com/package/hardhat-packager
-  packager: {
-    contracts: ["Wallet", "Vault", "IERC20"],
-    includeFactories: true,
-  },
-  paths: {
-    sources: "./contracts",
-    cache: "./cache_hardhat",
   },
 };

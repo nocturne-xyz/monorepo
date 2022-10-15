@@ -13,9 +13,11 @@
     "ci:test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
     "ci:test:e2e": "yarn turbo run test:e2e --filter=@flax/e2e-tests"
   },
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
     "turbo": "^1.5.5"

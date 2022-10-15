@@ -1,8 +1,16 @@
-import { ethers } from "ethers";
+import "@nomiclabs/hardhat-ethers";
+import hre from "hardhat";
 import { expect } from "chai";
+import * as contracts from "@flax/contracts";
 
 describe("Wallet", async () => {
+  beforeEach(async () => {
+    const c = contracts;
+    console.log(c);
+  });
+
   it("Test", async () => {
-    console.log("hello");
+    // const wallet = ethers.getContractAt("Wallet");
+    // console.log(hre);
   });
 });

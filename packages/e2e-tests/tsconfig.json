@@ -12,8 +12,8 @@
     "dist",
     "config",
     "scripts",
-    "tmp.ts",
-    "hardhat.config.ts"
+    "tmp.ts"
   ],
-  "include": ["index.ts", "src/**/*.ts", "package.json"]
+  "include": ["index.ts", "src/**/*.ts", "package.json"],
+  "files": ["./hardhat.config.ts"]
 }
