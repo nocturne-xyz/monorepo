@@ -22,8 +22,8 @@
     "link:node_modules": "ln -s ../../node_modules"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "~3.4.2",
-    "@openzeppelin/contracts-upgradeable": "~3.4.2"
+    "@openzeppelin/contracts": "4.7.3",
+    "@openzeppelin/contracts-upgradeable": "4.7.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",

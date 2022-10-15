@@ -993,11 +993,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@flax/contracts@workspace:packages/contracts"
   dependencies:
+    "@flax/sdk": "workspace:^"
     "@nomiclabs/hardhat-ethers": ^2.0.4
     "@nomiclabs/hardhat-etherscan": ^2.1.2
     "@nomiclabs/hardhat-waffle": ^2.0.1
-    "@openzeppelin/contracts": ~3.4.2
-    "@openzeppelin/contracts-upgradeable": ~3.4.2
+    "@openzeppelin/contracts": 4.7.3
+    "@openzeppelin/contracts-upgradeable": 4.7.3
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     "@types/node": ^17.0.14
@@ -1019,7 +1020,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@flax/sdk@workspace:packages/sdk":
+"@flax/sdk@workspace:^, @flax/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@flax/sdk@workspace:packages/sdk"
   dependencies:
@@ -1789,17 +1790,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts-upgradeable@npm:~3.4.2":
-  version: 3.4.2
-  resolution: "@openzeppelin/contracts-upgradeable@npm:3.4.2"
-  checksum: dd461cdc8353ee6219e746fa71eced068df46c6df4bfe29207a8ad35064b476c2aa532ec0026c505d9515857ada5838c445b2433e2dadc0878fc678046c4e8b0
+"@openzeppelin/contracts-upgradeable@npm:4.7.3":
+  version: 4.7.3
+  resolution: "@openzeppelin/contracts-upgradeable@npm:4.7.3"
+  checksum: c9ffb40cb847a975d440204fc6a811f43af960050242f707332b984d29bd16dc242ffa0935de61867aeb9e0357fadedb16b09b276deda5e9775582face831021
   languageName: node
   linkType: hard
 
-"@openzeppelin/contracts@npm:~3.4.2":
-  version: 3.4.2
-  resolution: "@openzeppelin/contracts@npm:3.4.2"
-  checksum: 0c90f029fe50a49643588e4c8670dae3bbf31795133a6ddce9bdcbc258486332700bb732287baabf7bf807f39182fe8ea2ffa19aa5caf359b1b9c0f083280748
+"@openzeppelin/contracts@npm:4.7.3":
+  version: 4.7.3
+  resolution: "@openzeppelin/contracts@npm:4.7.3"
+  checksum: 18382fcacf7cfd652f5dd0e70c08f08ea74eaa8ff11e9f9850639ada70198ae01a3f9493d89a52d724f2db394e9616bf6258017804612ba273167cf657fbb073
   languageName: node
   linkType: hard
 

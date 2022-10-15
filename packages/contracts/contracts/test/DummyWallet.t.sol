@@ -111,7 +111,7 @@ contract DummyWalletTest is Test, TestUtils {
         for (uint8 i = 0; i < 4; i++) {
             bytes memory path = abi.encodePacked(
                 bytes(root),
-                "/packages/contracts/poseidonBytecode/PoseidonT"
+                "/packages/contracts/poseidon-bytecode/PoseidonT"
             );
             path = abi.encodePacked(path, bytes(Strings.toString(i + 3)));
             path = abi.encodePacked(path, ".txt");

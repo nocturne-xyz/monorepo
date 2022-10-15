@@ -41,7 +41,7 @@ import {
 const ROOT_DIR = findWorkspaceRoot()!;
 const SPEND2_E2E_FIXTURE_PATH = path.join(
   ROOT_DIR,
-  "fixtures/spend2E2EProof.json"
+  "fixtures/spend2ProofE2E.json"
 );
 const SNARK_SCALAR_FIELD =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;

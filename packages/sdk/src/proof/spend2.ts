@@ -98,7 +98,7 @@ export async function proveSpend2(
     newNoteValue: newNote.value,
   };
 
-  let proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
+  const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
   proof.publicSignals = normalizePublicSignals(proof.publicSignals);
   return proof;
 }

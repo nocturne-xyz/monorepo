@@ -2,8 +2,8 @@ import { ethers } from "ethers";
 import { UnprovenOperation, UnprovenSpendTransaction } from "./types";
 
 export function hashOperation(op: UnprovenOperation): string {
-  console.log("[hashOperation]: packing encoded functions");
-  let payload = new Array() as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let payload = [] as any;
   for (let i = 0; i < op.actions.length; i++) {
     const action = op.actions[i];
     payload = ethers.utils.solidityPack(
@@ -16,7 +16,6 @@ export function hashOperation(op: UnprovenOperation): string {
     );
   }
 
-  console.log("[hashOperation]: packing tokens");
   const spendTokensHash = ethers.utils.keccak256(
     ethers.utils.solidityPack(["address[]"], [op.tokens.spendTokens])
   );
@@ -69,7 +68,7 @@ export function hashSpend(spend: UnprovenSpendTransaction): string {
 export function calculateOperationDigest(
   operationHash: string,
   spendHash: string
-) {
+): string {
   return ethers.utils.keccak256(
     ethers.utils.solidityPack(
       ["bytes32", "bytes32"],
