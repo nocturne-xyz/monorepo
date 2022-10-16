@@ -8,6 +8,9 @@ import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
 import {IHasherT6} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
+    uint256 public constant SNARK_SCALAR_FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     IBatchMerkle public noteCommitmentTree;
     mapping(uint256 => bool) public pastRoots;
     mapping(uint256 => bool) public nullifierSet;
@@ -54,7 +57,7 @@ contract CommitmentTreeManager {
         bytes32 spendHash = _hashSpend(spendTx);
         uint256 operationDigest = uint256(
             keccak256(abi.encodePacked(operationHash, spendHash))
-        );
+        ) % SNARK_SCALAR_FIELD;
 
         require(
             verifier.verifyProof(

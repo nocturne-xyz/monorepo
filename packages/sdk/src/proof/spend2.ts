@@ -30,6 +30,16 @@ export interface Spend2ProofWithPublicSignals {
   ];
 }
 
+export interface Spend2PublicSignals {
+  newNoteCommitment: bigint;
+  anchor: bigint;
+  type: bigint;
+  id: bigint;
+  value: bigint;
+  nullifier: bigint;
+  operationDigest: bigint;
+}
+
 export interface FlaxAddressInput {
   h1X: bigint;
   h1Y: bigint;
@@ -59,6 +69,20 @@ export interface Spend2Inputs {
   merkleProof: MerkleProofInput;
   c: bigint;
   z: bigint;
+}
+
+export function publicSignalsArrayToTyped(
+  publicSignals: bigint[]
+): Spend2PublicSignals {
+  return {
+    newNoteCommitment: publicSignals[0],
+    anchor: publicSignals[1],
+    type: publicSignals[2],
+    id: publicSignals[3],
+    value: publicSignals[4],
+    nullifier: publicSignals[5],
+    operationDigest: publicSignals[6],
+  };
 }
 
 function normalizeBigInt(n: bigint): bigint {

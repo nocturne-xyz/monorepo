@@ -1,4 +1,4 @@
-import { BaseProof } from "./common";
+import { BaseProof } from "../proof/common";
 
 export type SolidityProof = [
   bigint,

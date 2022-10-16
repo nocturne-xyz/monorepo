@@ -234,4 +234,11 @@ contract DummyWalletTest is Test, TestUtils {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(100));
     }
+
+    function testOperationHash() public {
+        uint256 operationDigest = uint256(
+            keccak256(abi.encodePacked(bytes32("0x"), bytes32("0x")))
+        ) % SNARK_SCALAR_FIELD;
+        console.log("Operation digest: ", operationDigest);
+    }
 }

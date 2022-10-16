@@ -89,9 +89,11 @@ template Spend(levels) {
     deriveNullifier.vk <== vk;
     nullifier <== deriveNullifier.nullifier;
 
-    // type and value
-    type <== oldNoteType; oldNoteType === newNoteType;
-    id <== oldNoteId; oldNoteId === newNoteId;
+    // Type and value
+    type <== oldNoteType; 
+    oldNoteType === newNoteType;
+    id <== oldNoteId; 
+    oldNoteId === newNoteId;
     value <== oldNoteValue - newNoteValue;
 
     // Viewing key integrity: h1^{vk} == h2

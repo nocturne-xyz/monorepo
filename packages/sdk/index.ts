@@ -5,7 +5,7 @@ export {
   FlaxSignature,
   FlaxSigner,
 } from "./src/crypto/crypto";
-export { SolidityProof } from "./src/proof/solidity";
+export { SolidityProof } from "./src/contract/proof";
 export {
   NoteInput,
   Spend2Inputs,
@@ -14,8 +14,13 @@ export {
 } from "./src/proof/spend2";
 export * from "./src/contract/types";
 
-export { proveSpend2, verifySpend2Proof } from "./src/proof/spend2";
-export { packToSolidityProof } from "./src/proof/solidity";
+export {
+  proveSpend2,
+  verifySpend2Proof,
+  normalizeSpend2Inputs,
+  publicSignalsArrayToTyped,
+} from "./src/proof/spend2";
+export { packToSolidityProof } from "./src/contract/proof";
 export {
   hashOperation,
   hashSpend,

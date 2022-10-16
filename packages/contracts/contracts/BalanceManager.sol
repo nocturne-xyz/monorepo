@@ -18,9 +18,6 @@ contract BalanceManager is
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    uint256 public constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
     IVault public vault;
     IHasherT5 public hasherT5;

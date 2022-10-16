@@ -1,6 +1,6 @@
 import { resetHardhatContext } from "hardhat/plugins-testing";
 import { expect } from "chai";
-import { ethers, deployments, getNamedAccounts } from "hardhat";
+import { ethers, deployments } from "hardhat";
 import {
   Wallet__factory,
   Vault__factory,
@@ -15,9 +15,6 @@ import {
 } from "@flax/contracts";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as path from "path";
-import * as fs from "fs";
 import {
   BinaryPoseidonTree,
   FlaxPrivKey,
@@ -39,6 +36,7 @@ import {
   ProvenSpendTransaction,
   ProvenOperation,
   Bundle,
+  publicSignalsArrayToTyped,
 } from "@flax/sdk";
 
 import { poseidon } from "circomlibjs";
@@ -124,6 +122,13 @@ describe("Wallet", async () => {
     await setup();
   });
 
+  it("Prints digests", async () => {
+    const val = ethers.utils.formatBytes32String("0x");
+    console.log("Val: ", val);
+    const operationDigest = calculateOperationDigest(val, val);
+    console.log("Operation : ", operationDigest);
+  });
+
   it("Test", async () => {
     // Deposit funds and commit note commitments
     await aliceDepositFunds();
@@ -169,6 +174,7 @@ describe("Wallet", async () => {
     const tree = new BinaryPoseidonTree();
     tree.insert(firstOldNoteCommitment);
     tree.insert(secondOldNoteCommitment);
+    console.log("ROOT: ", tree.root());
 
     // Generate proof for first note commitment
     expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
@@ -178,13 +184,13 @@ describe("Wallet", async () => {
       siblings: merkleProof.siblings,
     };
 
-    // New note and note commitment resulting from spend of 100 units
+    // New note and note commitment resulting from spend of 50 units
     const newNote: NoteInput = {
       owner: flaxSigner.address.toFlattened(),
       nonce: 12345n,
       type: firstOldNote.type,
       id: firstOldNote.id,
-      value: 100n,
+      value: 50n,
     };
     const newNoteCommitment = poseidon([
       ownerHash,
@@ -193,11 +199,11 @@ describe("Wallet", async () => {
       newNote.value,
     ]);
 
-    // Create Action to transfer the 100 tokens to bob
+    // Create Action to transfer the 50 tokens to bob
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [bob.address, 100]
+        [bob.address, 50]
       );
     const action: Action = {
       contractAddress: token.address,
@@ -229,9 +235,10 @@ describe("Wallet", async () => {
     // Calculate operation digest (combo of spend and operation)
     const operationHash = hashOperation(unprovenOperation);
     const spendHash = hashSpend(unprovenSpendTx);
-    const operationDigest = BigInt(
-      calculateOperationDigest(operationHash, spendHash)
-    );
+    const operationDigest =
+      BigInt(calculateOperationDigest(operationHash, spendHash)) %
+      SNARK_SCALAR_FIELD;
+    console.log("Operation digest: ", operationDigest);
 
     // Sign operation digest
     const opSig = flaxSigner.sign(operationDigest);
@@ -255,16 +262,22 @@ describe("Wallet", async () => {
     }
 
     // Create spend tx with proof
+    const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
     const spendTx: ProvenSpendTransaction = {
-      commitmentTreeRoot: unprovenSpendTx.commitmentTreeRoot,
-      nullifier: unprovenSpendTx.nullifier,
-      newNoteCommitment: unprovenSpendTx.newNoteCommitment,
+      commitmentTreeRoot:
+        BigInt(unprovenSpendTx.commitmentTreeRoot) % SNARK_SCALAR_FIELD,
+      nullifier: publicSignals.nullifier,
+      newNoteCommitment: publicSignals.newNoteCommitment,
       proof: solidityProof,
-      asset: unprovenSpendTx.asset,
-      value: unprovenSpendTx.value,
-      id: unprovenSpendTx.id,
+      asset: token.address,
+      value: publicSignals.value,
+      id: publicSignals.id,
     };
+
+    console.log("PROOF: ", proof);
+    console.log("SPEND TX: ", spendTx);
+    console.log("OPERATION DIGEST: ", operationDigest);
 
     // Create operation with spend tx and bundle
     const operation: ProvenOperation = {
@@ -274,6 +287,7 @@ describe("Wallet", async () => {
       actions: unprovenOperation.actions,
       gasLimit: unprovenOperation.gasLimit,
     };
+
     const bundle: Bundle = {
       operations: [operation],
     };
