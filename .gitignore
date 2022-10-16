@@ -16,6 +16,9 @@ lib/
 # turbo logs
 .turbo
 
+# contract build artifacts
+contract-artifacts
+
 # circom build artifacts
 .circom
 .ptau

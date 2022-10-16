@@ -17,8 +17,8 @@ import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
-import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
+import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 
 contract DummyWalletTest is Test, TestUtils {
     using stdJson for string;
@@ -135,7 +135,7 @@ contract DummyWalletTest is Test, TestUtils {
         merkle = new PoseidonBatchBinaryMerkle(
             32,
             0,
-            IPoseidonT3(address(hasherT3))
+            IPoseidonT3(poseidonAddrs[0])
         );
         verifier = new TestSpend2Verifier();
         wallet = new Wallet(

@@ -640,7 +640,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@flax/sdk@workspace:packages/sdk":
+"@flax/sdk@workspace:^, @flax/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@flax/sdk@workspace:packages/sdk"
   dependencies:
@@ -1637,6 +1637,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/glob@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@types/glob@npm:8.0.0"
+  dependencies:
+    "@types/minimatch": "*"
+    "@types/node": "*"
+  checksum: 1817b05f5a8aed851d102a65b5e926d5c777bef927ea62b36d635860eef5364f2046bb5a692d135b6f2b28f34e4a9d44ade9396122c0845bcc7636d35f624747
+  languageName: node
+  linkType: hard
+
 "@types/http-cache-semantics@npm:*":
   version: 4.0.1
   resolution: "@types/http-cache-semantics@npm:4.0.1"
@@ -1664,6 +1674,13 @@ __metadata:
   version: 5.1.1
   resolution: "@types/lru-cache@npm:5.1.1"
   checksum: e1d6c0085f61b16ec5b3073ec76ad1be4844ea036561c3f145fc19f71f084b58a6eb600b14128aa95809d057d28f1d147c910186ae51219f58366ffd2ff2e118
+  languageName: node
+  linkType: hard
+
+"@types/minimatch@npm:*":
+  version: 5.1.2
+  resolution: "@types/minimatch@npm:5.1.2"
+  checksum: 0391a282860c7cb6fe262c12b99564732401bdaa5e395bee9ca323c312c1a0f45efbf34dce974682036e857db59a5c9b1da522f3d6055aeead7097264c8705a8
   languageName: node
   linkType: hard
 
@@ -5048,10 +5065,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "e2e-tests@workspace:packages/e2e-tests"
   dependencies:
+    "@flax/contracts": "workspace:^"
+    "@flax/sdk": "workspace:^"
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
+    "@types/glob": ^8.0.0
     circomlibjs: 0.0.8
+    find-yarn-workspace-root: ^2.0.0
     hardhat: ^2.12.0
     hardhat-deploy: ^0.11.18
   languageName: unknown
