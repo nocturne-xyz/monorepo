@@ -11,7 +11,7 @@ export type SolidityProof = [
   bigint
 ];
 
-export default function packToSolidityProof(proof: BaseProof): SolidityProof {
+export function packToSolidityProof(proof: BaseProof): SolidityProof {
   return [
     proof.pi_a[0],
     proof.pi_a[1],

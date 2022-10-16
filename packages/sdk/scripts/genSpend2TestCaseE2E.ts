@@ -22,7 +22,7 @@ import {
   UnprovenOperation,
   UnprovenSpendTransaction,
 } from "../src/contract/types";
-import { IERC20__factory } from "@flax/contracts";
+import { SimpleERC20Token__factory } from "@flax/contracts";
 import {
   calculateOperationDigest,
   hashOperation,
@@ -128,10 +128,11 @@ const newNoteCommitment = poseidon([
 console.log("NEW NOTE COMMITMENT: ", newNoteCommitment);
 
 // EXPORT encoded function data
-const encodedFunction = IERC20__factory.createInterface().encodeFunctionData(
-  "transfer",
-  [BOB, 50]
-);
+const encodedFunction =
+  SimpleERC20Token__factory.createInterface().encodeFunctionData("transfer", [
+    BOB,
+    50,
+  ]);
 console.log("ENCODED FUNCTION: ", encodedFunction);
 const action: Action = {
   contractAddress: TOKEN_ADDR_STR,
