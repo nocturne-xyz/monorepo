@@ -43,16 +43,7 @@ contract Wallet is IWallet, BalanceManager {
 
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-
-            try this.performOperation{gas: op.gasLimit}(op) returns (
-                bool success,
-                bytes[] memory result
-            ) {
-                successes[i] = success;
-                results[i] = result;
-            } catch {
-                successes[i] = false;
-            }
+            this.performOperation{gas: op.gasLimit}(op);
         }
     }
 

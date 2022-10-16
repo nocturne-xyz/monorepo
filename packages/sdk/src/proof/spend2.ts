@@ -3,7 +3,11 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
-import { BaseProof, normalizePublicSignals } from "./common";
+import {
+  BaseProof,
+  normalizePublicSignals,
+  SNARK_SCALAR_FIELD,
+} from "./common";
 import * as fs from "fs";
 
 // eslint-disable-next-line
@@ -57,11 +61,70 @@ export interface Spend2Inputs {
   z: bigint;
 }
 
+function normalizeBigInt(n: bigint): bigint {
+  return BigInt(n) % SNARK_SCALAR_FIELD;
+}
+
+function normalizeFlaxAddressInput(
+  flaxAddressInput: FlaxAddressInput
+): FlaxAddressInput {
+  const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
+  return {
+    h1X: normalizeBigInt(h1X),
+    h1Y: normalizeBigInt(h1Y),
+    h2X: normalizeBigInt(h2X),
+    h2Y: normalizeBigInt(h2Y),
+  };
+}
+
+function normalizeNoteInput(noteInput: NoteInput): NoteInput {
+  const { owner, nonce, type, value, id } = noteInput;
+  return {
+    owner: normalizeFlaxAddressInput(owner),
+    nonce: normalizeBigInt(nonce),
+    type: normalizeBigInt(type),
+    value: normalizeBigInt(value),
+    id: normalizeBigInt(id),
+  };
+}
+
+function normalizeMerkleProofInput(
+  merkleProofInput: MerkleProofInput
+): MerkleProofInput {
+  let { path, siblings } = merkleProofInput;
+  for (let i = 0; i < path.length; i++) {
+    path[i] = normalizeBigInt(path[i]);
+  }
+  for (let i = 0; i < siblings.length; i++) {
+    siblings[i] = normalizeBigInt(siblings[i]);
+  }
+
+  return { path, siblings };
+}
+
+export function normalizeSpend2Inputs(inputs: Spend2Inputs): Spend2Inputs {
+  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
+    inputs;
+  const [spendPkX, spendPkY] = spendPk;
+
+  return {
+    vk: normalizeBigInt(vk),
+    operationDigest: normalizeBigInt(operationDigest),
+    oldNote: normalizeNoteInput(oldNote),
+    spendPk: [normalizeBigInt(spendPkX), normalizeBigInt(spendPkY)],
+    newNote: normalizeNoteInput(newNote),
+    merkleProof: normalizeMerkleProofInput(merkleProof),
+    c: normalizeBigInt(c),
+    z: normalizeBigInt(z),
+  };
+}
+
 export async function proveSpend2(
   inputs: Spend2Inputs,
   wasmPath = WASM_PATH,
   zkeyPath = ZKEY_PATH
 ): Promise<Spend2ProofWithPublicSignals> {
+  inputs = normalizeSpend2Inputs(inputs);
   const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
     inputs;
   const signals = {

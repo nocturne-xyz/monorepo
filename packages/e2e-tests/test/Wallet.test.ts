@@ -27,10 +27,9 @@ import {
   verifySpend2Proof,
   MerkleProofInput,
   NoteInput,
-  FlaxAddressInput,
+  UnprovenSpendTransaction,
   Spend2Inputs,
   SNARK_SCALAR_FIELD,
-  unprovenSpendTx,
   Tokens,
   UnprovenOperation,
   hashOperation,
@@ -179,13 +178,13 @@ describe("Wallet", async () => {
       siblings: merkleProof.siblings,
     };
 
-    // New note and note commitment resulting from spend of 50 units
+    // New note and note commitment resulting from spend of 100 units
     const newNote: NoteInput = {
       owner: flaxSigner.address.toFlattened(),
       nonce: 12345n,
       type: firstOldNote.type,
       id: firstOldNote.id,
-      value: 50n,
+      value: 100n,
     };
     const newNoteCommitment = poseidon([
       ownerHash,
@@ -194,11 +193,11 @@ describe("Wallet", async () => {
       newNote.value,
     ]);
 
-    // Create Action to transfer the 50 tokens to bob
+    // Create Action to transfer the 100 tokens to bob
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [bob.address, 50]
+        [bob.address, 100]
       );
     const action: Action = {
       contractAddress: token.address,
@@ -206,7 +205,7 @@ describe("Wallet", async () => {
     };
 
     // Create unproven spend
-    const unprovenSpendTx: unprovenSpendTx = {
+    const unprovenSpendTx: UnprovenSpendTransaction = {
       commitmentTreeRoot: merkleProof.root,
       nullifier: nullifier,
       newNoteCommitment: newNoteCommitment,
@@ -218,7 +217,7 @@ describe("Wallet", async () => {
     // Create unproven operation
     const tokens: Tokens = {
       spendTokens: [token.address],
-      refundTokens: [token.address],
+      refundTokens: [],
     };
     const unprovenOperation: UnprovenOperation = {
       refundAddr: flaxSigner.address.toFlattened(),
