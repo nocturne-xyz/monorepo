@@ -10,6 +10,7 @@ import {
   NoteInput,
   FlaxAddressInput,
   Spend2Inputs,
+  spend2ProofToJson,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
 
@@ -107,7 +108,7 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  const json = JSON.stringify(proof);
+  const json = spend2ProofToJson(proof);
   console.log(json);
 
   if (writeToFixture) {

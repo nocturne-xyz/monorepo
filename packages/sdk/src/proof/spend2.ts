@@ -112,8 +112,7 @@ export async function verifySpend2Proof(
 }
 
 export function spend2ProofToJson(proof: Spend2ProofWithPublicSignals): string {
-  return JSON.stringify(
-    proof,
-    (_, value) => (typeof value === "bigint" ? value.toString() : value) // return everything else unchanged
+  return JSON.stringify(proof, (_, value) =>
+    typeof value === "bigint" ? value.toString() : value
   );
 }

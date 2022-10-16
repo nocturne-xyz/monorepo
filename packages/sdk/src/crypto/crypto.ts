@@ -3,6 +3,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
+import { FlaxAddressInput } from "../proof/spend2";
 
 // TODO: rewrite Babyjub library to have constant time crypto
 
@@ -68,6 +69,15 @@ export class FlaxAddress {
     const b2 = Buffer.from(babyjub.packPoint(this.h2));
     const b = Buffer.concat([b1, b2]);
     return FlaxAddrPrefix + b.toString("base64");
+  }
+
+  toFlattened(): FlaxAddressInput {
+    return {
+      h1X: this.h1[0],
+      h1Y: this.h1[1],
+      h2X: this.h2[0],
+      h2Y: this.h2[1],
+    };
   }
 }
 

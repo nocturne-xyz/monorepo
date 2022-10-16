@@ -146,10 +146,10 @@ contract Wallet is IWallet, BalanceManager {
 
         payload = abi.encodePacked(
             payload,
-            op.refundAddr.H1X,
-            op.refundAddr.H1Y,
-            op.refundAddr.H2X,
-            op.refundAddr.H2Y,
+            op.refundAddr.h1X,
+            op.refundAddr.h1Y,
+            op.refundAddr.h2X,
+            op.refundAddr.h2Y,
             spendTokensHash,
             refundTokensHash,
             op.gasLimit
@@ -168,10 +168,10 @@ contract Wallet is IWallet, BalanceManager {
                 deposit.value,
                 deposit.spender,
                 deposit.id,
-                deposit.depositAddr.H1X,
-                deposit.depositAddr.H1Y,
-                deposit.depositAddr.H2X,
-                deposit.depositAddr.H2Y
+                deposit.depositAddr.h1X,
+                deposit.depositAddr.h1Y,
+                deposit.depositAddr.h2X,
+                deposit.depositAddr.h2Y
             )
         );
 

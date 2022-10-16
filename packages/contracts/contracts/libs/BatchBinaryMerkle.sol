@@ -84,10 +84,9 @@ library BatchBinaryMerkle {
         self.numberOfLeaves += 1;
     }
 
-    function insert2(
-        IncrementalTreeData storage self,
-        uint256[2] calldata leaves
-    ) internal {
+    function insert2(IncrementalTreeData storage self, uint256[2] memory leaves)
+        internal
+    {
         for (uint256 i = 0; i < 2; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
@@ -182,6 +181,22 @@ library BatchBinaryMerkle {
 
         self.root = hash;
         self.numberOfLeaves += 1;
+    }
+
+    function commit2FromQueue(IncrementalTreeData storage self) internal {
+        uint256 qLength = self.queueLength;
+        require(qLength >= 2, "Not enough eles in queue");
+
+        uint256 qStart = self.queueStart;
+        uint256[2] memory leaves;
+        for (uint256 i = 0; i < 2; i++) {
+            leaves[i] = self.queue[qStart + i];
+            delete self.queue[qStart + i];
+        }
+
+        self.queueStart = qStart + 2;
+
+        insert2(self, leaves);
     }
 
     function commit8FromQueue(IncrementalTreeData storage self) internal {

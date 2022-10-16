@@ -101,10 +101,10 @@ contract BalanceManager is
                 .depositAddr;
             uint256 depositAddrHash = hasherT5.hash(
                 [
-                    depositAddr.H1X,
-                    depositAddr.H1Y,
-                    depositAddr.H2X,
-                    depositAddr.H2Y
+                    depositAddr.h1X,
+                    depositAddr.h1Y,
+                    depositAddr.h2X,
+                    depositAddr.h2Y
                 ]
             );
 
@@ -120,7 +120,7 @@ contract BalanceManager is
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
         uint256 depositAddrHash = hasherT5.hash(
-            [depositAddr.H1X, depositAddr.H1Y, depositAddr.H2X, depositAddr.H2Y]
+            [depositAddr.h1X, depositAddr.h1Y, depositAddr.h2X, depositAddr.h2Y]
         );
 
         _handleRefund(
@@ -170,7 +170,7 @@ contract BalanceManager is
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
         uint256 refundAddrHash = hasherT5.hash(
-            [refundAddr.H1X, refundAddr.H1Y, refundAddr.H2X, refundAddr.H2Y]
+            [refundAddr.h1X, refundAddr.h1Y, refundAddr.h2X, refundAddr.h2Y]
         );
 
         _handleERC20Refunds(spendTokens, refundTokens, refundAddrHash);

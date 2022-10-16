@@ -15,7 +15,6 @@ contract TestSpend2Verifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/spend2Proof.json";
-    string constant E2E_FIXTURE_PATH = "/fixtures/spend2ProofE2E.json";
 
     ISpend2Verifier verifier;
 
@@ -64,9 +63,5 @@ contract TestSpend2Verifier is Test, TestUtils, JsonDecodings {
 
     function testBasicVerify() public {
         verifyFixture(BASIC_FIXTURE_PATH);
-    }
-
-    function testE2EVerify() public {
-        verifyFixture(E2E_FIXTURE_PATH);
     }
 }

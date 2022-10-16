@@ -30,6 +30,10 @@ contract PoseidonBatchBinaryMerkle is IBatchMerkle {
         return self.root;
     }
 
+    function commit2FromQueue() external override {
+        self.commit2FromQueue();
+    }
+
     function commit8FromQueue() external override {
         self.commit8FromQueue();
     }

@@ -48,10 +48,10 @@ contract DummyWalletTest is Test, TestUtils {
     {
         return
             IWallet.FLAXAddress({
-                H1X: 1938477,
-                H1Y: 9104058,
-                H2X: 1032988,
-                H2Y: 1032988
+                h1X: 1938477,
+                h1Y: 9104058,
+                h2X: 1032988,
+                h2Y: 1032988
             });
     }
 
