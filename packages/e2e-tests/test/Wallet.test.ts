@@ -122,12 +122,12 @@ describe("Wallet", async () => {
     await setup();
   });
 
-  it("Prints digests", async () => {
-    const val = ethers.utils.formatBytes32String("0x");
-    console.log("Val: ", val);
-    const operationDigest = calculateOperationDigest(val, val);
-    console.log("Operation : ", operationDigest);
-  });
+  // it("Prints digests", async () => {
+  //   const val = ethers.utils.formatBytes32String("0x");
+  //   console.log("Val: ", val);
+  //   const operationDigest = calculateOperationDigest(val, val);
+  //   console.log("Operation : ", operationDigest);
+  // });
 
   it("Test", async () => {
     // Deposit funds and commit note commitments
@@ -179,10 +179,12 @@ describe("Wallet", async () => {
     // Generate proof for first note commitment
     expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
     const merkleProof = tree.createProof(0);
+    console.log("MERKLE PROOF PRE: ", merkleProof);
     const merkleProofInput: MerkleProofInput = {
       path: merkleProof.pathIndices.map((n) => BigInt(n)),
       siblings: merkleProof.siblings,
     };
+    console.log("MERKLE PROOF POST: ", merkleProofInput);
 
     // New note and note commitment resulting from spend of 50 units
     const newNote: NoteInput = {

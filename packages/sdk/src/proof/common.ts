@@ -11,9 +11,13 @@ export interface BaseProof {
   curve: any;
 }
 
+export function normalizeBigInt(n: bigint): bigint {
+  return BigInt(n) % SNARK_SCALAR_FIELD;
+}
+
 export function normalizePublicSignals(signals: bigint[]): bigint[] {
   for (let i = 0; i < signals.length; i++) {
-    signals[i] = BigInt(signals[i]) % SNARK_SCALAR_FIELD;
+    signals[i] = normalizeBigInt(signals[i]);
   }
   return signals;
 }

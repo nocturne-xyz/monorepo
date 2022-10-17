@@ -3,11 +3,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
-import {
-  BaseProof,
-  normalizePublicSignals,
-  SNARK_SCALAR_FIELD,
-} from "./common";
+import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
 import * as fs from "fs";
 
 // eslint-disable-next-line
@@ -57,7 +53,7 @@ export interface NoteInput {
 
 export interface MerkleProofInput {
   path: bigint[];
-  siblings: bigint[];
+  siblings: any[];
 }
 
 export interface Spend2Inputs {
@@ -83,10 +79,6 @@ export function publicSignalsArrayToTyped(
     nullifier: publicSignals[5],
     operationDigest: publicSignals[6],
   };
-}
-
-function normalizeBigInt(n: bigint): bigint {
-  return BigInt(n) % SNARK_SCALAR_FIELD;
 }
 
 function normalizeFlaxAddressInput(
