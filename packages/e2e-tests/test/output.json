@@ -1,0 +1,24 @@
+[
+  {
+    "type": "BigNumber", // new note commitment
+    "hex": "0x0ec63da1c4218001a4b6b31b970de8568ea6ce97d4dab1f9a4b0cb4c4f9031ff"
+  },
+  {
+    "type": "BigNumber", // commitment tree root
+    "hex": "0x05f2acf39d2a90708d24cc18c799dbb3434307d94fd9e0fbd0fbc3eeac615c94"
+  },
+  { "type": "BigNumber", "hex": "0xa513e6e4b8f2a923d98304ec87f64353c4d5c853" }, // address
+  {
+    "type": "BigNumber", // id
+    "hex": "0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000000"
+  },
+  { "type": "BigNumber", "hex": "0x32" }, // value
+  {
+    "type": "BigNumber", // nullifier
+    "hex": "0x28ed761463ef9fa84eea13dc644ad334d6a291b23c6a206edfe01db317844957"
+  },
+  {
+    "type": "BigNumber",
+    "hex": "0x2509bef5e0afe66e1d1b83e662a54a367212f3d974ef90d52115086f7db65cc1"
+  }
+]

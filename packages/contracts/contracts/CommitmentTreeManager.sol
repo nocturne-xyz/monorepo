@@ -19,6 +19,17 @@ contract CommitmentTreeManager {
     ISpend2Verifier public verifier;
     IHasherT6 public hasherT6;
 
+    // REMOVE: debug
+    event Signals(
+        uint256 indexed newNoteCommitment,
+        uint256 indexed commitmentTreeRoot,
+        uint256 asset,
+        uint256 id,
+        uint256 value,
+        uint256 nullifier,
+        uint256 indexed operationDigest
+    );
+
     constructor(
         address _verifier,
         address _noteCommitmentTree,
@@ -59,26 +70,38 @@ contract CommitmentTreeManager {
             keccak256(abi.encodePacked(operationHash, spendHash))
         ) % SNARK_SCALAR_FIELD;
 
-        require(
-            verifier.verifyProof(
-                [spendTx.proof[0], spendTx.proof[1]],
-                [
-                    [spendTx.proof[2], spendTx.proof[3]],
-                    [spendTx.proof[4], spendTx.proof[5]]
-                ],
-                [spendTx.proof[6], spendTx.proof[7]],
-                [
-                    spendTx.newNoteCommitment,
-                    spendTx.commitmentTreeRoot,
-                    uint256(uint160(spendTx.asset)),
-                    spendTx.id,
-                    spendTx.value,
-                    spendTx.nullifier,
-                    operationDigest
-                ]
-            ),
-            "Spend proof invalid"
+        // REMOVE: debugging
+        emit Signals(
+            spendTx.newNoteCommitment,
+            spendTx.commitmentTreeRoot,
+            uint256(uint160(spendTx.asset)),
+            spendTx.id,
+            spendTx.value,
+            spendTx.nullifier,
+            operationDigest
         );
+
+        // READD: debug
+        // require(
+        //     verifier.verifyProof(
+        //         [spendTx.proof[0], spendTx.proof[1]],
+        //         [
+        //             [spendTx.proof[2], spendTx.proof[3]],
+        //             [spendTx.proof[4], spendTx.proof[5]]
+        //         ],
+        //         [spendTx.proof[6], spendTx.proof[7]],
+        //         [
+        //             spendTx.newNoteCommitment,
+        //             spendTx.commitmentTreeRoot,
+        //             uint256(uint160(spendTx.asset)),
+        //             spendTx.id,
+        //             spendTx.value,
+        //             spendTx.nullifier,
+        //             operationDigest
+        //         ]
+        //     ),
+        //     "Spend proof invalid"
+        // );
 
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
 

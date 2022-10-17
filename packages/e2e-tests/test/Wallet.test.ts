@@ -295,7 +295,8 @@ describe("Wallet", async () => {
     };
 
     const res = await wallet.processBundle(bundle);
-    console.log(res);
+    const waited = await res.wait();
+    console.log(JSON.stringify(waited.events[0].args));
 
     console.log("Bob address: ", bob.address);
     console.log("alice tokens: ", await token.balanceOf(alice.address));

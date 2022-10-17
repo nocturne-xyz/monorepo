@@ -5075,6 +5075,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     hardhat: ^2.12.0
     hardhat-deploy: ^0.11.18
+    hardhat-tracer: ^1.1.0-rc.9
   languageName: unknown
   linkType: soft
 
@@ -6151,7 +6152,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.5.1, ethers@npm:^5.5.2, ethers@npm:^5.5.3":
+"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.5.1, ethers@npm:^5.5.2, ethers@npm:^5.5.3, ethers@npm:^5.6.1":
   version: 5.7.1
   resolution: "ethers@npm:5.7.1"
   dependencies:
@@ -7422,6 +7423,19 @@ __metadata:
   peerDependencies:
     hardhat: ^2.0.5
   checksum: 7d543c2965828441741950b153d584ff096d7a006975f06af9870e05a928e56122b463c4a1b3b346f9a3baccaa6ee2dec1dfd026a434ac714ebf127bbe842fef
+  languageName: node
+  linkType: hard
+
+"hardhat-tracer@npm:^1.1.0-rc.9":
+  version: 1.1.0-rc.9
+  resolution: "hardhat-tracer@npm:1.1.0-rc.9"
+  dependencies:
+    ethers: ^5.6.1
+  peerDependencies:
+    chalk: 4.x
+    ethers: 5.x
+    hardhat: 2.x
+  checksum: 1cce7151f9f74e0c75a64fac6fa856dc20069cd4fb3c535f5330d2aa7d8105710396bb295d629bcec2d191ed9d9cc785d1b948dfa9d464df671668dc453da183
   languageName: node
   linkType: hard
 

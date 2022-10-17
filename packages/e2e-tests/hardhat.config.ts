@@ -2,6 +2,7 @@ import "solhint";
 import "@nomiclabs/hardhat-ethers";
 import { HardhatUserConfig } from "hardhat/config";
 import "hardhat-deploy";
+import "hardhat-tracer";
 import * as path from "path";
 
 const config: HardhatUserConfig = {
