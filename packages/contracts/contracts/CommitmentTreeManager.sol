@@ -69,11 +69,11 @@ contract CommitmentTreeManager {
                 [spendTx.proof[6], spendTx.proof[7]],
                 [
                     spendTx.newNoteCommitment,
-                    spendTx.nullifier,
-                    uint256(uint160(spendTx.asset)),
-                    spendTx.value,
                     spendTx.commitmentTreeRoot,
+                    uint256(uint160(spendTx.asset)),
                     spendTx.id,
+                    spendTx.value,
+                    spendTx.nullifier,
                     operationDigest
                 ]
             ),
