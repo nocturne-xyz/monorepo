@@ -1,9 +1,7 @@
 import "solhint";
 import "@nomiclabs/hardhat-ethers";
-import { HardhatUserConfig } from "hardhat/config";
 import "hardhat-deploy";
-import "hardhat-tracer";
-import * as path from "path";
+import { HardhatUserConfig } from "hardhat/config";
 
 const config: HardhatUserConfig = {
   solidity: {

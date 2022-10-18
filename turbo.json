@@ -14,11 +14,15 @@
     "@flax/e2e-tests#build": {
       "dependsOn": ["@flax/contracts#build", "@flax/sdk#build"]
     },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
     "test:unit": {
       "dependsOn": ["build"],
       "outputs": []
     },
-    "test": {
+    "test:e2e": {
       "dependsOn": ["build"],
       "outputs": []
     }

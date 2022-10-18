@@ -123,11 +123,11 @@ describe("Wallet", async () => {
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
-    // Deposit funds and commit note commitments
+    console.log("Deposit funds and commit note commitments");
     await aliceDepositFunds();
     await wallet.commit2FromQueue();
 
-    // Create two corresponding notes from deposits
+    console.log("Create two corresponding notes from deposits");
     const firstOldNote: NoteInput = {
       owner: flaxSigner.address.toFlattened(),
       nonce: 0n,
@@ -143,7 +143,7 @@ describe("Wallet", async () => {
       id: SNARK_SCALAR_FIELD - 1n,
     };
 
-    // Create corresponding note commitments
+    console.log("Create corresponding note commitments");
     const ownerHash = flaxSigner.address.hash();
     const firstOldNoteCommitment = poseidon([
       ownerHash,
@@ -160,26 +160,25 @@ describe("Wallet", async () => {
       secondOldNote.value,
     ]);
 
-    // Create nullifier for first note
+    console.log("Create nullifier for first note");
     const nullifier = poseidon([flaxSigner.privkey.vk, firstOldNoteCommitment]);
 
-    // Replicate commitment tree state
+    console.log("Replicate commitment tree state");
     const tree = new BinaryPoseidonTree();
     tree.insert(firstOldNoteCommitment);
     tree.insert(secondOldNoteCommitment);
-    console.log("ROOT: ", tree.root());
 
-    // Generate proof for first note commitment
+    console.log("Generate proof for first note commitment");
     expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
     const merkleProof = tree.createProof(0);
-    console.log("MERKLE PROOF PRE: ", merkleProof);
     const merkleProofInput: MerkleProofInput = {
       path: merkleProof.pathIndices.map((n) => BigInt(n)),
       siblings: merkleProof.siblings,
     };
-    console.log("MERKLE PROOF POST: ", merkleProofInput);
 
-    // New note and note commitment resulting from spend of 50 units
+    console.log(
+      "New note and note commitment resulting from spend of 50 units"
+    );
     const newNote: NoteInput = {
       owner: flaxSigner.address.toFlattened(),
       nonce: 12345n,
@@ -195,7 +194,7 @@ describe("Wallet", async () => {
       newNote.value,
     ]);
 
-    // Create Action to transfer the 50 tokens to bob
+    console.log("Create Action to transfer the 50 tokens to bob");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
@@ -206,7 +205,7 @@ describe("Wallet", async () => {
       encodedFunction: encodedFunction,
     };
 
-    // Create unproven spend
+    console.log("Create unproven spend");
     const unprovenSpendTx: UnprovenSpendTransaction = {
       commitmentTreeRoot: merkleProof.root,
       nullifier: nullifier,
@@ -216,7 +215,7 @@ describe("Wallet", async () => {
       id: SNARK_SCALAR_FIELD - 1n,
     };
 
-    // Create unproven operation
+    console.log("Create unproven operation");
     const tokens: Tokens = {
       spendTokens: [token.address],
       refundTokens: [token.address],
@@ -228,17 +227,17 @@ describe("Wallet", async () => {
       gasLimit: 1_000_000n,
     };
 
-    // Calculate operation digest (combo of spend and operation)
+    console.log("Calculate operation digest (combo of spend and operation)");
     const operationHash = hashOperation(unprovenOperation);
     const spendHash = hashSpend(unprovenSpendTx);
     const operationDigest =
       BigInt(calculateOperationDigest(operationHash, spendHash)) %
       SNARK_SCALAR_FIELD;
 
-    // Sign operation digest
+    console.log("Sign operation digest");
     const opSig = flaxSigner.sign(operationDigest);
 
-    // Format prover inputs
+    console.log("Format prover inputs");
     const spend2Inputs: Spend2Inputs = {
       vk: flaxSigner.privkey.vk,
       spendPk: flaxSigner.privkey.spendPk(),
@@ -250,13 +249,13 @@ describe("Wallet", async () => {
       merkleProof: merkleProofInput,
     };
 
-    // Prove
+    console.log("Prove");
     const proof = await proveSpend2(spend2Inputs);
     if (!(await verifySpend2Proof(proof))) {
       throw new Error("Proof invalid!");
     }
 
-    // Create spend tx with proof
+    console.log("Create spend tx with proof");
     const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
     const spendTx: ProvenSpendTransaction = {
@@ -270,10 +269,7 @@ describe("Wallet", async () => {
       id: publicSignals.id,
     };
 
-    console.log("PROOF: ", proof);
-    console.log("SPEND TX: ", spendTx);
-
-    // Create operation with spend tx and bundle
+    console.log("Create operation with spend tx and bundle");
     const operation: ProvenOperation = {
       spendTxs: [spendTx],
       refundAddr: unprovenOperation.refundAddr,
@@ -286,6 +282,7 @@ describe("Wallet", async () => {
       operations: [operation],
     };
 
+    console.log("Process bundle");
     const res = await wallet.processBundle(bundle);
 
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
