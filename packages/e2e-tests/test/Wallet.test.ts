@@ -122,14 +122,7 @@ describe("Wallet", async () => {
     await setup();
   });
 
-  // it("Prints digests", async () => {
-  //   const val = ethers.utils.formatBytes32String("0x");
-  //   console.log("Val: ", val);
-  //   const operationDigest = calculateOperationDigest(val, val);
-  //   console.log("Operation : ", operationDigest);
-  // });
-
-  it("Test", async () => {
+  it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
     // Deposit funds and commit note commitments
     await aliceDepositFunds();
     await wallet.commit2FromQueue();
@@ -196,6 +189,7 @@ describe("Wallet", async () => {
     };
     const newNoteCommitment = poseidon([
       ownerHash,
+      newNote.nonce,
       newNote.type,
       newNote.id,
       newNote.value,
@@ -218,14 +212,14 @@ describe("Wallet", async () => {
       nullifier: nullifier,
       newNoteCommitment: newNoteCommitment,
       asset: token.address,
-      value: firstOldNote.value,
+      value: 50n, // value being used (old note - new note)
       id: SNARK_SCALAR_FIELD - 1n,
     };
 
     // Create unproven operation
     const tokens: Tokens = {
       spendTokens: [token.address],
-      refundTokens: [],
+      refundTokens: [token.address],
     };
     const unprovenOperation: UnprovenOperation = {
       refundAddr: flaxSigner.address.toFlattened(),
@@ -240,7 +234,6 @@ describe("Wallet", async () => {
     const operationDigest =
       BigInt(calculateOperationDigest(operationHash, spendHash)) %
       SNARK_SCALAR_FIELD;
-    console.log("Operation digest: ", operationDigest);
 
     // Sign operation digest
     const opSig = flaxSigner.sign(operationDigest);
@@ -279,7 +272,6 @@ describe("Wallet", async () => {
 
     console.log("PROOF: ", proof);
     console.log("SPEND TX: ", spendTx);
-    console.log("OPERATION DIGEST: ", operationDigest);
 
     // Create operation with spend tx and bundle
     const operation: ProvenOperation = {
@@ -295,12 +287,9 @@ describe("Wallet", async () => {
     };
 
     const res = await wallet.processBundle(bundle);
-    const waited = await res.wait();
-    console.log(JSON.stringify(waited.events[0].args));
 
-    console.log("Bob address: ", bob.address);
-    console.log("alice tokens: ", await token.balanceOf(alice.address));
-    console.log("bob tokens: ", await token.balanceOf(bob.address));
-    console.log("vault tokens: ", await token.balanceOf(vault.address));
+    expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
+    expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
+    expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
   });
 });

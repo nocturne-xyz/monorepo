@@ -70,38 +70,26 @@ contract CommitmentTreeManager {
             keccak256(abi.encodePacked(operationHash, spendHash))
         ) % SNARK_SCALAR_FIELD;
 
-        // REMOVE: debugging
-        emit Signals(
-            spendTx.newNoteCommitment,
-            spendTx.commitmentTreeRoot,
-            uint256(uint160(spendTx.asset)),
-            spendTx.id,
-            spendTx.value,
-            spendTx.nullifier,
-            operationDigest
+        require(
+            verifier.verifyProof(
+                [spendTx.proof[0], spendTx.proof[1]],
+                [
+                    [spendTx.proof[2], spendTx.proof[3]],
+                    [spendTx.proof[4], spendTx.proof[5]]
+                ],
+                [spendTx.proof[6], spendTx.proof[7]],
+                [
+                    spendTx.newNoteCommitment,
+                    spendTx.commitmentTreeRoot,
+                    uint256(uint160(spendTx.asset)),
+                    spendTx.id,
+                    spendTx.value,
+                    spendTx.nullifier,
+                    operationDigest
+                ]
+            ),
+            "Spend proof invalid"
         );
-
-        // READD: debug
-        // require(
-        //     verifier.verifyProof(
-        //         [spendTx.proof[0], spendTx.proof[1]],
-        //         [
-        //             [spendTx.proof[2], spendTx.proof[3]],
-        //             [spendTx.proof[4], spendTx.proof[5]]
-        //         ],
-        //         [spendTx.proof[6], spendTx.proof[7]],
-        //         [
-        //             spendTx.newNoteCommitment,
-        //             spendTx.commitmentTreeRoot,
-        //             uint256(uint160(spendTx.asset)),
-        //             spendTx.id,
-        //             spendTx.value,
-        //             spendTx.nullifier,
-        //             operationDigest
-        //         ]
-        //     ),
-        //     "Spend proof invalid"
-        // );
 
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
 

@@ -235,6 +235,24 @@ contract DummyWalletTest is Test, TestUtils {
         assertEq(token.balanceOf(address(BOB)), uint256(100));
     }
 
+    function testHashAddressArray() public {
+        bytes memory payload = abi.encodePacked([address(1)]);
+        console.logBytes(payload);
+    }
+
+    function testHashAction() public {
+        IWallet.Action memory action = IWallet.Action({
+            contractAddress: address(1),
+            encodedFunction: bytes("0x0")
+        });
+        bytes memory payload = abi.encodePacked(
+            bytes(""),
+            action.contractAddress,
+            bytes32(uint256(1))
+        );
+        console.logBytes(payload);
+    }
+
     function testOperationHash() public {
         uint256 operationDigest = uint256(
             keccak256(abi.encodePacked(bytes32("0x"), bytes32("0x")))
