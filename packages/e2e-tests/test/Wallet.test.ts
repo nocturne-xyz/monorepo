@@ -1,4 +1,3 @@
-import { resetHardhatContext } from "hardhat/plugins-testing";
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
 import {
@@ -41,7 +40,6 @@ import {
 
 import { poseidon } from "circomlibjs";
 const circomlibjs = require("circomlibjs");
-const poseidonContract = circomlibjs.poseidon_gencontract;
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;

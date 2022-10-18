@@ -23,5 +23,3 @@ jobs:
           yarn build
       - run: |
           yarn test:unit
-      - run: |
-          yarn test:e2e

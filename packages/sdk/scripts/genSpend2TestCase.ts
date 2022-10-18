@@ -2,7 +2,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
+import { FlaxSigner } from "../src/crypto/signer";
+import { FlaxPrivKey } from "../src/crypto/privkey";
 import {
   proveSpend2,
   verifySpend2Proof,
