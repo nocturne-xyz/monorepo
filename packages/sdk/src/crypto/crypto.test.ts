@@ -1,5 +1,6 @@
-import { FlaxAddress, FlaxPrivKey, FlaxSigner, rerandAddr } from "./crypto";
+import "mocha";
 import { expect } from "chai";
+import { FlaxAddress, FlaxPrivKey, FlaxSigner, rerandAddr } from "./crypto";
 
 describe("[crypto]", () => {
   it("View key should work", () => {

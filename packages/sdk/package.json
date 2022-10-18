@@ -11,33 +11,34 @@
   "scripts": {
     "build": "tsc --build",
     "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
-    "test:unit": "cross-env TS_NODE_PROJECT=\"tsconfig.test.json\" mocha -r ts-node/register src/**/*.test.ts",
+    "test:unit": "mocha --require ts-node/register src/**/*.test.ts",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^10.0.0",
     "@types/node": "^18.8.0",
     "@typescript-eslint/parser": "^5.20.0",
+    "chai": "^4.3.6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "find-yarn-workspace-root": "^2.0.0",
+    "mocha": "^10.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   },
   "dependencies": {
     "@flax/contracts": "workspace:^",
     "@types/bn.js": "^5.1.1",
-    "@types/chai": "^4.3.3",
-    "@types/mocha": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "circomlib": "0.0.18",
     "circomlibjs": "0.0.8",
-    "cross-env": "^7.0.3",
     "ethers": "^5.0.0",
     "ffjavascript": "^0.2.38",
-    "find-yarn-workspace-root": "^2.0.0",
     "snarkjs": "0.5.0"
   }
 }
