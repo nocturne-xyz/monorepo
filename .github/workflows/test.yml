@@ -20,8 +20,8 @@ jobs:
       - run: |
           yarn lint
       - run: |
-          yarn ci:build
+          yarn build
       - run: |
-          yarn ci:test:unit
+          yarn test:unit
       - run: |
-          yarn ci:test:e2e
+          yarn test:e2e

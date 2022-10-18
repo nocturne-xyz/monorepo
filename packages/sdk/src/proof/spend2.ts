@@ -107,7 +107,7 @@ function normalizeNoteInput(noteInput: NoteInput): NoteInput {
 function normalizeMerkleProofInput(
   merkleProofInput: MerkleProofInput
 ): MerkleProofInput {
-  let { path, siblings } = merkleProofInput;
+  const { path, siblings } = merkleProofInput;
   for (let i = 0; i < path.length; i++) {
     path[i] = normalizeBigInt(path[i]);
   }

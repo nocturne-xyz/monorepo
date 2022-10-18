@@ -8,6 +8,12 @@
       "dependsOn": ["lint"],
       "outputs": ["dist/**"]
     },
+    "@flax/sdk#build": {
+      "dependsOn": ["@flax/contracts#build"]
+    },
+    "@flax/e2e-tests#build": {
+      "dependsOn": ["@flax/contracts#build", "@flax/sdk#build"]
+    },
     "test:unit": {
       "dependsOn": ["build"],
       "outputs": []

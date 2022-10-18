@@ -640,6 +640,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@flax/e2e-tests@workspace:packages/e2e-tests":
+  version: 0.0.0-use.local
+  resolution: "@flax/e2e-tests@workspace:packages/e2e-tests"
+  dependencies:
+    "@flax/contracts": "workspace:^"
+    "@flax/sdk": "workspace:^"
+    "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
+    "@nomicfoundation/hardhat-network-helpers": ^1.0.6
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
+    "@types/glob": ^8.0.0
+    circomlibjs: 0.0.8
+    find-yarn-workspace-root: ^2.0.0
+    hardhat: ^2.12.0
+    hardhat-deploy: ^0.11.18
+  languageName: unknown
+  linkType: soft
+
 "@flax/sdk@workspace:^, @flax/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@flax/sdk@workspace:packages/sdk"
@@ -5060,23 +5077,6 @@ __metadata:
   checksum: e677cb4c48f031ca728601d6a20bf6aed4c629d69ef9643cb89c67583d673c4ec9317cc6427501f38bd8c368d3a18f173987cc02bd99d8cf8fe3d94259a22a20
   languageName: node
   linkType: hard
-
-"e2e-tests@workspace:packages/e2e-tests":
-  version: 0.0.0-use.local
-  resolution: "e2e-tests@workspace:packages/e2e-tests"
-  dependencies:
-    "@flax/contracts": "workspace:^"
-    "@flax/sdk": "workspace:^"
-    "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
-    "@nomicfoundation/hardhat-network-helpers": ^1.0.6
-    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
-    "@types/glob": ^8.0.0
-    circomlibjs: 0.0.8
-    find-yarn-workspace-root: ^2.0.0
-    hardhat: ^2.12.0
-    hardhat-deploy: ^0.11.18
-  languageName: unknown
-  linkType: soft
 
 "ecc-jsbn@npm:~0.1.1":
   version: 0.1.2
