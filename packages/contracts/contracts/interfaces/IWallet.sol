@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 interface IWallet {
@@ -10,9 +10,10 @@ interface IWallet {
     }
 
     struct FLAXAddress {
-        uint256 H1;
-        uint256 H2;
-        uint256 H3;
+        uint256 h1X;
+        uint256 h1Y;
+        uint256 h2X;
+        uint256 h2Y;
     }
 
     struct SpendTransaction {
@@ -23,8 +24,6 @@ interface IWallet {
         uint256 value; // 0 for ERC721
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
-        uint256 c; // c, z auth sig fields
-        uint256 z;
     }
 
     struct Tokens {

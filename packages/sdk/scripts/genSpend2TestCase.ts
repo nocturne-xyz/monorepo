@@ -2,7 +2,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxPrivKey, FlaxSigner } from "../src/crypto/crypto";
+import { FlaxSigner } from "../src/signer";
+import { FlaxPrivKey } from "../src/crypto/privkey";
 import {
   proveSpend2,
   verifySpend2Proof,
@@ -10,11 +11,14 @@ import {
   NoteInput,
   FlaxAddressInput,
   Spend2Inputs,
+  spend2ProofToJson,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
+
+const writeToFixture = process.argv[2] == "--writeFixture";
 
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
@@ -28,17 +32,17 @@ const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
 const flaxAddrInput: FlaxAddressInput = {
-  h1X: flaxAddr.H1[0],
-  h1Y: flaxAddr.H1[1],
-  h2X: flaxAddr.H2[0],
-  h2Y: flaxAddr.H2[1],
+  h1X: flaxAddr.h1[0],
+  h1Y: flaxAddr.h1[1],
+  h2X: flaxAddr.h2[0],
+  h2Y: flaxAddr.h2[1],
 };
 
 // Old note input to spend
 const oldNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 1n,
-  type: 10n,
+  asset: 10n,
   value: 100n,
   id: 5n,
 };
@@ -47,7 +51,7 @@ console.log("OLD NOTE: ", oldNote);
 const ownerHash = flaxAddr.hash();
 const oldNoteCommitment = poseidon([
   ownerHash,
-  oldNote.type,
+  oldNote.asset,
   oldNote.id,
   oldNote.value,
 ]);
@@ -69,7 +73,7 @@ console.log(merkleProofInput);
 const newNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 2n,
-  type: 10n,
+  asset: 10n,
   value: 50n,
   id: 5n,
 };
@@ -77,7 +81,7 @@ console.log("NEW NOTE: ", newNote);
 
 const newNoteCommitment = poseidon([
   ownerHash,
-  newNote.type,
+  newNote.asset,
   newNote.id,
   newNote.value,
 ]);
@@ -105,12 +109,14 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  const json = JSON.stringify(proof);
+  const json = spend2ProofToJson(proof);
   console.log(json);
 
-  fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
-    encoding: "utf8",
-    flag: "w",
-  });
+  if (writeToFixture) {
+    fs.writeFileSync(SPEND2_FIXTURE_PATH, json, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  }
   process.exit(0);
 })();

@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "./interfaces/IWallet.sol";
@@ -21,9 +21,9 @@ contract Wallet is IWallet, BalanceManager {
         address _vault,
         address _verifier,
         address _merkle,
-        address _hasherT4,
+        address _hasherT5,
         address _hasherT6
-    ) BalanceManager(_vault, _verifier, _merkle, _hasherT4, _hasherT6) {} // solhint-disable-line no-empty-blocks
+    ) BalanceManager(_vault, _verifier, _merkle, _hasherT5, _hasherT6) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
@@ -43,16 +43,7 @@ contract Wallet is IWallet, BalanceManager {
 
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-
-            try this.performOperation{gas: op.gasLimit}(op) returns (
-                bool success,
-                bytes[] memory result
-            ) {
-                successes[i] = success;
-                results[i] = result;
-            } catch {
-                successes[i] = false;
-            }
+            this.performOperation{gas: op.gasLimit}(op);
         }
     }
 
@@ -146,9 +137,10 @@ contract Wallet is IWallet, BalanceManager {
 
         payload = abi.encodePacked(
             payload,
-            op.refundAddr.H1,
-            op.refundAddr.H2,
-            op.refundAddr.H3,
+            op.refundAddr.h1X,
+            op.refundAddr.h1Y,
+            op.refundAddr.h2X,
+            op.refundAddr.h2Y,
             spendTokensHash,
             refundTokensHash,
             op.gasLimit
@@ -167,9 +159,10 @@ contract Wallet is IWallet, BalanceManager {
                 deposit.value,
                 deposit.spender,
                 deposit.id,
-                deposit.depositAddr.H1,
-                deposit.depositAddr.H2,
-                deposit.depositAddr.H3
+                deposit.depositAddr.h1X,
+                deposit.depositAddr.h1Y,
+                deposit.depositAddr.h2X,
+                deposit.depositAddr.h2Y
             )
         );
 

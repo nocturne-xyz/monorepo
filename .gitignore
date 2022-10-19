@@ -16,9 +16,15 @@ lib/
 # turbo logs
 .turbo
 
+# contract build artifacts
+contract-artifacts
+
 # circom build artifacts
 .circom
 .ptau
 .setup
 build
-circuit-artifacts
+circuit-artifacts/**/*.*
+!circuit-artifacts/*/*_js/*.wasm
+!circuit-artifacts/*/*_cpp/*.zkey
+!circuit-artifacts/*/*_cpp/*.json

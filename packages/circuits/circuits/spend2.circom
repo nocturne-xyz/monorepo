@@ -30,7 +30,7 @@ template Spend(levels) {
     signal input oldNoteOwnerH2X;
     signal input oldNoteOwnerH2Y;
     signal input oldNoteNonce;
-    signal input oldNoteType;
+    signal input oldNoteAsset;
     signal input oldNoteId;
     signal input oldNoteValue;
 
@@ -44,14 +44,14 @@ template Spend(levels) {
     signal input newNoteOwnerH2X;
     signal input newNoteOwnerH2Y;
     signal input newNoteNonce;
-    signal input newNoteType;
+    signal input newNoteAsset;
     signal input newNoteId;
     signal input newNoteValue;
 
     // Public outputs
     signal output newNoteCommitment;
     signal output anchor;
-    signal output type;
+    signal output asset;
     signal output id;
     signal output value;
     signal output nullifier;
@@ -68,7 +68,7 @@ template Spend(levels) {
     component oldNoteCommit = NoteCommit();
     oldNoteCommit.ownerHash <== oldNoteOwnerHash.out;
     oldNoteCommit.nonce <== oldNoteNonce;
-    oldNoteCommit.type <== oldNoteType;
+    oldNoteCommit.asset <== oldNoteAsset;
     oldNoteCommit.id <== oldNoteId;
     oldNoteCommit.value <== oldNoteValue;
     oldNoteCommitment <== oldNoteCommit.out;
@@ -89,9 +89,11 @@ template Spend(levels) {
     deriveNullifier.vk <== vk;
     nullifier <== deriveNullifier.nullifier;
 
-    // type and value
-    type <== oldNoteType; oldNoteType === newNoteType;
-    id <== oldNoteId; oldNoteId === newNoteId;
+    // Asset and value
+    asset <== oldNoteAsset; 
+    oldNoteAsset === newNoteAsset;
+    id <== oldNoteId; 
+    oldNoteId === newNoteId;
     value <== oldNoteValue - newNoteValue;
 
     // Viewing key integrity: h1^{vk} == h2
@@ -133,7 +135,7 @@ template Spend(levels) {
     component newNoteCommit = NoteCommit();
     newNoteCommit.ownerHash <== newNoteOwnerHash.out;
     newNoteCommit.nonce <== newNoteNonce;
-    newNoteCommit.type <== newNoteType;
+    newNoteCommit.asset <== newNoteAsset;
     newNoteCommit.id <== newNoteId;
     newNoteCommit.value <== newNoteValue;
     newNoteCommitment <== newNoteCommit.out;

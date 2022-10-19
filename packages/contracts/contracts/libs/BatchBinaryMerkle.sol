@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 import {IHasherT3} from "../interfaces/IHasher.sol";
 
@@ -37,8 +37,8 @@ library BatchBinaryMerkle {
         IncrementalTreeData storage self,
         uint8 depth,
         uint256 zero,
-        address _hasherT3
-    ) public {
+        IHasherT3 _hasherT3
+    ) internal {
         require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
             depth > 0 && depth <= MAX_DEPTH,
@@ -46,7 +46,7 @@ library BatchBinaryMerkle {
         );
 
         self.depth = depth;
-        self.hasherT3 = IHasherT3(_hasherT3);
+        self.hasherT3 = _hasherT3;
 
         for (uint8 i = 0; i < depth; i++) {
             self.zeroes[i] = zero;
@@ -59,7 +59,7 @@ library BatchBinaryMerkle {
     /// @dev Inserts a leaf in the tree.
     /// @param self: Tree data.
     /// @param leaf: Leaf to be inserted.
-    function insert(IncrementalTreeData storage self, uint256 leaf) public {
+    function insert(IncrementalTreeData storage self, uint256 leaf) internal {
         require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
             self.numberOfLeaves < 2**self.depth,
@@ -84,10 +84,9 @@ library BatchBinaryMerkle {
         self.numberOfLeaves += 1;
     }
 
-    function insert2(
-        IncrementalTreeData storage self,
-        uint256[2] calldata leaves
-    ) public {
+    function insert2(IncrementalTreeData storage self, uint256[2] memory leaves)
+        internal
+    {
         for (uint256 i = 0; i < 2; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
@@ -118,7 +117,7 @@ library BatchBinaryMerkle {
     }
 
     function insert8(IncrementalTreeData storage self, uint256[8] memory leaves)
-        public
+        internal
     {
         for (uint256 i = 0; i < 8; i++) {
             require(
@@ -154,7 +153,7 @@ library BatchBinaryMerkle {
     function insert16(
         IncrementalTreeData storage self,
         uint256[16] memory leaves
-    ) public {
+    ) internal {
         for (uint256 i = 0; i < 16; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
@@ -184,7 +183,23 @@ library BatchBinaryMerkle {
         self.numberOfLeaves += 1;
     }
 
-    function commit8FromQueue(IncrementalTreeData storage self) public {
+    function commit2FromQueue(IncrementalTreeData storage self) internal {
+        uint256 qLength = self.queueLength;
+        require(qLength >= 2, "Not enough eles in queue");
+
+        uint256 qStart = self.queueStart;
+        uint256[2] memory leaves;
+        for (uint256 i = 0; i < 2; i++) {
+            leaves[i] = self.queue[qStart + i];
+            delete self.queue[qStart + i];
+        }
+
+        self.queueStart = qStart + 2;
+
+        insert2(self, leaves);
+    }
+
+    function commit8FromQueue(IncrementalTreeData storage self) internal {
         uint256 qLength = self.queueLength;
         require(qLength >= 8, "Not enough eles in queue");
 
@@ -200,7 +215,7 @@ library BatchBinaryMerkle {
         insert8(self, leaves);
     }
 
-    function commit16FromQueue(IncrementalTreeData storage self) public {
+    function commit16FromQueue(IncrementalTreeData storage self) internal {
         uint256 qLength = self.queueLength;
         require(qLength >= 16, "Not enough eles in queue");
 
@@ -219,7 +234,7 @@ library BatchBinaryMerkle {
     function insertLeavesToQueue(
         IncrementalTreeData storage self,
         uint256[] memory leaves
-    ) public {
+    ) internal {
         uint256 qLength = self.queueLength;
         for (uint256 i = 0; i < leaves.length; i++) {
             self.queue[qLength + i] = leaves[i];
@@ -229,7 +244,7 @@ library BatchBinaryMerkle {
     }
 
     function insertLeafToQueue(IncrementalTreeData storage self, uint256 leaf)
-        public
+        internal
     {
         uint256 qLength = self.queueLength;
         self.queue[qLength] = leaf;

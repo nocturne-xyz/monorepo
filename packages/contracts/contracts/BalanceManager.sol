@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
@@ -11,29 +11,26 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-import {IHasherT3, IHasherT4, IHasherT6} from "./interfaces/IHasher.sol";
+import {IHasherT3, IHasherT5, IHasherT6} from "./interfaces/IHasher.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    uint256 public constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
     IVault public vault;
-    IHasherT4 public hasherT4;
+    IHasherT5 public hasherT5;
 
     constructor(
         address _vault,
         address _verifier,
         address _merkle,
-        address _hasherT4,
+        address _hasherT5,
         address _hasherT6
     ) CommitmentTreeManager(_verifier, _merkle, _hasherT6) {
         vault = IVault(_vault);
-        hasherT4 = IHasherT4(_hasherT4);
+        hasherT5 = IHasherT5(_hasherT5);
     }
 
     function onERC721Received(
@@ -99,8 +96,13 @@ contract BalanceManager is
             uint256 index = successfulTransfers[i];
             IWallet.FLAXAddress memory depositAddr = approvedDeposits[index]
                 .depositAddr;
-            uint256 depositAddrHash = hasherT4.hash(
-                [depositAddr.H1, depositAddr.H2, depositAddr.H3]
+            uint256 depositAddrHash = hasherT5.hash(
+                [
+                    depositAddr.h1X,
+                    depositAddr.h1Y,
+                    depositAddr.h2X,
+                    depositAddr.h2Y
+                ]
             );
 
             _handleRefund(
@@ -114,8 +116,8 @@ contract BalanceManager is
 
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
-        uint256 depositAddrHash = hasherT4.hash(
-            [depositAddr.H1, depositAddr.H2, depositAddr.H3]
+        uint256 depositAddrHash = hasherT5.hash(
+            [depositAddr.h1X, depositAddr.h1Y, depositAddr.h2X, depositAddr.h2Y]
         );
 
         _handleRefund(
@@ -164,8 +166,8 @@ contract BalanceManager is
         address[] calldata refundTokens,
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
-        uint256 refundAddrHash = hasherT4.hash(
-            [refundAddr.H1, refundAddr.H2, refundAddr.H3]
+        uint256 refundAddrHash = hasherT5.hash(
+            [refundAddr.h1X, refundAddr.h1Y, refundAddr.h2X, refundAddr.h2Y]
         );
 
         _handleERC20Refunds(spendTokens, refundTokens, refundAddrHash);

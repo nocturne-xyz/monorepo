@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 contract TestUtils {
     // Convert an hexadecimal character to their value
@@ -32,17 +32,15 @@ contract TestUtils {
     }
 
     // Parse string into int
-    function parseInt(string memory _value) public pure returns (uint256 _ret) {
-        bytes memory _bytesValue = bytes(_value);
-        uint256 j = 1;
-        for (
-            uint256 i = _bytesValue.length - 1;
-            i >= 0 && i < _bytesValue.length;
-            i--
-        ) {
-            assert(uint8(_bytesValue[i]) >= 48 && uint8(_bytesValue[i]) <= 57);
-            _ret += (uint8(_bytesValue[i]) - 48) * j;
-            j *= 10;
+    function parseInt(string memory s) public pure returns (uint256) {
+        bytes memory b = bytes(s);
+        uint256 result = 0;
+        for (uint256 i = 0; i < b.length; i++) {
+            uint256 c = uint256(uint8(b[i]));
+            if (c >= 48 && c <= 57) {
+                result = result * 10 + (c - 48);
+            }
         }
+        return result;
     }
 }

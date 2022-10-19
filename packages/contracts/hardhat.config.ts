@@ -25,7 +25,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
  */
 module.exports = {
   solidity: {
-    version: "0.7.6",
+    version: "0.8.2",
     settings: {
       optimizer: {
         enabled: true,
@@ -65,7 +65,41 @@ module.exports = {
   // config for hardhat-packager
   // https://www.npmjs.com/package/hardhat-packager
   packager: {
-    contracts: ["Wallet", "Vault"],
+    contracts: [
+      "IERC20",
+      "IERC721",
+      "IERC1155",
+      "IBatchMerkle",
+      "IHasherT3",
+      "IHasherT4",
+      "IHasherT5",
+      "IHasherT6",
+      "IHasherT7",
+      "IPoseidonT3",
+      "IPoseidonT4",
+      "IPoseidonT5",
+      "IPoseidonT6",
+      "IPoseidonT7",
+      "ISpend2Verifier",
+      "IVault",
+      "IWallet",
+      "Pairing",
+      "PoseidonHasherT3",
+      "PoseidonHasherT4",
+      "PoseidonHasherT5",
+      "PoseidonHasherT6",
+      "PoseidonHasherT7",
+      "Wallet",
+      "Vault",
+      "BatchBinaryMerkle",
+      "CommitmentTreeManager",
+      "BalanceManager",
+      "Spend2Verifier",
+      "PoseidonBatchBinaryMerkle",
+      "SimpleERC20Token",
+      "SimpleERC721Token",
+      "SimpleERC1155Token",
+    ],
     includeFactories: true,
   },
   paths: {

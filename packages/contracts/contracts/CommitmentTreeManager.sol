@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
@@ -8,6 +8,9 @@ import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
 import {IHasherT6} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
+    uint256 public constant SNARK_SCALAR_FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     IBatchMerkle public noteCommitmentTree;
     mapping(uint256 => bool) public pastRoots;
     mapping(uint256 => bool) public nullifierSet;
@@ -15,6 +18,17 @@ contract CommitmentTreeManager {
 
     ISpend2Verifier public verifier;
     IHasherT6 public hasherT6;
+
+    // REMOVE: debug
+    event Signals(
+        uint256 indexed newNoteCommitment,
+        uint256 indexed commitmentTreeRoot,
+        uint256 asset,
+        uint256 id,
+        uint256 value,
+        uint256 nullifier,
+        uint256 indexed operationDigest
+    );
 
     constructor(
         address _verifier,
@@ -24,6 +38,11 @@ contract CommitmentTreeManager {
         verifier = ISpend2Verifier(_verifier);
         noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
         hasherT6 = IHasherT6(_hasherT6);
+    }
+
+    function commit2FromQueue() external {
+        noteCommitmentTree.commit2FromQueue();
+        pastRoots[noteCommitmentTree.root()] = true;
     }
 
     function commit8FromQueue() external {
@@ -49,7 +68,7 @@ contract CommitmentTreeManager {
         bytes32 spendHash = _hashSpend(spendTx);
         uint256 operationDigest = uint256(
             keccak256(abi.encodePacked(operationHash, spendHash))
-        );
+        ) % SNARK_SCALAR_FIELD;
 
         require(
             verifier.verifyProof(
@@ -61,11 +80,11 @@ contract CommitmentTreeManager {
                 [spendTx.proof[6], spendTx.proof[7]],
                 [
                     spendTx.newNoteCommitment,
-                    spendTx.nullifier,
-                    uint256(uint160(spendTx.asset)),
-                    spendTx.value,
                     spendTx.commitmentTreeRoot,
+                    uint256(uint160(spendTx.asset)),
                     spendTx.id,
+                    spendTx.value,
+                    spendTx.nullifier,
                     operationDigest
                 ]
             ),

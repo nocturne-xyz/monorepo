@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -9,16 +9,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT6} from "../PoseidonHashers.sol";
-import {IHasherT3, IHasherT4, IHasherT6} from "../interfaces/IHasher.sol";
+import {PoseidonHasherT3, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
+import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
-import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
+import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 
 contract DummyWalletTest is Test, TestUtils {
     using stdJson for string;
@@ -36,7 +36,7 @@ contract DummyWalletTest is Test, TestUtils {
     IBatchMerkle merkle;
     ISpend2Verifier verifier;
     IHasherT3 hasherT3;
-    IHasherT4 hasherT4;
+    IHasherT5 hasherT5;
     IHasherT6 hasherT6;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -46,7 +46,13 @@ contract DummyWalletTest is Test, TestUtils {
         pure
         returns (IWallet.FLAXAddress memory)
     {
-        return IWallet.FLAXAddress({H1: 1938477, H2: 9104058, H3: 103048217});
+        return
+            IWallet.FLAXAddress({
+                h1X: 1938477,
+                h1Y: 9104058,
+                h2X: 1032988,
+                h2Y: 1032988
+            });
     }
 
     function defaultSpendProof()
@@ -105,7 +111,7 @@ contract DummyWalletTest is Test, TestUtils {
         for (uint8 i = 0; i < 4; i++) {
             bytes memory path = abi.encodePacked(
                 bytes(root),
-                "/packages/contracts/poseidonBytecode/PoseidonT"
+                "/packages/contracts/poseidon-bytecode/PoseidonT"
             );
             path = abi.encodePacked(path, bytes(Strings.toString(i + 3)));
             path = abi.encodePacked(path, ".txt");
@@ -121,7 +127,7 @@ contract DummyWalletTest is Test, TestUtils {
         }
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonAddrs[0]));
-        hasherT4 = IHasherT4(new PoseidonHasherT4(poseidonAddrs[1]));
+        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonAddrs[2]));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonAddrs[3]));
 
         // Instantiate vault, verifier, tree, and wallet
@@ -129,14 +135,14 @@ contract DummyWalletTest is Test, TestUtils {
         merkle = new PoseidonBatchBinaryMerkle(
             32,
             0,
-            IPoseidonT3(address(hasherT3))
+            IPoseidonT3(poseidonAddrs[0])
         );
         verifier = new TestSpend2Verifier();
         wallet = new Wallet(
             address(vault),
             address(verifier),
             address(merkle),
-            address(hasherT4),
+            address(hasherT5),
             address(hasherT6)
         );
 
@@ -151,7 +157,9 @@ contract DummyWalletTest is Test, TestUtils {
 
     function testPoseidon() public {
         console.log(hasherT3.hash([uint256(0), uint256(1)]));
-        console.log(hasherT4.hash([uint256(0), uint256(1), uint256(2)]));
+        console.log(
+            hasherT5.hash([uint256(0), uint256(1), uint256(2), uint256(3)])
+        );
         console.log(
             hasherT6.hash(
                 [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
@@ -185,9 +193,7 @@ contract DummyWalletTest is Test, TestUtils {
             proof: defaultSpendProof(),
             value: uint256(100),
             asset: address(token),
-            id: ERC20_ID,
-            c: uint256(0xc),
-            z: uint256(0xd)
+            id: ERC20_ID
         });
 
         address[] memory spendTokens = new address[](1);

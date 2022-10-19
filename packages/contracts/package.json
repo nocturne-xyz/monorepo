@@ -9,7 +9,7 @@
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
     "build:deps": "../../scripts/install-deps.sh",
-    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=core forge build",
+    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
     "clean": "hardhat clean && rm -rf dist && rm -rf src",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
@@ -22,8 +22,8 @@
     "link:node_modules": "ln -s ../../node_modules"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "~3.4.2",
-    "@openzeppelin/contracts-upgradeable": "~3.4.2"
+    "@openzeppelin/contracts": "4.7.3",
+    "@openzeppelin/contracts-upgradeable": "4.7.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",

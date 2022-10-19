@@ -20,6 +20,7 @@ export class BinaryPoseidonTree {
     this.count = 0;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   root(): any {
     return this.tree.root;
   }

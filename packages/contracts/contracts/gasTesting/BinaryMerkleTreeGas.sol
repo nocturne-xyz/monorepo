@@ -1,7 +1,8 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 
 import "../libs/BatchBinaryMerkle.sol";
+import {IHasherT3} from "../interfaces/IHasher.sol";
 
 contract BinaryMerkleTreeGas {
     using BatchBinaryMerkle for IncrementalTreeData;
@@ -10,7 +11,7 @@ contract BinaryMerkleTreeGas {
 
     uint256 public constant ZERO = 123498798;
 
-    constructor(address _hasherT3) {
+    constructor(IHasherT3 _hasherT3) {
         binaryTree.init(32, ZERO, _hasherT3);
     }
 

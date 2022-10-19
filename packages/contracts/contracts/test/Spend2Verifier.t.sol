@@ -1,70 +1,61 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.7.6;
+pragma solidity ^0.8.2;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import "./utils/JsonDecodings.sol";
+import {JsonDecodings, Spend2ProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {Spend2Verifier} from "../Spend2Verifier.sol";
 
-contract TestSpend2Verifier is Test, TestUtils {
+contract TestSpend2Verifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
 
-    string constant FIXTURE_PATH = "/fixtures/spend2Proof.json";
+    string constant BASIC_FIXTURE_PATH = "/fixtures/spend2Proof.json";
 
     ISpend2Verifier verifier;
-
-    function loadFixture() public returns (string memory) {
-        string memory root = vm.projectRoot();
-        bytes memory path = abi.encodePacked(bytes(root), bytes(FIXTURE_PATH));
-        return vm.readFile(string(path));
-    }
 
     function setUp() public virtual {
         verifier = ISpend2Verifier(new Spend2Verifier());
     }
 
-    function testVerify() public {
-        string memory json = loadFixture();
-        bytes memory proofBytes = json.parseRaw(".proof");
-        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
-
-        uint256[9] memory signals;
-        for (uint256 i = 0; i < 7; i++) {
-            bytes memory jsonSelector = abi.encodePacked(
-                bytes(".publicSignals["),
-                Strings.toString(i)
-            );
-            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
-
-            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
-            string memory signal = abi.decode(signalBytes, (string));
-            signals[i] = parseInt(signal);
-        }
+    function verifyFixture(string memory path) public {
+        Spend2ProofWithPublicSignals memory proof = loadSpend2ProofFromFixture(
+            path
+        );
 
         require(
             verifier.verifyProof(
-                [parseInt(proof.pi_a[0]), parseInt(proof.pi_a[1])],
+                [parseInt(proof.proof.pi_a[0]), parseInt(proof.proof.pi_a[1])],
                 [
-                    [parseInt(proof.pi_b[0][1]), parseInt(proof.pi_b[0][0])],
-                    [parseInt(proof.pi_b[1][1]), parseInt(proof.pi_b[1][0])]
+                    [
+                        parseInt(proof.proof.pi_b[0][1]),
+                        parseInt(proof.proof.pi_b[0][0])
+                    ],
+                    [
+                        parseInt(proof.proof.pi_b[1][1]),
+                        parseInt(proof.proof.pi_b[1][0])
+                    ]
                 ],
-                [parseInt(proof.pi_c[0]), parseInt(proof.pi_c[1])],
+                [parseInt(proof.proof.pi_c[0]), parseInt(proof.proof.pi_c[1])],
                 [
-                    signals[0],
-                    signals[1],
-                    signals[2],
-                    signals[3],
-                    signals[4],
-                    signals[5],
-                    signals[6]
+                    proof.publicSignals[0],
+                    proof.publicSignals[1],
+                    proof.publicSignals[2],
+                    proof.publicSignals[3],
+                    proof.publicSignals[4],
+                    proof.publicSignals[5],
+                    proof.publicSignals[6]
                 ]
             ),
             "Invalid proof"
         );
+    }
+
+    function testBasicVerify() public {
+        verifyFixture(BASIC_FIXTURE_PATH);
     }
 }
