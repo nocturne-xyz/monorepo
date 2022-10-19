@@ -2,7 +2,7 @@
 solc_version = '0.8.2'        # Version of solc that we use
 remappings = [                # Libraries that we use from node_modules and are used by the smart contracts
 "@zk-kit/=lib/zk-kit/packages/",
-"@openzeppelin/=lib/openzeppelin-contracts/",
+"@openzeppelin/=node_modules/@openzeppelin/",
 "forge-std/=lib/forge-std/src/"
 ]
 optimizer = true              # Enable or disable the solc optimizer
