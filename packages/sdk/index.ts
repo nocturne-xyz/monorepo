@@ -1,6 +1,6 @@
 export { BinaryPoseidonTree } from "./src/primitives/binaryPoseidonTree";
-export { Note } from "./src/note";
-export { FlaxSignature, FlaxSigner } from "./src/signer";
+export { Note } from "./src/sdk/note";
+export { FlaxSignature, FlaxSigner } from "./src/sdk/signer";
 export { FlaxAddress } from "./src/crypto/address";
 export { FlaxPrivKey } from "./src/crypto/privkey";
 export { SolidityProof } from "./src/contract/proof";

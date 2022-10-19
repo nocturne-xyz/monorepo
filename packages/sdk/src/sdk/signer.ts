@@ -2,8 +2,8 @@ import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
-import { FlaxAddress } from "./crypto/address";
-import { FlaxPrivKey } from "./crypto/privkey";
+import { FlaxAddress } from "../crypto/address";
+import { FlaxPrivKey } from "../crypto/privkey";
 
 export interface FlaxSignature {
   c: bigint;

@@ -1,7 +1,8 @@
-import { FlaxAddress } from "./crypto/address";
-import { Address } from "./commonTypes";
+import { FlaxAddress } from "../crypto/address";
+import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
-import { NoteInput } from "./proof/spend2";
+import { NoteInput } from "../proof/spend2";
+import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
 interface NoteConstructor {
   owner: FlaxAddress;
@@ -46,5 +47,14 @@ export class Note {
       id: this.id,
       value: this.value,
     };
+  }
+}
+
+export class SpendableNote extends Note {
+  merkleProof: MerkleProof;
+
+  constructor(note: NoteConstructor, merkleProof: MerkleProof) {
+    super(note);
+    this.merkleProof = merkleProof;
   }
 }

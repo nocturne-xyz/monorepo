@@ -6,3 +6,8 @@ export interface FlattenedFlaxAddress {
   h2X: bigint;
   h2Y: bigint;
 }
+
+export interface Asset {
+  address: Address;
+  id: bigint;
+}
