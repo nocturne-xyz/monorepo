@@ -3,8 +3,9 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
-import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
 import * as fs from "fs";
+import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
+import { FlattenedFlaxAddress } from "../commonTypes";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -36,15 +37,8 @@ export interface Spend2PublicSignals {
   operationDigest: bigint;
 }
 
-export interface FlaxAddressInput {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-}
-
 export interface NoteInput {
-  owner: FlaxAddressInput;
+  owner: FlattenedFlaxAddress;
   nonce: bigint;
   asset: bigint;
   value: bigint;
@@ -82,8 +76,8 @@ export function publicSignalsArrayToTyped(
 }
 
 function normalizeFlaxAddressInput(
-  flaxAddressInput: FlaxAddressInput
-): FlaxAddressInput {
+  flaxAddressInput: FlattenedFlaxAddress
+): FlattenedFlaxAddress {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
   return {
     h1X: normalizeBigInt(h1X),

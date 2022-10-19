@@ -9,10 +9,10 @@ import {
   verifySpend2Proof,
   MerkleProofInput,
   NoteInput,
-  FlaxAddressInput,
   Spend2Inputs,
   spend2ProofToJson,
 } from "../src/proof/spend2";
+import { FlattenedFlaxAddress } from "../src/commonTypes";
 import { poseidon } from "circomlibjs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -31,7 +31,7 @@ const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
-const flaxAddrInput: FlaxAddressInput = {
+const flaxAddrInput: FlattenedFlaxAddress = {
   h1X: flaxAddr.h1[0],
   h1Y: flaxAddr.h1[1],
   h2X: flaxAddr.h2[0],

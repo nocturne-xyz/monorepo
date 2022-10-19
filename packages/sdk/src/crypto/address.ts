@@ -1,5 +1,5 @@
 import { babyjub, poseidon } from "circomlibjs";
-import { FlaxAddressInput } from "../proof/spend2";
+import { FlattenedFlaxAddress } from "../commonTypes";
 import { FlaxAddrPrefix } from "./common";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
@@ -35,7 +35,7 @@ export class FlaxAddress {
     return FlaxAddrPrefix + b.toString("base64");
   }
 
-  toFlattened(): FlaxAddressInput {
+  toFlattened(): FlattenedFlaxAddress {
     return {
       h1X: this.h1[0],
       h1Y: this.h1[1],

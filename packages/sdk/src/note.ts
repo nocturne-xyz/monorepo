@@ -1,8 +1,7 @@
 import { FlaxAddress } from "./crypto/address";
+import { Address } from "./commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "./proof/spend2";
-
-type Address = string;
 
 interface NoteConstructor {
   owner: FlaxAddress;

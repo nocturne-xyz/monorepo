@@ -4,12 +4,8 @@ export { FlaxSignature, FlaxSigner } from "./src/signer";
 export { FlaxAddress } from "./src/crypto/address";
 export { FlaxPrivKey } from "./src/crypto/privkey";
 export { SolidityProof } from "./src/contract/proof";
-export {
-  NoteInput,
-  Spend2Inputs,
-  FlaxAddressInput,
-  MerkleProofInput,
-} from "./src/proof/spend2";
+export { NoteInput, Spend2Inputs, MerkleProofInput } from "./src/proof/spend2";
+export { FlattenedFlaxAddress } from "./src/commonTypes";
 export * from "./src/contract/types";
 
 export {
