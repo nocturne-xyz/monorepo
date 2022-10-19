@@ -1,10 +1,10 @@
 import "mocha";
 import { expect } from "chai";
-import { FlaxSigner } from "../signer";
-import { FlaxPrivKey } from "./privkey";
-import { FlaxAddress, rerandAddr } from "./address";
+import { FlaxSigner } from "../src/signer";
+import { FlaxPrivKey } from "../src/crypto/privkey";
+import { FlaxAddress, rerandAddr } from "../src/crypto/address";
 
-describe("[crypto]", () => {
+describe("[crypto/signer]", () => {
   it("View key should work", () => {
     const priv1 = FlaxPrivKey.genPriv();
     const signer1 = new FlaxSigner(priv1);

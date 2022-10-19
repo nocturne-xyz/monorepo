@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc --build",
     "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
-    "test:unit": "mocha --require ts-node/register src/**/*.test.ts",
+    "test:unit": "mocha --require ts-node/register test/**",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",
     "clean": "rm -rf dist"
