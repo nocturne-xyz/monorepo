@@ -36,10 +36,8 @@ import {
   ProvenOperation,
   Bundle,
   publicSignalsArrayToTyped,
+  Note,
 } from "@flax/sdk";
-
-import { poseidon } from "circomlibjs";
-const circomlibjs = require("circomlibjs");
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -56,7 +54,7 @@ describe("Wallet", async () => {
     flaxSigner = new FlaxSigner(flaxPrivKey);
 
     [deployer, alice, bob] = await ethers.getSigners();
-    await deployments.fixture(["PoseidonLibs", "BatchBinaryMerkleLib"]);
+    await deployments.fixture(["PoseidonLibs"]);
 
     const poseidonT3Lib = await ethers.getContract("PoseidonT3Lib");
     const poseidonT5Lib = await ethers.getContract("PoseidonT5Lib");
@@ -126,40 +124,27 @@ describe("Wallet", async () => {
     await wallet.commit2FromQueue();
 
     console.log("Create two corresponding notes from deposits");
-    const firstOldNote: NoteInput = {
-      owner: flaxSigner.address.toFlattened(),
+    const firstOldNote = new Note({
+      owner: flaxSigner.address,
       nonce: 0n,
-      type: BigInt(token.address),
+      type: token.address,
+      id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
-      id: SNARK_SCALAR_FIELD - 1n,
-    };
-    const secondOldNote: NoteInput = {
-      owner: flaxSigner.address.toFlattened(),
+    });
+    const secondOldNote = new Note({
+      owner: flaxSigner.address,
       nonce: 1n,
-      type: BigInt(token.address),
+      type: token.address,
+      id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
-      id: SNARK_SCALAR_FIELD - 1n,
-    };
-
-    console.log("Create corresponding note commitments");
-    const ownerHash = flaxSigner.address.hash();
-    const firstOldNoteCommitment = poseidon([
-      ownerHash,
-      firstOldNote.nonce,
-      firstOldNote.type,
-      firstOldNote.id,
-      firstOldNote.value,
-    ]);
-    const secondOldNoteCommitment = poseidon([
-      ownerHash,
-      secondOldNote.nonce,
-      secondOldNote.type,
-      secondOldNote.id,
-      secondOldNote.value,
-    ]);
+    });
 
     console.log("Create nullifier for first note");
-    const nullifier = poseidon([flaxSigner.privkey.vk, firstOldNoteCommitment]);
+    const nullifier = flaxSigner.createNullifier(firstOldNote);
+
+    console.log("Create corresponding note commitments");
+    const firstOldNoteCommitment = firstOldNote.toCommitment();
+    const secondOldNoteCommitment = secondOldNote.toCommitment();
 
     console.log("Replicate commitment tree state");
     const tree = new BinaryPoseidonTree();
@@ -177,20 +162,14 @@ describe("Wallet", async () => {
     console.log(
       "New note and note commitment resulting from spend of 50 units"
     );
-    const newNote: NoteInput = {
-      owner: flaxSigner.address.toFlattened(),
+    const newNote = new Note({
+      owner: flaxSigner.address,
       nonce: 12345n,
       type: firstOldNote.type,
       id: firstOldNote.id,
       value: 50n,
-    };
-    const newNoteCommitment = poseidon([
-      ownerHash,
-      newNote.nonce,
-      newNote.type,
-      newNote.id,
-      newNote.value,
-    ]);
+    });
+    const newNoteCommitment = newNote.toCommitment();
 
     console.log("Create Action to transfer the 50 tokens to bob");
     const encodedFunction =
@@ -242,8 +221,8 @@ describe("Wallet", async () => {
       operationDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNote: firstOldNote,
-      newNote,
+      oldNote: firstOldNote.toNoteInput(),
+      newNote: newNote.toNoteInput(),
       merkleProof: merkleProofInput,
     };
 

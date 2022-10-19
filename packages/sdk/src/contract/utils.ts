@@ -1,13 +1,6 @@
 import { ethers } from "ethers";
 import { UnprovenOperation, UnprovenSpendTransaction } from "./types";
 
-// const SIXTEEN = 16;
-// const THIRTY_TWO = 32;
-
-// function bigIntToPaddedBytesLike(n: bigint): string {
-//   return ethers.utils.hexZeroPad("0x" + n.toString(SIXTEEN), THIRTY_TWO);
-// }
-
 export function hashOperation(op: UnprovenOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload = [] as any;

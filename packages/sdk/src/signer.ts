@@ -1,8 +1,9 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { FlaxAddress } from "./address";
-import { FlaxPrivKey } from "./privkey";
+import { Note } from "./note";
+import { FlaxAddress } from "./crypto/address";
+import { FlaxPrivKey } from "./crypto/privkey";
 
 export interface FlaxSignature {
   c: bigint;
@@ -49,16 +50,16 @@ export class FlaxSigner {
     return c == cp;
   }
 
+  createNullifier(note: Note): bigint {
+    if (!this.testOwn(note.owner)) {
+      throw Error("Attempted to create nullifier for note you do not own");
+    }
+
+    return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
+  }
+
   testOwn(addr: FlaxAddress): boolean {
     const H2prime = babyjub.mulPointEscalar(addr.h1, this.privkey.vk);
     return addr.h2[0] === H2prime[0] && addr.h2[1] === H2prime[1];
   }
-}
-
-export function rerandAddr(addr: FlaxAddress): FlaxAddress {
-  const r_buf = randomBytes(Math.floor(256 / 8));
-  const r = Scalar.fromRprBE(r_buf, 0, 32);
-  const H1 = babyjub.mulPointEscalar(addr.h1, r);
-  const H2 = babyjub.mulPointEscalar(addr.h2, r);
-  return new FlaxAddress(H1, H2);
 }

@@ -1,6 +1,8 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { FlaxAddressInput } from "../proof/spend2";
 import { FlaxAddrPrefix } from "./common";
+import { randomBytes } from "crypto";
+import { Scalar } from "ffjavascript";
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export class FlaxAddress {
@@ -41,4 +43,12 @@ export class FlaxAddress {
       h2Y: this.h2[1],
     };
   }
+}
+
+export function rerandAddr(addr: FlaxAddress): FlaxAddress {
+  const r_buf = randomBytes(Math.floor(256 / 8));
+  const r = Scalar.fromRprBE(r_buf, 0, 32);
+  const H1 = babyjub.mulPointEscalar(addr.h1, r);
+  const H2 = babyjub.mulPointEscalar(addr.h2, r);
+  return new FlaxAddress(H1, H2);
 }

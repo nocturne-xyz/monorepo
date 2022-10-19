@@ -3,14 +3,6 @@ import { FlaxAddressInput } from "../proof/spend2";
 type Address = string;
 type FLAXAddress = FlaxAddressInput;
 
-export interface Note {
-  owner: FLAXAddress;
-  nonce: bigint;
-  type: Address;
-  id: bigint;
-  value: bigint;
-}
-
 export interface Tokens {
   spendTokens: Address[];
   refundTokens: Address[];

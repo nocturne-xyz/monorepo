@@ -1,8 +1,8 @@
 import "mocha";
 import { expect } from "chai";
-import { FlaxSigner, rerandAddr } from "./signer";
+import { FlaxSigner } from "../signer";
 import { FlaxPrivKey } from "./privkey";
-import { FlaxAddress } from "./address";
+import { FlaxAddress, rerandAddr } from "./address";
 
 describe("[crypto]", () => {
   it("View key should work", () => {

@@ -64,16 +64,6 @@ contract JsonDecodings is Test, TestUtils {
         public
         returns (uint256[8] memory)
     {
-        // uint256[8] memory p;
-        // p[0] = proof.pi_a[0];
-        // p[1] = proof.pi_a[1];
-        // p[2] = proof.pi_b[0][1];
-        // p[3] = proof.pi_b[0][0];
-        // p[4] = proof.pi_b[1][1];
-        // p[5] = proof.pi_b[1][0];
-        // p[6] = proof.pi_c[0];
-        // p[7] = proof.pi_c[1];
-
         return [
             parseInt(proof.pi_a[0]),
             parseInt(proof.pi_a[1]),

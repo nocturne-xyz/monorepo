@@ -22,12 +22,6 @@ contract TestSpend2Verifier is Test, TestUtils, JsonDecodings {
         verifier = ISpend2Verifier(new Spend2Verifier());
     }
 
-    function loadFixture(string memory path) public returns (string memory) {
-        string memory root = vm.projectRoot();
-        bytes memory path = abi.encodePacked(bytes(root), bytes(path));
-        return vm.readFile(string(path));
-    }
-
     function verifyFixture(string memory path) public {
         Spend2ProofWithPublicSignals memory proof = loadSpend2ProofFromFixture(
             path
