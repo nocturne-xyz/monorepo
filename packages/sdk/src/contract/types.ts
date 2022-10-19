@@ -13,7 +13,7 @@ export interface Action {
   encodedFunction: string;
 }
 
-export interface UnprovenSpendTransaction {
+export interface PreProofSpendTransaction {
   commitmentTreeRoot: bigint;
   nullifier: bigint;
   newNoteCommitment: bigint;
@@ -22,14 +22,14 @@ export interface UnprovenSpendTransaction {
   id: bigint;
 }
 
-export interface UnprovenOperation {
+export interface PreProofOperation {
   refundAddr: FLAXAddress;
   tokens: Tokens;
   actions: Action[];
   gasLimit: bigint;
 }
 
-export interface ProvenSpendTransaction {
+export interface PostProofSpendTransaction {
   commitmentTreeRoot: bigint;
   nullifier: bigint;
   newNoteCommitment: bigint;
@@ -39,8 +39,8 @@ export interface ProvenSpendTransaction {
   id: bigint;
 }
 
-export interface ProvenOperation {
-  spendTxs: ProvenSpendTransaction[];
+export interface PostProofOperation {
+  spendTxs: PostProofSpendTransaction[];
   refundAddr: FLAXAddress;
   tokens: Tokens;
   actions: Action[];
@@ -48,7 +48,7 @@ export interface ProvenOperation {
 }
 
 export interface Bundle {
-  operations: ProvenOperation[];
+  operations: PostProofOperation[];
 }
 
 export interface Deposit {

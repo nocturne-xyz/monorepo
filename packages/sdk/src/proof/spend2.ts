@@ -29,7 +29,7 @@ export interface Spend2ProofWithPublicSignals {
 export interface Spend2PublicSignals {
   newNoteCommitment: bigint;
   anchor: bigint;
-  type: bigint;
+  asset: bigint;
   id: bigint;
   value: bigint;
   nullifier: bigint;
@@ -46,7 +46,7 @@ export interface FlaxAddressInput {
 export interface NoteInput {
   owner: FlaxAddressInput;
   nonce: bigint;
-  type: bigint;
+  asset: bigint;
   value: bigint;
   id: bigint;
 }
@@ -73,7 +73,7 @@ export function publicSignalsArrayToTyped(
   return {
     newNoteCommitment: publicSignals[0],
     anchor: publicSignals[1],
-    type: publicSignals[2],
+    asset: publicSignals[2],
     id: publicSignals[3],
     value: publicSignals[4],
     nullifier: publicSignals[5],
@@ -94,11 +94,11 @@ function normalizeFlaxAddressInput(
 }
 
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {
-  const { owner, nonce, type, value, id } = noteInput;
+  const { owner, nonce, asset, value, id } = noteInput;
   return {
     owner: normalizeFlaxAddressInput(owner),
     nonce: normalizeBigInt(nonce),
-    type: normalizeBigInt(type),
+    asset: normalizeBigInt(asset),
     value: normalizeBigInt(value),
     id: normalizeBigInt(id),
   };
@@ -160,7 +160,7 @@ export async function proveSpend2(
     oldNoteOwnerH2X: oldNote.owner.h2X,
     oldNoteOwnerH2Y: oldNote.owner.h2Y,
     oldNoteNonce: oldNote.nonce,
-    oldNoteType: oldNote.type,
+    oldNoteAsset: oldNote.asset,
     oldNoteId: oldNote.id,
     oldNoteValue: oldNote.value,
 
@@ -172,7 +172,7 @@ export async function proveSpend2(
     newNoteOwnerH2X: newNote.owner.h2X,
     newNoteOwnerH2Y: newNote.owner.h2Y,
     newNoteNonce: newNote.nonce,
-    newNoteType: newNote.type,
+    newNoteAsset: newNote.asset,
     newNoteId: newNote.id,
     newNoteValue: newNote.value,
   };

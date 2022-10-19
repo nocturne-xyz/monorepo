@@ -42,7 +42,7 @@ const flaxAddrInput: FlaxAddressInput = {
 const oldNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 1n,
-  type: 10n,
+  asset: 10n,
   value: 100n,
   id: 5n,
 };
@@ -51,7 +51,7 @@ console.log("OLD NOTE: ", oldNote);
 const ownerHash = flaxAddr.hash();
 const oldNoteCommitment = poseidon([
   ownerHash,
-  oldNote.type,
+  oldNote.asset,
   oldNote.id,
   oldNote.value,
 ]);
@@ -73,7 +73,7 @@ console.log(merkleProofInput);
 const newNote: NoteInput = {
   owner: flaxAddrInput,
   nonce: 2n,
-  type: 10n,
+  asset: 10n,
   value: 50n,
   id: 5n,
 };
@@ -81,7 +81,7 @@ console.log("NEW NOTE: ", newNote);
 
 const newNoteCommitment = poseidon([
   ownerHash,
-  newNote.type,
+  newNote.asset,
   newNote.id,
   newNote.value,
 ]);

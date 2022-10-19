@@ -19,9 +19,5 @@ export {
   publicSignalsArrayToTyped,
 } from "./src/proof/spend2";
 export { packToSolidityProof } from "./src/contract/proof";
-export {
-  hashOperation,
-  hashSpend,
-  calculateOperationDigest,
-} from "./src/contract/utils";
+export { calculateOperationDigest } from "./src/contract/utils";
 export { SNARK_SCALAR_FIELD } from "./src/proof/common";

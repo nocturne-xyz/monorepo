@@ -22,18 +22,15 @@ import {
   proveSpend2,
   verifySpend2Proof,
   MerkleProofInput,
-  NoteInput,
-  UnprovenSpendTransaction,
+  PreProofSpendTransaction,
   Spend2Inputs,
   SNARK_SCALAR_FIELD,
   Tokens,
-  UnprovenOperation,
-  hashOperation,
-  hashSpend,
+  PreProofOperation,
   calculateOperationDigest,
   packToSolidityProof,
-  ProvenSpendTransaction,
-  ProvenOperation,
+  PostProofSpendTransaction,
+  PostProofOperation,
   Bundle,
   publicSignalsArrayToTyped,
   Note,
@@ -127,14 +124,14 @@ describe("Wallet", async () => {
     const firstOldNote = new Note({
       owner: flaxSigner.address,
       nonce: 0n,
-      type: token.address,
+      asset: token.address,
       id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
     });
     const secondOldNote = new Note({
       owner: flaxSigner.address,
       nonce: 1n,
-      type: token.address,
+      asset: token.address,
       id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
     });
@@ -165,7 +162,7 @@ describe("Wallet", async () => {
     const newNote = new Note({
       owner: flaxSigner.address,
       nonce: 12345n,
-      type: firstOldNote.type,
+      asset: firstOldNote.asset,
       id: firstOldNote.id,
       value: 50n,
     });
@@ -182,8 +179,8 @@ describe("Wallet", async () => {
       encodedFunction: encodedFunction,
     };
 
-    console.log("Create unproven spend");
-    const unprovenSpendTx: UnprovenSpendTransaction = {
+    console.log("Create preProof spend");
+    const preProofSpendTx: PreProofSpendTransaction = {
       commitmentTreeRoot: merkleProof.root,
       nullifier: nullifier,
       newNoteCommitment: newNoteCommitment,
@@ -192,12 +189,12 @@ describe("Wallet", async () => {
       id: SNARK_SCALAR_FIELD - 1n,
     };
 
-    console.log("Create unproven operation");
+    console.log("Create preProof operation");
     const tokens: Tokens = {
       spendTokens: [token.address],
       refundTokens: [token.address],
     };
-    const unprovenOperation: UnprovenOperation = {
+    const preProofOperation: PreProofOperation = {
       refundAddr: flaxSigner.address.toFlattened(),
       tokens: tokens,
       actions: [action],
@@ -205,11 +202,10 @@ describe("Wallet", async () => {
     };
 
     console.log("Calculate operation digest (combo of spend and operation)");
-    const operationHash = hashOperation(unprovenOperation);
-    const spendHash = hashSpend(unprovenSpendTx);
-    const operationDigest =
-      BigInt(calculateOperationDigest(operationHash, spendHash)) %
-      SNARK_SCALAR_FIELD;
+    const operationDigest = calculateOperationDigest(
+      preProofOperation,
+      preProofSpendTx
+    );
 
     console.log("Sign operation digest");
     const opSig = flaxSigner.sign(operationDigest);
@@ -235,9 +231,9 @@ describe("Wallet", async () => {
     console.log("Create spend tx with proof");
     const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
-    const spendTx: ProvenSpendTransaction = {
+    const spendTx: PostProofSpendTransaction = {
       commitmentTreeRoot:
-        BigInt(unprovenSpendTx.commitmentTreeRoot) % SNARK_SCALAR_FIELD,
+        BigInt(preProofSpendTx.commitmentTreeRoot) % SNARK_SCALAR_FIELD,
       nullifier: publicSignals.nullifier,
       newNoteCommitment: publicSignals.newNoteCommitment,
       proof: solidityProof,
@@ -247,12 +243,12 @@ describe("Wallet", async () => {
     };
 
     console.log("Create operation with spend tx and bundle");
-    const operation: ProvenOperation = {
+    const operation: PostProofOperation = {
       spendTxs: [spendTx],
-      refundAddr: unprovenOperation.refundAddr,
-      tokens: unprovenOperation.tokens,
-      actions: unprovenOperation.actions,
-      gasLimit: unprovenOperation.gasLimit,
+      refundAddr: preProofOperation.refundAddr,
+      tokens: preProofOperation.tokens,
+      actions: preProofOperation.actions,
+      gasLimit: preProofOperation.gasLimit,
     };
 
     const bundle: Bundle = {

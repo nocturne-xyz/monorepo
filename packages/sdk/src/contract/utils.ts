@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
-import { UnprovenOperation, UnprovenSpendTransaction } from "./types";
+import { SNARK_SCALAR_FIELD } from "../proof/common";
+import { PreProofOperation, PreProofSpendTransaction } from "./types";
 
-export function hashOperation(op: UnprovenOperation): string {
+function hashOperation(op: PreProofOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload = [] as any;
   for (let i = 0; i < op.actions.length; i++) {
@@ -49,7 +50,7 @@ export function hashOperation(op: UnprovenOperation): string {
   return ethers.utils.keccak256(payload);
 }
 
-export function hashSpend(spend: UnprovenSpendTransaction): string {
+function hashSpend(spend: PreProofSpendTransaction): string {
   const payload = ethers.utils.solidityPack(
     ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
     [
@@ -65,14 +66,22 @@ export function hashSpend(spend: UnprovenSpendTransaction): string {
   return ethers.utils.keccak256(payload);
 }
 
-export function calculateOperationDigest(
-  operationHash: string,
-  spendHash: string
-): string {
+function calcOperationDigest(operationHash: string, spendHash: string): string {
   return ethers.utils.keccak256(
     ethers.utils.solidityPack(
       ["bytes32", "bytes32"],
       [operationHash, spendHash]
     )
+  );
+}
+
+export function calculateOperationDigest(
+  operation: PreProofOperation,
+  spend: PreProofSpendTransaction
+): bigint {
+  const operationHash = hashOperation(operation);
+  const spendHash = hashSpend(spend);
+  return (
+    BigInt(calcOperationDigest(operationHash, spendHash)) % SNARK_SCALAR_FIELD
   );
 }

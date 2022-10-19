@@ -7,7 +7,7 @@ type Address = string;
 interface NoteConstructor {
   owner: FlaxAddress;
   nonce: bigint;
-  type: Address;
+  asset: Address;
   id: bigint;
   value: bigint;
 }
@@ -15,14 +15,14 @@ interface NoteConstructor {
 export class Note {
   owner: FlaxAddress;
   nonce: bigint;
-  type: Address;
+  asset: Address;
   id: bigint;
   value: bigint;
 
-  constructor({ owner, nonce, type, id, value }: NoteConstructor) {
+  constructor({ owner, nonce, asset, id, value }: NoteConstructor) {
     this.owner = owner;
     this.nonce = nonce;
-    this.type = type;
+    this.asset = asset;
     this.id = id;
     this.value = value;
   }
@@ -32,7 +32,7 @@ export class Note {
       poseidon([
         this.owner.hash(),
         this.nonce,
-        BigInt(this.type),
+        BigInt(this.asset),
         this.id,
         this.value,
       ])
@@ -43,7 +43,7 @@ export class Note {
     return {
       owner: this.owner.toFlattened(),
       nonce: this.nonce,
-      type: BigInt(this.type),
+      asset: BigInt(this.asset),
       id: this.id,
       value: this.value,
     };
