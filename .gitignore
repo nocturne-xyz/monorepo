@@ -24,4 +24,7 @@ contract-artifacts
 .ptau
 .setup
 build
-circuit-artifacts
+circuit-artifacts/**/*.*
+!circuit-artifacts/*/*_js/*.wasm
+!circuit-artifacts/*/*_cpp/*.zkey
+!circuit-artifacts/*/*_cpp/*.json
