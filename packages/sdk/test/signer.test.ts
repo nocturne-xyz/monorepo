@@ -1,8 +1,8 @@
 import "mocha";
 import { expect } from "chai";
-import { FlaxSigner } from "../src/signer";
+import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
-import { FlaxAddress, rerandAddr } from "../src/crypto/address";
+import { FlaxAddress } from "../src/crypto/address";
 
 describe("[crypto/signer]", () => {
   it("View key should work", () => {
@@ -19,7 +19,7 @@ describe("[crypto/signer]", () => {
   it("Test rerand", () => {
     const priv1 = FlaxPrivKey.genPriv();
     const signer1 = new FlaxSigner(priv1);
-    const rerandAddr1 = rerandAddr(signer1.address);
+    const rerandAddr1 = signer1.address.rerand();
     const priv2 = FlaxPrivKey.genPriv();
     const signer2 = new FlaxSigner(priv2);
     expect(signer1.testOwn(signer1.address)).to.equal(true);

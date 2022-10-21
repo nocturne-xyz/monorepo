@@ -1,5 +1,4 @@
 import { babyjub, poseidon } from "circomlibjs";
-import { FlattenedFlaxAddress } from "../commonTypes";
 import { FlaxAddrPrefix } from "./common";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
@@ -12,10 +11,6 @@ export class FlaxAddress {
   constructor(h1: [bigint, bigint], h2: [bigint, bigint]) {
     this.h1 = h1;
     this.h2 = h2;
-  }
-
-  hash(): bigint {
-    return BigInt(poseidon([this.h1[0], this.h1[1], this.h2[0], this.h2[1]]));
   }
 
   static parse(str: string): FlaxAddress {
@@ -36,19 +31,52 @@ export class FlaxAddress {
   }
 
   toFlattened(): FlattenedFlaxAddress {
-    return {
+    return new FlattenedFlaxAddress({
       h1X: this.h1[0],
       h1Y: this.h1[1],
       h2X: this.h2[0],
       h2Y: this.h2[1],
-    };
+    });
+  }
+
+  hash(): bigint {
+    return this.toFlattened().hash();
+  }
+
+  rerand(): FlaxAddress {
+    const r_buf = randomBytes(Math.floor(256 / 8));
+    const r = Scalar.fromRprBE(r_buf, 0, 32);
+    const H1 = babyjub.mulPointEscalar(this.h1, r);
+    const H2 = babyjub.mulPointEscalar(this.h2, r);
+    return new FlaxAddress(H1, H2);
   }
 }
 
-export function rerandAddr(addr: FlaxAddress): FlaxAddress {
-  const r_buf = randomBytes(Math.floor(256 / 8));
-  const r = Scalar.fromRprBE(r_buf, 0, 32);
-  const H1 = babyjub.mulPointEscalar(addr.h1, r);
-  const H2 = babyjub.mulPointEscalar(addr.h2, r);
-  return new FlaxAddress(H1, H2);
+export interface FlattenedFlaxAddressConstructor {
+  h1X: bigint;
+  h1Y: bigint;
+  h2X: bigint;
+  h2Y: bigint;
+}
+
+export class FlattenedFlaxAddress {
+  h1X: bigint;
+  h1Y: bigint;
+  h2X: bigint;
+  h2Y: bigint;
+
+  constructor({ h1X, h1Y, h2X, h2Y }: FlattenedFlaxAddressConstructor) {
+    this.h1X = h1X;
+    this.h1Y = h1Y;
+    this.h2X = h2X;
+    this.h2Y = h2Y;
+  }
+
+  hash(): bigint {
+    return BigInt(poseidon([this.h1X, this.h1Y, this.h2X, this.h2Y]));
+  }
+
+  toArrayForm(): FlaxAddress {
+    return new FlaxAddress([this.h1X, this.h1Y], [this.h2X, this.h2Y]);
+  }
 }

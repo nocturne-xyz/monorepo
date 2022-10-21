@@ -1,4 +1,5 @@
-import { FlattenedFlaxAddress, Address } from "../commonTypes";
+import { Address } from "../commonTypes";
+import { FlattenedFlaxAddress } from "../crypto/address";
 
 export interface Tokens {
   spendTokens: Address[];
@@ -15,8 +16,8 @@ export interface PreProofSpendTransaction {
   nullifier: bigint;
   newNoteCommitment: bigint;
   asset: Address;
-  value: bigint;
   id: bigint;
+  value: bigint;
 }
 
 export interface PreProofOperation {

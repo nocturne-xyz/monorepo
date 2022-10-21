@@ -5,7 +5,7 @@ import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
 import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
-import { FlattenedFlaxAddress } from "../commonTypes";
+import { FlattenedFlaxAddress } from "../crypto/address";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -79,12 +79,12 @@ function normalizeFlaxAddressInput(
   flaxAddressInput: FlattenedFlaxAddress
 ): FlattenedFlaxAddress {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
-  return {
+  return new FlattenedFlaxAddress({
     h1X: normalizeBigInt(h1X),
     h1Y: normalizeBigInt(h1Y),
     h2X: normalizeBigInt(h2X),
     h2Y: normalizeBigInt(h2Y),
-  };
+  });
 }
 
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {

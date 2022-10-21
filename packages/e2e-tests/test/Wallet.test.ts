@@ -122,14 +122,14 @@ describe("Wallet", async () => {
 
     console.log("Create two corresponding notes from deposits");
     const firstOldNote = new Note({
-      owner: flaxSigner.address,
+      owner: flaxSigner.address.toFlattened(),
       nonce: 0n,
       asset: token.address,
       id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
     });
     const secondOldNote = new Note({
-      owner: flaxSigner.address,
+      owner: flaxSigner.address.toFlattened(),
       nonce: 1n,
       asset: token.address,
       id: ERC20_ID,
@@ -160,7 +160,7 @@ describe("Wallet", async () => {
       "New note and note commitment resulting from spend of 50 units"
     );
     const newNote = new Note({
-      owner: flaxSigner.address,
+      owner: flaxSigner.address.toFlattened(),
       nonce: 12345n,
       asset: firstOldNote.asset,
       id: firstOldNote.id,

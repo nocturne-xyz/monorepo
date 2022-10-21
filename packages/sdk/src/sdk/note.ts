@@ -1,11 +1,11 @@
-import { FlaxAddress } from "../crypto/address";
+import { FlattenedFlaxAddress } from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
 interface NoteConstructor {
-  owner: FlaxAddress;
+  owner: FlattenedFlaxAddress;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -13,7 +13,7 @@ interface NoteConstructor {
 }
 
 export class Note {
-  owner: FlaxAddress;
+  owner: FlattenedFlaxAddress;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -41,7 +41,7 @@ export class Note {
 
   toNoteInput(): NoteInput {
     return {
-      owner: this.owner.toFlattened(),
+      owner: this.owner,
       nonce: this.nonce,
       asset: BigInt(this.asset),
       id: this.id,

@@ -12,7 +12,6 @@ import {
   Spend2Inputs,
   spend2ProofToJson,
 } from "../src/proof/spend2";
-import { FlattenedFlaxAddress } from "../src/commonTypes";
 import { poseidon } from "circomlibjs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -31,12 +30,7 @@ const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
-const flaxAddrInput: FlattenedFlaxAddress = {
-  h1X: flaxAddr.h1[0],
-  h1Y: flaxAddr.h1[1],
-  h2X: flaxAddr.h2[0],
-  h2Y: flaxAddr.h2[1],
-};
+const flaxAddrInput = flaxAddr.toFlattened();
 
 // Old note input to spend
 const oldNote: NoteInput = {
