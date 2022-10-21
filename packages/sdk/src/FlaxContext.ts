@@ -1,4 +1,4 @@
-import { Address, Asset, AssetRequest } from "./commonTypes";
+import { Address, Asset, AssetHash, AssetRequest } from "./commonTypes";
 import {
   Action,
   PostProofOperation,
@@ -36,22 +36,27 @@ export interface OldAndNewNotePair {
 
 export class FlaxContext {
   signer: FlaxSigner;
-  tokenToNotes: Map<Asset, SpendableNote[]>; // notes sorted great to least value
+  tokenToNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
   noteCommitmentTree: BinaryPoseidonTree;
-  dbPath: string = "/flaxdb";
+  dbPath = "/flaxdb";
 
   // TODO: pull spendable notes from db
   // TODO: sync tree with db events and new on-chain events
-  constructor(privkey: FlaxPrivKey) {
+  // TODO: remove tokenToNotes and noteCommitmentTree, only for testing purposes!
+  constructor(
+    privkey: FlaxPrivKey,
+    tokenToNotes: Map<AssetHash, SpendableNote[]>,
+    noteCommitmentTree: BinaryPoseidonTree
+  ) {
     this.signer = new FlaxSigner(privkey);
-    this.tokenToNotes = new Map();
-    this.noteCommitmentTree = new BinaryPoseidonTree();
+    this.tokenToNotes = tokenToNotes;
+    this.noteCommitmentTree = noteCommitmentTree;
   }
 
   // TODO: sync owned notes from chain or bucket
-  async sync() {}
+  // async sync() {}
 
-  async tryFormatPostProofOperation(
+  async tryCreatePostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
     refundAddr?: FlattenedFlaxAddress,
     gasLimit = 1_000_000n
@@ -63,7 +68,7 @@ export class FlaxContext {
 
     // Create preProofOperation to use in per-note proving
     const tokens: Tokens = {
-      spendTokens: assetRequests.map((a) => a.address),
+      spendTokens: assetRequests.map((a) => a.asset.address),
       refundTokens,
     };
     const preProofOperation: PreProofOperation = {
@@ -74,22 +79,21 @@ export class FlaxContext {
     };
 
     // For each asset request, gather necessary notes
-    let allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
+    const allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
     for (const assetRequest of assetRequests) {
       const oldAndNewNotePairs = this.gatherMinimumNotes(
         realRefundAddr,
         assetRequest
       );
 
+      console.log("Minimum notes: ", oldAndNewNotePairs);
+
       // For each note, generate proof
-      let perRequestSpendTxsPromises: Promise<PostProofSpendTransaction>[] = [];
       for (const oldNewPair of oldAndNewNotePairs) {
-        perRequestSpendTxsPromises.push(
+        allSpendTxPromises.push(
           this.generatePostProofSpendTx(oldNewPair, preProofOperation)
         );
       }
-
-      allSpendTxPromises.concat(perRequestSpendTxsPromises);
     }
 
     const allSpendTxs = await Promise.all(allSpendTxPromises);
@@ -169,20 +173,20 @@ export class FlaxContext {
     refundAddr: FlattenedFlaxAddress,
     assetRequest: AssetRequest
   ): OldAndNewNotePair[] {
-    const balance = this.getAssetBalance(assetRequest as Asset);
+    const balance = this.getAssetBalance(assetRequest.asset);
     if (balance < assetRequest.value) {
       throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
       );
     }
 
     const sortedNotes = this.tokenToNotes
-      .get(assetRequest as Asset)!
+      .get(assetRequest.asset.hash())!
       .sort((a, b) => {
         return Number(a.value - b.value);
       });
 
-    let oldAndNewNotePairs: OldAndNewNotePair[] = [];
+    const oldAndNewNotePairs: OldAndNewNotePair[] = [];
     let totalSpend = 0n;
     while (totalSpend < assetRequest.value) {
       const oldNote = sortedNotes.shift()!;
@@ -201,8 +205,8 @@ export class FlaxContext {
       const newNote = new Note({
         owner: refundAddr,
         nonce: randNonce,
-        asset: assetRequest.address,
-        id: assetRequest.id,
+        asset: assetRequest.asset.address,
+        id: assetRequest.asset.id,
         value: newNoteValue,
       });
 
@@ -216,7 +220,7 @@ export class FlaxContext {
   }
 
   getAssetBalance(asset: Asset): bigint {
-    const notes = this.tokenToNotes.get(asset);
+    const notes = this.tokenToNotes.get(asset.hash());
 
     if (!notes) {
       return 0n;

@@ -7,6 +7,7 @@ export { SolidityProof } from "./src/contract/proof";
 export { NoteInput, Spend2Inputs, MerkleProofInput } from "./src/proof/spend2";
 export { FlattenedFlaxAddress } from "./src/crypto/address";
 export * from "./src/contract/types";
+export * from "./src/commonTypes";
 
 export {
   proveSpend2,
@@ -17,3 +18,5 @@ export {
 export { packToSolidityProof } from "./src/contract/proof";
 export { calculateOperationDigest } from "./src/contract/utils";
 export { SNARK_SCALAR_FIELD } from "./src/proof/common";
+
+export { FlaxContext } from "./src/FlaxContext";
