@@ -2,6 +2,7 @@ import { Address, Asset, AssetRequest } from "./commonTypes";
 import {
   Action,
   PostProofOperation,
+  PostProofSpendTransaction,
   PreProofOperation,
   PreProofSpendTransaction,
   Tokens,
@@ -12,6 +13,15 @@ import { FlaxSigner } from "./sdk/signer";
 import { FlaxPrivKey } from "./crypto/privkey";
 import { FlattenedFlaxAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./proof/common";
+import { calculateOperationDigest } from "./contract/utils";
+import {
+  MerkleProofInput,
+  proveSpend2,
+  publicSignalsArrayToTyped,
+  Spend2Inputs,
+  verifySpend2Proof,
+} from "./proof/spend2";
+import { packToSolidityProof } from "./contract/proof";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -41,7 +51,7 @@ export class FlaxContext {
   // TODO: sync owned notes from chain or bucket
   async sync() {}
 
-  async tryFormatOperation(
+  async tryFormatPostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
     refundAddr?: FlattenedFlaxAddress,
     gasLimit = 1_000_000n
@@ -63,41 +73,89 @@ export class FlaxContext {
       gasLimit,
     };
 
+    // For each asset request, gather necessary notes
+    let allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
     for (const assetRequest of assetRequests) {
       const oldAndNewNotePairs = this.gatherMinimumNotes(
         realRefundAddr,
         assetRequest
       );
+
+      // For each note, generate proof
+      let perRequestSpendTxsPromises: Promise<PostProofSpendTransaction>[] = [];
       for (const oldNewPair of oldAndNewNotePairs) {
-        const { oldNote, newNote } = oldNewPair;
-        const nullifier = this.signer.createNullifier(oldNote as Note);
-        const newNoteCommitment = newNote.toCommitment();
-        const preProofSpendTx: PreProofSpendTransaction = {
-          commitmentTreeRoot: oldNote.merkleProof.root,
-          nullifier,
-          newNoteCommitment,
-          asset: oldNote.asset,
-          id: oldNote.id,
-          value: oldNote.value - newNote.value,
-        };
+        perRequestSpendTxsPromises.push(
+          this.generatePostProofSpendTx(oldNewPair, preProofOperation)
+        );
       }
+
+      allSpendTxPromises.concat(perRequestSpendTxsPromises);
     }
 
-    /*
-      - Generate a refundAddr if parameter empty
-      - Create PreProofOperation with refundAddr, request.tokens, request.actions, and gas limit
+    const allSpendTxs = await Promise.all(allSpendTxPromises);
+    return {
+      spendTxs: allSpendTxs,
+      refundAddr: realRefundAddr,
+      tokens,
+      actions,
+      gasLimit,
+    };
+  }
 
-      For each asset request:
-      - Check totalBalances[request.asset] < request.value
-      - Gather smallest notes first until you reach threshold > request.value
-      - For each oldNote:
-          - Create nullifier
-          - Generate newNote + newNoteCommitment based on difference of notes -
-          request.value
-          - Create PreProofSpendTransaction
-          - Calculate AND sign operation digest with PreProofSpendTransaction + PreProofOperation
-          - Generate proof using vk, spendPk, operationDigest, c, z, oldNote, newNote, and oldNote.merkleProof
-      */
+  async generatePostProofSpendTx(
+    oldNewNotePair: OldAndNewNotePair,
+    preProofOperation: PreProofOperation
+  ): Promise<PostProofSpendTransaction> {
+    const { oldNote, newNote } = oldNewNotePair;
+    const nullifier = this.signer.createNullifier(oldNote as Note);
+    const newNoteCommitment = newNote.toCommitment();
+    const preProofSpendTx: PreProofSpendTransaction = {
+      commitmentTreeRoot: oldNote.merkleProof.root,
+      nullifier,
+      newNoteCommitment,
+      asset: oldNote.asset,
+      id: oldNote.id,
+      value: oldNote.value - newNote.value,
+    };
+
+    const opDigest = calculateOperationDigest(
+      preProofOperation,
+      preProofSpendTx
+    );
+    const opSig = this.signer.sign(opDigest);
+
+    const merkleInput: MerkleProofInput = {
+      path: oldNote.merkleProof.pathIndices.map((n) => BigInt(n)),
+      siblings: oldNote.merkleProof.siblings,
+    };
+
+    const inputs: Spend2Inputs = {
+      vk: this.signer.privkey.vk,
+      spendPk: this.signer.privkey.spendPk(),
+      operationDigest: opDigest,
+      c: opSig.c,
+      z: opSig.z,
+      oldNote: oldNote.toNoteInput(),
+      newNote: newNote.toNoteInput(),
+      merkleProof: merkleInput,
+    };
+
+    const proof = await proveSpend2(inputs);
+    if (!(await verifySpend2Proof(proof))) {
+      throw new Error("Proof invalid!");
+    }
+
+    const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
+    const solidityProof = packToSolidityProof(proof.proof);
+    return {
+      commitmentTreeRoot: publicSignals.anchor,
+      nullifier,
+      newNoteCommitment,
+      proof: solidityProof,
+      asset: preProofSpendTx.asset,
+      value: publicSignals.value,
+      id: publicSignals.id,
+    };
   }
 
   /**
