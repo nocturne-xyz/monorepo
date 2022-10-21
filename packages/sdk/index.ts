@@ -17,6 +17,5 @@ export {
 } from "./src/proof/spend2";
 export { packToSolidityProof } from "./src/contract/proof";
 export { calculateOperationDigest } from "./src/contract/utils";
-export { SNARK_SCALAR_FIELD } from "./src/proof/common";
 
 export { FlaxContext } from "./src/FlaxContext";

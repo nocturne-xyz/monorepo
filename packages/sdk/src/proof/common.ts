@@ -1,7 +1,6 @@
 /* eslint-disable */
 
-export const SNARK_SCALAR_FIELD: bigint =
-  21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+import { SNARK_SCALAR_FIELD } from "../commonTypes";
 
 export interface BaseProof {
   pi_a: any;

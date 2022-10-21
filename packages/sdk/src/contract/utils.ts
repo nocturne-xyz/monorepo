@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { SNARK_SCALAR_FIELD } from "../proof/common";
+import { SNARK_SCALAR_FIELD } from "../commonTypes";
 import { PreProofOperation, PreProofSpendTransaction } from "./types";
 
 function hashOperation(op: PreProofOperation): string {

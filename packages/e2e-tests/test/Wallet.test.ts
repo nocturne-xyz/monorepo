@@ -131,9 +131,6 @@ describe("Wallet", async () => {
 
     const asset = new Asset(token.address, ERC20_ID);
 
-    console.log("Create nullifier for first note");
-    const nullifier = flaxSigner.createNullifier(firstOldNote);
-
     console.log("Create corresponding note commitments");
     const firstOldNoteCommitment = firstOldNote.toCommitment();
     const secondOldNoteCommitment = secondOldNote.toCommitment();
@@ -150,8 +147,13 @@ describe("Wallet", async () => {
 
     console.log("Prefill tokenToNotes mapping for FlaxContext");
     const tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map([
-      [asset.hash(), [new SpendableNote(firstOldNote, firstMerkleProof)]],
-      [asset.hash(), [new SpendableNote(secondOldNote, secondMerkleProof)]],
+      [
+        asset.hash(),
+        [
+          new SpendableNote(firstOldNote, firstMerkleProof),
+          new SpendableNote(secondOldNote, secondMerkleProof),
+        ],
+      ],
     ]);
 
     console.log("Create FlaxContext");

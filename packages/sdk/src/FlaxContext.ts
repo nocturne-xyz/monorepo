@@ -12,7 +12,7 @@ import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
 import { FlaxSigner } from "./sdk/signer";
 import { FlaxPrivKey } from "./crypto/privkey";
 import { FlattenedFlaxAddress } from "./crypto/address";
-import { SNARK_SCALAR_FIELD } from "./proof/common";
+import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   MerkleProofInput,
@@ -45,8 +45,8 @@ export class FlaxContext {
   // TODO: remove tokenToNotes and noteCommitmentTree, only for testing purposes!
   constructor(
     privkey: FlaxPrivKey,
-    tokenToNotes: Map<AssetHash, SpendableNote[]>,
-    noteCommitmentTree: BinaryPoseidonTree
+    tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
+    noteCommitmentTree: BinaryPoseidonTree = new BinaryPoseidonTree()
   ) {
     this.signer = new FlaxSigner(privkey);
     this.tokenToNotes = tokenToNotes;
@@ -85,8 +85,6 @@ export class FlaxContext {
         realRefundAddr,
         assetRequest
       );
-
-      console.log("Minimum notes: ", oldAndNewNotePairs);
 
       // For each note, generate proof
       for (const oldNewPair of oldAndNewNotePairs) {
@@ -163,9 +161,9 @@ export class FlaxContext {
   }
 
   /**
-   * Gather minimum list of notes required to fullfill asset request. Returned
-   * list is sorted from smallest to largest. The last note in the list may
-   * produce a non-zero new note.
+   * Remove and return minimum list of notes required to fullfill asset request.
+   * Returned list is sorted from smallest to largest. The last note in the list
+   * may produce a non-zero new note.
    *
    * @param assetRequest asset request
    */

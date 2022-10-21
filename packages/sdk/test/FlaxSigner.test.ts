@@ -4,7 +4,7 @@ import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import { FlaxAddress } from "../src/crypto/address";
 
-describe("[crypto/signer]", () => {
+describe("FlaxSigner", () => {
   it("View key should work", () => {
     const priv1 = FlaxPrivKey.genPriv();
     const signer1 = new FlaxSigner(priv1);
