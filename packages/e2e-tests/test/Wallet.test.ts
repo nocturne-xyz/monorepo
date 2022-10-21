@@ -157,7 +157,7 @@ describe("Wallet", async () => {
     ]);
 
     console.log("Create FlaxContext");
-    const flaxContext = new FlaxContext(flaxSigner.privkey, tokenToNotes, tree);
+    const flaxContext = new FlaxContext(flaxSigner, tokenToNotes, tree);
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {

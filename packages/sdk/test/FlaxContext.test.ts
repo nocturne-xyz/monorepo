@@ -8,11 +8,10 @@ import { FlaxPrivKey } from "../src/crypto/privkey";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 
 describe("FlaxContext", () => {
-  it("Gathers minimum notes for asset request", () => {
-    const priv = FlaxPrivKey.genPriv();
-    const signer = new FlaxSigner(priv);
-    const asset: Asset = new Asset("0x12345", 11111n);
-
+  function setupFlaxContextWithFourNotes(
+    signer: FlaxSigner,
+    asset: Asset
+  ): FlaxContext {
     const firstOldNote = new Note({
       owner: signer.address.toFlattened(),
       nonce: 0n,
@@ -60,9 +59,26 @@ describe("FlaxContext", () => {
       ],
     ]);
 
-    const flaxContext = new FlaxContext(priv, tokenToNotes, tree);
-    // const flaxContext0 = new FlaxContext(priv, tokenToNotes, tree);
+    return new FlaxContext(signer, tokenToNotes, tree);
+  }
 
+  it("Gets total balance for an asset", () => {
+    const priv = FlaxPrivKey.genPriv();
+    const signer = new FlaxSigner(priv);
+    const asset: Asset = new Asset("0x12345", 11111n);
+
+    const flaxContext = setupFlaxContextWithFourNotes(signer, asset);
+
+    const assetBalance = flaxContext.getAssetBalance(asset);
+    expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
+  });
+
+  it("Gathers minimum notes for asset request", () => {
+    const priv = FlaxPrivKey.genPriv();
+    const signer = new FlaxSigner(priv);
+    const asset: Asset = new Asset("0x12345", 11111n);
+
+    const flaxContext = setupFlaxContextWithFourNotes(signer, asset);
     const refundAddr = signer.address.rerand().toFlattened();
 
     // Request 20 tokens, consume smallest note
@@ -78,7 +94,7 @@ describe("FlaxContext", () => {
     expect(minimumFor5[0].oldNote.value).to.equal(10n);
     expect(flaxContext.tokenToNotes.get(asset.hash())!.length).to.equal(3);
 
-    // Request 60 tokens, consume smallest two notes
+    // Request 60 tokens, consume next smallest two notes
     const assetRequest60: AssetRequest = {
       asset,
       value: 60n,

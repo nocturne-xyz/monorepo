@@ -10,7 +10,6 @@ import {
 import { Note, SpendableNote } from "./sdk/note";
 import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
 import { FlaxSigner } from "./sdk/signer";
-import { FlaxPrivKey } from "./crypto/privkey";
 import { FlattenedFlaxAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
@@ -44,11 +43,11 @@ export class FlaxContext {
   // TODO: sync tree with db events and new on-chain events
   // TODO: remove tokenToNotes and noteCommitmentTree, only for testing purposes!
   constructor(
-    privkey: FlaxPrivKey,
+    signer: FlaxSigner,
     tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
     noteCommitmentTree: BinaryPoseidonTree = new BinaryPoseidonTree()
   ) {
-    this.signer = new FlaxSigner(privkey);
+    this.signer = signer;
     this.tokenToNotes = tokenToNotes;
     this.noteCommitmentTree = noteCommitmentTree;
   }
