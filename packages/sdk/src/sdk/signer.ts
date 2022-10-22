@@ -2,8 +2,8 @@ import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
-import { FlaxAddress } from "./crypto/address";
-import { FlaxPrivKey } from "./crypto/privkey";
+import { FlattenedFlaxAddress, FlaxAddress } from "../crypto/address";
+import { FlaxPrivKey } from "../crypto/privkey";
 
 export interface FlaxSignature {
   c: bigint;
@@ -58,8 +58,9 @@ export class FlaxSigner {
     return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
   }
 
-  testOwn(addr: FlaxAddress): boolean {
-    const H2prime = babyjub.mulPointEscalar(addr.h1, this.privkey.vk);
-    return addr.h2[0] === H2prime[0] && addr.h2[1] === H2prime[1];
+  testOwn(addr: FlaxAddress | FlattenedFlaxAddress): boolean {
+    const flaxAddr = addr instanceof FlaxAddress ? addr : addr.toArrayForm();
+    const H2prime = babyjub.mulPointEscalar(flaxAddr.h1, this.privkey.vk);
+    return flaxAddr.h2[0] === H2prime[0] && flaxAddr.h2[1] === H2prime[1];
   }
 }

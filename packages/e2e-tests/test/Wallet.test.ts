@@ -19,22 +19,15 @@ import {
   FlaxPrivKey,
   FlaxSigner,
   Action,
-  proveSpend2,
-  verifySpend2Proof,
-  MerkleProofInput,
-  PreProofSpendTransaction,
-  Spend2Inputs,
   SNARK_SCALAR_FIELD,
-  Tokens,
-  PreProofOperation,
-  calculateOperationDigest,
-  packToSolidityProof,
-  PostProofSpendTransaction,
-  PostProofOperation,
   Bundle,
-  publicSignalsArrayToTyped,
   Note,
+  FlaxContext,
+  AssetHash,
 } from "@flax/sdk";
+import { Asset, AssetRequest } from "@flax/sdk/dist/src/commonTypes";
+import { SpendableNote } from "@flax/sdk/dist/src/sdk/note";
+import { OperationRequest } from "@flax/sdk/dist/src/FlaxContext";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -122,22 +115,21 @@ describe("Wallet", async () => {
 
     console.log("Create two corresponding notes from deposits");
     const firstOldNote = new Note({
-      owner: flaxSigner.address,
+      owner: flaxSigner.address.toFlattened(),
       nonce: 0n,
       asset: token.address,
       id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
     });
     const secondOldNote = new Note({
-      owner: flaxSigner.address,
+      owner: flaxSigner.address.toFlattened(),
       nonce: 1n,
       asset: token.address,
       id: ERC20_ID,
       value: PER_SPEND_AMOUNT,
     });
 
-    console.log("Create nullifier for first note");
-    const nullifier = flaxSigner.createNullifier(firstOldNote);
+    const asset = new Asset(token.address, ERC20_ID);
 
     console.log("Create corresponding note commitments");
     const firstOldNoteCommitment = firstOldNote.toCommitment();
@@ -148,27 +140,33 @@ describe("Wallet", async () => {
     tree.insert(firstOldNoteCommitment);
     tree.insert(secondOldNoteCommitment);
 
-    console.log("Generate proof for first note commitment");
+    console.log("Generate merkle proofs for two notes");
     expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
-    const merkleProof = tree.createProof(0);
-    const merkleProofInput: MerkleProofInput = {
-      path: merkleProof.pathIndices.map((n) => BigInt(n)),
-      siblings: merkleProof.siblings,
+    const firstMerkleProof = tree.createProof(0);
+    const secondMerkleProof = tree.createProof(1);
+
+    console.log("Prefill tokenToNotes mapping for FlaxContext");
+    const tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map([
+      [
+        asset.hash(),
+        [
+          new SpendableNote(firstOldNote, firstMerkleProof),
+          new SpendableNote(secondOldNote, secondMerkleProof),
+        ],
+      ],
+    ]);
+
+    console.log("Create FlaxContext");
+    const flaxContext = new FlaxContext(flaxSigner, tokenToNotes, tree);
+
+    console.log("Create asset request to spend 50 units of token");
+    const assetRequest: AssetRequest = {
+      asset,
+      value: 50n,
     };
 
-    console.log(
-      "New note and note commitment resulting from spend of 50 units"
-    );
-    const newNote = new Note({
-      owner: flaxSigner.address,
-      nonce: 12345n,
-      asset: firstOldNote.asset,
-      id: firstOldNote.id,
-      value: 50n,
-    });
-    const newNoteCommitment = newNote.toCommitment();
-
-    console.log("Create Action to transfer the 50 tokens to bob");
+    console.log("Encode operation request");
+    const refundTokens = [firstOldNote.asset];
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
@@ -178,78 +176,16 @@ describe("Wallet", async () => {
       contractAddress: token.address,
       encodedFunction: encodedFunction,
     };
-
-    console.log("Create preProof spend");
-    const preProofSpendTx: PreProofSpendTransaction = {
-      commitmentTreeRoot: merkleProof.root,
-      nullifier: nullifier,
-      newNoteCommitment: newNoteCommitment,
-      asset: token.address,
-      value: 50n, // value being used (old note - new note)
-      id: SNARK_SCALAR_FIELD - 1n,
-    };
-
-    console.log("Create preProof operation");
-    const tokens: Tokens = {
-      spendTokens: [token.address],
-      refundTokens: [token.address],
-    };
-    const preProofOperation: PreProofOperation = {
-      refundAddr: flaxSigner.address.toFlattened(),
-      tokens: tokens,
+    const operationRequest: OperationRequest = {
+      assetRequests: [assetRequest],
+      refundTokens,
       actions: [action],
-      gasLimit: 1_000_000n,
     };
 
-    console.log("Calculate operation digest (combo of spend and operation)");
-    const operationDigest = calculateOperationDigest(
-      preProofOperation,
-      preProofSpendTx
+    console.log("Create post-proof operation with FlaxContext");
+    const operation = await flaxContext.tryCreatePostProofOperation(
+      operationRequest
     );
-
-    console.log("Sign operation digest");
-    const opSig = flaxSigner.sign(operationDigest);
-
-    console.log("Format prover inputs");
-    const spend2Inputs: Spend2Inputs = {
-      vk: flaxSigner.privkey.vk,
-      spendPk: flaxSigner.privkey.spendPk(),
-      operationDigest,
-      c: opSig.c,
-      z: opSig.z,
-      oldNote: firstOldNote.toNoteInput(),
-      newNote: newNote.toNoteInput(),
-      merkleProof: merkleProofInput,
-    };
-
-    console.log("Prove");
-    const proof = await proveSpend2(spend2Inputs);
-    if (!(await verifySpend2Proof(proof))) {
-      throw new Error("Proof invalid!");
-    }
-
-    console.log("Create spend tx with proof");
-    const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
-    const solidityProof = packToSolidityProof(proof.proof);
-    const spendTx: PostProofSpendTransaction = {
-      commitmentTreeRoot:
-        BigInt(preProofSpendTx.commitmentTreeRoot) % SNARK_SCALAR_FIELD,
-      nullifier: publicSignals.nullifier,
-      newNoteCommitment: publicSignals.newNoteCommitment,
-      proof: solidityProof,
-      asset: token.address,
-      value: publicSignals.value,
-      id: publicSignals.id,
-    };
-
-    console.log("Create operation with spend tx and bundle");
-    const operation: PostProofOperation = {
-      spendTxs: [spendTx],
-      refundAddr: preProofOperation.refundAddr,
-      tokens: preProofOperation.tokens,
-      actions: preProofOperation.actions,
-      gasLimit: preProofOperation.gasLimit,
-    };
 
     const bundle: Bundle = {
       operations: [operation],

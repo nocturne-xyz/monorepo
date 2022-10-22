@@ -2,14 +2,13 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxSigner } from "../src/signer";
+import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import {
   proveSpend2,
   verifySpend2Proof,
   MerkleProofInput,
   NoteInput,
-  FlaxAddressInput,
   Spend2Inputs,
   spend2ProofToJson,
 } from "../src/proof/spend2";
@@ -31,12 +30,7 @@ const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
-const flaxAddrInput: FlaxAddressInput = {
-  h1X: flaxAddr.h1[0],
-  h1Y: flaxAddr.h1[1],
-  h2X: flaxAddr.h2[0],
-  h2Y: flaxAddr.h2[1],
-};
+const flaxAddrInput = flaxAddr.toFlattened();
 
 // Old note input to spend
 const oldNote: NoteInput = {

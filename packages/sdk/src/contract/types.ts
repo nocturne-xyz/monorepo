@@ -1,7 +1,5 @@
-import { FlaxAddressInput } from "../proof/spend2";
-
-type Address = string;
-type FLAXAddress = FlaxAddressInput;
+import { Address } from "../commonTypes";
+import { FlattenedFlaxAddress } from "../crypto/address";
 
 export interface Tokens {
   spendTokens: Address[];
@@ -18,12 +16,12 @@ export interface PreProofSpendTransaction {
   nullifier: bigint;
   newNoteCommitment: bigint;
   asset: Address;
-  value: bigint;
   id: bigint;
+  value: bigint;
 }
 
 export interface PreProofOperation {
-  refundAddr: FLAXAddress;
+  refundAddr: FlattenedFlaxAddress;
   tokens: Tokens;
   actions: Action[];
   gasLimit: bigint;
@@ -41,7 +39,7 @@ export interface PostProofSpendTransaction {
 
 export interface PostProofOperation {
   spendTxs: PostProofSpendTransaction[];
-  refundAddr: FLAXAddress;
+  refundAddr: FlattenedFlaxAddress;
   tokens: Tokens;
   actions: Action[];
   gasLimit: bigint;
@@ -56,5 +54,5 @@ export interface Deposit {
   asset: Address;
   value: bigint;
   id: bigint;
-  depositAddr: FLAXAddress;
+  depositAddr: FlattenedFlaxAddress;
 }
