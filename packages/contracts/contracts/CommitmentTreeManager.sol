@@ -19,15 +19,13 @@ contract CommitmentTreeManager {
     ISpend2Verifier public verifier;
     IHasherT6 public hasherT6;
 
-    // REMOVE: debug
-    event Signals(
-        uint256 indexed newNoteCommitment,
-        uint256 indexed commitmentTreeRoot,
-        uint256 asset,
+    event Refund(
+        IWallet.FLAXAddress indexed refundAddr,
+        uint256 indexed nonce,
+        address indexed asset,
         uint256 id,
         uint256 value,
-        uint256 nullifier,
-        uint256 indexed operationDigest
+        uint256 merkleIndex
     );
 
     constructor(
@@ -57,6 +55,7 @@ contract CommitmentTreeManager {
     // TODO: add default noteCommitment for when there is no output note.
     function _handleSpend(
         IWallet.SpendTransaction calldata spendTx,
+        IWallet.FLAXAddress calldata refundAddr,
         bytes32 operationHash
     ) internal {
         require(
@@ -92,11 +91,20 @@ contract CommitmentTreeManager {
         );
 
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
-
         nullifierSet[spendTx.nullifier] = true;
+
+        emit Refund(
+            refundAddr,
+            nonce,
+            spendTx.asset,
+            spendTx.id,
+            spendTx.value,
+            noteCommitmentTree.tentativeCount() - 1
+        );
     }
 
     function _handleRefund(
+        IWallet.FLAXAddress memory refundAddr,
         uint256 refundAddrHash,
         address asset,
         uint256 id,
@@ -109,6 +117,15 @@ contract CommitmentTreeManager {
         nonce++;
 
         noteCommitmentTree.insertLeafToQueue(noteCommitment);
+
+        emit Refund(
+            refundAddr,
+            nonce,
+            asset,
+            id,
+            value,
+            noteCommitmentTree.tentativeCount() - 1
+        );
     }
 
     function _hashSpend(IWallet.SpendTransaction calldata spend)

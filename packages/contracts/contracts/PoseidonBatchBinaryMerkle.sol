@@ -30,6 +30,10 @@ contract PoseidonBatchBinaryMerkle is IBatchMerkle {
         return self.root;
     }
 
+    function tentativeCount() external view override returns (uint256) {
+        return self.tentativeCount();
+    }
+
     function commit2FromQueue() external override {
         self.commit2FromQueue();
     }

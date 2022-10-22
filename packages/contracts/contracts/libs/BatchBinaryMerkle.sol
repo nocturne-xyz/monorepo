@@ -56,6 +56,17 @@ library BatchBinaryMerkle {
         self.root = zero;
     }
 
+    /// @dev Returns the _tentative_ number of leaves in the tree,
+    /// including leaves in the queue (not yet committed).
+    /// @param self: Tree data.
+    function tentativeCount(IncrementalTreeData storage self)
+        internal
+        view
+        returns (uint256)
+    {
+        return self.numberOfLeaves + self.queueLength;
+    }
+
     /// @dev Inserts a leaf in the tree.
     /// @param self: Tree data.
     /// @param leaf: Leaf to be inserted.
