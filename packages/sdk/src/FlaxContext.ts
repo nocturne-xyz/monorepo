@@ -41,7 +41,6 @@ export class FlaxContext {
 
   // TODO: pull spendable notes from db
   // TODO: sync tree with db events and new on-chain events
-  // TODO: remove tokenToNotes and noteCommitmentTree, only for testing purposes!
   constructor(
     signer: FlaxSigner,
     tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
@@ -55,6 +54,19 @@ export class FlaxContext {
   // TODO: sync owned notes from chain or bucket
   // async sync() {}
 
+  /**
+   * Attempt to create a `PostProofOperation` provided an `OperationRequest`.
+   * `FlaxContext` will attempt to gather all notes to fullfill the operation
+   * request's asset requests. It will then generate spend proofs for each and
+   * include that in the final `PostProofOperation`.
+   *
+   * @param assetRequests Asset requested to spend
+   * @param refundTokens Details on token Wallet will refund to user
+   * @param actions Encoded contract actions to take
+   * @param refundAddr Optional refund address. Context will generate
+   * rerandomized address if left empty
+   * @param gasLimit Gas limit
+   */
   async tryCreatePostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
     refundAddr?: FlattenedFlaxAddress,
@@ -103,6 +115,14 @@ export class FlaxContext {
     };
   }
 
+  /**
+   * Create a `PostProofSpendTransaction` given the `oldNote`, resulting
+   * `newNote`, and operation to use for the `operationDigest`
+   *
+   * @param oldNewNotePair Old `SpendableNote` and its resulting `newNote`
+   * post-spend
+   * @param preProofOperation Operation included when generating a proof
+   */
   async generatePostProofSpendTx(
     oldNewNotePair: OldAndNewNotePair,
     preProofOperation: PreProofOperation
@@ -164,7 +184,7 @@ export class FlaxContext {
    * Returned list is sorted from smallest to largest. The last note in the list
    * may produce a non-zero new note.
    *
-   * @param assetRequest asset request
+   * @param assetRequest Asset request
    */
   gatherMinimumNotes(
     refundAddr: FlattenedFlaxAddress,
@@ -216,6 +236,11 @@ export class FlaxContext {
     return oldAndNewNotePairs;
   }
 
+  /**
+   * Sum up the note values for a given `tokenToNote` entry array.
+   *
+   * @param asset Asset
+   */
   getAssetBalance(asset: Asset): bigint {
     const notes = this.tokenToNotes.get(asset.hash());
 
