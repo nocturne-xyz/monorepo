@@ -3,7 +3,7 @@ pragma solidity ^0.8.2;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
-import {IncrementalTreeData, BatchBinaryMerkle} from "./libs/BinaryMerkle.sol";
+import {IncrementalTreeData, BinaryMerkle} from "./libs/BinaryMerkle.sol";
 import {QueueLib} from "./libs/Queue.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
@@ -12,7 +12,7 @@ import {IPoseidonT3} from "./interfaces/IPoseidon.sol";
 import {PoseidonHasherT3} from "./PoseidonHashers.sol";
 
 contract PoseidonBatchBinaryMerkle is IBatchMerkle {
-    using BatchBinaryMerkle for IncrementalTreeData;
+    using BinaryMerkle for IncrementalTreeData;
     using QueueLib for QueueLib.Queue;
 
     QueueLib.Queue public queue;

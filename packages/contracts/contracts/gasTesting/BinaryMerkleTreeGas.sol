@@ -5,7 +5,7 @@ import "../libs/BinaryMerkle.sol";
 import {IHasherT3} from "../interfaces/IHasher.sol";
 
 contract BinaryMerkleTreeGas {
-    using BatchBinaryMerkle for IncrementalTreeData;
+    using BinaryMerkle for IncrementalTreeData;
 
     IncrementalTreeData binaryTree;
 

@@ -20,7 +20,7 @@ struct IncrementalTreeData {
 /// @title Incremental binary Merkle tree.
 /// @dev The incremental tree allows to calculate the root hash each time a leaf is added, ensuring
 /// the integrity of the tree.
-library BatchBinaryMerkle {
+library BinaryMerkle {
     uint8 internal constant MAX_DEPTH = 32;
     uint256 internal constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;

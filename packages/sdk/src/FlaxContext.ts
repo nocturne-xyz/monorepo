@@ -8,7 +8,6 @@ import {
   Tokens,
 } from "./contract/types";
 import { Note, SpendableNote } from "./sdk/note";
-import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
 import { FlaxSigner } from "./sdk/signer";
 import { FlattenedFlaxAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
@@ -21,6 +20,7 @@ import {
   verifySpend2Proof,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
+import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -36,7 +36,7 @@ export interface OldAndNewNotePair {
 export class FlaxContext {
   signer: FlaxSigner;
   tokenToNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
-  noteCommitmentTree: BinaryPoseidonTree;
+  merkleProver: MerkleProver;
   dbPath = "/flaxdb";
 
   // TODO: pull spendable notes from db
@@ -44,11 +44,11 @@ export class FlaxContext {
   constructor(
     signer: FlaxSigner,
     tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
-    noteCommitmentTree: BinaryPoseidonTree = new BinaryPoseidonTree()
+    merkleProver: MerkleProver = new LocalMerkleProver()
   ) {
     this.signer = signer;
     this.tokenToNotes = tokenToNotes;
-    this.noteCommitmentTree = noteCommitmentTree;
+    this.merkleProver = merkleProver;
   }
 
   // TODO: sync owned notes from chain or bucket
