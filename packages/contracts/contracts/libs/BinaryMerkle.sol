@@ -15,10 +15,6 @@ struct IncrementalTreeData {
     mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [left node, right node]).
     mapping(uint256 => uint256[2]) lastSubtrees; // Caching these values is essential to efficient appends.
-    // Queue variables
-    mapping(uint256 => uint256) queue;
-    uint256 queueStart;
-    uint256 queueLength;
 }
 
 /// @title Incremental binary Merkle tree.
@@ -33,7 +29,7 @@ library BatchBinaryMerkle {
     /// @param self: Tree data.
     /// @param depth: Depth of the tree.
     /// @param zero: Zero value to be used.
-    function init(
+    function initialize(
         IncrementalTreeData storage self,
         uint8 depth,
         uint256 zero,
@@ -181,74 +177,6 @@ library BatchBinaryMerkle {
 
         self.root = hash;
         self.numberOfLeaves += 1;
-    }
-
-    function commit2FromQueue(IncrementalTreeData storage self) internal {
-        uint256 qLength = self.queueLength;
-        require(qLength >= 2, "Not enough eles in queue");
-
-        uint256 qStart = self.queueStart;
-        uint256[2] memory leaves;
-        for (uint256 i = 0; i < 2; i++) {
-            leaves[i] = self.queue[qStart + i];
-            delete self.queue[qStart + i];
-        }
-
-        self.queueStart = qStart + 2;
-
-        insert2(self, leaves);
-    }
-
-    function commit8FromQueue(IncrementalTreeData storage self) internal {
-        uint256 qLength = self.queueLength;
-        require(qLength >= 8, "Not enough eles in queue");
-
-        uint256 qStart = self.queueStart;
-        uint256[8] memory leaves;
-        for (uint256 i = 0; i < 8; i++) {
-            leaves[i] = self.queue[qStart + i];
-            delete self.queue[qStart + i];
-        }
-
-        self.queueStart = qStart + 8;
-
-        insert8(self, leaves);
-    }
-
-    function commit16FromQueue(IncrementalTreeData storage self) internal {
-        uint256 qLength = self.queueLength;
-        require(qLength >= 16, "Not enough eles in queue");
-
-        uint256 qStart = self.queueStart;
-        uint256[16] memory leaves;
-        for (uint256 i = 0; i < 16; i++) {
-            leaves[i] = self.queue[qStart + i];
-            delete self.queue[qStart + i];
-        }
-
-        self.queueStart = qStart + 16;
-
-        insert16(self, leaves);
-    }
-
-    function insertLeavesToQueue(
-        IncrementalTreeData storage self,
-        uint256[] memory leaves
-    ) internal {
-        uint256 qLength = self.queueLength;
-        for (uint256 i = 0; i < leaves.length; i++) {
-            self.queue[qLength + i] = leaves[i];
-        }
-
-        self.queueLength = qLength + leaves.length;
-    }
-
-    function insertLeafToQueue(IncrementalTreeData storage self, uint256 leaf)
-        internal
-    {
-        uint256 qLength = self.queueLength;
-        self.queue[qLength] = leaf;
-        self.queueLength = qLength + 1;
     }
 
     function getRootFrom8(

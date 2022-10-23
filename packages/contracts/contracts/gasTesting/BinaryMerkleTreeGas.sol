@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
-import "../libs/BatchBinaryMerkle.sol";
+import "../libs/BinaryMerkle.sol";
 import {IHasherT3} from "../interfaces/IHasher.sol";
 
 contract BinaryMerkleTreeGas {
@@ -12,7 +12,7 @@ contract BinaryMerkleTreeGas {
     uint256 public constant ZERO = 123498798;
 
     constructor(IHasherT3 _hasherT3) {
-        binaryTree.init(32, ZERO, _hasherT3);
+        binaryTree.initialize(32, ZERO, _hasherT3);
     }
 
     function insertLeaf(uint256 leaf) public {
@@ -29,21 +29,5 @@ contract BinaryMerkleTreeGas {
 
     function insert16Leaves(uint256[16] calldata leaves) public {
         binaryTree.insert16(leaves);
-    }
-
-    function insertLeafToQueue(uint256 leaf) public {
-        binaryTree.insertLeafToQueue(leaf);
-    }
-
-    function insertLeavesToQueue(uint256[] memory leaves) public {
-        binaryTree.insertLeavesToQueue(leaves);
-    }
-
-    function commit8FromQueue() public {
-        binaryTree.commit8FromQueue();
-    }
-
-    function commit16FromQueue() public {
-        binaryTree.commit16FromQueue();
     }
 }

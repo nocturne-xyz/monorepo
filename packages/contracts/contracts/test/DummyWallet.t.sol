@@ -9,8 +9,9 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
-import {PoseidonHasherT3, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
+import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
+import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
@@ -20,7 +21,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 
-contract DummyWalletTest is Test, TestUtils {
+contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using stdJson for string;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
@@ -35,9 +36,6 @@ contract DummyWalletTest is Test, TestUtils {
     Vault vault;
     IBatchMerkle merkle;
     ISpend2Verifier verifier;
-    IHasherT3 hasherT3;
-    IHasherT5 hasherT5;
-    IHasherT6 hasherT6;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
 
@@ -106,44 +104,18 @@ contract DummyWalletTest is Test, TestUtils {
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
-        string memory root = vm.projectRoot();
-        address[4] memory poseidonAddrs;
-        for (uint8 i = 0; i < 4; i++) {
-            bytes memory path = abi.encodePacked(
-                bytes(root),
-                "/packages/contracts/poseidon-bytecode/PoseidonT"
-            );
-            path = abi.encodePacked(path, bytes(Strings.toString(i + 3)));
-            path = abi.encodePacked(path, ".txt");
-
-            string memory bytecodeStr = vm.readFile(string(path));
-            bytes memory bytecode = hexToBytes(bytecodeStr);
-
-            address deployed;
-            assembly {
-                deployed := create(0, add(bytecode, 0x20), mload(bytecode))
-            }
-            poseidonAddrs[i] = deployed;
-        }
-
-        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonAddrs[0]));
-        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonAddrs[2]));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonAddrs[3]));
+        deployPoseidon3Through6();
 
         // Instantiate vault, verifier, tree, and wallet
         vault = new Vault();
-        merkle = new PoseidonBatchBinaryMerkle(
-            32,
-            0,
-            IPoseidonT3(poseidonAddrs[0])
-        );
+        merkle = new PoseidonBatchBinaryMerkle(32, 0, IPoseidonT3(poseidonT3));
         verifier = new TestSpend2Verifier();
         wallet = new Wallet(
             address(vault),
             address(verifier),
             address(merkle),
-            address(hasherT5),
-            address(hasherT6)
+            address(IHasherT5(new PoseidonHasherT5(poseidonT5))),
+            address(IHasherT6(new PoseidonHasherT6(poseidonT6)))
         );
 
         vault.initialize(address(wallet));
@@ -156,12 +128,21 @@ contract DummyWalletTest is Test, TestUtils {
     }
 
     function testPoseidon() public {
-        console.log(hasherT3.hash([uint256(0), uint256(1)]));
         console.log(
-            hasherT5.hash([uint256(0), uint256(1), uint256(2), uint256(3)])
+            new PoseidonHasherT3(poseidonT3).hash([uint256(0), uint256(1)])
         );
         console.log(
-            hasherT6.hash(
+            new PoseidonHasherT4(poseidonT4).hash(
+                [uint256(0), uint256(1), uint256(2)]
+            )
+        );
+        console.log(
+            new PoseidonHasherT5(poseidonT5).hash(
+                [uint256(0), uint256(1), uint256(2), uint256(3)]
+            )
+        );
+        console.log(
+            new PoseidonHasherT6(poseidonT6).hash(
                 [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
             )
         );

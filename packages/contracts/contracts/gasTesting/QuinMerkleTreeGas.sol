@@ -11,7 +11,7 @@ contract QuinMerkleTreeGas {
     uint256 public constant ZERO = 123498798;
 
     constructor() {
-        quinTree.init(14, ZERO);
+        quinTree.initialize(14, ZERO);
     }
 
     function insertLeaf(uint256 leaf) public {

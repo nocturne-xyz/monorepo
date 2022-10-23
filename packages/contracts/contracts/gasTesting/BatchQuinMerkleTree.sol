@@ -29,7 +29,7 @@ library BatchQuinMerkleTree {
     /// @param self: Tree data.
     /// @param depth: Depth of the tree.
     /// @param zero: Zero value to be used.
-    function init(
+    function initialize(
         IncrementalTreeData storage self,
         uint8 depth,
         uint256 zero
