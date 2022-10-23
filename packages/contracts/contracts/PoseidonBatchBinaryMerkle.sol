@@ -34,7 +34,11 @@ contract PoseidonBatchBinaryMerkle is IBatchMerkle {
         return tree.root;
     }
 
-    function tentativeCount() external view override returns (uint256) {
+    function committedCount() external view override returns (uint256) {
+        return tree.numberOfLeaves;
+    }
+
+    function totalCount() external view override returns (uint256) {
         return tree.numberOfLeaves + queue.length();
     }
 

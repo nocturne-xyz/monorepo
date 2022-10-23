@@ -127,7 +127,7 @@ contract CommitmentTreeManager {
             asset,
             id,
             value,
-            noteCommitmentTree.tentativeCount() - 1
+            noteCommitmentTree.totalCount() - 1
         );
     }
 
