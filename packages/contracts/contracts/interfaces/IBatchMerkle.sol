@@ -13,4 +13,6 @@ interface IBatchMerkle {
     function commit8FromQueue() external;
 
     function insertLeafToQueue(uint256 leaf) external;
+
+    function insertLeavesToQueue(uint256[] memory leaves) external;
 }
