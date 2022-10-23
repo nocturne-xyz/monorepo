@@ -2,6 +2,7 @@ export { BinaryPoseidonTree } from "./src/primitives/binaryPoseidonTree";
 export { Note } from "./src/sdk/note";
 export { FlaxSignature, FlaxSigner } from "./src/sdk/signer";
 export { MerkleProver } from "./src/sdk/merkleProver";
+export { NoteCollector, LocalNoteIndexer } from "./src/sdk/noteCollector";
 export { FlaxAddress } from "./src/crypto/address";
 export { FlaxPrivKey } from "./src/crypto/privkey";
 export { SolidityProof } from "./src/contract/proof";
