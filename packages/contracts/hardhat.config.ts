@@ -91,7 +91,6 @@ module.exports = {
       "PoseidonHasherT7",
       "Wallet",
       "Vault",
-      "BatchBinaryMerkle",
       "CommitmentTreeManager",
       "BalanceManager",
       "Spend2Verifier",

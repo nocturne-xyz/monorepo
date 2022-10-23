@@ -15,7 +15,6 @@ import {
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
 import {
-  BinaryPoseidonTree,
   FlaxPrivKey,
   FlaxSigner,
   Action,
@@ -28,6 +27,7 @@ import {
 import { Asset, AssetRequest } from "@flax/sdk/dist/src/commonTypes";
 import { SpendableNote } from "@flax/sdk/dist/src/sdk/note";
 import { OperationRequest } from "@flax/sdk/dist/src/FlaxContext";
+import { LocalMerkleProver } from "@flax/sdk/dist/src/sdk/merkleProver";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -136,7 +136,7 @@ describe("Wallet", async () => {
     const secondOldNoteCommitment = secondOldNote.toCommitment();
 
     console.log("Replicate commitment tree state");
-    const tree = new BinaryPoseidonTree();
+    const tree = new LocalMerkleProver();
     tree.insert(firstOldNoteCommitment);
     tree.insert(secondOldNoteCommitment);
 
