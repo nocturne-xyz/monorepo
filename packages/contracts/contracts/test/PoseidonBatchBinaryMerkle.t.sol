@@ -15,14 +15,16 @@ contract TestPoseidonBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         merkle = new PoseidonBatchBinaryMerkle(32, 0, IPoseidonT3(poseidonT3));
     }
 
-    function testInsertAndTentativeCount() public {
+    function testInsertAndTotalCount() public {
         merkle.insertLeafToQueue(uint256(0));
         merkle.insertLeafToQueue(uint256(1));
 
-        assertEq(merkle.tentativeCount(), 2);
+        assertEq(merkle.totalCount(), 2);
+        assertEq(merkle.committedCount(), 0);
 
         merkle.commit2FromQueue();
-        assertEq(merkle.tentativeCount(), 2);
+        assertEq(merkle.committedCount(), 2);
+        assertEq(merkle.totalCount(), 2);
 
         merkle.insertLeafToQueue(uint256(2));
         merkle.insertLeafToQueue(uint256(3));
