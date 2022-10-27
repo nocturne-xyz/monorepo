@@ -35,7 +35,7 @@ export interface OldAndNewNotePair {
 
 export class FlaxContext {
   signer: FlaxSigner;
-  tokenToNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
+  spendableNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
   merkleProver: MerkleProver;
   dbPath = "/flaxdb";
 
@@ -43,11 +43,11 @@ export class FlaxContext {
   // TODO: sync tree with db events and new on-chain events
   constructor(
     signer: FlaxSigner,
-    tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
+    spendableNotes: Map<AssetHash, SpendableNote[]> = new Map(),
     merkleProver: MerkleProver = new LocalMerkleProver()
   ) {
     this.signer = signer;
-    this.tokenToNotes = tokenToNotes;
+    this.spendableNotes = spendableNotes;
     this.merkleProver = merkleProver;
   }
 
@@ -197,7 +197,7 @@ export class FlaxContext {
       );
     }
 
-    const sortedNotes = this.tokenToNotes
+    const sortedNotes = this.spendableNotes
       .get(assetRequest.asset.hash())!
       .sort((a, b) => {
         return Number(a.value - b.value);
@@ -242,7 +242,7 @@ export class FlaxContext {
    * @param asset Asset
    */
   getAssetBalance(asset: Asset): bigint {
-    const notes = this.tokenToNotes.get(asset.hash());
+    const notes = this.spendableNotes.get(asset.hash());
 
     if (!notes) {
       return 0n;

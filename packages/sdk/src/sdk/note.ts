@@ -50,6 +50,29 @@ export class Note {
   }
 }
 
+export class PendingNote extends Note {
+  merkleIndex: number;
+
+  constructor(note: NoteConstructor, merkleIndex: number) {
+    super(note);
+    this.merkleIndex = merkleIndex;
+  }
+
+  toSpendable(merkleProof: MerkleProof): SpendableNote {
+    const { owner, nonce, asset, id, value } = this;
+    return new SpendableNote(
+      {
+        owner,
+        nonce,
+        asset,
+        id,
+        value,
+      },
+      merkleProof
+    );
+  }
+}
+
 export class SpendableNote extends Note {
   merkleProof: MerkleProof;
 
