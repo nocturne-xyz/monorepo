@@ -80,6 +80,7 @@ contract CommitmentTreeManager {
                 [
                     spendTx.newNoteCommitment,
                     spendTx.commitmentTreeRoot,
+                    spendTx.newNonce,
                     uint256(uint160(spendTx.asset)),
                     spendTx.id,
                     spendTx.value,
@@ -93,9 +94,10 @@ contract CommitmentTreeManager {
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
+        // TODO: emit spend event
         emit Refund(
             refundAddr,
-            nonce,
+            spendTx.newNonce,
             spendTx.asset,
             spendTx.id,
             spendTx.value,
@@ -114,13 +116,14 @@ contract CommitmentTreeManager {
             [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
         );
 
+        uint256 _nonce = nonce;
         nonce++;
 
         noteCommitmentTree.insertLeafToQueue(noteCommitment);
 
         emit Refund(
             refundAddr,
-            nonce,
+            _nonce,
             asset,
             id,
             value,

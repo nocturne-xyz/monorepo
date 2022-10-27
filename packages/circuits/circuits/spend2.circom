@@ -51,6 +51,7 @@ template Spend(levels) {
     // Public outputs
     signal output newNoteCommitment;
     signal output anchor;
+    signal output newNonce;
     signal output asset;
     signal output id;
     signal output value;
@@ -89,7 +90,8 @@ template Spend(levels) {
     deriveNullifier.vk <== vk;
     nullifier <== deriveNullifier.nullifier;
 
-    // Asset and value
+    // Asset, id, value, nonce
+    newNonce <== newNoteNonce;
     asset <== oldNoteAsset; 
     oldNoteAsset === newNoteAsset;
     id <== oldNoteId; 

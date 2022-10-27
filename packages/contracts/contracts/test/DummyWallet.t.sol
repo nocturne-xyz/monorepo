@@ -17,6 +17,7 @@ import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
+import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
@@ -38,6 +39,15 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     ISpend2Verifier verifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
+
+    event Refund(
+        IWallet.FLAXAddress indexed refundAddr,
+        uint256 indexed nonce,
+        address indexed asset,
+        uint256 id,
+        uint256 value,
+        uint256 merkleIndex
+    );
 
     function defaultFlaxAddress()
         internal
@@ -90,6 +100,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit Refund(
+                defaultFlaxAddress(),
+                i,
+                address(token),
+                ERC20_ID,
+                100,
+                i
+            );
+
             vm.prank(ALICE);
             depositFunds(
                 wallet,
@@ -100,6 +120,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 defaultFlaxAddress()
             );
         }
+
+        wallet.commit8FromQueue();
     }
 
     function setUp() public virtual {
@@ -152,14 +174,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         aliceDepositFunds(token);
 
-        wallet.commit8FromQueue();
-
         // Create transaction to withdraw 100 token from vault and transfer
-        // to bob
+        // 50 to bob
         bytes memory encodedFunction = abi.encodeWithSelector(
             token.transfer.selector,
             BOB,
-            100
+            50
         );
         IWallet.Action memory transferAction = IWallet.Action({
             contractAddress: address(token),
@@ -172,14 +192,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             nullifier: uint256(182),
             newNoteCommitment: uint256(1038),
             proof: defaultSpendProof(),
-            value: uint256(100),
+            value: uint256(50),
             asset: address(token),
-            id: ERC20_ID
+            id: ERC20_ID,
+            newNonce: uint256(123)
         });
 
         address[] memory spendTokens = new address[](1);
         spendTokens[0] = address(token);
-        address[] memory refundTokens = new address[](0);
+        address[] memory refundTokens = new address[](1);
+        refundTokens[0] = address(token);
         IWallet.Tokens memory tokens = IWallet.Tokens({
             spendTokens: spendTokens,
             refundTokens: refundTokens
@@ -202,17 +224,20 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         ops[0] = op;
         IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
 
-        // Ensure 100 tokens have changed hands
+        // Ensure 50 tokens have changed hands
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(800));
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
+        vm.expectEmit(true, true, true, true);
+        emit Refund(defaultFlaxAddress(), 123, address(token), ERC20_ID, 50, 8); // nonce and merkleIndex = 8 after 0-7 being deposits
+
         wallet.processBundle(bundle);
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(700));
+        assertEq(token.balanceOf(address(vault)), uint256(750));
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
-        assertEq(token.balanceOf(address(BOB)), uint256(100));
+        assertEq(token.balanceOf(address(BOB)), uint256(50));
     }
 }

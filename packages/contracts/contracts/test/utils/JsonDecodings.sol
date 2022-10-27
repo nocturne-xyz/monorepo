@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {TestUtils} from "./TestUtils.sol";
 
 struct Spend2ProofWithPublicSignals {
-    uint256[7] publicSignals;
+    uint256[8] publicSignals;
     BaseProof proof;
 }
 
@@ -40,8 +40,8 @@ contract JsonDecodings is Test, TestUtils {
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
 
-        uint256[7] memory publicSignals;
-        for (uint256 i = 0; i < 7; i++) {
+        uint256[8] memory publicSignals;
+        for (uint256 i = 0; i < 8; i++) {
             bytes memory jsonSelector = abi.encodePacked(
                 bytes(".publicSignals["),
                 Strings.toString(i)

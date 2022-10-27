@@ -21,9 +21,10 @@ interface IWallet {
         uint256 nullifier;
         uint256 newNoteCommitment;
         uint256[8] proof;
-        uint256 value; // 0 for ERC721
+        uint256 newNonce;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
+        uint256 value; // 0 for ERC721
     }
 
     struct Tokens {
