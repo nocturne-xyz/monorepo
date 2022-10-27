@@ -19,6 +19,7 @@ export interface Spend2ProofWithPublicSignals {
   publicSignals: [
     bigint, // newNoteCommitment
     bigint, // anchor
+    bigint, // newNonce
     bigint, // type
     bigint, // id
     bigint, // value
@@ -30,6 +31,7 @@ export interface Spend2ProofWithPublicSignals {
 export interface Spend2PublicSignals {
   newNoteCommitment: bigint;
   anchor: bigint;
+  newNonce: bigint;
   asset: bigint;
   id: bigint;
   value: bigint;
@@ -67,11 +69,12 @@ export function publicSignalsArrayToTyped(
   return {
     newNoteCommitment: publicSignals[0],
     anchor: publicSignals[1],
-    asset: publicSignals[2],
-    id: publicSignals[3],
-    value: publicSignals[4],
-    nullifier: publicSignals[5],
-    operationDigest: publicSignals[6],
+    newNonce: publicSignals[2],
+    asset: publicSignals[3],
+    id: publicSignals[4],
+    value: publicSignals[5],
+    nullifier: publicSignals[6],
+    operationDigest: publicSignals[7],
   };
 }
 

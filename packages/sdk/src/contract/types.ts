@@ -15,6 +15,7 @@ export interface PreProofSpendTransaction {
   commitmentTreeRoot: bigint;
   nullifier: bigint;
   newNoteCommitment: bigint;
+  newNonce: bigint;
   asset: Address;
   id: bigint;
   value: bigint;
@@ -32,6 +33,7 @@ export interface PostProofSpendTransaction {
   nullifier: bigint;
   newNoteCommitment: bigint;
   proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+  newNonce: bigint;
   asset: Address;
   value: bigint;
   id: bigint;
