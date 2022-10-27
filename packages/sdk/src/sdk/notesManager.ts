@@ -2,18 +2,27 @@ import { Wallet, Wallet__factory } from "@flax/contracts";
 import { ethers } from "ethers";
 import { Address } from "../commonTypes";
 import { FlattenedFlaxAddress } from "../crypto/address";
+import { FlaxDB } from "./flaxDb";
 import { PendingNote } from "./note";
 
 export abstract class NotesManager {
+  db: FlaxDB;
+
+  constructor(db: FlaxDB) {
+    this.db = db;
+  }
+
   abstract gatherNewRefunds(): Promise<PendingNote[]>;
   // TODO: abstract gatherNewSpends():
   // TODO: method to call two gather functions and update DB accordingly
 }
 
-export class ChainIndexingNotesManager implements NotesManager {
+export class ChainIndexingNotesManager extends NotesManager {
   wallet: Wallet;
 
-  constructor(walletAddress: Address, rpcUrl: string) {
+  constructor(walletAddress: Address, rpcUrl: string, db: FlaxDB) {
+    super(db);
+
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     this.wallet = Wallet__factory.connect(walletAddress, provider);
   }
