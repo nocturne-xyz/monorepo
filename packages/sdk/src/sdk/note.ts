@@ -2,7 +2,6 @@ import { FlattenedFlaxAddress } from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
 interface NoteConstructor {
   owner: FlattenedFlaxAddress;
@@ -50,34 +49,11 @@ export class Note {
   }
 }
 
-export class PendingNote extends Note {
+export class IncludedNote extends Note {
   merkleIndex: number;
 
   constructor(note: NoteConstructor, merkleIndex: number) {
     super(note);
     this.merkleIndex = merkleIndex;
-  }
-
-  toSpendable(merkleProof: MerkleProof): SpendableNote {
-    const { owner, nonce, asset, id, value } = this;
-    return new SpendableNote(
-      {
-        owner,
-        nonce,
-        asset,
-        id,
-        value,
-      },
-      merkleProof
-    );
-  }
-}
-
-export class SpendableNote extends Note {
-  merkleProof: MerkleProof;
-
-  constructor(note: NoteConstructor, merkleProof: MerkleProof) {
-    super(note);
-    this.merkleProof = merkleProof;
   }
 }

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { Address } from "../commonTypes";
 import { FlattenedFlaxAddress } from "../crypto/address";
 import { FlaxDB } from "./flaxDb";
-import { PendingNote } from "./note";
+import { IncludedNote } from "./note";
 
 export abstract class NotesManager {
   db: FlaxDB;
@@ -12,7 +12,7 @@ export abstract class NotesManager {
     this.db = db;
   }
 
-  abstract gatherNewRefunds(): Promise<PendingNote[]>;
+  abstract gatherNewRefunds(): Promise<IncludedNote[]>;
   // TODO: abstract gatherNewSpends():
   // TODO: method to call two gather functions and update DB accordingly
 }
@@ -27,7 +27,7 @@ export class ChainIndexingNotesManager extends NotesManager {
     this.wallet = Wallet__factory.connect(walletAddress, provider);
   }
 
-  async gatherNewRefunds(): Promise<PendingNote[]> {
+  async gatherNewRefunds(): Promise<IncludedNote[]> {
     // TODO: load fromBlock and toBlock from FlaxDB
     let fromBlock = 0;
     let toBlock = 0;
@@ -37,7 +37,7 @@ export class ChainIndexingNotesManager extends NotesManager {
     return events.map((event) => {
       const { refundAddr, nonce, asset, id, value, merkleIndex } = event.args;
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
-      return new PendingNote(
+      return new IncludedNote(
         {
           owner: new FlattenedFlaxAddress({
             h1X: h1X.toBigInt(),

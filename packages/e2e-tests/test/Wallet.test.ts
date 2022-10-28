@@ -25,7 +25,7 @@ import {
   AssetHash,
 } from "@flax/sdk";
 import { Asset, AssetRequest } from "@flax/sdk/dist/src/commonTypes";
-import { SpendableNote } from "@flax/sdk/dist/src/sdk/note";
+import { IncludedNote } from "@flax/sdk/dist/src/sdk/note";
 import { OperationRequest } from "@flax/sdk/dist/src/FlaxContext";
 import { LocalMerkleProver } from "@flax/sdk/dist/src/sdk/merkleProver";
 
@@ -142,17 +142,12 @@ describe("Wallet", async () => {
 
     console.log("Generate merkle proofs for two notes");
     expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
-    const firstMerkleProof = tree.createProof(0);
-    const secondMerkleProof = tree.createProof(1);
 
     console.log("Prefill tokenToNotes mapping for FlaxContext");
-    const tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map([
+    const tokenToNotes: Map<AssetHash, IncludedNote[]> = new Map([
       [
         asset.hash(),
-        [
-          new SpendableNote(firstOldNote, firstMerkleProof),
-          new SpendableNote(secondOldNote, secondMerkleProof),
-        ],
+        [new IncludedNote(firstOldNote, 0), new IncludedNote(secondOldNote, 1)],
       ],
     ]);
 

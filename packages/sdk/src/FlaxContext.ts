@@ -7,7 +7,7 @@ import {
   PreProofSpendTransaction,
   Tokens,
 } from "./contract/types";
-import { Note, SpendableNote } from "./sdk/note";
+import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
 import { FlattenedFlaxAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
@@ -29,13 +29,13 @@ export interface OperationRequest {
 }
 
 export interface OldAndNewNotePair {
-  oldNote: SpendableNote;
+  oldNote: IncludedNote;
   newNote: Note;
 }
 
 export class FlaxContext {
   signer: FlaxSigner;
-  spendableNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
+  ownedNotes: Map<AssetHash, IncludedNote[]>; // notes sorted great to least value
   merkleProver: MerkleProver;
   dbPath = "/flaxdb";
 
@@ -43,11 +43,11 @@ export class FlaxContext {
   // TODO: sync tree with db events and new on-chain events
   constructor(
     signer: FlaxSigner,
-    spendableNotes: Map<AssetHash, SpendableNote[]> = new Map(),
+    ownedNotes: Map<AssetHash, IncludedNote[]> = new Map(),
     merkleProver: MerkleProver = new LocalMerkleProver()
   ) {
     this.signer = signer;
-    this.spendableNotes = spendableNotes;
+    this.ownedNotes = ownedNotes;
     this.merkleProver = merkleProver;
   }
 
@@ -119,7 +119,7 @@ export class FlaxContext {
    * Create a `PostProofSpendTransaction` given the `oldNote`, resulting
    * `newNote`, and operation to use for the `operationDigest`
    *
-   * @param oldNewNotePair Old `SpendableNote` and its resulting `newNote`
+   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
    * post-spend
    * @param preProofOperation Operation included when generating a proof
    */
@@ -130,8 +130,9 @@ export class FlaxContext {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote as Note);
     const newNoteCommitment = newNote.toCommitment();
+    const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
     const preProofSpendTx: PreProofSpendTransaction = {
-      commitmentTreeRoot: oldNote.merkleProof.root,
+      commitmentTreeRoot: merkleProof.root,
       nullifier,
       newNoteCommitment,
       asset: oldNote.asset,
@@ -146,8 +147,8 @@ export class FlaxContext {
     const opSig = this.signer.sign(opDigest);
 
     const merkleInput: MerkleProofInput = {
-      path: oldNote.merkleProof.pathIndices.map((n) => BigInt(n)),
-      siblings: oldNote.merkleProof.siblings,
+      path: merkleProof.pathIndices.map((n) => BigInt(n)),
+      siblings: merkleProof.siblings,
     };
 
     const inputs: Spend2Inputs = {
@@ -197,7 +198,7 @@ export class FlaxContext {
       );
     }
 
-    const sortedNotes = this.spendableNotes
+    const sortedNotes = this.ownedNotes
       .get(assetRequest.asset.hash())!
       .sort((a, b) => {
         return Number(a.value - b.value);
@@ -242,7 +243,7 @@ export class FlaxContext {
    * @param asset Asset
    */
   getAssetBalance(asset: Asset): bigint {
-    const notes = this.spendableNotes.get(asset.hash());
+    const notes = this.ownedNotes.get(asset.hash());
 
     if (!notes) {
       return 0n;
