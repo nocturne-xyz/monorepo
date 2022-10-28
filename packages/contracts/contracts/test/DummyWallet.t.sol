@@ -13,7 +13,7 @@ import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} 
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
+import {BatchBinaryMerkle} from "../BatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
@@ -136,7 +136,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Instantiate vault, verifier, tree, and wallet
         vault = new Vault();
-        merkle = new PoseidonBatchBinaryMerkle(32, 0, IPoseidonT3(poseidonT3));
+        merkle = new BatchBinaryMerkle(32, 0, new PoseidonHasherT3(poseidonT3));
         verifier = new TestSpend2Verifier();
         wallet = new Wallet(
             address(vault),

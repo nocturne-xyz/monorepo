@@ -5,7 +5,7 @@ import { Asset, AssetRequest, ERC20_ID } from "../src/commonTypes";
 import { Note, IncludedNote } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
-import { LocalMerkleProver } from "../src/sdk/merkleProver";
+import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 
 describe("FlaxContext", () => {
   function setupFlaxContextWithFourNotes(
@@ -41,7 +41,7 @@ describe("FlaxContext", () => {
       value: 10n,
     });
 
-    const prover = new LocalMerkleProver();
+    const prover = new BinaryPoseidonTree();
     prover.insert(firstOldNote.toCommitment());
     prover.insert(secondOldNote.toCommitment());
     prover.insert(thirdOldNote.toCommitment());

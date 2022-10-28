@@ -4,15 +4,15 @@ pragma solidity ^0.8.2;
 import "forge-std/Test.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
-import {PoseidonBatchBinaryMerkle} from "../PoseidonBatchBinaryMerkle.sol";
-import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
+import {BatchBinaryMerkle} from "../BatchBinaryMerkle.sol";
+import {PoseidonHasherT3} from "../PoseidonHashers.sol";
 
-contract TestPoseidonBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
-    PoseidonBatchBinaryMerkle merkle;
+contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
+    BatchBinaryMerkle merkle;
 
     function setUp() public virtual {
         deployPoseidon3Through6();
-        merkle = new PoseidonBatchBinaryMerkle(32, 0, IPoseidonT3(poseidonT3));
+        merkle = new BatchBinaryMerkle(32, 0, new PoseidonHasherT3(poseidonT3));
     }
 
     function testInsertAndTotalCount() public {

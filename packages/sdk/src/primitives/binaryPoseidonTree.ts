@@ -30,7 +30,7 @@ export class BinaryPoseidonTree {
     this.count += 1;
   }
 
-  createProof(index: number): MerkleProof {
+  getProof(index: number): MerkleProof {
     return this.tree.createProof(index);
   }
 }
