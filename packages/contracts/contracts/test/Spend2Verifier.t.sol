@@ -48,8 +48,7 @@ contract TestSpend2Verifier is Test, TestUtils, JsonDecodings {
                     proof.publicSignals[3],
                     proof.publicSignals[4],
                     proof.publicSignals[5],
-                    proof.publicSignals[6],
-                    proof.publicSignals[7]
+                    proof.publicSignals[6]
                 ]
             ),
             "Invalid proof"

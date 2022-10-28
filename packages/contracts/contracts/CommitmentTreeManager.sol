@@ -28,6 +28,12 @@ contract CommitmentTreeManager {
         uint256 merkleIndex
     );
 
+    event NewNoteFromSpend(
+        uint256 indexed oldNoteNullifier,
+        uint256 indexed oldNewValueDifference,
+        uint256 indexed merkleIndex
+    );
+
     constructor(
         address _verifier,
         address _noteCommitmentTree,
@@ -55,7 +61,6 @@ contract CommitmentTreeManager {
     // TODO: add default noteCommitment for when there is no output note.
     function _handleSpend(
         IWallet.SpendTransaction calldata spendTx,
-        IWallet.FLAXAddress calldata refundAddr,
         bytes32 operationHash
     ) internal {
         require(
@@ -80,10 +85,9 @@ contract CommitmentTreeManager {
                 [
                     spendTx.newNoteCommitment,
                     spendTx.commitmentTreeRoot,
-                    spendTx.newNonce,
                     uint256(uint160(spendTx.asset)),
                     spendTx.id,
-                    spendTx.value,
+                    spendTx.valueToSpend,
                     spendTx.nullifier,
                     operationDigest
                 ]
@@ -94,13 +98,9 @@ contract CommitmentTreeManager {
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
-        // TODO: emit spend event
-        emit Refund(
-            refundAddr,
-            spendTx.newNonce,
-            spendTx.asset,
-            spendTx.id,
-            spendTx.value,
+        emit NewNoteFromSpend(
+            spendTx.nullifier,
+            spendTx.valueToSpend,
             noteCommitmentTree.tentativeCount() - 1
         );
     }
@@ -140,7 +140,7 @@ contract CommitmentTreeManager {
             spend.commitmentTreeRoot,
             spend.nullifier,
             spend.newNoteCommitment,
-            spend.value,
+            spend.valueToSpend,
             spend.asset,
             spend.id
         );

@@ -134,10 +134,9 @@ export class FlaxContext {
       commitmentTreeRoot: oldNote.merkleProof.root,
       nullifier,
       newNoteCommitment,
-      newNonce: newNote.nonce,
       asset: oldNote.asset,
       id: oldNote.id,
-      value: oldNote.value - newNote.value,
+      valueToSpend: oldNote.value - newNote.value,
     };
 
     const opDigest = calculateOperationDigest(
@@ -174,9 +173,8 @@ export class FlaxContext {
       nullifier,
       newNoteCommitment,
       proof: solidityProof,
-      newNonce: preProofSpendTx.newNonce,
       asset: preProofSpendTx.asset,
-      value: publicSignals.value,
+      valueToSpend: publicSignals.valueToSpend,
       id: publicSignals.id,
     };
   }

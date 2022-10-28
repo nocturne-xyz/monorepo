@@ -49,6 +49,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 merkleIndex
     );
 
+    event NewNoteFromSpend(
+        uint256 indexed oldNoteNullifier,
+        uint256 indexed oldNewValueDifference,
+        uint256 indexed merkleIndex
+    );
+
     function defaultFlaxAddress()
         internal
         pure
@@ -192,10 +198,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             nullifier: uint256(182),
             newNoteCommitment: uint256(1038),
             proof: defaultSpendProof(),
-            value: uint256(50),
+            valueToSpend: uint256(50),
             asset: address(token),
-            id: ERC20_ID,
-            newNonce: uint256(123)
+            id: ERC20_ID
         });
 
         address[] memory spendTokens = new address[](1);
@@ -230,8 +235,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.expectEmit(true, true, true, true);
-        emit Refund(defaultFlaxAddress(), 123, address(token), ERC20_ID, 50, 8); // nonce and merkleIndex = 8 after 0-7 being deposits
+        vm.expectEmit(false, true, true, true);
+        emit NewNoteFromSpend(12345, 50, 8); // nonce and merkleIndex = 8 after 0-7 being deposits
 
         wallet.processBundle(bundle);
 
