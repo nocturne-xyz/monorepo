@@ -34,9 +34,9 @@ contract TestPoseidonBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         merkle.insertLeafToQueue(uint256(7));
         merkle.insertLeafToQueue(uint256(8));
         merkle.insertLeafToQueue(uint256(9));
-        assertEq(merkle.tentativeCount(), 10);
+        assertEq(merkle.totalCount(), 10);
 
         merkle.commit8FromQueue();
-        assertEq(merkle.tentativeCount(), 10);
+        assertEq(merkle.totalCount(), 10);
     }
 }
