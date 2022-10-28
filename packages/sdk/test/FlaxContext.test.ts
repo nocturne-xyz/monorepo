@@ -5,7 +5,7 @@ import { Asset, AssetRequest, ERC20_ID } from "../src/commonTypes";
 import { Note, SpendableNote } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
-import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
+import { LocalMerkleProver } from "../src/sdk/merkleProver";
 
 describe("FlaxContext", () => {
   function setupFlaxContextWithFourNotes(
@@ -41,25 +41,25 @@ describe("FlaxContext", () => {
       value: 10n,
     });
 
-    const tree = new BinaryPoseidonTree();
-    tree.insert(firstOldNote.toCommitment());
-    tree.insert(secondOldNote.toCommitment());
-    tree.insert(thirdOldNote.toCommitment());
-    tree.insert(fourthOldNote.toCommitment());
+    const prover = new LocalMerkleProver();
+    prover.insert(firstOldNote.toCommitment());
+    prover.insert(secondOldNote.toCommitment());
+    prover.insert(thirdOldNote.toCommitment());
+    prover.insert(fourthOldNote.toCommitment());
 
     const tokenToNotes = new Map([
       [
         asset.hash(),
         [
-          new SpendableNote(firstOldNote, tree.createProof(0)),
-          new SpendableNote(secondOldNote, tree.createProof(1)),
-          new SpendableNote(thirdOldNote, tree.createProof(2)),
-          new SpendableNote(fourthOldNote, tree.createProof(3)),
+          new SpendableNote(firstOldNote, prover.createProof(0)),
+          new SpendableNote(secondOldNote, prover.createProof(1)),
+          new SpendableNote(thirdOldNote, prover.createProof(2)),
+          new SpendableNote(fourthOldNote, prover.createProof(3)),
         ],
       ],
     ]);
 
-    return new FlaxContext(signer, tokenToNotes, tree);
+    return new FlaxContext(signer, tokenToNotes, prover);
   }
 
   it("Gets total balance for an asset", () => {
@@ -92,7 +92,7 @@ describe("FlaxContext", () => {
     );
     expect(minimumFor5.length).to.equal(1);
     expect(minimumFor5[0].oldNote.value).to.equal(10n);
-    expect(flaxContext.tokenToNotes.get(asset.hash())!.length).to.equal(3);
+    expect(flaxContext.spendableNotes.get(asset.hash())!.length).to.equal(3);
 
     // Request 60 tokens, consume next smallest two notes
     const assetRequest60: AssetRequest = {
@@ -106,6 +106,6 @@ describe("FlaxContext", () => {
     expect(minimumFor60.length).to.equal(2);
     expect(minimumFor60[1].oldNote.value).to.equal(50n);
     expect(minimumFor60[0].oldNote.value).to.equal(25n);
-    expect(flaxContext.tokenToNotes.get(asset.hash())!.length).to.equal(1);
+    expect(flaxContext.spendableNotes.get(asset.hash())!.length).to.equal(1);
   });
 });

@@ -101,7 +101,7 @@ contract CommitmentTreeManager {
         emit NewNoteFromSpend(
             spendTx.nullifier,
             spendTx.valueToSpend,
-            noteCommitmentTree.tentativeCount() - 1
+            noteCommitmentTree.totalCount() - 1
         );
     }
 
