@@ -236,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit NewNoteFromSpend(12345, 50, 8); // nonce and merkleIndex = 8 after 0-7 being deposits
+        emit NewNoteFromSpend(0, 50, 8); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 
