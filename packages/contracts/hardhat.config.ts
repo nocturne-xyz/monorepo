@@ -94,7 +94,7 @@ module.exports = {
       "CommitmentTreeManager",
       "BalanceManager",
       "Spend2Verifier",
-      "PoseidonBatchBinaryMerkle",
+      "BatchBinaryMerkle",
       "SimpleERC20Token",
       "SimpleERC721Token",
       "SimpleERC1155Token",

@@ -4,7 +4,7 @@ import {
   Wallet__factory,
   Vault__factory,
   Spend2Verifier__factory,
-  PoseidonBatchBinaryMerkle__factory,
+  BatchBinaryMerkle__factory,
   PoseidonHasherT3__factory,
   PoseidonHasherT5__factory,
   PoseidonHasherT6__factory,
@@ -23,11 +23,11 @@ import {
   Note,
   FlaxContext,
   AssetHash,
+  BinaryPoseidonTree,
 } from "@flax/sdk";
 import { Asset, AssetRequest } from "@flax/sdk/dist/src/commonTypes";
 import { IncludedNote } from "@flax/sdk/dist/src/sdk/note";
 import { OperationRequest } from "@flax/sdk/dist/src/FlaxContext";
-import { LocalMerkleProver } from "@flax/sdk/dist/src/sdk/merkleProver";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -74,8 +74,8 @@ describe("Wallet", async () => {
     const verifierFactory = new Spend2Verifier__factory(deployer);
     const verifier = await verifierFactory.deploy();
 
-    const merkleFactory = new PoseidonBatchBinaryMerkle__factory(deployer);
-    const merkle = await merkleFactory.deploy(32, 0, poseidonT3Lib.address);
+    const merkleFactory = new BatchBinaryMerkle__factory(deployer);
+    const merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
 
     const walletFactory = new Wallet__factory(deployer);
     wallet = await walletFactory.deploy(
@@ -136,7 +136,7 @@ describe("Wallet", async () => {
     const secondOldNoteCommitment = secondOldNote.toCommitment();
 
     console.log("Replicate commitment tree state");
-    const tree = new LocalMerkleProver();
+    const tree = new BinaryPoseidonTree();
     tree.insert(firstOldNoteCommitment);
     tree.insert(secondOldNoteCommitment);
 

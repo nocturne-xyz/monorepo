@@ -56,7 +56,7 @@ const tree = new BinaryPoseidonTree();
 tree.insert(oldNoteCommitment);
 console.log("MERKLE ROOT: ", tree.root());
 
-const merkleProof = tree.createProof(tree.count - 1);
+const merkleProof = tree.getProof(tree.count - 1);
 const merkleProofInput: MerkleProofInput = {
   path: merkleProof.pathIndices.map((n) => BigInt(n)),
   siblings: merkleProof.siblings,

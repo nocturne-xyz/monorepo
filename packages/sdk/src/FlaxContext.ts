@@ -20,7 +20,8 @@ import {
   verifySpend2Proof,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
-import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
+import { MerkleProver } from "./sdk/merkleProver";
+import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -44,7 +45,7 @@ export class FlaxContext {
   constructor(
     signer: FlaxSigner,
     ownedNotes: Map<AssetHash, IncludedNote[]> = new Map(),
-    merkleProver: MerkleProver = new LocalMerkleProver()
+    merkleProver: MerkleProver = new BinaryPoseidonTree()
   ) {
     this.signer = signer;
     this.ownedNotes = ownedNotes;
