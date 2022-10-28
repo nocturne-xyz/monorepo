@@ -1,38 +1,59 @@
-import { Wallet, Wallet__factory } from "@flax/contracts";
+import { BatchBinaryMerkle, BatchBinaryMerkle__factory } from "@flax/contracts";
+import { LeavesCommittedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { ethers } from "ethers";
 import { Address } from "../commonTypes";
 import { BinaryPoseidonTree } from "../primitives/binaryPoseidonTree";
 import { FlaxDB } from "./flaxDb";
+import { query } from "./utils";
 
 export interface MerkleProver {
   getProof(index: number): MerkleProof;
 }
 
-// const LAST_INDEXED_BLOCK_PREFIX = "LAST_INDEXED_BLOCK_";
+const DEFAULT_START_BLOCK = 0;
+const MERKLE_LAST_INDEXED_BLOCK = "MERKLE_LAST_INDEXED_BLOCK";
 
-export class LocalSyncingMerkleProver
+export class ChainIndexingMerkleProver
   extends BinaryPoseidonTree
   implements MerkleProver
 {
-  wallet: Wallet;
+  treeContract: BatchBinaryMerkle;
+  provider: ethers.providers.Provider;
   db: FlaxDB;
 
-  constructor(walletAddress: Address, rpcUrl: string, db: FlaxDB) {
+  constructor(merkleAddress: Address, rpcUrl: string, db: FlaxDB) {
     super();
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    this.wallet = Wallet__factory.connect(walletAddress, provider);
+    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    this.treeContract = BatchBinaryMerkle__factory.connect(
+      merkleAddress,
+      this.provider
+    );
     this.db = db;
   }
 
   async gatherNewLeaves(): Promise<bigint[]> {
-    // TODO: load fromBlock and toBlock from FlaxDB
-    let fromBlock = 0;
-    let toBlock = 0;
+    let maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
+    const lastSeen = maybeLastSeen
+      ? parseInt(maybeLastSeen)
+      : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
+    let latestBlock = await this.provider.getBlockNumber();
 
-    const filter = this.wallet.filters.Refund();
-    const events = await this.wallet.queryFilter(filter, fromBlock, toBlock);
-    return [];
+    const filter = this.treeContract.filters.LeavesCommitted();
+    let events: LeavesCommittedEvent[] = await query(
+      this.treeContract,
+      filter,
+      lastSeen,
+      latestBlock
+    );
+
+    events = events.sort((a, b) => a.blockNumber - b.blockNumber);
+
+    let leaves: bigint[] = [];
+    for (const event of events) {
+      leaves.concat(event.args.leaves.map((l) => l.toBigInt()));
+    }
+    return leaves;
   }
 }

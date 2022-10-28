@@ -7,7 +7,7 @@ export interface FlaxDB {
    *
    * @param key key
    */
-  getKv(key: string): string;
+  getKv(key: string): string | null;
 
   /**
    * Store arbitrary `value` for `key`. Enables additional storage needs like
