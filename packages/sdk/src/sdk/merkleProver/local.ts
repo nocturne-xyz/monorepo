@@ -1,15 +1,11 @@
 import { BatchBinaryMerkle, BatchBinaryMerkle__factory } from "@flax/contracts";
 import { LeavesCommittedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { ethers } from "ethers";
-import { Address } from "../commonTypes";
-import { BinaryPoseidonTree } from "../primitives/binaryPoseidonTree";
-import { FlaxDB } from "./flaxDb";
-import { query } from "./utils";
-
-export interface MerkleProver {
-  getProof(index: number): MerkleProof;
-}
+import { Address } from "../../commonTypes";
+import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
+import { FlaxDB } from "../flaxDb";
+import { query } from "../utils";
+import { MerkleProver } from ".";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_LAST_INDEXED_BLOCK = "MERKLE_LAST_INDEXED_BLOCK";
