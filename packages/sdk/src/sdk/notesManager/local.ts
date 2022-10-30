@@ -1,20 +1,15 @@
 import { Wallet, Wallet__factory } from "@flax/contracts";
 import { RefundEvent } from "@flax/contracts/dist/src/Wallet";
 import { ethers } from "ethers";
-import { Address } from "../commonTypes";
-import { FlattenedFlaxAddress } from "../crypto/address";
-import { FlaxDB } from "./flaxDb";
-import { IncludedNote } from "./note";
-import { query } from "./utils";
+import { Address } from "../../commonTypes";
+import { FlattenedFlaxAddress } from "../../crypto/address";
+import { FlaxDB } from "../flaxDb";
+import { IncludedNote } from "../note";
+import { query } from "../utils";
+import { NotesManager } from ".";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
-
-export interface NotesManager {
-  gatherNewRefunds(): Promise<IncludedNote[]>;
-  // TODO: abstract gatherNewSpends():
-  // TODO: method to call two gather functions and update DB accordingly
-}
 
 export class ChainIndexingNotesManager implements NotesManager {
   db: FlaxDB;

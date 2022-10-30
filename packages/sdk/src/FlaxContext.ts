@@ -22,7 +22,7 @@ import {
 import { packToSolidityProof } from "./contract/proof";
 import { MerkleProver } from "./sdk/merkleProver";
 import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
-import { FlaxDB } from "./sdk/flaxDb";
+// import { FlaxDB } from "./sdk/flaxDb";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -39,20 +39,20 @@ export class FlaxContext {
   signer: FlaxSigner;
   ownedNotes: Map<AssetHash, IncludedNote[]>; // sorted great to least value
   merkleProver: MerkleProver;
-  db: FlaxDB;
+  // db: FlaxDB;
 
   // TODO: pull spendable notes from db
   // TODO: sync tree with db events and new on-chain events
   constructor(
     signer: FlaxSigner,
     ownedNotes: Map<AssetHash, IncludedNote[]> = new Map(),
-    merkleProver: MerkleProver = new BinaryPoseidonTree(),
-    db: FlaxDB
+    merkleProver: MerkleProver = new BinaryPoseidonTree()
+    // db: FlaxDB
   ) {
     this.signer = signer;
     this.ownedNotes = ownedNotes;
     this.merkleProver = merkleProver;
-    this.db = db;
+    // this.db = db;
   }
 
   // TODO: sync owned notes from chain or bucket
