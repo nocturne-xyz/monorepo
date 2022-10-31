@@ -22,11 +22,11 @@ export class ChainIndexingNotesManager implements NotesManager {
   }
 
   async gatherNewRefunds(): Promise<IncludedNote[]> {
-    let maybeLastSeen = this.db.getKv(REFUNDS_LAST_INDEXED_BLOCK);
+    const maybeLastSeen = this.db.getKv(REFUNDS_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen)
       : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
-    let latestBlock = await this.provider.getBlockNumber();
+    const latestBlock = await this.provider.getBlockNumber();
 
     const filter = this.walletContract.filters.Refund();
     let events: RefundEvent[] = await query(
