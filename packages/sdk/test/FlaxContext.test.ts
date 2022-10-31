@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { FlaxContext } from "../src/FlaxContext";
 import { Asset, AssetRequest, ERC20_ID } from "../src/commonTypes";
-import { Note, IncludedNote } from "../src/sdk/note";
+import { Note } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
@@ -51,10 +51,10 @@ describe("FlaxContext", () => {
       [
         asset.hash(),
         [
-          new IncludedNote(firstOldNote, 0),
-          new IncludedNote(secondOldNote, 1),
-          new IncludedNote(thirdOldNote, 2),
-          new IncludedNote(fourthOldNote, 3),
+          firstOldNote.toIncluded(0),
+          secondOldNote.toIncluded(1),
+          thirdOldNote.toIncluded(2),
+          fourthOldNote.toIncluded(3),
         ],
       ],
     ]);
@@ -91,7 +91,7 @@ describe("FlaxContext", () => {
       assetRequest5
     );
     expect(minimumFor5.length).to.equal(1);
-    expect(minimumFor5[0].oldNote.value).to.equal(10n);
+    expect(minimumFor5[0].oldNote.inner.value).to.equal(10n);
     expect(flaxContext.ownedNotes.get(asset.hash())!.length).to.equal(3);
 
     // Request 60 tokens, consume next smallest two notes
@@ -104,8 +104,8 @@ describe("FlaxContext", () => {
       assetRequest60
     );
     expect(minimumFor60.length).to.equal(2);
-    expect(minimumFor60[1].oldNote.value).to.equal(50n);
-    expect(minimumFor60[0].oldNote.value).to.equal(25n);
+    expect(minimumFor60[1].oldNote.inner.value).to.equal(50n);
+    expect(minimumFor60[0].oldNote.inner.value).to.equal(25n);
     expect(flaxContext.ownedNotes.get(asset.hash())!.length).to.equal(1);
   });
 });

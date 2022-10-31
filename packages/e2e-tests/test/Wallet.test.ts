@@ -145,10 +145,7 @@ describe("Wallet", async () => {
 
     console.log("Prefill tokenToNotes mapping for FlaxContext");
     const tokenToNotes: Map<AssetHash, IncludedNote[]> = new Map([
-      [
-        asset.hash(),
-        [new IncludedNote(firstOldNote, 0), new IncludedNote(secondOldNote, 1)],
-      ],
+      [asset.hash(), [firstOldNote.toIncluded(0), secondOldNote.toIncluded(1)]],
     ]);
 
     console.log("Create FlaxContext");

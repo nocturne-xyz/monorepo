@@ -1,13 +1,10 @@
-import {
-  FlattenedFlaxAddress,
-  FlattenedFlaxAddressStruct,
-} from "../crypto/address";
+import { FlattenedFlaxAddress, FlaxAddress } from "../crypto/address";
 import { Address, Asset } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 
 interface NoteStruct {
-  owner: FlattenedFlaxAddressStruct;
+  owner: FlattenedFlaxAddress;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -15,44 +12,59 @@ interface NoteStruct {
 }
 
 export class Note {
-  owner: FlattenedFlaxAddress;
-  nonce: bigint;
-  asset: Address;
-  id: bigint;
-  value: bigint;
+  inner: NoteStruct;
 
-  constructor({ owner, nonce, asset, id, value }: NoteStruct) {
-    this.owner = new FlattenedFlaxAddress(owner);
-    this.nonce = nonce;
-    this.asset = asset;
-    this.id = id;
-    this.value = value;
+  constructor(note: NoteStruct) {
+    this.inner = note;
+  }
+
+  get owner(): FlattenedFlaxAddress {
+    return this.inner.owner;
+  }
+
+  get nonce(): bigint {
+    return this.inner.nonce;
+  }
+
+  get asset(): Address {
+    return this.inner.asset;
+  }
+
+  get id(): bigint {
+    return this.inner.id;
+  }
+
+  get value(): bigint {
+    return this.inner.value;
   }
 
   toCommitment(): bigint {
+    const { owner, nonce, asset, id, value } = this.inner;
+    const ownerFlaxAddr = new FlaxAddress(owner);
     return BigInt(
-      poseidon([
-        this.owner.hash(),
-        this.nonce,
-        BigInt(this.asset),
-        this.id,
-        this.value,
-      ])
+      poseidon([ownerFlaxAddr.hash(), nonce, BigInt(asset), id, value])
     );
   }
 
   toNoteInput(): NoteInput {
+    const { owner, nonce, asset, id, value } = this.inner;
     return {
-      owner: this.owner,
-      nonce: this.nonce,
-      asset: BigInt(this.asset),
-      id: this.id,
-      value: this.value,
+      owner: owner,
+      nonce: nonce,
+      asset: BigInt(asset),
+      id: id,
+      value: value,
     };
   }
 
   getAsset(): Asset {
-    return new Asset(this.asset, this.id);
+    const { asset, id } = this.inner;
+    return new Asset(asset, id);
+  }
+
+  toIncluded(merkleIndex: number): IncludedNote {
+    const { owner, nonce, asset, id, value } = this.inner;
+    return new IncludedNote({ owner, nonce, asset, id, value, merkleIndex });
   }
 }
 
@@ -63,31 +75,40 @@ export interface IncludedNoteStruct extends NoteStruct {
 export class IncludedNote extends Note {
   merkleIndex: number;
 
-  constructor(note: NoteStruct, merkleIndex: number) {
-    super(note);
-    this.merkleIndex = merkleIndex;
+  constructor(includedNote: IncludedNoteStruct) {
+    const { owner, nonce, asset, id, value } = includedNote;
+    super({ owner, nonce, asset, id, value });
+    this.merkleIndex = includedNote.merkleIndex;
   }
 
-  static fromStruct(note: IncludedNoteStruct): IncludedNote {
-    return new IncludedNote(
-      {
-        owner: new FlattenedFlaxAddress(note.owner),
-        nonce: note.nonce,
-        asset: note.asset,
-        id: note.id,
-        value: note.value,
-      },
-      note.merkleIndex
-    );
+  get owner(): FlattenedFlaxAddress {
+    return this.inner.owner;
+  }
+
+  get nonce(): bigint {
+    return this.inner.nonce;
+  }
+
+  get asset(): Address {
+    return this.inner.asset;
+  }
+
+  get id(): bigint {
+    return this.inner.id;
+  }
+
+  get value(): bigint {
+    return this.inner.value;
   }
 
   toStruct(): IncludedNoteStruct {
+    const { owner, nonce, asset, id, value } = this.inner;
     return {
-      owner: this.owner.toStruct(),
-      nonce: this.nonce,
-      asset: this.asset,
-      id: this.id,
-      value: this.value,
+      owner,
+      nonce,
+      asset,
+      id,
+      value,
       merkleIndex: this.merkleIndex,
     };
   }
