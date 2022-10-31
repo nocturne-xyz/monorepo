@@ -25,9 +25,9 @@ export class FlaxPrivKey {
   toAddress(): FlaxAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
-    const H1 = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const H2 = babyjub.mulPointEscalar(H1, this.vk);
-    return new FlaxAddress(H1, H2);
+    const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
+    const h2 = babyjub.mulPointEscalar(h1, this.vk);
+    return FlaxAddress.fromArrayForm({ h1, h2 });
   }
 
   spendPk(): [bigint, bigint] {

@@ -2,7 +2,6 @@ import { Wallet, Wallet__factory } from "@flax/contracts";
 import { RefundEvent } from "@flax/contracts/dist/src/Wallet";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
-import { FlattenedFlaxAddress } from "../../crypto/address";
 import { FlaxDB } from "../db";
 import { IncludedNote } from "../note";
 import { query } from "../utils";
@@ -42,21 +41,19 @@ export class ChainIndexingNotesManager implements NotesManager {
     return events.map((event) => {
       const { refundAddr, nonce, asset, id, value, merkleIndex } = event.args;
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
-      return new IncludedNote(
-        {
-          owner: new FlattenedFlaxAddress({
-            h1X: h1X.toBigInt(),
-            h1Y: h1Y.toBigInt(),
-            h2X: h2X.toBigInt(),
-            h2Y: h2Y.toBigInt(),
-          }),
-          nonce: nonce.toBigInt(),
-          asset,
-          id: id.toBigInt(),
-          value: value.toBigInt(),
+      return new IncludedNote({
+        owner: {
+          h1X: h1X.toBigInt(),
+          h1Y: h1Y.toBigInt(),
+          h2X: h2X.toBigInt(),
+          h2Y: h2Y.toBigInt(),
         },
-        merkleIndex.toNumber()
-      );
+        nonce: nonce.toBigInt(),
+        asset,
+        id: id.toBigInt(),
+        value: value.toBigInt(),
+        merkleIndex: merkleIndex.toNumber(),
+      });
     });
   }
 }

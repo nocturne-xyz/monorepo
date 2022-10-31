@@ -79,12 +79,12 @@ function normalizeFlaxAddressInput(
   flaxAddressInput: FlattenedFlaxAddress
 ): FlattenedFlaxAddress {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
-  return new FlattenedFlaxAddress({
+  return {
     h1X: normalizeBigInt(h1X),
     h1Y: normalizeBigInt(h1Y),
     h2X: normalizeBigInt(h2X),
     h2Y: normalizeBigInt(h2Y),
-  });
+  };
 }
 
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {

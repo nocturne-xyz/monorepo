@@ -161,7 +161,7 @@ export class FlaxContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNote: oldNote.toNoteInput(),
+      oldNote: (oldNote as Note).toNoteInput(),
       newNote: newNote.toNoteInput(),
       merkleProof: merkleInput,
     };
