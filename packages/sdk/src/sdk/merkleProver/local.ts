@@ -30,11 +30,11 @@ export class ChainIndexingMerkleProver
   }
 
   async gatherNewLeaves(): Promise<bigint[]> {
-    let maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
+    const maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen)
       : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
-    let latestBlock = await this.provider.getBlockNumber();
+    const latestBlock = await this.provider.getBlockNumber();
 
     const filter = this.treeContract.filters.LeavesCommitted();
     let events: LeavesCommittedEvent[] = await query(
@@ -46,7 +46,7 @@ export class ChainIndexingMerkleProver
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    let leaves: bigint[] = [];
+    const leaves: bigint[] = [];
     for (const event of events) {
       leaves.concat(event.args.leaves.map((l) => l.toBigInt()));
     }

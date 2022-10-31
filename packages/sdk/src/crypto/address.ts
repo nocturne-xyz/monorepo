@@ -20,7 +20,7 @@ export function flattenedFlaxAddressToArrayForm(
 }
 
 export function flattenedFlaxAddressFromJSON(
-  jsonOrString: any
+  jsonOrString: string | any
 ): FlaxAddressStruct {
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;

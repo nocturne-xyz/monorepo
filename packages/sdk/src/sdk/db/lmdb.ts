@@ -2,11 +2,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import { open, RootDatabase } from "lmdb";
 import { FlaxDB, NOTES_PREFIX } from ".";
-import {
-  IncludedNote,
-  IncludedNoteStruct,
-  includedNoteStructFromJSON,
-} from "../note";
+import { IncludedNoteStruct, includedNoteStructFromJSON } from "../note";
+import { Asset } from "../../commonTypes";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
@@ -28,17 +25,18 @@ export class FlaxLMDB implements FlaxDB {
     return this.db.get(key);
   }
 
-  storeNote(note: IncludedNote): Promise<boolean> {
-    const key = FlaxDB.notesKey(note.getAsset());
-    return this.putKv(key, JSON.stringify(note.toStruct()));
+  storeNote(note: IncludedNoteStruct): Promise<boolean> {
+    const asset = new Asset(note.asset, note.id);
+    const key = FlaxDB.notesKey(asset);
+    return this.putKv(key, JSON.stringify(note));
   }
 
   getAllNotes(): Map<string, IncludedNoteStruct[]> {
     const keys = this.db.getKeys();
 
-    let notesMap: Map<string, IncludedNoteStruct[]> = new Map();
+    const notesMap: Map<string, IncludedNoteStruct[]> = new Map();
     for (const key of keys) {
-      let notesArray: IncludedNoteStruct[] = [];
+      const notesArray: IncludedNoteStruct[] = [];
       if (key.startsWith(NOTES_PREFIX)) {
         for (const val of this.db.getValues(key)) {
           const includedNote = includedNoteStructFromJSON(val);

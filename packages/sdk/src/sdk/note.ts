@@ -77,7 +77,7 @@ export interface IncludedNoteStruct extends NoteStruct {
 }
 
 export function includedNoteStructFromJSON(
-  jsonOrString: any
+  jsonOrString: string | any
 ): IncludedNoteStruct {
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
@@ -99,26 +99,6 @@ export class IncludedNote extends Note {
     const { owner, nonce, asset, id, value } = includedNote;
     super({ owner, nonce, asset, id, value });
     this.merkleIndex = includedNote.merkleIndex;
-  }
-
-  get owner(): FlaxAddressStruct {
-    return this.inner.owner;
-  }
-
-  get nonce(): bigint {
-    return this.inner.nonce;
-  }
-
-  get asset(): Address {
-    return this.inner.asset;
-  }
-
-  get id(): bigint {
-    return this.inner.id;
-  }
-
-  get value(): bigint {
-    return this.inner.value;
   }
 
   toStruct(): IncludedNoteStruct {
