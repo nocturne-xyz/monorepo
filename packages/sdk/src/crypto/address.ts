@@ -52,7 +52,7 @@ export class FlaxAddress {
   }
 }
 
-export interface FlattenedFlaxAddressConstructor {
+export interface FlattenedFlaxAddressStruct {
   h1X: bigint;
   h1Y: bigint;
   h2X: bigint;
@@ -65,7 +65,7 @@ export class FlattenedFlaxAddress {
   h2X: bigint;
   h2Y: bigint;
 
-  constructor({ h1X, h1Y, h2X, h2Y }: FlattenedFlaxAddressConstructor) {
+  constructor({ h1X, h1Y, h2X, h2Y }: FlattenedFlaxAddressStruct) {
     this.h1X = h1X;
     this.h1Y = h1Y;
     this.h2X = h2X;
@@ -78,5 +78,10 @@ export class FlattenedFlaxAddress {
 
   toArrayForm(): FlaxAddress {
     return new FlaxAddress([this.h1X, this.h1Y], [this.h2X, this.h2Y]);
+  }
+
+  toStruct(): FlattenedFlaxAddressStruct {
+    const { h1X, h1Y, h2X, h2Y } = this;
+    return { h1X, h1Y, h2X, h2Y };
   }
 }

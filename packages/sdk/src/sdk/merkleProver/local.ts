@@ -3,7 +3,7 @@ import { LeavesCommittedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { FlaxDB } from "../flaxDb";
+import { FlaxDB } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
 

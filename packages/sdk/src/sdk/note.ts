@@ -1,10 +1,13 @@
-import { FlattenedFlaxAddress } from "../crypto/address";
-import { Address } from "../commonTypes";
+import {
+  FlattenedFlaxAddress,
+  FlattenedFlaxAddressStruct,
+} from "../crypto/address";
+import { Address, Asset } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 
-interface NoteConstructor {
-  owner: FlattenedFlaxAddress;
+interface NoteStruct {
+  owner: FlattenedFlaxAddressStruct;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -18,8 +21,8 @@ export class Note {
   id: bigint;
   value: bigint;
 
-  constructor({ owner, nonce, asset, id, value }: NoteConstructor) {
-    this.owner = owner;
+  constructor({ owner, nonce, asset, id, value }: NoteStruct) {
+    this.owner = new FlattenedFlaxAddress(owner);
     this.nonce = nonce;
     this.asset = asset;
     this.id = id;
@@ -47,13 +50,45 @@ export class Note {
       value: this.value,
     };
   }
+
+  getAsset(): Asset {
+    return new Asset(this.asset, this.id);
+  }
+}
+
+export interface IncludedNoteStruct extends NoteStruct {
+  merkleIndex: number;
 }
 
 export class IncludedNote extends Note {
   merkleIndex: number;
 
-  constructor(note: NoteConstructor, merkleIndex: number) {
+  constructor(note: NoteStruct, merkleIndex: number) {
     super(note);
     this.merkleIndex = merkleIndex;
+  }
+
+  static fromStruct(note: IncludedNoteStruct): IncludedNote {
+    return new IncludedNote(
+      {
+        owner: new FlattenedFlaxAddress(note.owner),
+        nonce: note.nonce,
+        asset: note.asset,
+        id: note.id,
+        value: note.value,
+      },
+      note.merkleIndex
+    );
+  }
+
+  toStruct(): IncludedNoteStruct {
+    return {
+      owner: this.owner.toStruct(),
+      nonce: this.nonce,
+      asset: this.asset,
+      id: this.id,
+      value: this.value,
+      merkleIndex: this.merkleIndex,
+    };
   }
 }

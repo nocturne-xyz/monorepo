@@ -183,9 +183,3 @@ export async function verifySpend2Proof(
   const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
   return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
 }
-
-export function spend2ProofToJson(proof: Spend2ProofWithPublicSignals): string {
-  return JSON.stringify(proof, (_, value) =>
-    typeof value === "bigint" ? value.toString() : value
-  );
-}
