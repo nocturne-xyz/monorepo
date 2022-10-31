@@ -1,5 +1,5 @@
 import {
-  FlattenedFlaxAddress,
+  FlaxAddressStruct,
   flattenedFlaxAddressFromJSON,
   FlaxAddress,
 } from "../crypto/address";
@@ -8,7 +8,7 @@ import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 
 interface NoteStruct {
-  owner: FlattenedFlaxAddress;
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -22,7 +22,7 @@ export class Note {
     this.inner = note;
   }
 
-  get owner(): FlattenedFlaxAddress {
+  get owner(): FlaxAddressStruct {
     return this.inner.owner;
   }
 
@@ -101,7 +101,7 @@ export class IncludedNote extends Note {
     this.merkleIndex = includedNote.merkleIndex;
   }
 
-  get owner(): FlattenedFlaxAddress {
+  get owner(): FlaxAddressStruct {
     return this.inner.owner;
   }
 

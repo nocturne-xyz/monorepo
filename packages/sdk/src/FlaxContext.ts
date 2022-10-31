@@ -9,7 +9,7 @@ import {
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
-import { FlattenedFlaxAddress } from "./crypto/address";
+import { FlaxAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import {
@@ -73,13 +73,13 @@ export class FlaxContext {
    */
   async tryCreatePostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
-    refundAddr?: FlattenedFlaxAddress,
+    refundAddr?: FlaxAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<PostProofOperation> {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toFlattened();
+      : this.signer.address.rerand().toStruct();
 
     // Create preProofOperation to use in per-note proving
     const tokens: Tokens = {
@@ -192,7 +192,7 @@ export class FlaxContext {
    * @param assetRequest Asset request
    */
   gatherMinimumNotes(
-    refundAddr: FlattenedFlaxAddress,
+    refundAddr: FlaxAddressStruct,
     assetRequest: AssetRequest
   ): OldAndNewNotePair[] {
     const balance = this.getAssetBalance(assetRequest.asset);

@@ -3,8 +3,6 @@ import { expect } from "chai";
 import { FlaxDB, FlaxLMDB } from "../src/sdk/db";
 import { IncludedNote } from "../src/sdk/note";
 import { Asset } from "../src/commonTypes";
-// import { IncludedNote, IncludedNoteStruct } from "../src/sdk/note";
-// import { Asset } from "../src/commonTypes";
 
 describe("FlaxLowDB", async () => {
   let db: FlaxLMDB;
@@ -39,10 +37,7 @@ describe("FlaxLowDB", async () => {
     await db.storeNote(note);
 
     const map = db.getAllNotes();
-    console.log(note);
-
-    const val = map.get(FlaxDB.notesKey(asset));
-    console.log(val);
-    expect(map.get(FlaxDB.notesKey(asset))![0]).to.eql(note.toStruct());
+    const notesArray = map.get(FlaxDB.notesKey(asset))!;
+    expect(notesArray[0]).to.eql(note.toStruct());
   });
 });
