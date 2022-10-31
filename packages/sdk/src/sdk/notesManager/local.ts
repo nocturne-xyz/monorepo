@@ -3,7 +3,7 @@ import { RefundEvent } from "@flax/contracts/dist/src/Wallet";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { FlattenedFlaxAddress } from "../../crypto/address";
-import { FlaxDB } from "../flaxDb";
+import { FlaxDB } from "../db";
 import { IncludedNote } from "../note";
 import { query } from "../utils";
 import { NotesManager } from ".";

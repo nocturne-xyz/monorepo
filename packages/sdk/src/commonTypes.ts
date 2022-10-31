@@ -26,3 +26,7 @@ export interface AssetRequest {
   asset: Asset;
   value: bigint;
 }
+
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
