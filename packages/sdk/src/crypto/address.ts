@@ -19,6 +19,20 @@ export function flattenedFlaxAddressToArrayForm(
   };
 }
 
+export function flattenedFlaxAddressFromJSON(
+  jsonOrString: any
+): FlattenedFlaxAddress {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  const { h1X, h1Y, h2X, h2Y } = json;
+  return {
+    h1X: BigInt(parseInt(h1X)),
+    h1Y: BigInt(parseInt(h1Y)),
+    h2X: BigInt(parseInt(h2X)),
+    h2Y: BigInt(parseInt(h2Y)),
+  };
+}
+
 export interface ArrayFlaxAddress {
   h1: [bigint, bigint];
   h2: [bigint, bigint];
