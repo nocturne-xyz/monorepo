@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
 import {
-  FlattenedFlaxAddress,
+  FlaxAddressStruct,
   flattenedFlaxAddressToArrayForm,
   FlaxAddress,
 } from "../crypto/address";
@@ -62,7 +62,7 @@ export class FlaxSigner {
     return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
   }
 
-  testOwn(addr: FlaxAddress | FlattenedFlaxAddress): boolean {
+  testOwn(addr: FlaxAddress | FlaxAddressStruct): boolean {
     const flaxAddr =
       addr instanceof FlaxAddress
         ? addr.toArrayForm()

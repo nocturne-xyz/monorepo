@@ -3,7 +3,7 @@ import { FlaxAddrPrefix } from "./common";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 
-export interface FlattenedFlaxAddress {
+export interface FlaxAddressStruct {
   h1X: bigint;
   h1Y: bigint;
   h2X: bigint;
@@ -11,7 +11,7 @@ export interface FlattenedFlaxAddress {
 }
 
 export function flattenedFlaxAddressToArrayForm(
-  flattened: FlattenedFlaxAddress
+  flattened: FlaxAddressStruct
 ): ArrayFlaxAddress {
   return {
     h1: [flattened.h1X, flattened.h1Y],
@@ -21,7 +21,7 @@ export function flattenedFlaxAddressToArrayForm(
 
 export function flattenedFlaxAddressFromJSON(
   jsonOrString: any
-): FlattenedFlaxAddress {
+): FlaxAddressStruct {
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { h1X, h1Y, h2X, h2Y } = json;
@@ -40,9 +40,9 @@ export interface ArrayFlaxAddress {
 
 // TODO: Fix binary / base64 format of a FlaxAddress
 export class FlaxAddress {
-  inner: FlattenedFlaxAddress;
+  inner: FlaxAddressStruct;
 
-  constructor(address: FlattenedFlaxAddress) {
+  constructor(address: FlaxAddressStruct) {
     this.inner = address;
   }
 
@@ -78,7 +78,7 @@ export class FlaxAddress {
     return FlaxAddrPrefix + b.toString("base64");
   }
 
-  toFlattened(): FlattenedFlaxAddress {
+  toStruct(): FlaxAddressStruct {
     return this.inner;
   }
 

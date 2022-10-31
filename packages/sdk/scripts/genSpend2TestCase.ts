@@ -29,7 +29,7 @@ const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
-const flaxAddrInput = flaxAddr.toFlattened();
+const flaxAddrInput = flaxAddr.toStruct();
 
 // Old note input to spend
 const oldNote: NoteInput = {

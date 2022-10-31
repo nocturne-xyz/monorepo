@@ -13,28 +13,28 @@ describe("FlaxContext", () => {
     asset: Asset
   ): FlaxContext {
     const firstOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      owner: signer.address.toStruct(),
       nonce: 0n,
       asset: asset.address,
       id: ERC20_ID,
       value: 100n,
     });
     const secondOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      owner: signer.address.toStruct(),
       nonce: 1n,
       asset: asset.address,
       id: ERC20_ID,
       value: 50n,
     });
     const thirdOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      owner: signer.address.toStruct(),
       nonce: 2n,
       asset: asset.address,
       id: ERC20_ID,
       value: 25n,
     });
     const fourthOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      owner: signer.address.toStruct(),
       nonce: 3n,
       asset: asset.address,
       id: ERC20_ID,
@@ -79,7 +79,7 @@ describe("FlaxContext", () => {
     const asset: Asset = new Asset("0x12345", 11111n);
 
     const flaxContext = setupFlaxContextWithFourNotes(signer, asset);
-    const refundAddr = signer.address.rerand().toFlattened();
+    const refundAddr = signer.address.rerand().toStruct();
 
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {
