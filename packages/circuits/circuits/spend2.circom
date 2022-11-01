@@ -53,7 +53,7 @@ template Spend(levels) {
     signal output anchor;
     signal output asset;
     signal output id;
-    signal output value;
+    signal output valueToSpend;
     signal output nullifier;
 
     // Compute hash of oldNoteOwner as H(h1X, h1Y, h2X, h2Y)
@@ -89,12 +89,12 @@ template Spend(levels) {
     deriveNullifier.vk <== vk;
     nullifier <== deriveNullifier.nullifier;
 
-    // Asset and value
+    // Asset, id, value, nonce
     asset <== oldNoteAsset; 
     oldNoteAsset === newNoteAsset;
     id <== oldNoteId; 
     oldNoteId === newNoteId;
-    value <== oldNoteValue - newNoteValue;
+    valueToSpend <== oldNoteValue - newNoteValue;
 
     // Viewing key integrity: h1^{vk} == h2
     component vkBits = Num2Bits(254);

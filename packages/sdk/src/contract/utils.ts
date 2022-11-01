@@ -57,7 +57,7 @@ function hashSpend(spend: PreProofSpendTransaction): string {
       spend.commitmentTreeRoot,
       spend.nullifier,
       spend.newNoteCommitment,
-      spend.value,
+      spend.valueToSpend,
       spend.asset,
       spend.id,
     ]

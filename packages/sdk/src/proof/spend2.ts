@@ -32,7 +32,7 @@ export interface Spend2PublicSignals {
   anchor: bigint;
   asset: bigint;
   id: bigint;
-  value: bigint;
+  valueToSpend: bigint;
   nullifier: bigint;
   operationDigest: bigint;
 }
@@ -69,7 +69,7 @@ export function publicSignalsArrayToTyped(
     anchor: publicSignals[1],
     asset: publicSignals[2],
     id: publicSignals[3],
-    value: publicSignals[4],
+    valueToSpend: publicSignals[4],
     nullifier: publicSignals[5],
     operationDigest: publicSignals[6],
   };

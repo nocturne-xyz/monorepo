@@ -75,7 +75,7 @@ contract Wallet is IWallet, BalanceManager {
         returns (bool success, bytes[] memory results)
     {
         bytes32 operationHash = _hashOperation(op);
-        _handleAllSpends(op.spendTxs, op.tokens, op.refundAddr, operationHash);
+        _handleAllSpends(op.spendTxs, op.tokens, operationHash);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;

@@ -17,7 +17,7 @@ export interface PreProofSpendTransaction {
   newNoteCommitment: bigint;
   asset: Address;
   id: bigint;
-  value: bigint;
+  valueToSpend: bigint;
 }
 
 export interface PreProofOperation {
@@ -33,7 +33,7 @@ export interface PostProofSpendTransaction {
   newNoteCommitment: bigint;
   proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
   asset: Address;
-  value: bigint;
+  valueToSpend: bigint;
   id: bigint;
 }
 

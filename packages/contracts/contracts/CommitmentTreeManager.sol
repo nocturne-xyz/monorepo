@@ -28,6 +28,12 @@ contract CommitmentTreeManager {
         uint256 merkleIndex
     );
 
+    event NewNoteFromSpend(
+        uint256 indexed oldNoteNullifier,
+        uint256 indexed oldNewValueDifference,
+        uint256 indexed merkleIndex
+    );
+
     constructor(
         address _verifier,
         address _noteCommitmentTree,
@@ -55,7 +61,6 @@ contract CommitmentTreeManager {
     // TODO: add default noteCommitment for when there is no output note.
     function _handleSpend(
         IWallet.SpendTransaction calldata spendTx,
-        IWallet.FLAXAddress calldata refundAddr,
         bytes32 operationHash
     ) internal {
         require(
@@ -82,7 +87,7 @@ contract CommitmentTreeManager {
                     spendTx.commitmentTreeRoot,
                     uint256(uint160(spendTx.asset)),
                     spendTx.id,
-                    spendTx.value,
+                    spendTx.valueToSpend,
                     spendTx.nullifier,
                     operationDigest
                 ]
@@ -93,12 +98,9 @@ contract CommitmentTreeManager {
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
-        emit Refund(
-            refundAddr,
-            nonce,
-            spendTx.asset,
-            spendTx.id,
-            spendTx.value,
+        emit NewNoteFromSpend(
+            spendTx.nullifier,
+            spendTx.valueToSpend,
             noteCommitmentTree.tentativeCount() - 1
         );
     }
@@ -114,13 +116,14 @@ contract CommitmentTreeManager {
             [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
         );
 
+        uint256 _nonce = nonce;
         nonce++;
 
         noteCommitmentTree.insertLeafToQueue(noteCommitment);
 
         emit Refund(
             refundAddr,
-            nonce,
+            _nonce,
             asset,
             id,
             value,
@@ -137,7 +140,7 @@ contract CommitmentTreeManager {
             spend.commitmentTreeRoot,
             spend.nullifier,
             spend.newNoteCommitment,
-            spend.value,
+            spend.valueToSpend,
             spend.asset,
             spend.id
         );

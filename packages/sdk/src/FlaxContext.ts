@@ -136,7 +136,7 @@ export class FlaxContext {
       newNoteCommitment,
       asset: oldNote.asset,
       id: oldNote.id,
-      value: oldNote.value - newNote.value,
+      valueToSpend: oldNote.value - newNote.value,
     };
 
     const opDigest = calculateOperationDigest(
@@ -174,7 +174,7 @@ export class FlaxContext {
       newNoteCommitment,
       proof: solidityProof,
       asset: preProofSpendTx.asset,
-      value: publicSignals.value,
+      valueToSpend: publicSignals.valueToSpend,
       id: publicSignals.id,
     };
   }

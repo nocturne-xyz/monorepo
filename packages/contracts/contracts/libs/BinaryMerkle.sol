@@ -142,7 +142,7 @@ library BatchBinaryMerkle {
         }
 
         self.root = hash;
-        self.numberOfLeaves += 1;
+        self.numberOfLeaves += 8;
     }
 
     // TODO: make sure we can allow both insert16 and insert8, that self.lastSubtrees is properly set
@@ -176,7 +176,7 @@ library BatchBinaryMerkle {
         }
 
         self.root = hash;
-        self.numberOfLeaves += 1;
+        self.numberOfLeaves += 16;
     }
 
     function getRootFrom8(

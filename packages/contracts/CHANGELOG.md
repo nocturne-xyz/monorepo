@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Add `NewNoteFromSpend` event and emit on `handleSpend`
+- Rename spend transaction `value` to `valueToSpend`
+- Fix merkle index bug where `insert8` and `insert16` only incremented `numberOfLeaves` by 1
 - Start test suite for `PoseidonBatchBinaryMerkle`
 - Break up `BatchBinaryMerkle` lib into `BinaryMerkle` and `Queue`
 - Add `Refund` events to `CommitmentTreeManager`

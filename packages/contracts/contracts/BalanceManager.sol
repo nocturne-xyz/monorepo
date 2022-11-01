@@ -135,23 +135,22 @@ contract BalanceManager is
     function _handleAllSpends(
         IWallet.SpendTransaction[] calldata spendTxs,
         IWallet.Tokens calldata tokens,
-        IWallet.FLAXAddress calldata refundAddr,
         bytes32 operationHash
     ) internal {
         uint256 numSpendTxs = spendTxs.length;
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            _handleSpend(spendTxs[i], refundAddr, operationHash);
+            _handleSpend(spendTxs[i], operationHash);
             if (spendTxs[i].id == SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[spendTxs[i].asset] += spendTxs[i]
-                    .value;
-            } else if (spendTxs[i].value == 0) {
+                    .valueToSpend;
+            } else if (spendTxs[i].valueToSpend == 0) {
                 _gatherERC721(spendTxs[i].asset, spendTxs[i].id);
             } else {
                 _gatherERC1155(
                     spendTxs[i].asset,
                     spendTxs[i].id,
-                    spendTxs[i].value
+                    spendTxs[i].valueToSpend
                 );
             }
         }
