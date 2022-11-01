@@ -3,22 +3,22 @@ import { LeavesCommittedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { FlaxDB } from "../db";
+import { FlaxLMDB } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_LAST_INDEXED_BLOCK = "MERKLE_LAST_INDEXED_BLOCK";
 
-export class ChainIndexingMerkleProver
+export class LocalMerkleProver
   extends BinaryPoseidonTree
   implements MerkleProver
 {
   treeContract: BatchBinaryMerkle;
   provider: ethers.providers.Provider;
-  db: FlaxDB;
+  db: FlaxLMDB;
 
-  constructor(merkleAddress: Address, rpcUrl: string, db: FlaxDB) {
+  constructor(merkleAddress: Address, rpcUrl: string, db: FlaxLMDB) {
     super();
 
     this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -29,7 +29,16 @@ export class ChainIndexingMerkleProver
     this.db = db;
   }
 
-  async gatherNewLeaves(): Promise<bigint[]> {
+  async fetchAndStoreNewLeaves(): Promise<void> {
+    const newLeaves = await this.fetchNewLeavesSorted();
+
+    for (const leaf of newLeaves) {
+      this.db.storeLeaf(this.count, leaf);
+      this.insert(leaf);
+    }
+  }
+
+  async fetchNewLeavesSorted(): Promise<bigint[]> {
     const maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen)

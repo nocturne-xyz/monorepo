@@ -10,7 +10,7 @@ import { NotesManager } from ".";
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
 
-export class ChainIndexingNotesManager implements NotesManager {
+export class LocalNotesManager implements NotesManager {
   db: FlaxDB;
   walletContract: Wallet;
   provider: ethers.providers.Provider;
