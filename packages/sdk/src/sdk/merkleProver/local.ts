@@ -1,5 +1,5 @@
 import { BatchBinaryMerkle, BatchBinaryMerkle__factory } from "@flax/contracts";
-import { LeavesCommittedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle";
+import { LeavesEnqueuedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
@@ -45,13 +45,15 @@ export class LocalMerkleProver
       : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
     const latestBlock = await this.provider.getBlockNumber();
 
-    const filter = this.treeContract.filters.LeavesCommitted();
-    let events: LeavesCommittedEvent[] = await query(
+    const filter = this.treeContract.filters.LeavesEnqueued();
+    let events: LeavesEnqueuedEvent[] = await query(
       this.treeContract,
       filter,
       lastSeen,
       latestBlock
     );
+
+    console.log("Fetched leaves: ", events);
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 

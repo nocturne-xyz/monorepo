@@ -34,7 +34,7 @@ import {
   FlaxLMDB,
 } from "@flax/sdk";
 
-const HH_URL = "http://localhost:8545";
+const HH_URL = "http://127.0.0.1:8545";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
 
@@ -115,6 +115,32 @@ describe("Wallet", async () => {
 
   beforeEach(async () => {
     await setup();
+  });
+
+  // TODO: move to separate test suite
+  it("Local merkle prover self syncs", async () => {
+    const lmdb = new FlaxLMDB({ localMerkle: true });
+    const localMerkle = new LocalMerkleProver(merkle.address, HH_URL, lmdb);
+    const flaxContext = new FlaxContext(
+      flaxSigner,
+      new Map(),
+      localMerkle,
+      lmdb
+    );
+
+    await aliceDepositFunds();
+    await wallet.commit2FromQueue();
+
+    console.log("Sleeping...");
+    await new Promise((r) => setTimeout(r, 3000));
+
+    console.log("Fetching leaves...");
+    const leaves = await (
+      flaxContext.merkleProver as LocalMerkleProver
+    ).fetchNewLeavesSorted();
+    console.log(leaves);
+
+    fs.rmSync("db", { recursive: true, force: true });
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
@@ -198,13 +224,5 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
-  });
-
-  it("Local merkle prover self syncs", async () => {
-    const lmdb = new FlaxLMDB({ localMerkle: true });
-    const localMerkle = new LocalMerkleProver(merkle.address, HH_URL, lmdb);
-    const flaxContext = new FlaxContext(flaxSigner);
-
-    fs.rmSync("db", { recursive: true, force: true });
   });
 });

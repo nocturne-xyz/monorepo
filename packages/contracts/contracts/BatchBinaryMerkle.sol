@@ -18,7 +18,7 @@ contract BatchBinaryMerkle is IBatchMerkle {
     QueueLib.Queue public queue;
     IncrementalTreeData public tree;
 
-    event LeavesCommitted(uint256[] leaves);
+    event LeavesEnqueued(uint256[] indexed leaves);
 
     constructor(
         uint8 depth,
@@ -49,7 +49,6 @@ contract BatchBinaryMerkle is IBatchMerkle {
         for (uint256 i = 0; i < 2; i++) {
             eventLeaves[i] = leaves[i];
         }
-        emit LeavesCommitted(eventLeaves);
     }
 
     function commit8FromQueue() external override {
@@ -60,14 +59,18 @@ contract BatchBinaryMerkle is IBatchMerkle {
         for (uint256 i = 0; i < 8; i++) {
             eventLeaves[i] = leaves[i];
         }
-        emit LeavesCommitted(eventLeaves);
     }
 
     function insertLeafToQueue(uint256 leaf) external override {
         queue.enqueue(leaf);
+
+        uint256[] memory eventLeaves = new uint256[](1);
+        eventLeaves[0] = leaf;
+        emit LeavesEnqueued(eventLeaves);
     }
 
     function insertLeavesToQueue(uint256[] memory leaves) external override {
         queue.enqueue(leaves);
+        emit LeavesEnqueued(leaves);
     }
 }
