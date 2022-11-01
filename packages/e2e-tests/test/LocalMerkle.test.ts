@@ -15,7 +15,6 @@ import {
   BatchBinaryMerkle,
 } from "@flax/contracts";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
-
 import {
   FlaxPrivKey,
   FlaxSigner,
@@ -26,7 +25,6 @@ import {
 } from "@flax/sdk";
 
 const DB_PATH = "db";
-const HH_URL = "http://127.0.0.1:8545";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
 
@@ -115,7 +113,11 @@ describe("LocalMerkle", async () => {
 
   it("Local merkle prover self syncs", async () => {
     const lmdb = new FlaxLMDB({ dbPath: DB_PATH, localMerkle: true });
-    const localMerkle = new LocalMerkleProver(merkle.address, HH_URL, lmdb);
+    const localMerkle = new LocalMerkleProver(
+      merkle.address,
+      ethers.provider,
+      lmdb
+    );
 
     const notes = [
       new Note({

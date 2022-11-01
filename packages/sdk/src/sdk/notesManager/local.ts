@@ -15,9 +15,13 @@ export class LocalNotesManager implements NotesManager {
   walletContract: Wallet;
   provider: ethers.providers.Provider;
 
-  constructor(walletAddress: Address, rpcUrl: string, db: FlaxDB) {
+  constructor(
+    walletAddress: Address,
+    provider: ethers.providers.Provider,
+    db: FlaxDB
+  ) {
     this.db = db;
-    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    this.provider = provider;
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }
 
