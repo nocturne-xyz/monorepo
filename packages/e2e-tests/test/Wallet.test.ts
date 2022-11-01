@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
+import * as fs from "fs";
 import {
   Wallet__factory,
   Vault__factory,
@@ -11,6 +12,7 @@ import {
   SimpleERC20Token__factory,
   Vault,
   Wallet,
+  BatchBinaryMerkle,
 } from "@flax/contracts";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
@@ -24,17 +26,24 @@ import {
   FlaxContext,
   AssetHash,
   BinaryPoseidonTree,
+  Asset,
+  AssetRequest,
+  LocalMerkleProver,
+  IncludedNote,
+  OperationRequest,
+  FlaxLMDB,
 } from "@flax/sdk";
-import { Asset, AssetRequest } from "@flax/sdk/dist/src/commonTypes";
-import { IncludedNote } from "@flax/sdk/dist/src/sdk/note";
-import { OperationRequest } from "@flax/sdk/dist/src/FlaxContext";
 
+const HH_URL = "http://localhost:8545";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
 
 describe("Wallet", async () => {
   let deployer: ethers.Signer, alice: ethers.Signer, bob: ethers.Signer;
-  let vault: Vault, wallet: Wallet, token: SimpleERC20Token;
+  let vault: Vault,
+    wallet: Wallet,
+    merkle: BatchBinaryMerkle,
+    token: SimpleERC20Token;
   let flaxSigner: FlaxSigner;
 
   async function setup() {
@@ -75,7 +84,7 @@ describe("Wallet", async () => {
     const verifier = await verifierFactory.deploy();
 
     const merkleFactory = new BatchBinaryMerkle__factory(deployer);
-    const merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
+    merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
 
     const walletFactory = new Wallet__factory(deployer);
     wallet = await walletFactory.deploy(
@@ -189,5 +198,13 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
+  });
+
+  it("Local merkle prover self syncs", async () => {
+    const lmdb = new FlaxLMDB({ localMerkle: true });
+    const localMerkle = new LocalMerkleProver(merkle.address, HH_URL, lmdb);
+    const flaxContext = new FlaxContext(flaxSigner);
+
+    fs.rmSync("db", { recursive: true, force: true });
   });
 });
