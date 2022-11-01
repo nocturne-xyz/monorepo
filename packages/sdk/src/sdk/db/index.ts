@@ -1,6 +1,7 @@
 import { Asset, AssetHash } from "../../commonTypes";
 import { IncludedNote, IncludedNoteStruct } from "../note";
 
+export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
 
 export abstract class FlaxDB {
@@ -37,6 +38,16 @@ export abstract class FlaxDB {
    * @param asset asset address and id
    */
   abstract getAllNotes(asset: Asset): Map<AssetHash, IncludedNoteStruct[]>;
+
+  /**
+   * Clear entire database.
+   */
+  abstract clear(): void;
+
+  /**
+   * Close entire database.
+   */
+  abstract close(): Promise<void>;
 }
 
 export * from "./lmdb";
