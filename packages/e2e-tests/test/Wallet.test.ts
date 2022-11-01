@@ -117,32 +117,6 @@ describe("Wallet", async () => {
     await setup();
   });
 
-  // TODO: move to separate test suite
-  it("Local merkle prover self syncs", async () => {
-    const lmdb = new FlaxLMDB({ localMerkle: true });
-    const localMerkle = new LocalMerkleProver(merkle.address, HH_URL, lmdb);
-    const flaxContext = new FlaxContext(
-      flaxSigner,
-      new Map(),
-      localMerkle,
-      lmdb
-    );
-
-    await aliceDepositFunds();
-    await wallet.commit2FromQueue();
-
-    console.log("Sleeping...");
-    await new Promise((r) => setTimeout(r, 3000));
-
-    console.log("Fetching leaves...");
-    const leaves = await (
-      flaxContext.merkleProver as LocalMerkleProver
-    ).fetchNewLeavesSorted();
-    console.log(leaves);
-
-    fs.rmSync("db", { recursive: true, force: true });
-  });
-
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
     console.log("Deposit funds and commit note commitments");
     await aliceDepositFunds();

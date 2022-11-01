@@ -53,14 +53,13 @@ export class LocalMerkleProver
       latestBlock
     );
 
-    console.log("Fetched leaves: ", events);
-
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    const leaves: bigint[] = [];
+    let allLeaves: bigint[] = [];
     for (const event of events) {
-      leaves.concat(event.args.leaves.map((l) => l.toBigInt()));
+      const eventLeaves = event.args.leaves.map((l) => l.toBigInt());
+      allLeaves.push(...eventLeaves);
     }
-    return leaves;
+    return allLeaves;
   }
 }
