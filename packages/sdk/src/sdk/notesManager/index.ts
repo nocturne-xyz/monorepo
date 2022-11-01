@@ -6,4 +6,4 @@ export interface NotesManager {
   // TODO: method to call two gather functions and update DB accordingly
 }
 
-export * from "./local";
+export { LocalNotesManager } from "./local";

@@ -4,4 +4,4 @@ export interface MerkleProver {
   getProof(index: number): MerkleProof;
 }
 
-export * from "./local";
+export { LocalMerkleProver } from "./local";
