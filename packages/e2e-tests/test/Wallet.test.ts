@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
-import * as fs from "fs";
 import {
   Wallet__factory,
   Vault__factory,
@@ -28,10 +27,8 @@ import {
   BinaryPoseidonTree,
   Asset,
   AssetRequest,
-  LocalMerkleProver,
   IncludedNote,
   OperationRequest,
-  FlaxLMDB,
 } from "@flax/sdk";
 
 const HH_URL = "http://127.0.0.1:8545";

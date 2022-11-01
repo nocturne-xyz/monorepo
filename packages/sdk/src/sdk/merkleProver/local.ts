@@ -18,10 +18,14 @@ export class LocalMerkleProver
   provider: ethers.providers.Provider;
   db: FlaxLMDB;
 
-  constructor(merkleAddress: Address, rpcUrl: string, db: FlaxLMDB) {
+  constructor(
+    merkleAddress: Address,
+    provider: ethers.providers.JsonRpcProvider,
+    db: FlaxLMDB
+  ) {
     super();
 
-    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    this.provider = provider;
     this.treeContract = BatchBinaryMerkle__factory.connect(
       merkleAddress,
       this.provider
