@@ -1,16 +1,30 @@
 import { open, RootDatabase, Database } from "lmdb";
-import { DEFAULT_DB_PATH, FlaxDB, NOTES_PREFIX } from ".";
+import {
+  DEFAULT_DB_PATH,
+  FlaxDB,
+  LEAVES_PREFIX,
+  LocalMerkleDBExtension,
+  NOTES_PREFIX,
+} from ".";
 import { IncludedNoteStruct, includedNoteStructFromJSON } from "../note";
 import { Asset } from "../../commonTypes";
 
-export class FlaxLMDB implements FlaxDB {
+export interface FlaxLMDBOptions {
+  dbPath?: string;
+  localMerkle?: boolean;
+}
+
+export class FlaxLMDB extends LocalMerkleDBExtension implements FlaxDB {
   rootDb: RootDatabase<string, string>;
   kvDb: Database<string, string>;
   notesDb: Database<string, string>;
+  leavesDb?: Database<string, string>;
 
-  constructor(dbPath: string = DEFAULT_DB_PATH) {
+  constructor(options?: FlaxLMDBOptions) {
+    super();
+
     this.rootDb = open({
-      path: dbPath,
+      path: options?.dbPath ?? DEFAULT_DB_PATH,
     });
     this.kvDb = this.rootDb.openDB({ name: "kv" });
     this.notesDb = this.rootDb.openDB({
@@ -19,6 +33,13 @@ export class FlaxLMDB implements FlaxDB {
       encoding: "ordered-binary",
       sharedStructuresKey: Symbol.for(NOTES_PREFIX),
     });
+
+    if (options?.localMerkle) {
+      this.leavesDb = this.rootDb.openDB({
+        name: "leaves",
+        sharedStructuresKey: Symbol.for(LEAVES_PREFIX),
+      });
+    }
   }
 
   putKv(key: string, value: string): Promise<boolean> {
@@ -55,9 +76,37 @@ export class FlaxLMDB implements FlaxDB {
     this.kvDb.clearSync();
     this.notesDb.clearSync();
     this.rootDb.clearSync();
+    this.leavesDb?.clearSync();
   }
 
   async close(): Promise<void> {
     await this.rootDb.close();
+  }
+
+  storeLeaf(index: number, leaf: bigint): Promise<boolean> {
+    if (!this.leavesDb) {
+      throw Error(
+        "Attempted to merkle store leaf when LMDB configured without leaf storage"
+      );
+    }
+
+    const key = LocalMerkleDBExtension.leafKey(index);
+    return this.leavesDb.put(key, leaf.toString());
+  }
+
+  getLeaf(index: number): bigint | undefined {
+    if (!this.leavesDb) {
+      throw Error(
+        "Attempted to merkle store leaf when LMDB configured without leaf storage"
+      );
+    }
+
+    const leafString = this.leavesDb.get(LocalMerkleDBExtension.leafKey(index));
+
+    if (!leafString) {
+      return undefined;
+    }
+
+    return BigInt(leafString);
   }
 }

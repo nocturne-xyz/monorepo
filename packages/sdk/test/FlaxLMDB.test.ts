@@ -6,7 +6,7 @@ import { IncludedNoteStruct } from "../src/sdk/note";
 import { Asset } from "../src/commonTypes";
 
 describe("FlaxLMDB", async () => {
-  let db = new FlaxLMDB();
+  let db = new FlaxLMDB({ localMerkle: true });
 
   beforeEach(async () => {
     db.clear();
@@ -83,5 +83,14 @@ describe("FlaxLMDB", async () => {
     const notesArray = map.get(FlaxDB.notesKey(asset))!;
     expect(notesArray[0]).to.eql(noteOne);
     expect(notesArray[1]).to.eql(noteTwo);
+  });
+
+  it("Stores and gets merkle leaves", async () => {
+    await db.storeLeaf(0, 0n);
+    await db.storeLeaf(1, 1n);
+    await db.storeLeaf(2, 2n);
+    expect(db.getLeaf(0)).to.eq(0n);
+    expect(db.getLeaf(1)).to.eq(1n);
+    expect(db.getLeaf(2)).to.eq(2n);
   });
 });
