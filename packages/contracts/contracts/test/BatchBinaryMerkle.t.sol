@@ -10,7 +10,7 @@ import {PoseidonHasherT3} from "../PoseidonHashers.sol";
 contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
     BatchBinaryMerkle merkle;
 
-    event LeavesEnqueued(uint256[] indexed leaves);
+    event LeavesEnqueued(uint256[] leaves);
 
     function setUp() public virtual {
         deployPoseidon3Through6();

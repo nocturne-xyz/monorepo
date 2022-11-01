@@ -18,7 +18,7 @@ contract BatchBinaryMerkle is IBatchMerkle {
     QueueLib.Queue public queue;
     IncrementalTreeData public tree;
 
-    event LeavesEnqueued(uint256[] indexed leaves);
+    event LeavesEnqueued(uint256[] leaves);
 
     constructor(
         uint8 depth,
