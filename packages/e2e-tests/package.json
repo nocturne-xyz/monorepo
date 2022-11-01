@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test:e2e": "npx hardhat test",
+    "test:e2e": "npx hardhat test --network localhost",
     "build": ""
   },
   "author": "",
