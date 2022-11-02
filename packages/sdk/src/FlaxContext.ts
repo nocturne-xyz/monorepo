@@ -1,4 +1,4 @@
-import { Address, Asset, AssetHash, AssetRequest } from "./commonTypes";
+import { Address, AssetRequest, AssetStruct } from "./commonTypes";
 import {
   Action,
   PostProofOperation,
@@ -21,8 +21,8 @@ import {
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
 import { MerkleProver } from "./sdk/merkleProver";
-import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
 import { FlaxDB, FlaxLMDB } from "./sdk/db";
+import { NotesManager } from "./sdk";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -37,26 +37,21 @@ export interface OldAndNewNotePair {
 
 export class FlaxContext {
   signer: FlaxSigner;
-  ownedNotes: Map<AssetHash, IncludedNote[]>; // sorted great to least value
   merkleProver: MerkleProver;
+  notesManager: NotesManager;
   db: FlaxDB;
 
-  // TODO: pull spendable notes from db
-  // TODO: sync tree with db events and new on-chain events
   constructor(
     signer: FlaxSigner,
-    ownedNotes: Map<AssetHash, IncludedNote[]> = new Map(),
-    merkleProver: MerkleProver = new BinaryPoseidonTree(),
+    merkleProver: MerkleProver,
+    notesManager: NotesManager,
     db: FlaxDB = new FlaxLMDB()
   ) {
     this.signer = signer;
-    this.ownedNotes = ownedNotes;
     this.merkleProver = merkleProver;
+    this.notesManager = notesManager;
     this.db = db;
   }
-
-  // TODO: sync owned notes from chain or bucket
-  // async sync() {}
 
   /**
    * Attempt to create a `PostProofOperation` provided an `OperationRequest`.
@@ -185,7 +180,7 @@ export class FlaxContext {
   }
 
   /**
-   * Remove and return minimum list of notes required to fullfill asset request.
+   * Return minimum list of notes required to fullfill asset request.
    * Returned list is sorted from smallest to largest. The last note in the list
    * may produce a non-zero new note.
    *
@@ -202,11 +197,10 @@ export class FlaxContext {
       );
     }
 
-    const sortedNotes = this.ownedNotes
-      .get(assetRequest.asset.hash())!
-      .sort((a, b) => {
-        return Number(a.value - b.value);
-      });
+    const notes = this.db.getNotesFor(assetRequest.asset);
+    const sortedNotes = notes.sort((a, b) => {
+      return Number(a.value - b.value);
+    });
 
     const oldAndNewNotePairs: OldAndNewNotePair[] = [];
     let totalSpend = 0n;
@@ -233,7 +227,7 @@ export class FlaxContext {
       });
 
       oldAndNewNotePairs.push({
-        oldNote,
+        oldNote: new IncludedNote(oldNote),
         newNote,
       });
     }
@@ -246,8 +240,8 @@ export class FlaxContext {
    *
    * @param asset Asset
    */
-  getAssetBalance(asset: Asset): bigint {
-    const notes = this.ownedNotes.get(asset.hash());
+  getAssetBalance(asset: AssetStruct): bigint {
+    const notes = this.db.getNotesFor(asset);
 
     if (!notes) {
       return 0n;

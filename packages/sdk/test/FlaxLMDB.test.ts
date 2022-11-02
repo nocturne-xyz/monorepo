@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { expect } from "chai";
 import { DEFAULT_DB_PATH, FlaxDB, FlaxLMDB } from "../src/sdk/db";
 import { IncludedNoteStruct } from "../src/sdk/note";
-import { Asset } from "../src/commonTypes";
+import { AssetStruct } from "../src/commonTypes";
 
 describe("FlaxLMDB", async () => {
   let db = new FlaxLMDB({ localMerkle: true });
@@ -28,7 +28,7 @@ describe("FlaxLMDB", async () => {
   });
 
   it("Stores, gets, and removes note", async () => {
-    const asset = new Asset("0x1234", 1234n);
+    const asset: AssetStruct = { address: "0x1234", id: 1234n };
     const note: IncludedNoteStruct = {
       owner: {
         h1X: 1n,
@@ -55,7 +55,7 @@ describe("FlaxLMDB", async () => {
   });
 
   it("Stores, gets, and removes multiple notes for same asset", async () => {
-    const asset = new Asset("0x1234", 1234n);
+    const asset: AssetStruct = { address: "0x1234", id: 1234n };
     const noteOne: IncludedNoteStruct = {
       owner: {
         h1X: 1n,

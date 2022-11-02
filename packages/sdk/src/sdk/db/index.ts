@@ -1,4 +1,4 @@
-import { Asset, AssetHash } from "../../commonTypes";
+import { AssetHash, AssetStruct, hashAsset } from "../../commonTypes";
 import { IncludedNoteStruct } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
@@ -35,8 +35,8 @@ export abstract class FlaxDB {
    *
    * @param asset asset
    */
-  static notesKey(asset: Asset): string {
-    return NOTES_PREFIX + asset.hash();
+  static notesKey(asset: AssetStruct): string {
+    return NOTES_PREFIX + hashAsset(asset);
   }
 
   /**
@@ -60,7 +60,7 @@ export abstract class FlaxDB {
    */
   async storeNotes(notes: IncludedNoteStruct[]): Promise<void> {
     for (const note of notes) {
-      const success = this.storeNote(note);
+      const success = await this.storeNote(note);
       if (!success) {
         throw Error(`Failed to store note ${note}`);
       }
@@ -73,6 +73,13 @@ export abstract class FlaxDB {
    * @returns mapping of all assets to their respective notes
    */
   abstract getAllNotes(): Map<AssetHash, IncludedNoteStruct[]>;
+
+  /**
+   * Get mapping of all asset types to `IncludedNoteStruct[]`;
+   *
+   * @returns mapping of all assets to their respective notes
+   */
+  abstract getNotesFor(asset: AssetStruct): IncludedNoteStruct[];
 
   /**
    * Clear entire database.

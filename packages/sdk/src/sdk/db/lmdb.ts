@@ -7,7 +7,7 @@ import {
   NOTES_PREFIX,
 } from ".";
 import { IncludedNoteStruct, includedNoteStructFromJSON } from "../note";
-import { Asset } from "../../commonTypes";
+import { AssetStruct } from "../../commonTypes";
 
 export interface FlaxLMDBOptions {
   dbPath?: string;
@@ -55,14 +55,12 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
   }
 
   storeNote(note: IncludedNoteStruct): Promise<boolean> {
-    const asset = new Asset(note.asset, note.id);
-    const key = FlaxDB.notesKey(asset);
+    const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
     return this.notesDb.put(key, JSON.stringify(note));
   }
 
   removeNote(note: IncludedNoteStruct): Promise<boolean> {
-    const asset = new Asset(note.asset, note.id);
-    const key = FlaxDB.notesKey(asset);
+    const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
     return this.notesDb.remove(key, JSON.stringify(note));
   }
 
@@ -80,6 +78,16 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     }
 
     return notesMap;
+  }
+
+  getNotesFor(asset: AssetStruct): IncludedNoteStruct[] {
+    const key = FlaxDB.notesKey(asset);
+    let notesArray: IncludedNoteStruct[] = [];
+    for (const val of this.notesDb.getValues(key)) {
+      const includedNote = includedNoteStructFromJSON(val);
+      notesArray.push(includedNote);
+    }
+    return notesArray;
   }
 
   clear(): void {

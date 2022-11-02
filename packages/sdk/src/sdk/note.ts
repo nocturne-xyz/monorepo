@@ -3,7 +3,7 @@ import {
   flattenedFlaxAddressFromJSON,
   FlaxAddress,
 } from "../crypto/address";
-import { Address, Asset } from "../commonTypes";
+import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 
@@ -61,11 +61,6 @@ export class Note {
     };
   }
 
-  getAsset(): Asset {
-    const { asset, id } = this.inner;
-    return new Asset(asset, id);
-  }
-
   toIncluded(merkleIndex: number): IncludedNote {
     const { owner, nonce, asset, id, value } = this.inner;
     return new IncludedNote({ owner, nonce, asset, id, value, merkleIndex });
@@ -77,10 +72,9 @@ export interface IncludedNoteStruct extends NoteStruct {
 }
 
 export function includedNoteStructFromJSON(
-  jsonOrString: string | any
+  jsonString: string
 ): IncludedNoteStruct {
-  const json: any =
-    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  const json: any = JSON.parse(jsonString);
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
     owner: flattenedFlaxAddressFromJSON(owner),
