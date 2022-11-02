@@ -1,8 +1,13 @@
 import { TypedEvent } from "@flax/contracts/dist/src/common";
+import { poseidon } from "circomlibjs";
 import { BaseContract, EventFilter } from "ethers";
 import { Result } from "ethers/lib/utils";
 
 const CHUNK_SIZE = 2000;
+
+export function generateNewNonce(vk: bigint, oldNullifier: bigint): bigint {
+  return poseidon([vk, oldNullifier]);
+}
 
 export async function largeQueryInChunks<T extends Result>(
   contract: BaseContract,

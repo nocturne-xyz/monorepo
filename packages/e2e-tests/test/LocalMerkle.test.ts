@@ -141,7 +141,7 @@ describe("LocalMerkle", async () => {
     await wallet.commit2FromQueue();
 
     console.log("Fetching and storing leaves from events");
-    await localMerkle.fetchAndStoreNewLeaves();
+    await localMerkle.fetchLeavesAndUpdate();
     expect(localMerkle.count).to.eql(2);
 
     console.log("Ensure leaves match enqueued");

@@ -49,9 +49,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 merkleIndex
     );
 
-    event NewNoteFromSpend(
+    event Spend(
         uint256 indexed oldNoteNullifier,
-        uint256 indexed oldNewValueDifference,
+        uint256 indexed valueSpent,
         uint256 indexed merkleIndex
     );
 
@@ -236,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit NewNoteFromSpend(0, 50, 8); // only checking value and merkleIndex are valid
+        emit Spend(0, 50, 8); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 

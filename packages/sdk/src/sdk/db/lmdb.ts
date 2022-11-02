@@ -14,7 +14,7 @@ export interface FlaxLMDBOptions {
   localMerkle?: boolean;
 }
 
-export class FlaxLMDB extends LocalMerkleDBExtension implements FlaxDB {
+export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
   rootDb: RootDatabase<string, string>;
   kvDb: Database<string, string>;
   notesDb: Database<string, string>;

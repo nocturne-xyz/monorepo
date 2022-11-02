@@ -28,9 +28,9 @@ contract CommitmentTreeManager {
         uint256 merkleIndex
     );
 
-    event NewNoteFromSpend(
+    event Spend(
         uint256 indexed oldNoteNullifier,
-        uint256 indexed oldNewValueDifference,
+        uint256 indexed valueSpent,
         uint256 indexed merkleIndex
     );
 
@@ -98,7 +98,7 @@ contract CommitmentTreeManager {
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
-        emit NewNoteFromSpend(
+        emit Spend(
             spendTx.nullifier,
             spendTx.valueToSpend,
             noteCommitmentTree.totalCount() - 1

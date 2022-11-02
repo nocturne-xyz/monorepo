@@ -33,11 +33,25 @@ export abstract class FlaxDB {
   }
 
   /**
-   * Store `SpendableNote` or `PendingNote` in it's appropriate place in DB.
+   * Store `IncludedNote` in it's appropriate place in DB.
    *
-   * @param note either a `PendingNote` or `SpendableNote`
+   * @param note an `IncludedNote`
    */
   abstract storeNote(note: IncludedNote): Promise<boolean>;
+
+  /**
+   * Store several `IncludedNote` in db.
+   *
+   * @param notes array of `IncludedNote
+   */
+  async storeNotes(notes: IncludedNote[]) {
+    for (const note of notes) {
+      const success = this.storeNote(note);
+      if (!success) {
+        throw Error(`Failed to store note ${note}`);
+      }
+    }
+  }
 
   /**
    * Get mapping of all asset types to `IncludedNote[]`;

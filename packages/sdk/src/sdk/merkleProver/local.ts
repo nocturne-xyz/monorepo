@@ -33,28 +33,30 @@ export class LocalMerkleProver
     this.db = db;
   }
 
-  async fetchAndStoreNewLeaves(): Promise<void> {
-    const newLeaves = await this.fetchNewLeavesSorted();
-
-    for (const leaf of newLeaves) {
-      this.db.storeLeaf(this.count, leaf);
-      this.insert(leaf);
-    }
-  }
-
-  async fetchNewLeavesSorted(): Promise<bigint[]> {
+  async fetchLeavesAndUpdate(): Promise<void> {
     const maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen)
       : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
     const latestBlock = await this.provider.getBlockNumber();
 
+    const newLeaves = await this.fetchNewLeavesSorted(lastSeen, latestBlock);
+
+    for (const leaf of newLeaves) {
+      this.db.storeLeaf(this.count, leaf);
+      this.insert(leaf);
+    }
+
+    this.db.putKv(MERKLE_LAST_INDEXED_BLOCK, latestBlock.toString());
+  }
+
+  async fetchNewLeavesSorted(from: number, to: number): Promise<bigint[]> {
     const filter = this.treeContract.filters.LeavesEnqueued();
     let events: LeavesEnqueuedEvent[] = await query(
       this.treeContract,
       filter,
-      lastSeen,
-      latestBlock
+      from,
+      to
     );
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
