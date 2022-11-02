@@ -7,12 +7,15 @@ import {
   RefundEvent as EthRefundEvent,
   SpendEvent as EthSpendEvent,
 } from "@flax/contracts/dist/src/Wallet";
-import { NotesManager } from ".";
-import { IncludedNote } from "../note";
+import { NotesManager, RefundEvent, SpendEvent } from ".";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
+const REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK =
+  "REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK";
 const SPENDS_LAST_INDEXED_BLOCK = "SPENDS_LAST_INDEXED_BLOCK";
+const SPENDS_TENTATIVE_LAST_INDEXED_BLOCK =
+  "SPENDS_TENTATIVE_LAST_INDEXED_BLOCK";
 
 export class LocalNotesManager extends NotesManager {
   walletContract: Wallet;
@@ -28,7 +31,7 @@ export class LocalNotesManager extends NotesManager {
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }
 
-  async fetchAndStoreRefunds(): Promise<void> {
+  async fetchNotesFromRefunds(): Promise<RefundEvent[]> {
     const maybeLastSeen = this.db.getKv(REFUNDS_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen) + 1
@@ -45,10 +48,10 @@ export class LocalNotesManager extends NotesManager {
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    const newNotes = events.map((event) => {
+    const newRefunds = events.map((event) => {
       const { refundAddr, nonce, asset, id, value, merkleIndex } = event.args;
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
-      return new IncludedNote({
+      return {
         owner: {
           h1X: h1X.toBigInt(),
           h1Y: h1Y.toBigInt(),
@@ -60,14 +63,29 @@ export class LocalNotesManager extends NotesManager {
         id: id.toBigInt(),
         value: value.toBigInt(),
         merkleIndex: merkleIndex.toNumber(),
-      });
+      };
     });
 
-    await this.db.storeNotes(newNotes);
-    await this.db.putKv(REFUNDS_LAST_INDEXED_BLOCK, latestBlock.toString());
+    this.db.putKv(REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK, latestBlock.toString());
+    return newRefunds;
   }
+
+  async postStoreNotesFromRefunds(): Promise<void> {
+    const tentativeLastSeen = this.db.getKv(
+      REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK
+    );
+
+    if (!tentativeLastSeen) {
+      throw new Error(
+        "Should never call `postStoreNotesFromRefunds` without having stored a tentative last seen block"
+      );
+    }
+
+    await this.db.putKv(REFUNDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
+  }
+
   //newNonce = H(vk, nf)
-  async fetchAndApplySpends(): Promise<void> {
+  async fetchSpends(): Promise<SpendEvent[]> {
     const maybeLastSeen = this.db.getKv(SPENDS_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen) + 1
@@ -92,9 +110,22 @@ export class LocalNotesManager extends NotesManager {
         merkleIndex: merkleIndex.toNumber(),
       };
     });
-    console.log(newSpends);
 
-    // Find/remove old note and store new one by changing refundAddr and
-    // calculating new nonce
+    this.db.putKv(SPENDS_TENTATIVE_LAST_INDEXED_BLOCK, latestBlock.toString());
+    return newSpends;
+  }
+
+  async postApplySpends(): Promise<void> {
+    const tentativeLastSeen = this.db.getKv(
+      SPENDS_TENTATIVE_LAST_INDEXED_BLOCK
+    );
+
+    if (!tentativeLastSeen) {
+      throw new Error(
+        "Should never call `postApplySpends` without having stored a tentative last seen block"
+      );
+    }
+
+    await this.db.putKv(SPENDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
   }
 }

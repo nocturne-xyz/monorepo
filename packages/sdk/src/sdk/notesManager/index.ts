@@ -15,8 +15,13 @@ export abstract class NotesManager {
     this.db = db;
   }
 
-  abstract fetchAndStoreRefunds(): Promise<void>;
-  abstract fetchAndApplySpends(): Promise<void>;
+  abstract fetchNotesFromRefunds(): Promise<RefundEvent[]>;
+  abstract postStoreNotesFromRefunds(): Promise<void>;
+  abstract fetchSpends(): Promise<SpendEvent[]>;
+  abstract postApplySpends(): Promise<void>;
+
+  async fetchAndStoreNewNotesFromRefunds(): Promise<void> {}
+  async fetchAndApplyNewSpends(): Promise<void> {}
 }
 
 export { LocalNotesManager } from "./local";
