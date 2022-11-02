@@ -54,16 +54,16 @@ export abstract class NotesManager {
             merkleIndex: spend.merkleIndex,
           };
 
-          this.db.removeNote(oldNote);
-          this.db.storeNote(newNote);
+          await this.db.removeNote(oldNote);
+          await this.db.storeNote(newNote);
         }
       }
     }
   }
 
   async fetchAndApplyNewSpends(): Promise<void> {
-    const newSpend = await this.fetchSpends();
-    await this.applyNewSpends(newSpend);
+    const newSpends = await this.fetchSpends();
+    await this.applyNewSpends(newSpends);
     await this.postApplySpends();
   }
 }

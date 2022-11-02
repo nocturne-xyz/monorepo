@@ -13,7 +13,7 @@ export interface AssetStruct {
   id: bigint;
 }
 
-export function hashAsset(asset: AssetStruct) {
+export function hashAsset(asset: AssetStruct): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
 }
 

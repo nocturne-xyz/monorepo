@@ -20,10 +20,10 @@ contract CommitmentTreeManager {
     IHasherT6 public hasherT6;
 
     event Refund(
-        IWallet.FLAXAddress indexed refundAddr,
+        IWallet.FLAXAddress refundAddr,
         uint256 indexed nonce,
         address indexed asset,
-        uint256 id,
+        uint256 indexed id,
         uint256 value,
         uint256 merkleIndex
     );

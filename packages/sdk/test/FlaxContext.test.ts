@@ -14,15 +14,6 @@ describe("FlaxContext", () => {
   let db = new FlaxLMDB({ localMerkle: true });
   let signer = new FlaxSigner(FlaxPrivKey.genPriv());
 
-  beforeEach(async () => {
-    db.clear();
-  });
-
-  after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
-  });
-
   async function setupFlaxContextWithFourNotes(
     asset: AssetStruct
   ): Promise<FlaxContext> {
@@ -76,6 +67,15 @@ describe("FlaxContext", () => {
 
     return new FlaxContext(signer, prover, notesManager, db);
   }
+
+  beforeEach(async () => {
+    db.clear();
+  });
+
+  after(async () => {
+    await db.close();
+    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
+  });
 
   it("Gets total balance for an asset", async () => {
     const asset: AssetStruct = { address: "0x12345", id: 11111n };

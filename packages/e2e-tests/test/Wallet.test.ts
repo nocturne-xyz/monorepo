@@ -24,12 +24,18 @@ import {
   Note,
   FlaxContext,
   AssetHash,
+  AssetStruct,
   BinaryPoseidonTree,
-  Asset,
   AssetRequest,
   IncludedNote,
   OperationRequest,
+  hashAsset,
+  FlaxLMDB,
+  DEFAULT_DB_PATH,
+  LocalMerkleProver,
+  LocalNotesManager,
 } from "@flax/sdk";
+import * as fs from "fs";
 
 const HH_URL = "http://127.0.0.1:8545";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
@@ -42,6 +48,7 @@ describe("Wallet", async () => {
     merkle: BatchBinaryMerkle,
     token: SimpleERC20Token;
   let flaxSigner: FlaxSigner;
+  let db = new FlaxLMDB({ localMerkle: true });
 
   async function setup() {
     const sk = BigInt(1);
@@ -111,51 +118,44 @@ describe("Wallet", async () => {
   }
 
   beforeEach(async () => {
+    db.clear();
     await setup();
   });
 
+  after(async () => {
+    await db.close();
+    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
+  });
+
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
+    const asset: AssetStruct = { address: token.address, id: ERC20_ID };
+
+    console.log("Create FlaxContext");
+    const prover = new LocalMerkleProver(merkle.address, ethers.provider, db);
+    const notesManager = new LocalNotesManager(
+      db,
+      flaxSigner,
+      wallet.address,
+      ethers.provider
+    );
+    const flaxContext = new FlaxContext(flaxSigner, prover, notesManager, db);
+
     console.log("Deposit funds and commit note commitments");
     await aliceDepositFunds();
     await wallet.commit2FromQueue();
 
-    console.log("Create two corresponding notes from deposits");
-    const firstOldNote = new Note({
-      owner: flaxSigner.address.toStruct(),
-      nonce: 0n,
-      asset: token.address,
-      id: ERC20_ID,
-      value: PER_SPEND_AMOUNT,
-    });
-    const secondOldNote = new Note({
-      owner: flaxSigner.address.toStruct(),
-      nonce: 1n,
-      asset: token.address,
-      id: ERC20_ID,
-      value: PER_SPEND_AMOUNT,
-    });
+    console.log("Sync SDK notes manager");
+    await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
+    const notesForAsset = flaxContext.notesManager.db.getNotesFor(asset);
+    expect(notesForAsset.length).to.equal(2);
 
-    const asset = new Asset(token.address, ERC20_ID);
-
-    console.log("Create corresponding note commitments");
-    const firstOldNoteCommitment = firstOldNote.toCommitment();
-    const secondOldNoteCommitment = secondOldNote.toCommitment();
-
-    console.log("Replicate commitment tree state");
-    const tree = new BinaryPoseidonTree();
-    tree.insert(firstOldNoteCommitment);
-    tree.insert(secondOldNoteCommitment);
-
-    console.log("Generate merkle proofs for two notes");
-    expect(tree.root()).to.equal((await wallet.getRoot()).toBigInt());
-
-    console.log("Prefill tokenToNotes mapping for FlaxContext");
-    const tokenToNotes: Map<AssetHash, IncludedNote[]> = new Map([
-      [asset.hash(), [firstOldNote.toIncluded(0), secondOldNote.toIncluded(1)]],
-    ]);
-
-    console.log("Create FlaxContext");
-    const flaxContext = new FlaxContext(flaxSigner, tokenToNotes, tree);
+    console.log("Sync SDK merkle prover");
+    await (
+      flaxContext.merkleProver as LocalMerkleProver
+    ).fetchLeavesAndUpdate();
+    expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
+      (await wallet.getRoot()).toBigInt()
+    );
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
@@ -164,7 +164,7 @@ describe("Wallet", async () => {
     };
 
     console.log("Encode operation request");
-    const refundTokens = [firstOldNote.asset];
+    const refundTokens = [token.address];
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
@@ -195,5 +195,12 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
+
+    console.log("Sync SDK notes manager post-spend");
+    await flaxContext.notesManager.fetchAndApplyNewSpends();
+    const updatedNotesForAsset =
+      flaxContext.notesManager.db.getNotesFor(asset)!;
+    const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 2)!; // 3rd note
+    expect(updatedNote.value).to.equal(50n);
   });
 });

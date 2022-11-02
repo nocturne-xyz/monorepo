@@ -82,7 +82,7 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
 
   getNotesFor(asset: AssetStruct): IncludedNoteStruct[] {
     const key = FlaxDB.notesKey(asset);
-    let notesArray: IncludedNoteStruct[] = [];
+    const notesArray: IncludedNoteStruct[] = [];
     for (const val of this.notesDb.getValues(key)) {
       const includedNote = includedNoteStructFromJSON(val);
       notesArray.push(includedNote);

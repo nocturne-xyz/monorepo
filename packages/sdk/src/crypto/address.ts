@@ -26,10 +26,10 @@ export function flattenedFlaxAddressFromJSON(
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { h1X, h1Y, h2X, h2Y } = json;
   return {
-    h1X: BigInt(parseInt(h1X)),
-    h1Y: BigInt(parseInt(h1Y)),
-    h2X: BigInt(parseInt(h2X)),
-    h2Y: BigInt(parseInt(h2Y)),
+    h1X: BigInt(h1X),
+    h1Y: BigInt(h1Y),
+    h2X: BigInt(h2X),
+    h2Y: BigInt(h2Y),
   };
 }
 

@@ -47,7 +47,7 @@ export class LocalMerkleProver
       this.insert(leaf);
     }
 
-    this.db.putKv(MERKLE_LAST_INDEXED_BLOCK, latestBlock.toString());
+    await this.db.putKv(MERKLE_LAST_INDEXED_BLOCK, latestBlock.toString());
   }
 
   async fetchNewLeavesSorted(from: number, to: number): Promise<bigint[]> {

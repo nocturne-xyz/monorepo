@@ -127,7 +127,7 @@ export class FlaxContext {
     preProofOperation: PreProofOperation
   ): Promise<PostProofSpendTransaction> {
     const { oldNote, newNote } = oldNewNotePair;
-    const nullifier = this.signer.createNullifier(oldNote as Note);
+    const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
     const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
     const preProofSpendTx: PreProofSpendTransaction = {

@@ -55,7 +55,7 @@ export class LocalNotesManager extends NotesManager {
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
       return {
         owner: {
-          h1X: h1X.toBigInt(),
+          h1X: h1X.toBigInt(), // TODO: make event args not indexed
           h1Y: h1Y.toBigInt(),
           h2X: h2X.toBigInt(),
           h2Y: h2Y.toBigInt(),
@@ -68,7 +68,10 @@ export class LocalNotesManager extends NotesManager {
       };
     });
 
-    this.db.putKv(REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK, latestBlock.toString());
+    await this.db.putKv(
+      REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK,
+      latestBlock.toString()
+    );
     return newRefunds;
   }
 
@@ -86,7 +89,6 @@ export class LocalNotesManager extends NotesManager {
     await this.db.putKv(REFUNDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
   }
 
-  //newNonce = H(vk, nf)
   async fetchSpends(): Promise<SpendEvent[]> {
     const maybeLastSeen = this.db.getKv(SPENDS_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
@@ -113,7 +115,10 @@ export class LocalNotesManager extends NotesManager {
       };
     });
 
-    this.db.putKv(SPENDS_TENTATIVE_LAST_INDEXED_BLOCK, latestBlock.toString());
+    await this.db.putKv(
+      SPENDS_TENTATIVE_LAST_INDEXED_BLOCK,
+      latestBlock.toString()
+    );
     return newSpends;
   }
 

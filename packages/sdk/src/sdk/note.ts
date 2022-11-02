@@ -78,10 +78,10 @@ export function includedNoteStructFromJSON(
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
     owner: flattenedFlaxAddressFromJSON(owner),
-    nonce: BigInt(parseInt(nonce)),
+    nonce: BigInt(nonce),
     asset: asset.toString(),
-    id: BigInt(parseInt(id)),
-    value: BigInt(parseInt(value)),
+    id: BigInt(id),
+    value: BigInt(value),
     merkleIndex,
   };
 }
