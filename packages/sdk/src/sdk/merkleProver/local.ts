@@ -61,7 +61,7 @@ export class LocalMerkleProver
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    let allLeaves: bigint[] = [];
+    const allLeaves: bigint[] = [];
     for (const event of events) {
       const eventLeaves = event.args.leaves.map((l) => l.toBigInt());
       allLeaves.push(...eventLeaves);

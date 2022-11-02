@@ -62,6 +62,10 @@ export class FlaxSigner {
     return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
   }
 
+  generateNewNonce(oldNullifier: bigint): bigint {
+    return poseidon([this.privkey.vk, oldNullifier]);
+  }
+
   testOwn(addr: FlaxAddress | FlaxAddressStruct): boolean {
     const flaxAddr =
       addr instanceof FlaxAddress

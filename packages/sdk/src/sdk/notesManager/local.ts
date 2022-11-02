@@ -8,6 +8,7 @@ import {
   SpendEvent as EthSpendEvent,
 } from "@flax/contracts/dist/src/Wallet";
 import { NotesManager, RefundEvent, SpendEvent } from ".";
+import { FlaxSigner } from "../signer";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
@@ -22,11 +23,12 @@ export class LocalNotesManager extends NotesManager {
   provider: ethers.providers.Provider;
 
   constructor(
+    db: FlaxDB,
+    signer: FlaxSigner,
     walletAddress: Address,
-    provider: ethers.providers.Provider,
-    db: FlaxDB
+    provider: ethers.providers.Provider
   ) {
-    super(db);
+    super(db, signer);
     this.provider = provider;
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }

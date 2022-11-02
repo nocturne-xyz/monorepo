@@ -50,10 +50,20 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return this.kvDb.get(key);
   }
 
+  removeKv(key: string): Promise<boolean> {
+    return this.kvDb.remove(key);
+  }
+
   storeNote(note: IncludedNoteStruct): Promise<boolean> {
     const asset = new Asset(note.asset, note.id);
     const key = FlaxDB.notesKey(asset);
     return this.notesDb.put(key, JSON.stringify(note));
+  }
+
+  removeNote(note: IncludedNoteStruct): Promise<boolean> {
+    const asset = new Asset(note.asset, note.id);
+    const key = FlaxDB.notesKey(asset);
+    return this.notesDb.remove(key, JSON.stringify(note));
   }
 
   getAllNotes(): Map<string, IncludedNoteStruct[]> {

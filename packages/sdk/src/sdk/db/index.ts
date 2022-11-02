@@ -1,5 +1,5 @@
 import { Asset, AssetHash } from "../../commonTypes";
-import { IncludedNote, IncludedNoteStruct } from "../note";
+import { IncludedNoteStruct } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
@@ -23,6 +23,13 @@ export abstract class FlaxDB {
   abstract putKv(key: string, value: string): Promise<boolean>;
 
   /**
+   * Remove arbitrary `value` for `key`.
+   *
+   * @param key key
+   */
+  abstract removeKv(key: string): Promise<boolean>;
+
+  /**
    * Format an `Asset` into a key for the notes db by prefixing with
    * `NOTES_PREFIX`.
    *
@@ -33,18 +40,25 @@ export abstract class FlaxDB {
   }
 
   /**
-   * Store `IncludedNote` in it's appropriate place in DB.
+   * Store `IncludedNoteStruct` in it's appropriate place in DB.
    *
-   * @param note an `IncludedNote`
+   * @param note an `IncludedNoteStruct`
    */
-  abstract storeNote(note: IncludedNote): Promise<boolean>;
+  abstract storeNote(note: IncludedNoteStruct): Promise<boolean>;
 
   /**
-   * Store several `IncludedNote` in db.
+   * Remove `IncludedNoteStruct` from DB.
    *
-   * @param notes array of `IncludedNote
+   * @param note an `IncludedNoteStruct`
    */
-  async storeNotes(notes: IncludedNote[]) {
+  abstract removeNote(note: IncludedNoteStruct): Promise<boolean>;
+
+  /**
+   * Store several `IncludedNoteStruct` in db.
+   *
+   * @param notes array of `IncludedNoteStruct
+   */
+  async storeNotes(notes: IncludedNoteStruct[]): Promise<void> {
     for (const note of notes) {
       const success = this.storeNote(note);
       if (!success) {
@@ -54,11 +68,11 @@ export abstract class FlaxDB {
   }
 
   /**
-   * Get mapping of all asset types to `IncludedNote[]`;
+   * Get mapping of all asset types to `IncludedNoteStruct[]`;
    *
-   * @param asset asset address and id
+   * @returns mapping of all assets to their respective notes
    */
-  abstract getAllNotes(asset: Asset): Map<AssetHash, IncludedNoteStruct[]>;
+  abstract getAllNotes(): Map<AssetHash, IncludedNoteStruct[]>;
 
   /**
    * Clear entire database.

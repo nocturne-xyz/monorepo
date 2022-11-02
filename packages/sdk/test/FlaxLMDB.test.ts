@@ -17,13 +17,17 @@ describe("FlaxLMDB", async () => {
     fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
-  it("Gets and sets value", async () => {
+  it("Stores, gets, and removes value", async () => {
     await db.putKv("hello", "world");
+
     const val = db.getKv("hello");
     expect(val).to.equal("world");
+
+    await db.removeKv("hello");
+    expect(db.getKv("hello")).to.be.undefined;
   });
 
-  it("Stores and gets note", async () => {
+  it("Stores, gets, and removes note", async () => {
     const asset = new Asset("0x1234", 1234n);
     const note: IncludedNoteStruct = {
       owner: {
@@ -44,9 +48,13 @@ describe("FlaxLMDB", async () => {
     const map = db.getAllNotes();
     const notesArray = map.get(FlaxDB.notesKey(asset))!;
     expect(notesArray[0]).to.eql(note);
+
+    await db.removeNote(note);
+    const newMap = db.getAllNotes();
+    expect(newMap.get(FlaxDB.notesKey(asset))).to.be.undefined;
   });
 
-  it("Stores and gets multiple notes for same asset", async () => {
+  it("Stores, gets, and removes multiple notes for same asset", async () => {
     const asset = new Asset("0x1234", 1234n);
     const noteOne: IncludedNoteStruct = {
       owner: {
@@ -83,14 +91,20 @@ describe("FlaxLMDB", async () => {
     const notesArray = map.get(FlaxDB.notesKey(asset))!;
     expect(notesArray[0]).to.eql(noteOne);
     expect(notesArray[1]).to.eql(noteTwo);
+
+    await db.removeNote(noteOne);
+    const newMap = db.getAllNotes();
+    const newNotesArray = newMap.get(FlaxDB.notesKey(asset))!;
+    expect(newNotesArray.length).to.eql(1);
+    expect(newNotesArray[0]).to.eql(noteTwo);
   });
 
   it("Stores and gets merkle leaves", async () => {
     await db.storeLeaf(0, 0n);
     await db.storeLeaf(1, 1n);
     await db.storeLeaf(2, 2n);
-    expect(db.getLeaf(0)).to.eq(0n);
-    expect(db.getLeaf(1)).to.eq(1n);
-    expect(db.getLeaf(2)).to.eq(2n);
+    expect(db.getLeaf(0)).to.eql(0n);
+    expect(db.getLeaf(1)).to.eql(1n);
+    expect(db.getLeaf(2)).to.eql(2n);
   });
 });
