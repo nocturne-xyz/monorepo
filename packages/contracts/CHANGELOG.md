@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix events to have fields > 32 bytes be not `indexed`
 - Add `Spend` event and emit on `handleSpend`
 - Rename spend transaction `value` to `valueToSpend`
 - Fix merkle index bug where `insert8` and `insert16` only incremented `numberOfLeaves` by 1
