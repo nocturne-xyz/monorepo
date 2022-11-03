@@ -21,15 +21,10 @@ import {
   Action,
   SNARK_SCALAR_FIELD,
   Bundle,
-  Note,
   FlaxContext,
-  AssetHash,
   AssetStruct,
-  BinaryPoseidonTree,
   AssetRequest,
-  IncludedNote,
   OperationRequest,
-  hashAsset,
   FlaxLMDB,
   DEFAULT_DB_PATH,
   LocalMerkleProver,
@@ -37,7 +32,6 @@ import {
 } from "@flax/sdk";
 import * as fs from "fs";
 
-const HH_URL = "http://127.0.0.1:8545";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
 
@@ -47,14 +41,13 @@ describe("Wallet", async () => {
     wallet: Wallet,
     merkle: BatchBinaryMerkle,
     token: SimpleERC20Token;
-  let flaxSigner: FlaxSigner;
+  let flaxContext: FlaxContext;
   let db = new FlaxLMDB({ localMerkle: true });
 
   async function setup() {
     const sk = BigInt(1);
     const flaxPrivKey = new FlaxPrivKey(sk);
-    const vk = flaxPrivKey.vk;
-    flaxSigner = new FlaxSigner(flaxPrivKey);
+    const flaxSigner = new FlaxSigner(flaxPrivKey);
 
     [deployer, alice, bob] = await ethers.getSigners();
     await deployments.fixture(["PoseidonLibs"]);
@@ -100,6 +93,16 @@ describe("Wallet", async () => {
     );
 
     await vault.initialize(wallet.address);
+
+    console.log("Create FlaxContext");
+    const prover = new LocalMerkleProver(merkle.address, ethers.provider, db);
+    const notesManager = new LocalNotesManager(
+      db,
+      flaxSigner,
+      wallet.address,
+      ethers.provider
+    );
+    flaxContext = new FlaxContext(flaxSigner, prover, notesManager, db);
   }
 
   async function aliceDepositFunds() {
@@ -112,14 +115,17 @@ describe("Wallet", async () => {
         asset: token.address,
         value: PER_SPEND_AMOUNT,
         id: ERC20_ID,
-        depositAddr: flaxSigner.address.toStruct(),
+        depositAddr: flaxContext.signer.address.toStruct(),
       });
     }
   }
 
   beforeEach(async () => {
-    db.clear();
     await setup();
+  });
+
+  afterEach(async () => {
+    db.clear();
   });
 
   after(async () => {
@@ -129,16 +135,6 @@ describe("Wallet", async () => {
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
     const asset: AssetStruct = { address: token.address, id: ERC20_ID };
-
-    console.log("Create FlaxContext");
-    const prover = new LocalMerkleProver(merkle.address, ethers.provider, db);
-    const notesManager = new LocalNotesManager(
-      db,
-      flaxSigner,
-      wallet.address,
-      ethers.provider
-    );
-    const flaxContext = new FlaxContext(flaxSigner, prover, notesManager, db);
 
     console.log("Deposit funds and commit note commitments");
     await aliceDepositFunds();
@@ -190,7 +186,7 @@ describe("Wallet", async () => {
     };
 
     console.log("Process bundle");
-    const res = await wallet.processBundle(bundle);
+    await wallet.processBundle(bundle);
 
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);

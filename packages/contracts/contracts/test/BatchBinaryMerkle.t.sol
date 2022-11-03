@@ -52,6 +52,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         // Enqueue batch of 8
         merkle.insertLeavesToQueue(batchLeaves);
+        assertEq(merkle.committedCount(), 2);
         assertEq(merkle.totalCount(), 10);
 
         merkle.commit8FromQueue();

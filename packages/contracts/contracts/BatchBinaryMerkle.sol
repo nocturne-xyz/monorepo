@@ -44,21 +44,11 @@ contract BatchBinaryMerkle is IBatchMerkle {
     function commit2FromQueue() external override {
         uint256[2] memory leaves = queue.dequeue2();
         tree.insert2(leaves);
-
-        uint256[] memory eventLeaves = new uint256[](2);
-        for (uint256 i = 0; i < 2; i++) {
-            eventLeaves[i] = leaves[i];
-        }
     }
 
     function commit8FromQueue() external override {
         uint256[8] memory leaves = queue.dequeue8();
         tree.insert8(leaves);
-
-        uint256[] memory eventLeaves = new uint256[](8);
-        for (uint256 i = 0; i < 8; i++) {
-            eventLeaves[i] = leaves[i];
-        }
     }
 
     function insertLeafToQueue(uint256 leaf) external override {
