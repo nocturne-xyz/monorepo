@@ -8,7 +8,7 @@ import { AssetStruct } from "../src/commonTypes";
 describe("FlaxLMDB", async () => {
   let db = new FlaxLMDB({ localMerkle: true });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     db.clear();
   });
 

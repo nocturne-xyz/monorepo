@@ -7,8 +7,9 @@ import {
   RefundEvent as EthRefundEvent,
   SpendEvent as EthSpendEvent,
 } from "@flax/contracts/dist/src/Wallet";
-import { NotesManager, RefundEvent, SpendEvent } from ".";
+import { NotesManager, SpendEvent } from ".";
 import { FlaxSigner } from "../signer";
+import { IncludedNoteStruct } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
@@ -33,7 +34,7 @@ export class LocalNotesManager extends NotesManager {
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }
 
-  async fetchNotesFromRefunds(): Promise<RefundEvent[]> {
+  async fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]> {
     const maybeLastSeen = this.db.getKv(REFUNDS_LAST_INDEXED_BLOCK);
     const lastSeen = maybeLastSeen
       ? parseInt(maybeLastSeen) + 1
@@ -55,7 +56,7 @@ export class LocalNotesManager extends NotesManager {
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
       return {
         owner: {
-          h1X: h1X.toBigInt(), // TODO: make event args not indexed
+          h1X: h1X.toBigInt(),
           h1Y: h1Y.toBigInt(),
           h2X: h2X.toBigInt(),
           h2Y: h2Y.toBigInt(),

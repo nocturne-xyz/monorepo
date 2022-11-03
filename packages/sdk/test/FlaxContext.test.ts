@@ -12,11 +12,16 @@ import { getDefaultProvider } from "ethers";
 
 describe("FlaxContext", () => {
   let db = new FlaxLMDB({ localMerkle: true });
-  let signer = new FlaxSigner(FlaxPrivKey.genPriv());
+  let flaxContext: FlaxContext;
+  const asset: AssetStruct = { address: "0x12345", id: 11111n };
 
   async function setupFlaxContextWithFourNotes(
     asset: AssetStruct
   ): Promise<FlaxContext> {
+    const sk = BigInt(1);
+    const flaxPrivKey = new FlaxPrivKey(sk);
+    const signer = new FlaxSigner(flaxPrivKey);
+
     const firstOldNote: IncludedNoteStruct = {
       owner: signer.address.toStruct(),
       nonce: 0n,
@@ -69,6 +74,10 @@ describe("FlaxContext", () => {
   }
 
   beforeEach(async () => {
+    flaxContext = await setupFlaxContextWithFourNotes(asset);
+  });
+
+  afterEach(async () => {
     db.clear();
   });
 
@@ -78,20 +87,12 @@ describe("FlaxContext", () => {
   });
 
   it("Gets total balance for an asset", async () => {
-    const asset: AssetStruct = { address: "0x12345", id: 11111n };
-
-    const flaxContext = await setupFlaxContextWithFourNotes(asset);
     const assetBalance = flaxContext.getAssetBalance(asset);
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
   it("Gathers minimum notes for asset request", async () => {
-    const priv = FlaxPrivKey.genPriv();
-    const signer = new FlaxSigner(priv);
-    const asset: AssetStruct = { address: "0x12345", id: 11111n };
-
-    const flaxContext = await setupFlaxContextWithFourNotes(asset);
-    const refundAddr = signer.address.rerand().toStruct();
+    const refundAddr = flaxContext.signer.address.rerand().toStruct();
 
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {

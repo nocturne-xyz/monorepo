@@ -33,7 +33,7 @@ export class FlaxSigner {
     const c = poseidon([R[0], R[1], m]);
 
     // eslint-disable-next-line
-    let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder; // TODO: remove any cast
+    let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder;
     if (z < 0) {
       z += babyjub.subOrder;
     }

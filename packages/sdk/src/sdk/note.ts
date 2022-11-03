@@ -72,9 +72,10 @@ export interface IncludedNoteStruct extends NoteStruct {
 }
 
 export function includedNoteStructFromJSON(
-  jsonString: string
+  jsonOrString: string | any
 ): IncludedNoteStruct {
-  const json: any = JSON.parse(jsonString);
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
     owner: flattenedFlaxAddressFromJSON(owner),

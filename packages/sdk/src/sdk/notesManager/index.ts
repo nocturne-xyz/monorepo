@@ -2,7 +2,6 @@ import { FlaxDB } from "../db";
 import { IncludedNote, IncludedNoteStruct } from "../note";
 import { FlaxSigner } from "../signer";
 
-export type RefundEvent = IncludedNoteStruct;
 export interface SpendEvent {
   oldNoteNullifier: bigint;
   valueSpent: bigint;
@@ -18,13 +17,12 @@ export abstract class NotesManager {
     this.signer = signer;
   }
 
-  abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
-  abstract postStoreNotesFromRefunds(): Promise<void>;
-  abstract fetchSpends(): Promise<SpendEvent[]>;
-  abstract postApplySpends(): Promise<void>;
+  protected abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
+  protected abstract postStoreNotesFromRefunds(): Promise<void>;
+  protected abstract fetchSpends(): Promise<SpendEvent[]>;
+  protected abstract postApplySpends(): Promise<void>;
 
-  // TODO: hide unused methods as private
-  async storeNewNotesFromRefunds(
+  private async storeNewNotesFromRefunds(
     newNotesFromRefunds: IncludedNoteStruct[]
   ): Promise<void> {
     await this.db.storeNotes(newNotesFromRefunds);
@@ -36,7 +34,7 @@ export abstract class NotesManager {
     await this.postStoreNotesFromRefunds();
   }
 
-  async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
+  private async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
     const allNotes = [...this.db.getAllNotes().values()].flat();
     for (const spend of newSpends) {
       for (const oldNote of allNotes) {
