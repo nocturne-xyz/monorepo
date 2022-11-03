@@ -1,4 +1,4 @@
-import { Address, Asset, AssetHash, AssetRequest } from "./commonTypes";
+import { Address, AssetRequest, AssetStruct } from "./commonTypes";
 import {
   Action,
   PostProofOperation,
@@ -7,10 +7,9 @@ import {
   PreProofSpendTransaction,
   Tokens,
 } from "./contract/types";
-import { Note, SpendableNote } from "./sdk/note";
-import { BinaryPoseidonTree } from "./primitives/binaryPoseidonTree";
+import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
-import { FlattenedFlaxAddress } from "./crypto/address";
+import { FlaxAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import {
@@ -21,6 +20,9 @@ import {
   verifySpend2Proof,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
+import { MerkleProver } from "./sdk/merkleProver";
+import { FlaxDB, FlaxLMDB } from "./sdk/db";
+import { NotesManager } from "./sdk";
 
 export interface OperationRequest {
   assetRequests: AssetRequest[];
@@ -29,30 +31,27 @@ export interface OperationRequest {
 }
 
 export interface OldAndNewNotePair {
-  oldNote: SpendableNote;
+  oldNote: IncludedNote;
   newNote: Note;
 }
 
 export class FlaxContext {
   signer: FlaxSigner;
-  tokenToNotes: Map<AssetHash, SpendableNote[]>; // notes sorted great to least value
-  noteCommitmentTree: BinaryPoseidonTree;
-  dbPath = "/flaxdb";
+  merkleProver: MerkleProver;
+  notesManager: NotesManager;
+  db: FlaxDB;
 
-  // TODO: pull spendable notes from db
-  // TODO: sync tree with db events and new on-chain events
   constructor(
     signer: FlaxSigner,
-    tokenToNotes: Map<AssetHash, SpendableNote[]> = new Map(),
-    noteCommitmentTree: BinaryPoseidonTree = new BinaryPoseidonTree()
+    merkleProver: MerkleProver,
+    notesManager: NotesManager,
+    db: FlaxDB = new FlaxLMDB()
   ) {
     this.signer = signer;
-    this.tokenToNotes = tokenToNotes;
-    this.noteCommitmentTree = noteCommitmentTree;
+    this.merkleProver = merkleProver;
+    this.notesManager = notesManager;
+    this.db = db;
   }
-
-  // TODO: sync owned notes from chain or bucket
-  // async sync() {}
 
   /**
    * Attempt to create a `PostProofOperation` provided an `OperationRequest`.
@@ -69,13 +68,13 @@ export class FlaxContext {
    */
   async tryCreatePostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
-    refundAddr?: FlattenedFlaxAddress,
+    refundAddr?: FlaxAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<PostProofOperation> {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toFlattened();
+      : this.signer.address.rerand().toStruct();
 
     // Create preProofOperation to use in per-note proving
     const tokens: Tokens = {
@@ -119,7 +118,7 @@ export class FlaxContext {
    * Create a `PostProofSpendTransaction` given the `oldNote`, resulting
    * `newNote`, and operation to use for the `operationDigest`
    *
-   * @param oldNewNotePair Old `SpendableNote` and its resulting `newNote`
+   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
    * post-spend
    * @param preProofOperation Operation included when generating a proof
    */
@@ -128,10 +127,11 @@ export class FlaxContext {
     preProofOperation: PreProofOperation
   ): Promise<PostProofSpendTransaction> {
     const { oldNote, newNote } = oldNewNotePair;
-    const nullifier = this.signer.createNullifier(oldNote as Note);
+    const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
+    const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
     const preProofSpendTx: PreProofSpendTransaction = {
-      commitmentTreeRoot: oldNote.merkleProof.root,
+      commitmentTreeRoot: merkleProof.root,
       nullifier,
       newNoteCommitment,
       asset: oldNote.asset,
@@ -146,8 +146,8 @@ export class FlaxContext {
     const opSig = this.signer.sign(opDigest);
 
     const merkleInput: MerkleProofInput = {
-      path: oldNote.merkleProof.pathIndices.map((n) => BigInt(n)),
-      siblings: oldNote.merkleProof.siblings,
+      path: merkleProof.pathIndices.map((n) => BigInt(n)),
+      siblings: merkleProof.siblings,
     };
 
     const inputs: Spend2Inputs = {
@@ -180,14 +180,14 @@ export class FlaxContext {
   }
 
   /**
-   * Remove and return minimum list of notes required to fullfill asset request.
+   * Return minimum list of notes required to fullfill asset request.
    * Returned list is sorted from smallest to largest. The last note in the list
    * may produce a non-zero new note.
    *
    * @param assetRequest Asset request
    */
   gatherMinimumNotes(
-    refundAddr: FlattenedFlaxAddress,
+    refundAddr: FlaxAddressStruct,
     assetRequest: AssetRequest
   ): OldAndNewNotePair[] {
     const balance = this.getAssetBalance(assetRequest.asset);
@@ -197,11 +197,10 @@ export class FlaxContext {
       );
     }
 
-    const sortedNotes = this.tokenToNotes
-      .get(assetRequest.asset.hash())!
-      .sort((a, b) => {
-        return Number(a.value - b.value);
-      });
+    const notes = this.db.getNotesFor(assetRequest.asset);
+    const sortedNotes = notes.sort((a, b) => {
+      return Number(a.value - b.value);
+    });
 
     const oldAndNewNotePairs: OldAndNewNotePair[] = [];
     let totalSpend = 0n;
@@ -228,7 +227,7 @@ export class FlaxContext {
       });
 
       oldAndNewNotePairs.push({
-        oldNote,
+        oldNote: new IncludedNote(oldNote),
         newNote,
       });
     }
@@ -241,8 +240,8 @@ export class FlaxContext {
    *
    * @param asset Asset
    */
-  getAssetBalance(asset: Asset): bigint {
-    const notes = this.tokenToNotes.get(asset.hash());
+  getAssetBalance(asset: AssetStruct): bigint {
+    const notes = this.db.getNotesFor(asset);
 
     if (!notes) {
       return 0n;

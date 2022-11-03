@@ -10,7 +10,6 @@ import {
   MerkleProofInput,
   NoteInput,
   Spend2Inputs,
-  spend2ProofToJson,
 } from "../src/proof/spend2";
 import { poseidon } from "circomlibjs";
 
@@ -30,7 +29,7 @@ const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();
 
-const flaxAddrInput = flaxAddr.toFlattened();
+const flaxAddrInput = flaxAddr.toStruct();
 
 // Old note input to spend
 const oldNote: NoteInput = {
@@ -56,7 +55,7 @@ const tree = new BinaryPoseidonTree();
 tree.insert(oldNoteCommitment);
 console.log("MERKLE ROOT: ", tree.root());
 
-const merkleProof = tree.createProof(tree.count - 1);
+const merkleProof = tree.getProof(tree.count - 1);
 const merkleProofInput: MerkleProofInput = {
   path: merkleProof.pathIndices.map((n) => BigInt(n)),
   siblings: merkleProof.siblings,
@@ -103,7 +102,7 @@ console.log(spend2Inputs);
   if (!(await verifySpend2Proof(proof))) {
     throw new Error("Proof invalid!");
   }
-  const json = spend2ProofToJson(proof);
+  const json = JSON.stringify(proof);
   console.log(json);
 
   if (writeToFixture) {

@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `FlaxContext`
+- Add `FlaxLMDB` as local SDK `FlaxDB`
+- Add `LocalNotesManager` as local SDK `NotesManager`
+- Add `LocalMerkleProver` as local SDK `MerkleProver`
+- Have all packages follow `index.ts` --> `export *` structure
 - Rename spend transaction `value` to `valueToSpend`
 - Add `FlaxContext` object and add functionality for converting an asset request and desired operation to a `PostProofOperation` containing potentially several spend txs
 - Update `generateSpend2TestCase` script to write to `/fixtures`

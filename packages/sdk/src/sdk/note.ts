@@ -1,11 +1,14 @@
-import { FlattenedFlaxAddress } from "../crypto/address";
+import {
+  FlaxAddressStruct,
+  flattenedFlaxAddressFromJSON,
+  FlaxAddress,
+} from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
-interface NoteConstructor {
-  owner: FlattenedFlaxAddress;
+interface NoteStruct {
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -13,48 +16,95 @@ interface NoteConstructor {
 }
 
 export class Note {
-  owner: FlattenedFlaxAddress;
-  nonce: bigint;
-  asset: Address;
-  id: bigint;
-  value: bigint;
+  inner: NoteStruct;
 
-  constructor({ owner, nonce, asset, id, value }: NoteConstructor) {
-    this.owner = owner;
-    this.nonce = nonce;
-    this.asset = asset;
-    this.id = id;
-    this.value = value;
+  constructor(note: NoteStruct) {
+    this.inner = note;
+  }
+
+  get owner(): FlaxAddressStruct {
+    return this.inner.owner;
+  }
+
+  get nonce(): bigint {
+    return this.inner.nonce;
+  }
+
+  get asset(): Address {
+    return this.inner.asset;
+  }
+
+  get id(): bigint {
+    return this.inner.id;
+  }
+
+  get value(): bigint {
+    return this.inner.value;
   }
 
   toCommitment(): bigint {
+    const { owner, nonce, asset, id, value } = this.inner;
+    const ownerFlaxAddr = new FlaxAddress(owner);
     return BigInt(
-      poseidon([
-        this.owner.hash(),
-        this.nonce,
-        BigInt(this.asset),
-        this.id,
-        this.value,
-      ])
+      poseidon([ownerFlaxAddr.hash(), nonce, BigInt(asset), id, value])
     );
   }
 
   toNoteInput(): NoteInput {
+    const { owner, nonce, asset, id, value } = this.inner;
     return {
-      owner: this.owner,
-      nonce: this.nonce,
-      asset: BigInt(this.asset),
-      id: this.id,
-      value: this.value,
+      owner: owner,
+      nonce: nonce,
+      asset: BigInt(asset),
+      id: id,
+      value: value,
     };
+  }
+
+  toIncluded(merkleIndex: number): IncludedNote {
+    const { owner, nonce, asset, id, value } = this.inner;
+    return new IncludedNote({ owner, nonce, asset, id, value, merkleIndex });
   }
 }
 
-export class SpendableNote extends Note {
-  merkleProof: MerkleProof;
+export interface IncludedNoteStruct extends NoteStruct {
+  merkleIndex: number;
+}
 
-  constructor(note: NoteConstructor, merkleProof: MerkleProof) {
-    super(note);
-    this.merkleProof = merkleProof;
+export function includedNoteStructFromJSON(
+  jsonOrString: string | any
+): IncludedNoteStruct {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  const { owner, nonce, asset, id, value, merkleIndex } = json;
+  return {
+    owner: flattenedFlaxAddressFromJSON(owner),
+    nonce: BigInt(nonce),
+    asset: asset.toString(),
+    id: BigInt(id),
+    value: BigInt(value),
+    merkleIndex,
+  };
+}
+
+export class IncludedNote extends Note {
+  merkleIndex: number;
+
+  constructor(includedNote: IncludedNoteStruct) {
+    const { owner, nonce, asset, id, value } = includedNote;
+    super({ owner, nonce, asset, id, value });
+    this.merkleIndex = includedNote.merkleIndex;
+  }
+
+  toStruct(): IncludedNoteStruct {
+    const { owner, nonce, asset, id, value } = this.inner;
+    return {
+      owner,
+      nonce,
+      asset,
+      id,
+      value,
+      merkleIndex: this.merkleIndex,
+    };
   }
 }

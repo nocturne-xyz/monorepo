@@ -5,7 +5,7 @@ import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
 import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
-import { FlattenedFlaxAddress } from "../crypto/address";
+import { FlaxAddressStruct } from "../crypto/address";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -38,7 +38,7 @@ export interface Spend2PublicSignals {
 }
 
 export interface NoteInput {
-  owner: FlattenedFlaxAddress;
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: bigint;
   value: bigint;
@@ -76,15 +76,15 @@ export function publicSignalsArrayToTyped(
 }
 
 function normalizeFlaxAddressInput(
-  flaxAddressInput: FlattenedFlaxAddress
-): FlattenedFlaxAddress {
+  flaxAddressInput: FlaxAddressStruct
+): FlaxAddressStruct {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
-  return new FlattenedFlaxAddress({
+  return {
     h1X: normalizeBigInt(h1X),
     h1Y: normalizeBigInt(h1Y),
     h2X: normalizeBigInt(h2X),
     h2Y: normalizeBigInt(h2Y),
-  });
+  };
 }
 
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {
@@ -182,10 +182,4 @@ export async function verifySpend2Proof(
 ): Promise<boolean> {
   const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
   return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
-}
-
-export function spend2ProofToJson(proof: Spend2ProofWithPublicSignals): string {
-  return JSON.stringify(proof, (_, value) =>
-    typeof value === "bigint" ? value.toString() : value
-  );
 }

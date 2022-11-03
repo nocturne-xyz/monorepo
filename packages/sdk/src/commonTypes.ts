@@ -8,21 +8,20 @@ export const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 export type Address = string;
 export type AssetHash = string;
 
-export class Asset {
+export interface AssetStruct {
   address: Address;
   id: bigint;
+}
 
-  constructor(address: Address, id: bigint) {
-    this.address = address;
-    this.id = id;
-  }
-
-  hash(): AssetHash {
-    return keccak256(toUtf8Bytes(`${this.address}:${this.id.toString()}`));
-  }
+export function hashAsset(asset: AssetStruct): string {
+  return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
 }
 
 export interface AssetRequest {
-  asset: Asset;
+  asset: AssetStruct;
   value: bigint;
 }
+
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};

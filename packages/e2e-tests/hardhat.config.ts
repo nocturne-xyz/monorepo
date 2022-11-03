@@ -15,7 +15,14 @@ const config: HardhatUserConfig = {
     user: 1,
   },
   mocha: {
-    timeout: 100_000, // 100k ms --> 100 sec
+    timeout: 1_000_000, // 1M ms --> 1000 sec
+  },
+  networks: {
+    localhost: {
+      live: false,
+      saveDeployments: false,
+      tags: ["local"],
+    },
   },
 };
 

@@ -20,17 +20,17 @@ contract CommitmentTreeManager {
     IHasherT6 public hasherT6;
 
     event Refund(
-        IWallet.FLAXAddress indexed refundAddr,
+        IWallet.FLAXAddress refundAddr,
         uint256 indexed nonce,
         address indexed asset,
-        uint256 id,
+        uint256 indexed id,
         uint256 value,
         uint256 merkleIndex
     );
 
-    event NewNoteFromSpend(
+    event Spend(
         uint256 indexed oldNoteNullifier,
-        uint256 indexed oldNewValueDifference,
+        uint256 indexed valueSpent,
         uint256 indexed merkleIndex
     );
 
@@ -98,10 +98,10 @@ contract CommitmentTreeManager {
         noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
-        emit NewNoteFromSpend(
+        emit Spend(
             spendTx.nullifier,
             spendTx.valueToSpend,
-            noteCommitmentTree.tentativeCount() - 1
+            noteCommitmentTree.totalCount() - 1
         );
     }
 
@@ -127,7 +127,7 @@ contract CommitmentTreeManager {
             asset,
             id,
             value,
-            noteCommitmentTree.tentativeCount() - 1
+            noteCommitmentTree.totalCount() - 1
         );
     }
 

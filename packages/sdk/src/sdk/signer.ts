@@ -2,7 +2,11 @@ import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
-import { FlattenedFlaxAddress, FlaxAddress } from "../crypto/address";
+import {
+  FlaxAddressStruct,
+  flattenedFlaxAddressToArrayForm,
+  FlaxAddress,
+} from "../crypto/address";
 import { FlaxPrivKey } from "../crypto/privkey";
 
 export interface FlaxSignature {
@@ -29,7 +33,7 @@ export class FlaxSigner {
     const c = poseidon([R[0], R[1], m]);
 
     // eslint-disable-next-line
-    let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder; // TODO: remove any cast
+    let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder;
     if (z < 0) {
       z += babyjub.subOrder;
     }
@@ -58,8 +62,15 @@ export class FlaxSigner {
     return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
   }
 
-  testOwn(addr: FlaxAddress | FlattenedFlaxAddress): boolean {
-    const flaxAddr = addr instanceof FlaxAddress ? addr : addr.toArrayForm();
+  generateNewNonce(oldNullifier: bigint): bigint {
+    return poseidon([this.privkey.vk, oldNullifier]);
+  }
+
+  testOwn(addr: FlaxAddress | FlaxAddressStruct): boolean {
+    const flaxAddr =
+      addr instanceof FlaxAddress
+        ? addr.toArrayForm()
+        : flattenedFlaxAddressToArrayForm(addr);
     const H2prime = babyjub.mulPointEscalar(flaxAddr.h1, this.privkey.vk);
     return flaxAddr.h2[0] === H2prime[0] && flaxAddr.h2[1] === H2prime[1];
   }

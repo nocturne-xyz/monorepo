@@ -6,7 +6,9 @@ import "./IWallet.sol";
 interface IBatchMerkle {
     function root() external view returns (uint256);
 
-    function tentativeCount() external view returns (uint256);
+    function committedCount() external view returns (uint256);
+
+    function totalCount() external view returns (uint256);
 
     function commit2FromQueue() external;
 

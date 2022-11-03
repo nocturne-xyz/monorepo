@@ -1,85 +1,98 @@
 import "mocha";
+import * as fs from "fs";
 import { expect } from "chai";
 import { FlaxContext } from "../src/FlaxContext";
-import { Asset, AssetRequest, ERC20_ID } from "../src/commonTypes";
-import { Note, SpendableNote } from "../src/sdk/note";
+import { AssetRequest, AssetStruct } from "../src/commonTypes";
+import { IncludedNoteStruct } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
+import { DEFAULT_DB_PATH, FlaxLMDB, LocalNotesManager } from "../src/sdk";
+import { getDefaultProvider } from "ethers";
 
 describe("FlaxContext", () => {
-  function setupFlaxContextWithFourNotes(
-    signer: FlaxSigner,
-    asset: Asset
-  ): FlaxContext {
-    const firstOldNote = new Note({
-      owner: signer.address.toFlattened(),
+  let db = new FlaxLMDB({ localMerkle: true });
+  let flaxContext: FlaxContext;
+  const asset: AssetStruct = { address: "0x12345", id: 11111n };
+
+  async function setupFlaxContextWithFourNotes(
+    asset: AssetStruct
+  ): Promise<FlaxContext> {
+    const sk = BigInt(1);
+    const flaxPrivKey = new FlaxPrivKey(sk);
+    const signer = new FlaxSigner(flaxPrivKey);
+
+    const firstOldNote: IncludedNoteStruct = {
+      owner: signer.address.toStruct(),
       nonce: 0n,
       asset: asset.address,
-      id: ERC20_ID,
+      id: asset.id,
       value: 100n,
-    });
-    const secondOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      merkleIndex: 1,
+    };
+    const secondOldNote: IncludedNoteStruct = {
+      owner: signer.address.toStruct(),
       nonce: 1n,
       asset: asset.address,
-      id: ERC20_ID,
+      id: asset.id,
       value: 50n,
-    });
-    const thirdOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      merkleIndex: 1,
+    };
+    const thirdOldNote: IncludedNoteStruct = {
+      owner: signer.address.toStruct(),
       nonce: 2n,
       asset: asset.address,
-      id: ERC20_ID,
+      id: asset.id,
       value: 25n,
-    });
-    const fourthOldNote = new Note({
-      owner: signer.address.toFlattened(),
+      merkleIndex: 1,
+    };
+    const fourthOldNote: IncludedNoteStruct = {
+      owner: signer.address.toStruct(),
       nonce: 3n,
       asset: asset.address,
-      id: ERC20_ID,
+      id: asset.id,
       value: 10n,
-    });
+      merkleIndex: 1,
+    };
 
-    const tree = new BinaryPoseidonTree();
-    tree.insert(firstOldNote.toCommitment());
-    tree.insert(secondOldNote.toCommitment());
-    tree.insert(thirdOldNote.toCommitment());
-    tree.insert(fourthOldNote.toCommitment());
-
-    const tokenToNotes = new Map([
-      [
-        asset.hash(),
-        [
-          new SpendableNote(firstOldNote, tree.createProof(0)),
-          new SpendableNote(secondOldNote, tree.createProof(1)),
-          new SpendableNote(thirdOldNote, tree.createProof(2)),
-          new SpendableNote(fourthOldNote, tree.createProof(3)),
-        ],
-      ],
+    await db.storeNotes([
+      firstOldNote,
+      secondOldNote,
+      thirdOldNote,
+      fourthOldNote,
     ]);
 
-    return new FlaxContext(signer, tokenToNotes, tree);
+    const prover = new BinaryPoseidonTree();
+    const notesManager = new LocalNotesManager(
+      db,
+      signer,
+      "0xeeee",
+      getDefaultProvider()
+    );
+
+    return new FlaxContext(signer, prover, notesManager, db);
   }
 
-  it("Gets total balance for an asset", () => {
-    const priv = FlaxPrivKey.genPriv();
-    const signer = new FlaxSigner(priv);
-    const asset: Asset = new Asset("0x12345", 11111n);
+  beforeEach(async () => {
+    flaxContext = await setupFlaxContextWithFourNotes(asset);
+  });
 
-    const flaxContext = setupFlaxContextWithFourNotes(signer, asset);
+  afterEach(async () => {
+    db.clear();
+  });
 
+  after(async () => {
+    await db.close();
+    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
+  });
+
+  it("Gets total balance for an asset", async () => {
     const assetBalance = flaxContext.getAssetBalance(asset);
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
-  it("Gathers minimum notes for asset request", () => {
-    const priv = FlaxPrivKey.genPriv();
-    const signer = new FlaxSigner(priv);
-    const asset: Asset = new Asset("0x12345", 11111n);
-
-    const flaxContext = setupFlaxContextWithFourNotes(signer, asset);
-    const refundAddr = signer.address.rerand().toFlattened();
+  it("Gathers minimum notes for asset request", async () => {
+    const refundAddr = flaxContext.signer.address.rerand().toStruct();
 
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {
@@ -91,21 +104,20 @@ describe("FlaxContext", () => {
       assetRequest5
     );
     expect(minimumFor5.length).to.equal(1);
-    expect(minimumFor5[0].oldNote.value).to.equal(10n);
-    expect(flaxContext.tokenToNotes.get(asset.hash())!.length).to.equal(3);
+    expect(minimumFor5[0].oldNote.inner.value).to.equal(10n);
 
     // Request 60 tokens, consume next smallest two notes
     const assetRequest60: AssetRequest = {
       asset,
-      value: 60n,
+      value: 80n,
     };
-    const minimumFor60 = flaxContext.gatherMinimumNotes(
+    const minimumFor80 = flaxContext.gatherMinimumNotes(
       refundAddr,
       assetRequest60
     );
-    expect(minimumFor60.length).to.equal(2);
-    expect(minimumFor60[1].oldNote.value).to.equal(50n);
-    expect(minimumFor60[0].oldNote.value).to.equal(25n);
-    expect(flaxContext.tokenToNotes.get(asset.hash())!.length).to.equal(1);
+    expect(minimumFor80.length).to.equal(3);
+    expect(minimumFor80[2].oldNote.inner.value).to.equal(50n);
+    expect(minimumFor80[1].oldNote.inner.value).to.equal(25n);
+    expect(minimumFor80[0].oldNote.inner.value).to.equal(10n);
   });
 });

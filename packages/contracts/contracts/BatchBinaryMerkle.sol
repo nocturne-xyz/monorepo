@@ -3,7 +3,7 @@ pragma solidity ^0.8.2;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
-import {IncrementalTreeData, BatchBinaryMerkle} from "./libs/BinaryMerkle.sol";
+import {IncrementalTreeData, BinaryMerkle} from "./libs/BinaryMerkle.sol";
 import {QueueLib} from "./libs/Queue.sol";
 
 import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
@@ -11,30 +11,33 @@ import {IHasherT3} from "./interfaces/IHasher.sol";
 import {IPoseidonT3} from "./interfaces/IPoseidon.sol";
 import {PoseidonHasherT3} from "./PoseidonHashers.sol";
 
-contract PoseidonBatchBinaryMerkle is IBatchMerkle {
-    using BatchBinaryMerkle for IncrementalTreeData;
+contract BatchBinaryMerkle is IBatchMerkle {
+    using BinaryMerkle for IncrementalTreeData;
     using QueueLib for QueueLib.Queue;
 
     QueueLib.Queue public queue;
     IncrementalTreeData public tree;
 
+    event LeavesEnqueued(uint256[] leaves);
+
     constructor(
         uint8 depth,
         uint256 zero,
-        IPoseidonT3 _poseidonT3
+        IHasherT3 _hasherT3
     ) {
-        PoseidonHasherT3 _poseidonHasherT3 = new PoseidonHasherT3(
-            address(_poseidonT3)
-        );
         queue.initialize();
-        tree.initialize(depth, zero, IHasherT3(_poseidonHasherT3));
+        tree.initialize(depth, zero, _hasherT3);
     }
 
     function root() external view override returns (uint256) {
         return tree.root;
     }
 
-    function tentativeCount() external view override returns (uint256) {
+    function committedCount() external view override returns (uint256) {
+        return tree.numberOfLeaves;
+    }
+
+    function totalCount() external view override returns (uint256) {
         return tree.numberOfLeaves + queue.length();
     }
 
@@ -50,9 +53,14 @@ contract PoseidonBatchBinaryMerkle is IBatchMerkle {
 
     function insertLeafToQueue(uint256 leaf) external override {
         queue.enqueue(leaf);
+
+        uint256[] memory eventLeaves = new uint256[](1);
+        eventLeaves[0] = leaf;
+        emit LeavesEnqueued(eventLeaves);
     }
 
     function insertLeavesToQueue(uint256[] memory leaves) external override {
         queue.enqueue(leaves);
+        emit LeavesEnqueued(leaves);
     }
 }

@@ -3,14 +3,61 @@ import { FlaxAddrPrefix } from "./common";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 
-// TODO: Fix binary / base64 format of a FlaxAddress
-export class FlaxAddress {
+export interface FlaxAddressStruct {
+  h1X: bigint;
+  h1Y: bigint;
+  h2X: bigint;
+  h2Y: bigint;
+}
+
+export function flattenedFlaxAddressToArrayForm(
+  flattened: FlaxAddressStruct
+): ArrayFlaxAddress {
+  return {
+    h1: [flattened.h1X, flattened.h1Y],
+    h2: [flattened.h2X, flattened.h2Y],
+  };
+}
+
+export function flattenedFlaxAddressFromJSON(
+  jsonOrString: string | any
+): FlaxAddressStruct {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  const { h1X, h1Y, h2X, h2Y } = json;
+  return {
+    h1X: BigInt(h1X),
+    h1Y: BigInt(h1Y),
+    h2X: BigInt(h2X),
+    h2Y: BigInt(h2Y),
+  };
+}
+
+export interface ArrayFlaxAddress {
   h1: [bigint, bigint];
   h2: [bigint, bigint];
+}
 
-  constructor(h1: [bigint, bigint], h2: [bigint, bigint]) {
-    this.h1 = h1;
-    this.h2 = h2;
+// TODO: Fix binary / base64 format of a FlaxAddress
+export class FlaxAddress {
+  inner: FlaxAddressStruct;
+
+  constructor(address: FlaxAddressStruct) {
+    this.inner = address;
+  }
+
+  static fromArrayForm(address: ArrayFlaxAddress): FlaxAddress {
+    const { h1, h2 } = address;
+    return new FlaxAddress({
+      h1X: h1[0],
+      h1Y: h1[1],
+      h2X: h2[0],
+      h2Y: h2[1],
+    });
+  }
+
+  toArrayForm(): ArrayFlaxAddress {
+    return flattenedFlaxAddressToArrayForm(this.inner);
   }
 
   static parse(str: string): FlaxAddress {
@@ -18,65 +65,34 @@ export class FlaxAddress {
     const b = Buffer.from(base64str, "base64");
     const b1 = b.slice(0, 32);
     const b2 = b.slice(32, 64);
-    const H1 = babyjub.unpackPoint(b1);
-    const H2 = babyjub.unpackPoint(b2);
-    return new FlaxAddress(H1, H2);
+    const h1 = babyjub.unpackPoint(b1) as [bigint, bigint];
+    const h2 = babyjub.unpackPoint(b2) as [bigint, bigint];
+    return FlaxAddress.fromArrayForm({ h1, h2 });
   }
 
   toString(): string {
-    const b1 = Buffer.from(babyjub.packPoint(this.h1));
-    const b2 = Buffer.from(babyjub.packPoint(this.h2));
+    const { h1, h2 } = this.toArrayForm();
+    const b1 = Buffer.from(babyjub.packPoint(h1));
+    const b2 = Buffer.from(babyjub.packPoint(h2));
     const b = Buffer.concat([b1, b2]);
     return FlaxAddrPrefix + b.toString("base64");
   }
 
-  toFlattened(): FlattenedFlaxAddress {
-    return new FlattenedFlaxAddress({
-      h1X: this.h1[0],
-      h1Y: this.h1[1],
-      h2X: this.h2[0],
-      h2Y: this.h2[1],
-    });
+  toStruct(): FlaxAddressStruct {
+    return this.inner;
   }
 
   hash(): bigint {
-    return this.toFlattened().hash();
+    const { h1X, h1Y, h2X, h2Y } = this.inner;
+    return BigInt(poseidon([h1X, h1Y, h2X, h2Y]));
   }
 
   rerand(): FlaxAddress {
+    const arrayAddr = this.toArrayForm();
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
-    const H1 = babyjub.mulPointEscalar(this.h1, r);
-    const H2 = babyjub.mulPointEscalar(this.h2, r);
-    return new FlaxAddress(H1, H2);
-  }
-}
-
-export interface FlattenedFlaxAddressConstructor {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-}
-
-export class FlattenedFlaxAddress {
-  h1X: bigint;
-  h1Y: bigint;
-  h2X: bigint;
-  h2Y: bigint;
-
-  constructor({ h1X, h1Y, h2X, h2Y }: FlattenedFlaxAddressConstructor) {
-    this.h1X = h1X;
-    this.h1Y = h1Y;
-    this.h2X = h2X;
-    this.h2Y = h2Y;
-  }
-
-  hash(): bigint {
-    return BigInt(poseidon([this.h1X, this.h1Y, this.h2X, this.h2Y]));
-  }
-
-  toArrayForm(): FlaxAddress {
-    return new FlaxAddress([this.h1X, this.h1Y], [this.h2X, this.h2Y]);
+    const h1 = babyjub.mulPointEscalar(arrayAddr.h1, r);
+    const h2 = babyjub.mulPointEscalar(arrayAddr.h2, r);
+    return FlaxAddress.fromArrayForm({ h1, h2 });
   }
 }
