@@ -34,10 +34,9 @@ export class LocalMerkleProver
   }
 
   async fetchLeavesAndUpdate(): Promise<void> {
-    const maybeLastSeen = this.db.getKv(MERKLE_LAST_INDEXED_BLOCK);
-    const lastSeen = maybeLastSeen
-      ? parseInt(maybeLastSeen)
-      : DEFAULT_START_BLOCK; // TODO: load default from network-specific config
+    // TODO: load default from network-specific config
+    const lastSeen =
+      this.db.getNumberKv(MERKLE_LAST_INDEXED_BLOCK) ?? DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
     const newLeaves = await this.fetchNewLeavesSorted(lastSeen, latestBlock);

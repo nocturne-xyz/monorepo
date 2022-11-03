@@ -14,13 +14,38 @@ export abstract class FlaxDB {
   abstract getKv(key: string): string | undefined;
 
   /**
-   * Store arbitrary `value` for `key`. Enables additional storage needs like
-   * storing last indexed block
+   * Store arbitrary `value` for `key`.
    *
    * @param key key
    * @param value value
    */
   abstract putKv(key: string, value: string): Promise<boolean>;
+
+  /**
+   * Get arbitrary number `value` for `key`.
+   *
+   * @param key key
+   */
+  getNumberKv(key: string): number | undefined {
+    const stringVal = this.getKv(key);
+
+    if (!stringVal) {
+      return undefined;
+    }
+
+    return parseInt(stringVal);
+  }
+
+  /**
+   * Store arbitrary number `value` for `key`. Enables additional storage needs
+   * like storing last indexed block.
+   *
+   * @param key key
+   * @param value number value
+   */
+  putNumberKv(key: string, value: number): Promise<boolean> {
+    return this.putKv(key, value.toString());
+  }
 
   /**
    * Remove arbitrary `value` for `key`.
