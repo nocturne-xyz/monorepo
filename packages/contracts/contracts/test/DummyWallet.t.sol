@@ -41,10 +41,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     SimpleERC721Token[3] ERC721s;
 
     event Refund(
-        IWallet.FLAXAddress indexed refundAddr,
+        IWallet.FLAXAddress refundAddr,
         uint256 indexed nonce,
         address indexed asset,
-        uint256 id,
+        uint256 indexed id,
         uint256 value,
         uint256 merkleIndex
     );
@@ -236,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit Spend(0, 50, 8); // only checking value and merkleIndex are valid
+        emit Spend(182, 50, 8); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 
