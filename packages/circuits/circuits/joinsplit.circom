@@ -48,7 +48,7 @@ template Spend(levels) {
     signal input oldNoteBId;
     signal input oldNoteBValue;
 
-    // Path to old note A
+    // Path to old note B
     signal input pathB[levels];
     signal input siblingsB[levels];
 
@@ -126,6 +126,7 @@ template Spend(levels) {
 
     anchor <== inclusionProofA.root;
 
+    // Merkle tree inclusion proof for oldNoteBCommitment
     component inclusionProofB = MerkleTreeInclusionProof(levels);
     inclusionProofB.leaf <== oldNoteBCommitment;
     for (var i = 0; i < levels; i++) {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.5;
 
 /// @title Verifier interface.
-/// @dev Interface of Verifier contract.
+/// @dev Interface of Spend2 Verifier contract.
 interface ISpend2Verifier {
     function verifyProof(
         uint256[2] memory a,
