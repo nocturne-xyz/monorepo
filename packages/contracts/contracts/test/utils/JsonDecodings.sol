@@ -7,6 +7,11 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {TestUtils} from "./TestUtils.sol";
 
+struct JoinSplitProofWithPublicSignals {
+    uint256[9] publicSignals;
+    BaseProof proof;
+}
+
 struct Spend2ProofWithPublicSignals {
     uint256[7] publicSignals;
     BaseProof proof;
@@ -61,6 +66,50 @@ contract JsonDecodings is Test, TestUtils {
     }
 
     function spend2BaseProofToProof8(BaseProof memory proof)
+        public
+        returns (uint256[8] memory)
+    {
+        return [
+            parseInt(proof.pi_a[0]),
+            parseInt(proof.pi_a[1]),
+            parseInt(proof.pi_b[0][1]),
+            parseInt(proof.pi_b[0][0]),
+            parseInt(proof.pi_b[1][1]),
+            parseInt(proof.pi_b[1][0]),
+            parseInt(proof.pi_c[0]),
+            parseInt(proof.pi_c[1])
+        ];
+    }
+
+    function loadJoinSplitProofFromFixture(string memory path)
+        public
+        returns (JoinSplitProofWithPublicSignals memory)
+    {
+        string memory json = loadFixtureJson(path);
+        bytes memory proofBytes = json.parseRaw(".proof");
+        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
+
+        uint256[9] memory publicSignals;
+        for (uint256 i = 0; i < 9; i++) {
+            bytes memory jsonSelector = abi.encodePacked(
+                bytes(".publicSignals["),
+                Strings.toString(i)
+            );
+            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
+
+            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
+            string memory signal = abi.decode(signalBytes, (string));
+            publicSignals[i] = parseInt(signal);
+        }
+
+        return
+            JoinSplitProofWithPublicSignals({
+                publicSignals: publicSignals,
+                proof: proof
+            });
+    }
+
+    function joinsplitBaseProofToProof8(BaseProof memory proof)
         public
         returns (uint256[8] memory)
     {

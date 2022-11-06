@@ -78,7 +78,7 @@ template Spend(levels) {
     signal output anchor;
     signal output asset;
     signal output id;
-    signal output publicSpend;
+    signal output valueLeft;
     signal output nullifierA;
     signal output nullifierB;
 
@@ -124,8 +124,6 @@ template Spend(levels) {
         inclusionProofA.pathIndices[i] <== pathA[i];
     }
 
-    anchor <== inclusionProofA.root;
-
     // Merkle tree inclusion proof for oldNoteBCommitment
     component inclusionProofB = MerkleTreeInclusionProof(levels);
     inclusionProofB.leaf <== oldNoteBCommitment;
@@ -134,7 +132,8 @@ template Spend(levels) {
         inclusionProofB.pathIndices[i] <== pathB[i];
     }
 
-    anchor === inclusionProofB.root;
+    anchor <== inclusionProofA.root;
+    inclusionProofA.root === inclusionProofB.root;
 
     // Nullifier derivation for oldNoteA
     component deriveNullifierA = DeriveNullifier();
@@ -157,7 +156,7 @@ template Spend(levels) {
     oldNoteAId === oldNoteBId;
     oldNoteBId === newNoteAId;
     newNoteAId === newNoteBId;
-    publicSpend <== oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue;
+    valueLeft <== oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue;
 
     // Viewing key integrity for note A: h1^{vk} == h2
     component vkBits = Num2Bits(254);
