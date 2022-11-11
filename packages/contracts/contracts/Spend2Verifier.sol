@@ -11,7 +11,8 @@
 //
 //
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
+
 import {ISpend2Verifier} from "./interfaces/ISpend2Verifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
 contract Spend2Verifier is ISpend2Verifier {
