@@ -6,10 +6,35 @@ include "include/sha256/sha256.circom";
 
 include "tree.circom";
 
-// Update a subtree of depth s, with overall tree is of depth r + s
-template SubtreeUpdate(r, s) {
-    // Public signals
+// Update a subtree of depth 4, where overall tree is of depth r + 4
+template SubtreeUpdate4(r) {
+    var emptySubtreeRoot = ;
+    
+    // public inputs
+    signal input compressedPathAndHash;
+    signal input accumulatorHash;
+    signal output oldRoot;
+    signal output newRoot;
 
+    component inner = SubtreeUpdate(r, 4);
+
+    // root of the depth-4 subtree
+    inner.emptySubtreeRoot <== 3607627140608796879659380071776844901612302623152076817094415224584923813162;
+    inner.compressedPathAndHash <== compressedPathAndHash;
+    inner.accumulatorHash <== accumulatorHash;
+    oldRoot <== inner.oldRoot;
+    newRoot <== inner.newRoot;
+}
+
+// Update a subtree of depth s, where overall tree is of depth r + s
+template SubtreeUpdate(r, s) {
+    // a constant signal that should be passed in by the outer component
+    // this should be set to to the value of the root of a depth-s subtree of zeros
+    // this is a bit of a hack, but it's best way to do this while retaining parametricity for size
+    // since circom doesn't have constant propogration yet
+    signal input emptySubtreeRoot;
+
+    // Public signals
     // r bits encodes the subTreelocation, 3 bits encode the high bit of accumulatorHash
     signal input compressedPathAndHash;
 
@@ -17,7 +42,7 @@ template SubtreeUpdate(r, s) {
     signal output oldRoot;
     signal output newRoot;
 
-    // Merkle include witness for the subtre
+    // Merkle include witness for the subtree
     signal input siblings[r];
     // Leaves to be inserted
     signal input leaves[2**s];
@@ -26,9 +51,8 @@ template SubtreeUpdate(r, s) {
     component path = Num2Bits(r+3);
     path.in <== compressedPathAndHash;
 
+
     // Merkle tree inclusion proof for old subtree
-    // TODO compute and fill-in the right empty subtreeroot
-    var emptySubtreeRoot = 0;
     component inclusionProof = MerkleTreeInclusionProof(r);
     inclusionProof.leaf <== emptySubtreeRoot;
     for (var i = 0; i < r; i++) {
@@ -99,4 +123,4 @@ template SubtreeUpdate(r, s) {
     newRoot <== inclusionProof2.root;
 }
 
-component main { public [compressedPathAndHash, accumulatorHash] } = SubtreeUpdate(28, 4);
+component main { public [compressedPathAndHash, accumulatorHash] } = SubtreeUpdate4(28);
