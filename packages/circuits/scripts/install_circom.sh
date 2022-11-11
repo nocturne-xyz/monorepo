@@ -19,9 +19,6 @@ echo "checking if circom is installed..."
 CIRCOM_VERSION=$(circom --version | cut -d " " -f3)
 if [ $? -eq 0 ]
 then
-	echo "found circom version $CIRCOM_VERSION"
-	echo ""
-else
 	echo "circom not found. installing..."
 	git clone https://github.com/iden3/circom.git
 	pushd circom
@@ -31,6 +28,9 @@ else
 	rm -rf circom
 	CIRCOM_VERSION=$(circom --version | cut -d " " -f3)
 	echo "installed circom version $CIRCOM_VERSION"
+	echo ""
+else
+	echo "found circom version $CIRCOM_VERSION"
 	echo ""
 fi
 
