@@ -3,7 +3,7 @@ CIRCUIT_NAME=subtreeupdate
 SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR="$SCRIPT_DIR/../../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
-PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_15.ptau"
+PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_21.ptau"
 CIRCUIT_PATH="$SCRIPT_DIR/../../circuits/$CIRCUIT_NAME.circom"
 BUILD_DIR="$CIRCUIT_ARTIFACTS_DIR/$CIRCUIT_NAME"
 OUTPUT_DIR="$BUILD_DIR"/"$CIRCUIT_NAME"_cpp
@@ -81,4 +81,4 @@ npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$O
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
-\cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdate.sol"
+\cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
