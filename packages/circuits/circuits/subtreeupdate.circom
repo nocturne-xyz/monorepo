@@ -9,7 +9,7 @@ include "tree.circom";
 // Update a subtree of depth 4, where overall tree is of depth r + 4
 template SubtreeUpdate4(r) {
     // public inputs
-    signal input compressedPathAndHash;
+    signal input encodedPathAndHash;
     signal input accumulatorHash;
     signal output oldRoot;
     signal output newRoot;
@@ -23,7 +23,7 @@ template SubtreeUpdate4(r) {
 
     // root of the depth-4 subtree
     inner.emptySubtreeRoot <== 3607627140608796879659380071776844901612302623152076817094415224584923813162;
-    inner.compressedPathAndHash <== compressedPathAndHash;
+    inner.encodedPathAndHash <== encodedPathAndHash;
     inner.accumulatorHash <== accumulatorHash;
     inner.siblings <== siblings;
     inner.leaves <== leaves;
@@ -35,8 +35,8 @@ template SubtreeUpdate4(r) {
 template SubtreeUpdate(r, s) {
 
     // Public signals
-    // r bits encodes the subTreelocation, 3 bits encode the high bit of accumulatorHash
-    signal input compressedPathAndHash;
+    // r bits encodes the subTreelocation, 3 bits encode the high bits of accumulatorHash
+    signal input encodedPathAndHash;
 
     signal input accumulatorHash;
     signal output oldRoot;
@@ -55,8 +55,7 @@ template SubtreeUpdate(r, s) {
 
     // Opening up compressed path
     component path = Num2Bits(r+3);
-    path.in <== compressedPathAndHash;
-
+    path.in <== encodedPathAndHash;
 
     // Merkle tree inclusion proof for old subtree
     component inclusionProof = MerkleTreeInclusionProof(r);
@@ -68,38 +67,28 @@ template SubtreeUpdate(r, s) {
     oldRoot <== inclusionProof.root;
 
     // Compute accumulator hash for proposed leaves
-    component hasher[2**s];
+    component hasher = Sha256(256 * 2**s);
     component leavesToBits[2**s];
+    // set hash input
     for (var i = 0; i < 2**s; i++) {
-        hasher[i] = Sha256(512);
-        if (i == 0) {
-          for (var j = 0; j < 256; j++) {
-            hasher[i].in[j] <== 0;
-          }
-        } else {
-          for (var j = 0; j < 256; j++) {
-            hasher[i].in[j] <== hasher[i-1].out[j];
-          }
-        }
         leavesToBits[i] = Num2Bits(254);
         leavesToBits[i].in <== leaves[i];
         for (var j = 0; j < 254; j++) {
-          hasher[i].in[256+j] <== leavesToBits[i].out[j];
+          hasher.in[i*256 + j] <== leavesToBits[i].out[j];
         }
-        // Pad the leftover two bits with 0
-        hasher[i].in[510] <== 0;
-        hasher[i].in[511] <== 0;
+        hasher.in[i*256 + 254] <== 0;
+        hasher.in[i*256 + 255] <== 0;
     }
-
+    
     // Assert that the accumulatorHash is correct
     component hashBits = Num2Bits(253);
     hashBits.in <== accumulatorHash;
     for (var i = 0; i < 256; i++) {
         if (i < 3) {
-            path.out[i] === hasher[2**s-1].out[i];
+            path.out[i] === hasher.out[i];
         }
         else {
-            hashBits.out[i-3] === hasher[2**s-1].out[i];
+            hashBits.out[i-3] === hasher.out[i];
         }
     }
 
@@ -129,4 +118,4 @@ template SubtreeUpdate(r, s) {
     newRoot <== inclusionProof2.root;
 }
 
-component main { public [compressedPathAndHash, accumulatorHash] } = SubtreeUpdate4(28);
+component main { public [encodedPathAndHash, accumulatorHash] } = SubtreeUpdate4(28);
