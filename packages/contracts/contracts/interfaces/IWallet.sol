@@ -26,6 +26,13 @@ interface IWallet {
         uint256 valueToSpend; // 0 for ERC721
     }
 
+    struct SubtreeUpdateArgs {
+        uint256 oldRoot,
+        uint256 newRoot,
+
+        uint256[8] proof;
+    }
+
     struct Tokens {
         address[] spendTokens;
         address[] refundTokens;
