@@ -29,7 +29,8 @@ library FieldUtils  {
 	function bytes32ToFieldElems(bytes32 buf) pure internal returns (uint256, uint256) {
 		uint256 sum = 0;
 		for (uint256 i = 0; i < 32; i++) {
-			sum = 2 * sum + uint256(uint8(buf[i]));
+			sum <<= 8;
+			sum |= uint256(uint8(buf[i]));
 		}
 
 		uint256 hi = sum >> 253;
