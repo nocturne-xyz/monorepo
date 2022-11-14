@@ -34,7 +34,8 @@ template SubtreeUpdate4(r) {
 // computes both poseidon and sha256 hash of a "concrete" note as defined in notion
 template NoteCommitmentHash() {
     // ! NOTE: This assumes ristretto compression for addresses has been implemented
-    signal input owner;
+    signal input ownerH1;
+    signal input ownerH2;
     signal input nonce;
     signal input asset;
     signal input id;
@@ -45,10 +46,28 @@ template NoteCommitmentHash() {
     signal output poseidonHash;
 
     // compute sha256 hash
-    component sha256Hasher = Sha256(256 * 5);
-    component elemBits[8];
-    for (var i = 0; i < 8; i++) {
-        elemBits[i] = Num2Bits(254);
+    component sha256Hasher = Sha256(256 * 6);
+    component elemBits[6];
+
+    elemBits[0] = Num2Bits(254);
+    elemBits[0].in <== ownerH1;
+
+    elemBits[1] = Num2Bits(254);
+    elemBits[1].in <== ownerH2;
+
+    elemBits[2] = Num2Bits(254);
+    elemBits[2].in <== nonce;
+
+    elemBits[3] = Num2Bits(254);
+    elemBits[3].in <== asset;
+
+    elemBits[4] = Num2Bits(254);
+    elemBits[4].in <== id;
+
+    elemBits[5] = Num2Bits(254);
+    elemBits[5].in <== value;
+
+    for (var i = 0; i < 6; i++) {
         for (var j = 0; j < 254; j++) {
           sha256hasher.in[i*256 + j] <== elemBits[i].out[j];
         }
@@ -91,7 +110,8 @@ template SubtreeUpdate(r, s) {
 
     // notes to be inserted
     // ! NOTE: This assumes ristretto compression for addresses has been implemented
-    signal input owners[2**s];
+    signal input ownerH1s[2**s];
+    signal input ownerH2s[2**s];
     signal input nonces[2**s];
     signal input assets[2**s];
     signal input ids[2**s];
@@ -103,7 +123,8 @@ template SubtreeUpdate(r, s) {
     component noteHashers[2**s];
     for (var i = 0; i < 2**s; i++) {
         noteHashers[i] = parallel NoteCommitmentHash();
-        noteHashers[i].owner <== owners[i];
+        noteHashers[i].ownerH1 <== ownerH1s[i];
+        noteHashers[i].ownerH2 <== ownerH2s[i];
         noteHashers[i].nonce <== nonces[i];
         noteHashers[i].asset <== assets[i];
         noteHashers[i].id <== id;
