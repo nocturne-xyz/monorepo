@@ -35,7 +35,7 @@ export abstract class NotesManager {
   }
 
   private async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
-    const allNotes = [...this.db.getAllNotes().values()].flat();
+    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const spend of newSpends) {
       for (const oldNote of allNotes) {
         const oldNullifier = this.signer.createNullifier(

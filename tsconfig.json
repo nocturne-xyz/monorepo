@@ -8,7 +8,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2021"],
+    "lib": ["es2021", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmitOnError": true,
@@ -26,6 +26,7 @@
     "allowJs": true,
     "typeRoots": ["node_modules/@types", "types"]
   },
+
   "references": [
     {
       "path": "./packages/contracts"
@@ -38,6 +39,12 @@
     },
     {
       "path": "./packages/e2e-tests"
+    },
+    {
+      "path": "./packages/site"
+    },
+    {
+      "path": "./packages/snap"
     }
   ]
 }

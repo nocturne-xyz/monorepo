@@ -91,7 +91,7 @@ export class FlaxContext {
     // For each asset request, gather necessary notes
     const allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
     for (const assetRequest of assetRequests) {
-      const oldAndNewNotePairs = this.gatherMinimumNotes(
+      const oldAndNewNotePairs = await this.gatherMinimumNotes(
         realRefundAddr,
         assetRequest
       );
@@ -186,18 +186,18 @@ export class FlaxContext {
    *
    * @param assetRequest Asset request
    */
-  gatherMinimumNotes(
+  async gatherMinimumNotes(
     refundAddr: FlaxAddressStruct,
     assetRequest: AssetRequest
-  ): OldAndNewNotePair[] {
-    const balance = this.getAssetBalance(assetRequest.asset);
+  ): Promise<OldAndNewNotePair[]> {
+    const balance = await this.getAssetBalance(assetRequest.asset);
     if (balance < assetRequest.value) {
       throw new Error(
         `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
       );
     }
 
-    const notes = this.db.getNotesFor(assetRequest.asset);
+    const notes = await this.db.getNotesFor(assetRequest.asset);
     const sortedNotes = notes.sort((a, b) => {
       return Number(a.value - b.value);
     });
@@ -240,8 +240,8 @@ export class FlaxContext {
    *
    * @param asset Asset
    */
-  getAssetBalance(asset: AssetStruct): bigint {
-    const notes = this.db.getNotesFor(asset);
+  async getAssetBalance(asset: AssetStruct): Promise<bigint> {
+    const notes = await this.db.getNotesFor(asset);
 
     if (!notes) {
       return 0n;

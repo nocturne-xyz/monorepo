@@ -20,11 +20,11 @@ describe("FlaxLMDB", async () => {
   it("Stores, gets, and removes value", async () => {
     await db.putKv("hello", "world");
 
-    const val = db.getKv("hello");
+    const val = await db.getKv("hello");
     expect(val).to.equal("world");
 
     await db.removeKv("hello");
-    expect(db.getKv("hello")).to.be.undefined;
+    expect(await db.getKv("hello")).to.be.undefined;
   });
 
   it("Stores, gets, and removes note", async () => {
@@ -45,12 +45,12 @@ describe("FlaxLMDB", async () => {
 
     await db.storeNote(note);
 
-    const map = db.getAllNotes();
+    const map = await db.getAllNotes();
     const notesArray = map.get(FlaxDB.notesKey(asset))!;
     expect(notesArray[0]).to.eql(note);
 
     await db.removeNote(note);
-    const newMap = db.getAllNotes();
+    const newMap = await db.getAllNotes();
     expect(newMap.get(FlaxDB.notesKey(asset))).to.be.undefined;
   });
 
@@ -87,13 +87,13 @@ describe("FlaxLMDB", async () => {
     await db.storeNote(noteOne);
     await db.storeNote(noteTwo);
 
-    const map = db.getAllNotes();
+    const map = await db.getAllNotes();
     const notesArray = map.get(FlaxDB.notesKey(asset))!;
     expect(notesArray[0]).to.eql(noteOne);
     expect(notesArray[1]).to.eql(noteTwo);
 
     await db.removeNote(noteOne);
-    const newMap = db.getAllNotes();
+    const newMap = await db.getAllNotes();
     const newNotesArray = newMap.get(FlaxDB.notesKey(asset))!;
     expect(newNotesArray.length).to.eql(1);
     expect(newNotesArray[0]).to.eql(noteTwo);
