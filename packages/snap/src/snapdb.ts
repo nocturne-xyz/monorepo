@@ -1,10 +1,26 @@
-import { AssetHash, IncludedNoteStruct } from "@flax/sdk";
+import { AssetHash } from "@flax/sdk";
 
 type SnapState = {
   kv: Map<string, string>;
-  notes: Map<AssetHash, IncludedNoteStruct[]>;
-  leaves?: bigint[];
+  notes: Map<AssetHash, string>;
+  leaves: bigint[];
 };
+
+function objectToSnapState(obj: any): SnapState {
+  return {
+    kv: new Map(Object.entries(obj.kv)),
+    notes: new Map(Object.entries(obj.notes)),
+    leaves: obj.leaves,
+  };
+}
+
+function snapStateToObject(state: SnapState): Object {
+  return {
+    kv: Object.fromEntries(state.kv),
+    notes: Object.fromEntries(state.notes),
+    leaves: state.leaves,
+  };
+}
 
 export class SnapDB {
   constructor() {
@@ -12,20 +28,22 @@ export class SnapDB {
   }
 
   async getSnapState(): Promise<SnapState> {
-    let state = await wallet.request({
-      method: "snap_manageState",
-      params: ["get"],
-    });
+    let state = objectToSnapState(
+      await wallet.request({
+        method: "snap_manageState",
+        params: ["get"],
+      })
+    );
 
     if (!state) {
-      state = { kv: {}, notes: {}, leaves: [] };
+      state = { kv: new Map(), notes: new Map(), leaves: [] };
       await wallet.request({
         method: "snap_manageState",
         params: ["update", state],
       });
     }
 
-    return state as SnapState;
+    return state;
   }
 
   async getKv(key: string): Promise<string | undefined> {
@@ -35,11 +53,12 @@ export class SnapDB {
 
   async putKv(key: string, value: string): Promise<boolean> {
     let state = await this.getSnapState();
+    console.log("STATE: ", state.kv);
     state.kv.set(key, value);
 
     await wallet.request({
       method: "snap_manageState",
-      params: ["update", state],
+      params: ["update", snapStateToObject(state)],
     });
     return true; // update request will have thrown error if failed?
   }
