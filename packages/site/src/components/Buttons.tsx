@@ -1,8 +1,8 @@
-import { ComponentProps } from 'react';
-import styled from 'styled-components';
-import { MetamaskState } from '../hooks';
-import { ReactComponent as FlaskFox } from '../assets/flask_fox.svg';
-import { shouldDisplayReconnectButton } from '../utils';
+import { ComponentProps } from "react";
+import styled from "styled-components";
+import { MetamaskState } from "../hooks";
+import { ReactComponent as FlaskFox } from "../assets/flask_fox.svg";
+import { shouldDisplayReconnectButton } from "../utils";
 
 const Link = styled.a`
   display: flex;
@@ -62,7 +62,7 @@ const ConnectedContainer = styled.div`
 `;
 
 const ConnectedIndicator = styled.div`
-  content: ' ';
+  content: " ";
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -96,6 +96,10 @@ export const ReconnectButton = (props: ComponentProps<typeof Button>) => {
 
 export const SendHelloButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Send message</Button>;
+};
+
+export const SetAndShowKButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>SetAndShowKv</Button>;
 };
 
 export const HeaderButtons = ({

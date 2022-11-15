@@ -1,4 +1,5 @@
-import { OnRpcRequestHandler } from '@metamask/snap-types';
+import { OnRpcRequestHandler } from "@metamask/snap-types";
+import { SnapDB } from "./snapdb";
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -20,22 +21,38 @@ export const getMessage = (originString: string): string =>
  * @throws If the request method is not valid for this snap.
  * @throws If the `snap_confirm` call failed.
  */
-export const onRpcRequest: OnRpcRequestHandler = ({ origin, request }) => {
+export const onRpcRequest: OnRpcRequestHandler = async ({
+  origin,
+  request,
+}) => {
   switch (request.method) {
-    case 'hello':
+    case "hello":
       return wallet.request({
-        method: 'snap_confirm',
+        method: "snap_confirm",
         params: [
           {
             prompt: getMessage(origin),
             description:
-              'This custom confirmation is just for display purposes.',
+              "This custom confirmation is just for display purposes.",
             textAreaContent:
-              'But you can edit the snap source code to make it do something, if you want to!',
+              "But you can edit the snap source code to make it do something, if you want to!",
+          },
+        ],
+      });
+    case "setAndShowKv":
+      let db = new SnapDB();
+      await db.putKv("key1", "value1");
+      return wallet.request({
+        method: "snap_confirm",
+        params: [
+          {
+            prompt: getMessage(origin),
+            description: "Displaying newly set storage for key1",
+            textAreaContent: await db.getKv("key1"),
           },
         ],
       });
     default:
-      throw new Error('Method not found.');
+      throw new Error("Method not found.");
   }
 };

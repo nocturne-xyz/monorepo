@@ -46,7 +46,7 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return this.kvDb.put(key, value);
   }
 
-  getKv(key: string): string | undefined {
+  async getKv(key: string): Promise<string | undefined> {
     return this.kvDb.get(key);
   }
 
@@ -64,7 +64,7 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return this.notesDb.remove(key, JSON.stringify(note));
   }
 
-  getAllNotes(): Map<string, IncludedNoteStruct[]> {
+  async getAllNotes(): Promise<Map<string, IncludedNoteStruct[]>> {
     const keys = this.notesDb.getKeys();
 
     const notesMap: Map<string, IncludedNoteStruct[]> = new Map();
@@ -80,7 +80,7 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return notesMap;
   }
 
-  getNotesFor(asset: AssetStruct): IncludedNoteStruct[] {
+  async getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]> {
     const key = FlaxDB.notesKey(asset);
     const notesArray: IncludedNoteStruct[] = [];
     for (const val of this.notesDb.getValues(key)) {
@@ -90,7 +90,7 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return notesArray;
   }
 
-  clear(): void {
+  async clear(): Promise<void> {
     this.kvDb.clearSync();
     this.notesDb.clearSync();
     this.rootDb.clearSync();

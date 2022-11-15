@@ -87,7 +87,7 @@ describe("FlaxContext", () => {
   });
 
   it("Gets total balance for an asset", async () => {
-    const assetBalance = flaxContext.getAssetBalance(asset);
+    const assetBalance = await flaxContext.getAssetBalance(asset);
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
@@ -99,7 +99,7 @@ describe("FlaxContext", () => {
       asset,
       value: 5n,
     };
-    const minimumFor5 = flaxContext.gatherMinimumNotes(
+    const minimumFor5 = await flaxContext.gatherMinimumNotes(
       refundAddr,
       assetRequest5
     );
@@ -111,7 +111,7 @@ describe("FlaxContext", () => {
       asset,
       value: 80n,
     };
-    const minimumFor80 = flaxContext.gatherMinimumNotes(
+    const minimumFor80 = await flaxContext.gatherMinimumNotes(
       refundAddr,
       assetRequest60
     );

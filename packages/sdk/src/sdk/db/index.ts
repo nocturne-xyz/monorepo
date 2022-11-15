@@ -11,7 +11,7 @@ export abstract class FlaxDB {
    *
    * @param key key
    */
-  abstract getKv(key: string): string | undefined;
+  abstract getKv(key: string): Promise<string | undefined>;
 
   /**
    * Store arbitrary `value` for `key`.
@@ -26,8 +26,8 @@ export abstract class FlaxDB {
    *
    * @param key key
    */
-  getNumberKv(key: string): number | undefined {
-    const stringVal = this.getKv(key);
+  async getNumberKv(key: string): Promise<number | undefined> {
+    const stringVal = await this.getKv(key);
 
     if (!stringVal) {
       return undefined;
@@ -97,19 +97,19 @@ export abstract class FlaxDB {
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getAllNotes(): Map<AssetHash, IncludedNoteStruct[]>;
+  abstract getAllNotes(): Promise<Map<AssetHash, IncludedNoteStruct[]>>;
 
   /**
    * Get mapping of all asset types to `IncludedNoteStruct[]`;
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getNotesFor(asset: AssetStruct): IncludedNoteStruct[];
+  abstract getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]>;
 
   /**
    * Clear entire database.
    */
-  abstract clear(): void;
+  abstract clear(): Promise<void>;
 
   /**
    * Close entire database.
