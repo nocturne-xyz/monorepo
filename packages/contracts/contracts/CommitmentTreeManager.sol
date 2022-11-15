@@ -44,17 +44,7 @@ contract CommitmentTreeManager {
         hasherT6 = IHasherT6(_hasherT6);
     }
 
-    function commit2FromQueue() external {
-        noteCommitmentTree.commit2FromQueue();
-        pastRoots[noteCommitmentTree.root()] = true;
-    }
-
-    function commit8FromQueue() external {
-        noteCommitmentTree.commit8FromQueue();
-        pastRoots[noteCommitmentTree.root()] = true;
-    }
-
-    function getRoot() external view returns (uint256) {
+    function getCurrentRoot() external view returns (uint256) {
         return noteCommitmentTree.root();
     }
 

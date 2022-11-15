@@ -1,13 +1,15 @@
 pragma circom 2.0.0;
 
 include "include/poseidon.circom";
-include "include/bitify.circom";
+include "bitifyBE.circom";
 include "include/sha256/sha256.circom";
 
+include "note2.circom";
 include "tree.circom";
 
 // Update a subtree of depth 4, where overall tree is of depth r + 4
 template SubtreeUpdate4(r) {
+    var s = 4; 
     // public inputs
     signal input encodedPathAndHash;
     signal input accumulatorHash;
@@ -16,17 +18,35 @@ template SubtreeUpdate4(r) {
 
     // merkle proof for the subtree's root
     signal input siblings[r];
-    // Leaves to be inserted
-    signal input leaves[2**4];
+    // notes to be inserted
+    // ! NOTE: This assumes ristretto compression for addresses has been implemented
+    signal input ownerH1s[2**s];
+    signal input ownerH2s[2**s];
+    signal input nonces[2**s];
+    signal input assets[2**s];
+    signal input ids[2**s];
+    signal input values[2**s];
 
-    component inner = SubtreeUpdate(r, 4);
+    component inner = SubtreeUpdate(r, s);
 
     // root of the depth-4 subtree
     inner.emptySubtreeRoot <== 3607627140608796879659380071776844901612302623152076817094415224584923813162;
+
+    for (var i = 0; i < r; i++) {
+        inner.siblings[i] <== siblings[i];
+    }
+
+    for (var i = 0; i < 2**s; i++) {
+        inner.ownerH1s[i] <== ownerH1s[i];
+        inner.ownerH2s[i] <== ownerH2s[i];
+        inner.nonces[i] <== nonces[i];
+        inner.assets[i] <== assets[i];
+        inner.ids[i] <== ids[i];
+        inner.values[i] <== values[i];
+    }
+
     inner.encodedPathAndHash <== encodedPathAndHash;
     inner.accumulatorHash <== accumulatorHash;
-    inner.siblings <== siblings;
-    inner.leaves <== leaves;
     oldRoot <== inner.oldRoot;
     newRoot <== inner.newRoot;
 }
@@ -43,49 +63,58 @@ template NoteCommitmentHash() {
 
     // bits are in big-endian order
     signal output sha256HashBits[256];
-    signal output poseidonHash;
+    signal output noteCommitment;
 
     // compute sha256 hash
     component sha256Hasher = Sha256(256 * 6);
     component elemBits[6];
 
-    elemBits[0] = Num2Bits(254);
+    signal ownerHash;
+
+    elemBits[0] = Num2BitsBE(254);
     elemBits[0].in <== ownerH1;
 
-    elemBits[1] = Num2Bits(254);
+    elemBits[1] = Num2BitsBE(254);
     elemBits[1].in <== ownerH2;
 
-    elemBits[2] = Num2Bits(254);
+    elemBits[2] = Num2BitsBE(254);
     elemBits[2].in <== nonce;
 
-    elemBits[3] = Num2Bits(254);
+    elemBits[3] = Num2BitsBE(254);
     elemBits[3].in <== asset;
 
-    elemBits[4] = Num2Bits(254);
+    elemBits[4] = Num2BitsBE(254);
     elemBits[4].in <== id;
 
-    elemBits[5] = Num2Bits(254);
+    elemBits[5] = Num2BitsBE(254);
     elemBits[5].in <== value;
 
     for (var i = 0; i < 6; i++) {
         for (var j = 0; j < 254; j++) {
-          sha256hasher.in[i*256 + j] <== elemBits[i].out[j];
+          sha256Hasher.in[i*256 + 2 + j] <== elemBits[i].out[j];
         }
-        sha256Hasher.in[i*256 + 254] <== 0;
-        sha256Hasher.in[i*256 + 255] <== 0;
+        sha256Hasher.in[i*256] <== 0;
+        sha256Hasher.in[i*256 + 1] <== 0;
+    }
+
+    for (var i = 0; i < 256; i++) {
+        sha256HashBits[i] <== sha256Hasher.out[i];
     }
     
-    sha256hashBits <== sha256Hasher.out;
+    // hash owner
+    component hasher = Poseidon(2);
+    hasher.inputs[0] <== ownerH1;
+    hasher.inputs[1] <== ownerH2;
+    ownerHash <== hasher.out;
 
-    // compute poseidon hash 
-    component hasher = Poseidon(5);
-    hasher.inputs[0] <== owner;
-    hasher.inputs[1] <== nonce;
-    hasher.inputs[2] <== asset;
-    hasher.inputs[3] <== id;
-    hasher.inputs[4] <== value;
+    component noteCommit = NoteCommit(); 
+    noteCommit.ownerHash <== ownerHash;
+    noteCommit.nonce <== nonce;
+    noteCommit.asset <== asset;
+    noteCommit.id <== id;
+    noteCommit.value <== value;
 
-    poseidonHash <== hasher.out;
+    noteCommitment <== noteCommit.out;
 }
 
 // Update a subtree of depth s, where overall tree is of depth r + s
@@ -119,7 +148,7 @@ template SubtreeUpdate(r, s) {
 
     // hash the notes to get the tree leaves and sha256 hashes to check against accumulator
     signal leaves[2**s];
-    signal noteCommitmentSha256Hashes[256][2**s];
+    signal noteCommitmentSha256Hashes[2**s][256];
     component noteHashers[2**s];
     for (var i = 0; i < 2**s; i++) {
         noteHashers[i] = parallel NoteCommitmentHash();
@@ -127,15 +156,18 @@ template SubtreeUpdate(r, s) {
         noteHashers[i].ownerH2 <== ownerH2s[i];
         noteHashers[i].nonce <== nonces[i];
         noteHashers[i].asset <== assets[i];
-        noteHashers[i].id <== id;
-        noteHashers[i].value <== value;
+        noteHashers[i].id <== ids[i];
+        noteHashers[i].value <== values[i];
 
-        leaves[i] <== notehashers[i].poseidonHash;
-        noteCommitmentSha256Hashes[i] <== noteHashers[i].sha256hashBits;
+        leaves[i] <== noteHashers[i].noteCommitment;
+
+        for (var j = 0; j < 256; j++) {
+            noteCommitmentSha256Hashes[i][j] <== noteHashers[i].sha256HashBits[j];
+        }
     }
     
     // Opening up compressed path
-    component path = Num2Bits(r+3);
+    component path = Num2BitsBE(r+3);
     path.in <== encodedPathAndHash;
 
     // Merkle tree inclusion proof for old subtree
@@ -159,7 +191,7 @@ template SubtreeUpdate(r, s) {
     }
     
     // Assert that the accumulatorHash is correct
-    component hashBits = Num2Bits(253);
+    component hashBits = Num2BitsBE(253);
     hashBits.in <== accumulatorHash;
     for (var i = 0; i < 256; i++) {
         if (i < 3) {

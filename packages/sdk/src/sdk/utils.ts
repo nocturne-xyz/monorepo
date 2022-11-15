@@ -29,3 +29,38 @@ export async function query<T extends Result, C extends BaseContract>(
 ): Promise<TypedEvent<T>[]> {
   return largeQueryInChunks(contract, filter, from, to);
 }
+
+export function bigInt256ToBEBytes(n: bigint): number[] {
+  let s = n.toString(16);
+
+  // pad with leading zeros
+  while (s.length < 64) {
+    s = "0" + s;
+  }
+
+  return hexStringToBEBytes(s);
+}
+
+export function hexStringToBEBytes(s: string): number[] {
+  const res = [];
+  for (let i = 0; i < 32; i++) {
+    const byte = parseInt(s.slice(2*i, 2*(i+1)), 16);
+    res.push(byte);
+  }
+
+  return res;
+}
+
+export function splitBigInt256(n: bigint): [number, bigint] {
+  let bits = n.toString(2);
+
+  // pad with leading zeros
+  while (bits.length < 256) {
+    bits = "0" + bits;
+  }
+  
+  const hi = parseInt(bits.slice(0, 3), 2);
+  const lo = BigInt(`0b${bits.slice(3)}`);
+
+  return [hi, lo];
+}

@@ -3,7 +3,7 @@ CIRCUIT_NAME=subtreeupdate
 SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR="$SCRIPT_DIR/../../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
-PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_21.ptau"
+PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_23.ptau"
 CIRCUIT_PATH="$SCRIPT_DIR/../../circuits/$CIRCUIT_NAME.circom"
 BUILD_DIR="$CIRCUIT_ARTIFACTS_DIR/$CIRCUIT_NAME"
 OUTPUT_DIR="$BUILD_DIR"/"$CIRCUIT_NAME"_cpp
@@ -27,11 +27,11 @@ circom "$CIRCUIT_PATH" --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
-# echo "****GENERATING WITNESS FOR SAMPLE INPUT****"
-# start=`date +%s`
-# node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm input.json "$BUILD_DIR"/witness.wtns
-# end=`date +%s`
-# echo "DONE ($((end-start))s)"
+echo "****GENERATING WITNESS FOR SAMPLE INPUT****"
+start=`date +%s`
+node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm "$SCRIPT_DIR"/input_"$CIRCUIT_NAME".json "$BUILD_DIR"/witness.wtns
+end=`date +%s`
+echo "DONE ($((end-start))s)"
 
 echo "****GENERATING ZKEY 0****"
 start=`date +%s`

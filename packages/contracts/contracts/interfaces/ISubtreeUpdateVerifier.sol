@@ -3,7 +3,7 @@ pragma solidity ^0.8.5;
 
 /// @title Verifier interface.
 /// @dev Interface of Verifier contract.
-interface ISpend2Verifier {
+interface ISubtreeUpdateVerifier{
     function verifyProof(
         uint256[2] memory a,
         uint256[2][2] memory b,
