@@ -25,6 +25,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }) => {
+  const db = new SnapDB();
   switch (request.method) {
     case "hello":
       return wallet.request({
@@ -40,7 +41,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "setAndShowKv":
-      let db = new SnapDB();
       await db.putKv("key1", "value1");
       return wallet.request({
         method: "snap_confirm",

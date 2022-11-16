@@ -124,7 +124,7 @@ describe("Wallet", async () => {
     
     console.log("Sync SDK notes manager");
     await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
-    const notesForAsset = flaxContext.notesManager.db.getNotesFor(asset);
+    const notesForAsset = await flaxContext.notesManager.db.getNotesFor(asset);
     expect(notesForAsset.length).to.equal(2);
 
     console.log("Sync SDK merkle prover");
@@ -176,8 +176,9 @@ describe("Wallet", async () => {
 
     console.log("Sync SDK notes manager post-spend");
     await flaxContext.notesManager.fetchAndApplyNewSpends();
-    const updatedNotesForAsset =
-      flaxContext.notesManager.db.getNotesFor(asset)!;
+    const updatedNotesForAsset = await flaxContext.notesManager.db.getNotesFor(
+      asset
+    )!;
     const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
     expect(updatedNote.value).to.equal(50n);
   });

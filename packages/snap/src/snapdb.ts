@@ -14,7 +14,7 @@ function objectToSnapState(obj: any): SnapState {
   };
 }
 
-function snapStateToObject(state: SnapState): Object {
+function snapStateToObject(state: SnapState): any {
   return {
     kv: Object.fromEntries(state.kv),
     notes: Object.fromEntries(state.notes),
@@ -52,7 +52,7 @@ export class SnapDB {
   }
 
   async putKv(key: string, value: string): Promise<boolean> {
-    let state = await this.getSnapState();
+    const state = await this.getSnapState();
     console.log("STATE: ", state.kv);
     state.kv.set(key, value);
 
