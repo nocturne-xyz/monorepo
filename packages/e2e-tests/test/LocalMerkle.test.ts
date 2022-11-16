@@ -10,7 +10,7 @@ import {
   FlaxPrivKey,
   FlaxSigner,
   LocalMerkleProver,
-  FlaxLMDB,
+  LocalFlaxDB,
   DEFAULT_DB_PATH,
 } from "@flax/sdk";
 
@@ -18,14 +18,14 @@ describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
   let flaxSigner: FlaxSigner;
-  let db: FlaxLMDB;
+  let db: LocalFlaxDB;
   let localMerkle: LocalMerkleProver;
 
   async function setup() {
     const sk = BigInt(1);
     const flaxPrivKey = new FlaxPrivKey(sk);
     flaxSigner = new FlaxSigner(flaxPrivKey);
-    db = new FlaxLMDB({ dbPath: DEFAULT_DB_PATH, localMerkle: true });
+    db = new LocalFlaxDB({ localMerkle: true });
 
     [deployer] = await ethers.getSigners();
     await deployments.fixture(["PoseidonLibs"]);

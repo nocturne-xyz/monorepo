@@ -3,7 +3,7 @@ import { LeavesEnqueuedEvent } from "@flax/contracts/dist/src/BatchBinaryMerkle"
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { FlaxLMDB } from "../db";
+import { LocalFlaxDB } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
 
@@ -16,12 +16,12 @@ export class LocalMerkleProver
 {
   treeContract: BatchBinaryMerkle;
   provider: ethers.providers.Provider;
-  db: FlaxLMDB;
+  db: LocalFlaxDB;
 
   constructor(
     merkleAddress: Address,
     provider: ethers.providers.Provider,
-    db: FlaxLMDB
+    db: LocalFlaxDB
   ) {
     super();
 

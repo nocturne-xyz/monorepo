@@ -25,7 +25,7 @@ import {
   AssetStruct,
   AssetRequest,
   OperationRequest,
-  FlaxLMDB,
+  LocalFlaxDB,
   DEFAULT_DB_PATH,
   LocalMerkleProver,
   LocalNotesManager,
@@ -42,7 +42,7 @@ describe("Wallet", async () => {
     merkle: BatchBinaryMerkle,
     token: SimpleERC20Token;
   let flaxContext: FlaxContext;
-  let db = new FlaxLMDB({ localMerkle: true });
+  let db = new LocalFlaxDB({ localMerkle: true });
 
   async function setup() {
     const sk = BigInt(1);
