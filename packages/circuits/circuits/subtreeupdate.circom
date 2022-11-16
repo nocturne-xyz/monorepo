@@ -18,6 +18,13 @@ template SubtreeUpdate4(r) {
 
     // merkle proof for the subtree's root
     signal input siblings[r];
+    // note commitments
+    signal input leaves[2**s];
+    // bitmap indicating which of the leaves don't appear in the accumulator hash
+    // i.e. if the leaf was inserted by a joinsplit, then its corresponding bit will be 0, as we don't know the entire note
+    // otherwise, it's 1, since the note was revealed on-chain
+    signal input bitmap[2**s];
+
     // notes to be inserted
     // ! NOTE: This assumes ristretto compression for addresses has been implemented
     signal input ownerH1s[2**s];
@@ -37,6 +44,8 @@ template SubtreeUpdate4(r) {
     }
 
     for (var i = 0; i < 2**s; i++) {
+        inner.leaves[i] <== leaves[i];
+        inner.bitmap[i] <== bitmap[i];
         inner.ownerH1s[i] <== ownerH1s[i];
         inner.ownerH2s[i] <== ownerH2s[i];
         inner.nonces[i] <== nonces[i];
@@ -131,6 +140,13 @@ template SubtreeUpdate(r, s) {
     // Merkle inclusion witness for the subtree
     signal input siblings[r];
 
+    // note commitments
+    signal input leaves[2**s];
+    // bitmap indicating which of the leaves don't appear in the accumulator hash
+    // i.e. if the leaf was inserted by a joinsplit, then its corresponding bit will be 0, as we don't know the entire note
+    // otherwise, it's 1, since the note was revealed on-chain
+    signal input bitmap[2**s];
+
     // a constant signal that should be passed in by the outer component
     // this should be set to to the value of the root of a depth-s subtree of zeros
     // this is a bit of a hack, but it's best way to do this while retaining parametricity for size
@@ -146,10 +162,17 @@ template SubtreeUpdate(r, s) {
     signal input ids[2**s];
     signal input values[2**s];
 
+    // binary-check the bitmap
+    for (var i = 0; i < 2**2; i++) {
+        bitmap[i] * (1 - bitmap[i]) === 0;
+    }
+
     // hash the notes to get the tree leaves and sha256 hashes to check against accumulator
-    signal leaves[2**s];
-    signal noteCommitmentSha256Hashes[2**s][256];
+    signal accumulatorInnerHashes[2**s][256];
+    signal tmp1[2**s][256];
+    signal tmp2[2**s][256];
     component noteHashers[2**s];
+    component leafBits[2**s];
     for (var i = 0; i < 2**s; i++) {
         noteHashers[i] = parallel NoteCommitmentHash();
         noteHashers[i].ownerH1 <== ownerH1s[i];
@@ -159,10 +182,19 @@ template SubtreeUpdate(r, s) {
         noteHashers[i].id <== ids[i];
         noteHashers[i].value <== values[i];
 
-        leaves[i] <== noteHashers[i].noteCommitment;
+        bitmap[i] * (noteHashers[i].noteCommitment - leaves[i]) === 0;
+
+        leafBits[i] = Num2BitsBE(254);
+        leafBits[i].in <== leaves[i];
+        for (var j = 0; j < 254; j++) {
+            tmp2[i][j + 2] <== (1 - bitmap[i]) * leafBits[i].out[j];
+        }
+        tmp2[i][0] <== 0;
+        tmp2[i][1] <== 0;
 
         for (var j = 0; j < 256; j++) {
-            noteCommitmentSha256Hashes[i][j] <== noteHashers[i].sha256HashBits[j];
+            tmp1[i][j] <== bitmap[i] * noteHashers[i].sha256HashBits[j];
+            accumulatorInnerHashes[i][j] <== tmp1[i][j] + tmp2[i][j];
         }
     }
     
@@ -186,7 +218,7 @@ template SubtreeUpdate(r, s) {
     // accumulatorHash input is a concatenation of all of the sha256 hashes for the notes as big-endian bitstrings
     for (var i = 0; i < 2**s; i++) {
         for (var j = 0; j < 256; j++) {
-            hasher.in[i*256 + j] <== noteCommitmentSha256Hashes[i][j];
+            hasher.in[i*256 + j] <== accumulatorInnerHashes[i][j];
         }
     }
     

@@ -52,15 +52,6 @@ export class Note {
     );
   }
 
-  // TODO: replace the other one with this one once ristretto is implemented
-  toCommitmentRistretto(): bigint {
-    const { owner, nonce, asset, id, value } = this.inner;
-    const ownerHash = poseidon([owner.h1X, owner.h2X]);
-    return BigInt(
-      poseidon([ownerHash, nonce, BigInt(asset), id, value])
-    );
-  }
-
   toNoteInput(): NoteInput {
     const { owner, nonce, asset, id, value } = this.inner;
     return {

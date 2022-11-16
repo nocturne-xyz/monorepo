@@ -4,14 +4,14 @@ pragma solidity ^0.8.5;
 import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
 
-import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
+import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
 import {IHasherT6} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-    IBatchMerkle public noteCommitmentTree;
+    IOffchainMerkleTree public noteCommitmentTree;
     mapping(uint256 => bool) public pastRoots;
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
@@ -40,12 +40,12 @@ contract CommitmentTreeManager {
         address _hasherT6
     ) {
         verifier = ISpend2Verifier(_verifier);
-        noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
+        noteCommitmentTree = IOffchainMerkleTree(_noteCommitmentTree);
         hasherT6 = IHasherT6(_hasherT6);
     }
 
     function getCurrentRoot() external view returns (uint256) {
-        return noteCommitmentTree.root();
+        return noteCommitmentTree.getRoot();
     }
 
     // TODO: add default noteCommitment for when there is no output note.

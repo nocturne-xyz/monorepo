@@ -41,6 +41,16 @@ export function bigInt256ToBEBytes(n: bigint): number[] {
   return hexStringToBEBytes(s);
 }
 
+export function bEBytesToBigInt256(bytes: number[]): bigint {
+  while (bytes.length < 32) {
+    bytes.unshift(0);
+  }
+
+  return bytes.reduce((acc, byte) => {
+    return acc * 256n + BigInt(byte);
+  }, 0n);
+}
+
 export function hexStringToBEBytes(s: string): number[] {
   const res = [];
   for (let i = 0; i < 32; i++) {
