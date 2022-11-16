@@ -67,3 +67,4 @@ export abstract class NotesManager {
 }
 
 export { LocalNotesManager } from "./local";
+export { MockNotesManager } from "./mock";

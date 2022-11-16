@@ -6,7 +6,7 @@ import {
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { FlaxLMDB } from "../db";
+import { LocalFlaxDB } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
 import { Note } from "../note";
@@ -20,12 +20,12 @@ export class LocalMerkleProver
 {
   contract: Wallet;
   provider: ethers.providers.Provider;
-  db: FlaxLMDB;
+  db: LocalFlaxDB;
 
   constructor(
     walletContractAddress: Address,
     provider: ethers.providers.Provider,
-    db: FlaxLMDB
+    db: LocalFlaxDB
   ) {
     super();
 

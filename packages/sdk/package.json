@@ -1,9 +1,9 @@
 {
   "name": "@flax/sdk",
   "version": "1.0.0",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT",
   "files": [
     "dist/**/*",
     "src/**/*"
@@ -14,10 +14,22 @@
     "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
     "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
-    "test:unit": "mocha --require ts-node/register test/**",
     "check": "tsc --noEmit",
+    "clean": "rm -rf dist",
     "lint": "eslint --fix src --ext .ts",
-    "clean": "rm -rf dist"
+    "test:unit": "mocha --require ts-node/register test/**"
+  },
+  "dependencies": {
+    "@flax/contracts": "workspace:^",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@zk-kit/incremental-merkle-tree": "^1.0.0",
+    "big-integer": "^1.6.42",
+    "circomlib": "0.0.18",
+    "circomlibjs": "0.0.8",
+    "ethers": "^5.0.0",
+    "ffjavascript": "^0.2.38",
+    "snarkjs": "0.5.0",
+	"js-sha256": "^0.9.0",
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
@@ -32,19 +44,5 @@
     "mocha": "^10.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
-  },
-  "dependencies": {
-    "@flax/contracts": "workspace:^",
-    "@typescript-eslint/eslint-plugin": "^5.20.0",
-    "@zk-kit/incremental-merkle-tree": "^1.0.0",
-    "big-integer": "^1.6.42",
-    "bigint-conversion": "^2.3.0",
-    "circomlib": "0.0.18",
-    "circomlibjs": "0.0.8",
-    "ethers": "^5.0.0",
-    "ffjavascript": "^0.2.38",
-    "js-sha256": "^0.9.0",
-    "lmdb": "^2.6.8",
-    "snarkjs": "0.5.0"
   }
 }

@@ -12,7 +12,7 @@ import {
 } from "@flax/contracts";
 import {
   LocalMerkleProver,
-  FlaxLMDB,
+  LocalFlaxDB,
   DEFAULT_DB_PATH,
   BinaryPoseidonTree,
   FlaxPrivKey,
@@ -23,11 +23,9 @@ import { depositFunds } from "./utils";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
-  let alice: ethers.Signer;
-  let wallet: Wallet;
-  let token: SimpleERC20Token;
-  let vault: Vault;
-  let db: FlaxLMDB;
+  let merkle: BatchBinaryMerkle;
+  let flaxSigner: FlaxSigner;
+  let db: LocalFlaxDB;
   let localMerkle: LocalMerkleProver;
   let flaxSigner: FlaxSigner;
 
@@ -35,8 +33,7 @@ describe("LocalMerkle", async () => {
     const sk = BigInt(1);
     const flaxPrivKey = new FlaxPrivKey(sk);
     flaxSigner = new FlaxSigner(flaxPrivKey);
-
-    db = new FlaxLMDB({ dbPath: DEFAULT_DB_PATH, localMerkle: true });
+    db = new LocalFlaxDB({ localMerkle: true });
 
     [deployer, alice] = await ethers.getSigners();
     const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);

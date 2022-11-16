@@ -21,7 +21,7 @@ import {
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
 import { MerkleProver } from "./sdk/merkleProver";
-import { FlaxDB, FlaxLMDB } from "./sdk/db";
+import { FlaxDB, LocalFlaxDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 
 export interface OperationRequest {
@@ -45,7 +45,7 @@ export class FlaxContext {
     signer: FlaxSigner,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
-    db: FlaxDB = new FlaxLMDB()
+    db: FlaxDB = new LocalFlaxDB()
   ) {
     this.signer = signer;
     this.merkleProver = merkleProver;
@@ -198,7 +198,7 @@ export class FlaxContext {
     }
 
     const notes = await this.db.getNotesFor(assetRequest.asset);
-    const sortedNotes = notes.sort((a, b) => {
+    const sortedNotes = [...notes].sort((a, b) => {
       return Number(a.value - b.value);
     });
 

@@ -7,11 +7,11 @@ import { IncludedNoteStruct } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { DEFAULT_DB_PATH, FlaxLMDB, LocalNotesManager } from "../src/sdk";
+import { DEFAULT_DB_PATH, LocalFlaxDB, LocalNotesManager } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
 describe("FlaxContext", () => {
-  let db = new FlaxLMDB({ localMerkle: true });
+  let db = new LocalFlaxDB({ localMerkle: true });
   let flaxContext: FlaxContext;
   const asset: AssetStruct = { address: "0x12345", id: 11111n };
 
@@ -28,7 +28,7 @@ describe("FlaxContext", () => {
       asset: asset.address,
       id: asset.id,
       value: 100n,
-      merkleIndex: 1,
+      merkleIndex: 0,
     };
     const secondOldNote: IncludedNoteStruct = {
       owner: signer.address.toStruct(),
@@ -44,7 +44,7 @@ describe("FlaxContext", () => {
       asset: asset.address,
       id: asset.id,
       value: 25n,
-      merkleIndex: 1,
+      merkleIndex: 2,
     };
     const fourthOldNote: IncludedNoteStruct = {
       owner: signer.address.toStruct(),
@@ -52,7 +52,7 @@ describe("FlaxContext", () => {
       asset: asset.address,
       id: asset.id,
       value: 10n,
-      merkleIndex: 1,
+      merkleIndex: 3,
     };
 
     await db.storeNotes([
@@ -106,15 +106,16 @@ describe("FlaxContext", () => {
     expect(minimumFor5.length).to.equal(1);
     expect(minimumFor5[0].oldNote.inner.value).to.equal(10n);
 
-    // Request 60 tokens, consume next smallest two notes
-    const assetRequest60: AssetRequest = {
+    // Request 80 tokens, consume next smallest two notes
+    const assetRequest80: AssetRequest = {
       asset,
       value: 80n,
     };
     const minimumFor80 = await flaxContext.gatherMinimumNotes(
       refundAddr,
-      assetRequest60
+      assetRequest80
     );
+
     expect(minimumFor80.length).to.equal(3);
     expect(minimumFor80[2].oldNote.inner.value).to.equal(50n);
     expect(minimumFor80[1].oldNote.inner.value).to.equal(25n);

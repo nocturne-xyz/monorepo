@@ -5,3 +5,4 @@ export interface MerkleProver {
 }
 
 export { LocalMerkleProver } from "./local";
+export { MockMerkleProver } from "./mock";

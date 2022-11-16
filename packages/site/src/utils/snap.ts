@@ -1,12 +1,5 @@
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
-// import { FlaxContext, FlaxSigner, FlaxPrivKey } from "@flax/sdk";
-
-// const privkey = new FlaxPrivKey(1n);
-// export const flax = new FlaxContext(
-//   new FlaxSigner(privkey),
-
-// )
 
 /**
  * Get the installed snaps in MetaMask.
@@ -84,6 +77,7 @@ export const sendHello = async () => {
  */
 
 export const sendSetAndShowKv = async () => {
+  // await flax.db.clear();
   await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [
