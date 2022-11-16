@@ -127,5 +127,5 @@ export abstract class LocalMerkleDBExtension {
   abstract getLeaf(index: number): Promise<bigint | undefined>;
 }
 
-// export { FlaxLMDB } from "./lmdb";
+export { SnapDB } from "./snap";
 export { LocalFlaxDB } from "./local";
