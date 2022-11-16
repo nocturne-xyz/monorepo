@@ -19,11 +19,21 @@ interface IWallet {
     struct SpendTransaction {
         uint256 commitmentTreeRoot;
         uint256 nullifier;
-        uint256 newNoteCommitment;
         uint256[8] proof;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
         uint256 valueToSpend; // 0 for ERC721
+        uint256 newNoteCommitment;
+        Note newNote;
+    }
+
+    struct Note {
+        uint256 ownerH1;
+        uint256 ownerH2;
+        uint256 nonce;
+        uint256 asset;
+        uint256 id;
+        uint256 value;
     }
 
     struct SubtreeUpdateArgs {

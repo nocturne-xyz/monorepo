@@ -83,8 +83,8 @@ export class FlaxAddress {
   }
 
   hash(): bigint {
-    const { h1X, h1Y, h2X, h2Y } = this.inner;
-    return BigInt(poseidon([h1X, h1Y, h2X, h2Y]));
+    const { h1X, h2X } = this.inner;
+    return BigInt(poseidon([h1X, h2X]));
   }
 
   rerand(): FlaxAddress {
