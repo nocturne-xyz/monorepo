@@ -1,5 +1,21 @@
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
+import {
+  FlaxContext,
+  FlaxSigner,
+  FlaxPrivKey,
+  LocalFlaxDB,
+  MockMerkleProver,
+  MockNotesManager,
+} from "@flax/sdk";
+
+const privkey = new FlaxPrivKey(1n);
+const flax = new FlaxContext(
+  new FlaxSigner(privkey),
+  new MockMerkleProver(),
+  new MockNotesManager(),
+  new LocalFlaxDB()
+);
 
 /**
  * Get the installed snaps in MetaMask.
@@ -77,7 +93,7 @@ export const sendHello = async () => {
  */
 
 export const sendSetAndShowKv = async () => {
-  // await flax.db.clear();
+  await flax.db.clear();
   await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [

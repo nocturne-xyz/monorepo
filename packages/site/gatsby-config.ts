@@ -7,6 +7,7 @@ const config: GatsbyConfig = {
   plugins: [
     "gatsby-plugin-svgr",
     "gatsby-plugin-styled-components",
+    "gatsby-plugin-polyfill-io",
     {
       resolve: "gatsby-plugin-manifest",
       options: {
