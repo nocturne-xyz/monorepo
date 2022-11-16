@@ -25,6 +25,7 @@
     ]
   },
   "dependencies": {
+    "@flax/sdk": "workspace:^",
     "@metamask/providers": "^9.0.0",
     "eslint-webpack-plugin": "^3.2.0",
     "gatsby-plugin-eslint": "^4.0.3",
