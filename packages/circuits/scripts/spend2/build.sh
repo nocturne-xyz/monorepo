@@ -66,13 +66,13 @@ echo "DONE ($((end-start))s)"
 
 # echo "****GENERATING PROOF FOR SAMPLE INPUT****"
 # start=`date +%s`
-# npx snarkjs groth16 prove "$BUILD_DIR"/"$CIRCUIT_NAME".zkey "$BUILD_DIR"/witness.wtns "$BUILD_DIR"/proof.json "$BUILD_DIR"/public.json
+# npx snarkjs groth16 prove "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey "$BUILD_DIR"/witness.wtns "$BUILD_DIR"/proof.json "$BUILD_DIR"/public.json
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
 # echo "****VERIFYING PROOF FOR SAMPLE INPUT****"
 # start=`date +%s`
-# npx snarkjs groth16 verify "$BUILD_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
+# npx snarkjs groth16 verify "$OUTPUT_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
