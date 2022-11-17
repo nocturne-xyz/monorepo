@@ -35,9 +35,9 @@ function snapStateToObject(state: SnapState): any {
   };
 }
 
-export class SnapDB {
+export class SnapDB extends FlaxDB {
   constructor() {
-    // super();
+    super();
   }
 
   async getSnapState(): Promise<SnapState> {
@@ -102,50 +102,50 @@ export class SnapDB {
     return true;
   }
 
-  // async removeNote(note: IncludedNoteStruct): Promise<boolean> {
-  //   const state = await this.getSnapState();
+  async removeNote(note: IncludedNoteStruct): Promise<boolean> {
+    const state = await this.getSnapState();
 
-  //   const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
-  //   state.notes.set(
-  //     key,
-  //     (state.notes.get(key) ?? []).filter(
-  //       (jsonNote) => jsonNote != JSON.stringify(note)
-  //     )
-  //   );
+    const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
+    state.notes.set(
+      key,
+      (state.notes.get(key) ?? []).filter(
+        (jsonNote) => jsonNote != JSON.stringify(note)
+      )
+    );
 
-  //   await wallet.request({
-  //     method: "snap_manageState",
-  //     params: ["update", snapStateToObject(state)],
-  //   });
-  //   return true;
-  // }
+    await wallet.request({
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
+    });
+    return true;
+  }
 
-  // async getAllNotes(): Promise<Map<string, IncludedNoteStruct[]>> {
-  //   const state = await this.getSnapState();
+  async getAllNotes(): Promise<Map<string, IncludedNoteStruct[]>> {
+    const state = await this.getSnapState();
 
-  //   const notesMap: Map<string, IncludedNoteStruct[]> = new Map();
-  //   for (const [assetHash, jsonNotes] of state.notes.entries()) {
-  //     const notes = jsonNotes.map(includedNoteStructFromJSON);
-  //     notesMap.set(assetHash, notes);
-  //   }
+    const notesMap: Map<string, IncludedNoteStruct[]> = new Map();
+    for (const [assetHash, jsonNotes] of state.notes.entries()) {
+      const notes = jsonNotes.map(includedNoteStructFromJSON);
+      notesMap.set(assetHash, notes);
+    }
 
-  //   return notesMap;
-  // }
+    return notesMap;
+  }
 
-  // async getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]> {
-  //   const state = await this.getSnapState();
-  //   const jsonNotesFor = state.notes.get(hashAsset(asset)) ?? [];
-  //   return jsonNotesFor.map(includedNoteStructFromJSON);
-  // }
+  async getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]> {
+    const state = await this.getSnapState();
+    const jsonNotesFor = state.notes.get(hashAsset(asset)) ?? [];
+    return jsonNotesFor.map(includedNoteStructFromJSON);
+  }
 
-  // async clear(): Promise<void> {
-  //   await wallet.request({
-  //     method: "snap_manageState",
-  //     params: ["update", DEFAULT_SNAP_STATE],
-  //   });
-  // }
+  async clear(): Promise<void> {
+    await wallet.request({
+      method: "snap_manageState",
+      params: ["update", DEFAULT_SNAP_STATE],
+    });
+  }
 
-  // async close(): Promise<void> {
-  //   return new Promise(() => {}); // no close function for snap
-  // }
+  async close(): Promise<void> {
+    return new Promise(() => {}); // no close function for snap
+  }
 }
