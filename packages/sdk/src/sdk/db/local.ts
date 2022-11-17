@@ -2,7 +2,6 @@
 import { FlaxDB, LocalMerkleDBExtension } from ".";
 import { IncludedNoteStruct } from "../note";
 import { AssetHash, AssetStruct } from "../../commonTypes";
-import * as _ from "lodash";
 
 interface LocalFlaxDBState {
   kv: Map<string, string>;
@@ -50,7 +49,7 @@ export class LocalFlaxDB extends FlaxDB implements LocalMerkleDBExtension {
     const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
     this.state.notes.set(
       key,
-      (this.state.notes.get(key) ?? []).filter((n) => !_.isEqual(n, note))
+      (this.state.notes.get(key) ?? []).filter((n) => n !== note)
     );
     return true;
   }
