@@ -6,6 +6,7 @@ import { AssetRequest, AssetStruct } from "../src/commonTypes";
 import { IncludedNoteStruct } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
+import { MockSpend2Prover } from "../src/proof/mock";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { DEFAULT_DB_PATH, LocalFlaxDB, LocalNotesManager } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
@@ -62,7 +63,8 @@ describe("FlaxContext", () => {
       fourthOldNote,
     ]);
 
-    const prover = new BinaryPoseidonTree();
+    const prover = new MockSpend2Prover();
+    const merkleProver = new BinaryPoseidonTree();
     const notesManager = new LocalNotesManager(
       db,
       signer,
@@ -70,7 +72,7 @@ describe("FlaxContext", () => {
       getDefaultProvider()
     );
 
-    return new FlaxContext(signer, prover, notesManager, db);
+    return new FlaxContext(signer, prover, merkleProver, notesManager, db);
   }
 
   beforeEach(async () => {

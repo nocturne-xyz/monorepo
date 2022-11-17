@@ -2,15 +2,16 @@
   "name": "@flax/e2e-tests",
   "version": "1.0.0",
   "description": "",
+  "license": "ISC",
+  "author": "",
   "main": "index.js",
   "scripts": {
-    "test:e2e": "npx hardhat test",
-    "build": ""
+    "build": "",
+    "test:e2e": "npx hardhat test"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@flax/contracts": "workspace:^",
+    "@flax/local-prover": "workspace:^",
     "@flax/sdk": "workspace:^",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
