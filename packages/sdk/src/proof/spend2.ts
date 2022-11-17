@@ -1,4 +1,4 @@
-import findWorkspaceRoot from "find-yarn-workspace-root";
+// import findWorkspaceRoot from "find-yarn-workspace-root";
 
 //@ts-ignore
 // TODO: make proving work again
@@ -12,11 +12,11 @@ import {
 import { FlaxAddressStruct } from "../crypto/address";
 
 // eslint-disable-next-line
-const ROOT_DIR = findWorkspaceRoot()!;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
+// const ROOT_DIR = findWorkspaceRoot()!;
+// const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+// const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
+// const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
+// const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export interface Spend2ProofWithPublicSignals {
   proof: BaseProof;
@@ -133,11 +133,10 @@ export function normalizeSpend2Inputs(inputs: Spend2Inputs): Spend2Inputs {
   };
 }
 
-export async function proveSpend2(
-  inputs: Spend2Inputs,
-  wasmPath = WASM_PATH,
-  zkeyPath = ZKEY_PATH
-): Promise<Spend2ProofWithPublicSignals> {
+export async function proveSpend2(): Promise<Spend2ProofWithPublicSignals> {
+  // inputs: Spend2Inputs,
+  // wasmPath = WASM_PATH,
+  // zkeyPath = ZKEY_PATH
   // inputs = normalizeSpend2Inputs(inputs);
   // const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
   //   inputs;
@@ -216,10 +215,11 @@ export async function proveSpend2(
   };
 }
 
-export async function verifySpend2Proof(
-  { proof, publicSignals }: Spend2ProofWithPublicSignals,
-  vkeyPath = VKEY_PATH
-): Promise<boolean> {
+export async function verifySpend2Proof({
+  proof,
+  publicSignals,
+}: Spend2ProofWithPublicSignals): // vkeyPath = VKEY_PATH
+Promise<boolean> {
   // const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
   // return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
   return true;

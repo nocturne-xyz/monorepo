@@ -11,12 +11,12 @@ import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
 import { FlaxAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
-import { calculateOperationDigest } from "./contract/utils";
+// import { calculateOperationDigest } from "./contract/utils";
 import {
-  MerkleProofInput,
+  // MerkleProofInput,
   proveSpend2,
   publicSignalsArrayToTyped,
-  Spend2Inputs,
+  // Spend2Inputs,
   verifySpend2Proof,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
@@ -139,29 +139,29 @@ export class FlaxContext {
       valueToSpend: oldNote.value - newNote.value,
     };
 
-    const opDigest = calculateOperationDigest(
-      preProofOperation,
-      preProofSpendTx
-    );
-    const opSig = this.signer.sign(opDigest);
+    // const opDigest = calculateOperationDigest(
+    //   preProofOperation,
+    //   preProofSpendTx
+    // );
+    // const opSig = this.signer.sign(opDigest);
 
-    const merkleInput: MerkleProofInput = {
-      path: merkleProof.pathIndices.map((n) => BigInt(n)),
-      siblings: merkleProof.siblings,
-    };
+    // const merkleInput: MerkleProofInput = {
+    //   path: merkleProof.pathIndices.map((n) => BigInt(n)),
+    //   siblings: merkleProof.siblings,
+    // };
 
-    const inputs: Spend2Inputs = {
-      vk: this.signer.privkey.vk,
-      spendPk: this.signer.privkey.spendPk(),
-      operationDigest: opDigest,
-      c: opSig.c,
-      z: opSig.z,
-      oldNote: oldNote.toNoteInput(),
-      newNote: newNote.toNoteInput(),
-      merkleProof: merkleInput,
-    };
+    // const inputs: Spend2Inputs = {
+    //   vk: this.signer.privkey.vk,
+    //   spendPk: this.signer.privkey.spendPk(),
+    //   operationDigest: opDigest,
+    //   c: opSig.c,
+    //   z: opSig.z,
+    //   oldNote: oldNote.toNoteInput(),
+    //   newNote: newNote.toNoteInput(),
+    //   merkleProof: merkleInput,
+    // };
 
-    const proof = await proveSpend2(inputs);
+    const proof = await proveSpend2(/* inputs */);
     if (!(await verifySpend2Proof(proof))) {
       throw new Error("Proof invalid!");
     }
