@@ -1,6 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import * as fs from "fs";
+import { ethers, deployments } from "hardhat";
 import {
   Wallet,
   Wallet__factory,
@@ -13,10 +12,6 @@ import {
 import {
   LocalMerkleProver,
   LocalFlaxDB,
-  DEFAULT_DB_PATH,
-  BinaryPoseidonTree,
-  FlaxPrivKey,
-  FlaxSigner,
 } from "@flax/sdk";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 import { depositFunds } from "./utils";
@@ -66,11 +61,6 @@ describe("LocalMerkle", async () => {
 
   afterEach(async () => {
     db.clear();
-  });
-
-  after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
   it("Local merkle prover self syncs", async () => {

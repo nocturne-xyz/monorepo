@@ -1,7 +1,5 @@
-import findWorkspaceRoot from "find-yarn-workspace-root";
-
-//@ts-ignore
 // TODO: make proving work again
+import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
@@ -23,6 +21,7 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export class LocalSpend2Prover implements Spend2Prover {
+  // TODO: should prover hold the artifacts?
   async proveSpend2(
     inputs: Spend2Inputs,
     wasmPath = WASM_PATH,

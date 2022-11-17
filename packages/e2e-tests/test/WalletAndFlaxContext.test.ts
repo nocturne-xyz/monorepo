@@ -1,9 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import {
-  Wallet__factory,
-  Vault__factory,
-  Spend2Verifier__factory,
   TestSubtreeUpdateVerifier__factory,
   SimpleERC20Token__factory,
   Vault,
@@ -12,8 +9,6 @@ import {
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
 import {
-  FlaxPrivKey,
-  FlaxSigner,
   Action,
   SNARK_SCALAR_FIELD,
   Bundle,
@@ -22,12 +17,9 @@ import {
   AssetRequest,
   OperationRequest,
   LocalFlaxDB,
-  DEFAULT_DB_PATH,
   LocalMerkleProver,
-  LocalNotesManager,
 } from "@flax/sdk";
-import { LocalSpend2Prover } from "@flax/local-prover";
-import * as fs from "fs";
+import { setup } from "../deploy/deployScript";
 import { depositFunds } from "./utils";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
@@ -41,58 +33,7 @@ describe("Wallet", async () => {
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let flaxContext: FlaxContext;
-  let db = new LocalFlaxDB({ localMerkle: true });
-
-  async function setup() {
-    const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    const flaxSigner = new FlaxSigner(flaxPrivKey);
-
-    [deployer, alice, bob] = await ethers.getSigners();
-
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
-    token = await tokenFactory.deploy();
-
-    const vaultFactory = new Vault__factory(deployer);
-    vault = await vaultFactory.deploy();
-
-    const spend2VerifierFactory = new Spend2Verifier__factory(deployer);
-    const spend2Verifier = await spend2VerifierFactory.deploy();
-
-    const subtreeUpdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
-    const subtreeUpdateVerifier = await subtreeUpdateVerifierFactory.deploy();
-
-
-    const walletFactory = new Wallet__factory(deployer);
-    wallet = await walletFactory.deploy(
-      vault.address,
-      spend2Verifier.address,
-      subtreeUpdateVerifier.address
-    );
-
-    await vault.initialize(wallet.address);
-
-    console.log("Create FlaxContext");
-    const prover = new LocalSpend2Prover();
-    const merkleProver = new LocalMerkleProver(
-      merkle.address,
-      ethers.provider,
-      db
-    );
-    const notesManager = new LocalNotesManager(
-      db,
-      flaxSigner,
-      wallet.address,
-      ethers.provider
-    );
-    flaxContext = new FlaxContext(
-      flaxSigner,
-      prover,
-      merkleProver,
-      notesManager,
-      db
-    );
-  }
+  let db: LocalFlaxDB;
 
   async function applySubtreeUpdate() {
     const root = (flaxContext.merkleProver as LocalMerkleProver).root();
@@ -100,16 +41,20 @@ describe("Wallet", async () => {
   }
 
   beforeEach(async () => {
-    await setup();
+    const flaxSetup = await setup();
+    deployer = flaxSetup.deployer;
+    alice = flaxSetup.alice;
+    bob = flaxSetup.bob;
+    vault = flaxSetup.vault;
+    wallet = flaxSetup.wallet;
+    merkle = flaxSetup.merkle;
+    token = flaxSetup.token;
+    flaxContext = flaxSetup.flaxContext;
+    db = flaxSetup.db;
   });
 
   afterEach(async () => {
     db.clear();
-  });
-
-  after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
