@@ -11,13 +11,12 @@ import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
 import { FlaxAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
-// import { calculateOperationDigest } from "./contract/utils";
+import { calculateOperationDigest } from "./contract/utils";
 import {
-  // MerkleProofInput,
-  proveSpend2,
+  MerkleProofInput,
+  Spend2Prover,
   publicSignalsArrayToTyped,
-  // Spend2Inputs,
-  verifySpend2Proof,
+  Spend2Inputs,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
 import { MerkleProver } from "./sdk/merkleProver";
@@ -37,17 +36,20 @@ export interface OldAndNewNotePair {
 
 export class FlaxContext {
   signer: FlaxSigner;
+  prover: Spend2Prover;
   merkleProver: MerkleProver;
   notesManager: NotesManager;
   db: FlaxDB;
 
   constructor(
     signer: FlaxSigner,
+    prover: Spend2Prover,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: FlaxDB = new LocalFlaxDB()
   ) {
     this.signer = signer;
+    this.prover = prover;
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;
@@ -139,30 +141,30 @@ export class FlaxContext {
       valueToSpend: oldNote.value - newNote.value,
     };
 
-    // const opDigest = calculateOperationDigest(
-    //   preProofOperation,
-    //   preProofSpendTx
-    // );
-    // const opSig = this.signer.sign(opDigest);
+    const opDigest = calculateOperationDigest(
+      preProofOperation,
+      preProofSpendTx
+    );
+    const opSig = this.signer.sign(opDigest);
 
-    // const merkleInput: MerkleProofInput = {
-    //   path: merkleProof.pathIndices.map((n) => BigInt(n)),
-    //   siblings: merkleProof.siblings,
-    // };
+    const merkleInput: MerkleProofInput = {
+      path: merkleProof.pathIndices.map((n) => BigInt(n)),
+      siblings: merkleProof.siblings,
+    };
 
-    // const inputs: Spend2Inputs = {
-    //   vk: this.signer.privkey.vk,
-    //   spendPk: this.signer.privkey.spendPk(),
-    //   operationDigest: opDigest,
-    //   c: opSig.c,
-    //   z: opSig.z,
-    //   oldNote: oldNote.toNoteInput(),
-    //   newNote: newNote.toNoteInput(),
-    //   merkleProof: merkleInput,
-    // };
+    const inputs: Spend2Inputs = {
+      vk: this.signer.privkey.vk,
+      spendPk: this.signer.privkey.spendPk(),
+      operationDigest: opDigest,
+      c: opSig.c,
+      z: opSig.z,
+      oldNote: oldNote.toNoteInput(),
+      newNote: newNote.toNoteInput(),
+      merkleProof: merkleInput,
+    };
 
-    const proof = await proveSpend2(/* inputs */);
-    if (!(await verifySpend2Proof(proof))) {
+    const proof = await this.prover.proveSpend2(inputs);
+    if (!(await this.prover.verifySpend2Proof(proof))) {
       throw new Error("Proof invalid!");
     }
 

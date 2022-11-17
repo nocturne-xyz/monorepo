@@ -26,6 +26,7 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@flax/sdk";
+import { LocalSpend2Prover } from "@flax/local-prover";
 import * as fs from "fs";
 import { depositFunds } from "./utils";
 
@@ -72,14 +73,25 @@ describe("Wallet", async () => {
     await vault.initialize(wallet.address);
 
     console.log("Create FlaxContext");
-    const prover = new LocalMerkleProver(wallet.address, ethers.provider, db);
+    const prover = new LocalSpend2Prover();
+    const merkleProver = new LocalMerkleProver(
+      merkle.address,
+      ethers.provider,
+      db
+    );
     const notesManager = new LocalNotesManager(
       db,
       flaxSigner,
       wallet.address,
       ethers.provider
     );
-    flaxContext = new FlaxContext(flaxSigner, prover, notesManager, db);
+    flaxContext = new FlaxContext(
+      flaxSigner,
+      prover,
+      merkleProver,
+      notesManager,
+      db
+    );
   }
 
   async function applySubtreeUpdate() {

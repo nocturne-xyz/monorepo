@@ -38,6 +38,9 @@
       "path": "./packages/sdk"
     },
     {
+      "path": "./packages/local-prover"
+    },
+    {
       "path": "./packages/e2e-tests"
     },
     {
