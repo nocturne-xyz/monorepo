@@ -1,3 +1,12 @@
+import {
+  FlaxContext,
+  FlaxPrivKey,
+  FlaxSigner,
+  LocalFlaxDB,
+  LocalMerkleProver,
+  MockNotesManager,
+} from "@flax/sdk";
+import { ethers } from "ethers";
 import { OnRpcRequestHandler } from "@metamask/snap-types";
 import { SnapDB } from "./snapdb";
 
@@ -26,6 +35,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }) => {
   const db = new SnapDB();
+  const signer = new FlaxSigner(new FlaxPrivKey(1n));
+  const context = new FlaxContext(
+    signer,
+    new LocalMerkleProver(
+      "0x1234",
+      new ethers.providers.JsonRpcProvider("https:/alchemy.com"),
+      new LocalFlaxDB()
+    ),
+    new MockNotesManager(),
+    db
+  );
   switch (request.method) {
     case "hello":
       return wallet.request({

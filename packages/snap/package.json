@@ -27,7 +27,8 @@
     "start": "mm-snap watch"
   },
   "dependencies": {
-    "@flax/sdk": "workspace:^"
+    "@flax/sdk": "workspace:^",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@lavamoat/allow-scripts": "^2.0.3",
