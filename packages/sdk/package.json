@@ -24,11 +24,9 @@
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
-    "circomlib": "0.0.18",
     "circomlibjs": "0.0.8",
     "ethers": "^5.0.0",
     "ffjavascript": "^0.2.38",
-    "snarkjs": "0.5.0",
 	"js-sha256": "^0.9.0",
   },
   "devDependencies": {

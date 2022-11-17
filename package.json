@@ -20,5 +20,8 @@
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
     "turbo": "^1.5.5"
+  },
+  "resolutions": {
+    "ffjavascript": "FLAXPrivacy/ffjavascript"
   }
 }

@@ -1,9 +1,9 @@
 {
   "name": "@flax/circuits",
   "version": "1.0.0",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT",
   "scripts": {
     "install-circom": "./scripts/install_circom.sh",
     "build-all-circuits": "./scripts/build_all.sh",
@@ -33,5 +33,16 @@
     "node-fetch": "^3.2.10",
     "snarkjs": "^0.5.0",
     "wasmsnark": "^0.0.10"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1",
+    "@types/node": "^18.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "circomlibjs": "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
   }
 }
