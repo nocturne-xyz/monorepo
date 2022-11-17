@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { ethers, deployments } from "hardhat";
-import * as fs from "fs";
 import {
   BatchBinaryMerkle__factory,
   PoseidonHasherT3__factory,
@@ -11,7 +10,6 @@ import {
   FlaxSigner,
   LocalMerkleProver,
   LocalFlaxDB,
-  DEFAULT_DB_PATH,
 } from "@flax/sdk";
 
 describe("LocalMerkle", async () => {
@@ -48,11 +46,6 @@ describe("LocalMerkle", async () => {
 
   afterEach(async () => {
     db.clear();
-  });
-
-  after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
   it("Local merkle prover self syncs", async () => {

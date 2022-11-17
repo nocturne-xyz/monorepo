@@ -1,13 +1,6 @@
 import { expect } from "chai";
-import { ethers, deployments } from "hardhat";
+import { ethers } from "hardhat";
 import {
-  Wallet__factory,
-  Vault__factory,
-  Spend2Verifier__factory,
-  BatchBinaryMerkle__factory,
-  PoseidonHasherT3__factory,
-  PoseidonHasherT5__factory,
-  PoseidonHasherT6__factory,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
@@ -16,8 +9,6 @@ import {
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
 import {
-  FlaxPrivKey,
-  FlaxSigner,
   Action,
   SNARK_SCALAR_FIELD,
   Bundle,
@@ -26,12 +17,9 @@ import {
   AssetRequest,
   OperationRequest,
   LocalFlaxDB,
-  DEFAULT_DB_PATH,
   LocalMerkleProver,
-  LocalNotesManager,
 } from "@flax/sdk";
-import { LocalSpend2Prover } from "@flax/local-prover";
-import * as fs from "fs";
+import { setup } from "../deploy/deployScript";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -43,79 +31,7 @@ describe("Wallet", async () => {
     merkle: BatchBinaryMerkle,
     token: SimpleERC20Token;
   let flaxContext: FlaxContext;
-  let db = new LocalFlaxDB({ localMerkle: true });
-
-  async function setup() {
-    const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    const flaxSigner = new FlaxSigner(flaxPrivKey);
-
-    [deployer, alice, bob] = await ethers.getSigners();
-    await deployments.fixture(["PoseidonLibs"]);
-
-    const poseidonT3Lib = await ethers.getContract("PoseidonT3Lib");
-    const poseidonT5Lib = await ethers.getContract("PoseidonT5Lib");
-    const poseidonT6Lib = await ethers.getContract("PoseidonT6Lib");
-
-    const poseidonT3Factory = new PoseidonHasherT3__factory(deployer);
-    const poseidonHasherT3 = await poseidonT3Factory.deploy(
-      poseidonT3Lib.address
-    );
-
-    const poseidonT5Factory = new PoseidonHasherT5__factory(deployer);
-    const poseidonHasherT5 = await poseidonT5Factory.deploy(
-      poseidonT5Lib.address
-    );
-
-    const poseidonT6Factory = new PoseidonHasherT6__factory(deployer);
-    const poseidonHasherT6 = await poseidonT6Factory.deploy(
-      poseidonT6Lib.address
-    );
-
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
-    token = await tokenFactory.deploy();
-
-    const vaultFactory = new Vault__factory(deployer);
-    vault = await vaultFactory.deploy();
-
-    const verifierFactory = new Spend2Verifier__factory(deployer);
-    const verifier = await verifierFactory.deploy();
-
-    const merkleFactory = new BatchBinaryMerkle__factory(deployer);
-    merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
-
-    const walletFactory = new Wallet__factory(deployer);
-    wallet = await walletFactory.deploy(
-      vault.address,
-      verifier.address,
-      merkle.address,
-      poseidonHasherT5.address,
-      poseidonHasherT6.address
-    );
-
-    await vault.initialize(wallet.address);
-
-    console.log("Create FlaxContext");
-    const prover = new LocalSpend2Prover();
-    const merkleProver = new LocalMerkleProver(
-      merkle.address,
-      ethers.provider,
-      db
-    );
-    const notesManager = new LocalNotesManager(
-      db,
-      flaxSigner,
-      wallet.address,
-      ethers.provider
-    );
-    flaxContext = new FlaxContext(
-      flaxSigner,
-      prover,
-      merkleProver,
-      notesManager,
-      db
-    );
-  }
+  let db: LocalFlaxDB;
 
   async function aliceDepositFunds() {
     token.reserveTokens(alice.address, 1000);
@@ -133,16 +49,20 @@ describe("Wallet", async () => {
   }
 
   beforeEach(async () => {
-    await setup();
+    const flaxSetup = await setup();
+    deployer = flaxSetup.deployer;
+    alice = flaxSetup.alice;
+    bob = flaxSetup.bob;
+    vault = flaxSetup.vault;
+    wallet = flaxSetup.wallet;
+    merkle = flaxSetup.merkle;
+    token = flaxSetup.token;
+    flaxContext = flaxSetup.flaxContext;
+    db = flaxSetup.db;
   });
 
   afterEach(async () => {
     db.clear();
-  });
-
-  after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
