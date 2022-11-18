@@ -7,6 +7,7 @@ import {
   sendHello,
   sendSetAndShowKv,
   shouldDisplayReconnectButton,
+  syncNotes,
 } from "../utils";
 import {
   ConnectButton,
@@ -15,6 +16,7 @@ import {
   SendHelloButton,
   Card,
   SetAndShowKButton,
+  SyncNotesButton,
 } from "../components";
 
 const Container = styled.div`
@@ -137,6 +139,15 @@ const Index = () => {
     }
   };
 
+  const handleSyncNotesClick = async () => {
+    try {
+      await syncNotes();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   return (
     <Container>
       <Heading>
@@ -220,6 +231,24 @@ const Index = () => {
             button: (
               <SetAndShowKButton
                 onClick={handleSetAndShowKvClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "Sync Notes",
+            description: "Sync notes.",
+            button: (
+              <SyncNotesButton
+                onClick={handleSyncNotesClick}
                 disabled={!state.installedSnap}
               />
             ),

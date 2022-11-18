@@ -5,7 +5,7 @@ import {
   IncludedNoteStruct,
   LocalFlaxDB,
   LocalMerkleProver,
-  MockNotesManager,
+  LocalNotesManager,
   MockSpend2Prover,
 } from "@flax/sdk";
 import { ethers } from "ethers";
@@ -40,18 +40,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const flaxPrivKey = new FlaxPrivKey(1n);
   const signer = new FlaxSigner(flaxPrivKey);
   const flaxAddr = signer.address;
-  const context = new FlaxContext(
-    signer,
-    new MockSpend2Prover(),
-    new LocalMerkleProver(
-      "0x1234",
-      new ethers.providers.JsonRpcProvider("https:/alchemy.com"),
-      new LocalFlaxDB()
-    ),
-    new MockNotesManager(),
-    db
-  );
-
   // Old note input to spend
   const oldNote: IncludedNoteStruct = {
     owner: flaxAddr.toStruct(),
@@ -61,6 +49,24 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     id: 5n,
     merkleIndex: 0,
   };
+
+  const notesManager = new LocalNotesManager(
+    db,
+    signer,
+    "0x443a4cf67da85a50f50c442Ed81ab79700C81A78",
+    new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/")
+  );
+  const context = new FlaxContext(
+    signer,
+    new MockSpend2Prover(),
+    new LocalMerkleProver(
+      "0x9E40Fa7544998DaA305e7B6043a6f485c2B38Cdf",
+      new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/"),
+      new LocalFlaxDB()
+    ),
+    notesManager,
+    db
+  );
 
   switch (request.method) {
     case "hello":
@@ -95,6 +101,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           },
         ],
       });
+    case "flax_syncNotes":
+      await context.notesManager.fetchAndStoreNewNotesFromRefunds();
+      console.log("synced");
+      return;
     default:
       throw new Error("Method not found.");
   }
