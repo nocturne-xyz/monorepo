@@ -6,7 +6,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "../TestSubtreeUpdateVerifier.sol";
 import {PoseidonHasherT3} from "../PoseidonHashers.sol";
 import {BatchBinaryMerkle} from "../BatchBinaryMerkle.sol";
 
@@ -56,12 +56,26 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         onChainMerkle.commit8FromQueue();
         uint256 newRoot = onChainMerkle.root();
 
-        vm.expectEmit(true, true, true, true);
-        emit LeavesCommitted(subtreeIndex, newRoot);
-        merkle.commitSubtree(
-            newRoot,
-            dummyProof()
-        );
+        if (batch.length == merkle.BATCH_SIZE()) {
+            // if the batch is full, next event should be LeavesCommitted
+            vm.expectEmit(true, true, true, true);
+            emit LeavesCommitted(subtreeIndex, newRoot);
+            merkle.commitSubtree(
+                newRoot,
+                dummyProof()
+            );
+        } else {
+            // if the batch isn't full, next event should be LeavesEqueued
+            uint256[] memory leaves = new uint256[](merkle.BATCH_SIZE() - batch.length);
+            vm.expectEmit(true, true, true, true);
+            emit LeavesEnqueued(leaves);
+            merkle.commitSubtree(
+                newRoot,
+                dummyProof()
+            );
+
+        }
+
     }
 
     function testInsertAndTotalCount() public {

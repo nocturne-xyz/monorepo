@@ -16,7 +16,7 @@ import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
-import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "../TestSubtreeUpdateVerifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
