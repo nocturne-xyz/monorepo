@@ -41,14 +41,17 @@ describe("Wallet", async () => {
   }
 
   beforeEach(async () => {
+    [deployer] = await ethers.getSigners();
+    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    token = await tokenFactory.deploy();
+
     const flaxSetup = await setup();
-    deployer = flaxSetup.deployer;
     alice = flaxSetup.alice;
     bob = flaxSetup.bob;
     vault = flaxSetup.vault;
     wallet = flaxSetup.wallet;
     merkle = flaxSetup.merkle;
-    token = flaxSetup.token;
+    token = token;
     flaxContext = flaxSetup.flaxContext;
     db = flaxSetup.db;
   });
