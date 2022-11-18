@@ -104,6 +104,7 @@ module.exports = {
       "SimpleERC20Token",
       "SimpleERC721Token",
       "SimpleERC1155Token",
+      "TestSubtreeUpdateVerifier",
     ],
     includeFactories: true,
   },

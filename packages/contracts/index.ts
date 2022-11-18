@@ -3,6 +3,8 @@
 export type { Wallet } from "./src/Wallet";
 export type { Vault } from "./src/Vault";
 export type { Spend2Verifier } from "./src/Spend2Verifier";
+export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
+export type { TestSubtreeUpdateVerifier } from './src/TestSubtreeUpdateVerifier';
 export type { CommitmentTreeManager } from "./src/CommitmentTreeManager";
 export type { BatchBinaryMerkle } from "./src/BatchBinaryMerkle";
 export type { OffchainMerkleTree } from "./src/OffchainMerkleTree";
@@ -18,6 +20,8 @@ export type { IERC1155Interface } from "./src/IERC1155";
 export { Wallet__factory } from "./src/factories/Wallet__factory";
 export { Vault__factory } from "./src/factories/Vault__factory";
 export { Spend2Verifier__factory } from "./src/factories/Spend2Verifier__factory";
+export { SubtreeUpdateVerifier__factory } from "./src/factories/SubtreeUpdateVerifier__factory";
+export { TestSubtreeUpdateVerifier__factory } from "./src/factories/TestSubtreeUpdateVerifier__factory";
 export { CommitmentTreeManager__factory } from "./src/factories/CommitmentTreeManager__factory";
 export { BatchBinaryMerkle__factory } from "./src/factories/BatchBinaryMerkle__factory";
 export { OffchainMerkleTree__factory } from "./src/factories/OffchainMerkleTree__factory";

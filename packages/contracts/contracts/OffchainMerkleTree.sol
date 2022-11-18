@@ -100,18 +100,19 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     }
 
     function computeAccumulatorHash() internal view returns (uint256) {
+        require(batchLen == BATCH_SIZE, "batchLen != BATCH_SIZE");
+
         uint256[] memory _batch = new uint256[](BATCH_SIZE);
-        for (uint256 i = 0; i < batchLen ; i++) {
+        for (uint256 i = 0; i < BATCH_SIZE; i++) {
             _batch[i] = batch[i];
-        }
-        for (uint256 i = batchLen; i < BATCH_SIZE; i++) {
-            _batch[i] = ZERO;
         }
 
         return FieldUtils.sha256FieldElemsToUint256(_batch);
     }
 
     function accumulate() internal {
+        require(batchLen == BATCH_SIZE, "batchLen != BATCH_SIZE");
+
         uint256 accumulatorHash = computeAccumulatorHash();
         queue.enqueue(accumulatorHash);
         batchLen = 0;
@@ -121,8 +122,18 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         uint256 newRoot,
         uint256[8] calldata proof
     ) external override {
-        // accumulate early if the queue is empty
-        if (queue.isEmpty()) {
+        // append 0s if the queue is empty or the batch isn't full
+        if (queue.isEmpty() || batchLen < BATCH_SIZE) {
+            uint256 numEmptyleaves = uint256(BATCH_SIZE) - uint256(batchLen);
+            uint256[] memory emptyLeaves = new uint256[](numEmptyleaves);
+
+            for (uint256 i = batchLen; i < BATCH_SIZE; i++) {
+                batch[i] = ZERO;
+                emptyLeaves[i - batchLen] = ZERO;
+            } 
+            batchLen = uint128(BATCH_SIZE);
+
+            emit LeavesEnqueued(emptyLeaves);
             accumulate();
         }
 
