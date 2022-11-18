@@ -7,6 +7,7 @@
   "main": "index.js",
   "scripts": {
     "build": "",
+    "hh-node": "npx hardhat node",
     "test:e2e": "npx hardhat test"
   },
   "devDependencies": {

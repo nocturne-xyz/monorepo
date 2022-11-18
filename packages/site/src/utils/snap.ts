@@ -87,4 +87,16 @@ export const sendSetAndShowKv = async () => {
   });
 };
 
+export const syncNotes = async () => {
+  await window.ethereum.request({
+    method: "wallet_invokeSnap",
+    params: [
+      defaultSnapOrigin,
+      {
+        method: "flax_syncNotes",
+      },
+    ],
+  });
+};
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith("local:");

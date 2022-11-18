@@ -102,6 +102,10 @@ export const SetAndShowKButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>SetAndShowKv</Button>;
 };
 
+export const SyncNotesButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>SyncNotes</Button>;
+};
+
 export const HeaderButtons = ({
   state,
   onConnectClick,
