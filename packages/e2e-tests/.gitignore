@@ -9,3 +9,5 @@ db
 #Hardhat files
 cache
 artifacts
+
+deployments

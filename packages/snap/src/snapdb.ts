@@ -1,9 +1,9 @@
 import {
   AssetStruct,
   FlaxDB,
-  hashAsset,
   IncludedNoteStruct,
   includedNoteStructFromJSON,
+  includedNoteStructToJSON,
 } from "@flax/sdk";
 
 const DEFAULT_SNAP_STATE = {
@@ -87,14 +87,18 @@ export class SnapDB extends FlaxDB {
   }
 
   async storeNote(note: IncludedNoteStruct): Promise<boolean> {
-    const state = await this.getSnapState();
+    let state = await this.getSnapState();
 
     const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
-    state.notes.set(
-      key,
-      (state.notes.get(key) ?? []).concat([JSON.stringify(note)])
-    );
+    let existingNotesFor = state.notes.get(key) ?? [];
 
+    const jsonNote = includedNoteStructToJSON(note);
+    if (existingNotesFor.includes(jsonNote)) {
+      return true;
+    }
+
+    state.notes.set(key, existingNotesFor.concat([jsonNote]));
+    console.log("STATE pre-store: ", state);
     await wallet.request({
       method: "snap_manageState",
       params: ["update", snapStateToObject(state)],
@@ -109,7 +113,7 @@ export class SnapDB extends FlaxDB {
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter(
-        (jsonNote) => jsonNote != JSON.stringify(note)
+        (n) => n !== includedNoteStructToJSON(note)
       )
     );
 
@@ -125,7 +129,7 @@ export class SnapDB extends FlaxDB {
 
     const notesMap: Map<string, IncludedNoteStruct[]> = new Map();
     for (const [assetHash, jsonNotes] of state.notes.entries()) {
-      const notes = jsonNotes.map(includedNoteStructFromJSON);
+      const notes = [...jsonNotes].map(includedNoteStructFromJSON);
       notesMap.set(assetHash, notes);
     }
 
@@ -134,7 +138,7 @@ export class SnapDB extends FlaxDB {
 
   async getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]> {
     const state = await this.getSnapState();
-    const jsonNotesFor = state.notes.get(hashAsset(asset)) ?? [];
+    const jsonNotesFor = state.notes.get(FlaxDB.notesKey(asset)) ?? [];
     return jsonNotesFor.map(includedNoteStructFromJSON);
   }
 
