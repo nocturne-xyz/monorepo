@@ -24,7 +24,6 @@ interface IWallet {
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
         uint256 valueToSpend; // 0 for ERC721
         uint256 newNoteCommitment;
-        Note newNote;
     }
 
     struct Note {
@@ -37,8 +36,8 @@ interface IWallet {
     }
 
     struct SubtreeUpdateArgs {
-        uint256 oldRoot,
-        uint256 newRoot,
+        uint256 oldRoot;
+        uint256 newRoot;
 
         uint256[8] proof;
     }

@@ -4,6 +4,7 @@ import { IncludedNoteStruct } from "../note";
 export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
 export const LEAVES_PREFIX = "LEAVES_";
+export const LEAF_COMMIT_PREFIX = "LEAF_COMMITS_";
 
 export abstract class FlaxDB {
   /**
@@ -122,8 +123,11 @@ export abstract class LocalMerkleDBExtension {
     return LEAVES_PREFIX + index;
   }
 
-  abstract storeLeaf(index: number, leaf: bigint): Promise<boolean>;
+  static leafCommitKey(index: number): string {
+    return LEAF_COMMIT_PREFIX + index;
+  }
 
+  abstract storeLeaf(index: number, leaf: bigint): Promise<boolean>;
   abstract getLeaf(index: number): bigint | undefined;
 }
 
