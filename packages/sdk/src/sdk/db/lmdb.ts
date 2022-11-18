@@ -112,17 +112,6 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     return this.leavesDb.put(key, leaf.toString());
   }
 
-  storeLeafCommit(index: number): Promise<boolean> {
-    if (!this.leavesDb) {
-      throw Error(
-        "Attempted to merkle store leaf when LMDB configured without leaf storage"
-      );
-    }
-
-    const key = LocalMerkleDBExtension.leafCommitKey(index);
-    return this.leavesDb.put(key, "COMMITTED");
-  }
-
   getLeaf(index: number): bigint | undefined {
     if (!this.leavesDb) {
       throw Error(
@@ -137,17 +126,5 @@ export class FlaxLMDB extends FlaxDB implements LocalMerkleDBExtension {
     }
 
     return BigInt(leafString);
-  }
-
-  getLeafCommit(index: number): boolean {
-    if (!this.leavesDb) {
-      throw Error(
-        "Attempted to merkle store leaf when LMDB configured without leaf storage"
-      );
-    }
-
-    return "COMMITTED" !== this.leavesDb.get(
-      LocalMerkleDBExtension.leafCommitKey(index)
-    );
   }
 }
