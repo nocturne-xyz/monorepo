@@ -3,13 +3,13 @@ pragma circom 2.0.0;
 include "include/poseidon.circom";
 
 // Note structure
-// owner, nonce, asset, value
+// owner, nonce, encodedAsset, encodedId, value
 
 template NoteCommit() {
     signal input ownerHash;
     signal input nonce;
-    signal input asset;
-    signal input id;
+    signal input encodedAsset;
+    signal input encodedId;
     signal input value;
 
     signal output out;
@@ -17,8 +17,8 @@ template NoteCommit() {
     component noteHash = Poseidon(5);
     noteHash.inputs[0] <== ownerHash;
     noteHash.inputs[1] <== nonce;
-    noteHash.inputs[2] <== asset;
-    noteHash.inputs[3] <== id;
+    noteHash.inputs[2] <== encodedAsset;
+    noteHash.inputs[3] <== encodedId;
     noteHash.inputs[4] <== value;
 
     out <== noteHash.out;
