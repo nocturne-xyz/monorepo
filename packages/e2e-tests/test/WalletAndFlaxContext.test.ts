@@ -19,7 +19,7 @@ import {
   LocalFlaxDB,
   LocalMerkleProver,
 } from "@flax/sdk";
-import { setup } from "../deploy/deployScript";
+import { setup } from "../deploy/deployFlax";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -34,7 +34,7 @@ describe("Wallet", async () => {
   let db: LocalFlaxDB;
 
   async function aliceDepositFunds() {
-    token.reserveTokens(alice.address, 1000);
+    await token.reserveTokens(alice.address, 1000);
     await token.connect(alice).approve(vault.address, 200);
 
     for (let i = 0; i < 2; i++) {
@@ -49,14 +49,17 @@ describe("Wallet", async () => {
   }
 
   beforeEach(async () => {
+    [deployer] = await ethers.getSigners();
+    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    token = await tokenFactory.deploy();
+
     const flaxSetup = await setup();
-    deployer = flaxSetup.deployer;
     alice = flaxSetup.alice;
     bob = flaxSetup.bob;
     vault = flaxSetup.vault;
     wallet = flaxSetup.wallet;
     merkle = flaxSetup.merkle;
-    token = flaxSetup.token;
+    token = token;
     flaxContext = flaxSetup.flaxContext;
     db = flaxSetup.db;
   });

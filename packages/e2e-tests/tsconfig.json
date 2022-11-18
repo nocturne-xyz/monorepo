@@ -8,5 +8,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["deploy/**/*.ts", "test/**/*.ts"]
+  "include": ["deploy/**/*.ts", "test/**/*.ts", "deploy/deployFlax.ts"]
 }

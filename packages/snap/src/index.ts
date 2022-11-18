@@ -5,6 +5,7 @@ import {
   LocalFlaxDB,
   LocalMerkleProver,
   MockNotesManager,
+  MockSpend2Prover,
 } from "@flax/sdk";
 import { ethers } from "ethers";
 import { OnRpcRequestHandler } from "@metamask/snap-types";
@@ -38,6 +39,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const signer = new FlaxSigner(new FlaxPrivKey(1n));
   const context = new FlaxContext(
     signer,
+    new MockSpend2Prover(),
     new LocalMerkleProver(
       "0x1234",
       new ethers.providers.JsonRpcProvider("https:/alchemy.com"),
