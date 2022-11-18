@@ -20,10 +20,8 @@ contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
         address _verifier,
-        address _merkle,
-        address _hasherT5,
-        address _hasherT6
-    ) BalanceManager(_vault, _verifier, _merkle, _hasherT5, _hasherT6) {} // solhint-disable-line no-empty-blocks
+        address _merkle
+    ) BalanceManager(_vault, _verifier, _merkle) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
@@ -67,6 +65,10 @@ contract Wallet is IWallet, BalanceManager {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
         _makeDeposit(deposit);
+    }
+
+    function getRoot() external view returns (uint256) {
+        return noteCommitmentTree.getRoot();
     }
 
     function performOperation(Operation calldata op)

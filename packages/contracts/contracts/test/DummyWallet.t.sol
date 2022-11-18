@@ -8,13 +8,15 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
-import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
+import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {BatchBinaryMerkle} from "../BatchBinaryMerkle.sol";
+import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
+import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
@@ -35,10 +37,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
     Wallet wallet;
     Vault vault;
-    IBatchMerkle merkle;
+    IOffchainMerkleTree merkle;
     ISpend2Verifier verifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
+    IHasherT3 hasherT3;
+    IHasherT6 hasherT6;
 
     event Refund(
         IWallet.FLAXAddress refundAddr,
@@ -55,6 +60,32 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 indexed merkleIndex
     );
 
+    function setUp() public virtual {
+        // Deploy poseidon hasher libraries
+        deployPoseidon3Through6();
+
+        // Instantiate vault, verifier, tree, and wallet
+        vault = new Vault();
+        verifier = new TestSpend2Verifier();
+        subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
+        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
+        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+        merkle = IOffchainMerkleTree(new OffchainMerkleTree(address(subtreeUpdateVerifier), address(hasherT3)));
+        wallet = new Wallet(
+            address(vault),
+            address(verifier),
+            address(merkle)
+        );
+
+        vault.initialize(address(wallet));
+
+        // Instantiate token contracts
+        for (uint256 i = 0; i < 3; i++) {
+            ERC20s[i] = new SimpleERC20Token();
+            ERC721s[i] = new SimpleERC721Token();
+        }
+    }
+
     function defaultFlaxAddress()
         internal
         pure
@@ -69,7 +100,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             });
     }
 
-    function defaultSpendProof()
+    function defaultGroth16Proof()
         internal
         pure
         returns (uint256[8] memory _values)
@@ -104,11 +135,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         vm.prank(ALICE);
         token.approve(address(vault), 800);
 
+        uint256[16] memory batch;
+
         // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
             vm.expectEmit(true, true, true, true);
+            IWallet.FLAXAddress memory addr = defaultFlaxAddress();
             emit Refund(
-                defaultFlaxAddress(),
+                addr,
                 i,
                 address(token),
                 ERC20_ID,
@@ -123,36 +157,41 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 address(token),
                 100,
                 ERC20_ID,
-                defaultFlaxAddress()
+                addr
             );
+
+            uint256 addrHash = hasherT3.hash([addr.h1X, addr.h2X]);
+            uint256 noteCommitment = hasherT6.hash([
+                addrHash,
+                i,
+                uint256(uint160(address(token))),
+                ERC20_ID,
+                100
+            ]);
+            batch[i] = noteCommitment;
         }
 
-        wallet.commit8FromQueue();
-    }
+        // update the tree root
+        // since the tree is initially empty at this point, it's at the leftmost position in the tree
+        uint256 sibling = 0;
+        for (uint256 i = 3; i >= 0; i--) {
+            for (uint256 j = 0; j < 2**i; j++) {
+                uint256 left = batch[2 * j]; 
+                uint256 right = batch[2 * j + 1];
+                batch[j] = hasherT3.hash([left, right]);
+            }
+            sibling = hasherT3.hash([sibling, sibling]);
+        }
+        uint256 root = batch[0];
+        for (uint256 i = 4; i < 32; i++) {
+            root = hasherT3.hash([root, sibling]);
+            sibling = hasherT3.hash([sibling, sibling]);
+        }
 
-    function setUp() public virtual {
-        // Deploy poseidon hasher libraries
-        deployPoseidon3Through6();
-
-        // Instantiate vault, verifier, tree, and wallet
-        vault = new Vault();
-        merkle = new BatchBinaryMerkle(32, 0, new PoseidonHasherT3(poseidonT3));
-        verifier = new TestSpend2Verifier();
-        wallet = new Wallet(
-            address(vault),
-            address(verifier),
-            address(merkle),
-            address(IHasherT5(new PoseidonHasherT5(poseidonT5))),
-            address(IHasherT6(new PoseidonHasherT6(poseidonT6)))
+        merkle.commitSubtree(
+            root,
+            defaultGroth16Proof()
         );
-
-        vault.initialize(address(wallet));
-
-        // Instantiate token contracts
-        for (uint256 i = 0; i < 3; i++) {
-            ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-        }
     }
 
     function testPoseidon() public {
@@ -197,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             commitmentTreeRoot: root,
             nullifier: uint256(182),
             newNoteCommitment: uint256(1038),
-            proof: defaultSpendProof(),
+            proof: defaultGroth16Proof(),
             valueToSpend: uint256(50),
             asset: address(token),
             id: ERC20_ID

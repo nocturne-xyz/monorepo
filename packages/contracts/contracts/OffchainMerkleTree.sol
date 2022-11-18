@@ -2,48 +2,50 @@
 pragma solidity ^0.8.5;
 
 import "./interfaces/ISubtreeUpdateVerifier.sol";
+import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
 import {FieldUtils} from "./libs/FieldUtils.sol";
 import {IHasherT3} from "./interfaces/IHasher.sol";
 
 
-contract OffchainMerkleTree {
+contract OffchainMerkleTree is IOffchainMerkleTree {
     using QueueLib for QueueLib.Queue;
 
-	uint256 internal constant ZERO = 0;
-    uint256 internal constant LOG2_BATCH_SIZE = 4;
-    uint256 internal constant BATCH_SIZE = 1 << LOG2_BATCH_SIZE;
-    uint256 internal constant LOG2_DEPTH = 5;
-    uint256 internal constant DEPTH = 1 << LOG2_DEPTH;
+	uint256 public constant ZERO = 0;
+    uint256 public constant LOG2_BATCH_SIZE = 4;
+    uint256 public constant BATCH_SIZE = 1 << LOG2_BATCH_SIZE;
+    uint256 public constant LOG2_DEPTH = 5;
+    uint256 public constant DEPTH = 1 << LOG2_DEPTH;
 
     uint256 internal constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // number of non-zero leaves in the tree
-    // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `len` should all be zero
-    uint128 len;
+    // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
+    uint128 public count;
     // number of leaves in the batch
     // when this gets to BATCH_SIZE, we compute accumulatorHash and push te the queue
-    uint128 batchLen;
+    uint128 public batchLen;
 
     // root of the merkle tree
-    uint256 root;
+    uint256 public root;
 
     // current batch of updates to accumulate
-    uint256[BATCH_SIZE] batch;
+    uint256[BATCH_SIZE] public batch;
 
 	ISubtreeUpdateVerifier public verifier;
     QueueLib.Queue public queue;
 
 
     event LeavesEnqueued(uint256[] leaves);
+    event LeavesCommitted(uint128 subtreeIndex, uint256 newRoot);
 
     constructor(
-        address _hasherT3,
-        address _verifier
+        address _verifier,
+        address _hasherT3
     ) {
         root = ZERO;
-        len = 0;
+        count = 0;
         batchLen = 0;
         verifier = ISubtreeUpdateVerifier(_verifier);
 
@@ -56,61 +58,77 @@ contract OffchainMerkleTree {
         queue.initialize();
     }
 
-    function getRoot() external view returns (uint256) {
+    function getRoot() external view override returns (uint256) {
         return root;
     }
 
-    function getLen() external view returns (uint128) {
-        return len;
+    function committedCount() external view override returns (uint128) {
+        return count;
     }
 
-    function getBatchLen() external view returns (uint128) {
+    function totalCount() external view override returns (uint128) {
+        return count + batchLen + uint128(BATCH_SIZE) * uint128(queue.length());
+    }
+
+    function getBatchLen() external view override returns (uint128) {
         return batchLen;
     }
 
-    function insertLeafToQueue(uint256 leaf) external {
+    function insertLeafToQueue(uint256 leaf) external override {
+        batch[batchLen] = leaf;
+        batchLen += 1;
+
         if (batchLen == BATCH_SIZE) {
             accumulate();
         }
-
-        batch[batchLen] = leaf;
-        batchLen += 1;
 
         uint256[] memory leaves = new uint256[](1);
         leaves[0] = leaf;
         emit LeavesEnqueued(leaves);
     }
 
-    function insertLeavesToQueue(uint256[] memory leaves) external {
-        queue.enqueue(leaves);
+    function insertLeavesToQueue(uint256[] memory leaves) external override {
+        for (uint256 i = 0; i < leaves.length; i++) {
+            batch[batchLen] = leaves[i];
+            batchLen += 1;
+
+            if (batchLen == BATCH_SIZE) {
+                accumulate();
+            }
+        }
         emit LeavesEnqueued(leaves);
     }
 
-    function accumulate() internal {
-        require(batchLen == BATCH_SIZE);
+    function computeAccumulatorHash() internal view returns (uint256) {
         uint256[] memory _batch = new uint256[](BATCH_SIZE);
-        for (uint256 i = 0; i < BATCH_SIZE; i++) {
+        for (uint256 i = 0; i < batchLen ; i++) {
             _batch[i] = batch[i];
         }
+        for (uint256 i = batchLen; i < BATCH_SIZE; i++) {
+            _batch[i] = ZERO;
+        }
 
-        uint256 accumulatorHash = FieldUtils.sha256FieldElemsToUint256(_batch);
+        return FieldUtils.sha256FieldElemsToUint256(_batch);
+    }
+
+    function accumulate() internal {
+        uint256 accumulatorHash = computeAccumulatorHash();
         queue.enqueue(accumulatorHash);
         batchLen = 0;
     }
-    
-	function append16(
+
+	function commitSubtree(
         uint256 newRoot,
         uint256[8] calldata proof
-    ) external {
+    ) external override {
         uint256 accumulatorHash = queue.peek();
         (uint256 hi, uint256 lo) = FieldUtils.uint256ToFieldElemLimbs(accumulatorHash);
 
-        // len is r + s bits
+        // count is r + s bits
         // get bottom `r` bits of the path
-        uint256 encodedPathAndHash = uint256(len) >> LOG2_BATCH_SIZE;
+        uint256 encodedPathAndHash = uint256(count) >> LOG2_BATCH_SIZE;
         // pack the top 3 bits of accumulatorhash to get r + 3 bits
         encodedPathAndHash |= hi << (LOG2_DEPTH - LOG2_BATCH_SIZE);
-
 
         require(
             verifier.verifyProof(
@@ -132,7 +150,7 @@ contract OffchainMerkleTree {
 
         queue.dequeue(); 
         root = newRoot;
-        len += uint128(BATCH_SIZE);
+        count += uint128(BATCH_SIZE);
     }
 
 }

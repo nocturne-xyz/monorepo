@@ -3,9 +3,10 @@ pragma solidity ^0.8.5;
 
 import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
+import "./interfaces/ISubtreeUpdateVerifier.sol";
 
 import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
-import {IHasherT6} from "./interfaces/IHasher.sol";
+import {FieldUtils} from "./libs/FieldUtils.sol";
 
 contract CommitmentTreeManager {
     uint256 public constant SNARK_SCALAR_FIELD =
@@ -17,7 +18,7 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     ISpend2Verifier public verifier;
-    IHasherT6 public hasherT6;
+    ISubtreeUpdateVerifier public subtreeUpdateVerifier;
 
     event Refund(
         IWallet.FLAXAddress refundAddr,
@@ -36,12 +37,10 @@ contract CommitmentTreeManager {
 
     constructor(
         address _verifier,
-        address _noteCommitmentTree,
-        address _hasherT6
+        address _noteCommitmentTree
     ) {
         verifier = ISpend2Verifier(_verifier);
         noteCommitmentTree = IOffchainMerkleTree(_noteCommitmentTree);
-        hasherT6 = IHasherT6(_hasherT6);
     }
 
     function getCurrentRoot() external view returns (uint256) {
@@ -97,19 +96,23 @@ contract CommitmentTreeManager {
 
     function _handleRefund(
         IWallet.FLAXAddress memory refundAddr,
-        uint256 refundAddrHash,
         address asset,
         uint256 id,
         uint256 value
     ) internal {
-        uint256 noteCommitment = hasherT6.hash(
-            [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
-        );
+        uint256[] memory elems = new uint256[](6);
+        elems[0] = refundAddr.h1X;
+        elems[1] = refundAddr.h2X;
+        elems[2] = nonce;
+        elems[3] = uint256(uint160(asset));
+        elems[4] = id;
+        elems[5] = value;
+        uint256 accumulator = FieldUtils.sha256FieldElemsToUint256(elems);
 
         uint256 _nonce = nonce;
         nonce++;
 
-        noteCommitmentTree.insertLeafToQueue(noteCommitment);
+        noteCommitmentTree.insertLeafToQueue(accumulator);
 
         emit Refund(
             refundAddr,
