@@ -123,9 +123,6 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     ) external override {
         // accumulate early if the queue is empty
         if (queue.isEmpty()) {
-            for (uint256 i = batchLen; i < BATCH_SIZE; i++) {
-                batch[i] = ZERO;
-            }
             accumulate();
         }
 
@@ -155,6 +152,8 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
             ),
             "subtree update proof invalid"
         );
+        
+        emit LeavesCommitted(count, newRoot);
 
         queue.dequeue(); 
         root = newRoot;

@@ -100,7 +100,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             });
     }
 
-    function defaultGroth16Proof()
+    function dummyProof()
         internal
         pure
         returns (uint256[8] memory _values)
@@ -190,7 +190,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         wallet.commitSubtree(
             root,
-            defaultGroth16Proof()
+            dummyProof()
         );
     }
 
@@ -236,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             commitmentTreeRoot: root,
             nullifier: uint256(182),
             newNoteCommitment: uint256(1038),
-            proof: defaultGroth16Proof(),
+            proof: dummyProof(),
             valueToSpend: uint256(50),
             asset: address(token),
             id: ERC20_ID
