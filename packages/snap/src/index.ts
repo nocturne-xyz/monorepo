@@ -2,6 +2,7 @@ import {
   FlaxContext,
   FlaxPrivKey,
   FlaxSigner,
+  IncludedNoteStruct,
   LocalFlaxDB,
   LocalMerkleProver,
   MockNotesManager,
@@ -36,7 +37,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }) => {
   const db = new SnapDB();
-  const signer = new FlaxSigner(new FlaxPrivKey(1n));
+  const flaxPrivKey = new FlaxPrivKey(1n);
+  const signer = new FlaxSigner(flaxPrivKey);
+  const flaxAddr = signer.address;
   const context = new FlaxContext(
     signer,
     new MockSpend2Prover(),
@@ -48,6 +51,17 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     new MockNotesManager(),
     db
   );
+
+  // Old note input to spend
+  const oldNote: IncludedNoteStruct = {
+    owner: flaxAddr.toStruct(),
+    nonce: 1n,
+    asset: "0aaaa",
+    value: 100n,
+    id: 5n,
+    merkleIndex: 0,
+  };
+
   switch (request.method) {
     case "hello":
       return wallet.request({
@@ -63,14 +77,21 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "setAndShowKv":
-      await db.putKv("key1", "value1");
+      await context.db.storeNote(oldNote);
+      const retrieved = await db.getNotesFor({
+        address: oldNote.asset,
+        id: oldNote.id,
+      });
       return wallet.request({
         method: "snap_confirm",
         params: [
           {
             prompt: getMessage(origin),
-            description: "Displaying newly set storage for key1",
-            textAreaContent: await db.getKv("key1"),
+            description: `Displaying newly set storage for ${{
+              address: oldNote.asset,
+              id: oldNote.id,
+            }}`,
+            textAreaContent: retrieved[0].asset,
           },
         ],
       });
