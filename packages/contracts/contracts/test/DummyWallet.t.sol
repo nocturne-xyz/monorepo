@@ -174,7 +174,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // update the tree root
         // since the tree is initially empty at this point, it's at the leftmost position in the tree
         uint256 sibling = 0;
-        for (uint256 i = 3; i >= 0; i--) {
+        for (uint256 i = 3; i > 0; i--) {
             for (uint256 j = 0; j < 2**i; j++) {
                 uint256 left = batch[2 * j]; 
                 uint256 right = batch[2 * j + 1];
@@ -188,7 +188,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             sibling = hasherT3.hash([sibling, sibling]);
         }
 
-        merkle.commitSubtree(
+        wallet.commitSubtree(
             root,
             defaultGroth16Proof()
         );
@@ -275,7 +275,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit Spend(0, 50, 8); // only checking value and merkleIndex are valid
+        emit Spend(0, 50, 16); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 

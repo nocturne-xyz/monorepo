@@ -71,6 +71,14 @@ contract Wallet is IWallet, BalanceManager {
         return noteCommitmentTree.getRoot();
     }
 
+    function commitSubtree(
+        uint256 newRoot,
+        uint256[8] calldata proof
+    ) external {
+        noteCommitmentTree.commitSubtree(newRoot, proof);
+        pastRoots[newRoot] = true;
+    }
+
     function performOperation(Operation calldata op)
         external
         onlyThis
