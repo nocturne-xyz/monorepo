@@ -11,12 +11,12 @@ export async function largeQueryInChunks<T extends Result>(
   to: number
 ): Promise<TypedEvent<T>[]> {
   const events: TypedEvent<T>[] = [];
-  while (from < to) {
+  do {
     const finalTo = Math.min(from + CHUNK_SIZE, to);
     const rangeEvents = await contract.queryFilter(filter, from, finalTo);
     from = finalTo;
     events.push(...(rangeEvents as TypedEvent<T>[]));
-  }
+  } while (from < to);
 
   return events;
 }

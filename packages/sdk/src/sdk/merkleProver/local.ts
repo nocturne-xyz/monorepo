@@ -1,5 +1,5 @@
 import { OffchainMerkleTree, OffchainMerkleTree__factory } from "@flax/contracts";
-import { LeavesEnqueuedEvent, LeavesCommittedEvent } from "@flax/contracts/dist/src/OffchainMerkleTree";
+import { LeavesEnqueuedEvent } from "@flax/contracts/dist/src/OffchainMerkleTree";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
@@ -8,10 +8,7 @@ import { query } from "../utils";
 import { MerkleProver } from ".";
 
 const DEFAULT_START_BLOCK = 0;
-const MERKLE_LAST_INDEXED_BLOCK = "MERKLE_LAST_INDEXED_BLOCK";
-const MERKLE_LAST_IDX = "MERKLE_LAST_IDX";
-
-let batchSize: number | undefined = undefined;
+const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
 
 export class LocalMerkleProver
@@ -21,6 +18,7 @@ export class LocalMerkleProver
   treeContract: OffchainMerkleTree;
   provider: ethers.providers.Provider;
   db: FlaxLMDB;
+  lastCommittedIndex: number;
 
   constructor(
     merkleAddress: Address,
@@ -35,59 +33,29 @@ export class LocalMerkleProver
       this.provider
     );
     this.db = db;
+    this.lastCommittedIndex = 0;
   }
 
-  async fetchLeaves(): Promise<void> {
+  async fetchLeavesAndUpdate(): Promise<void> {
     // TODO: load default from network-specific config
-    const lastSeen =
-      this.db.getNumberKv(MERKLE_LAST_INDEXED_BLOCK) ?? DEFAULT_START_BLOCK;
+    const nextBlockToIndex =
+      this.db.getNumberKv(MERKLE_NEXT_BLOCK_TO_INDEX) ?? DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
-    let leafIdx = this.db.getNumberKv(MERKLE_LAST_IDX) ?? 0;
 
-    const newLeaves = await this.fetchNewLeavesSorted(lastSeen, latestBlock);
+    console.log("from", nextBlockToIndex, "to", latestBlock);
+
+    const [newLeaves, lastCommittedIndex] = await Promise.all([
+      this.fetchNewLeavesSorted(nextBlockToIndex, latestBlock),
+      this.fetchLastCommittedIndex(),
+    ]);
 
     for (const leaf of newLeaves) {
-      this.db.storeLeaf(leafIdx, leaf);
-      leafIdx += 1;
+      this.db.storeLeaf(this.count, leaf);
+      this.insert(leaf);
     }
+    this.lastCommittedIndex = lastCommittedIndex;
 
-    await this.db.putKv(MERKLE_LAST_INDEXED_BLOCK, latestBlock.toString());
-  }
-
-  async fetchCommitsAndUpdate(from: number, to: number): Promise<void> {
-    const filter = this.treeContract.filters.LeavesCommitted();
-    let events: LeavesCommittedEvent[] = await query(
-      this.treeContract,
-      filter,
-      from,
-      to
-    );
-
-    events = events.sort((a, b) => a.blockNumber - b.blockNumber);
-
-    if (!batchSize) {
-      batchSize = Number(await this.treeContract.BATCH_SIZE());
-    }
-
-
-    for (const event of events) {
-      const [subtreeIndex, newRoot] = event.args;
-      const subtreeIdx = Number(subtreeIndex);
-      const proms = [...Array(batchSize).keys()].map(async i => {
-        await this.db.storeLeafCommit(subtreeIdx + i);
-        
-        const leaf = await this.db.getLeaf(subtreeIdx + i);
-        this.tree.insert(leaf);
-      });
-
-      Promise.all(proms);
-
-      // sanity check
-      const root = this.tree.root();
-      if (root !== newRoot.toBigInt()) {
-        throw new Error("failed to sync with offchain merkle tree - got different roots!");
-      }
-    }
+    await this.db.putKv(MERKLE_NEXT_BLOCK_TO_INDEX, (latestBlock + 1).toString());
   }
 
   async fetchNewLeavesSorted(from: number, to: number): Promise<bigint[]> {
@@ -99,6 +67,8 @@ export class LocalMerkleProver
       to
     );
 
+    console.log(events);
+
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
     const allLeaves: bigint[] = [];
@@ -107,5 +77,10 @@ export class LocalMerkleProver
       allLeaves.push(...eventLeaves);
     }
     return allLeaves;
+  }
+
+  async fetchLastCommittedIndex(): Promise<number> {
+    const res = await this.treeContract.committedCount();
+    return res.toNumber();
   }
 }

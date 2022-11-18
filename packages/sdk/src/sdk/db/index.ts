@@ -123,10 +123,6 @@ export abstract class LocalMerkleDBExtension {
     return LEAVES_PREFIX + index;
   }
 
-  static leafCommitKey(index: number): string {
-    return LEAF_COMMIT_PREFIX + index;
-  }
-
   abstract storeLeaf(index: number, leaf: bigint): Promise<boolean>;
   abstract getLeaf(index: number): bigint | undefined;
 }
