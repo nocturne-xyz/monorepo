@@ -86,8 +86,8 @@ export interface IncludedNoteStruct extends NoteStruct {
   merkleIndex: number;
 }
 
-export function includedNoteStructToJSON(note: NoteStruct): string {
-  const { owner, nonce, asset, id, value } = note;
+export function includedNoteStructToJSON(note: IncludedNoteStruct): string {
+  const { owner, nonce, asset, id, value, merkleIndex } = note;
   return JSON.stringify({
     owner: {
       h1X: owner.h1X.toString(),
@@ -99,6 +99,7 @@ export function includedNoteStructToJSON(note: NoteStruct): string {
     asset,
     id: id.toString(),
     value: value.toString(),
+    merkleIndex
   });
 }
 
