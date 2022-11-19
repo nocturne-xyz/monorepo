@@ -5,12 +5,5 @@
   },
   "type": "module",
   "exclude": ["node_modules", "dist", "config"],
-  "include": [
-    "index.ts",
-    "src",
-    "src/**/*.ts",
-    "src/**/**/*.ts",
-    "scripts/*.ts",
-    "package.json"
-  ]
+  "include": ["index.ts", "src", "src/**/*.ts", "scripts/*.ts", "package.json"]
 }

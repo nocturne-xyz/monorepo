@@ -103,7 +103,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "flax_syncNotes":
-      await context.notesManager.fetchAndStoreNewNotesFromRefunds();
+      await context.syncNotes();
       console.log("synced");
       return;
     default:
