@@ -25,7 +25,7 @@
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
     "serve": "mm-snap serve",
     "start": "mm-snap watch",
-    "test:unit": "mocha --require ts-node/register test/**"
+    "test:unit": ""
   },
   "dependencies": {
     "@flax/sdk": "workspace:^",

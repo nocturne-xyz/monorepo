@@ -117,7 +117,7 @@ export abstract class FlaxDB {
   abstract close(): Promise<void>;
 }
 
-export abstract class LocalMerkleDBExtension {
+export abstract class LocalMerkleDBExtension extends FlaxDB {
   static leafKey(index: number): string {
     return LEAVES_PREFIX + index;
   }
@@ -127,5 +127,4 @@ export abstract class LocalMerkleDBExtension {
   abstract getLeaf(index: number): Promise<bigint | undefined>;
 }
 
-// export { SnapDB } from "./snap";
 export { LocalFlaxDB } from "./local";

@@ -9,8 +9,8 @@ export interface SpendEvent {
 }
 
 export abstract class NotesManager {
-  db: FlaxDB;
-  signer: FlaxSigner;
+  protected db: FlaxDB;
+  protected signer: FlaxSigner;
 
   constructor(db: FlaxDB, signer: FlaxSigner) {
     this.db = db;

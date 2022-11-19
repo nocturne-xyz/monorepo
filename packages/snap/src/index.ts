@@ -84,10 +84,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       });
     case "setAndShowKv":
       await context.db.storeNote(oldNote);
-      const retrieved = await db.getNotesFor({
-        address: oldNote.asset,
-        id: oldNote.id,
-      });
       return wallet.request({
         method: "snap_confirm",
         params: [
@@ -97,7 +93,12 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
               address: oldNote.asset,
               id: oldNote.id,
             }}`,
-            textAreaContent: retrieved[0].asset,
+            textAreaContent: (
+              await db.getNotesFor({
+                address: oldNote.asset,
+                id: oldNote.id,
+              })
+            )[0].asset,
           },
         ],
       });

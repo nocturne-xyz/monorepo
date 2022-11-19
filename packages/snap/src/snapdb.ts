@@ -87,10 +87,10 @@ export class SnapDB extends FlaxDB {
   }
 
   async storeNote(note: IncludedNoteStruct): Promise<boolean> {
-    let state = await this.getSnapState();
+    const state = await this.getSnapState();
 
     const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
-    let existingNotesFor = state.notes.get(key) ?? [];
+    const existingNotesFor = state.notes.get(key) ?? [];
 
     const jsonNote = includedNoteStructToJSON(note);
     if (existingNotesFor.includes(jsonNote)) {

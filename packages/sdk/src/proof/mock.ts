@@ -1,4 +1,4 @@
-/* tslint:disable */
+/* eslint-disable */
 import {
   Spend2Inputs,
   Spend2ProofWithPublicSignals,

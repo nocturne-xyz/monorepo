@@ -6,35 +6,58 @@ import {
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { LocalFlaxDB } from "../db";
+import { LocalMerkleDBExtension } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
+import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { Note } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
-export class LocalMerkleProver
-  extends BinaryPoseidonTree
-  implements MerkleProver
-{
-  contract: Wallet;
-  provider: ethers.providers.Provider;
-  db: LocalFlaxDB;
+export class LocalMerkleProver extends MerkleProver {
+  readonly localTree: BinaryPoseidonTree;
+  protected treeContract: BatchBinaryMerkle;
+  protected provider: ethers.providers.Provider;
+  protected db: LocalMerkleDBExtension;
 
   constructor(
     walletContractAddress: Address,
     provider: ethers.providers.Provider,
-    db: LocalFlaxDB
+    db: LocalMerkleDBExtension
   ) {
     super();
 
+    this.localTree = new BinaryPoseidonTree();
     this.provider = provider;
     this.contract = Wallet__factory.connect(
       walletContractAddress,
       this.provider
     );
     this.db = db;
+  }
+
+  static async fromDb(
+    merkleAddress: Address,
+    provider: ethers.providers.Provider,
+    db: LocalMerkleDBExtension
+  ): Promise<LocalMerkleProver> {
+    const self = new LocalMerkleProver(merkleAddress, provider, db);
+
+    const index = 0;
+    // eslint-disable-next-line
+    while (true) {
+      const leaf = await db.getLeaf(index);
+      if (!leaf) {
+        return self;
+      } else {
+        self.localTree.insert(leaf);
+      }
+    }
+  }
+
+  async getProof(index: number): Promise<MerkleProof> {
+    return this.localTree.getProof(index);
   }
 
   async fetchLeavesAndUpdate(): Promise<void> {
@@ -47,8 +70,8 @@ export class LocalMerkleProver
     const newLeaves = await this.fetchNewLeaves(nextBlockToIndex, latestBlock);
 
     for (const leaf of newLeaves) {
-      this.db.storeLeaf(this.count, leaf);
-      this.insert(leaf);
+      this.db.storeLeaf(this.localTree.count, leaf);
+      this.localTree.insert(leaf);
     }
 
     await this.db.putKv(

@@ -19,15 +19,11 @@ import { depositFunds } from "./utils";
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
-  let flaxSigner: FlaxSigner;
   let db: LocalFlaxDB;
   let localMerkle: LocalMerkleProver;
   let flaxSigner: FlaxSigner;
 
   async function setup() {
-    const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    flaxSigner = new FlaxSigner(flaxPrivKey);
     db = new LocalFlaxDB({ localMerkle: true });
 
     [deployer, alice] = await ethers.getSigners();
@@ -76,7 +72,7 @@ describe("LocalMerkle", async () => {
 
     console.log("Fetching and storing leaves from events");
     await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count).to.eql(2);
+    expect(localMerkle.localTree.count).to.eql(2);
 
     console.log("Ensure leaves match enqueued");
     expect(BigInt(localMerkle.getProof(0).leaf)).to.equal(ncs[0]);

@@ -14,7 +14,7 @@
     "clean": "rm -rf dist",
     "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": "mocha --require ts-node/register test/**"
+    "test:unit": ""
   },
   "dependencies": {
     "@flax/sdk": "workspace:^",

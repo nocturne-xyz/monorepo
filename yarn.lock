@@ -2157,6 +2157,7 @@ __metadata:
   resolution: "@flax/e2e-tests@workspace:packages/e2e-tests"
   dependencies:
     "@flax/contracts": "workspace:^"
+    "@flax/local-prover": "workspace:^"
     "@flax/sdk": "workspace:^"
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
@@ -2169,7 +2170,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@flax/local-prover@workspace:packages/local-prover":
+"@flax/local-prover@workspace:^, @flax/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@flax/local-prover@workspace:packages/local-prover"
   dependencies:
