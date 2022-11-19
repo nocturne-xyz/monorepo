@@ -2,11 +2,13 @@ import { useContext } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
+  clearDb,
   connectSnap,
   getSnap,
   sendHello,
   sendSetAndShowKv,
   shouldDisplayReconnectButton,
+  syncLeaves,
   syncNotes,
 } from "../utils";
 import {
@@ -17,6 +19,8 @@ import {
   Card,
   SetAndShowKButton,
   SyncNotesButton,
+  SyncLeavesButton,
+  ClearDbButton,
 } from "../components";
 
 const Container = styled.div`
@@ -148,6 +152,24 @@ const Index = () => {
     }
   };
 
+  const handleSyncLeavesClick = async () => {
+    try {
+      await syncLeaves();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleClearDb = async () => {
+    try {
+      await clearDb();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   return (
     <Container>
       <Heading>
@@ -249,6 +271,42 @@ const Index = () => {
             button: (
               <SyncNotesButton
                 onClick={handleSyncNotesClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "Sync Leaves",
+            description: "Sync leaves.",
+            button: (
+              <SyncLeavesButton
+                onClick={handleSyncLeavesClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "Clear DB",
+            description: "Clear DB.",
+            button: (
+              <ClearDbButton
+                onClick={handleClearDb}
                 disabled={!state.installedSnap}
               />
             ),

@@ -4,30 +4,32 @@ import {
   IncludedNoteStruct,
   includedNoteStructFromJSON,
   includedNoteStructToJSON,
-} from '@flax/sdk';
+  LocalMerkleDBExtension,
+} from "@flax/sdk";
 
-const DEFAULT_SNAP_STATE = {
+const DEFAULT_SNAP_STATE: SnapState = {
   kv: new Map<string, string>(),
   notes: new Map<string, JSONNote[]>(),
-  leaves: [],
+  leaves: new Map<string, BigIntString>(),
 };
 
 type JSONNote = string;
+type BigIntString = string;
 type SnapState = {
   kv: Map<string, string>;
   notes: Map<string, JSONNote[]>;
-  leaves: bigint[];
+  leaves: Map<string, BigIntString>;
 };
 
 /**
  *
  * @param obj
  */
-function objectToSnapState(obj: any): SnapState {
+export function objectToSnapState(obj: any): SnapState {
   return {
     kv: new Map(Object.entries(obj.kv)),
     notes: new Map(Object.entries(obj.notes)),
-    leaves: obj.leaves,
+    leaves: new Map(Object.entries(obj.leaves)),
   };
 }
 
@@ -35,29 +37,30 @@ function objectToSnapState(obj: any): SnapState {
  *
  * @param state
  */
-function snapStateToObject(state: SnapState): any {
+export function snapStateToObject(state: SnapState): any {
   return {
     kv: Object.fromEntries(state.kv),
     notes: Object.fromEntries(state.notes),
-    leaves: state.leaves,
+    leaves: Object.fromEntries(state.leaves),
   };
 }
 
-export class SnapDB extends FlaxDB {
+export class SnapDB extends LocalMerkleDBExtension {
   async getSnapState(): Promise<SnapState> {
-    let state = objectToSnapState(
-      await wallet.request({
-        method: 'snap_manageState',
-        params: ['get'],
-      }),
-    );
+    let maybeState = await wallet.request({
+      method: "snap_manageState",
+      params: ["get"],
+    });
 
-    if (!state) {
+    let state;
+    if (!maybeState) {
       state = DEFAULT_SNAP_STATE;
       await wallet.request({
-        method: 'snap_manageState',
-        params: ['update', state],
+        method: "snap_manageState",
+        params: ["update", snapStateToObject(state)],
       });
+    } else {
+      state = objectToSnapState(maybeState);
     }
 
     return state;
@@ -73,8 +76,8 @@ export class SnapDB extends FlaxDB {
     state.kv.set(key, value);
 
     await wallet.request({
-      method: 'snap_manageState',
-      params: ['update', snapStateToObject(state)],
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
     });
     return true;
   }
@@ -84,8 +87,8 @@ export class SnapDB extends FlaxDB {
     state.kv.delete(key);
 
     await wallet.request({
-      method: 'snap_manageState',
-      params: ['update', snapStateToObject(state)],
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
     });
     return true;
   }
@@ -102,10 +105,9 @@ export class SnapDB extends FlaxDB {
     }
 
     state.notes.set(key, existingNotesFor.concat([jsonNote]));
-    console.log('STATE pre-store: ', state);
     await wallet.request({
-      method: 'snap_manageState',
-      params: ['update', snapStateToObject(state)],
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
     });
     return true;
   }
@@ -117,13 +119,13 @@ export class SnapDB extends FlaxDB {
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter(
-        (n) => n !== includedNoteStructToJSON(note),
-      ),
+        (n) => n !== includedNoteStructToJSON(note)
+      )
     );
 
     await wallet.request({
-      method: 'snap_manageState',
-      params: ['update', snapStateToObject(state)],
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
     });
     return true;
   }
@@ -147,13 +149,47 @@ export class SnapDB extends FlaxDB {
   }
 
   async clear(): Promise<void> {
+    console.log(snapStateToObject(DEFAULT_SNAP_STATE));
     await wallet.request({
-      method: 'snap_manageState',
-      params: ['update', DEFAULT_SNAP_STATE],
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(DEFAULT_SNAP_STATE)],
     });
   }
 
   async close(): Promise<void> {
     return new Promise(() => {}); // no close function for snap
+  }
+
+  async storeLeaf(index: number, leaf: bigint): Promise<boolean> {
+    const state = await this.getSnapState();
+
+    if (!state.leaves) {
+      throw Error(
+        "Attempted to merkle store leaf when DB configured without leaf storage"
+      );
+    }
+
+    const key = LocalMerkleDBExtension.leafKey(index);
+
+    state.leaves.set(key, leaf.toString());
+
+    await wallet.request({
+      method: "snap_manageState",
+      params: ["update", snapStateToObject(state)],
+    });
+    return true;
+  }
+
+  async getLeaf(index: number): Promise<bigint | undefined> {
+    const state = await this.getSnapState();
+    if (!state.leaves) {
+      throw Error(
+        "Attempted to merkle store leaf when DB configured without leaf storage"
+      );
+    }
+
+    const key = LocalMerkleDBExtension.leafKey(index);
+    const maybeLeaf = state.leaves.get(key);
+    return maybeLeaf ? BigInt(maybeLeaf) : undefined;
   }
 }

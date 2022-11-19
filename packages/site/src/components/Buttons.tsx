@@ -106,6 +106,14 @@ export const SyncNotesButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>SyncNotes</Button>;
 };
 
+export const SyncLeavesButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>SyncLeaves</Button>;
+};
+
+export const ClearDbButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>ClearDb</Button>;
+};
+
 export const HeaderButtons = ({
   state,
   onConnectClick,
