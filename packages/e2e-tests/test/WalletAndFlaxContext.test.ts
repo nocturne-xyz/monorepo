@@ -16,7 +16,7 @@ import {
   AssetStruct,
   AssetRequest,
   OperationRequest,
-  LocalFlaxDB,
+  LocalObjectDB,
   LocalMerkleProver,
 } from "@flax/sdk";
 import { setup } from "../deploy/deployScript";
@@ -33,7 +33,7 @@ describe("Wallet", async () => {
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let flaxContext: FlaxContext;
-  let db: LocalFlaxDB;
+  let db: LocalObjectDB;
 
   async function applySubtreeUpdate() {
     const root = (flaxContext.merkleProver as LocalMerkleProver).root();

@@ -19,12 +19,12 @@ import { depositFunds } from "./utils";
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
-  let db: LocalFlaxDB;
+  let db: LocalObjectDB;
   let localMerkle: LocalMerkleProver;
   let flaxSigner: FlaxSigner;
 
   async function setup() {
-    db = new LocalFlaxDB({ localMerkle: true });
+    db = new LocalObjectDB({ localMerkle: true });
 
     [deployer, alice] = await ethers.getSigners();
     const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);

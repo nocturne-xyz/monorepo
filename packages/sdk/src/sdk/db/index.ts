@@ -127,5 +127,4 @@ export abstract class LocalMerkleDBExtension extends FlaxDB {
   abstract getLeaf(index: number): Promise<bigint | undefined>;
 }
 
-export { LocalFlaxDB } from "./local";
-export { LocalObjectDB } from "./localobj";
+export { LocalObjectDB } from "./local";
