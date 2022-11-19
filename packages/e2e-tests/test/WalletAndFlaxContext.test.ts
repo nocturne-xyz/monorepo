@@ -16,7 +16,7 @@ import {
   AssetStruct,
   AssetRequest,
   OperationRequest,
-  LocalFlaxDB,
+  LocalObjectDB,
   LocalMerkleProver,
 } from "@flax/sdk";
 import { setup } from "../deploy/deployFlax";
@@ -31,7 +31,7 @@ describe("Wallet", async () => {
     merkle: BatchBinaryMerkle,
     token: SimpleERC20Token;
   let flaxContext: FlaxContext;
-  let db: LocalFlaxDB;
+  let db: LocalObjectDB;
 
   async function aliceDepositFunds() {
     await token.reserveTokens(alice.address, 1000);

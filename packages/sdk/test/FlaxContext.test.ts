@@ -9,14 +9,14 @@ import { FlaxPrivKey } from "../src/crypto/privkey";
 import { MockSpend2Prover } from "../src/proof/mock";
 import {
   DEFAULT_DB_PATH,
-  LocalFlaxDB,
+  LocalObjectDB,
   LocalMerkleProver,
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
 describe("FlaxContext", () => {
-  let db = new LocalFlaxDB({ localMerkle: true });
+  let db = new LocalObjectDB({ localMerkle: true });
   let flaxContext: FlaxContext;
   const asset: AssetStruct = { address: "0x12345", id: 11111n };
 

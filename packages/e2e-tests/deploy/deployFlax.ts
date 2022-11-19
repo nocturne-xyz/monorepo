@@ -16,7 +16,7 @@ import {
   FlaxPrivKey,
   FlaxSigner,
   FlaxContext,
-  LocalFlaxDB,
+  LocalObjectDB,
   LocalMerkleProver,
   LocalNotesManager,
 } from "@flax/sdk";
@@ -32,11 +32,11 @@ export interface FlaxSetup {
   wallet: Wallet;
   merkle: BatchBinaryMerkle;
   flaxContext: FlaxContext;
-  db: LocalFlaxDB;
+  db: LocalObjectDB;
 }
 
 export async function setup(): Promise<FlaxSetup> {
-  const db = new LocalFlaxDB({ localMerkle: true });
+  const db = new LocalObjectDB({ localMerkle: true });
   const sk = BigInt(1);
   const flaxPrivKey = new FlaxPrivKey(sk);
   const flaxSigner = new FlaxSigner(flaxPrivKey);

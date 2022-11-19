@@ -5,16 +5,16 @@ import {
   PoseidonHasherT3__factory,
   BatchBinaryMerkle,
 } from "@flax/contracts";
-import { LocalMerkleProver, LocalFlaxDB } from "@flax/sdk";
+import { LocalMerkleProver, LocalObjectDB } from "@flax/sdk";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
-  let db: LocalFlaxDB;
+  let db: LocalObjectDB;
   let localMerkle: LocalMerkleProver;
 
   async function setup() {
-    db = new LocalFlaxDB({ localMerkle: true });
+    db = new LocalObjectDB({ localMerkle: true });
 
     [deployer] = await ethers.getSigners();
     await deployments.fixture(["PoseidonLibs"]);

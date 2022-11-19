@@ -1,13 +1,16 @@
 /* eslint-disable */
 import { NotesManager, SpendEvent } from ".";
 import { FlaxPrivKey } from "../../crypto";
-import { LocalFlaxDB } from "../db/local";
+import { LocalObjectDB } from "../db/local";
 import { IncludedNoteStruct } from "../note";
 import { FlaxSigner } from "../signer";
 
 export class MockNotesManager extends NotesManager {
   constructor() {
-    super(new LocalFlaxDB(), new FlaxSigner(new FlaxPrivKey(1n)));
+    super(
+      new LocalObjectDB({ localMerkle: true }),
+      new FlaxSigner(new FlaxPrivKey(1n))
+    );
   }
 
   protected async fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]> {
