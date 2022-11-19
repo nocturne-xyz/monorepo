@@ -128,3 +128,4 @@ export abstract class LocalMerkleDBExtension extends FlaxDB {
 }
 
 export { LocalFlaxDB } from "./local";
+export { LocalObjectDB } from "./localobj";
