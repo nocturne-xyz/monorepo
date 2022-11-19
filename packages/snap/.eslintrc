@@ -20,6 +20,7 @@
     "@typescript-eslint/no-empty-function": "off"
   },
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "allowImportExportEverywhere": true
   }
 }
