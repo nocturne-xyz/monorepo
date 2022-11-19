@@ -76,17 +76,15 @@ describe("Wallet", async () => {
     await wallet.commit2FromQueue();
 
     console.log("Sync SDK notes manager");
-    await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
-    const notesForAsset = await flaxContext.notesManager.db.getNotesFor(asset);
+    await flaxContext.syncNotes();
+    const notesForAsset = await flaxContext.db.getNotesFor(asset);
     expect(notesForAsset.length).to.equal(2);
 
     console.log("Sync SDK merkle prover");
-    await (
-      flaxContext.merkleProver as LocalMerkleProver
-    ).fetchLeavesAndUpdate();
-    expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
-      (await wallet.getRoot()).toBigInt()
-    );
+    await flaxContext.syncLeaves();
+    expect(
+      (flaxContext.merkleProver as LocalMerkleProver).localTree.root()
+    ).to.equal((await wallet.getRoot()).toBigInt());
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
@@ -128,10 +126,8 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
 
     console.log("Sync SDK notes manager post-spend");
-    await flaxContext.notesManager.fetchAndApplyNewSpends();
-    const updatedNotesForAsset = await flaxContext.notesManager.db.getNotesFor(
-      asset
-    )!;
+    await flaxContext.syncNotes();
+    const updatedNotesForAsset = await flaxContext.db.getNotesFor(asset)!;
     const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 2)!; // 3rd note
     expect(updatedNote.value).to.equal(50n);
   });

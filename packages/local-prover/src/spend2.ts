@@ -1,5 +1,7 @@
 // TODO: make proving work again
 import findWorkspaceRoot from "find-yarn-workspace-root";
+
+//@ts-ignore
 import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";

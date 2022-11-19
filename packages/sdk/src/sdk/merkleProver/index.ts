@@ -1,7 +1,11 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
-export interface MerkleProver {
-  getProof(index: number): MerkleProof;
+export abstract class MerkleProver {
+  abstract getProof(index: number): Promise<MerkleProof>;
+
+  isLocal(): boolean {
+    return "localTree" in this;
+  }
 }
 
 export { LocalMerkleProver } from "./local";

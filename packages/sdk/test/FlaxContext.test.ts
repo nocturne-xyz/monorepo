@@ -7,8 +7,12 @@ import { IncludedNoteStruct } from "../src/sdk/note";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
 import { MockSpend2Prover } from "../src/proof/mock";
-import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { DEFAULT_DB_PATH, LocalFlaxDB, LocalNotesManager } from "../src/sdk";
+import {
+  DEFAULT_DB_PATH,
+  LocalFlaxDB,
+  LocalMerkleProver,
+  LocalNotesManager,
+} from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
 describe("FlaxContext", () => {
@@ -64,11 +68,15 @@ describe("FlaxContext", () => {
     ]);
 
     const prover = new MockSpend2Prover();
-    const merkleProver = new BinaryPoseidonTree();
+    const merkleProver = new LocalMerkleProver(
+      "0xaaaa",
+      getDefaultProvider(),
+      db
+    );
     const notesManager = new LocalNotesManager(
       db,
       signer,
-      "0xeeee",
+      "0xaaaa",
       getDefaultProvider()
     );
 

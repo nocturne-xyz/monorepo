@@ -19,8 +19,8 @@ import {
   Spend2Inputs,
 } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
-import { MerkleProver } from "./sdk/merkleProver";
-import { FlaxDB, LocalFlaxDB } from "./sdk/db";
+import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
+import { FlaxDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 
 export interface OperationRequest {
@@ -35,24 +35,37 @@ export interface OldAndNewNotePair {
 }
 
 export class FlaxContext {
-  signer: FlaxSigner;
-  prover: Spend2Prover;
-  merkleProver: MerkleProver;
-  notesManager: NotesManager;
-  db: FlaxDB;
+  readonly signer: FlaxSigner;
+  protected prover: Spend2Prover;
+  protected merkleProver: MerkleProver;
+  protected notesManager: NotesManager;
+  protected db: FlaxDB;
 
   constructor(
     signer: FlaxSigner,
     prover: Spend2Prover,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
-    db: FlaxDB = new LocalFlaxDB()
+    db: FlaxDB
   ) {
     this.signer = signer;
     this.prover = prover;
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;
+  }
+
+  async syncNotes(): Promise<void> {
+    await this.notesManager.fetchAndStoreNewNotesFromRefunds();
+    await this.notesManager.fetchAndApplyNewSpends();
+  }
+
+  async syncLeaves(): Promise<void> {
+    if (this.merkleProver.isLocal()) {
+      await (this.merkleProver as LocalMerkleProver).fetchLeavesAndUpdate();
+    } else {
+      throw Error("Attempted to sync leaves for non-local merkle prover");
+    }
   }
 
   /**
@@ -124,14 +137,14 @@ export class FlaxContext {
    * post-spend
    * @param preProofOperation Operation included when generating a proof
    */
-  async generatePostProofSpendTx(
+  protected async generatePostProofSpendTx(
     oldNewNotePair: OldAndNewNotePair,
     preProofOperation: PreProofOperation
   ): Promise<PostProofSpendTransaction> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
-    const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
+    const merkleProof = await this.merkleProver.getProof(oldNote.merkleIndex);
     const preProofSpendTx: PreProofSpendTransaction = {
       commitmentTreeRoot: merkleProof.root,
       nullifier,

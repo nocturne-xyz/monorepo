@@ -1,4 +1,4 @@
-/* tslint:disable */
+/* eslint-disable */
 import { NotesManager, SpendEvent } from ".";
 import { FlaxPrivKey } from "../../crypto";
 import { LocalFlaxDB } from "../db/local";
