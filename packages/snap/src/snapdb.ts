@@ -4,7 +4,7 @@ import {
   IncludedNoteStruct,
   includedNoteStructFromJSON,
   includedNoteStructToJSON,
-} from "@flax/sdk";
+} from '@flax/sdk';
 
 const DEFAULT_SNAP_STATE = {
   kv: new Map<string, string>(),
@@ -19,6 +19,10 @@ type SnapState = {
   leaves: bigint[];
 };
 
+/**
+ *
+ * @param obj
+ */
 function objectToSnapState(obj: any): SnapState {
   return {
     kv: new Map(Object.entries(obj.kv)),
@@ -27,6 +31,10 @@ function objectToSnapState(obj: any): SnapState {
   };
 }
 
+/**
+ *
+ * @param state
+ */
 function snapStateToObject(state: SnapState): any {
   return {
     kv: Object.fromEntries(state.kv),
@@ -36,23 +44,19 @@ function snapStateToObject(state: SnapState): any {
 }
 
 export class SnapDB extends FlaxDB {
-  constructor() {
-    super();
-  }
-
   async getSnapState(): Promise<SnapState> {
     let state = objectToSnapState(
       await wallet.request({
-        method: "snap_manageState",
-        params: ["get"],
-      })
+        method: 'snap_manageState',
+        params: ['get'],
+      }),
     );
 
     if (!state) {
       state = DEFAULT_SNAP_STATE;
       await wallet.request({
-        method: "snap_manageState",
-        params: ["update", state],
+        method: 'snap_manageState',
+        params: ['update', state],
       });
     }
 
@@ -69,8 +73,8 @@ export class SnapDB extends FlaxDB {
     state.kv.set(key, value);
 
     await wallet.request({
-      method: "snap_manageState",
-      params: ["update", snapStateToObject(state)],
+      method: 'snap_manageState',
+      params: ['update', snapStateToObject(state)],
     });
     return true;
   }
@@ -80,8 +84,8 @@ export class SnapDB extends FlaxDB {
     state.kv.delete(key);
 
     await wallet.request({
-      method: "snap_manageState",
-      params: ["update", snapStateToObject(state)],
+      method: 'snap_manageState',
+      params: ['update', snapStateToObject(state)],
     });
     return true;
   }
@@ -98,10 +102,10 @@ export class SnapDB extends FlaxDB {
     }
 
     state.notes.set(key, existingNotesFor.concat([jsonNote]));
-    console.log("STATE pre-store: ", state);
+    console.log('STATE pre-store: ', state);
     await wallet.request({
-      method: "snap_manageState",
-      params: ["update", snapStateToObject(state)],
+      method: 'snap_manageState',
+      params: ['update', snapStateToObject(state)],
     });
     return true;
   }
@@ -113,13 +117,13 @@ export class SnapDB extends FlaxDB {
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter(
-        (n) => n !== includedNoteStructToJSON(note)
-      )
+        (n) => n !== includedNoteStructToJSON(note),
+      ),
     );
 
     await wallet.request({
-      method: "snap_manageState",
-      params: ["update", snapStateToObject(state)],
+      method: 'snap_manageState',
+      params: ['update', snapStateToObject(state)],
     });
     return true;
   }
@@ -144,8 +148,8 @@ export class SnapDB extends FlaxDB {
 
   async clear(): Promise<void> {
     await wallet.request({
-      method: "snap_manageState",
-      params: ["update", DEFAULT_SNAP_STATE],
+      method: 'snap_manageState',
+      params: ['update', DEFAULT_SNAP_STATE],
     });
   }
 
