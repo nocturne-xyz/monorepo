@@ -99,4 +99,28 @@ export const syncNotes = async () => {
   });
 };
 
+export const syncLeaves = async () => {
+  await window.ethereum.request({
+    method: "wallet_invokeSnap",
+    params: [
+      defaultSnapOrigin,
+      {
+        method: "flax_syncLeaves",
+      },
+    ],
+  });
+};
+
+export const clearDb = async () => {
+  await window.ethereum.request({
+    method: "wallet_invokeSnap",
+    params: [
+      defaultSnapOrigin,
+      {
+        method: "flax_clearDb",
+      },
+    ],
+  });
+};
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith("local:");

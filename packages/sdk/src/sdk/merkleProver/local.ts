@@ -70,7 +70,7 @@ export class LocalMerkleProver extends MerkleProver {
     const newLeaves = await this.fetchNewLeaves(nextBlockToIndex, latestBlock);
 
     for (const leaf of newLeaves) {
-      this.db.storeLeaf(this.localTree.count, leaf);
+      await this.db.storeLeaf(this.localTree.count, leaf);
       this.localTree.insert(leaf);
     }
 
