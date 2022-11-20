@@ -9,7 +9,7 @@ import {
 } from "@flax/sdk";
 import { ethers } from "ethers";
 import { OnRpcRequestHandler } from "@metamask/snap-types";
-import { SnapDB, snapStateToObject } from "./snapdb";
+import { SnapDB } from "./snapdb";
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -105,21 +105,21 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       await context.syncNotes();
       console.log(
         "Synced notes, state: ",
-        JSON.stringify(snapStateToObject(await db.getSnapState()))
+        JSON.stringify(await db.getSerializableState())
       );
       return;
     case "flax_syncLeaves":
       await context.syncLeaves();
       console.log(
         "Synced leaves, state: ",
-        JSON.stringify(snapStateToObject(await db.getSnapState()))
+        JSON.stringify(await db.getSerializableState())
       );
       return;
     case "flax_clearDb":
       await context.db.clear();
       console.log(
         "Cleared DB, state: ",
-        JSON.stringify(snapStateToObject(await db.getSnapState()))
+        JSON.stringify(await db.getSerializableState())
       );
       return;
     default:
