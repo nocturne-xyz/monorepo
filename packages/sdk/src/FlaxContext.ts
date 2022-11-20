@@ -62,10 +62,8 @@ export class FlaxContext {
 
   async syncLeaves(): Promise<void> {
     if (this.merkleProver.isLocal()) {
-      console.log("IS LOCAL");
       await (this.merkleProver as LocalMerkleProver).fetchLeavesAndUpdate();
     } else {
-      console.log("NOT LOCAL");
       throw Error("Attempted to sync leaves for non-local merkle prover");
     }
   }
