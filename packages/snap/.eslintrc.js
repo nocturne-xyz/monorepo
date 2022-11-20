@@ -23,6 +23,7 @@ module.exports = {
         "jsdoc/require-param-description": "off",
         "jsdoc/require-returns": "off",
         "consistent-return": "off",
+        "no-negated-condition": "off",
       },
     },
   ],
