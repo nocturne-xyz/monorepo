@@ -19,9 +19,10 @@ import "hardhat/console.sol";
 contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
-        address _verifier,
-        address _merkle
-    ) BalanceManager(_vault, _verifier, _merkle) {} // solhint-disable-line no-empty-blocks
+        address _spend2Verifier,
+        address _subtreeUpdateVerifier,
+        address _hasherT3
+    ) BalanceManager(_vault, _spend2Verifier, _subtreeUpdateVerifier, _hasherT3) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
@@ -65,18 +66,6 @@ contract Wallet is IWallet, BalanceManager {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
         _makeDeposit(deposit);
-    }
-
-    function getRoot() external view returns (uint256) {
-        return noteCommitmentTree.getRoot();
-    }
-
-    function commitSubtree(
-        uint256 newRoot,
-        uint256[8] calldata proof
-    ) external {
-        noteCommitmentTree.commitSubtree(newRoot, proof);
-        pastRoots[newRoot] = true;
     }
 
     function performOperation(Operation calldata op)

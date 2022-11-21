@@ -9,12 +9,10 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
 import {TestSubtreeUpdateVerifier} from "../TestSubtreeUpdateVerifier.sol";
 import {Vault} from "../Vault.sol";
@@ -37,8 +35,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
     Wallet wallet;
     Vault vault;
-    IOffchainMerkleTree merkle;
-    ISpend2Verifier verifier;
+    ISpend2Verifier spend2Verifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -64,17 +61,17 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
 
-        // Instantiate vault, verifier, tree, and wallet
+        // Instantiate vault, spend2Verifier, tree, and wallet
         vault = new Vault();
-        verifier = new TestSpend2Verifier();
+        spend2Verifier = new TestSpend2Verifier();
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
-        merkle = IOffchainMerkleTree(new OffchainMerkleTree(address(subtreeUpdateVerifier), address(hasherT3)));
         wallet = new Wallet(
             address(vault),
-            address(verifier),
-            address(merkle)
+            address(spend2Verifier),
+            address(subtreeUpdateVerifier),
+            address(hasherT3)
         );
 
         vault.initialize(address(wallet));

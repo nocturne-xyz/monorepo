@@ -7,7 +7,6 @@ export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
 export type { TestSubtreeUpdateVerifier } from './src/TestSubtreeUpdateVerifier';
 export type { CommitmentTreeManager } from "./src/CommitmentTreeManager";
 export type { BatchBinaryMerkle } from "./src/BatchBinaryMerkle";
-export type { OffchainMerkleTree } from "./src/OffchainMerkleTree";
 export type { PoseidonHasherT3 } from "./src/PoseidonHasherT3";
 export type { PoseidonHasherT4 } from "./src/PoseidonHasherT4";
 export type { PoseidonHasherT5 } from "./src/PoseidonHasherT5";
@@ -24,7 +23,6 @@ export { SubtreeUpdateVerifier__factory } from "./src/factories/SubtreeUpdateVer
 export { TestSubtreeUpdateVerifier__factory } from "./src/factories/TestSubtreeUpdateVerifier__factory";
 export { CommitmentTreeManager__factory } from "./src/factories/CommitmentTreeManager__factory";
 export { BatchBinaryMerkle__factory } from "./src/factories/BatchBinaryMerkle__factory";
-export { OffchainMerkleTree__factory } from "./src/factories/OffchainMerkleTree__factory";
 export { PoseidonHasherT3__factory } from "./src/factories/PoseidonHasherT3__factory";
 export { PoseidonHasherT4__factory } from "./src/factories/PoseidonHasherT4__factory";
 export { PoseidonHasherT5__factory } from "./src/factories/PoseidonHasherT5__factory";

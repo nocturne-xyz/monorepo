@@ -76,16 +76,16 @@ contract CommitmentTreeManager {
     );
 
     constructor(
-        address _verifier,
-        address _noteCommitmentTree,
+        address _spend2verifier,
+        address _subtreeUpdateVerifier,
         address _hasherT3
     ) {
-        spend2Verifier = ISpend2Verifier(_verifier);
+        spend2Verifier = ISpend2Verifier(_spend2verifier);
 
         root = ZERO;
         count = 0;
         batchLen = 0;
-        subtreeUpdateVerifier = ISubtreeUpdateVerifier(_verifier);
+        subtreeUpdateVerifier = ISubtreeUpdateVerifier(_subtreeUpdateVerifier);
 
         // compute the initial root corresponding to the tree of depth `depth` containing all zeros
         IHasherT3 hasher = IHasherT3(_hasherT3);
@@ -123,11 +123,11 @@ contract CommitmentTreeManager {
         return uint128(_totalCount());
     }
 
-    function getCurrentRoot() external view returns (uint256) {
+    function getRoot() external view returns (uint256) {
         return root;
     }
 
-    function insertComOrAccToQueue(uint256 _hash, bool isAccumulator ) internal {
+    function insertComOrAccToQueue(uint256 _hash, bool isAccumulator) internal {
         batch[batchLen] = _hash;
         batchLen += 1;
 
@@ -146,7 +146,6 @@ contract CommitmentTreeManager {
     }
 
     function insertComsOrAccsToQueue(uint256[] memory hashes, bool isAccumulator) internal {
-        uint256 startMerkleIndex = _totalCount();
         for (uint256 i = 0; i < hashes.length; i++) {
             batch[batchLen] = hashes[i];
             batchLen += 1;
@@ -307,6 +306,7 @@ contract CommitmentTreeManager {
 
         queue.dequeue(); 
         root = newRoot;
+        pastRoots[newRoot] = true;
         count += uint128(BATCH_SIZE);
     }
 }
