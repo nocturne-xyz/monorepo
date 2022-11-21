@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.5;
 
-import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
 import "./interfaces/ISubtreeUpdateVerifier.sol";
+import {IWallet} from "./interfaces/IWallet.sol";
 
 import {QueueLib} from "./libs/Queue.sol";
 import {FieldUtils} from "./libs/FieldUtils.sol";
@@ -63,12 +63,12 @@ contract CommitmentTreeManager {
         uint256 indexed merkleIndex
     );
 
-    event InsertCommitments(
-        uint256[] indexed commitment
+    event InsertNoteCommitments(
+        uint256[] indexed commitments
     );
 
-    event InsertAccumulators(
-        uint256[] indexed hashes
+    event InsertNotes(
+        IWallet.Note[] notes
     );
 
     event LeavesCommitted(
@@ -127,7 +127,7 @@ contract CommitmentTreeManager {
         return root;
     }
 
-    function insertComOrAccToQueue(uint256 _hash, bool isAccumulator) internal {
+    function insertComOrAccToQueue(uint256 _hash) internal {
         batch[batchLen] = _hash;
         batchLen += 1;
 
@@ -137,15 +137,9 @@ contract CommitmentTreeManager {
 
         uint256[] memory hashes = new uint256[](1);
         hashes[0] = _hash;
-
-        if (isAccumulator) {
-            emit InsertAccumulators(hashes);
-        } else {
-            emit InsertCommitments(hashes);
-        }
     }
 
-    function insertComsOrAccsToQueue(uint256[] memory hashes, bool isAccumulator) internal {
+    function insertComsOrAccsToQueue(uint256[] memory hashes) internal {
         for (uint256 i = 0; i < hashes.length; i++) {
             batch[batchLen] = hashes[i];
             batchLen += 1;
@@ -154,12 +148,53 @@ contract CommitmentTreeManager {
                 accumulate();
             }
         }
+    }
 
-        if (isAccumulator) {
-            emit InsertAccumulators(hashes);
-        } else {
-            emit InsertCommitments(hashes);
+    function insertNoteCommitment(uint256 commitment) internal {
+        insertComOrAccToQueue(commitment);
+
+        uint256[] memory comms = new uint256[](1);
+        emit InsertNoteCommitments(comms);
+    }
+
+    function insertNoteCommitments(uint256[] memory commitments) internal {
+        insertComsOrAccsToQueue(commitments);
+        emit InsertNoteCommitments(commitments);
+    }
+
+    function hashNote(
+        IWallet.Note memory note
+    ) internal pure returns (uint256) {
+        uint256[] memory elems = new uint256[](6);
+        elems[0] = note.ownerH1;
+        elems[1] = note.ownerH2;
+        elems[2] = note.nonce;
+        elems[3] = note.asset;
+        elems[4] = note.id;
+        elems[5] = note.value;
+        return FieldUtils.sha256FieldElemsToUint256(elems);
+    }
+
+    function insertNote(
+        IWallet.Note memory note
+    ) internal {
+        uint256 accumulator = hashNote(note);
+        insertComOrAccToQueue(accumulator);
+
+        IWallet.Note[] memory notes = new IWallet.Note[](1);
+        notes[0] = note;
+
+        emit InsertNotes(notes);
+    }
+
+    function insertNotes(
+        IWallet.Note[] memory notes
+    ) internal {
+        for (uint256 i = 0; i < notes.length; i++) {
+            uint256 accumulator = hashNote(notes[i]);
+            insertComOrAccToQueue(accumulator);
         }
+        emit InsertNotes(notes);
     }
 
     // TODO: add default noteCommitment for when there is no output note.
@@ -199,7 +234,7 @@ contract CommitmentTreeManager {
             "Spend proof invalid"
         );
 
-        insertComOrAccToQueue(spendTx.newNoteCommitment, false);
+        insertComOrAccToQueue(spendTx.newNoteCommitment);
         nullifierSet[spendTx.nullifier] = true;
 
         emit Spend(
@@ -215,19 +250,18 @@ contract CommitmentTreeManager {
         uint256 id,
         uint256 value
     ) internal {
-        uint256[] memory elems = new uint256[](6);
-        elems[0] = refundAddr.h1X;
-        elems[1] = refundAddr.h2X;
-        elems[2] = nonce;
-        elems[3] = uint256(uint160(asset));
-        elems[4] = id;
-        elems[5] = value;
-        uint256 accumulator = FieldUtils.sha256FieldElemsToUint256(elems);
+        IWallet.Note memory note;
+        note.ownerH1 = refundAddr.h1X;
+        note.ownerH2 = refundAddr.h2X;
+        note.nonce = nonce;
+        note.asset = uint256(uint160(asset));
+        note.id = id;
+        note.value = value;
+
+        insertNote(note);
 
         uint256 _nonce = nonce;
         nonce++;
-
-        insertComOrAccToQueue(accumulator, true);
 
         emit Refund(
             refundAddr,
@@ -271,7 +305,7 @@ contract CommitmentTreeManager {
             } 
             batchLen = uint128(BATCH_SIZE);
 
-            emit InsertCommitments(emptyLeaves);
+            emit InsertNoteCommitments(emptyLeaves);
             accumulate();
         }
 
