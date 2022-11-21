@@ -71,10 +71,6 @@ contract CommitmentTreeManager {
         IWallet.Note[] notes
     );
 
-    event LeavesCommitted(
-        uint256 newRoot
-    );
-
     constructor(
         address _spend2verifier,
         address _subtreeUpdateVerifier,
@@ -336,8 +332,6 @@ contract CommitmentTreeManager {
             "subtree update proof invalid"
         );
         
-        emit LeavesCommitted(newRoot);
-
         queue.dequeue(); 
         root = newRoot;
         pastRoots[newRoot] = true;
