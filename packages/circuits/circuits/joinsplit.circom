@@ -4,6 +4,8 @@ include "include/babyjub.circom";
 include "include/poseidon.circom";
 include "include/escalarmulany.circom";
 
+include "include/sha256/sha256.circom";
+
 include "tree.circom";
 include "note2.circom";
 include "sig.circom";
@@ -17,8 +19,13 @@ template Spend(levels) {
     signal input spendPkY;
     signal input spendPkNonce;
 
+    // Public inputs
     // Opeartion digest
     signal input operationDigest;
+    // Asset viewing public key
+    signal input assetViewingPubKey[2];
+    // Asset freezing public key
+    signal input assetFreezingPubKey[2];
 
     // authSig
     signal input c;
@@ -81,6 +88,9 @@ template Spend(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
+    signal output encryptedNoteA[3];
+    signal output encryptedNoteB[3];
+    signal output encryptedPad;
 
     // Computing oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -107,11 +117,16 @@ template Spend(levels) {
     signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, siblingsB, pathB);
     anchor === anchorB;
 
+    // Derive nullifying key
+    signal nk, G[2];
+    G <== EscalarMulAny(254)(Num2Bits(254)(vk), assetFreezingPubKey);
+    nk <== Poseidon(2)(G);
+
     // Nullifier derivation for oldNoteA
-    nullifierA <== DeriveNullifier()(oldNoteACommitment, vk);
+    nullifierA <== DeriveNullifier()(oldNoteACommitment, nk);
 
     // Nullifier derivation for oldNoteB
-    nullifierB <== DeriveNullifier()(oldNoteBCommitment, vk);
+    nullifierB <== DeriveNullifier()(oldNoteBCommitment, nk);
 
     // Asset, id, value, nonce
     encodedAsset <== oldNoteAEncodedAsset;
@@ -124,27 +139,11 @@ template Spend(levels) {
     newNoteAEncodedId === newNoteBEncodedId;
     publicSpend <== oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue;
 
-    // Viewing key integrity for note A: h1^{vk} == h2
-    component vkBits = Num2Bits(254);
-    vkBits.in <== vk;
-    component H1vkA = EscalarMulAny(254);
-    H1vkA.p[0] <== oldNoteAOwnerH1X;
-    H1vkA.p[1] <== oldNoteAOwnerH1Y;
-    for (var i = 0; i < 254; i++) {
-        H1vkA.e[i] <== vkBits.out[i];
-    }
-    H1vkA.out[0] === oldNoteAOwnerH2X;
-    H1vkA.out[1] === oldNoteAOwnerH2Y;
+    // Viewing key integrity for note A: H1^{vk} == H2
+    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vk);
 
-    // Viewing key integrity for note B: h1^{vk} == h2
-    component H1vkB = EscalarMulAny(254);
-    H1vkB.p[0] <== oldNoteBOwnerH1X;
-    H1vkB.p[1] <== oldNoteBOwnerH1Y;
-    for (var i = 0; i < 254; i++) {
-        H1vkB.e[i] <== vkBits.out[i];
-    }
-    H1vkB.out[0] === oldNoteBOwnerH2X;
-    H1vkB.out[1] === oldNoteBOwnerH2Y;
+    // Viewing key integrity for note B: H1^{vk} == H2
+    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vk);
 
     // Derive spending public key
     signal derived_vk <== Poseidon(3)([spendPkX, spendPkY, spendPkNonce]);
@@ -170,6 +169,16 @@ template Spend(levels) {
       newNoteBEncodedId,
       newNoteBValue
     );
+
+    // Compute
+    signal input r;
+    encryptedNoteA <== Encrypt(3)(r, [newNoteAOwnerH1X, newNoteANonce, newNoteAValue]);
+    encryptedNoteB <== Encrypt(3)(r, [newNoteBOwnerH1X, newNoteBNonce, newNoteBValue]);
+
+    signal input rr;
+    signal RR[2] <== EscalarMulAny(254)(Num2Bits(254)(rr), assetViewingPubKey);
+    signal pad <== Poseidon(2)(RR);
+    encryptedPad <== pad + r;
 }
 
 component main { public [operationDigest] } = Spend(32);
