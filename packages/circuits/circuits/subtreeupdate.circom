@@ -193,6 +193,8 @@ template SubtreeUpdate(r, s) {
         tmp2[i][1] <== 0;
 
         for (var j = 0; j < 256; j++) {
+            // For some reason circcom complains if I combine these into a single (still quadratic) constraint
+            // if I don't split it up with a temp signal
             tmp1[i][j] <== bitmap[i] * noteHashers[i].sha256HashBits[j];
             accumulatorInnerHashes[i][j] <== tmp1[i][j] + tmp2[i][j];
         }
