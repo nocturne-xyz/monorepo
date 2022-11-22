@@ -8,13 +8,13 @@ library FieldUtils  {
 		bytes memory res = new bytes(elems.length * 32);
 		for (uint256 i = 0; i < elems.length; i++) {
 			uint256 elem = elems[i];
-            for (uint256 j = 31; j > 0; j--) {
+			for (uint256 j = 31; j > 0; j--) {
 				uint8 b = uint8(elem & uint256(0xFF));
-            	res[32 * i + j] = bytes1(b);
-                elem >>= 8;
-            }
-        }
-
+				res[32 * i + j] = bytes1(b);
+				elem >>= 8;
+			}
+		}
+		
 		return res;
 	}
 
