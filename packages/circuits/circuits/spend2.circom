@@ -121,12 +121,10 @@ template Spend(levels) {
     sigVerify.c <== c;
     sigVerify.z <== z;
 
-    // Compute hash of newNoteOwner as H(h1X, h1Y, h2X, h2Y)
-    component newNoteOwnerHash = Poseidon(4);
+    // Compute hash of newNoteOwner as H(h1X, h2X)
+    component newNoteOwnerHash = Poseidon(2);
     newNoteOwnerHash.inputs[0] <== newNoteOwnerH1X;
-    newNoteOwnerHash.inputs[1] <== newNoteOwnerH1Y;
-    newNoteOwnerHash.inputs[2] <== newNoteOwnerH2X;
-    newNoteOwnerHash.inputs[3] <== newNoteOwnerH2Y;
+    newNoteOwnerHash.inputs[1] <== newNoteOwnerH2X;
 
 
     // Computing newNoteCommitment
