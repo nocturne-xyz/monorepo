@@ -194,7 +194,7 @@ describe("Wallet", async () => {
     await flaxContext.notesManager.fetchAndApplyNewSpends();
     const updatedNotesForAsset =
       flaxContext.notesManager.db.getNotesFor(asset)!;
-    const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 2)!; // 3rd note
+    const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
     expect(updatedNote.value).to.equal(50n);
   });
 });
