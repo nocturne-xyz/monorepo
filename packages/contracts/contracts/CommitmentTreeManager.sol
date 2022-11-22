@@ -293,7 +293,7 @@ contract CommitmentTreeManager {
         uint256[8] calldata proof
     ) external {
         // append 0s if the queue is empty or the batch isn't full
-        if (queue.isEmpty() || batchLen < BATCH_SIZE) {
+        if (queue.isEmpty()) {
             uint256 numEmptyleaves = uint256(BATCH_SIZE) - uint256(batchLen);
             uint256[] memory emptyLeaves = new uint256[](numEmptyleaves);
 
