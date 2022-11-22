@@ -4,14 +4,11 @@ import {
   Wallet__factory,
   Vault__factory,
   Spend2Verifier__factory,
-  BatchBinaryMerkle__factory,
+  TestSubtreeUpdateVerifier__factory,
   PoseidonHasherT3__factory,
-  PoseidonHasherT5__factory,
-  PoseidonHasherT6__factory,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
-  BatchBinaryMerkle,
 } from "@flax/contracts";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
@@ -29,18 +26,22 @@ import {
   DEFAULT_DB_PATH,
   LocalMerkleProver,
   LocalNotesManager,
+  Note,
+  BinaryPoseidonTree,
 } from "@flax/sdk";
 import * as fs from "fs";
+import { Contract } from "hardhat/internal/hardhat-network/stack-traces/model";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
 
 describe("Wallet", async () => {
-  let deployer: ethers.Signer, alice: ethers.Signer, bob: ethers.Signer;
-  let vault: Vault,
-    wallet: Wallet,
-    merkle: BatchBinaryMerkle,
-    token: SimpleERC20Token;
+  let deployer: ethers.Signer;
+  let alice: ethers.Signer;
+  let bob: ethers.Signer;
+  let vault: Vault;
+  let wallet: Wallet;
+  let token: SimpleERC20Token;
   let flaxContext: FlaxContext;
   let db = new FlaxLMDB({ localMerkle: true });
 
@@ -53,22 +54,10 @@ describe("Wallet", async () => {
     await deployments.fixture(["PoseidonLibs"]);
 
     const poseidonT3Lib = await ethers.getContract("PoseidonT3Lib");
-    const poseidonT5Lib = await ethers.getContract("PoseidonT5Lib");
-    const poseidonT6Lib = await ethers.getContract("PoseidonT6Lib");
 
     const poseidonT3Factory = new PoseidonHasherT3__factory(deployer);
     const poseidonHasherT3 = await poseidonT3Factory.deploy(
       poseidonT3Lib.address
-    );
-
-    const poseidonT5Factory = new PoseidonHasherT5__factory(deployer);
-    const poseidonHasherT5 = await poseidonT5Factory.deploy(
-      poseidonT5Lib.address
-    );
-
-    const poseidonT6Factory = new PoseidonHasherT6__factory(deployer);
-    const poseidonHasherT6 = await poseidonT6Factory.deploy(
-      poseidonT6Lib.address
     );
 
     const tokenFactory = new SimpleERC20Token__factory(deployer);
@@ -77,25 +66,24 @@ describe("Wallet", async () => {
     const vaultFactory = new Vault__factory(deployer);
     vault = await vaultFactory.deploy();
 
-    const verifierFactory = new Spend2Verifier__factory(deployer);
-    const verifier = await verifierFactory.deploy();
+    const spend2VerifierFactory = new Spend2Verifier__factory(deployer);
+    const spend2Verifier = await spend2VerifierFactory.deploy();
 
-    const merkleFactory = new BatchBinaryMerkle__factory(deployer);
-    merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
+    const subtreeUpdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
+    const subtreeUpdateVerifier = await subtreeUpdateVerifierFactory.deploy();
 
     const walletFactory = new Wallet__factory(deployer);
     wallet = await walletFactory.deploy(
       vault.address,
-      verifier.address,
-      merkle.address,
-      poseidonHasherT5.address,
-      poseidonHasherT6.address
+      spend2Verifier.address,
+      subtreeUpdateVerifier.address,
+      poseidonHasherT3.address
     );
 
     await vault.initialize(wallet.address);
 
     console.log("Create FlaxContext");
-    const prover = new LocalMerkleProver(merkle.address, ethers.provider, db);
+    const prover = new LocalMerkleProver(wallet.address, ethers.provider, db);
     const notesManager = new LocalNotesManager(
       db,
       flaxSigner,
@@ -119,6 +107,11 @@ describe("Wallet", async () => {
       });
     }
   }
+  
+  async function commitSubtree() {
+    const newRoot = (flaxContext.merkleProver as LocalMerkleProver).root();
+    await wallet.commitSubtree(newRoot, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+  }
 
   beforeEach(async () => {
     await setup();
@@ -138,8 +131,13 @@ describe("Wallet", async () => {
 
     console.log("Deposit funds and commit note commitments");
     await aliceDepositFunds();
-    await wallet.commit2FromQueue();
 
+    console.log("Commit subtree update on-chain")
+    await (
+      flaxContext.merkleProver as LocalMerkleProver
+    ).fetchLeavesAndUpdate();
+    await commitSubtree();
+    
     console.log("Sync SDK notes manager");
     await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
     const notesForAsset = flaxContext.notesManager.db.getNotesFor(asset);
@@ -152,7 +150,7 @@ describe("Wallet", async () => {
     expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
       (await wallet.getRoot()).toBigInt()
     );
-
+    
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
       asset,

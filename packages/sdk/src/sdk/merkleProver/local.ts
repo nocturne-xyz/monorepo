@@ -11,12 +11,12 @@ import { Note } from "../note";
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
-
-enum UpdateKind {
-  NOTE,
-  NOTE_COMMITMENT
-};
-
+interface OrederedLeaf {
+  leaf: bigint,
+  blockNumber: number,
+  txIdx: number,
+  logIdx: number
+}
 
 export class LocalMerkleProver
   extends BinaryPoseidonTree
@@ -49,8 +49,6 @@ export class LocalMerkleProver
       this.db.getNumberKv(MERKLE_NEXT_BLOCK_TO_INDEX) ?? DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
-    console.log("from", nextBlockToIndex, "to", latestBlock);
-
     const [newLeaves, lastCommittedIndex] = await Promise.all([
       this.fetchNewLeaves(nextBlockToIndex, latestBlock),
       this.fetchLastCommittedIndex(),
@@ -67,41 +65,35 @@ export class LocalMerkleProver
 
   async fetchNewLeaves(from: number, to: number): Promise<bigint[]> {
 
-    const proms = [];
-    proms.push(
-      query(
-        this.contract,
-        this.contract.filters.InsertNoteCommitments(),
-        from,
-        to
-      )
+    const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = query(
+      this.contract,
+      this.contract.filters.InsertNoteCommitments(),
+      from,
+      to
     );
-    proms.push(
-      query(
-        this.contract,
-        this.contract.filters.InsertNotes(),
-        from,
-        to
-      )
-    );
-    const [noteCommitmentEvents, noteEvents] = await Promise.all(proms);
-    let taggedEvents = noteCommitmentEvents.map(event => [UpdateKind.NOTE_COMMITMENT, event]);
-    taggedEvents = taggedEvents.concat(
-      noteEvents.map(event => [UpdateKind.NOTE, event])
+    const noteEventsProm: Promise<InsertNotesEvent[]> = query(
+      this.contract,
+      this.contract.filters.InsertNotes(),
+      from,
+      to
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const events = (taggedEvents as [UpdateKind, InsertNoteCommitmentsEvent | InsertNotesEvent][]).sort(([_akind, a], [_bkind, b]) => a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex || a.logIndex - b.logIndex);
+    const [noteCommitmentEvents, noteEvents] = await Promise.all([ncEventsProm, noteEventsProm]);
 
-    const allLeaves = [];
-    for (const [kind, event] of events) {
-      if (kind === UpdateKind.NOTE_COMMITMENT) {
-        const e = event as InsertNoteCommitmentsEvent;
-        const eventLeaves = e.args.commitments.map((l) => l.toBigInt());
-        allLeaves.push(...eventLeaves);
-      } else if (kind === UpdateKind.NOTE) {
-        const e = event as InsertNotesEvent;
-        for (const noteValues of e.args.notes) {
+    let leaves: OrederedLeaf[] = [];
+    for (const event of noteCommitmentEvents) {
+        const eventLeaves = event.args.commitments.map((l) => l.toBigInt());
+        const orderedLeaves = eventLeaves.map(leaf => ({
+          leaf,
+          blockNumber: event.blockNumber,
+          txIdx: event.transactionIndex,
+          logIdx: event.logIndex,
+        }));
+        leaves.push(...orderedLeaves);
+    }
+
+    for (const event of noteEvents) {
+        for (const noteValues of event.args.notes) {
           const owner = {
             h1X: noteValues.ownerH1.toBigInt(),
             h2X: noteValues.ownerH2.toBigInt(),
@@ -118,14 +110,18 @@ export class LocalMerkleProver
           };
 
           const note = new Note(noteStruct);
-          const commitment = note.toCommitment();
-          allLeaves.push(commitment);
+          const leaf = note.toCommitment();
+          leaves.push({
+            leaf,
+            blockNumber: event.blockNumber,
+            txIdx: event.transactionIndex,
+            logIdx: event.logIndex,
+          });
         }
-      } else {
-        throw new Error("unexpected event kind");
-      }
     }
-    return allLeaves;
+
+    leaves = leaves.sort((a, b) => a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx);
+    return leaves.map(({ leaf }) => leaf);
   }
 
   async fetchLastCommittedIndex(): Promise<number> {
