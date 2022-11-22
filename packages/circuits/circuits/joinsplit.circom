@@ -3,29 +3,24 @@ pragma circom 2.1.0;
 include "include/babyjub.circom";
 include "include/poseidon.circom";
 include "include/escalarmulany.circom";
+include "include/comparators.circom";
 
 include "include/sha256/sha256.circom";
 
 include "tree.circom";
-include "note2.circom";
-include "sig.circom";
+include "lib.circom";
 
-template Spend(levels) {
+template JoinSplit(levels) {
     // viewing / nullifier key
-    signal input vk;
+    signal input userViewingKey;
 
     // Spend Pk
-    signal input spendPkX;
-    signal input spendPkY;
-    signal input spendPkNonce;
+    signal input spendPublicKey[2];
+    signal input userViewingKeyNonce;
 
     // Public inputs
     // Opeartion digest
     signal input operationDigest;
-    // Asset viewing public key
-    signal input assetViewingPubKey[2];
-    // Asset freezing public key
-    signal input assetFreezingPubKey[2];
 
     // authSig
     signal input c;
@@ -88,9 +83,6 @@ template Spend(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
-    signal output encryptedNoteA[3];
-    signal output encryptedNoteB[3];
-    signal output encryptedPad;
 
     // Computing oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -117,16 +109,11 @@ template Spend(levels) {
     signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, siblingsB, pathB);
     anchor === anchorB;
 
-    // Derive nullifying key
-    signal nk, G[2];
-    G <== EscalarMulAny(254)(Num2Bits(254)(vk), assetFreezingPubKey);
-    nk <== Poseidon(2)(G);
-
     // Nullifier derivation for oldNoteA
-    nullifierA <== DeriveNullifier()(oldNoteACommitment, nk);
+    nullifierA <== Poseidon(2)([oldNoteACommitment, userViewingKey]);
 
     // Nullifier derivation for oldNoteB
-    nullifierB <== DeriveNullifier()(oldNoteBCommitment, nk);
+    nullifierB <== Poseidon(2)([oldNoteBCommitment, userViewingKey]);
 
     // Asset, id, value, nonce
     encodedAsset <== oldNoteAEncodedAsset;
@@ -137,20 +124,25 @@ template Spend(levels) {
     oldNoteAEncodedId === oldNoteBEncodedId;
     oldNoteBEncodedId === newNoteAEncodedId;
     newNoteAEncodedId === newNoteBEncodedId;
-    publicSpend <== oldNoteAValue + oldNoteBValue - newNoteAValue - newNoteBValue;
 
-    // Viewing key integrity for note A: H1^{vk} == H2
-    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, vk);
+    signal valInput <== oldNoteAValue + oldNoteBValue;
+    signal valOutput <== newNoteAValue + newNoteBValue;
+    signal compOut <== LessEqThan(252)([valOutput, valInput]);
+    compOut === 1;
+    publicSpend <== valInput - valOutput;
 
-    // Viewing key integrity for note B: H1^{vk} == H2
-    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, vk);
+    // Viewing key integrity for note A
+    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, userViewingKey);
+
+    // Viewing key integrity for note B
+    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, userViewingKey);
 
     // Derive spending public key
-    signal derived_vk <== Poseidon(3)([spendPkX, spendPkY, spendPkNonce]);
-    vk === derived_vk;
+    signal derivedViewingKey <== Poseidon(3)([spendPublicKey[0], spendPublicKey[1], userViewingKeyNonce]);
+    userViewingKey === derivedViewingKey;
 
     // AuthSig validity
-    Verify()(spendPkX, spendPkY, operationDigest, c, z);
+    SigVerify()(spendPublicKey[0], spendPublicKey[1], operationDigest, c, z);
 
     // Computing newNoteACommitment
     newNoteACommitment <== NoteCommit()(
@@ -169,16 +161,6 @@ template Spend(levels) {
       newNoteBEncodedId,
       newNoteBValue
     );
-
-    // Compute
-    signal input r;
-    encryptedNoteA <== Encrypt(3)(r, [newNoteAOwnerH1X, newNoteANonce, newNoteAValue]);
-    encryptedNoteB <== Encrypt(3)(r, [newNoteBOwnerH1X, newNoteBNonce, newNoteBValue]);
-
-    signal input rr;
-    signal RR[2] <== EscalarMulAny(254)(Num2Bits(254)(rr), assetViewingPubKey);
-    signal pad <== Poseidon(2)(RR);
-    encryptedPad <== pad + r;
 }
 
-component main { public [operationDigest] } = Spend(32);
+component main { public [operationDigest] } = JoinSplit(32);
