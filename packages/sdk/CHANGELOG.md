@@ -14,3 +14,5 @@
 - Update `FlaxSigner` to derive `vk` from `sk` and use simplified 2 field `FLAXAddress`
 - Move spend2 circuit prove/verify methods into sdk
 - Add babyjub classes and poseidon tree
+- Fix indexing bug when only querying a single block
+- Update merkle prover indexing logic to work with off-chain updates
