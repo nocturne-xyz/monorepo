@@ -130,6 +130,7 @@ export class FlaxContext {
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
     const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
+    console.log(merkleProof.root);
     const preProofSpendTx: PreProofSpendTransaction = {
       commitmentTreeRoot: merkleProof.root,
       nullifier,
@@ -168,6 +169,7 @@ export class FlaxContext {
 
     const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
+    console.log(publicSignals.anchor);
     return {
       commitmentTreeRoot: publicSignals.anchor,
       nullifier,

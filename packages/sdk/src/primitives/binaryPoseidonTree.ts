@@ -9,7 +9,7 @@ export class BinaryPoseidonTree {
   static readonly R = 28;
   static readonly S = 4;
   static readonly DEPTH = 32;
-  static readonly SUBTREE_SIZE = 1 << this.S;
+  static readonly BATCH_SIZE = 1 << this.S;
 
   tree: IncrementalMerkleTree;
   count: number;
@@ -38,11 +38,11 @@ export class BinaryPoseidonTree {
   }
 
   insertSubtree(leaves: Node[]): void {
-    while (leaves.length < BinaryPoseidonTree.SUBTREE_SIZE) {
+    while (leaves.length < BinaryPoseidonTree.BATCH_SIZE) {
       leaves.push(0n);
     }
 
-    for (let i = 0; i < BinaryPoseidonTree.SUBTREE_SIZE; i++) {
+    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
       this.insert(leaves[i]);
     }
   }
@@ -51,17 +51,17 @@ export class BinaryPoseidonTree {
   // only the subtree updater should use them
 
   _insertEmptySubtree(): void {
-    for (let i = 0; i < BinaryPoseidonTree.SUBTREE_SIZE; i++) {
+    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
       this.insert(0n);
     }
   }
   _insertNonEmptySubtree(leaves: Node[]): void {
-    while (leaves.length < BinaryPoseidonTree.SUBTREE_SIZE) {
+    while (leaves.length < BinaryPoseidonTree.BATCH_SIZE) {
       leaves.push(0n);
     }
 
-    const offset = this.count - BinaryPoseidonTree.SUBTREE_SIZE;
-    for (let i = 0; i < BinaryPoseidonTree.SUBTREE_SIZE; i++) {
+    const offset = this.count - BinaryPoseidonTree.BATCH_SIZE;
+    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
       this.tree.update(offset + i, leaves[i]);
     }
   }

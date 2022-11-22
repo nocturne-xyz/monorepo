@@ -64,7 +64,7 @@ contract CommitmentTreeManager {
     );
 
     event InsertNoteCommitments(
-        uint256[] indexed commitments
+        uint256[] commitments
     );
 
     event InsertNotes(
@@ -88,6 +88,8 @@ contract CommitmentTreeManager {
         for (uint256 i = 0; i < DEPTH; i++) {
             root = hasher.hash([root, root]);
         }
+
+        pastRoots[root] = true;
 
         queue.initialize();
     }
