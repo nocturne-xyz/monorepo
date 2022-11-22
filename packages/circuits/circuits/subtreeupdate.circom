@@ -142,7 +142,7 @@ template SubtreeUpdate(r, s) {
 
     // note commitments
     signal input leaves[2**s];
-    // bitmap indicating which of the leaves don't appear in the accumulator hash
+    // bitmap indicating which of the leaves aren't "opaque" commitments
     // i.e. if the leaf was inserted by a joinsplit, then its corresponding bit will be 0, as we don't know the entire note
     // otherwise, it's 1, since the note was revealed on-chain
     signal input bitmap[2**s];
