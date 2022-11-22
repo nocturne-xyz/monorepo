@@ -11,8 +11,8 @@ import {IHasherT3} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
     using QueueLib for QueueLib.Queue;
-
-	uint256 public constant ZERO = 0;
+    
+    uint256 public constant ZERO = 0;
     uint256 public constant LOG2_BATCH_SIZE = 4;
     uint256 public constant BATCH_SIZE = 1 << LOG2_BATCH_SIZE;
     uint256 public constant LOG2_DEPTH = 5;

@@ -6,7 +6,7 @@ library FieldUtils  {
 	// pack array of field elements / uint256s to big-endian bytes
 	function packFieldElems(uint256[] memory elems) pure internal returns (bytes memory) {
 		bytes memory res = new bytes(elems.length * 32);
-        for (uint256 i = 0; i < elems.length; i++) {
+		for (uint256 i = 0; i < elems.length; i++) {
 			uint256 elem = elems[i];
             for (uint256 j = 31; j > 0; j--) {
 				uint8 b = uint8(elem & uint256(0xFF));
