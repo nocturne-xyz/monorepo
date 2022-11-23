@@ -91,7 +91,7 @@ export abstract class ObjectDB extends FlaxDB {
   }
 
   async getStructuredState(): Promise<StructuredState> {
-    let maybeState = await this.getSerializableState();
+    const maybeState = await this.getSerializableState();
 
     if (!maybeState) {
       const defaultState = serializableToStructuredState(

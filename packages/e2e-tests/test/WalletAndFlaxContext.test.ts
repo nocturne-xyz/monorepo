@@ -110,7 +110,7 @@ describe("Wallet", async () => {
     };
 
     console.log("Create post-proof operation with FlaxContext");
-    const operation = await flaxContext.tryCreatePostProofOperation(
+    const operation = await flaxContext.tryCreateProvenOperation(
       operationRequest
     );
 

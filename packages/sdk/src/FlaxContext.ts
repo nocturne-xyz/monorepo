@@ -1,11 +1,11 @@
 import { Address, AssetRequest, AssetStruct } from "./commonTypes";
 import {
   Action,
-  PostProofOperation,
-  PostProofSpendTransaction,
+  ProvenOperation,
+  ProvenSpendTx,
   PreProofOperation,
-  PreProofSpendTransaction,
-  Tokens,
+  PreProofSpendTx,
+  SpendAndRefundTokens,
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
 import { FlaxSigner } from "./sdk/signer";
@@ -32,6 +32,16 @@ export interface OperationRequest {
 export interface OldAndNewNotePair {
   oldNote: IncludedNote;
   newNote: Note;
+}
+
+export interface PreProofOperationInputs {
+  oldNewNotePair: OldAndNewNotePair;
+  preProofOperation: PreProofOperation;
+}
+
+export interface PreProofOperationInputsAndProofInputs {
+  preProofSpendTxInputs: PreProofOperationInputs;
+  proofInputs: Spend2Inputs;
 }
 
 export class FlaxContext {
@@ -69,10 +79,10 @@ export class FlaxContext {
   }
 
   /**
-   * Attempt to create a `PostProofOperation` provided an `OperationRequest`.
+   * Attempt to create a `ProvenOperation` provided an `OperationRequest`.
    * `FlaxContext` will attempt to gather all notes to fullfill the operation
    * request's asset requests. It will then generate spend proofs for each and
-   * include that in the final `PostProofOperation`.
+   * include that in the final `ProvenOperation`.
    *
    * @param assetRequests Asset requested to spend
    * @param refundTokens Details on token Wallet will refund to user
@@ -81,45 +91,40 @@ export class FlaxContext {
    * rerandomized address if left empty
    * @param gasLimit Gas limit
    */
-  async tryCreatePostProofOperation(
-    { assetRequests, refundTokens, actions }: OperationRequest,
+  async tryCreateProvenOperation(
+    operationRequest: OperationRequest,
     refundAddr?: FlaxAddressStruct,
     gasLimit = 1_000_000n
-  ): Promise<PostProofOperation> {
+  ): Promise<ProvenOperation> {
+    const { assetRequests, refundTokens, actions } = operationRequest;
+
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
       : this.signer.address.rerand().toStruct();
 
     // Create preProofOperation to use in per-note proving
-    const tokens: Tokens = {
+    const tokens: SpendAndRefundTokens = {
       spendTokens: assetRequests.map((a) => a.asset.address),
       refundTokens,
     };
-    const preProofOperation: PreProofOperation = {
-      refundAddr: realRefundAddr,
+
+    // Get all inputs needed to generate ProvenSpendTxs
+    const preProofSpendTxInputs = await this.getPreProofSpendTxsInputs(
+      operationRequest,
       tokens,
-      actions,
-      gasLimit,
-    };
+      realRefundAddr,
+      gasLimit
+    );
 
-    // For each asset request, gather necessary notes
-    const allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
-    for (const assetRequest of assetRequests) {
-      const oldAndNewNotePairs = await this.gatherMinimumNotes(
-        realRefundAddr,
-        assetRequest
-      );
-
-      // For each note, generate proof
-      for (const oldNewPair of oldAndNewNotePairs) {
-        allSpendTxPromises.push(
-          this.generatePostProofSpendTx(oldNewPair, preProofOperation)
-        );
-      }
+    // Generate proofs for each PreProofOperationInputs and format into
+    // ProvenSpendTxs
+    const allProvenSpendTxPromises: Promise<ProvenSpendTx>[] = [];
+    for (const inputs of preProofSpendTxInputs) {
+      allProvenSpendTxPromises.push(this.generateProvenSpendTxFor(inputs));
     }
 
-    const allSpendTxs = await Promise.all(allSpendTxPromises);
+    const allSpendTxs = await Promise.all(allProvenSpendTxPromises);
     return {
       spendTxs: allSpendTxs,
       refundAddr: realRefundAddr,
@@ -129,23 +134,116 @@ export class FlaxContext {
     };
   }
 
+  async tryGetPreProofOperationInputsAndProofInputs(
+    operationRequest: OperationRequest,
+    refundAddr?: FlaxAddressStruct,
+    gasLimit = 1_000_000n
+  ): Promise<PreProofOperationInputsAndProofInputs[]> {
+    const { assetRequests, refundTokens } = operationRequest;
+
+    // Generate refund addr if needed
+    const realRefundAddr = refundAddr
+      ? refundAddr
+      : this.signer.address.rerand().toStruct();
+
+    // Create preProofOperation to use in per-note proving
+    const tokens: SpendAndRefundTokens = {
+      spendTokens: assetRequests.map((a) => a.asset.address),
+      refundTokens,
+    };
+
+    const spendTxsInputs = await this.getPreProofSpendTxsInputs(
+      operationRequest,
+      tokens,
+      realRefundAddr,
+      gasLimit
+    );
+
+    return Promise.all(
+      spendTxsInputs.map(async (spendTxInputs) => {
+        const proofInputs = await this.getProofInputsFor(spendTxInputs);
+        return {
+          preProofSpendTxInputs: spendTxInputs,
+          proofInputs,
+        };
+      })
+    );
+  }
+
   /**
-   * Create a `PostProofSpendTransaction` given the `oldNote`, resulting
-   * `newNote`, and operation to use for the `operationDigest`
+   * Given a set of asset requests, gather the necessary notes to fullfill the
+   * requests and format the data into PreProofOperationInputs (all inputs needed
+   * to generate proof for spend tx and format into ProvenSpendTx).
    *
-   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
-   * post-spend
-   * @param preProofOperation Operation included when generating a proof
+   * @param assetRequests Asset requested to spend
+   * @param actions Encoded contract actions to take
+   * @param tokens spend and refund token addresses
+   * @param refundAddr Optional refund address. Context will generate
+   * rerandomized address if left empty
+   * @param gasLimit Gas limit
    */
-  protected async generatePostProofSpendTx(
-    oldNewNotePair: OldAndNewNotePair,
-    preProofOperation: PreProofOperation
-  ): Promise<PostProofSpendTransaction> {
+  protected async getPreProofSpendTxsInputs(
+    { assetRequests, actions }: OperationRequest,
+    tokens: SpendAndRefundTokens,
+    refundAddr: FlaxAddressStruct,
+    gasLimit = 1_000_000n
+  ): Promise<PreProofOperationInputs[]> {
+    const preProofOperation: PreProofOperation = {
+      refundAddr,
+      tokens,
+      actions,
+      gasLimit,
+    };
+
+    // For each asset request, gather necessary notes
+    const allPreProofOperationInputs: PreProofOperationInputs[] = [];
+    for (const assetRequest of assetRequests) {
+      const oldAndNewNotePairs = await this.gatherMinimumNotes(
+        refundAddr,
+        assetRequest
+      );
+
+      for (const oldNewNotePair of oldAndNewNotePairs) {
+        allPreProofOperationInputs.push({ oldNewNotePair, preProofOperation });
+      }
+    }
+
+    return allPreProofOperationInputs;
+  }
+
+  /**
+   * Given an array of PreProofOperationInputs, create array of proof inputs for
+   * the spend txs.
+   *
+   * @param preProofSpendTxInputs array of preProofSpendTxInputs
+   */
+  protected async tryGetProofInputs(
+    preProofSpendTxInputs: PreProofOperationInputs[]
+  ): Promise<Spend2Inputs[]> {
+    const allSpend2InputPromises: Promise<Spend2Inputs>[] = [];
+    for (const { oldNewNotePair, preProofOperation } of preProofSpendTxInputs) {
+      allSpend2InputPromises.push(
+        this.getProofInputsFor({ oldNewNotePair, preProofOperation })
+      );
+    }
+
+    return Promise.all(allSpend2InputPromises);
+  }
+
+  /**
+   * Given a single PreProofOperationInputs, create proof inputs for the spend tx.
+   *
+   * @param preProofSpendTxInputs array of preProofSpendTxInputs
+   */
+  protected async getProofInputsFor({
+    oldNewNotePair,
+    preProofOperation,
+  }: PreProofOperationInputs): Promise<Spend2Inputs> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
     const merkleProof = await this.merkleProver.getProof(oldNote.merkleIndex);
-    const preProofSpendTx: PreProofSpendTransaction = {
+    const preProofSpendTx: PreProofSpendTx = {
       commitmentTreeRoot: merkleProof.root,
       nullifier,
       newNoteCommitment,
@@ -165,7 +263,7 @@ export class FlaxContext {
       siblings: merkleProof.siblings,
     };
 
-    const inputs: Spend2Inputs = {
+    return {
       vk: this.signer.privkey.vk,
       spendPk: this.signer.privkey.spendPk(),
       operationDigest: opDigest,
@@ -175,6 +273,28 @@ export class FlaxContext {
       newNote: newNote.toNoteInput(),
       merkleProof: merkleInput,
     };
+  }
+
+  /**
+   * Create a `ProvenSpendTx` given the `oldNote`, resulting
+   * `newNote`, and operation to use for the `operationDigest`
+   *
+   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
+   * post-spend
+   * @param preProofOperation Operation included when generating a proof
+   */
+  protected async generateProvenSpendTxFor({
+    oldNewNotePair,
+    preProofOperation,
+  }: PreProofOperationInputs): Promise<ProvenSpendTx> {
+    const { oldNote, newNote } = oldNewNotePair;
+    const nullifier = this.signer.createNullifier(oldNote);
+    const newNoteCommitment = newNote.toCommitment();
+
+    const inputs = await this.getProofInputsFor({
+      oldNewNotePair,
+      preProofOperation,
+    });
 
     const proof = await this.prover.proveSpend2(inputs);
     if (!(await this.prover.verifySpend2Proof(proof))) {
@@ -188,7 +308,7 @@ export class FlaxContext {
       nullifier,
       newNoteCommitment,
       proof: solidityProof,
-      asset: preProofSpendTx.asset,
+      asset: oldNewNotePair.oldNote.asset,
       valueToSpend: publicSignals.valueToSpend,
       id: publicSignals.id,
     };
