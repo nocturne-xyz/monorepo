@@ -118,8 +118,6 @@ export function getSubtreeUpdateInputs(
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const OUT_PATH = path.join(ROOT_DIR, "packages/circuits/scripts/subtreeupdate/input_subtreeupdate.json");
-const SUBTREE_UPDATE_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdate.json");
-const writeToFixture = process.argv[2] == "--writeFixture";
 
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
