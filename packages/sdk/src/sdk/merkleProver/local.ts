@@ -11,13 +11,6 @@ import { Note } from "../note";
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
-interface OrederedLeaf {
-  leaf: bigint,
-  blockNumber: number,
-  txIdx: number,
-  logIdx: number
-}
-
 export class LocalMerkleProver
   extends BinaryPoseidonTree
   implements MerkleProver
@@ -64,7 +57,7 @@ export class LocalMerkleProver
   }
 
   async fetchNewLeaves(from: number, to: number): Promise<bigint[]> {
-
+    // fetch both kind of insertion events (note commitments and full notes)
     const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = query(
       this.contract,
       this.contract.filters.InsertNoteCommitments(),
@@ -80,7 +73,18 @@ export class LocalMerkleProver
 
     const [noteCommitmentEvents, noteEvents] = await Promise.all([ncEventsProm, noteEventsProm]);
 
-    let leaves: OrederedLeaf[] = [];
+    // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
+    // combine them into a single list
+    // and sort them in the order in which they appeared on-chain
+
+    interface OrderedLeaf {
+      leaf: bigint,
+      blockNumber: number,
+      txIdx: number,
+      logIdx: number
+    }
+
+    let leaves: OrderedLeaf[] = [];
     for (const event of noteCommitmentEvents) {
         const eventLeaves = event.args.commitments.map((l) => l.toBigInt());
         const orderedLeaves = eventLeaves.map(leaf => ({
@@ -121,6 +125,8 @@ export class LocalMerkleProver
     }
 
     leaves = leaves.sort((a, b) => a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx);
+
+    // return only the leaves
     return leaves.map(({ leaf }) => leaf);
   }
 
