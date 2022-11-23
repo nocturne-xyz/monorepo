@@ -94,7 +94,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         uint256 newRoot,
         uint256[8] calldata proof
     ) external override {
-		require(!accumulatorQueue.isEmpty(), "accumulatorQueue is empty - no batches to apply");
+		require(!accumulatorQueue.isEmpty(), "accumulatorQueue is empty");
 
         uint256 accumulatorHash = accumulatorQueue.peek();
         (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(accumulatorHash);
