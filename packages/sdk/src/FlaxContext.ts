@@ -8,8 +8,8 @@ import {
   Tokens,
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
-import { FlaxSigner } from "./sdk/signer";
-import { FlaxAddressStruct } from "./crypto/address";
+import { Signer } from "./sdk/signer";
+import { AnonAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import {
@@ -36,13 +36,13 @@ export interface OldAndNewNotePair {
 }
 
 export class FlaxContext {
-  signer: FlaxSigner;
+  signer: Signer;
   merkleProver: MerkleProver;
   notesManager: NotesManager;
   db: FlaxDB;
 
   constructor(
-    signer: FlaxSigner,
+    signer: Signer,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: FlaxDB = new FlaxLMDB()
@@ -68,7 +68,7 @@ export class FlaxContext {
    */
   async tryCreatePostProofOperation(
     { assetRequests, refundTokens, actions }: OperationRequest,
-    refundAddr?: FlaxAddressStruct,
+    refundAddr?: AnonAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<PostProofOperation> {
     // Generate refund addr if needed
@@ -187,7 +187,7 @@ export class FlaxContext {
    * @param assetRequest Asset request
    */
   gatherMinimumNotes(
-    refundAddr: FlaxAddressStruct,
+    refundAddr: AnonAddressStruct,
     assetRequest: AssetRequest
   ): OldAndNewNotePair[] {
     const balance = this.getAssetBalance(assetRequest.asset);

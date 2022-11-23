@@ -2,8 +2,8 @@
 // import * as path from "path";
 // import * as fs from "fs";
 // import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-// import { FlaxSigner } from "../src/sdk/signer";
-// import { FlaxPrivKey } from "../src/crypto/privkey";
+// import { Signer } from "../src/sdk/signer";
+// import { PrivKey } from "../src/crypto/privkey";
 // import {
 //   proveSpend2,
 //   verifySpend2Proof,
@@ -23,9 +23,9 @@
 // );
 
 // // Instantiate flax keypair and addr
-// const flaxPrivKey = new FlaxPrivKey(sk);
+// const flaxPrivKey = new PrivKey(sk);
 // const vk = flaxPrivKey.vk;
-// const flaxSigner = new FlaxSigner(flaxPrivKey);
+// const flaxSigner = new Signer(flaxPrivKey);
 // const flaxAddr = flaxSigner.address;
 // const spendPk = flaxSigner.privkey.spendPk();
 

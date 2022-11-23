@@ -12,13 +12,12 @@ include "lib.circom";
 
 template JoinSplit(levels) {
     // viewing / nullifier key
-    signal input userViewingKey;
+    signal input userViewKey;
 
     // Spend Pk
-    signal input spendPublicKey[2];
-    signal input userViewingKeyNonce;
+    signal input spendPubKey[2];
+    signal input userViewKeyNonce;
 
-    // Public inputs
     // Opeartion digest
     signal input operationDigest;
 
@@ -103,17 +102,17 @@ template JoinSplit(levels) {
     );
 
     // Merkle tree inclusion proof for oldNoteACommitment
-    anchor <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, siblingsA, pathA);
+    anchor <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, pathA, siblingsA);
 
     // Merkle tree inclusion proof for oldNoteBCommitment
-    signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, siblingsB, pathB);
+    signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
     anchor === anchorB;
 
     // Nullifier derivation for oldNoteA
-    nullifierA <== Poseidon(2)([oldNoteACommitment, userViewingKey]);
+    nullifierA <== Poseidon(2)([oldNoteACommitment, userViewKey]);
 
     // Nullifier derivation for oldNoteB
-    nullifierB <== Poseidon(2)([oldNoteBCommitment, userViewingKey]);
+    nullifierB <== Poseidon(2)([oldNoteBCommitment, userViewKey]);
 
     // Asset, id, value, nonce
     encodedAsset <== oldNoteAEncodedAsset;
@@ -132,17 +131,17 @@ template JoinSplit(levels) {
     publicSpend <== valInput - valOutput;
 
     // Viewing key integrity for note A
-    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, userViewingKey);
+    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, userViewKey);
 
     // Viewing key integrity for note B
-    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, userViewingKey);
+    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, userViewKey);
 
     // Derive spending public key
-    signal derivedViewingKey <== Poseidon(3)([spendPublicKey[0], spendPublicKey[1], userViewingKeyNonce]);
-    userViewingKey === derivedViewingKey;
+    signal derivedViewKey <== Poseidon(3)([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);
+    userViewKey === derivedViewKey;
 
     // AuthSig validity
-    SigVerify()(spendPublicKey[0], spendPublicKey[1], operationDigest, c, z);
+    SigVerify()(spendPubKey[0], spendPubKey[1], operationDigest, c, z);
 
     // Computing newNoteACommitment
     newNoteACommitment <== NoteCommit()(

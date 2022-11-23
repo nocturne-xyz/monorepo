@@ -2,8 +2,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
+import { Signer } from "../src/sdk/signer";
+import { PrivKey } from "../src/crypto/privkey";
 import { bigInt256ToBEBytes, Note, splitBigInt256 } from "../src/sdk";
 import { sha256 } from "js-sha256";
 
@@ -121,8 +121,8 @@ const sk = BigInt(
 );
 
 // Instantiate flax keypair and addr
-const flaxPrivKey = new FlaxPrivKey(sk);
-const flaxSigner = new FlaxSigner(flaxPrivKey);
+const flaxPrivKey = new PrivKey(sk);
+const flaxSigner = new Signer(flaxPrivKey);
 const flaxAddr = flaxSigner.address;
 const flaxAddrInput = flaxAddr.toStruct();
 

@@ -4,8 +4,8 @@ import { expect } from "chai";
 import { FlaxContext } from "../src/FlaxContext";
 import { AssetRequest, AssetStruct } from "../src/commonTypes";
 import { IncludedNoteStruct } from "../src/sdk/note";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
+import { Signer } from "../src/sdk/signer";
+import { PrivKey } from "../src/crypto/privkey";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { DEFAULT_DB_PATH, FlaxLMDB, LocalNotesManager } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
@@ -19,8 +19,8 @@ describe("FlaxContext", () => {
     asset: AssetStruct
   ): Promise<FlaxContext> {
     const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    const signer = new FlaxSigner(flaxPrivKey);
+    const flaxPrivKey = new PrivKey(sk);
+    const signer = new Signer(flaxPrivKey);
 
     const firstOldNote: IncludedNoteStruct = {
       owner: signer.address.toStruct(),

@@ -1,15 +1,15 @@
 import "mocha";
 import { expect } from "chai";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
-import { FlaxAddress } from "../src/crypto/address";
+import { Signer } from "../src/sdk/signer";
+import { PrivKey } from "../src/crypto/privkey";
+import { AnonAddress } from "../src/crypto/address";
 
-describe("FlaxSigner", () => {
+describe("Signer", () => {
   it("View key should work", () => {
-    const priv1 = FlaxPrivKey.genPriv();
-    const signer1 = new FlaxSigner(priv1);
-    const priv2 = FlaxPrivKey.genPriv();
-    const signer2 = new FlaxSigner(priv2);
+    const priv1 = PrivKey.genPriv();
+    const signer1 = new Signer(priv1);
+    const priv2 = PrivKey.genPriv();
+    const signer2 = new Signer(priv2);
     expect(signer1.testOwn(signer1.address)).to.equal(true);
     expect(signer1.testOwn(signer2.address)).to.equal(false);
     expect(signer2.testOwn(signer2.address)).to.equal(true);
@@ -17,11 +17,11 @@ describe("FlaxSigner", () => {
   });
 
   it("Test rerand", () => {
-    const priv1 = FlaxPrivKey.genPriv();
-    const signer1 = new FlaxSigner(priv1);
+    const priv1 = PrivKey.genPriv();
+    const signer1 = new Signer(priv1);
     const rerandAddr1 = signer1.address.rerand();
-    const priv2 = FlaxPrivKey.genPriv();
-    const signer2 = new FlaxSigner(priv2);
+    const priv2 = PrivKey.genPriv();
+    const signer2 = new Signer(priv2);
     expect(signer1.testOwn(signer1.address)).to.equal(true);
     expect(signer1.testOwn(rerandAddr1)).to.equal(true);
     expect(signer2.testOwn(signer1.address)).to.equal(false);
@@ -29,18 +29,18 @@ describe("FlaxSigner", () => {
   });
 
   it("Test address (de)serialization", () => {
-    const priv = FlaxPrivKey.genPriv();
-    const addr = priv.toAddress();
+    const priv = PrivKey.genPriv();
+    const addr = priv.toAnonAddress();
     const str = addr.toString();
-    expect(FlaxAddress.parse(str)).to.eql(addr);
+    expect(AnonAddress.parse(str)).to.eql(addr);
   });
 
   it("Test Sign / verify", () => {
-    const priv = FlaxPrivKey.genPriv();
+    const priv = PrivKey.genPriv();
     const pk = priv.spendPk();
-    const signer = new FlaxSigner(priv);
+    const signer = new Signer(priv);
     const m = BigInt(123);
     const sig = signer.sign(m);
-    expect(FlaxSigner.verify(pk, m, sig)).to.equal(true);
+    expect(Signer.verify(pk, m, sig)).to.equal(true);
   });
 });

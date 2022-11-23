@@ -1,5 +1,5 @@
 import { Address } from "../commonTypes";
-import { FlaxAddressStruct } from "../crypto/address";
+import { AnonAddressStruct } from "../crypto/address";
 
 export interface Tokens {
   spendTokens: Address[];
@@ -21,7 +21,7 @@ export interface PreProofSpendTransaction {
 }
 
 export interface PreProofOperation {
-  refundAddr: FlaxAddressStruct;
+  refundAddr: AnonAddressStruct;
   tokens: Tokens;
   actions: Action[];
   gasLimit: bigint;
@@ -39,7 +39,7 @@ export interface PostProofSpendTransaction {
 
 export interface PostProofOperation {
   spendTxs: PostProofSpendTransaction[];
-  refundAddr: FlaxAddressStruct;
+  refundAddr: AnonAddressStruct;
   tokens: Tokens;
   actions: Action[];
   gasLimit: bigint;
@@ -54,5 +54,5 @@ export interface Deposit {
   asset: Address;
   value: bigint;
   id: bigint;
-  depositAddr: FlaxAddressStruct;
+  depositAddr: AnonAddressStruct;
 }
