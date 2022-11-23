@@ -1,1 +1,1 @@
-export const FlaxAddrPrefix = "0f";
+export const AnonAddrPrefix = "0f";

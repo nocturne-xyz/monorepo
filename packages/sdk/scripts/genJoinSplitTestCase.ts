@@ -135,7 +135,7 @@ console.log("NEW NOTE COMMITMENT B: ", newNoteBCommitment);
 // Sign operation hash
 const operationDigest = BigInt(12345);
 const opSig = flaxSigner.sign(operationDigest);
-console.log(opSig);
+console.log("opSig: ", opSig);
 
 const joinsplitInputs: JoinSplitInputs = {
   vk,
@@ -150,7 +150,7 @@ const joinsplitInputs: JoinSplitInputs = {
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
 };
-console.log(joinsplitInputs);
+console.log("joinSplitInputs: ", joinsplitInputs);
 
 (async () => {
   const proof = await proveJoinSplit(joinsplitInputs);
