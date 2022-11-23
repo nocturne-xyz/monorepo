@@ -8,13 +8,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
+import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
+import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
-import {TestSubtreeUpdateVerifier} from "../TestSubtreeUpdateVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
@@ -24,6 +27,7 @@ import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using stdJson for string;
+    using TreeTestLib for TreeTest;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
     uint256 constant SNARK_SCALAR_FIELD =
@@ -35,6 +39,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
     Wallet wallet;
     Vault vault;
+    TreeTest treeTest;
+    IOffchainMerkleTree merkle;
     ISpend2Verifier spend2Verifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
@@ -48,13 +54,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address indexed asset,
         uint256 indexed id,
         uint256 value,
-        uint256 merkleIndex
+        uint128 merkleIndex
     );
 
     event Spend(
         uint256 indexed oldNoteNullifier,
         uint256 indexed valueSpent,
-        uint256 indexed merkleIndex
+        uint128 indexed merkleIndex
     );
 
     function setUp() public virtual {
@@ -64,15 +70,20 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Instantiate vault, spend2Verifier, tree, and wallet
         vault = new Vault();
         spend2Verifier = new TestSpend2Verifier();
+
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+        merkle = new OffchainMerkleTree(address(subtreeUpdateVerifier));
+
         wallet = new Wallet(
             address(vault),
             address(spend2Verifier),
-            address(subtreeUpdateVerifier),
-            address(hasherT3)
+            address(merkle)
         );
+
+        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
+        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+
+        treeTest.initialize(hasherT3, hasherT6);
 
         vault.initialize(address(wallet));
 
@@ -132,7 +143,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         vm.prank(ALICE);
         token.approve(address(vault), 800);
 
-        uint256[16] memory batch;
+        uint256[] memory batch = new uint256[](16);
 
         // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
@@ -144,7 +155,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 address(token),
                 ERC20_ID,
                 100,
-                i
+                uint128(i)
             );
 
             vm.prank(ALICE);
@@ -157,35 +168,20 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 addr
             );
 
-            uint256 addrHash = hasherT3.hash([addr.h1X, addr.h2X]);
-            uint256 noteCommitment = hasherT6.hash([
-                addrHash,
-                i,
-                uint256(uint160(address(token))),
-                ERC20_ID,
-                100
-            ]);
+            IWallet.Note memory note = IWallet.Note(addr.h1X, addr.h2X, i, uint256(uint160(address(token))), ERC20_ID, 100);
+            uint256 noteCommitment = treeTest.computeNoteCommitment(note);
+
             batch[i] = noteCommitment;
         }
 
-        // update the tree root
-        // since the tree is initially empty at this point, it's at the leftmost position in the tree
-        uint256 sibling = 0;
-        for (uint256 i = 3; i > 0; i--) {
-            for (uint256 j = 0; j < 2**i; j++) {
-                uint256 left = batch[2 * j]; 
-                uint256 right = batch[2 * j + 1];
-                batch[j] = hasherT3.hash([left, right]);
-            }
-            sibling = hasherT3.hash([sibling, sibling]);
-        }
-        uint256 root = batch[0];
-        for (uint256 i = 4; i < 32; i++) {
-            root = hasherT3.hash([root, sibling]);
-            sibling = hasherT3.hash([sibling, sibling]);
-        }
+        uint256[] memory path = treeTest.computeInitialRoot(batch);
+        uint256 root = path[path.length - 1];
 
-        wallet.commitSubtree(
+        // insert 8 empty leaves into tree
+        uint256[] memory ncs = new uint256[](8);
+        merkle.insertNoteCommitments(ncs);
+
+        wallet.applySubtreeUpdate(
             root,
             dummyProof()
         );
@@ -228,7 +224,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedFunction: encodedFunction
         });
 
-        uint256 root = wallet.getRoot();
+        uint256 root = merkle.root();
         IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
             commitmentTreeRoot: root,
             nullifier: uint256(182),
@@ -272,7 +268,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit Spend(0, 50, 16); // only checking value and merkleIndex are valid
+        emit Spend(0, 50, uint128(16)); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 

@@ -90,4 +90,6 @@ interface IWallet {
     ) external;
 
     function depositFunds(Deposit calldata deposit) external;
+
+    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof) external;
 }

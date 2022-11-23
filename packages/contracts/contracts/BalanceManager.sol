@@ -10,8 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {Utils} from "./libs/Utils.sol";
 
-import {IHasherT3, IHasherT5, IHasherT6} from "./interfaces/IHasher.sol";
 
 contract BalanceManager is
     IERC721Receiver,
@@ -24,9 +24,8 @@ contract BalanceManager is
     constructor(
         address _vault,
         address _spend2Verifier,
-        address _subtreeUpdateVerifier,
-        address _hasherT3
-    ) CommitmentTreeManager(_spend2Verifier, _subtreeUpdateVerifier, _hasherT3) {
+        address _merkle 
+    ) CommitmentTreeManager(_spend2Verifier, _merkle) {
         vault = IVault(_vault);
     }
 
@@ -125,7 +124,7 @@ contract BalanceManager is
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
             _handleSpend(spendTxs[i], operationHash);
-            if (spendTxs[i].id == SNARK_SCALAR_FIELD - 1) {
+            if (spendTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[spendTxs[i].asset] += spendTxs[i]
                     .valueToSpend;
             } else if (spendTxs[i].valueToSpend == 0) {
@@ -176,7 +175,7 @@ contract BalanceManager is
                 _handleRefund(
                     refundAddr,
                     spendTokens[i],
-                    SNARK_SCALAR_FIELD - 1,
+                    Utils.SNARK_SCALAR_FIELD - 1,
                     newBal
                 );
                 require(
@@ -193,7 +192,7 @@ contract BalanceManager is
                 _handleRefund(
                     refundAddr,
                     refundTokens[i],
-                    SNARK_SCALAR_FIELD - 1,
+                    Utils.SNARK_SCALAR_FIELD - 1,
                     bal
                 );
                 require(
