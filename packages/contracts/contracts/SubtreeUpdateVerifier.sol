@@ -12,8 +12,8 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
-import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 
+import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 library SubtreeUpdatePairing {
     struct G1Point {
         uint X;
@@ -196,10 +196,10 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
              8495653923123431417604973247489272438418190587263600148770280649306958101930]
         );
         vk.delta2 = SubtreeUpdatePairing.G2Point(
-            [4866163551421723180022622961314202367197898367927656363378083512799490938055,
-             20608293161151125515439770790222644505723990806747878050421772737754467914635],
-            [2937763493251609409840235883491161311956418150501273364554107934101526314539,
-             14314698524736079202738473027085080581698930616362160467338407216441627039728]
+            [601035731979164843097057364621283735957412231857379595980097728227207407041,
+             2642302322058992365281050762473931717853805696605920244509064145002733697448],
+            [4911772716606408933244807294042633877826335132456314027472293148908922546526,
+             13304658961766972000554287352195088688693311953181128556018221374116185870049]
         );
         vk.IC = new SubtreeUpdatePairing.G1Point[](5);
         
@@ -254,7 +254,7 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
             uint[2][2] memory b,
             uint[2] memory c,
             uint[4] memory input
-        ) public override view returns (bool r) {
+        ) public view returns (bool r) {
         Proof memory proof;
         proof.A = SubtreeUpdatePairing.G1Point(a[0], a[1]);
         proof.B = SubtreeUpdatePairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
