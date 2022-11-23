@@ -1,10 +1,13 @@
+//@ts-nocheck
+
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { FlaxSigner } from "../src/sdk/signer";
 import { FlaxPrivKey } from "../src/crypto/privkey";
-import { bigInt256ToBEBytes, Note, splitBigInt256 } from "../src/sdk";
+import { bigInt256ToBEBytes, splitBigInt256 } from "../src/sdk/utils";
+import { Note } from "../src/sdk/note";
 import { sha256 } from "js-sha256";
 
 interface SubtreeUpdateInputSignals {
@@ -115,6 +118,8 @@ export function getSubtreeUpdateInputs(
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const OUT_PATH = path.join(ROOT_DIR, "packages/circuits/scripts/subtreeupdate/input_subtreeupdate.json");
+const SUBTREE_UPDATE_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdate.json");
+const writeToFixture = process.argv[2] == "--writeFixture";
 
 const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
@@ -143,6 +148,6 @@ const spendNoteCommitments = spendIndices.map(i => notes[i].toCommitment());
 const nonSpendNotes = notes.filter((_, i) => !spendIndices.includes(i));
 
 const inputs = getSubtreeUpdateInputs(spendIndices, spendNoteCommitments, nonSpendNotes, tree);
-// console.log("inputs: ", inputs);
+console.log("inputs: ", inputs);
 
 fs.writeFileSync(OUT_PATH, JSON.stringify(inputs));

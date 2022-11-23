@@ -9,7 +9,7 @@ export class BinaryPoseidonTree {
   static readonly R = 28;
   static readonly S = 4;
   static readonly DEPTH = 32;
-  static readonly BATCH_SIZE = 1 << this.S;
+  static readonly BATCH_SIZE = 16;
 
   tree: IncrementalMerkleTree;
   count: number;
