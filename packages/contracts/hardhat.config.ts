@@ -84,7 +84,7 @@ module.exports = {
       "ISubtreeUpdateVerifier",
       "IVault",
       "IWallet",
-      // TODO: deduplicate these in an automated way somehow 
+      // TODO: deduplicate these in an automated way somehow
       "Spend2Pairing",
       "SubtreeUpdatePairing",
       "PoseidonHasherT3",
@@ -97,6 +97,7 @@ module.exports = {
       "CommitmentTreeManager",
       "BalanceManager",
       "Spend2Verifier",
+      "JoinsplitVerifier",
       "SubtreeUpdateVerifier",
       "BatchBinaryMerkle",
       "SimpleERC20Token",

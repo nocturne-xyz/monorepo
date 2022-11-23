@@ -13,8 +13,8 @@ import {
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
 import {
-  FlaxPrivKey,
-  FlaxSigner,
+  PrivKey,
+  Signer,
   Action,
   SNARK_SCALAR_FIELD,
   Bundle,
@@ -107,7 +107,7 @@ describe("Wallet", async () => {
       });
     }
   }
-  
+
   async function commitSubtree() {
     const newRoot = (flaxContext.merkleProver as LocalMerkleProver).root();
     await wallet.commitSubtree(newRoot, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
@@ -137,7 +137,7 @@ describe("Wallet", async () => {
       flaxContext.merkleProver as LocalMerkleProver
     ).fetchLeavesAndUpdate();
     await commitSubtree();
-    
+
     console.log("Sync SDK notes manager");
     await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
     const notesForAsset = flaxContext.notesManager.db.getNotesFor(asset);
@@ -150,7 +150,7 @@ describe("Wallet", async () => {
     expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
       (await wallet.getRoot()).toBigInt()
     );
-    
+
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
       asset,
