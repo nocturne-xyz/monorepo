@@ -1,6 +1,7 @@
 #!/bin/bash
 CIRCUIT_NAME=joinsplit
 SCRIPT_DIR=$(dirname "$0")
+ROOT_SCRIPT_DIR="$SCRIPT_DIR/../"
 ROOT_DIR="$SCRIPT_DIR/../../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
 PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_15.ptau"
@@ -81,4 +82,6 @@ npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$O
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
-\cp "$OUTPUT_DIR/JoinsplitVerifier.sol" "$CONTRACTS_DIR/JoinsplitVerifier.sol"
+cp "$OUTPUT_DIR/JoinsplitVerifier.sol" "$CONTRACTS_DIR/JoinsplitVerifier.sol"
+
+"$ROOT_SCRIPT_DIR/fixSolidityVerifier.sh" "$CONTRACTS_DIR/JoinsplitVerifier.sol"
