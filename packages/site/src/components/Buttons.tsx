@@ -110,6 +110,10 @@ export const SyncLeavesButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>SyncLeaves</Button>;
 };
 
+export const ProveSpend2Button = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>ProveSpend2</Button>;
+};
+
 export const ClearDbButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>ClearDb</Button>;
 };

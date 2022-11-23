@@ -2240,6 +2240,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@flax/template-site@workspace:packages/site"
   dependencies:
+    "@flax/local-prover": "workspace:^"
     "@flax/sdk": "workspace:^"
     "@metamask/eslint-config": ^10.0.0
     "@metamask/eslint-config-nodejs": ^10.0.0

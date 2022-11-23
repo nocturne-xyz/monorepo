@@ -25,6 +25,7 @@
     ]
   },
   "dependencies": {
+    "@flax/local-prover": "workspace:^",
     "@flax/sdk": "workspace:^",
     "@metamask/providers": "^9.0.0",
     "react": "^18.2.0",
