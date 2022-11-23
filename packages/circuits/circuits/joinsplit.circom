@@ -11,7 +11,7 @@ include "tree.circom";
 include "lib.circom";
 
 template JoinSplit(levels) {
-    // viewing / nullifier key
+    // Viewing / nullifying key
     signal input userViewKey;
 
     // Spend Pk
@@ -106,7 +106,8 @@ template JoinSplit(levels) {
 
     // Merkle tree inclusion proof for oldNoteBCommitment
     signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
-    anchor === anchorB;
+    // Either oldNoteBValue is 0 (dummy note) or anchorB is equal to anchor
+    oldNoteBValue * (anchor - anchorB) === 0;
 
     // Nullifier derivation for oldNoteA
     nullifierA <== Poseidon(2)([oldNoteACommitment, userViewKey]);
