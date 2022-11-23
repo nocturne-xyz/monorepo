@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
 
-import "./interfaces/ISubtreeUpdateVerifier.sol";
-import "./test/utils/Pairing.sol";
+import "../../interfaces/ISubtreeUpdateVerifier.sol";
+import "./Pairing.sol";
 
 contract TestSubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     function verifyProof(

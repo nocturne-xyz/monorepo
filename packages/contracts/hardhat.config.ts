@@ -16,7 +16,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
 
-    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test") || p.includes("TestSubtreeUpdateVerifier"));
   }
 );
 
@@ -70,6 +70,7 @@ module.exports = {
       "IERC721",
       "IERC1155",
       "IBatchMerkle",
+      "IOffchainMerkleTree",
       "IHasherT3",
       "IHasherT4",
       "IHasherT5",
@@ -99,10 +100,11 @@ module.exports = {
       "Spend2Verifier",
       "SubtreeUpdateVerifier",
       "BatchBinaryMerkle",
+      "OffchainMerkleTree",
       "SimpleERC20Token",
       "SimpleERC721Token",
       "SimpleERC1155Token",
-      "TestSubtreeUpdateVerifier",
+      "TestSubtreeUpdateVerifier"
     ],
     includeFactories: true,
   },
