@@ -5,6 +5,7 @@ import {
   clearDb,
   connectSnap,
   getSnap,
+  proveSpend2,
   sendHello,
   sendSetAndShowKv,
   shouldDisplayReconnectButton,
@@ -21,6 +22,7 @@ import {
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
+  ProveSpend2Button,
 } from "../components";
 
 const Container = styled.div`
@@ -161,6 +163,15 @@ const Index = () => {
     }
   };
 
+  const handleProveSpend2 = async () => {
+    try {
+      await proveSpend2();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   const handleClearDb = async () => {
     try {
       await clearDb();
@@ -289,6 +300,24 @@ const Index = () => {
             button: (
               <SyncLeavesButton
                 onClick={handleSyncLeavesClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "ProveSpend2",
+            description: "Prove spend2.",
+            button: (
+              <ProveSpend2Button
+                onClick={handleProveSpend2}
                 disabled={!state.installedSnap}
               />
             ),

@@ -111,6 +111,18 @@ export const syncLeaves = async () => {
   });
 };
 
+export const proveSpend2 = async () => {
+  await window.ethereum.request({
+    method: "wallet_invokeSnap",
+    params: [
+      defaultSnapOrigin,
+      {
+        method: "flax_proveSpend2",
+      },
+    ],
+  });
+};
+
 export const clearDb = async () => {
   await window.ethereum.request({
     method: "wallet_invokeSnap",

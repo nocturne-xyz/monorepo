@@ -10,6 +10,7 @@ import {
 import { ethers } from "ethers";
 import { OnRpcRequestHandler } from "@metamask/snap-types";
 import { SnapDB } from "./snapdb";
+import { DUMMY_PROOF } from "./dummyProof";
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -114,6 +115,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         "Synced leaves, state: ",
         JSON.stringify(await db.getSerializableState())
       );
+      return;
+    case "flax_proveSpend2":
+      console.log("Waiting on browser prove");
+      const res = await fetch("http://localhost:8000/api/prove-spend2", {
+        method: "POST",
+        body: JSON.stringify(DUMMY_PROOF),
+        headers: new Headers({ "content-type": "application/json" }),
+      });
+      console.log("Proved! ", JSON.stringify(await res.json()));
       return;
     case "flax_clearDb":
       await context.db.clear();
