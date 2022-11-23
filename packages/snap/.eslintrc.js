@@ -24,6 +24,7 @@ module.exports = {
         "jsdoc/require-returns": "off",
         "consistent-return": "off",
         "no-negated-condition": "off",
+        "no-case-declarations": "off",
       },
     },
   ],

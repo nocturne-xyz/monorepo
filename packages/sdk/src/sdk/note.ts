@@ -99,7 +99,7 @@ export function includedNoteStructToJSON(note: IncludedNoteStruct): string {
     asset,
     id: id.toString(),
     value: value.toString(),
-    merkleIndex
+    merkleIndex,
   });
 }
 
