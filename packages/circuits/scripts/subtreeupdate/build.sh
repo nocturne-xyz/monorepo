@@ -70,11 +70,11 @@ echo "DONE ($((end-start))s)"
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
-echo "****VERIFYING PROOF FOR SAMPLE INPUT****"
-start=`date +%s`
-npx snarkjs groth16 verify "$OUTPUT_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
-end=`date +%s`
-echo "DONE ($((end-start))s)"
+# echo "****VERIFYING PROOF FOR SAMPLE INPUT****"
+# start=`date +%s`
+# npx snarkjs groth16 verify "$OUTPUT_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
+# end=`date +%s`
+# echo "DONE ($((end-start))s)"
 
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`
