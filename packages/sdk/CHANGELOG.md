@@ -16,3 +16,4 @@
 - add script to generate input signals for `subtreeupdate` circuit 
 - Fix indexing bug when only querying a single block
 - Update merkle prover indexing logic to work with off-chain updates
+- use `bigint-conversion` for bigint packing stuff

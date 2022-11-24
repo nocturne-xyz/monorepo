@@ -1,4 +1,5 @@
 import { TypedEvent } from "@flax/contracts/dist/src/common";
+import { bigintToBuf } from "bigint-conversion";
 import { BaseContract, EventFilter } from "ethers";
 import { Result } from "ethers/lib/utils";
 
@@ -30,47 +31,25 @@ export async function query<T extends Result, C extends BaseContract>(
   return largeQueryInChunks(contract, filter, from, to);
 }
 
-export function bigInt256ToBEBytes(n: bigint): number[] {
-  let s = n.toString(16);
+// splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
+export function splitBigint256ToLimbs(n: bigint, lowerBits: number): [bigint, bigint] {
+  n = BigInt.asUintN(256, n);
 
-  // pad with leading zeros
-  while (s.length < 64) {
-    s = "0" + s;
-  }
-
-  return hexStringToBEBytes(s);
+  const hi = n >> BigInt(lowerBits);
+  const lo = n & ((1n << BigInt(lowerBits)) - 1n);
+  return [hi, lo];
 }
 
-export function bEBytesToBigInt256(bytes: number[]): bigint {
-  while (bytes.length < 32) {
-    bytes.unshift(0);
-  }
-
-  return bytes.reduce((acc, byte) => {
-    return acc * 256n + BigInt(byte);
-  }, 0n);
+// splits bigint256 into two limbs, where the lower limb has 253 bits and the upper limb has only 3.
+export function bigInt256ToFieldElems(n: bigint): [bigint, bigint] {
+  return splitBigint256ToLimbs(n, 253);
 }
 
-export function hexStringToBEBytes(s: string): number[] {
-  const res = [];
-  for (let i = 0; i < 32; i++) {
-    const byte = parseInt(s.slice(2*i, 2*(i+1)), 16);
-    res.push(byte);
+export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
+  const res = [...new Uint8Array(bigintToBuf(n, true))];
+  while (res.length < numBytes) {
+    res.unshift(0);
   }
 
   return res;
-}
-
-export function splitBigInt256(n: bigint): [number, bigint] {
-  let bits = n.toString(2);
-
-  // pad with leading zeros
-  while (bits.length < 256) {
-    bits = "0" + bits;
-  }
-  
-  const hi = parseInt(bits.slice(0, 3), 2);
-  const lo = BigInt(`0b${bits.slice(3)}`);
-
-  return [hi, lo];
 }

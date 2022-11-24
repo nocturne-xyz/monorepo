@@ -3,12 +3,11 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
-import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
-import { bigInt256ToBEBytes, splitBigInt256 } from "../src/sdk/utils";
-import { Note } from "../src/sdk/note";
+import { bigInt256ToFieldElems, Note, FlaxSigner } from "../src/sdk";
+import { BinaryPoseidonTree } from "../src/primitives";
+import { FlaxPrivKey } from "../src/crypto";
 import { sha256 } from "js-sha256";
+import { bigintToBuf, hexToBigint } from "bigint-conversion";
 
 interface SubtreeUpdateInputSignals {
   encodedPathAndHash: bigint;
@@ -23,6 +22,19 @@ interface SubtreeUpdateInputSignals {
   assets: bigint[];
   ids: bigint[];
   values: bigint[];
+}
+
+function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
+  idx = BigInt.asUintN(256, idx);
+  accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
+
+  if (idx % BigInt(BinaryPoseidonTree.BATCH_SIZE) !== 0n) {
+    throw new Error("idx must be a multiple of BATCH_SIZE");
+  }
+
+  let encodedPathAndHash = idx >> BigInt(BinaryPoseidonTree.S);
+  encodedPathAndHash |= accumulatorHashHi << BigInt(BinaryPoseidonTree.R);
+  return encodedPathAndHash;
 }
 
 export function getSubtreeUpdateInputs(
@@ -64,7 +76,7 @@ export function getSubtreeUpdateInputs(
       ids.push(0n);
       values.push(0n);
       bitmap.push(0n);
-      noteHashes.push(bigInt256ToBEBytes(spendNoteCommitments[spendIdxIdx]));
+      noteHashes.push([...new Uint8Array(bigintToBuf(spendNoteCommitments[spendIdxIdx], true))]);
       leaves.push(spendNoteCommitments[spendIdxIdx]);
 
       spendIdxIdx++;
@@ -86,8 +98,11 @@ export function getSubtreeUpdateInputs(
 
   // accumulatorHash
   const accumulatorPreimage = noteHashes.reduce((acc, hash) => [...acc, ...hash]);
-  const accumulatorHashU256 = BigInt(`0x${sha256.hex(accumulatorPreimage)}`);
-  const [accumulatorHashHi, accumulatorHash] = splitBigInt256(accumulatorHashU256);
+  const accumulatorHashU256 = hexToBigint(sha256.hex(accumulatorPreimage));
+  const [accumulatorHashHi, accumulatorHash] = bigInt256ToFieldElems(accumulatorHashU256);
+  console.log("accumulatorHashU256:", accumulatorHashU256.toString(2));
+  console.log("accumulatorHashHi:", accumulatorHashHi.toString(2));
+  console.log("accumulatorHashLo:", accumulatorHash.toString(2));
 
   // siblings
   const idx = tree.count;
@@ -97,8 +112,8 @@ export function getSubtreeUpdateInputs(
   tree._insertNonEmptySubtree(leaves);
 
   // encodedPathAndHash
-  let encodedPathAndHash = BigInt(merkleProofToLeaf.pathIndices.slice(BinaryPoseidonTree.S).map((bit, i) => bit << i).reduce((a, b) => a | b));
-  encodedPathAndHash += BigInt(accumulatorHashHi) * BigInt(1 << BinaryPoseidonTree.R);
+  const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
+  console.log("encodedPathAndHash:", encodedPathAndHash.toString(2));
 
   return {
     encodedPathAndHash,

@@ -6,8 +6,8 @@ import {
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
-import { bigInt256ToBEBytes } from "./utils";
 import { sha256 } from "js-sha256";
+import { bigintToBEPadded } from "./utils";
 
 interface NoteStruct {
   owner: FlaxAddressStruct;
@@ -65,12 +65,12 @@ export class Note {
 
   sha256(): number[] {
     const note = this.toNoteInput();
-    const ownerH1 = bigInt256ToBEBytes(note.owner.h1X);
-    const ownerH2 = bigInt256ToBEBytes(note.owner.h2X);
-    const nonce = bigInt256ToBEBytes(note.nonce);
-    const asset = bigInt256ToBEBytes(note.asset);
-    const id = bigInt256ToBEBytes(note.id);
-    const value = bigInt256ToBEBytes(note.value);
+    const ownerH1 = bigintToBEPadded(note.owner.h1X, 32);
+    const ownerH2 = bigintToBEPadded(note.owner.h2X, 32);
+    const nonce = bigintToBEPadded(note.nonce, 32);
+    const asset = bigintToBEPadded(note.asset, 32);
+    const id = bigintToBEPadded(note.id, 32);
+    const value = bigintToBEPadded(note.value, 32);
     
     const preimage = [...ownerH1, ...ownerH2, ...nonce, ...asset, ...id, ...value];
     return sha256.array(preimage);
