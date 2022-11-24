@@ -18,3 +18,4 @@
 - Fix indexing bug when only querying a single block
 - Update merkle prover indexing logic to work with off-chain updates
 - use `bigint-conversion` for bigint packing stuff
+- add `update` method to `BinaryPoseidonTree`
