@@ -12,30 +12,13 @@ library Utils {
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-    // pack array of field elements / uint256s to big-endian bytes
-    function packFieldElems(uint256[] memory elems)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        bytes memory res = new bytes(elems.length * 32);
-        for (uint256 i = 0; i < elems.length; i++) {
-            bytes32 elemBytes = bytes32(elems[i]);
-            for (uint256 j = 0; j < 32; j++) {
-                res[i * 32 + j] = elemBytes[31 - j];
-            }
-        }
-
-        return res;
-    }
-
     // hash array of field elements / uint256s as big-endian bytes with sha256
     function sha256FieldElems(uint256[] memory elems)
         internal
         pure
         returns (bytes32)
     {
-        bytes memory packed = packFieldElems(elems);
+        bytes memory packed = abi.encodePacked(elems);
         return sha256(packed);
     }
 
