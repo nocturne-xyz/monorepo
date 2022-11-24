@@ -670,6 +670,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.20.0
     "@zk-kit/incremental-merkle-tree": ^1.0.0
     big-integer: ^1.6.42
+    bigint-conversion: ^2.3.0
     chai: ^4.3.6
     circomlib: 0.0.18
     circomlibjs: 0.0.8
@@ -750,6 +751,13 @@ __metadata:
     "@jridgewell/resolve-uri": ^3.0.3
     "@jridgewell/sourcemap-codec": ^1.4.10
   checksum: d89597752fd88d3f3480845691a05a44bd21faac18e2185b6f436c3b0fd0c5a859fbbd9aaa92050c4052caf325ad3e10e2e1d1b64327517471b7d51babc0ddef
+  languageName: node
+  linkType: hard
+
+"@juanelas/base64@npm:^1.0.1":
+  version: 1.0.5
+  resolution: "@juanelas/base64@npm:1.0.5"
+  checksum: c207175bf7d7420609685e94df39f0f543a0d03b3ac7d394afdc682043703900c2d3b0cc6c4e11d30dad666230e5c49ffb1afb61aaed6b8d348048d02b165ce4
   languageName: node
   linkType: hard
 
@@ -3404,6 +3412,15 @@ __metadata:
   version: 1.6.51
   resolution: "big-integer@npm:1.6.51"
   checksum: 3d444173d1b2e20747e2c175568bedeebd8315b0637ea95d75fd27830d3b8e8ba36c6af40374f36bdaea7b5de376dcada1b07587cb2a79a928fccdb6e6e3c518
+  languageName: node
+  linkType: hard
+
+"bigint-conversion@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "bigint-conversion@npm:2.3.0"
+  dependencies:
+    "@juanelas/base64": ^1.0.1
+  checksum: 02fe29c813cb86505508cc3e895fd315baa82b4672970048605bae1748f88ea8ebb057411639286f9f2443490c58a28b5bda84e02f0bb57d6d4b55761ea004e2
   languageName: node
   linkType: hard
 
