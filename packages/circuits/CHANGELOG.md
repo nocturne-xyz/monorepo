@@ -11,3 +11,4 @@
 - add subtreeupdate circuit and build script for it
 - restructure build scripts with a layer of indirection so they can be invoked all at once
 - add rapidsnark option to subtreeupdate build scripts
+- add script to download subtreeupdate's chonky ptau file
