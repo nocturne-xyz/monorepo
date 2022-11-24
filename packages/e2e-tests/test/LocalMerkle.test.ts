@@ -23,8 +23,8 @@ describe("LocalMerkle", async () => {
     db = new FlaxLMDB({ dbPath: DEFAULT_DB_PATH, localMerkle: true });
 
     [deployer] = await ethers.getSigners();
-	const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
-	const subtreeUpdateVerifier = await subtreeupdateVerifierFactory.deploy();
+    const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
+    const subtreeUpdateVerifier = await subtreeupdateVerifierFactory.deploy();
 
     const merkleFactory = new OffchainMerkleTree__factory(deployer);
     merkle = await merkleFactory.deploy(subtreeUpdateVerifier.address);
@@ -33,11 +33,11 @@ describe("LocalMerkle", async () => {
   }
 
   async function fillBatch() {
-	const batchLen = await merkle.batchLen();
-	const amountToInsert = BinaryPoseidonTree.BATCH_SIZE - batchLen.toNumber();
-	for (let i = 0; i < amountToInsert; i++) {
-		await merkle.insertNoteCommitment(0n);
-	}
+    const batchLen = await merkle.batchLen();
+    const amountToInsert = BinaryPoseidonTree.BATCH_SIZE - batchLen.toNumber();
+    for (let i = 0; i < amountToInsert; i++) {
+      await merkle.insertNoteCommitment(0n);
+    }
   }
 
   async function applySubtreeUpdate() {
@@ -71,15 +71,15 @@ describe("LocalMerkle", async () => {
     expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(1n);
 
     console.log("filling subtree");
-	await fillBatch();
+    await fillBatch();
 
-	console.log("local merkle prover picks up the zeros")
+    console.log("local merkle prover picks up the zeros")
     await localMerkle.fetchLeavesAndUpdate();
-	expect(localMerkle.count).to.eql(BinaryPoseidonTree.BATCH_SIZE);
+    expect(localMerkle.count).to.eql(BinaryPoseidonTree.BATCH_SIZE);
 
 
-	console.log("Local merkle doesn't care when subtree update is applied")
-	await applySubtreeUpdate();
+    console.log("Local merkle doesn't care when subtree update is applied")
+    await applySubtreeUpdate();
     expect(BigInt(localMerkle.getProof(0).leaf)).to.equal(0n);
     expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(1n);
   });
