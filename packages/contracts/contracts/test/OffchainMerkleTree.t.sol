@@ -8,7 +8,7 @@ import {Utils} from "../libs/Utils.sol";
 import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
-import {ISubtreeUpdateVerifier}  from "../interfaces/ISubtreeUpdateVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {PoseidonHasherT3, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
@@ -23,13 +23,9 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
     IHasherT6 hasherT6;
     TreeTest treeTest;
 
-    event InsertNoteCommitments(
-        uint256[] commitments
-    );
+    event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(
-        IWallet.Note[] notes
-    );
+    event InsertNotes(IWallet.Note[] notes);
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
@@ -42,9 +38,12 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
     }
 
     function testTreeTest() public {
-        // test that hashing empty batch gives EMPTY_SUBTREE_ROOT 
+        // test that hashing empty batch gives EMPTY_SUBTREE_ROOT
         uint256[] memory batch = new uint256[](0);
-        assertEq(treeTest.computeSubtreeRoot(batch), TreeTestLib.EMPTY_SUBTREE_ROOT);
+        assertEq(
+            treeTest.computeSubtreeRoot(batch),
+            TreeTestLib.EMPTY_SUBTREE_ROOT
+        );
 
         // test that hashing empty batch total givens EMPTY_TREE_ROOT
         uint256[] memory path = treeTest.computeInitialRoot(batch);
@@ -55,7 +54,10 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         batch[0] = 420;
         batch[1] = 69;
         path = treeTest.computeInitialRoot(batch);
-        assertEq(path[path.length - 1], 7535458605132084619456785809582285707117893595742786994560375527566624811343);
+        assertEq(
+            path[path.length - 1],
+            7535458605132084619456785809582285707117893595742786994560375527566624811343
+        );
         assertEq(path[0], treeTest.computeSubtreeRoot(batch));
 
         // test computeNewRoot for non-empty batch
@@ -64,7 +66,10 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         batch[1] = 1;
         batch[2] = 1449;
         path = treeTest.computeNewRoot(batch, path, 16);
-        assertEq(path[path.length - 1], 6984220783167935932287489881196784031196766582157979071264100186030762206286);
+        assertEq(
+            path[path.length - 1],
+            6984220783167935932287489881196784031196766582157979071264100186030762206286
+        );
         assertEq(path[0], treeTest.computeSubtreeRoot(batch));
     }
 
@@ -79,8 +84,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNotes(notes);
         merkle.insertNote(notes[0]);
 
-        assertEq(uint(merkle.count()), 0); 
-        assertEq(uint(merkle.totalCount()), 1);
+        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle.totalCount()), 1);
         assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](1);
@@ -91,8 +96,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitment(ncs[0]);
 
-        assertEq(uint(merkle.count()), 0); 
-        assertEq(uint(merkle.totalCount()), 2);
+        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle.totalCount()), 2);
         assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
 
         // apply subtree update
@@ -100,8 +105,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         uint256[] memory zeros = new uint256[](14);
         merkle.insertNoteCommitments(zeros);
 
-        assertEq(uint(merkle.count()), 0); 
-        assertEq(uint(merkle.totalCount()), 16);
+        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle.totalCount()), 16);
         assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
 
         // compute new root and call `applySubtreeUpdate`
@@ -109,8 +114,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         uint256 newRoot = path[path.length - 1];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
-        assertEq(uint(merkle.count()), 16);
-        assertEq(uint(merkle.totalCount()), 16);
+        assertEq(uint256(merkle.count()), 16);
+        assertEq(uint256(merkle.totalCount()), 16);
         assertEq(merkle.root(), newRoot);
     }
 
@@ -127,8 +132,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNotes(notes);
         merkle.insertNotes(notes);
 
-        assertEq(uint(merkle.count()), 0); 
-        assertEq(uint(merkle.totalCount()), 5);
+        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle.totalCount()), 5);
         assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](11);
@@ -141,8 +146,8 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitments(ncs);
 
-        assertEq(uint(merkle.count()), 0); 
-        assertEq(uint(merkle.totalCount()),16);
+        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle.totalCount()), 16);
         assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
 
         // apply subtree update
@@ -163,14 +168,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
     }
 
     function dummyNote(uint256 value) internal returns (IWallet.Note memory) {
-        IWallet.Note memory note = IWallet.Note(
-            0,
-            0,
-            0,
-            0,
-            0,
-            value
-        );
+        IWallet.Note memory note = IWallet.Note(0, 0, 0, 0, 0, value);
 
         return note;
     }

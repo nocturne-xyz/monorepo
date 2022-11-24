@@ -17,7 +17,7 @@ struct Spend2ProofWithPublicSignals {
     BaseProof proof;
 }
 
-struct SubtreeUpdateProofWithPublicSignals{
+struct SubtreeUpdateProofWithPublicSignals {
     uint256[4] publicSignals;
     BaseProof proof;
 }

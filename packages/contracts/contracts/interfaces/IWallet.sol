@@ -38,7 +38,6 @@ interface IWallet {
     struct SubtreeUpdateArgs {
         uint256 oldRoot;
         uint256 newRoot;
-
         uint256[8] proof;
     }
 

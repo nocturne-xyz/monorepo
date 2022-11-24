@@ -23,9 +23,8 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
     }
 
     function verifyFixture(string memory path) public {
-        SubtreeUpdateProofWithPublicSignals memory proof = loadSubtreeUpdateProofFromFixture(
-            path
-        );
+        SubtreeUpdateProofWithPublicSignals
+            memory proof = loadSubtreeUpdateProofFromFixture(path);
 
         require(
             verifier.verifyProof(

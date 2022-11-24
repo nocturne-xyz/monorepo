@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
 
-
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
@@ -24,7 +23,7 @@ contract BalanceManager is
     constructor(
         address _vault,
         address _spend2Verifier,
-        address _merkle 
+        address _merkle
     ) CommitmentTreeManager(_spend2Verifier, _merkle) {
         vault = IVault(_vault);
     }
@@ -105,12 +104,7 @@ contract BalanceManager is
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
 
-        _handleRefund(
-            depositAddr,
-            deposit.asset,
-            deposit.id,
-            deposit.value
-        );
+        _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
 
         require(vault.makeDeposit(deposit), "Deposit failed");
     }
@@ -151,12 +145,7 @@ contract BalanceManager is
         address[] calldata refundTokens,
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
-
-        _handleERC20Refunds(
-            spendTokens,
-            refundTokens,
-            refundAddr
-        );
+        _handleERC20Refunds(spendTokens, refundTokens, refundAddr);
 
         _handleERC721Refunds(refundAddr);
 
@@ -203,20 +192,15 @@ contract BalanceManager is
         }
     }
 
-    function _handleERC721Refunds(
-        IWallet.FLAXAddress calldata refundAddr
-    ) internal {
+    function _handleERC721Refunds(IWallet.FLAXAddress calldata refundAddr)
+        internal
+    {
         for (uint256 i = 0; i < balanceInfo.erc721Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc721Addresses[i];
             uint256[] memory ids = balanceInfo.erc721Ids[tokenAddress];
             for (uint256 k = 0; k < ids.length; k++) {
                 if (IERC721(tokenAddress).ownerOf(ids[k]) == address(this)) {
-                    _handleRefund(
-                        refundAddr,
-                        tokenAddress,
-                        ids[k],
-                        0
-                    );
+                    _handleRefund(refundAddr, tokenAddress, ids[k], 0);
                     IERC721(tokenAddress).transferFrom(
                         address(this),
                         address(vault),
@@ -229,9 +213,9 @@ contract BalanceManager is
         delete balanceInfo.erc721Addresses;
     }
 
-    function _handleERC1155Refunds(
-        IWallet.FLAXAddress calldata refundAddr
-    ) internal {
+    function _handleERC1155Refunds(IWallet.FLAXAddress calldata refundAddr)
+        internal
+    {
         for (uint256 i = 0; i < balanceInfo.erc1155Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc1155Addresses[i];
             uint256[] memory ids = balanceInfo.erc1155Ids[tokenAddress];
@@ -241,12 +225,7 @@ contract BalanceManager is
                     ids[k]
                 );
                 if (currBal != 0) {
-                    _handleRefund(
-                        refundAddr,
-                        tokenAddress,
-                        ids[k],
-                        currBal
-                    );
+                    _handleRefund(refundAddr, tokenAddress, ids[k], currBal);
                     IERC1155(tokenAddress).safeTransferFrom(
                         address(this),
                         address(vault),
