@@ -2,8 +2,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { Signer } from "../src/sdk/signer";
-import { PrivKey } from "../src/crypto/privkey";
+import { FlaxSigner } from "../src/sdk/signer";
+import { FlaxPrivKey } from "../src/crypto/privkey";
 import {
   proveJoinSplit,
   verifyJoinSplitProof,
@@ -26,9 +26,9 @@ const sk = BigInt(
 );
 
 // Instantiate flax keypair and addr
-const flaxPrivKey = new PrivKey(sk);
+const flaxPrivKey = new FlaxPrivKey(sk);
 const vk = flaxPrivKey.vk;
-const flaxSigner = new Signer(flaxPrivKey);
+const flaxSigner = new FlaxSigner(flaxPrivKey);
 const flaxAddrA = flaxSigner.address;
 const flaxAddrB = flaxSigner.address;
 const spendPk = flaxSigner.privkey.spendPk();

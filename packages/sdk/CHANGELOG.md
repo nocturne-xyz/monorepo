@@ -10,7 +10,7 @@
 - Rename spend transaction `value` to `valueToSpend`
 - Add `FlaxContext` object and add functionality for converting an asset request and desired operation to a `PostProofOperation` containing potentially several spend txs
 - Update `generateSpend2TestCase` script to write to `/fixtures`
-- Update `Signer` to derive `vk` from `sk` and use simplified 2 field `FLAXAddress`
+- Update `FlaxSigner` to derive `vk` from `sk` and use simplified 2 field `FLAXAddress`
 - Move spend2 circuit prove/verify methods into sdk
 - Add babyjub classes and poseidon tree
 - Fix indexing bug when only querying a single block

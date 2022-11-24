@@ -3,29 +3,29 @@ import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
 import {
-  AnonAddressStruct,
-  flattenedAnonAddressToArrayForm,
-  AnonAddress,
+  FlaxAddressStruct,
+  flattenedFlaxAddressToArrayForm,
+  FlaxAddress,
 } from "../crypto/address";
-import { PrivKey } from "../crypto/privkey";
+import { FlaxPrivKey } from "../crypto/privkey";
 
-export interface Signature {
+export interface FlaxSignature {
   c: bigint;
   z: bigint;
 }
 
-export class Signer {
-  privkey: PrivKey;
-  address: AnonAddress;
+export class FlaxSigner {
+  privkey: FlaxPrivKey;
+  address: FlaxAddress;
 
-  constructor(privkey: PrivKey) {
-    const address = privkey.toAnonAddress();
+  constructor(privkey: FlaxPrivKey) {
+    const address = privkey.toAddress();
 
     this.privkey = privkey;
     this.address = address;
   }
 
-  sign(m: bigint): Signature {
+  sign(m: bigint): FlaxSignature {
     // TODO: make this deterministic
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
@@ -44,7 +44,7 @@ export class Signer {
     };
   }
 
-  static verify(pk: [bigint, bigint], m: bigint, sig: Signature): boolean {
+  static verify(pk: [bigint, bigint], m: bigint, sig: FlaxSignature): boolean {
     const c = sig.c;
     const z = sig.z;
     const Z = babyjub.mulPointEscalar(babyjub.Base8, z);
@@ -66,11 +66,11 @@ export class Signer {
     return poseidon([this.privkey.vk, oldNullifier]);
   }
 
-  testOwn(addr: AnonAddress | AnonAddressStruct): boolean {
+  testOwn(addr: FlaxAddress | FlaxAddressStruct): boolean {
     const flaxAddr =
-      addr instanceof AnonAddress
+      addr instanceof FlaxAddress
         ? addr.toArrayForm()
-        : flattenedAnonAddressToArrayForm(addr);
+        : flattenedFlaxAddressToArrayForm(addr);
     const H2prime = babyjub.mulPointEscalar(flaxAddr.h1, this.privkey.vk);
     return flaxAddr.h2[0] === H2prime[0] && flaxAddr.h2[1] === H2prime[1];
   }

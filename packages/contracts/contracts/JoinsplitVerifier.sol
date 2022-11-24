@@ -15,8 +15,10 @@
 pragma solidity ^0.8.5;
 import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
 import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
+import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
 =======
 pragma solidity ^0.8.5;
+import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
 import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
 >>>>>>> parent of f9869b4 (Joinsplit sol verifier passes)
 library Pairing {

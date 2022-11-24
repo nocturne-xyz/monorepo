@@ -1,6 +1,6 @@
 import { FlaxDB } from "../db";
 import { IncludedNote, IncludedNoteStruct } from "../note";
-import { Signer } from "../signer";
+import { FlaxSigner } from "../signer";
 
 export interface SpendEvent {
   oldNoteNullifier: bigint;
@@ -10,9 +10,9 @@ export interface SpendEvent {
 
 export abstract class NotesManager {
   db: FlaxDB;
-  signer: Signer;
+  signer: FlaxSigner;
 
-  constructor(db: FlaxDB, signer: Signer) {
+  constructor(db: FlaxDB, signer: FlaxSigner) {
     this.db = db;
     this.signer = signer;
   }

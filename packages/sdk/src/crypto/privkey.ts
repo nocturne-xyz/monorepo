@@ -5,14 +5,14 @@ import { AnonAddress } from "./address";
 
 // TODO: rewrite Babyjub library to have constant time crypto
 export class PrivKey {
-  vk: bigint; // a number between 0 and babyjub.subOrder - 1
-  sk: bigint; // a number between 0 and babyjub.subOrder - 1
+  userViewingKey: bigint; // a number between 0 and babyjub.subOrder - 1
+  spendingPrivateKey: bigint; // a number between 0 and babyjub.subOrder - 1
 
-  constructor(sk: bigint) {
-    this.sk = sk;
-    const spendPubKey = babyjub.mulPointEscalar(babyjub.Base8, this.sk);
-    const userViewKeyNonce = BigInt(1);
-    this.vk = poseidon([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);
+  constructor(spendPrivateKey: bigint) {
+    this.spendPrivateKey = spendPrivateKey;
+    const spendPublicKey = babyjub.mulPointEscalar(babyjub.Base8, this.spendPrivateKey);
+    const userViewkingKeyNonce = BigInt(1);
+    this.userViewingKey = poseidon([spendPublicKey[0], spendPublicKey[1], userViewkingKeyNonce]);
   }
 
   static genPriv(): PrivKey {
@@ -22,7 +22,7 @@ export class PrivKey {
     return new PrivKey(BigInt(sk));
   }
 
-  toAnonAddress(): AnonAddress {
+  toAddress(): Address {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
     const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);

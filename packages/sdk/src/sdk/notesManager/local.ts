@@ -8,7 +8,7 @@ import {
   SpendEvent as EthSpendEvent,
 } from "@flax/contracts/dist/src/Wallet";
 import { NotesManager, SpendEvent } from ".";
-import { Signer } from "../signer";
+import { FlaxSigner } from "../signer";
 import { IncludedNoteStruct } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
@@ -25,7 +25,7 @@ export class LocalNotesManager extends NotesManager {
 
   constructor(
     db: FlaxDB,
-    signer: Signer,
+    signer: FlaxSigner,
     walletAddress: Address,
     provider: ethers.providers.Provider
   ) {

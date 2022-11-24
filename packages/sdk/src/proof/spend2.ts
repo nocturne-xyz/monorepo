@@ -5,7 +5,7 @@ import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
 import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
-import { AnonAddressStruct } from "../crypto/address";
+import { FlaxAddressStruct } from "../crypto/address";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -38,7 +38,7 @@ export interface Spend2PublicSignals {
 }
 
 export interface NoteInput {
-  owner: AnonAddressStruct;
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: bigint;
   value: bigint;
@@ -75,9 +75,9 @@ export function publicSignalsArrayToTyped(
   };
 }
 
-function normalizeAnonAddressInput(
-  flaxAddressInput: AnonAddressStruct
-): AnonAddressStruct {
+function normalizeFlaxAddressInput(
+  flaxAddressInput: FlaxAddressStruct
+): FlaxAddressStruct {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
   return {
     h1X: normalizeBigInt(h1X),
@@ -90,7 +90,7 @@ function normalizeAnonAddressInput(
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {
   const { owner, nonce, asset, value, id } = noteInput;
   return {
-    owner: normalizeAnonAddressInput(owner),
+    owner: normalizeFlaxAddressInput(owner),
     nonce: normalizeBigInt(nonce),
     asset: normalizeBigInt(asset),
     value: normalizeBigInt(value),

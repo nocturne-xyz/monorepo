@@ -5,7 +5,7 @@ import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
 import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
-import { AnonAddressStruct } from "../crypto/address";
+import { FlaxAddressStruct } from "../crypto/address";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -42,7 +42,7 @@ export interface JoinSplitPublicSignals {
 }
 
 export interface NoteInput {
-  owner: AnonAddressStruct;
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: bigint;
   value: bigint;
@@ -84,9 +84,9 @@ export function publicSignalsArrayToTyped(
   };
 }
 
-function normalizeAnonAddressInput(
-  flaxAddressInput: AnonAddressStruct
-): AnonAddressStruct {
+function normalizeFlaxAddressInput(
+  flaxAddressInput: FlaxAddressStruct
+): FlaxAddressStruct {
   const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
   return {
     h1X: normalizeBigInt(h1X),
@@ -99,7 +99,7 @@ function normalizeAnonAddressInput(
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {
   const { owner, nonce, asset, value, id } = noteInput;
   return {
-    owner: normalizeAnonAddressInput(owner),
+    owner: normalizeFlaxAddressInput(owner),
     nonce: normalizeBigInt(nonce),
     asset: normalizeBigInt(asset),
     value: normalizeBigInt(value),
@@ -174,10 +174,11 @@ export async function proveJoinSplit(
     z,
   } = inputs;
   const signals = {
-    userViewKey: vk,
+    vk,
 
-    spendPubKey: spendPk,
-    userViewKeyNonce: BigInt(1),
+    spendPkX: spendPk[0],
+    spendPkY: spendPk[1],
+    spendPkNonce: BigInt(1),
 
     operationDigest,
 
@@ -189,8 +190,8 @@ export async function proveJoinSplit(
     oldNoteAOwnerH2X: oldNoteA.owner.h2X,
     oldNoteAOwnerH2Y: oldNoteA.owner.h2Y,
     oldNoteANonce: oldNoteA.nonce,
-    oldNoteAEncodedAsset: oldNoteA.asset,
-    oldNoteAEncodedId: oldNoteA.id,
+    oldNoteAAsset: oldNoteA.asset,
+    oldNoteAId: oldNoteA.id,
     oldNoteAValue: oldNoteA.value,
 
     pathA: merkleProofA.path,
@@ -201,8 +202,8 @@ export async function proveJoinSplit(
     oldNoteBOwnerH2X: oldNoteB.owner.h2X,
     oldNoteBOwnerH2Y: oldNoteB.owner.h2Y,
     oldNoteBNonce: oldNoteB.nonce,
-    oldNoteBEncodedAsset: oldNoteB.asset,
-    oldNoteBEncodedId: oldNoteB.id,
+    oldNoteBAsset: oldNoteB.asset,
+    oldNoteBId: oldNoteB.id,
     oldNoteBValue: oldNoteB.value,
 
     pathB: merkleProofB.path,
@@ -213,8 +214,8 @@ export async function proveJoinSplit(
     newNoteAOwnerH2X: newNoteA.owner.h2X,
     newNoteAOwnerH2Y: newNoteA.owner.h2Y,
     newNoteANonce: newNoteA.nonce,
-    newNoteAEncodedAsset: newNoteA.asset,
-    newNoteAEncodedId: newNoteA.id,
+    newNoteAAsset: newNoteA.asset,
+    newNoteAId: newNoteA.id,
     newNoteAValue: newNoteA.value,
 
     newNoteBOwnerH1X: newNoteB.owner.h1X,
@@ -222,12 +223,10 @@ export async function proveJoinSplit(
     newNoteBOwnerH2X: newNoteB.owner.h2X,
     newNoteBOwnerH2Y: newNoteB.owner.h2Y,
     newNoteBNonce: newNoteB.nonce,
-    newNoteBEncodedAsset: newNoteB.asset,
-    newNoteBEncodedId: newNoteB.id,
+    newNoteBAsset: newNoteB.asset,
+    newNoteBId: newNoteB.id,
     newNoteBValue: newNoteB.value,
   };
-
-  console.log(signals);
 
   const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
   proof.publicSignals = normalizePublicSignals(proof.publicSignals);

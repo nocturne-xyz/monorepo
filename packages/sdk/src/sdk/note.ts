@@ -1,7 +1,7 @@
 import {
-  AnonAddressStruct,
-  flattenedAnonAddressFromJSON,
-  AnonAddress,
+  FlaxAddressStruct,
+  flattenedFlaxAddressFromJSON,
+  FlaxAddress,
 } from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
@@ -10,7 +10,7 @@ import { bigInt256ToBEBytes } from "./utils";
 import { sha256 } from "js-sha256";
 
 interface NoteStruct {
-  owner: AnonAddressStruct;
+  owner: FlaxAddressStruct;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -24,7 +24,7 @@ export class Note {
     this.inner = note;
   }
 
-  get owner(): AnonAddressStruct {
+  get owner(): FlaxAddressStruct {
     return this.inner.owner;
   }
 
@@ -46,7 +46,7 @@ export class Note {
 
   toCommitment(): bigint {
     const { owner, nonce, asset, id, value } = this.inner;
-    const ownerFlaxAddr = new AnonAddress(owner);
+    const ownerFlaxAddr = new FlaxAddress(owner);
     return BigInt(
       poseidon([ownerFlaxAddr.hash(), nonce, BigInt(asset), id, value])
     );
@@ -93,7 +93,7 @@ export function includedNoteStructFromJSON(
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
-    owner: flattenedAnonAddressFromJSON(owner),
+    owner: flattenedFlaxAddressFromJSON(owner),
     nonce: BigInt(nonce),
     asset: asset.toString(),
     id: BigInt(id),
