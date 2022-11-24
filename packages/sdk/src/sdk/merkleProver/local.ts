@@ -18,7 +18,6 @@ export class LocalMerkleProver
   contract: OffchainMerkleTree;
   provider: ethers.providers.Provider;
   db: FlaxLMDB;
-  lastCommittedIndex: number;
 
   constructor(
     merkleAddress: Address,
@@ -33,7 +32,6 @@ export class LocalMerkleProver
       this.provider
     );
     this.db = db;
-    this.lastCommittedIndex = 0;
   }
 
   async fetchLeavesAndUpdate(): Promise<void> {
@@ -42,16 +40,12 @@ export class LocalMerkleProver
       this.db.getNumberKv(MERKLE_NEXT_BLOCK_TO_INDEX) ?? DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
-    const [newLeaves, lastCommittedIndex] = await Promise.all([
-      this.fetchNewLeaves(nextBlockToIndex, latestBlock),
-      this.fetchLastCommittedIndex(),
-    ]);
+    const newLeaves = await this.fetchNewLeaves(nextBlockToIndex, latestBlock);
 
     for (const leaf of newLeaves) {
       this.db.storeLeaf(this.count, leaf);
       this.insert(leaf);
     }
-    this.lastCommittedIndex = lastCommittedIndex;
 
     await this.db.putKv(MERKLE_NEXT_BLOCK_TO_INDEX, (latestBlock + 1).toString());
   }
@@ -128,10 +122,5 @@ export class LocalMerkleProver
 
     // return only the leaves
     return leaves.map(({ leaf }) => leaf);
-  }
-
-  async fetchLastCommittedIndex(): Promise<number> {
-    const res = await this.contract.count();
-    return res.toNumber();
   }
 }
