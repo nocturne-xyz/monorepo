@@ -12,7 +12,6 @@ import {
 import { ethers } from "ethers";
 import { OnRpcRequestHandler } from "@metamask/snap-types";
 import { SnapDB } from "./snapdb";
-import { DUMMY_PROOF } from "./dummyProof";
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -125,7 +124,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         request.params.operationRequest
       );
       const preProofOperationInputs =
-        await context.tryGetPreProofOperationInputsAndProofInputs(
+        await context.tryGetPreProofSpendTxInputsAndProofInputs(
           operationRequest
         );
       console.log(

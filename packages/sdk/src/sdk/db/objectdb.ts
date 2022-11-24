@@ -1,10 +1,6 @@
 import { FlaxDB, LocalMerkleDBExtension } from ".";
-import { AssetStruct } from "../../commonTypes";
-import {
-  IncludedNoteStruct,
-  includedNoteStructFromJSON,
-  includedNoteStructToJSON,
-} from "../note";
+import { AssetStruct, toJSON } from "../../commonTypes";
+import { IncludedNoteStruct, includedNoteStructFromJSON } from "../note";
 
 export const DEFAULT_SERIALIZABLE_STATE: SerializableState = {
   kv: {},
@@ -55,10 +51,7 @@ export function structuredToSerializableState(
   const kv = Object.fromEntries(state.kv);
 
   const notesMap = new Map(
-    Array.from(state.notes).map(([key, value]) => [
-      key,
-      value.map(includedNoteStructToJSON),
-    ])
+    Array.from(state.notes).map(([key, value]) => [key, value.map(toJSON)])
   );
   const notes = Object.fromEntries(notesMap);
 
@@ -146,9 +139,7 @@ export abstract class ObjectDB extends FlaxDB {
     const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
     state.notes.set(
       key,
-      (state.notes.get(key) ?? []).filter(
-        (n) => includedNoteStructToJSON(n) != includedNoteStructToJSON(note)
-      )
+      (state.notes.get(key) ?? []).filter((n) => toJSON(n) != toJSON(note))
     );
 
     await this.storeState(state);
