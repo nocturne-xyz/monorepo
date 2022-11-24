@@ -8,6 +8,7 @@ import { poseidon } from "circomlibjs";
 import { NoteInput } from "../proof/spend2";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
+import JSON from "json-bigint";
 
 interface NoteStruct {
   owner: FlaxAddressStruct;
@@ -84,23 +85,6 @@ export class Note {
 
 export interface IncludedNoteStruct extends NoteStruct {
   merkleIndex: number;
-}
-
-export function includedNoteStructToJSON(note: IncludedNoteStruct): string {
-  const { owner, nonce, asset, id, value, merkleIndex } = note;
-  return JSON.stringify({
-    owner: {
-      h1X: owner.h1X.toString(),
-      h1Y: owner.h1Y.toString(),
-      h2X: owner.h2X.toString(),
-      h2Y: owner.h2Y.toString(),
-    },
-    nonce: nonce.toString(),
-    asset,
-    id: id.toString(),
-    value: value.toString(),
-    merkleIndex,
-  });
 }
 
 export function includedNoteStructFromJSON(

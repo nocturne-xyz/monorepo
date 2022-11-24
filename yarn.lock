@@ -2186,6 +2186,7 @@ __metadata:
     "@flax/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
+    "@types/json-bigint": ^1.0.1
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
@@ -2198,6 +2199,7 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
     ffjavascript: FLAXPrivacy/ffjavascript
+    json-bigint: ^1.0.0
     mocha: ^10.1.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -4757,6 +4759,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 7a6746d00729b2a9fe9f9dd3453430b099931df879ec8f7a7b5f07b1795f6d99b0512640c45a67390b1e4bacb9401e36824952aeeaf089feba8627a063cf8e00
+  languageName: node
+  linkType: hard
+
+"@types/json-bigint@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@types/json-bigint@npm:1.0.1"
+  checksum: b39e55a811f554bd25f1d991bc4fc70655216dff466f21f97160097573a4bc7b478c1907aa5194c79022c115f509f8e4712083c51f57665e7a2de7412ff7801f
   languageName: node
   linkType: hard
 
@@ -15524,6 +15533,15 @@ ffjavascript@FLAXPrivacy/ffjavascript:
   bin:
     jsesc: bin/jsesc
   checksum: b8b44cbfc92f198ad972fba706ee6a1dfa7485321ee8c0b25f5cedd538dcb20cde3197de16a7265430fce8277a12db066219369e3d51055038946039f6e20e17
+  languageName: node
+  linkType: hard
+
+"json-bigint@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "json-bigint@npm:1.0.0"
+  dependencies:
+    bignumber.js: ^9.0.0
+  checksum: c67bb93ccb3c291e60eb4b62931403e378906aab113ec1c2a8dd0f9a7f065ad6fd9713d627b732abefae2e244ac9ce1721c7a3142b2979532f12b258634ce6f6
   languageName: node
   linkType: hard
 

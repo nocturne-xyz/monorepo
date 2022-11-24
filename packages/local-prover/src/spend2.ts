@@ -14,6 +14,7 @@ import {
   Spend2ProofWithPublicSignals,
   Spend2Prover,
 } from "@flax/sdk";
+import JSON from "json-bigint";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;

@@ -27,13 +27,13 @@ export interface OldAndNewNotePair {
   newNote: Note;
 }
 
-export interface PreProofOperationInputs {
+export interface PreProofSpendTxInputs {
   oldNewNotePair: OldAndNewNotePair;
   preProofOperation: PreProofOperation;
 }
 
-export interface PreProofOperationInputsAndProofInputs {
-  preProofSpendTxInputs: PreProofOperationInputs;
+export interface PreProofSpendTxInputsAndProofInputs {
+  preProofSpendTxInputs: PreProofSpendTxInputs;
   proofInputs: Spend2Inputs;
 }
 
@@ -103,14 +103,14 @@ export class FlaxContext {
     };
 
     // Get all inputs needed to generate ProvenSpendTxs
-    const preProofSpendTxInputs = await this.getPreProofSpendTxsInputs(
+    const preProofSpendTxInputs = await this.getPreProofSpendTxInputsMultiple(
       operationRequest,
       tokens,
       realRefundAddr,
       gasLimit
     );
 
-    // Generate proofs for each PreProofOperationInputs and format into
+    // Generate proofs for each PreProofSpendTxInputs and format into
     // ProvenSpendTxs
     const allProvenSpendTxPromises: Promise<ProvenSpendTx>[] = [];
     for (const inputs of preProofSpendTxInputs) {
@@ -127,11 +127,11 @@ export class FlaxContext {
     };
   }
 
-  async tryGetPreProofOperationInputsAndProofInputs(
+  async tryGetPreProofSpendTxInputsAndProofInputs(
     operationRequest: OperationRequest,
     refundAddr?: FlaxAddressStruct,
     gasLimit = 1_000_000n
-  ): Promise<PreProofOperationInputsAndProofInputs[]> {
+  ): Promise<PreProofSpendTxInputsAndProofInputs[]> {
     const { assetRequests, refundTokens } = operationRequest;
 
     // Generate refund addr if needed
@@ -145,7 +145,7 @@ export class FlaxContext {
       refundTokens,
     };
 
-    const spendTxsInputs = await this.getPreProofSpendTxsInputs(
+    const spendTxInputsArray = await this.getPreProofSpendTxInputsMultiple(
       operationRequest,
       tokens,
       realRefundAddr,
@@ -153,7 +153,7 @@ export class FlaxContext {
     );
 
     return Promise.all(
-      spendTxsInputs.map(async (spendTxInputs) => {
+      spendTxInputsArray.map(async (spendTxInputs) => {
         const proofInputs = await this.getProofInputsFor(spendTxInputs);
         return {
           preProofSpendTxInputs: spendTxInputs,
@@ -165,7 +165,7 @@ export class FlaxContext {
 
   /**
    * Given a set of asset requests, gather the necessary notes to fullfill the
-   * requests and format the data into PreProofOperationInputs (all inputs needed
+   * requests and format the data into PreProofSpendTxInputs (all inputs needed
    * to generate proof for spend tx and format into ProvenSpendTx).
    *
    * @param assetRequests Asset requested to spend
@@ -175,12 +175,12 @@ export class FlaxContext {
    * rerandomized address if left empty
    * @param gasLimit Gas limit
    */
-  protected async getPreProofSpendTxsInputs(
+  protected async getPreProofSpendTxInputsMultiple(
     { assetRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
     refundAddr: FlaxAddressStruct,
     gasLimit = 1_000_000n
-  ): Promise<PreProofOperationInputs[]> {
+  ): Promise<PreProofSpendTxInputs[]> {
     const preProofOperation: PreProofOperation = {
       refundAddr,
       tokens,
@@ -189,7 +189,7 @@ export class FlaxContext {
     };
 
     // For each asset request, gather necessary notes
-    const allPreProofOperationInputs: PreProofOperationInputs[] = [];
+    const allPreProofSpendTxInputs: PreProofSpendTxInputs[] = [];
     for (const assetRequest of assetRequests) {
       const oldAndNewNotePairs = await this.gatherMinimumNotes(
         refundAddr,
@@ -197,41 +197,22 @@ export class FlaxContext {
       );
 
       for (const oldNewNotePair of oldAndNewNotePairs) {
-        allPreProofOperationInputs.push({ oldNewNotePair, preProofOperation });
+        allPreProofSpendTxInputs.push({ oldNewNotePair, preProofOperation });
       }
     }
 
-    return allPreProofOperationInputs;
+    return allPreProofSpendTxInputs;
   }
 
   /**
-   * Given an array of PreProofOperationInputs, create array of proof inputs for
-   * the spend txs.
-   *
-   * @param preProofSpendTxInputs array of preProofSpendTxInputs
-   */
-  protected async tryGetProofInputs(
-    preProofSpendTxInputs: PreProofOperationInputs[]
-  ): Promise<Spend2Inputs[]> {
-    const allSpend2InputPromises: Promise<Spend2Inputs>[] = [];
-    for (const { oldNewNotePair, preProofOperation } of preProofSpendTxInputs) {
-      allSpend2InputPromises.push(
-        this.getProofInputsFor({ oldNewNotePair, preProofOperation })
-      );
-    }
-
-    return Promise.all(allSpend2InputPromises);
-  }
-
-  /**
-   * Given a single PreProofOperationInputs, create proof inputs for the spend tx.
+   * Given a single PreProofSpendTxInputs, create proof inputs for the spend tx.
    *
    * @param preProofSpendTxInputs array of preProofSpendTxInputs
    */
   protected async getProofInputsFor({
     oldNewNotePair,
     preProofOperation,
-  }: PreProofOperationInputs): Promise<Spend2Inputs> {
+  }: PreProofSpendTxInputs): Promise<Spend2Inputs> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
@@ -279,7 +260,7 @@ export class FlaxContext {
   protected async generateProvenSpendTxFor({
     oldNewNotePair,
     preProofOperation,
-  }: PreProofOperationInputs): Promise<ProvenSpendTx> {
+  }: PreProofSpendTxInputs): Promise<ProvenSpendTx> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
