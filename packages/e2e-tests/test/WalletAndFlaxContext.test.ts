@@ -52,6 +52,7 @@ describe("Wallet", async () => {
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);
     token = await tokenFactory.deploy();
+    console.log("Token deployed at: ", token.address);
 
     const flaxSetup = await setup();
     alice = flaxSetup.alice;

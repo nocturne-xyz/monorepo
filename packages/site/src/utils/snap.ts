@@ -1,3 +1,4 @@
+import { OperationRequest, toJSON } from "@flax/sdk";
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
 /**
@@ -111,16 +112,22 @@ export const syncLeaves = async () => {
   });
 };
 
-export const proveSpend2 = async () => {
-  await window.ethereum.request({
+export const getOperationInputs = async (
+  operationRequest: OperationRequest
+) => {
+  console.log("Invoking flax_getOperationInputs");
+  const res = await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_proveSpend2",
+        method: "flax_getOperationInputs",
+        params: { operationRequest: toJSON(operationRequest) },
       },
     ],
   });
+
+  return res;
 };
 
 export const clearDb = async () => {

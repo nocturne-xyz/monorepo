@@ -6,4 +6,4 @@ export * from "./src/proof";
 export * from "./src/contract";
 export * from "./src/primitives";
 
-export { FlaxContext, OperationRequest } from "./src/FlaxContext";
+export { FlaxContext } from "./src/FlaxContext";

@@ -4,8 +4,8 @@ import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
   clearDb,
   connectSnap,
+  getOperationInputs,
   getSnap,
-  proveSpend2,
   sendHello,
   sendSetAndShowKv,
   shouldDisplayReconnectButton,
@@ -22,8 +22,10 @@ import {
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
-  ProveSpend2Button,
+  GetOperationInputsButton,
 } from "../components";
+import { Action, AssetRequest, ERC20_ID, OperationRequest } from "@flax/sdk";
+import { SimpleERC20Token__factory } from "@flax/contracts";
 
 const Container = styled.div`
   display: flex;
@@ -163,11 +165,35 @@ const Index = () => {
     }
   };
 
-  const handleProveSpend2 = async () => {
+  const handleGetOperationInputs = async () => {
+    const tokenAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+    const assetRequest: AssetRequest = {
+      asset: { address: tokenAddress, id: ERC20_ID },
+      value: 25n,
+    };
+
+    const refundTokens = [tokenAddress];
+    const encodedFunction =
+      SimpleERC20Token__factory.createInterface().encodeFunctionData(
+        "transfer",
+        ["0x0B306BF915C4d645ff596e518fAf3F9669b97016", 50]
+      );
+    const action: Action = {
+      contractAddress: tokenAddress,
+      encodedFunction: encodedFunction,
+    };
+    const operationRequest: OperationRequest = {
+      assetRequests: [assetRequest],
+      refundTokens,
+      actions: [action],
+    };
+
+    console.log("Operation request: ", operationRequest);
     try {
-      await proveSpend2();
+      const inputs = await getOperationInputs(operationRequest);
+      console.log(inputs);
     } catch (e) {
-      console.error(e);
+      console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
@@ -313,11 +339,11 @@ const Index = () => {
         />
         <Card
           content={{
-            title: "ProveSpend2",
-            description: "Prove spend2.",
+            title: "GetOperationInputs",
+            description: "Get operation inputs",
             button: (
-              <ProveSpend2Button
-                onClick={handleProveSpend2}
+              <GetOperationInputsButton
+                onClick={handleGetOperationInputs}
                 disabled={!state.installedSnap}
               />
             ),
