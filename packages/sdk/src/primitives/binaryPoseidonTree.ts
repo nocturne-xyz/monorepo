@@ -36,33 +36,4 @@ export class BinaryPoseidonTree {
   getProof(index: number): MerkleProof {
     return this.tree.createProof(index);
   }
-
-  insertSubtree(leaves: Node[]): void {
-    while (leaves.length < BinaryPoseidonTree.BATCH_SIZE) {
-      leaves.push(0n);
-    }
-
-    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-      this.insert(leaves[i]);
-    }
-  }
-
-  // these methods are a bit of a hack
-  // only the subtree updater should use them
-
-  _insertEmptySubtree(): void {
-    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-      this.insert(0n);
-    }
-  }
-  _insertNonEmptySubtree(leaves: Node[]): void {
-    while (leaves.length < BinaryPoseidonTree.BATCH_SIZE) {
-      leaves.push(0n);
-    }
-
-    const offset = this.count - BinaryPoseidonTree.BATCH_SIZE;
-    for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-      this.tree.update(offset + i, leaves[i]);
-    }
-  }
 }
