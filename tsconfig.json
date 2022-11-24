@@ -38,6 +38,9 @@
     },
     {
       "path": "./packages/e2e-tests"
+    },
+    {
+      "path": "./apps/merkle-prover"
     }
   ]
 }
