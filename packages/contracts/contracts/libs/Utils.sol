@@ -18,8 +18,7 @@ library Utils {
         pure
         returns (bytes32)
     {
-        bytes memory packed = abi.encodePacked(elems);
-        return sha256(packed);
+        return sha256(abi.encodePacked(elems));
     }
 
     // split a uint256 into 2 limbs, one containing the high (256 - lowerBits) bits, the other containing the lower `lowerBits` bits
