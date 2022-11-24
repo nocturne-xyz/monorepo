@@ -15,7 +15,7 @@ template JoinSplit(levels) {
     signal input userViewKey;
 
     // Spend Pk
-    signal input spendPublicKey[2];
+    signal input spendPubKey[2];
     signal input userViewKeyNonce;
 
     // Public inputs
@@ -103,7 +103,7 @@ template JoinSplit(levels) {
     );
 
     // Merkle tree inclusion proof for oldNoteACommitment
-    anchor <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, siblingsA, pathA);
+    anchor <== MerkleTreeInclusionProof(levels)(oldNoteACommitment, pathA, siblingsA);
 
     // Merkle tree inclusion proof for oldNoteBCommitment
     signal anchorB <== MerkleTreeInclusionProof(levels)(oldNoteBCommitment, pathB, siblingsB);
@@ -139,11 +139,11 @@ template JoinSplit(levels) {
     vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, userViewKey);
 
     // Derive spending public key
-    signal derivedViewKey <== Poseidon(3)([spendPublicKey[0], spendPublicKey[1], userViewKeyNonce]);
+    signal derivedViewKey <== Poseidon(3)([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);
     userViewKey === derivedViewKey;
 
     // AuthSig validity
-    SigVerify()(spendPublicKey[0], spendPublicKey[1], operationDigest, c, z);
+    SigVerify()(spendPubKey[0], spendPubKey[1], operationDigest, c, z);
 
     // Computing newNoteACommitment
     newNoteACommitment <== NoteCommit()(

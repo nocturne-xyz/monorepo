@@ -174,11 +174,10 @@ export async function proveJoinSplit(
     z,
   } = inputs;
   const signals = {
-    vk,
+    userViewKey: vk,
 
-    spendPkX: spendPk[0],
-    spendPkY: spendPk[1],
-    spendPkNonce: BigInt(1),
+    spendPubKey: spendPk,
+    userViewKeyNonce: BigInt(1),
 
     operationDigest,
 
@@ -190,8 +189,8 @@ export async function proveJoinSplit(
     oldNoteAOwnerH2X: oldNoteA.owner.h2X,
     oldNoteAOwnerH2Y: oldNoteA.owner.h2Y,
     oldNoteANonce: oldNoteA.nonce,
-    oldNoteAAsset: oldNoteA.asset,
-    oldNoteAId: oldNoteA.id,
+    oldNoteAEncodedAsset: oldNoteA.asset,
+    oldNoteAEncodedId: oldNoteA.id,
     oldNoteAValue: oldNoteA.value,
 
     pathA: merkleProofA.path,
@@ -202,8 +201,8 @@ export async function proveJoinSplit(
     oldNoteBOwnerH2X: oldNoteB.owner.h2X,
     oldNoteBOwnerH2Y: oldNoteB.owner.h2Y,
     oldNoteBNonce: oldNoteB.nonce,
-    oldNoteBAsset: oldNoteB.asset,
-    oldNoteBId: oldNoteB.id,
+    oldNoteBEncodedAsset: oldNoteB.asset,
+    oldNoteBEncodedId: oldNoteB.id,
     oldNoteBValue: oldNoteB.value,
 
     pathB: merkleProofB.path,
@@ -214,8 +213,8 @@ export async function proveJoinSplit(
     newNoteAOwnerH2X: newNoteA.owner.h2X,
     newNoteAOwnerH2Y: newNoteA.owner.h2Y,
     newNoteANonce: newNoteA.nonce,
-    newNoteAAsset: newNoteA.asset,
-    newNoteAId: newNoteA.id,
+    newNoteAEncodedAsset: newNoteA.asset,
+    newNoteAEncodedId: newNoteA.id,
     newNoteAValue: newNoteA.value,
 
     newNoteBOwnerH1X: newNoteB.owner.h1X,
@@ -223,10 +222,12 @@ export async function proveJoinSplit(
     newNoteBOwnerH2X: newNoteB.owner.h2X,
     newNoteBOwnerH2Y: newNoteB.owner.h2Y,
     newNoteBNonce: newNoteB.nonce,
-    newNoteBAsset: newNoteB.asset,
-    newNoteBId: newNoteB.id,
+    newNoteBEncodedAsset: newNoteB.asset,
+    newNoteBEncodedId: newNoteB.id,
     newNoteBValue: newNoteB.value,
   };
+
+  console.log(signals);
 
   const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
   proof.publicSignals = normalizePublicSignals(proof.publicSignals);
