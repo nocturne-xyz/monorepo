@@ -20,7 +20,19 @@ export interface PreProofSpendTransaction {
   valueToSpend: bigint;
 }
 
+export interface PreProofJoinsplitTransaction {
+  commitmentTreeRoot: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  asset: Address;
+  id: bigint;
+  publicSpend: bigint;
+}
+
 export interface PreProofOperation {
+  joinsplitTxs: PreProofJoinsplitTransaction[];
   refundAddr: AnonAddressStruct;
   tokens: Tokens;
   actions: Action[];
@@ -37,8 +49,21 @@ export interface PostProofSpendTransaction {
   id: bigint;
 }
 
+export interface PostProofJoinsplitTransaction {
+  commitmentTreeRoot: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  asset: Address;
+  id: bigint;
+  publicSpend: bigint;
+  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+}
+
+
 export interface PostProofOperation {
-  spendTxs: PostProofSpendTransaction[];
+  joinsplitTxs: PostProofJoinsplitTransaction[];
   refundAddr: AnonAddressStruct;
   tokens: Tokens;
   actions: Action[];

@@ -14,7 +14,7 @@ const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 
-export interface JoinSplitProofWithPublicSignals {
+export interface JoinsplitProofWithPublicSignals {
   proof: BaseProof;
   publicSignals: [
     bigint, // newNoteACommitment
@@ -29,13 +29,13 @@ export interface JoinSplitProofWithPublicSignals {
   ];
 }
 
-export interface JoinSplitPublicSignals {
-  newNoteCommitmentA: bigint;
-  newNoteCommitmentB: bigint;
+export interface JoinsplitPublicSignals {
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
   anchor: bigint;
   asset: bigint;
   id: bigint;
-  valueToSpend: bigint;
+  publicSpend: bigint;
   nullifierA: bigint;
   nullifierB: bigint;
   operationDigest: bigint;
@@ -54,7 +54,7 @@ export interface MerkleProofInput {
   siblings: any[];
 }
 
-export interface JoinSplitInputs {
+export interface JoinsplitInputs {
   vk: bigint;
   operationDigest: bigint;
   oldNoteA: NoteInput;
@@ -70,14 +70,14 @@ export interface JoinSplitInputs {
 
 export function publicSignalsArrayToTyped(
   publicSignals: bigint[]
-): JoinSplitPublicSignals {
+): JoinsplitPublicSignals {
   return {
-    newNoteCommitmentA: publicSignals[0],
-    newNoteCommitmentB: publicSignals[1],
+    newNoteACommitment: publicSignals[0],
+    newNoteBCommitment: publicSignals[1],
     anchor: publicSignals[2],
     asset: publicSignals[3],
     id: publicSignals[4],
-    valueToSpend: publicSignals[5],
+    publicSpend: publicSignals[5],
     nullifierA: publicSignals[6],
     nullifierB: publicSignals[7],
     operationDigest: publicSignals[8],
@@ -121,9 +121,9 @@ function normalizeMerkleProofInput(
   return { path, siblings };
 }
 
-export function normalizeJoinSplitInputs(
-  inputs: JoinSplitInputs
-): JoinSplitInputs {
+export function normalizeJoinsplitInputs(
+  inputs: JoinsplitInputs
+): JoinsplitInputs {
   const {
     vk,
     operationDigest,
@@ -154,12 +154,12 @@ export function normalizeJoinSplitInputs(
   };
 }
 
-export async function proveJoinSplit(
-  inputs: JoinSplitInputs,
+export async function proveJoinsplit(
+  inputs: JoinsplitInputs,
   wasmPath = WASM_PATH,
   zkeyPath = ZKEY_PATH
-): Promise<JoinSplitProofWithPublicSignals> {
-  inputs = normalizeJoinSplitInputs(inputs);
+): Promise<JoinsplitProofWithPublicSignals> {
+  inputs = normalizeJoinsplitInputs(inputs);
   const {
     vk,
     operationDigest,
@@ -234,8 +234,8 @@ export async function proveJoinSplit(
   return proof;
 }
 
-export async function verifyJoinSplitProof(
-  { proof, publicSignals }: JoinSplitProofWithPublicSignals,
+export async function verifyJoinsplitProof(
+  { proof, publicSignals }: JoinsplitProofWithPublicSignals,
   vkeyPath = VKEY_PATH
 ): Promise<boolean> {
   const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));

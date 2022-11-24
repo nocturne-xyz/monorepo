@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { SNARK_SCALAR_FIELD } from "../commonTypes";
-import { PreProofOperation, PreProofSpendTransaction } from "./types";
+import { PreProofOperation, PreProofJoinsplitTransaction } from "./types";
 
 function hashOperation(op: PreProofOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +16,10 @@ function hashOperation(op: PreProofOperation): string {
       ]
     );
   }
+
+  const joinsplitHash = ethers.utils.keccak256(
+    ethers.utils.solidityPack(["uint256[]"], op.joinsplitTxs.map(hashJoinsplit))
+  );
 
   const spendTokensHash = ethers.utils.keccak256(
     ethers.utils.solidityPack(["address[]"], [op.tokens.spendTokens])
@@ -37,6 +41,7 @@ function hashOperation(op: PreProofOperation): string {
     ],
     [
       payload,
+      joinsplitHash,
       op.refundAddr.h1X,
       op.refundAddr.h1Y,
       op.refundAddr.h2X,
@@ -50,38 +55,29 @@ function hashOperation(op: PreProofOperation): string {
   return ethers.utils.keccak256(payload);
 }
 
-function hashSpend(spend: PreProofSpendTransaction): string {
+function hashJoinsplit(joinsplit: PreProofJoinsplitTransaction): string {
   const payload = ethers.utils.solidityPack(
-    ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
+    ["uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint256", "uint256"],
     [
-      spend.commitmentTreeRoot,
-      spend.nullifier,
-      spend.newNoteCommitment,
-      spend.valueToSpend,
-      spend.asset,
-      spend.id,
+      joinsplit.commitmentTreeRoot,
+      joinsplit.nullifierA,
+      joinsplit.nullifierB,
+      joinsplit.newNoteACommitment,
+      joinsplit.newNoteBCommitment,
+      joinsplit.asset,
+      joinsplit.id,
+      joinsplit.publicSpend,
     ]
   );
 
   return ethers.utils.keccak256(payload);
 }
 
-function calcOperationDigest(operationHash: string, spendHash: string): string {
-  return ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ["bytes32", "bytes32"],
-      [operationHash, spendHash]
-    )
-  );
-}
-
 export function calculateOperationDigest(
   operation: PreProofOperation,
-  spend: PreProofSpendTransaction
 ): bigint {
   const operationHash = hashOperation(operation);
-  const spendHash = hashSpend(spend);
   return (
-    BigInt(calcOperationDigest(operationHash, spendHash)) % SNARK_SCALAR_FIELD
+    BigInt(operationHash) % SNARK_SCALAR_FIELD
   );
 }

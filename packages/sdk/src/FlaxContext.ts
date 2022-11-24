@@ -2,23 +2,30 @@ import { Address, AssetRequest, AssetStruct } from "./commonTypes";
 import {
   Action,
   PostProofOperation,
-  PostProofSpendTransaction,
+  PostProofJoinsplitTransaction,
   PreProofOperation,
-  PreProofSpendTransaction,
+  PreProofJoinsplitTransaction,
   Tokens,
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
-import { Signer } from "./sdk/signer";
+import { Signer, Signature } from "./sdk/signer";
 import { AnonAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
+// import {
+//   MerkleProofInput,
+//   proveSpend2,
+//   publicSignalsArrayToTyped,
+//   Spend2Inputs,
+//   verifySpend2Proof,
+// } from "./proof/spend2";
 import {
   MerkleProofInput,
-  proveSpend2,
+  proveJoinsplit,
   publicSignalsArrayToTyped,
-  Spend2Inputs,
-  verifySpend2Proof,
-} from "./proof/spend2";
+  JoinsplitInputs,
+  verifyJoinsplitProof,
+} from "./proof/joinsplit";
 import { packToSolidityProof } from "./contract/proof";
 import { MerkleProver } from "./sdk/merkleProver";
 import { FlaxDB, FlaxLMDB } from "./sdk/db";
@@ -28,11 +35,6 @@ export interface OperationRequest {
   assetRequests: AssetRequest[];
   refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
   actions: Action[];
-}
-
-export interface OldAndNewNotePair {
-  oldNote: IncludedNote;
-  newNote: Note;
 }
 
 export class FlaxContext {
@@ -81,32 +83,49 @@ export class FlaxContext {
       spendTokens: assetRequests.map((a) => a.asset.address),
       refundTokens,
     };
+
+    const allPreProofJoinsplitTxs: PreProofJoinsplitTransaction[] = [];
+    const allJoinsplitInputs: JoinsplitInputs[] = [];
+
+    // For each asset request, gather necessary notes
+    for (const assetRequest of assetRequests) {
+      const [oldNotes, newNotes] = this.gatherMinimumNotes(
+        realRefundAddr,
+        assetRequest
+      );
+
+      console.log(oldNotes, newNotes);
+
+      // for (const oldNewPair of oldAndNewNotes) {
+      //   const [tx, proofInput] = generatePreProofJoinsplitTx(oldNoteA, oldNoteB, newNoteA, newNoteB);
+      //   allPreProofJoinsplitTxs.push(tx);
+      //   allJoinsplitInputs.push(proofInput);
+      // }
+    }
+
     const preProofOperation: PreProofOperation = {
+      joinsplitTxs: allPreProofJoinsplitTxs,
       refundAddr: realRefundAddr,
       tokens,
       actions,
       gasLimit,
     };
 
-    // For each asset request, gather necessary notes
-    const allSpendTxPromises: Promise<PostProofSpendTransaction>[] = [];
-    for (const assetRequest of assetRequests) {
-      const oldAndNewNotePairs = this.gatherMinimumNotes(
-        realRefundAddr,
-        assetRequest
-      );
+    // generate OperationDigest
+    const opDigest = calculateOperationDigest(preProofOperation);
+    // sign the digest
+    const opSig = this.signer.sign(opDigest);
 
-      // For each note, generate proof
-      for (const oldNewPair of oldAndNewNotePairs) {
-        allSpendTxPromises.push(
-          this.generatePostProofSpendTx(oldNewPair, preProofOperation)
-        );
-      }
+    const allJoinsplitTxPromises: Promise<PostProofJoinsplitTransaction>[] = [];
+    for (const input of allJoinsplitInputs) {
+      input.operationDigest = opDigest;
+      allJoinsplitTxPromises.push(this.generatePostProofJoinsplitTx(input, opSig));
     }
 
-    const allSpendTxs = await Promise.all(allSpendTxPromises);
+    const allJoinsplitTxs = await Promise.all(allJoinsplitTxPromises);
+
     return {
-      spendTxs: allSpendTxs,
+      joinsplitTxs: allJoinsplitTxs,
       refundAddr: realRefundAddr,
       tokens,
       actions,
@@ -115,54 +134,77 @@ export class FlaxContext {
   }
 
   /**
-   * Create a `PostProofSpendTransaction` given the `oldNote`, resulting
-   * `newNote`, and operation to use for the `operationDigest`
-   *
-   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
-   * post-spend
-   * @param preProofOperation Operation included when generating a proof
+   * Create a `PreProofJoinsplitTransaction` given the `oldNoteA, oldNoteB`,
+   * resulting `newNoteA, newNoteB`
    */
-  async generatePostProofSpendTx(
-    oldNewNotePair: OldAndNewNotePair,
-    preProofOperation: PreProofOperation
-  ): Promise<PostProofSpendTransaction> {
-    const { oldNote, newNote } = oldNewNotePair;
-    const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = newNote.toCommitment();
-    const merkleProof = this.merkleProver.getProof(oldNote.merkleIndex);
-    const preProofSpendTx: PreProofSpendTransaction = {
-      commitmentTreeRoot: merkleProof.root,
-      nullifier,
-      newNoteCommitment,
-      asset: oldNote.asset,
-      id: oldNote.id,
-      valueToSpend: oldNote.value - newNote.value,
+  generatePreProofJoinsplitTx(
+    oldNoteA: IncludedNote,
+    oldNoteB: IncludedNote,
+    newNoteA: Note,
+    newNoteB: Note
+  ): [JoinsplitInputs, PreProofJoinsplitTransaction] {
+    const nullifierA = this.signer.createNullifier(oldNoteA);
+    const nullifierB = this.signer.createNullifier(oldNoteB);
+    const newNoteACommitment = newNoteA.toCommitment();
+    const newNoteBCommitment = newNoteB.toCommitment();
+    const merkleProofA = this.merkleProver.getProof(oldNoteA.merkleIndex);
+    const merkleProofB = this.merkleProver.getProof(oldNoteB.merkleIndex);
+
+    const publicSpend = oldNoteA.value + oldNoteA.value - newNoteA.value - newNoteB.value;
+
+    const merkleInputA: MerkleProofInput = {
+      path: merkleProofA.pathIndices.map((n) => BigInt(n)),
+      siblings: merkleProofA.siblings,
+    };
+    const merkleInputB: MerkleProofInput = {
+      path: merkleProofB.pathIndices.map((n) => BigInt(n)),
+      siblings: merkleProofB.siblings,
     };
 
-    const opDigest = calculateOperationDigest(
-      preProofOperation,
-      preProofSpendTx
-    );
-    const opSig = this.signer.sign(opDigest);
-
-    const merkleInput: MerkleProofInput = {
-      path: merkleProof.pathIndices.map((n) => BigInt(n)),
-      siblings: merkleProof.siblings,
-    };
-
-    const inputs: Spend2Inputs = {
+    const inputs: JoinsplitInputs = {
       vk: this.signer.privkey.vk,
       spendPk: this.signer.privkey.spendPk(),
-      operationDigest: opDigest,
-      c: opSig.c,
-      z: opSig.z,
-      oldNote: oldNote.toNoteInput(),
-      newNote: newNote.toNoteInput(),
-      merkleProof: merkleInput,
+      operationDigest: BigInt(0), //
+      c: BigInt(0), //
+      z: BigInt(0), //
+      oldNoteA: oldNoteA.toNoteInput(),
+      oldNoteB: oldNoteB.toNoteInput(),
+      newNoteA: newNoteA.toNoteInput(),
+      newNoteB: newNoteB.toNoteInput(),
+      merkleProofA: merkleInputA,
+      merkleProofB: merkleInputB,
     };
 
-    const proof = await proveSpend2(inputs);
-    if (!(await verifySpend2Proof(proof))) {
+    const preProofJoinsplitTx: PreProofJoinsplitTransaction = {
+      commitmentTreeRoot: merkleProofA.root,
+      nullifierA,
+      nullifierB,
+      newNoteACommitment,
+      newNoteBCommitment,
+      asset: oldNoteA.asset,
+      id: oldNoteA.id,
+      publicSpend,
+    };
+
+    return [inputs, preProofJoinsplitTx]
+  }
+
+  /**
+   * Create a `PostProofJoinsplitTransaction` given the `oldNote`, resulting
+   * `newNote`, and operation to use for the `operationDigest`
+   *
+   * @param proofInputs preproof joinsplit inptus with empty opSig
+   * @param preProofOperation Operation included when generating a proof
+   */
+  async generatePostProofJoinsplitTx(
+    proofInputs: JoinsplitInputs,
+    opSig: Signature
+  ): Promise<PostProofJoinsplitTransaction> {
+    proofInputs.c = opSig.c;
+    proofInputs.z = opSig.z;
+
+    const proof = await proveJoinsplit(proofInputs);
+    if (!(await verifyJoinsplitProof(proof))) {
       throw new Error("Proof invalid!");
     }
 
@@ -170,11 +212,13 @@ export class FlaxContext {
     const solidityProof = packToSolidityProof(proof.proof);
     return {
       commitmentTreeRoot: publicSignals.anchor,
-      nullifier,
-      newNoteCommitment,
+      nullifierA: publicSignals.nullifierA,
+      nullifierB: publicSignals.nullifierB,
+      newNoteACommitment: publicSignals.newNoteACommitment,
+      newNoteBCommitment: publicSignals.newNoteBCommitment,
       proof: solidityProof,
-      asset: preProofSpendTx.asset,
-      valueToSpend: publicSignals.valueToSpend,
+      asset: String(publicSignals.asset),
+      publicSpend: publicSignals.publicSpend,
       id: publicSignals.id,
     };
   }
@@ -184,12 +228,14 @@ export class FlaxContext {
    * Returned list is sorted from smallest to largest. The last note in the list
    * may produce a non-zero new note.
    *
+   * @param refundAddr
    * @param assetRequest Asset request
+   * @return (oldNotes, newNotes) list of notes to spent and a single
    */
   gatherMinimumNotes(
     refundAddr: AnonAddressStruct,
     assetRequest: AssetRequest
-  ): OldAndNewNotePair[] {
+  ): [IncludedNote[], Note[]] {
     const balance = this.getAssetBalance(assetRequest.asset);
     if (balance < assetRequest.value) {
       throw new Error(
@@ -202,22 +248,20 @@ export class FlaxContext {
       return Number(a.value - b.value);
     });
 
-    const oldAndNewNotePairs: OldAndNewNotePair[] = [];
+    const oldNotes: IncludedNote[] = [];
+    const newNotes: Note[] = [];
     let totalSpend = 0n;
     while (totalSpend < assetRequest.value) {
       const oldNote = sortedNotes.shift()!;
       totalSpend += oldNote.value;
+      oldNotes.push(new IncludedNote(oldNote));
+    }
 
+    if (totalSpend > assetRequest.value) {
       const randNonce = BigInt(
         Math.floor(Math.random() * Number(SNARK_SCALAR_FIELD))
       );
-      let newNoteValue;
-      if (totalSpend > assetRequest.value) {
-        newNoteValue = totalSpend - assetRequest.value;
-      } else {
-        newNoteValue = 0n; // spend whole note
-      }
-
+      const newNoteValue = totalSpend - assetRequest.value;
       const newNote = new Note({
         owner: refundAddr,
         nonce: randNonce,
@@ -225,14 +269,10 @@ export class FlaxContext {
         id: assetRequest.asset.id,
         value: newNoteValue,
       });
-
-      oldAndNewNotePairs.push({
-        oldNote: new IncludedNote(oldNote),
-        newNote,
-      });
+      newNotes.push(newNote);
     }
 
-    return oldAndNewNotePairs;
+    return [oldNotes.reverse(), newNotes];
   }
 
   /**

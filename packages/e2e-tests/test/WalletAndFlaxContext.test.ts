@@ -47,8 +47,8 @@ describe("Wallet", async () => {
 
   async function setup() {
     const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    const flaxSigner = new FlaxSigner(flaxPrivKey);
+    const flaxPrivKey = new PrivKey(sk);
+    const flaxSigner = new Signer(flaxPrivKey);
 
     [deployer, alice, bob] = await ethers.getSigners();
     await deployments.fixture(["PoseidonLibs"]);
@@ -95,13 +95,13 @@ describe("Wallet", async () => {
 
   async function aliceDepositFunds() {
     token.reserveTokens(alice.address, 1000);
-    await token.connect(alice).approve(vault.address, 200);
+    await token.connect(alice).approve(vault.address, 300);
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       await wallet.connect(alice).depositFunds({
         spender: alice.address as string,
         asset: token.address,
-        value: PER_SPEND_AMOUNT,
+        value: BigInt(50 * (i + 1)),
         id: ERC20_ID,
         depositAddr: flaxContext.signer.address.toStruct(),
       });
@@ -126,7 +126,7 @@ describe("Wallet", async () => {
     fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
   });
 
-  it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
+  it("Alice deposits notes with value 50, 100, and 150, spends one and transfers 200 tokens to Bob", async () => {
     const asset: AssetStruct = { address: token.address, id: ERC20_ID };
 
     console.log("Deposit funds and commit note commitments");
@@ -141,7 +141,7 @@ describe("Wallet", async () => {
     console.log("Sync SDK notes manager");
     await flaxContext.notesManager.fetchAndStoreNewNotesFromRefunds();
     const notesForAsset = flaxContext.notesManager.db.getNotesFor(asset);
-    expect(notesForAsset.length).to.equal(2);
+    expect(notesForAsset.length).to.equal(3);
 
     console.log("Sync SDK merkle prover");
     await (
@@ -154,7 +154,7 @@ describe("Wallet", async () => {
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
       asset,
-      value: 50n,
+      value: 200n,
     };
 
     console.log("Encode operation request");

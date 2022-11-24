@@ -5,11 +5,11 @@ import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
 import { Signer } from "../src/sdk/signer";
 import { PrivKey } from "../src/crypto/privkey";
 import {
-  proveJoinSplit,
-  verifyJoinSplitProof,
+  proveJoinsplit,
+  verifyJoinsplitProof,
   MerkleProofInput,
   NoteInput,
-  JoinSplitInputs,
+  JoinsplitInputs,
 } from "../src/proof/joinsplit";
 import { poseidon } from "circomlibjs";
 
@@ -137,7 +137,7 @@ const operationDigest = BigInt(12345);
 const opSig = flaxSigner.sign(operationDigest);
 console.log("opSig: ", opSig);
 
-const joinsplitInputs: JoinSplitInputs = {
+const joinsplitInputs: JoinsplitInputs = {
   vk,
   spendPk,
   operationDigest,
@@ -150,11 +150,11 @@ const joinsplitInputs: JoinSplitInputs = {
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
 };
-console.log("joinSplitInputs: ", joinsplitInputs);
+console.log("joinsplitInputs: ", joinsplitInputs);
 
 (async () => {
-  const proof = await proveJoinSplit(joinsplitInputs);
-  if (!(await verifyJoinSplitProof(proof))) {
+  const proof = await proveJoinsplit(joinsplitInputs);
+  if (!(await verifyJoinsplitProof(proof))) {
     throw new Error("Proof invalid!");
   }
   const json = JSON.stringify(proof);
