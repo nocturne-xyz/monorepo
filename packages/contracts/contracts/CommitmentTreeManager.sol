@@ -2,13 +2,11 @@
 pragma solidity ^0.8.5;
 
 import "./interfaces/ISpend2Verifier.sol";
-import "./interfaces/ISubtreeUpdateVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
 
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
-import {IHasherT3} from "./interfaces/IHasher.sol";
 
 contract CommitmentTreeManager {
     // past roots of the merkle tree
