@@ -147,11 +147,6 @@ contract Wallet is IWallet, BalanceManager {
         return keccak256(payload);
     }
 
-    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof) external override {
-        merkle.applySubtreeUpdate(newRoot, proof);
-        pastRoots[newRoot] = true;
-    }
-
     function _verifyApprovalSig(
         Deposit calldata deposit,
         Signature calldata sig
