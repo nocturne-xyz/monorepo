@@ -15,4 +15,14 @@
 - Add tests for verifier contract
 - Make commitment tree and hash functions generic behind interfaces
 - Add contracts as package in yarn workspace
-- Implement off-chain tree updates
+- Add `SubtreeUpdateVerifier` contract
+- Add `Utils` lib for encoding / hashing details
+- Add `IOffChainMerkleTree` and `MerkleTree` for Offchain ZK updates
+- Split `LeavesInserted` event into `InsertNoteCommitment` and `InsertNote`
+- Remove Poseidon from all contracts
+- Change `CommitmentTreeManager` to use `OffchainMerkleTree` instead of `BatchBinaryMerkle`
+- Add `TestSubtreeUpdateVerifier` to test utils
+- Add `TreeTest` lib to test utils. Containins helpers for computing / maintaining subtree roots
+- Add unit test for `OffchainMerkleTree`
+- Update `DummyWallet` unit test to use `OffchainMerkleTree` instead
+- Add fixture unit test for `SubtreeUpdateVerifier`
