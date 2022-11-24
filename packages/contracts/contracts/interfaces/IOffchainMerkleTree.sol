@@ -4,13 +4,19 @@ import {IWallet} from "./IWallet.sol";
 
 interface IOffchainMerkleTree {
     function root() external view returns (uint256);
+
     function count() external view returns (uint128);
+
     function totalCount() external view returns (uint128);
 
-    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof) external;
+    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof)
+        external;
 
     function insertNotes(IWallet.Note[] memory notes) external;
+
     function insertNote(IWallet.Note memory note) external;
+
     function insertNoteCommitments(uint256[] memory ncs) external;
+
     function insertNoteCommitment(uint256 nc) external;
 }

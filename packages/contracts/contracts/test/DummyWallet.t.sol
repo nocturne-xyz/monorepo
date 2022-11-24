@@ -108,11 +108,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             });
     }
 
-    function dummyProof()
-        internal
-        pure
-        returns (uint256[8] memory _values)
-    {
+    function dummyProof() internal pure returns (uint256[8] memory _values) {
         for (uint256 i = 0; i < 8; i++) {
             _values[i] = uint256(4757829);
         }
@@ -149,26 +145,19 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         for (uint256 i = 0; i < 8; i++) {
             vm.expectEmit(true, true, true, true);
             IWallet.FLAXAddress memory addr = defaultFlaxAddress();
-            emit Refund(
-                addr,
-                i,
-                address(token),
-                ERC20_ID,
-                100,
-                uint128(i)
-            );
+            emit Refund(addr, i, address(token), ERC20_ID, 100, uint128(i));
 
             vm.prank(ALICE);
-            depositFunds(
-                wallet,
-                ALICE,
-                address(token),
-                100,
-                ERC20_ID,
-                addr
-            );
+            depositFunds(wallet, ALICE, address(token), 100, ERC20_ID, addr);
 
-            IWallet.Note memory note = IWallet.Note(addr.h1X, addr.h2X, i, uint256(uint160(address(token))), ERC20_ID, 100);
+            IWallet.Note memory note = IWallet.Note(
+                addr.h1X,
+                addr.h2X,
+                i,
+                uint256(uint160(address(token))),
+                ERC20_ID,
+                100
+            );
             uint256 noteCommitment = treeTest.computeNoteCommitment(note);
 
             batch[i] = noteCommitment;
@@ -181,10 +170,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256[] memory ncs = new uint256[](8);
         merkle.insertNoteCommitments(ncs);
 
-        wallet.applySubtreeUpdate(
-            root,
-            dummyProof()
-        );
+        wallet.applySubtreeUpdate(root, dummyProof());
     }
 
     function testPoseidon() public {

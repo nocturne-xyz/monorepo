@@ -14,7 +14,6 @@ contract CommitmentTreeManager {
     // past roots of the merkle tree
     mapping(uint256 => bool) public pastRoots;
 
-
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
 
@@ -36,15 +35,11 @@ contract CommitmentTreeManager {
         uint128 indexed merkleIndex
     );
 
-    constructor(
-        address _spend2verifier,
-        address _merkle
-    ) {
+    constructor(address _spend2verifier, address _merkle) {
         merkle = IOffchainMerkleTree(_merkle);
         spend2Verifier = ISpend2Verifier(_spend2verifier);
         pastRoots[Utils.EMPTY_TREE_ROOT] = true;
     }
-
 
     // TODO: add default noteCommitment for when there is no output note.
     function _handleSpend(
@@ -93,7 +88,9 @@ contract CommitmentTreeManager {
         );
     }
 
-    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof) external {
+    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof)
+        external
+    {
         merkle.applySubtreeUpdate(newRoot, proof);
         pastRoots[newRoot] = true;
     }
@@ -143,5 +140,4 @@ contract CommitmentTreeManager {
 
         return keccak256(payload);
     }
-
 }
