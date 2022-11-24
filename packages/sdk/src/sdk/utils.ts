@@ -45,6 +45,7 @@ export function bigInt256ToFieldElems(n: bigint): [bigint, bigint] {
   return splitBigint256ToLimbs(n, 253);
 }
 
+// converts a bigint256 into a 32-byte buffer containing it's big-endian repr
 export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
   const res = [...new Uint8Array(bigintToBuf(n, true))];
   while (res.length < numBytes) {
