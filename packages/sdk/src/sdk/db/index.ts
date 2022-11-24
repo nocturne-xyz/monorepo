@@ -4,7 +4,6 @@ import { IncludedNoteStruct } from "../note";
 export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
 export const LEAVES_PREFIX = "LEAVES_";
-export const LEAF_COMMIT_PREFIX = "LEAF_COMMITS_";
 
 export abstract class FlaxDB {
   /**
