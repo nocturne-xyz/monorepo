@@ -93,6 +93,11 @@ contract CommitmentTreeManager {
         );
     }
 
+    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof) external {
+        merkle.applySubtreeUpdate(newRoot, proof);
+        pastRoots[newRoot] = true;
+    }
+
     function _handleRefund(
         IWallet.FLAXAddress memory refundAddr,
         address asset,
