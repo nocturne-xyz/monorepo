@@ -11,6 +11,7 @@
     "build:joinsplit": "./scripts/joinsplit/build_joinsplit.sh",
     "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "build": "tsc --build",
+    "download-big-ptau": "./scripts/download_big_ptau.sh",
     "test:unit": "",
     "lint": ""
   },

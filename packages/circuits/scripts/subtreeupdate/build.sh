@@ -12,7 +12,8 @@ CONTRACTS_DIR="$ROOT_DIR/packages/contracts/contracts"
 if [ -f "$PHASE1_PATH" ]; then
     echo "Found Phase 1 ptau file"
 else
-    echo "No Phase 1 ptau file found. Exiting..."
+    echo "Phase 1 ptau file not found. Please download it by running `yarn download-big-ptau` from the package root"
+    echo "Exiting..."
     exit 1
 fi
 
