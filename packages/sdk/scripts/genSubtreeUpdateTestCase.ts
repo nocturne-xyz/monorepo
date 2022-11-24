@@ -1,5 +1,3 @@
-//@ts-nocheck
-
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -100,16 +98,17 @@ export function getSubtreeUpdateInputs(
   const accumulatorPreimage = noteHashes.reduce((acc, hash) => [...acc, ...hash]);
   const accumulatorHashU256 = hexToBigint(sha256.hex(accumulatorPreimage));
   const [accumulatorHashHi, accumulatorHash] = bigInt256ToFieldElems(accumulatorHashU256);
-  console.log("accumulatorHashU256:", accumulatorHashU256.toString(2));
-  console.log("accumulatorHashHi:", accumulatorHashHi.toString(2));
-  console.log("accumulatorHashLo:", accumulatorHash.toString(2));
 
   // siblings
   const idx = tree.count;
-  tree._insertEmptySubtree();
+  for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
+    tree.insert(0n);
+  }
   const merkleProofToLeaf = tree.getProof(idx);
   const siblings = merkleProofToLeaf.siblings.slice(BinaryPoseidonTree.S).map(arr => arr[0]);
-  tree._insertNonEmptySubtree(leaves);
+  for (let i = 0; i < leaves.length; i++) {
+    tree.update(idx + i, leaves[i]);
+  }
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
