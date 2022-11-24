@@ -7,6 +7,7 @@
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn sdk:gen-test-cases",
     "lint": "yarn turbo run lint",
     "build": "yarn turbo run build",
+    "build-nocache": "yarn turbo run build --force",
     "test": "yarn turbo run test --filter=!@flax/circuits...",
     "test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
     "test:e2e": "yarn turbo run test:e2e --filter=@flax/e2e-tests"
