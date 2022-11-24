@@ -58,6 +58,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         return _count;
     }
 
+    // returns the number of leaves in the tree plus the number of leaves waiting in the queue
     function totalCount() external view override returns (uint128) {
         return
             _count +
