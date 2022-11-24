@@ -1,6 +1,5 @@
-import { Address, AssetRequest, AssetStruct } from "./commonTypes";
+import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
 import {
-  Action,
   ProvenOperation,
   ProvenSpendTx,
   PreProofOperation,
@@ -22,12 +21,6 @@ import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { FlaxDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
-
-export interface OperationRequest {
-  assetRequests: AssetRequest[];
-  refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
-  actions: Action[];
-}
 
 export interface OldAndNewNotePair {
   oldNote: IncludedNote;
