@@ -32,8 +32,8 @@ export function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigin
 }
 
 // given a batch and a tree, generate the input signals for the subtree update circuit
-// leaves the tree in the same state as which it was given.
-export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], tree: BinaryPoseidonTree): SubtreeUpdateInputSignals {
+// if `modifyTree` is `true`, then the batch will also be applying to `tree`.
+export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], tree: BinaryPoseidonTree, modifyTree = false): SubtreeUpdateInputSignals {
 	const ownerH1s: bigint[] = [];
 	const ownerH2s: bigint[] = [];
 	const nonces: bigint[] = [];
@@ -85,11 +85,16 @@ export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], tree: Bin
   }
   const merkleProofToLeaf = tree.getProof(idx);
   const siblings = merkleProofToLeaf.siblings.slice(BinaryPoseidonTree.S).map(arr => arr[0]);
-	
-	// TODO: this is hacky, write this in a more intelligent manner
-  for (let i = 0; i < leaves.length; i++) {
-		tree.pop();
-  }
+
+	if (!modifyTree) {
+		for (let i = 0; i < leaves.length; i++) {
+			tree.pop();
+		}
+	} else {
+		for (let i = 0; i < leaves.length; i++) {
+			tree.update(idx + i, leaves[i]);
+		}
+	}
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
