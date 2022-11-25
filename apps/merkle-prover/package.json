@@ -19,6 +19,10 @@
     "@flax/circuits": "workspace:^",
     "@flax/contracts": "workspace:^",
     "@flax/sdk": "workspace:^",
-    "lmdb": "^2.7.0"
+    "bigint-conversion": "^2.3.0",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "lmdb": "^2.7.0",
+    "rxjs": "^7.5.7"
   }
 }
