@@ -1,9 +1,9 @@
-import { OffchainMerkleTree } from "@flax/contracts";
-import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/OffchainMerkleTree";
+import { Wallet } from "@flax/contracts";
+import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/Wallet";
 import { query } from "../utils";
 import { Note } from "../note";
 
-export async function fetchInsertions(contract: OffchainMerkleTree, from: number, to: number): Promise<(Note | bigint)[]> {
+export async function fetchInsertions(contract: Wallet, from: number, to: number): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
   const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = query(
     contract,

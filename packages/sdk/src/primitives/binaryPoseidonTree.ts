@@ -37,6 +37,11 @@ export class BinaryPoseidonTree {
     this.tree.update(index, leaf);
   }
 
+  pop(): void {
+    this.tree.delete(this.count - 1);
+    this.count -= 1;
+  }
+
   getProof(index: number): MerkleProof {
     return this.tree.createProof(index);
   }
