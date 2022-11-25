@@ -26,6 +26,7 @@ import {
 } from "../components";
 import { Action, AssetRequest, ERC20_ID, OperationRequest } from "@flax/sdk";
 import { SimpleERC20Token__factory } from "@flax/contracts";
+import JSON from "json-bigint";
 
 const Container = styled.div`
   display: flex;
@@ -190,8 +191,11 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const inputs = await getOperationInputs(operationRequest);
-      console.log(inputs);
+      const inputs = JSON.parse(await getOperationInputs(operationRequest));
+      console.log("From snap inputs: ", inputs);
+      // const proof = await new LocalSpend2Prover().proveSpend2(
+      //   inputs.proofInputs
+      // );
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
