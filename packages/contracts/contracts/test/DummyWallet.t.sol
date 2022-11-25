@@ -210,7 +210,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedFunction: encodedFunction
         });
 
-        uint256 root = merkle.root();
+        uint256 root = merkle._root();
         IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
             commitmentTreeRoot: root,
             nullifier: uint256(182),

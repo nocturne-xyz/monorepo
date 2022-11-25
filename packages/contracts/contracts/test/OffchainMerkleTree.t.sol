@@ -84,9 +84,9 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNotes(notes);
         merkle.insertNote(notes[0]);
 
-        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 1);
-        assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](1);
         ncs[0] = 2;
@@ -96,27 +96,27 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitment(ncs[0]);
 
-        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 2);
-        assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
         uint256[] memory zeros = new uint256[](14);
         merkle.insertNoteCommitments(zeros);
 
-        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
 
         // compute new root and call `applySubtreeUpdate`
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 newRoot = path[path.length - 1];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
-        assertEq(uint256(merkle.count()), 16);
+        assertEq(uint256(merkle._count()), 16);
         assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle.root(), newRoot);
+        assertEq(merkle._root(), newRoot);
     }
 
     function testInsertMultiple() public {
@@ -132,9 +132,9 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNotes(notes);
         merkle.insertNotes(notes);
 
-        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 5);
-        assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](11);
         for (uint256 i = 0; i < 11; i++) {
@@ -146,18 +146,18 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
         emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitments(ncs);
 
-        assertEq(uint256(merkle.count()), 0);
+        assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle.root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 newRoot = path[path.length - 1];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
-        assertEq(merkle.count(), 16);
+        assertEq(merkle._count(), 16);
         assertEq(merkle.totalCount(), 16);
-        assertEq(merkle.root(), newRoot);
+        assertEq(merkle._root(), newRoot);
 
         // insert 16 more commitments
     }

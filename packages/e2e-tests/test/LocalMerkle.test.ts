@@ -41,7 +41,7 @@ describe("LocalMerkle", async () => {
   }
 
   async function applySubtreeUpdate() {
-	const root = localMerkle.root();
+	const root = localmerkle._root();
 	await merkle.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
   }
 
