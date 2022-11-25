@@ -40,17 +40,4 @@ contract TestUtilsLib is Test, TestUtils {
         assertEq(7, hi);
         assertEq(n, lo + (hi << 253));
     }
-
-    function testEncodePathAndHash() public {
-        uint256 idx = 12 * Utils.BATCH_SIZE;
-        uint256 accumulatorHash = (1 << 255) - 1;
-        (uint256 hi, ) = Utils.uint256ToFieldElemLimbs(accumulatorHash);
-        assertEq(3, hi);
-
-        uint256 encodedPathAndhash = Utils.encodePathAndHash(uint128(idx), hi);
-        uint256 expected = (3 << (Utils.DEPTH - Utils.BATCH_SUBTREE_DEPTH)) |
-            12;
-
-        assertEq(expected, encodedPathAndhash);
-    }
 }

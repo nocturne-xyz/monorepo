@@ -7,6 +7,7 @@ import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
 
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
+import {TreeUtils} from "./libs/TreeUtils.sol";
 
 contract CommitmentTreeManager {
     // past roots of the merkle tree
@@ -36,7 +37,7 @@ contract CommitmentTreeManager {
     constructor(address _spend2verifier, address _merkle) {
         merkle = IOffchainMerkleTree(_merkle);
         spend2Verifier = ISpend2Verifier(_spend2verifier);
-        pastRoots[Utils.EMPTY_TREE_ROOT] = true;
+        pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
     // TODO: add default noteCommitment for when there is no output note.

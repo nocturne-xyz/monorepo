@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- split `Utils` into `TreeUtils` and `Utils`
 - add `update` method to `BinaryPoseidonTree`
 - use `bigint-conversion` for bigint packing stuff
 - Update merkle prover indexing logic to work with off-chain updates
