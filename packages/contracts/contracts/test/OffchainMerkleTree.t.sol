@@ -38,7 +38,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     }
 
     function testTreeTest() public {
-        // test that hashing empty batch gives EMPTY_SUBTREE_ROOT
+        // test that hashing empty batch gives EMPTY_SUBTREEgetRoot
         uint256[] memory batch = new uint256[](0);
         assertEq(
             treeTest.computeSubtreeRoot(batch),
@@ -81,9 +81,9 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         batch[0] = treeTest.computeNoteCommitment(notes[0]);
 
         merkle.insertNote(notes[0]);
-        assertEq(uint256(merkle._count()), 0);
-        assertEq(uint256(merkle.totalCount()), 1);
-        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 1);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](1);
         ncs[0] = 2;
@@ -91,27 +91,27 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
 
         merkle.insertNoteCommitment(ncs[0]);
 
-        assertEq(uint256(merkle._count()), 0);
-        assertEq(uint256(merkle.totalCount()), 2);
-        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 2);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
         uint256[] memory zeros = new uint256[](14);
         merkle.insertNoteCommitments(zeros);
 
-        assertEq(uint256(merkle._count()), 0);
-        assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         // compute new root and call `applySubtreeUpdate`
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 newRoot = path[path.length - 1];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
-        assertEq(uint256(merkle._count()), 16);
-        assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle._root(), newRoot);
+        assertEq(uint256(merkle.getCount()), 16);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(merkle.getRoot(), newRoot);
     }
 
     function testInsertMultiple() public {
@@ -125,9 +125,9 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
 
         merkle.insertNotes(notes);
 
-        assertEq(uint256(merkle._count()), 0);
-        assertEq(uint256(merkle.totalCount()), 5);
-        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 5);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](11);
         for (uint256 i = 0; i < 11; i++) {
@@ -137,18 +137,18 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
 
         merkle.insertNoteCommitments(ncs);
 
-        assertEq(uint256(merkle._count()), 0);
-        assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 newRoot = path[path.length - 1];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
-        assertEq(merkle._count(), 16);
-        assertEq(merkle.totalCount(), 16);
-        assertEq(merkle._root(), newRoot);
+        assertEq(merkle.getCount(), 16);
+        assertEq(merkle.getTotalCount(), 16);
+        assertEq(merkle.getRoot(), newRoot);
     }
 
     function dummyProof() internal returns (uint256[8] memory) {

@@ -89,20 +89,20 @@ contract CommitmentTreeManager {
         emit Spend(
             spendTx.nullifier,
             spendTx.valueToSpend,
-            merkle.totalCount() - 1
+            merkle.getTotalCount() - 1
         );
     }
 
     function root() public view returns (uint256) {
-        return merkle._root();
+        return merkle.getRoot();
     }
 
     function count() public view returns (uint256) {
-        return merkle._count();
+        return merkle.getCount();
     }
 
     function totalCount() public view returns (uint256) {
-        return merkle.totalCount();
+        return merkle.getTotalCount();
     }
 
     function insertNoteCommitment(uint256 nc) internal {
@@ -165,7 +165,7 @@ contract CommitmentTreeManager {
             asset,
             id,
             value,
-            merkle.totalCount() - 1
+            merkle.getTotalCount() - 1
         );
     }
 
