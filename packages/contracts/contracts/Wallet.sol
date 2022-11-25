@@ -20,8 +20,8 @@ contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
         address _spend2Verifier,
-        address _merkle
-    ) BalanceManager(_vault, _spend2Verifier, _merkle) {} // solhint-disable-line no-empty-blocks
+        address _subtreeUpdateVerifier 
+    ) BalanceManager(_vault, _spend2Verifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");

@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
-import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
@@ -27,6 +26,7 @@ import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
+    using OffchainMerkleTree for OffchainMerkleTreeData;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -42,7 +42,6 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     Wallet wallet;
     Vault vault;
     TreeTest treeTest;
-    IOffchainMerkleTree merkle;
     ISpend2Verifier spend2Verifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
@@ -74,12 +73,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         spend2Verifier = new TestSpend2Verifier();
 
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-        merkle = new OffchainMerkleTree(address(subtreeUpdateVerifier));
 
         wallet = new Wallet(
             address(vault),
             address(spend2Verifier),
-            address(merkle)
+            address(subtreeUpdateVerifier)
         );
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
@@ -168,9 +166,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 root = path[path.length - 1];
 
-        // insert 8 empty leaves into tree
-        uint256[] memory ncs = new uint256[](8);
-        merkle.insertNoteCommitments(ncs);
+        // fill the tree batch
+        wallet.fillBatchWithZeros();
 
         wallet.applySubtreeUpdate(root, dummyProof());
     }
@@ -212,7 +209,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedFunction: encodedFunction
         });
 
-        uint256 root = merkle._root();
+        uint256 root = wallet.root();
         IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
             commitmentTreeRoot: root,
             nullifier: uint256(182),
