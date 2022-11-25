@@ -9,7 +9,6 @@
     "circuits-build": "./scripts/build_all.sh",
     "build:spend2": "./scripts/spend2/build_spend2.sh",
     "build:joinsplit": "./scripts/joinsplit/build_joinsplit.sh",
-    "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "build": "tsc --build",
     "test:unit": "",
     "lint": ""

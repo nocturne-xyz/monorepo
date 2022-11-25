@@ -227,8 +227,6 @@ export async function proveJoinSplit(
     newNoteBValue: newNoteB.value,
   };
 
-  console.log(signals);
-
   const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
   proof.publicSignals = normalizePublicSignals(proof.publicSignals);
   return proof;
