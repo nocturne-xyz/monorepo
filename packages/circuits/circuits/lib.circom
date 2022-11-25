@@ -25,6 +25,18 @@ template NoteCommit() {
     out <== noteHash.out;
 }
 
+template DeriveNullifier() {
+    signal input vk;
+    signal input noteCommitment;
+
+    signal output nullifier;
+
+    component hash = Poseidon(2);
+    hash.inputs[0] <== vk;
+    hash.inputs[1] <== noteCommitment;
+    nullifier <== hash.out;
+}
+
 template vkIntegrity() {
     signal input H1X;
     signal input H1Y;
