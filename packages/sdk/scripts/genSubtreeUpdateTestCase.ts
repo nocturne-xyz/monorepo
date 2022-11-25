@@ -36,7 +36,7 @@ function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
 }
 
 export function getSubtreeUpdateInputs(
-  spendIndices: number[],
+  noteCommitmentIndices: number[],
   spendNoteCommitments: bigint[],
   notes: Note[],
   tree: BinaryPoseidonTree,
@@ -53,8 +53,8 @@ export function getSubtreeUpdateInputs(
   const leaves: bigint[] = [];
 
 
-  if (spendIndices.length !== spendNoteCommitments.length) {
-    throw new Error("spendIndices.length !== spendNoteCommitments.length");
+  if (noteCommitmentIndices.length !== spendNoteCommitments.length) {
+    throw new Error("noteCommitmentIndices.length !== spendNoteCommitments.length");
   }
 
   if (spendNoteCommitments.length + notes.length !== BinaryPoseidonTree.BATCH_SIZE) {
@@ -62,11 +62,10 @@ export function getSubtreeUpdateInputs(
   }
 
   // note fields
-  let spendIdxIdx = 0;
+  let noteCommitmentIdx = 0;
   let noteIdx = 0;
   for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-
-    if (spendIdxIdx < spendIndices.length && spendIndices[spendIdxIdx] === i) {
+    if (noteCommitmentIdx < noteCommitmentIndices.length && noteCommitmentIndices[noteCommitmentIdx] === i) {
       ownerH1s.push(0n);
       ownerH2s.push(0n);
       nonces.push(0n);
@@ -74,10 +73,10 @@ export function getSubtreeUpdateInputs(
       ids.push(0n);
       values.push(0n);
       bitmap.push(0n);
-      noteHashes.push([...new Uint8Array(bigintToBuf(spendNoteCommitments[spendIdxIdx], true))]);
-      leaves.push(spendNoteCommitments[spendIdxIdx]);
+      noteHashes.push([...new Uint8Array(bigintToBuf(spendNoteCommitments[noteCommitmentIdx], true))]);
+      leaves.push(spendNoteCommitments[noteCommitmentIdx]);
 
-      spendIdxIdx++;
+      noteCommitmentIdx++;
     } else {
       const note = notes[noteIdx];
       ownerH1s.push(note.owner.h1X);
@@ -155,11 +154,11 @@ const notes = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(_ => new Note
   value: 100n,
 }));
 
-const spendIndices = [1, 7, 9];
-const spendNoteCommitments = spendIndices.map(i => notes[i].toCommitment());
-const nonSpendNotes = notes.filter((_, i) => !spendIndices.includes(i));
+const noteCommitmentIndices = [1, 7, 9];
+const spendNoteCommitments = noteCommitmentIndices.map(i => notes[i].toCommitment());
+const fullyRevealedNotes = notes.filter((_, i) => !noteCommitmentIndices.includes(i));
 
-const inputs = getSubtreeUpdateInputs(spendIndices, spendNoteCommitments, nonSpendNotes, tree);
+const inputs = getSubtreeUpdateInputs(noteCommitmentIndices, spendNoteCommitments, fullyRevealedNotes, tree);
 console.log("inputs: ", inputs);
 
 fs.writeFileSync(OUT_PATH, JSON.stringify(inputs));
