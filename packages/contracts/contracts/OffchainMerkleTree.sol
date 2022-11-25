@@ -12,13 +12,13 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
 
     // number of non-zero leaves in the tree
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
-    uint128 public _count;
+    uint128 public count;
     // number of leaves in the batch
     // when this gets to Utils.BATCH_SIZE, we compute accumulatorHash and push te the accumulatorQueue
     uint128 public batchLen;
 
     // root of the merkle tree
-    uint256 public _root;
+    uint256 public root;
 
     // buffer containing uncommitted update hashes
     // each hash can either be the sha256 hash of a publically revealed note (e.g. in thecase of a deposit)
@@ -40,8 +40,8 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
 
     constructor(address _subtreeUpdateVerifier) {
         // root starts as the root of the empty depth-32 tree.
-        _root = Utils.EMPTY_TREE_ROOT;
-        _count = 0;
+        root = Utils.EMPTY_TREE_ROOT;
+        count = 0;
         batchLen = 0;
         subtreeUpdateVerifier = ISubtreeUpdateVerifier(_subtreeUpdateVerifier);
 
@@ -49,19 +49,19 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     }
 
     // returns the current root of the tree
-    function root() external view override returns (uint256) {
-        return _root;
+    function _root() external view override returns (uint256) {
+        return root;
     }
 
     // returns the current number of leaves in the tree
-    function count() external view override returns (uint128) {
-        return _count;
+    function _count() external view override returns (uint128) {
+        return count;
     }
 
     // returns the number of leaves in the tree plus the number of leaves waiting in the queue
     function totalCount() external view override returns (uint128) {
         return
-            _count +
+            count +
             batchLen +
             uint128(Utils.BATCH_SIZE) *
             uint128(accumulatorQueue.length());
@@ -96,21 +96,21 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(
             accumulatorHash
         );
-        uint256 encodedPathAndHash = Utils.encodePathAndHash(_count, hi);
+        uint256 encodedPathAndHash = Utils.encodePathAndHash(count, hi);
 
         require(
             subtreeUpdateVerifier.verifyProof(
                 [proof[0], proof[1]],
                 [[proof[2], proof[3]], [proof[4], proof[5]]],
                 [proof[6], proof[7]],
-                [_root, newRoot, encodedPathAndHash, lo]
+                [root, newRoot, encodedPathAndHash, lo]
             ),
             "subtree update proof invalid"
         );
 
         accumulatorQueue.dequeue();
-        _root = newRoot;
-        _count += uint128(Utils.BATCH_SIZE);
+        root = newRoot;
+        count += uint128(Utils.BATCH_SIZE);
     }
 
     function _insertUpdates(uint256[] memory updates) internal {

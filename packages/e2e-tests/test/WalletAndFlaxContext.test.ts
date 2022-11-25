@@ -155,7 +155,7 @@ describe("Wallet", async () => {
       flaxContext.merkleProver as LocalMerkleProver
     ).fetchLeavesAndUpdate();
     expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
-      (await merkle.root()).toBigInt()
+      (await merkle._root()).toBigInt()
     );
     
     console.log("Create asset request to spend 50 units of token");

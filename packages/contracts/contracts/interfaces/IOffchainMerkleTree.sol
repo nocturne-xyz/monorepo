@@ -3,9 +3,9 @@ pragma solidity ^0.8.5;
 import {IWallet} from "./IWallet.sol";
 
 interface IOffchainMerkleTree {
-    function root() external view returns (uint256);
+    function _root() external view returns (uint256);
 
-    function count() external view returns (uint128);
+    function _count() external view returns (uint128);
 
     function totalCount() external view returns (uint128);
 
