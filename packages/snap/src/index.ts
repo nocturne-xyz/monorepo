@@ -8,10 +8,10 @@ import {
   MockSpend2Prover,
   operationRequestFromJSON,
   toJSON,
-} from "@flax/sdk";
-import { ethers } from "ethers";
-import { OnRpcRequestHandler } from "@metamask/snap-types";
-import { SnapDB } from "./snapdb";
+} from '@flax/sdk';
+import { ethers } from 'ethers';
+import { OnRpcRequestHandler } from '@metamask/snap-types';
+import { SnapDB } from './snapdb';
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -45,7 +45,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const oldNote: IncludedNoteStruct = {
     owner: flaxAddr.toStruct(),
     nonce: 1n,
-    asset: "0aaaa",
+    asset: '0aaaa',
     value: 100n,
     id: 5n,
     merkleIndex: 0,
@@ -54,40 +54,40 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const notesManager = new LocalNotesManager(
     db,
     signer,
-    "0x443a4cf67da85a50f50c442Ed81ab79700C81A78",
-    new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/")
+    '0x443a4cf67da85a50f50c442Ed81ab79700C81A78',
+    new ethers.providers.JsonRpcProvider('http://127.0.0.1:8545/'),
   );
   const context = new FlaxContext(
     signer,
     new MockSpend2Prover(),
     await LocalMerkleProver.fromDb(
-      "0x9E40Fa7544998DaA305e7B6043a6f485c2B38Cdf",
-      new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/"),
-      db
+      '0x9E40Fa7544998DaA305e7B6043a6f485c2B38Cdf',
+      new ethers.providers.JsonRpcProvider('http://127.0.0.1:8545/'),
+      db,
     ),
     notesManager,
-    db
+    db,
   );
 
-  console.log("Switching on method: ", request.method);
+  console.log('Switching on method: ', request.method);
   switch (request.method) {
-    case "hello":
+    case 'hello':
       return wallet.request({
-        method: "snap_confirm",
+        method: 'snap_confirm',
         params: [
           {
             prompt: getMessage(origin),
             description:
-              "This custom confirmation is just for display purposes.",
+              'This custom confirmation is just for display purposes.',
             textAreaContent:
-              "But you can edit the snap source code to make it do something, if you want to!",
+              'But you can edit the snap source code to make it do something, if you want to!',
           },
         ],
       });
-    case "setAndShowKv":
+    case 'setAndShowKv':
       await context.db.storeNote(oldNote);
       return wallet.request({
-        method: "snap_confirm",
+        method: 'snap_confirm',
         params: [
           {
             prompt: getMessage(origin),
@@ -104,42 +104,42 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           },
         ],
       });
-    case "flax_syncNotes":
+    case 'flax_syncNotes':
       await context.syncNotes();
       console.log(
-        "Synced notes, state: ",
-        JSON.stringify(await db.getSerializableState())
+        'Synced notes, state: ',
+        JSON.stringify(await db.getSerializableState()),
       );
       return;
-    case "flax_syncLeaves":
+    case 'flax_syncLeaves':
       await context.syncLeaves();
       console.log(
-        "Synced leaves, state: ",
-        JSON.stringify(await db.getSerializableState())
+        'Synced leaves, state: ',
+        JSON.stringify(await db.getSerializableState()),
       );
       return;
-    case "flax_getOperationInputs":
-      console.log("Request params: ", request.params);
+    case 'flax_getOperationInputs':
+      console.log('Request params: ', request.params);
       const operationRequest = operationRequestFromJSON(
-        request.params.operationRequest
+        request.params.operationRequest,
       );
       const preProofOperationInputs =
         await context.tryGetPreProofSpendTxInputsAndProofInputs(
-          operationRequest
+          operationRequest,
         );
       console.log(
-        "PreProofOperationInputsAndProofInputs: ",
-        toJSON(preProofOperationInputs)
+        'PreProofOperationInputsAndProofInputs: ',
+        toJSON(preProofOperationInputs),
       );
       return toJSON(preProofOperationInputs);
-    case "flax_clearDb":
+    case 'flax_clearDb':
       await context.db.clear();
       console.log(
-        "Cleared DB, state: ",
-        JSON.stringify(await db.getSerializableState())
+        'Cleared DB, state: ',
+        JSON.stringify(await db.getSerializableState()),
       );
       return;
     default:
-      throw new Error("Method not found.");
+      throw new Error('Method not found.');
   }
 };
