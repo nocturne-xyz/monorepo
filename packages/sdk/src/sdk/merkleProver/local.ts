@@ -1,5 +1,5 @@
 import { Wallet, Wallet__factory} from "@flax/contracts";
-import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/OffchainMerkleTree";
+import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/Wallet";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
