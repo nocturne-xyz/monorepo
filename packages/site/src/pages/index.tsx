@@ -27,6 +27,8 @@ import {
 import { Action, AssetRequest, ERC20_ID, OperationRequest } from "@flax/sdk";
 import { SimpleERC20Token__factory } from "@flax/contracts";
 import JSON from "json-bigint";
+import { LocalSpend2Prover } from "@flax/local-prover";
+const snarkjs = require("snarkjs");
 
 const Container = styled.div`
   display: flex;
@@ -115,6 +117,18 @@ const ErrorMessage = styled.div`
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
+  let spend2Wasm: any;
+  let spend2Zkey: any;
+
+  const instantiateCircuitData = async () => {
+    if (!spend2Wasm) {
+      spend2Wasm = await fetch("./public/spend2.wasm");
+    }
+    if (!spend2Zkey) {
+      spend2Zkey = await fetch("./public/spend2.zkey");
+    }
+  };
+
   const handleConnectClick = async () => {
     try {
       await connectSnap();
@@ -167,6 +181,8 @@ const Index = () => {
   };
 
   const handleGetOperationInputs = async () => {
+    await instantiateCircuitData();
+
     const tokenAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
     const assetRequest: AssetRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
@@ -193,9 +209,13 @@ const Index = () => {
     try {
       const inputs = JSON.parse(await getOperationInputs(operationRequest));
       console.log("From snap inputs: ", inputs);
-      // const proof = await new LocalSpend2Prover().proveSpend2(
-      //   inputs.proofInputs
-      // );
+      const prover = new LocalSpend2Prover();
+      const proof = await prover.proveSpend2(
+        inputs[0].proofInputs,
+        "./spend2.wasm",
+        "./spend2.zkey"
+      );
+      console.log(proof);
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });

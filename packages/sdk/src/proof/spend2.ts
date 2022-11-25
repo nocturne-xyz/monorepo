@@ -4,13 +4,13 @@ import { BaseProof } from "./types";
 export interface Spend2Prover {
   proveSpend2(
     inputs: Spend2Inputs,
-    wasmPath?: string,
-    zkeyPath?: string
+    wasmPath: string,
+    zkeyPath: string
   ): Promise<Spend2ProofWithPublicSignals>;
 
   verifySpend2Proof(
     { proof, publicSignals }: Spend2ProofWithPublicSignals,
-    vkeyPath?: string
+    vkey: any
   ): Promise<boolean>;
 }
 

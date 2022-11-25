@@ -86,6 +86,8 @@ export class FlaxContext {
    */
   async tryCreateProvenOperation(
     operationRequest: OperationRequest,
+    spend2WasmPath: string,
+    spend2ZkeyPath: string,
     refundAddr?: FlaxAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
@@ -114,7 +116,9 @@ export class FlaxContext {
     // ProvenSpendTxs
     const allProvenSpendTxPromises: Promise<ProvenSpendTx>[] = [];
     for (const inputs of preProofSpendTxInputs) {
-      allProvenSpendTxPromises.push(this.generateProvenSpendTxFor(inputs));
+      allProvenSpendTxPromises.push(
+        this.generateProvenSpendTxFor(inputs, spend2WasmPath, spend2ZkeyPath)
+      );
     }
 
     const allSpendTxs = await Promise.all(allProvenSpendTxPromises);
@@ -257,10 +261,11 @@ export class FlaxContext {
    * post-spend
    * @param preProofOperation Operation included when generating a proof
    */
-  protected async generateProvenSpendTxFor({
-    oldNewNotePair,
-    preProofOperation,
-  }: PreProofSpendTxInputs): Promise<ProvenSpendTx> {
+  protected async generateProvenSpendTxFor(
+    { oldNewNotePair, preProofOperation }: PreProofSpendTxInputs,
+    spend2WasmPath: string,
+    spend2ZkeyPath: string
+  ): Promise<ProvenSpendTx> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
     const newNoteCommitment = newNote.toCommitment();
@@ -270,10 +275,11 @@ export class FlaxContext {
       preProofOperation,
     });
 
-    const proof = await this.prover.proveSpend2(inputs);
-    if (!(await this.prover.verifySpend2Proof(proof))) {
-      throw new Error("Proof invalid!");
-    }
+    const proof = await this.prover.proveSpend2(
+      inputs,
+      spend2WasmPath,
+      spend2ZkeyPath
+    );
 
     const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);

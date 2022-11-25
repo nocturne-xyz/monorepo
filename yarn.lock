@@ -2278,6 +2278,7 @@ __metadata:
     react-dom: ^18.2.0
     react-is: ^18.2.0
     rimraf: ^3.0.2
+    snarkjs: ^0.5.0
     styled-components: 5.3.3
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -12121,12 +12122,12 @@ __metadata:
 
 ffjavascript@FLAXPrivacy/ffjavascript:
   version: 0.2.57
-  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=06ab801b1a0e3e01f9ce91cca68189453b28ec2d"
+  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=43a3bb69f062582ab1a26de26b419ad53d05cf9a"
   dependencies:
     wasmbuilder: 0.0.16
     wasmcurves: 0.2.0
-    web-worker: "FLAXPrivacy/web-worker#master"
-  checksum: 45bd8faeb3e0c947066046593309e19a8ceb0f89064f54e5e323103462d34884a9aaf73dd68761da5379b1f192568cf1cec63ffb43271577b590944b53dbdb90
+    web-worker: ^1.2.0
+  checksum: ca9e1ec78cd31b35594ff7f6874fcac748355526c213c6545975be972b665881d5fd4e66a947d0aaccb3c3cbf49f5f3b37bf319f5906a8d54c04a1b8f8c48737
   languageName: node
   linkType: hard
 
@@ -23857,10 +23858,10 @@ ffjavascript@FLAXPrivacy/ffjavascript:
   languageName: node
   linkType: hard
 
-"web-worker@FLAXPrivacy/web-worker#master":
+"web-worker@npm:^1.2.0":
   version: 1.2.0
-  resolution: "web-worker@https://github.com/FLAXPrivacy/web-worker.git#commit=c67675ae44919c84337ad9c7394534dd8476df75"
-  checksum: 6ce284fdb3872cdef7d90ad7dfef184022eb17efa6c4540d079cd20d1a7ef6eeb784596371e7eae9ea80182daae19e99e0a762cc426aa184324489a4ef106f42
+  resolution: "web-worker@npm:1.2.0"
+  checksum: 1bb28348ddcf9b2e7c62c5fd02e49a84098795856cd905456de957271bba288e9618941cf69d8960f0a7ae81f5dfb74b427c0634be47ec69e3e955c4ec5213be
   languageName: node
   linkType: hard
 
