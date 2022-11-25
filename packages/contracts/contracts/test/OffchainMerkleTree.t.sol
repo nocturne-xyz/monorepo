@@ -5,8 +5,7 @@ import "forge-std/Test.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {TreeUtils} from "../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
-import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
-import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
@@ -16,8 +15,9 @@ import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 
 contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
+    using OffchainMerkleTree for OffchainMerkleTreeData;
 
-    IOffchainMerkleTree merkle;
+    OffchainMerkleTreeData merkle;
     ISubtreeUpdateVerifier verifier;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
@@ -31,10 +31,10 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
         verifier = ISubtreeUpdateVerifier(new TestSubtreeUpdateVerifier());
-        merkle = IOffchainMerkleTree(new OffchainMerkleTree(address(verifier)));
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
         treeTest.initialize(hasherT3, hasherT6);
+        merkle.initialize(address(verifier));
     }
 
     function testTreeTest() public {
@@ -80,10 +80,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         notes[0] = dummyNote(1);
         batch[0] = treeTest.computeNoteCommitment(notes[0]);
 
-        vm.expectEmit(true, true, true, true);
-        emit InsertNotes(notes);
         merkle.insertNote(notes[0]);
-
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 1);
         assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
@@ -92,8 +89,6 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         ncs[0] = 2;
         batch[1] = ncs[0];
 
-        vm.expectEmit(true, true, true, true);
-        emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitment(ncs[0]);
 
         assertEq(uint256(merkle._count()), 0);
@@ -128,8 +123,6 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
             batch[i] = treeTest.computeNoteCommitment(notes[i]);
         }
 
-        vm.expectEmit(true, true, true, true);
-        emit InsertNotes(notes);
         merkle.insertNotes(notes);
 
         assertEq(uint256(merkle._count()), 0);
@@ -142,8 +135,6 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
             batch[i + 5] = ncs[i];
         }
 
-        vm.expectEmit(true, true, true, true);
-        emit InsertNoteCommitments(ncs);
         merkle.insertNoteCommitments(ncs);
 
         assertEq(uint256(merkle._count()), 0);
@@ -158,8 +149,6 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         assertEq(merkle._count(), 16);
         assertEq(merkle.totalCount(), 16);
         assertEq(merkle._root(), newRoot);
-
-        // insert 16 more commitments
     }
 
     function dummyProof() internal returns (uint256[8] memory) {

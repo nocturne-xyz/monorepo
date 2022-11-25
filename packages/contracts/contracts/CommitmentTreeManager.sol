@@ -3,21 +3,22 @@ pragma solidity ^0.8.5;
 
 import "./interfaces/ISpend2Verifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
-import {IOffchainMerkleTree} from "./interfaces/IOffchainMerkleTree.sol";
-
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 
 contract CommitmentTreeManager {
+    using OffchainMerkleTree for OffchainMerkleTreeData;
+
     // past roots of the merkle tree
     mapping(uint256 => bool) public pastRoots;
 
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
 
+    OffchainMerkleTreeData internal merkle;
     ISpend2Verifier public spend2Verifier;
-    IOffchainMerkleTree public merkle;
 
     event Refund(
         IWallet.FLAXAddress refundAddr,
@@ -34,8 +35,12 @@ contract CommitmentTreeManager {
         uint128 indexed merkleIndex
     );
 
-    constructor(address _spend2verifier, address _merkle) {
-        merkle = IOffchainMerkleTree(_merkle);
+    event InsertNoteCommitments(uint256[] commitments);
+
+    event InsertNotes(IWallet.Note[] notes);
+
+    constructor(address _spend2verifier, address _subtreeUpdateVerifier) {
+        merkle.initialize(_subtreeUpdateVerifier);
         spend2Verifier = ISpend2Verifier(_spend2verifier);
         pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
@@ -77,7 +82,8 @@ contract CommitmentTreeManager {
             "Spend proof invalid"
         );
 
-        merkle.insertNoteCommitment(spendTx.newNoteCommitment);
+        insertNoteCommitment(spendTx.newNoteCommitment);
+
         nullifierSet[spendTx.nullifier] = true;
 
         emit Spend(
@@ -85,6 +91,46 @@ contract CommitmentTreeManager {
             spendTx.valueToSpend,
             merkle.totalCount() - 1
         );
+    }
+
+    function root() public view returns (uint256) {
+        return merkle._root();
+    }
+
+    function count() public view returns (uint256) {
+        return merkle._count();
+    }
+
+    function totalCount() public view returns (uint256) {
+        return merkle.totalCount();
+    }
+
+    function insertNoteCommitment(uint256 nc) internal {
+        uint256[] memory ncs = new uint256[](1);
+        ncs[0] = nc;
+        insertNoteCommitments(ncs);
+    }
+
+    function insertNoteCommitments(uint256[] memory ncs) internal {
+        merkle.insertNoteCommitments(ncs);
+        emit InsertNoteCommitments(ncs);
+    }
+
+    function insertNote(IWallet.Note memory note) internal {
+        IWallet.Note[] memory notes = new IWallet.Note[](1);
+        notes[0] = note;
+        insertNotes(notes);
+    }
+
+    function insertNotes(IWallet.Note[] memory notes) internal {
+        merkle.insertNotes(notes);
+        emit InsertNotes(notes);
+    }
+
+    function fillBatchWithZeros() external {
+		uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+		uint256[] memory zeros = new uint256[](numToInsert);
+        insertNoteCommitments(zeros);
     }
 
     function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof)
@@ -108,7 +154,7 @@ contract CommitmentTreeManager {
         note.id = id;
         note.value = value;
 
-        merkle.insertNote(note);
+        insertNote(note);
 
         uint256 _nonce = nonce;
         nonce++;

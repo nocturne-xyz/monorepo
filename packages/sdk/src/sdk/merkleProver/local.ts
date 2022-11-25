@@ -1,4 +1,4 @@
-import { OffchainMerkleTree, OffchainMerkleTree__factory } from "@flax/contracts";
+import { Wallet, Wallet__factory} from "@flax/contracts";
 import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/OffchainMerkleTree";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
@@ -15,20 +15,20 @@ export class LocalMerkleProver
   extends BinaryPoseidonTree
   implements MerkleProver
 {
-  contract: OffchainMerkleTree;
+  contract: Wallet;
   provider: ethers.providers.Provider;
   db: FlaxLMDB;
 
   constructor(
-    merkleAddress: Address,
+    walletContractAddress: Address,
     provider: ethers.providers.Provider,
     db: FlaxLMDB
   ) {
     super();
 
     this.provider = provider;
-    this.contract = OffchainMerkleTree__factory.connect(
-      merkleAddress,
+    this.contract = Wallet__factory.connect(
+      walletContractAddress,
       this.provider
     );
     this.db = db;

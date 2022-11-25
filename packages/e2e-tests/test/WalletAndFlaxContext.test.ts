@@ -5,8 +5,6 @@ import {
   Vault__factory,
   Spend2Verifier__factory,
   TestSubtreeUpdateVerifier__factory,
-  OffchainMerkleTree__factory,
-  OffchainMerkleTree,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
@@ -29,7 +27,7 @@ import {
   LocalNotesManager,
 } from "@flax/sdk";
 import * as fs from "fs";
-import { fillBatch } from "./utils";
+import { depositFunds } from "./utils";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -40,7 +38,6 @@ describe("Wallet", async () => {
   let bob: ethers.Signer;
   let vault: Vault;
   let wallet: Wallet;
-  let merkle: OffchainMerkleTree;
   let token: SimpleERC20Token;
   let flaxContext: FlaxContext;
   let db = new FlaxLMDB({ localMerkle: true });
@@ -64,20 +61,18 @@ describe("Wallet", async () => {
     const subtreeUpdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
     const subtreeUpdateVerifier = await subtreeUpdateVerifierFactory.deploy();
 
-    const merkleFactory = new OffchainMerkleTree__factory(deployer);
-    merkle = await merkleFactory.deploy(subtreeUpdateVerifier.address);
 
     const walletFactory = new Wallet__factory(deployer);
     wallet = await walletFactory.deploy(
       vault.address,
       spend2Verifier.address,
-      merkle.address
+      subtreeUpdateVerifier.address
     );
 
     await vault.initialize(wallet.address);
 
     console.log("Create FlaxContext");
-    const prover = new LocalMerkleProver(merkle.address, ethers.provider, db);
+    const prover = new LocalMerkleProver(wallet.address, ethers.provider, db);
     const notesManager = new LocalNotesManager(
       db,
       flaxSigner,
@@ -85,21 +80,6 @@ describe("Wallet", async () => {
       ethers.provider
     );
     flaxContext = new FlaxContext(flaxSigner, prover, notesManager, db);
-  }
-
-  async function aliceDepositFunds() {
-    token.reserveTokens(alice.address, 1000);
-    await token.connect(alice).approve(vault.address, 200);
-
-    for (let i = 0; i < 2; i++) {
-      await wallet.connect(alice).depositFunds({
-        spender: alice.address as string,
-        asset: token.address,
-        value: PER_SPEND_AMOUNT,
-        id: ERC20_ID,
-        depositAddr: flaxContext.signer.address.toStruct(),
-      });
-    }
   }
 
   async function applySubtreeUpdate() {
@@ -124,10 +104,17 @@ describe("Wallet", async () => {
     const asset: AssetStruct = { address: token.address, id: ERC20_ID };
 
     console.log("Deposit funds and commit note commitments");
-    await aliceDepositFunds();
+    await depositFunds(
+      wallet,
+      vault,
+      token,
+      alice,
+      flaxContext.signer.address,
+      [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT],
+    );
 
     console.log("fill the subtree with zeros")
-    await fillBatch(merkle);
+    await wallet.fillBatchWithZeros();
 
     console.log("apply subtree update")
     await (
@@ -145,7 +132,7 @@ describe("Wallet", async () => {
       flaxContext.merkleProver as LocalMerkleProver
     ).fetchLeavesAndUpdate();
     expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
-      (await merkle._root()).toBigInt()
+      (await wallet.root()).toBigInt()
     );
     
     console.log("Create asset request to spend 50 units of token");
