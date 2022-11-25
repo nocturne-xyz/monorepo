@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Make Pairing library from circom reusable for different circuits
 - Fix events to have fields > 32 bytes be not `indexed`
 - Add `Spend` event and emit on `handleSpend`
 - Rename spend transaction `value` to `valueToSpend`

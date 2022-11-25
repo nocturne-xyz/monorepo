@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add scripts to generate test cases for joinsplit circuit
 - Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `FlaxContext`
 - Add `FlaxLMDB` as local SDK `FlaxDB`
 - Add `LocalNotesManager` as local SDK `NotesManager`
