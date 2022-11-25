@@ -5,8 +5,7 @@ include "include/poseidon.circom";
 include "include/escalarmulany.circom";
 
 include "tree.circom";
-include "note2.circom";
-include "sig.circom";
+include "lib.circom";
 
 template Spend(levels) {
     // viewing / nullifier key
@@ -68,8 +67,8 @@ template Spend(levels) {
     component oldNoteCommit = NoteCommit();
     oldNoteCommit.ownerHash <== oldNoteOwnerHash.out;
     oldNoteCommit.nonce <== oldNoteNonce;
-    oldNoteCommit.asset <== oldNoteAsset;
-    oldNoteCommit.id <== oldNoteId;
+    oldNoteCommit.encodedAsset <== oldNoteAsset;
+    oldNoteCommit.encodedId <== oldNoteId;
     oldNoteCommit.value <== oldNoteValue;
     oldNoteCommitment <== oldNoteCommit.out;
 
@@ -90,9 +89,9 @@ template Spend(levels) {
     nullifier <== deriveNullifier.nullifier;
 
     // Asset, id, value, nonce
-    asset <== oldNoteAsset; 
+    asset <== oldNoteAsset;
     oldNoteAsset === newNoteAsset;
-    id <== oldNoteId; 
+    id <== oldNoteId;
     oldNoteId === newNoteId;
     valueToSpend <== oldNoteValue - newNoteValue;
 
@@ -116,7 +115,7 @@ template Spend(levels) {
     vkHasher.out === vk;
 
     // AuthSig validity
-    component sigVerify = Verify();
+    component sigVerify = SigVerify();
     sigVerify.pkx <== spendPkX;
     sigVerify.pky <== spendPkY;
     sigVerify.m <== operationDigest;
@@ -135,8 +134,8 @@ template Spend(levels) {
     component newNoteCommit = NoteCommit();
     newNoteCommit.ownerHash <== newNoteOwnerHash.out;
     newNoteCommit.nonce <== newNoteNonce;
-    newNoteCommit.asset <== newNoteAsset;
-    newNoteCommit.id <== newNoteId;
+    newNoteCommit.encodedAsset <== newNoteAsset;
+    newNoteCommit.encodedId <== newNoteId;
     newNoteCommit.value <== newNoteValue;
     newNoteCommitment <== newNoteCommit.out;
 }

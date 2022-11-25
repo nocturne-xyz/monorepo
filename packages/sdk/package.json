@@ -10,7 +10,9 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "gen-test-cases": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
+    "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
+    "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
+    "gen-test-cases": "yarn gen-test-cases:joinsplit",
     "test:unit": "mocha --require ts-node/register test/**",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",
