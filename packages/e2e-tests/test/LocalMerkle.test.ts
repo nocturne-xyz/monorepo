@@ -12,6 +12,7 @@ import {
   DEFAULT_DB_PATH,
   BinaryPoseidonTree
 } from "@flax/sdk";
+import { fillBatch } from "./utils";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
@@ -30,14 +31,6 @@ describe("LocalMerkle", async () => {
     merkle = await merkleFactory.deploy(subtreeUpdateVerifier.address);
 
     localMerkle = new LocalMerkleProver(merkle.address, ethers.provider, db);
-  }
-
-  async function fillBatch() {
-    const batchLen = await merkle.batchLen();
-    const amountToInsert = BinaryPoseidonTree.BATCH_SIZE - batchLen.toNumber();
-    for (let i = 0; i < amountToInsert; i++) {
-      await merkle.insertNoteCommitment(0n);
-    }
   }
 
   async function applySubtreeUpdate() {
@@ -71,7 +64,7 @@ describe("LocalMerkle", async () => {
     expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(1n);
 
     console.log("filling subtree");
-    await fillBatch();
+    await fillBatch(merkle);
 
     console.log("local merkle prover picks up the zeros")
     await localMerkle.fetchLeavesAndUpdate();

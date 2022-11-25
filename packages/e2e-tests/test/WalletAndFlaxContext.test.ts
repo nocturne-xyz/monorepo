@@ -27,11 +27,9 @@ import {
   DEFAULT_DB_PATH,
   LocalMerkleProver,
   LocalNotesManager,
-  Note,
-  BinaryPoseidonTree,
 } from "@flax/sdk";
 import * as fs from "fs";
-import { Contract } from "hardhat/internal/hardhat-network/stack-traces/model";
+import { fillBatch } from "./utils";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -104,14 +102,6 @@ describe("Wallet", async () => {
     }
   }
 
-  async function fillBatch() {
-    const batchLen = await merkle.batchLen();
-    const amountToInsert = BinaryPoseidonTree.BATCH_SIZE - batchLen.toNumber();
-    for (let i = 0; i < amountToInsert; i++) {
-      await merkle.insertNoteCommitment(0n);
-    }
-  }
-
   async function applySubtreeUpdate() {
     const root = (flaxContext.merkleProver as LocalMerkleProver).root();
     await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
@@ -137,7 +127,7 @@ describe("Wallet", async () => {
     await aliceDepositFunds();
 
     console.log("fill the subtree with zeros")
-    await fillBatch();
+    await fillBatch(merkle);
 
     console.log("apply subtree update")
     await (
