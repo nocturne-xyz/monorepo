@@ -20,6 +20,15 @@ import {
   LocalMerkleProver,
 } from "@flax/sdk";
 import { setup } from "../deploy/deployFlax";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import * as path from "path";
+
+// eslint-disable-next-line
+const ROOT_DIR = findWorkspaceRoot()!;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -112,7 +121,9 @@ describe("Wallet", async () => {
 
     console.log("Create post-proof operation with FlaxContext");
     const operation = await flaxContext.tryCreateProvenOperation(
-      operationRequest
+      operationRequest,
+      WASM_PATH,
+      ZKEY_PATH
     );
 
     const bundle: Bundle = {
