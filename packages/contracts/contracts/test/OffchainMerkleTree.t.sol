@@ -3,8 +3,8 @@ pragma solidity ^0.8.5;
 
 import "forge-std/Test.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
+import {TreeUtils} from "../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
-import {Utils} from "../libs/Utils.sol";
 import {OffchainMerkleTree} from "../OffchainMerkleTree.sol";
 import {IOffchainMerkleTree} from "../interfaces/IOffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
@@ -14,7 +14,7 @@ import {PoseidonHasherT3, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 
-contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
+contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
 
     IOffchainMerkleTree merkle;
@@ -47,7 +47,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         // test that hashing empty batch total givens EMPTY_TREE_ROOT
         uint256[] memory path = treeTest.computeInitialRoot(batch);
-        assertEq(path[path.length - 1], Utils.EMPTY_TREE_ROOT);
+        assertEq(path[path.length - 1], TreeUtils.EMPTY_TREE_ROOT);
 
         // test computeInitialRoot for non-empty batch
         batch = new uint256[](2);
@@ -86,7 +86,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 1);
-        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](1);
         ncs[0] = 2;
@@ -98,7 +98,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 2);
-        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
@@ -107,7 +107,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
 
         // compute new root and call `applySubtreeUpdate`
         uint256[] memory path = treeTest.computeInitialRoot(batch);
@@ -134,7 +134,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 5);
-        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
 
         uint256[] memory ncs = new uint256[](11);
         for (uint256 i = 0; i < 11; i++) {
@@ -148,7 +148,7 @@ contract TestBatchBinaryMerkle is Test, TestUtils, PoseidonDeployer {
 
         assertEq(uint256(merkle._count()), 0);
         assertEq(uint256(merkle.totalCount()), 16);
-        assertEq(merkle._root(), Utils.EMPTY_TREE_ROOT);
+        assertEq(merkle._root(), TreeUtils.EMPTY_TREE_ROOT);
 
         // apply subtree update
         uint256[] memory path = treeTest.computeInitialRoot(batch);

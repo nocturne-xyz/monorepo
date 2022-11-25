@@ -2,7 +2,7 @@
 pragma solidity ^0.8.5;
 import {IWallet} from "../../interfaces/IWallet.sol";
 import {IHasherT3, IHasherT6} from "../../interfaces/IHasher.sol";
-import {Utils} from "../../libs/Utils.sol";
+import {TreeUtils} from "../../libs/TreeUtils.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {
@@ -27,13 +27,13 @@ library TreeTestLib {
         internal
         returns (uint256)
     {
-        require(batch.length <= Utils.BATCH_SIZE, "batch too large");
-        uint256[] memory scratch = new uint256[](Utils.BATCH_SIZE);
+        require(batch.length <= TreeUtils.BATCH_SIZE, "batch too large");
+        uint256[] memory scratch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < batch.length; i++) {
             scratch[i] = batch[i];
         }
 
-        for (int256 i = int256(Utils.BATCH_SUBTREE_DEPTH - 1); i >= 0; i--) {
+        for (int256 i = int256(TreeUtils.BATCH_SUBTREE_DEPTH - 1); i >= 0; i--) {
             for (uint256 j = 0; j < 2**uint256(i); j++) {
                 uint256 left = scratch[2 * j];
                 uint256 right = scratch[2 * j + 1];
@@ -54,10 +54,10 @@ library TreeTestLib {
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
         uint256[] memory path = new uint256[](
-            Utils.DEPTH - Utils.BATCH_SUBTREE_DEPTH + 1
+            TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
         path[0] = subtreeRoot;
-        for (uint256 i = 0; i < Utils.DEPTH - Utils.BATCH_SUBTREE_DEPTH; i++) {
+        for (uint256 i = 0; i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH; i++) {
             path[i + 1] = self.hasherT3.hash([path[i], zero]);
             zero = self.hasherT3.hash([zero, zero]);
         }
@@ -74,14 +74,14 @@ library TreeTestLib {
         uint256 idx
     ) internal returns (uint256[] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
-        uint256 subtreeIdx = idx >> Utils.BATCH_SUBTREE_DEPTH;
+        uint256 subtreeIdx = idx >> TreeUtils.BATCH_SUBTREE_DEPTH;
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
         uint256[] memory newPath = new uint256[](
-            Utils.DEPTH - Utils.BATCH_SUBTREE_DEPTH + 1
+            TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
         newPath[0] = subtreeRoot;
-        for (uint256 i = 0; i < Utils.DEPTH - Utils.BATCH_SUBTREE_DEPTH; i++) {
+        for (uint256 i = 0; i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH; i++) {
             if (subtreeIdx & 1 == 1) {
                 newPath[i + 1] = self.hasherT3.hash([path[i], newPath[i]]);
             } else {

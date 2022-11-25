@@ -4,6 +4,7 @@ pragma solidity ^0.8.5;
 import "./interfaces/ISubtreeUpdateVerifier.sol";
 import "./interfaces/IOffchainMerkleTree.sol";
 import {Utils} from "./libs/Utils.sol";
+import {TreeUtils} from "./libs/TreeUtils.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {QueueLib} from "./libs/Queue.sol";
 
@@ -14,7 +15,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
     uint128 public count;
     // number of leaves in the batch
-    // when this gets to Utils.BATCH_SIZE, we compute accumulatorHash and push te the accumulatorQueue
+    // when this gets to TreeUtils.BATCH_SIZE, we compute accumulatorHash and push te the accumulatorQueue
     uint128 public batchLen;
 
     // root of the merkle tree
@@ -24,7 +25,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     // each hash can either be the sha256 hash of a publically revealed note (e.g. in thecase of a deposit)
     // or the note commitment (i.e. poseidon hash computed off-chain) of a note that hasn't been revealed
     // when the buffer is filled, the sha256 hash of the batch is pushed to the accumulatorQueue, "accumulating" the batch of updates
-    // ! solidity doesn't allow us to use `Utils.BATCH_SIZE` here unfortunately.
+    // ! solidity doesn't allow us to use `TreeUtils.BATCH_SIZE` here unfortunately.
     uint256[16] public batch;
 
     // queue containing accumulator hashes of batches of updates
@@ -40,7 +41,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
 
     constructor(address _subtreeUpdateVerifier) {
         // root starts as the root of the empty depth-32 tree.
-        root = Utils.EMPTY_TREE_ROOT;
+        root = TreeUtils.EMPTY_TREE_ROOT;
         count = 0;
         batchLen = 0;
         subtreeUpdateVerifier = ISubtreeUpdateVerifier(_subtreeUpdateVerifier);
@@ -63,15 +64,15 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         return
             count +
             batchLen +
-            uint128(Utils.BATCH_SIZE) *
+            uint128(TreeUtils.BATCH_SIZE) *
             uint128(accumulatorQueue.length());
     }
 
     function computeAccumulatorHash() internal view returns (uint256) {
-        require(batchLen == Utils.BATCH_SIZE, "batchLen != Utils.BATCH_SIZE");
+        require(batchLen == TreeUtils.BATCH_SIZE, "batchLen != TreeUtils.BATCH_SIZE");
 
-        uint256[] memory _batch = new uint256[](Utils.BATCH_SIZE);
-        for (uint256 i = 0; i < Utils.BATCH_SIZE; i++) {
+        uint256[] memory _batch = new uint256[](TreeUtils.BATCH_SIZE);
+        for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
             _batch[i] = batch[i];
         }
 
@@ -79,7 +80,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
     }
 
     function accumulate() internal {
-        require(batchLen == Utils.BATCH_SIZE, "batchLen != Utils.BATCH_SIZE");
+        require(batchLen == TreeUtils.BATCH_SIZE, "batchLen != TreeUtils.BATCH_SIZE");
 
         uint256 accumulatorHash = computeAccumulatorHash();
         accumulatorQueue.enqueue(accumulatorHash);
@@ -96,7 +97,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
         (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(
             accumulatorHash
         );
-        uint256 encodedPathAndHash = Utils.encodePathAndHash(count, hi);
+        uint256 encodedPathAndHash = TreeUtils.encodePathAndHash(count, hi);
 
         require(
             subtreeUpdateVerifier.verifyProof(
@@ -110,7 +111,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
 
         accumulatorQueue.dequeue();
         root = newRoot;
-        count += uint128(Utils.BATCH_SIZE);
+        count += uint128(TreeUtils.BATCH_SIZE);
     }
 
     function _insertUpdates(uint256[] memory updates) internal {
@@ -118,7 +119,7 @@ contract OffchainMerkleTree is IOffchainMerkleTree {
             batch[batchLen] = updates[i];
             batchLen += 1;
 
-            if (batchLen == Utils.BATCH_SIZE) {
+            if (batchLen == TreeUtils.BATCH_SIZE) {
                 accumulate();
             }
         }

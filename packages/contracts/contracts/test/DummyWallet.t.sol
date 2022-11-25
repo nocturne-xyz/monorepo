@@ -24,14 +24,16 @@ import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {Utils} from "../libs/Utils.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
+    uint256 public constant SNARK_SCALAR_FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     using stdJson for string;
     using TreeTestLib for TreeTest;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
-    uint256 constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 constant ERC20_ID = SNARK_SCALAR_FIELD - 1;
 
     address constant ALICE = address(1);
