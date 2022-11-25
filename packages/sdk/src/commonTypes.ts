@@ -19,7 +19,7 @@ export interface AssetStruct {
   id: bigint;
 }
 
-export function toJSON(object: any) {
+export function toJSON(object: any): string {
   return JSON.stringify(object, (_, value) =>
     typeof value === "bigint" ? value.toString() : value
   );
