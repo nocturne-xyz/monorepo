@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- remove `IBatchMerkle` and `BatchBinaryMerkle`
+- split `Utils` into `TreeUtils` and `Utils`
 - Add fixture unit test for `SubtreeUpdateVerifier`
 - Update `DummyWallet` unit test to use `OffchainMerkleTree` instead
 - Add unit test for `OffchainMerkleTree`
