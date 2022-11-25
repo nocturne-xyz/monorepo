@@ -10,7 +10,7 @@
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
-    "start": "./scripts/copySpend2DataToPublic.sh && cross-env GATSBY_TELEMETRY_DISABLED=1 gatsby develop"
+    "start": "./scripts/copySpend2DataToStatic.sh && cross-env GATSBY_TELEMETRY_DISABLED=1 gatsby develop"
   },
   "browserslist": {
     "production": [
@@ -32,6 +32,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",
+    "snarkjs": "^0.5.0",
     "styled-components": "5.3.3"
   },
   "devDependencies": {

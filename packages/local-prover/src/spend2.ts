@@ -1,10 +1,5 @@
-// TODO: make proving work again
-import findWorkspaceRoot from "find-yarn-workspace-root";
-
 //@ts-ignore
 import * as snarkjs from "snarkjs";
-import * as path from "path";
-import * as fs from "fs";
 import { normalizePublicSignals, normalizeBigInt } from "./utils";
 import {
   FlaxAddressStruct,
@@ -14,21 +9,15 @@ import {
   Spend2ProofWithPublicSignals,
   Spend2Prover,
 } from "@flax/sdk";
-import JSON from "json-bigint";
 
 // eslint-disable-next-line
-const ROOT_DIR = findWorkspaceRoot()!;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
 
 export class LocalSpend2Prover implements Spend2Prover {
   // TODO: should prover hold the artifacts?
   async proveSpend2(
     inputs: Spend2Inputs,
-    wasmPath = WASM_PATH,
-    zkeyPath = ZKEY_PATH
+    wasmPath: string,
+    zkeyPath: string
   ): Promise<Spend2ProofWithPublicSignals> {
     inputs = normalizeSpend2Inputs(inputs);
     const {
@@ -82,10 +71,9 @@ export class LocalSpend2Prover implements Spend2Prover {
 
   async verifySpend2Proof(
     { proof, publicSignals }: Spend2ProofWithPublicSignals,
-    vkeyPath = VKEY_PATH
+    vkey: any
   ): Promise<boolean> {
-    const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
-    return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
+    return await snarkjs.groth16.verify(vkey, publicSignals, proof);
   }
 }
 
