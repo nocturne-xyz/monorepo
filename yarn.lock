@@ -2198,7 +2198,7 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
-    ffjavascript: FLAXPrivacy/ffjavascript
+    ffjavascript: 0.2.57
     json-bigint: ^1.0.0
     mocha: ^10.1.0
     ts-node: ^10.9.1
@@ -12122,12 +12122,12 @@ __metadata:
 
 ffjavascript@FLAXPrivacy/ffjavascript:
   version: 0.2.57
-  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=43a3bb69f062582ab1a26de26b419ad53d05cf9a"
+  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=b41d7e7ae580b0bb671d661016b69bb4fcc75c6a"
   dependencies:
     wasmbuilder: 0.0.16
     wasmcurves: 0.2.0
-    web-worker: ^1.2.0
-  checksum: ca9e1ec78cd31b35594ff7f6874fcac748355526c213c6545975be972b665881d5fd4e66a947d0aaccb3c3cbf49f5f3b37bf319f5906a8d54c04a1b8f8c48737
+    web-worker: FLAXPrivacy/web-worker
+  checksum: 72812812403b46699e50eccf47e97ff2fd4ef8fe50a203e0322e50085443240d3121cd2f5982aa4106766bcccac3c77552a38d2c8f79b9823369715d30711aaf
   languageName: node
   linkType: hard
 
@@ -23858,10 +23858,10 @@ ffjavascript@FLAXPrivacy/ffjavascript:
   languageName: node
   linkType: hard
 
-"web-worker@npm:^1.2.0":
+web-worker@FLAXPrivacy/web-worker:
   version: 1.2.0
-  resolution: "web-worker@npm:1.2.0"
-  checksum: 1bb28348ddcf9b2e7c62c5fd02e49a84098795856cd905456de957271bba288e9618941cf69d8960f0a7ae81f5dfb74b427c0634be47ec69e3e955c4ec5213be
+  resolution: "web-worker@https://github.com/FLAXPrivacy/web-worker.git#commit=e3135df13d2ab8c32640e596ceae6a9a83d8efa6"
+  checksum: 805fceeed0a3229a9f53059668c0bfb85498deb53e10755d960987680c624908877187d1aafd3ae09808afd58a81c69ac8aa4fa2f9107534d0ed6cfa457d4f34
   languageName: node
   linkType: hard
 

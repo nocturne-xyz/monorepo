@@ -24,7 +24,7 @@
     "big-integer": "^1.6.42",
     "circomlibjs": "0.0.8",
     "ethers": "^5.0.0",
-    "ffjavascript": "FLAXPrivacy/ffjavascript",
+    "ffjavascript": "0.2.57",
     "json-bigint": "^1.0.0"
   },
   "devDependencies": {
