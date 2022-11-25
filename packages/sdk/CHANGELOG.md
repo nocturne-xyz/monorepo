@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add `update` method to `BinaryPoseidonTree`
+- use `bigint-conversion` for bigint packing stuff
+- Update merkle prover indexing logic to work with off-chain updates
+- add script to generate input signals for `subtreeupdate` circuit 
+- Fix indexing bug when only querying a single block
 - Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `FlaxContext`
 - Add `FlaxLMDB` as local SDK `FlaxDB`
 - Add `LocalNotesManager` as local SDK `NotesManager`
@@ -13,8 +18,3 @@
 - Update `FlaxSigner` to derive `vk` from `sk` and use simplified 2 field `FLAXAddress`
 - Move spend2 circuit prove/verify methods into sdk
 - Add babyjub classes and poseidon tree
-- add script to generate input signals for `subtreeupdate` circuit 
-- Fix indexing bug when only querying a single block
-- Update merkle prover indexing logic to work with off-chain updates
-- use `bigint-conversion` for bigint packing stuff
-- add `update` method to `BinaryPoseidonTree`
