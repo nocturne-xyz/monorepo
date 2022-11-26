@@ -22,7 +22,6 @@
   "dependencies": {
     "@flax/contracts": "workspace:^",
     "@types/json-bigint": "^1.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "circomlibjs": "0.0.8",
@@ -36,6 +35,7 @@
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.8.0",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "chai": "^4.3.6",
     "eslint": "^7.32.0",

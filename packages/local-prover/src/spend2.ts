@@ -10,10 +10,7 @@ import {
   Spend2Prover,
 } from "@flax/sdk";
 
-// eslint-disable-next-line
-
 export class LocalSpend2Prover implements Spend2Prover {
-  // TODO: should prover hold the artifacts?
   async proveSpend2(
     inputs: Spend2Inputs,
     wasmPath: string,
