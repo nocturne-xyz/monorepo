@@ -1,10 +1,8 @@
 //@ts-ignore
 import * as snarkjs from "snarkjs";
-import { normalizePublicSignals, normalizeBigInt } from "./utils";
+import { normalizePublicSignals } from "@flax/sdk";
 import {
-  FlaxAddressStruct,
-  MerkleProofInput,
-  NoteInput,
+  normalizeSpend2Inputs,
   Spend2Inputs,
   Spend2ProofWithPublicSignals,
   Spend2Prover,
@@ -72,58 +70,4 @@ export class LocalSpend2Prover implements Spend2Prover {
   ): Promise<boolean> {
     return await snarkjs.groth16.verify(vkey, publicSignals, proof);
   }
-}
-
-function normalizeFlaxAddressInput(
-  flaxAddressInput: FlaxAddressStruct
-): FlaxAddressStruct {
-  const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
-  return {
-    h1X: normalizeBigInt(h1X),
-    h1Y: normalizeBigInt(h1Y),
-    h2X: normalizeBigInt(h2X),
-    h2Y: normalizeBigInt(h2Y),
-  };
-}
-
-function normalizeNoteInput(noteInput: NoteInput): NoteInput {
-  const { owner, nonce, asset, value, id } = noteInput;
-  return {
-    owner: normalizeFlaxAddressInput(owner),
-    nonce: normalizeBigInt(nonce),
-    asset: normalizeBigInt(asset),
-    value: normalizeBigInt(value),
-    id: normalizeBigInt(id),
-  };
-}
-
-function normalizeMerkleProofInput(
-  merkleProofInput: MerkleProofInput
-): MerkleProofInput {
-  const { path, siblings } = merkleProofInput;
-  for (let i = 0; i < path.length; i++) {
-    path[i] = normalizeBigInt(path[i]);
-  }
-  for (let i = 0; i < siblings.length; i++) {
-    siblings[i] = normalizeBigInt(siblings[i]);
-  }
-
-  return { path, siblings };
-}
-
-export function normalizeSpend2Inputs(inputs: Spend2Inputs): Spend2Inputs {
-  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
-    inputs;
-  const [spendPkX, spendPkY] = spendPk;
-
-  return {
-    vk: normalizeBigInt(vk),
-    operationDigest: normalizeBigInt(operationDigest),
-    oldNote: normalizeNoteInput(oldNote),
-    spendPk: [normalizeBigInt(spendPkX), normalizeBigInt(spendPkY)],
-    newNote: normalizeNoteInput(newNote),
-    merkleProof: normalizeMerkleProofInput(merkleProof),
-    c: normalizeBigInt(c),
-    z: normalizeBigInt(z),
-  };
 }

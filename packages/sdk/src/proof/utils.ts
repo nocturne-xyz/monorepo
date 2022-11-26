@@ -1,4 +1,4 @@
-import { SNARK_SCALAR_FIELD } from "@flax/sdk";
+import { SNARK_SCALAR_FIELD } from "../commonTypes";
 
 export function normalizeBigInt(n: bigint): bigint {
   return BigInt(n) % SNARK_SCALAR_FIELD;
