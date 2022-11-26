@@ -1,62 +1,38 @@
 import { expect } from "chai";
-import { ethers, deployments } from "hardhat";
-import {
-  Wallet,
-  Wallet__factory,
-  TestSubtreeUpdateVerifier__factory,
-  Spend2Verifier__factory,
-  Vault__factory,
-  Vault,
-  SimpleERC20Token__factory
-} from "@flax/contracts";
-import {
-  LocalMerkleProver,
-  LocalFlaxDB,
-} from "@flax/sdk";
-import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
-import { depositFunds } from "./utils";
+import hre from "hardhat";
+import { ethers } from "hardhat";
+import { BatchBinaryMerkle } from "@flax/contracts";
+import { LocalMerkleProver, LocalObjectDB } from "@flax/sdk";
+import { setup } from "../deploy/deployFlax";
 
 describe("LocalMerkle", async () => {
-  let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
   let db: LocalObjectDB;
   let localMerkle: LocalMerkleProver;
   let flaxSigner: FlaxSigner;
 
-  async function setup() {
+  beforeEach(async () => {
     db = new LocalObjectDB({ localMerkle: true });
 
-    [deployer, alice] = await ethers.getSigners();
-    const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
-    const subtreeUpdateVerifier = await subtreeupdateVerifierFactory.deploy();
+    const flaxSetup = await setup();
+    merkle = flaxSetup.merkle;
 
-    const spend2VerifierFactory = new Spend2Verifier__factory(deployer);
-    const spend2Verifier = await spend2VerifierFactory.deploy();
-
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
-    token = await tokenFactory.deploy();
-
-    const vaultFactory = new Vault__factory(deployer);
-    vault = await vaultFactory.deploy();
-
-    const walletFactory = new Wallet__factory(deployer);
-    wallet = await walletFactory.deploy(vault.address, spend2Verifier.address, subtreeUpdateVerifier.address);
-
-    await vault.initialize(wallet.address);
-    localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
+    localMerkle = new LocalMerkleProver(merkle.address, ethers.provider, db);
   }
 
   async function applySubtreeUpdate() {
     const root = localMerkle.root();
-    await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+	await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
   }
-
-  beforeEach(async () => {
-    await setup();
+    
   });
 
   afterEach(async () => {
     db.clear();
+  });
+
+  after(async () => {
+    await hre.network.provider.send("hardhat_reset");
   });
 
   it("Local merkle prover self syncs", async () => {
