@@ -1,10 +1,4 @@
-import { keccak256 } from "ethers/lib/utils";
-import { toUtf8Bytes } from "ethers/lib/utils";
-import { AssetStruct, SNARK_SCALAR_FIELD } from "./common";
-
-export function hashAsset(asset: AssetStruct): string {
-  return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
-}
+import { SNARK_SCALAR_FIELD } from "@flax/sdk";
 
 export function normalizeBigInt(n: bigint): bigint {
   return BigInt(n) % SNARK_SCALAR_FIELD;
