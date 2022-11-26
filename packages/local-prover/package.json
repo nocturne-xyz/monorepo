@@ -17,7 +17,8 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@flax/sdk": "workspace:^"
+    "@flax/sdk": "workspace:^",
+    "snarkjs": "^0.5.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
