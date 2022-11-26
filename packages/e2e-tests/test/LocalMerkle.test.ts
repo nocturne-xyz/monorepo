@@ -1,42 +1,30 @@
 import { expect } from "chai";
-import { ethers, deployments } from "hardhat";
-import {
-  BatchBinaryMerkle__factory,
-  PoseidonHasherT3__factory,
-  BatchBinaryMerkle,
-} from "@flax/contracts";
+import hre from "hardhat";
+import { ethers } from "hardhat";
+import { BatchBinaryMerkle } from "@flax/contracts";
 import { LocalMerkleProver, LocalObjectDB } from "@flax/sdk";
+import { setup } from "../deploy/deployFlax";
 
 describe("LocalMerkle", async () => {
-  let deployer: ethers.Signer;
   let merkle: BatchBinaryMerkle;
   let db: LocalObjectDB;
   let localMerkle: LocalMerkleProver;
 
-  async function setup() {
+  beforeEach(async () => {
     db = new LocalObjectDB({ localMerkle: true });
 
-    [deployer] = await ethers.getSigners();
-    await deployments.fixture(["PoseidonLibs"]);
-
-    const poseidonT3Lib = await ethers.getContract("PoseidonT3Lib");
-    const poseidonT3Factory = new PoseidonHasherT3__factory(deployer);
-    const poseidonHasherT3 = await poseidonT3Factory.deploy(
-      poseidonT3Lib.address
-    );
-
-    const merkleFactory = new BatchBinaryMerkle__factory(deployer);
-    merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
+    const flaxSetup = await setup();
+    merkle = flaxSetup.merkle;
 
     localMerkle = new LocalMerkleProver(merkle.address, ethers.provider, db);
-  }
-
-  beforeEach(async () => {
-    await setup();
   });
 
   afterEach(async () => {
     db.clear();
+  });
+
+  after(async () => {
+    await hre.network.provider.send("hardhat_reset");
   });
 
   it("Local merkle prover self syncs", async () => {
