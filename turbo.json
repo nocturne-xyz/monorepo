@@ -11,6 +11,9 @@
     "@flax/sdk#build": {
       "dependsOn": ["@flax/contracts#build"]
     },
+    "@flax/site#build": {
+      "dependsOn": ["@flax/sdk#build", "@flax/local-prover#build"]
+    },
     "@flax/snap#build": {
       "dependsOn": ["@flax/sdk#build"]
     },
