@@ -87,10 +87,6 @@ export class FlaxAddress {
     return BigInt(poseidon([h1X, h2X]));
   }
 
-  hash2(): bigint {
-    return BigInt(poseidon([this.inner.h1X, this.inner.h2X]));
-  }
-
   rerand(): FlaxAddress {
     const arrayAddr = this.toArrayForm();
     const r_buf = randomBytes(Math.floor(256 / 8));

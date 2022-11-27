@@ -46,7 +46,7 @@ const oldNoteA: NoteInput = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash = flaxAddrA.hash2();
+const oldNoteAOwnerHash = flaxAddrA.hash();
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
