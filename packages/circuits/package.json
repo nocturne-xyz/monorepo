@@ -7,7 +7,7 @@
   "scripts": {
     "install-circom": "./scripts/install_circom.sh",
     "build-all-circuits": "./scripts/build_all.sh",
-    "build:spend2": "./scripts/spend2/build_spend2.sh",
+    "build:spend2": "./scripts/spend2/build.sh",
     "build:joinsplit": "./scripts/joinsplit/build.sh",
     "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "build": "tsc --build",

@@ -19,7 +19,7 @@ fi
 echo "Post processing solidity vierfier at $FILE with verifier name $VERIFIERNAME.."
 
 $CMD -i \
-  '/^pragma/s/.*/pragma solidity ^0.8.2;/
+  '/^pragma/s/.*/pragma solidity ^0.8.5;/
   /^pragma/aimport {I'$VERIFIERNAME'} from "./interfaces/I'$VERIFIERNAME'.sol";
   s/contract Verifier/contract '$VERIFIERNAME' is I'$VERIFIERNAME'/
   s/public view returns (bool r)/public override view returns (bool r)/' "$FILE"

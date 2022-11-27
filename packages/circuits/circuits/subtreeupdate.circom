@@ -119,8 +119,8 @@ template NoteCommitmentHash() {
     component noteCommit = NoteCommit(); 
     noteCommit.ownerHash <== ownerHash;
     noteCommit.nonce <== nonce;
-    noteCommit.asset <== asset;
-    noteCommit.id <== id;
+    noteCommit.encodedAsset <== asset;
+    noteCommit.encodedId <== id;
     noteCommit.value <== value;
 
     noteCommitment <== noteCommit.out;

@@ -84,8 +84,6 @@ module.exports = {
       "IVault",
       "IWallet",
       // TODO: deduplicate these in an automated way somehow 
-      "Spend2Pairing",
-      "SubtreeUpdatePairing",
       "PoseidonHasherT3",
       "PoseidonHasherT4",
       "PoseidonHasherT5",
