@@ -12,6 +12,7 @@
     "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "build": "tsc --build",
     "download-big-ptau": "./scripts/download_big_ptau.sh",
+    "check_deps": "./scripts/install_deps.sh",
     "test:unit": "",
     "lint": ""
   },
