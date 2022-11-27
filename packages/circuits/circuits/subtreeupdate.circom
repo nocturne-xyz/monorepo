@@ -4,7 +4,7 @@ include "include/poseidon.circom";
 include "bitifyBE.circom";
 include "include/sha256/sha256.circom";
 
-include "note2.circom";
+include "lib.circom";
 include "tree.circom";
 
 // Update a subtree of depth 4, where overall tree is of depth r + 4
