@@ -6,13 +6,13 @@ import { Database } from 'lmdb';
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION";
 
-export async function getInsertionsObservable(walletContract: Wallet, timerInterval: number, db: Database<string, string>): Promise<Observable<Note | bigint>> {
+export async function getInsertionsObservable(walletContract: Wallet, interval: number, db: Database<string, string>): Promise<Observable<Note | bigint>> {
 
 	const nextBlockToIndexStr = await db.get(NEXT_BLOCK_TO_INDEX_KEY) ?? "0";
 	let nextBlockToIndex = parseInt(nextBlockToIndexStr);
 	return new Observable(subscriber => {
 		let index = 0;
-		const timerSubscription = timer(timerInterval)
+		const timerSubscription = timer(interval)
 			.subscribe({
 				next: async (_) => {
 					const currentBlockNumber = await walletContract.provider.getBlockNumber();
