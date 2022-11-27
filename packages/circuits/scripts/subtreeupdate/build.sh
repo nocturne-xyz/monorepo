@@ -84,3 +84,5 @@ end=`date +%s`
 echo "DONE ($((end-start))s)"
 
 \cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
+
+"$ROOT_SCRIPT_DIR/fixSolidityVerifier.sh" "$CONTRACTS_DIR/JoinsplitVerifier.sol"
