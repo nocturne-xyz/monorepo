@@ -8,7 +8,8 @@
   "scripts": {
     "build": "",
     "hh-node": "npx hardhat node",
-    "test:e2e": "npx hardhat test"
+    "test:e2e": "npx hardhat test",
+    "test:hh-node": "npx hardhat test --network localhost"
   },
   "devDependencies": {
     "@flax/contracts": "workspace:^",

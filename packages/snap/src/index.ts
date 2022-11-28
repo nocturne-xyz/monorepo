@@ -54,14 +54,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const notesManager = new LocalNotesManager(
     db,
     signer,
-    '0x443a4cf67da85a50f50c442Ed81ab79700C81A78',
+    '0xe9F3F81A41B4a777658661d85a74e21576d92E53',
     new ethers.providers.JsonRpcProvider('http://127.0.0.1:8545/'),
   );
   const context = new FlaxContext(
     signer,
     new MockSpend2Prover(),
     await LocalMerkleProver.fromDb(
-      '0x9E40Fa7544998DaA305e7B6043a6f485c2B38Cdf',
+      '0xe9F3F81A41B4a777658661d85a74e21576d92E53',
       new ethers.providers.JsonRpcProvider('http://127.0.0.1:8545/'),
       db,
     ),

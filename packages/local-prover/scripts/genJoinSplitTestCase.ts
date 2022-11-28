@@ -10,6 +10,7 @@ import {
   JoinSplitInputs,
   MerkleProofInput,
   NoteInput,
+  toJSON,
 } from "@flax/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -17,6 +18,7 @@ const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
+const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 const JOINSPLIT_FIXTURE_PATH = path.join(
   ROOT_DIR,
   "fixtures/joinsplitProof.json"
@@ -162,10 +164,10 @@ console.log(joinsplitInputs);
     WASM_PATH,
     ZKEY_PATH
   );
-  if (!(await prover.verifyJoinsplitProof(proof, VKEY_PATH))) {
+  if (!(await prover.verifyJoinsplitProof(proof, VKEY))) {
     throw new Error("Proof invalid!");
   }
-  const json = JSON.stringify(proof);
+  const json = toJSON(proof);
   console.log(json);
 
   if (writeToFixture) {

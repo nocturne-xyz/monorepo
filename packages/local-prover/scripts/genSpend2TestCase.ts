@@ -8,6 +8,7 @@ import {
   NoteInput,
   MerkleProofInput,
   Spend2Inputs,
+  toJSON,
 } from "@flax/sdk";
 import { LocalSpend2Prover } from "../src/spend2";
 import { poseidon } from "circomlibjs";
@@ -17,6 +18,7 @@ const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
+const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 const SPEND2_FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/spend2Proof.json");
 
 const writeToFixture = process.argv[2] == "--writeFixture";
@@ -103,10 +105,10 @@ console.log(spend2Inputs);
 (async () => {
   const prover = new LocalSpend2Prover();
   const proof = await prover.proveSpend2(spend2Inputs, WASM_PATH, ZKEY_PATH);
-  if (!(await prover.verifySpend2Proof(proof, VKEY_PATH))) {
+  if (!(await prover.verifySpend2Proof(proof, VKEY))) {
     throw new Error("Proof invalid!");
   }
-  const json = JSON.stringify(proof);
+  const json = toJSON(proof);
   console.log(json);
 
   if (writeToFixture) {

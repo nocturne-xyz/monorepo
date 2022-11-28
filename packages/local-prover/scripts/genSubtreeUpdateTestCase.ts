@@ -13,6 +13,7 @@ import {
   FlaxPrivKey,
   FlaxSigner,
   Note,
+  toJSON,
 } from "@flax/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -213,7 +214,7 @@ console.log(inputs);
 
 async function prove() {
   const proof = await snarkjs.groth16.fullProve(inputs, WASM_PATH, ZKEY_PATH);
-  const json = JSON.stringify(proof);
+  const json = toJSON(proof);
   console.log(json);
 
   if (writeToFixture) {

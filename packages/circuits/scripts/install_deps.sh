@@ -3,27 +3,27 @@ set -u
 
 echo "checking if cargo is installed..."
 CARGO_VERSION=$(cargo --version | head -n 1)
-if [ $? -eq 0 ]
-then
-	echo "found cargo version $CARGO_VERSION"
-	echo ""
-else
+if ! type "$?" >/dev/null 2>&1; then
 	echo "cargo not found. installing via rustup..."
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 	source ~/.bashrc
 	CARGO_VERSION=$(cargo --version | head -n 1)
 	echo "installed cargo version $CARGO_VERSION"
+else
+	echo "found cargo version $CARGO_VERSION"
+	echo ""
 fi
 
-echo "checking if circom is installed..."
+echo "checking if circom 2.1.2 is installed..."
 CIRCOM_VERSION=$(circom --version | cut -d " " -f3)
-if [ $? -eq 0 ]
+if [ $CIRCOM_VERSION == "2.1.2" ]
 then
-	echo "found circom version $CIRCOM_VERSION"
+	echo "found circom version 2.1.2"
 	echo ""
 else
 	echo "circom not found. installing..."
-	git clone https://github.com/iden3/circom.git
+	rm -rf circom
+	git clone https://github.com/iden3/circom.git --branch v2.1.2
 	pushd circom
 	cargo build --release
 	cargo install --path circom
@@ -52,16 +52,14 @@ if [[ $OSTYPE == 'darwin'* ]]; then
 	fi
 
 	echo "checking if gsed is installed..."
-	GSED_VERSION=$(gsed --version | head -n 1)
-	if [ $? -eq 0 ]
-	then
-		echo "found gsed version $GSED_VERSION"
-		echo ""
-	else
+	if ! type "$?" >/dev/null 2>&1; then
 		echo "gsed not found. installing..."
 		brew install gnu-sed
 		source ~/.bashrc
 		GSED_VERSION=$(gsed --version | head -n 1)
 		echo "installed gsed version $GSED_VERSION"
+	else
+		echo "found gsed version $GSED_VERSION"
+		echo ""
 	fi
 fi

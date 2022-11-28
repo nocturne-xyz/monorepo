@@ -15,6 +15,13 @@ import { Note } from "../note";
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
+interface OrderedLeaf {
+  leaf: bigint;
+  blockNumber: number;
+  txIdx: number;
+  logIdx: number;
+}
+
 export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
   protected contract: Wallet;
@@ -48,7 +55,7 @@ export class LocalMerkleProver extends MerkleProver {
     // eslint-disable-next-line
     while (true) {
       const leaf = await db.getLeaf(index);
-      if (!leaf) {
+      if (leaf == undefined) {
         return self;
       } else {
         self.localTree.insert(leaf);
@@ -112,13 +119,6 @@ export class LocalMerkleProver extends MerkleProver {
     // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
     // combine them into a single list
     // and sort them in the order in which they appeared on-chain
-
-    interface OrderedLeaf {
-      leaf: bigint;
-      blockNumber: number;
-      txIdx: number;
-      logIdx: number;
-    }
 
     let leaves: OrderedLeaf[] = [];
     for (const event of noteCommitmentEvents) {

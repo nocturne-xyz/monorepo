@@ -58,16 +58,16 @@ export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
 }
 
 export function bigintToBuf(bn: bigint): Uint8Array {
-  var hex = BigInt(bn).toString(16);
+  let hex = BigInt(bn).toString(16);
   if (hex.length % 2) {
     hex = "0" + hex;
   }
 
-  var len = hex.length / 2;
-  var u8 = new Uint8Array(len);
+  const len = hex.length / 2;
+  const u8 = new Uint8Array(len);
 
-  var i = 0;
-  var j = 0;
+  let i = 0;
+  let j = 0;
   while (i < len) {
     u8[i] = parseInt(hex.slice(j, j + 2), 16);
     i += 1;

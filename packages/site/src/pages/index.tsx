@@ -183,7 +183,7 @@ const Index = () => {
   const handleGetOperationInputs = async () => {
     await instantiateCircuitData();
 
-    const tokenAddress = "0x0B306BF915C4d645ff596e518fAf3F9669b97016";
+    const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
     const assetRequest: AssetRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
       value: 25n,
@@ -193,7 +193,7 @@ const Index = () => {
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        ["0x0B306BF915C4d645ff596e518fAf3F9669b97016", 50]
+        [tokenAddress, 50]
       );
     const action: Action = {
       contractAddress: tokenAddress,

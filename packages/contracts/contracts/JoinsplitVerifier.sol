@@ -11,7 +11,7 @@
 //
 //
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
 
@@ -58,12 +58,12 @@ contract JoinsplitVerifier is IJoinsplitVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                3430630060653912441866730717173175543132866358923666785052718703150505879903,
-                4773646557598007801793033289151323355978601132069675374925330428127485576747
+                10770071568911284132661470015100894287013542330024388752394924111813245485515,
+                48165030147560799631827531260595328019781976310011044725123782337638156138
             ],
             [
-                4394948353562578401709868618048513659563799580629429134867998032214101428487,
-                15439516117364900685739156747444305823612796291848677023047709214258352863897
+                19119587499550532069751919453437091467665186077648311048520068913160328557429,
+                9823246457185474343918006494366290394336540939466122002370987586576552409599
             ]
         );
         vk.IC = new Pairing.G1Point[](10);
@@ -120,15 +120,15 @@ contract JoinsplitVerifier is IJoinsplitVerifier {
     }
 
     function verify(
-        uint256[] memory input,
+        uint[] memory input,
         Proof memory proof
-    ) internal view returns (uint256) {
+    ) internal view returns (uint) {
         uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
         VerifyingKey memory vk = verifyingKey();
         require(input.length + 1 == vk.IC.length, "verifier-bad-input");
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-        for (uint256 i = 0; i < input.length; i++) {
+        for (uint i = 0; i < input.length; i++) {
             require(
                 input[i] < snark_scalar_field,
                 "verifier-gte-snark-scalar-field"
@@ -156,17 +156,17 @@ contract JoinsplitVerifier is IJoinsplitVerifier {
 
     /// @return r  bool true if proof is valid
     function verifyProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[9] memory input
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[9] memory input
     ) public view override returns (bool r) {
         Proof memory proof;
         proof.A = Pairing.G1Point(a[0], a[1]);
         proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
         proof.C = Pairing.G1Point(c[0], c[1]);
-        uint256[] memory inputValues = new uint256[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
+        uint[] memory inputValues = new uint[](input.length);
+        for (uint i = 0; i < input.length; i++) {
             inputValues[i] = input[i];
         }
         if (verify(inputValues, proof) == 0) {
