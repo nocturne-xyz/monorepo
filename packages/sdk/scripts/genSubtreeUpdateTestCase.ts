@@ -1,11 +1,30 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
+
+//@ts-ignore
+import * as snarkjs from "snarkjs";
 import { bigInt256ToFieldElems, Note, FlaxSigner } from "../src/sdk";
 import { BinaryPoseidonTree } from "../src/primitives";
 import { FlaxPrivKey } from "../src/crypto";
 import { sha256 } from "js-sha256";
 import { bigintToBuf, hexToBigint } from "bigint-conversion";
+import { BaseProof } from "../src/proof";
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const FIXTURE_PATH = path.join(
+  ROOT_DIR,
+  "fixtures/subtreeupdateProof.json"
+);
+
+const sk = BigInt(
+  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
+);
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_js/subtreeupdate.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
+
+const writeToFixture = process.argv[2] == "--writeFixture";
 
 interface SubtreeUpdateInputSignals {
   encodedPathAndHash: bigint;
@@ -20,6 +39,16 @@ interface SubtreeUpdateInputSignals {
   assets: bigint[];
   ids: bigint[];
   values: bigint[];
+}
+
+export interface SubtreeUpdateProofWithPublicSignals {
+  proof: BaseProof;
+  publicSignals: [
+    bigint, // oldRoot 
+    bigint, // newRoot
+    bigint, // encodedPathAndHash 
+    bigint, // accumulatorHash 
+  ];
 }
 
 function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
@@ -129,12 +158,6 @@ export function getSubtreeUpdateInputs(
   };
 }
 
-const ROOT_DIR = findWorkspaceRoot()!;
-const OUT_PATH = path.join(ROOT_DIR, "packages/circuits/scripts/subtreeupdate/input_subtreeupdate.json");
-
-const sk = BigInt(
-  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
-);
 
 // Instantiate flax keypair and addr
 const flaxPrivKey = new FlaxPrivKey(sk);
@@ -159,6 +182,20 @@ const spendNoteCommitments = noteCommitmentIndices.map(i => notes[i].toCommitmen
 const fullyRevealedNotes = notes.filter((_, i) => !noteCommitmentIndices.includes(i));
 
 const inputs = getSubtreeUpdateInputs(noteCommitmentIndices, spendNoteCommitments, fullyRevealedNotes, tree);
-console.log("inputs: ", inputs);
+console.log(inputs);
 
-fs.writeFileSync(OUT_PATH, JSON.stringify(inputs));
+async function prove() {
+  const proof = await snarkjs.groth16.fullProve(inputs, WASM_PATH, ZKEY_PATH);
+  const json = JSON.stringify(proof);
+  console.log(json);
+
+  if (writeToFixture) {
+    fs.writeFileSync(FIXTURE_PATH, json, {
+      encoding: "utf8",
+      flag: "w",
+    });
+  }
+  process.exit(0);
+}
+
+prove();
