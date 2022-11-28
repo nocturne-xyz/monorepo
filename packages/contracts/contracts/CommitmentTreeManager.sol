@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 
-import "./interfaces/IWallet.sol";
 import "./interfaces/ISpend2Verifier.sol";
-
-import {IBatchMerkle} from "./interfaces/IBatchMerkle.sol";
-import {IHasherT6} from "./interfaces/IHasher.sol";
+import {IWallet} from "./interfaces/IWallet.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
+import {QueueLib} from "./libs/Queue.sol";
+import {Utils} from "./libs/Utils.sol";
+import {TreeUtils} from "./libs/TreeUtils.sol";
 
 contract CommitmentTreeManager {
-    uint256 public constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    using OffchainMerkleTree for OffchainMerkleTreeData;
 
-    IBatchMerkle public noteCommitmentTree;
+    // past roots of the merkle tree
     mapping(uint256 => bool) public pastRoots;
+
     mapping(uint256 => bool) public nullifierSet;
     uint256 public nonce;
 
-    ISpend2Verifier public verifier;
-    IHasherT6 public hasherT6;
+    OffchainMerkleTreeData internal merkle;
+    ISpend2Verifier public spend2Verifier;
 
     event Refund(
         IWallet.FLAXAddress refundAddr,
@@ -25,37 +26,23 @@ contract CommitmentTreeManager {
         address indexed asset,
         uint256 indexed id,
         uint256 value,
-        uint256 merkleIndex
+        uint128 merkleIndex
     );
 
     event Spend(
         uint256 indexed oldNoteNullifier,
         uint256 indexed valueSpent,
-        uint256 indexed merkleIndex
+        uint128 indexed merkleIndex
     );
 
-    constructor(
-        address _verifier,
-        address _noteCommitmentTree,
-        address _hasherT6
-    ) {
-        verifier = ISpend2Verifier(_verifier);
-        noteCommitmentTree = IBatchMerkle(_noteCommitmentTree);
-        hasherT6 = IHasherT6(_hasherT6);
-    }
+    event InsertNoteCommitments(uint256[] commitments);
 
-    function commit2FromQueue() external {
-        noteCommitmentTree.commit2FromQueue();
-        pastRoots[noteCommitmentTree.root()] = true;
-    }
+    event InsertNotes(IWallet.Note[] notes);
 
-    function commit8FromQueue() external {
-        noteCommitmentTree.commit8FromQueue();
-        pastRoots[noteCommitmentTree.root()] = true;
-    }
-
-    function getRoot() external view returns (uint256) {
-        return noteCommitmentTree.root();
+    constructor(address _spend2verifier, address _subtreeUpdateVerifier) {
+        merkle.initialize(_subtreeUpdateVerifier);
+        spend2Verifier = ISpend2Verifier(_spend2verifier);
+        pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
     // TODO: add default noteCommitment for when there is no output note.
@@ -72,10 +59,10 @@ contract CommitmentTreeManager {
         bytes32 spendHash = _hashSpend(spendTx);
         uint256 operationDigest = uint256(
             keccak256(abi.encodePacked(operationHash, spendHash))
-        ) % SNARK_SCALAR_FIELD;
+        ) % Utils.SNARK_SCALAR_FIELD;
 
         require(
-            verifier.verifyProof(
+            spend2Verifier.verifyProof(
                 [spendTx.proof[0], spendTx.proof[1]],
                 [
                     [spendTx.proof[2], spendTx.proof[3]],
@@ -95,31 +82,82 @@ contract CommitmentTreeManager {
             "Spend proof invalid"
         );
 
-        noteCommitmentTree.insertLeafToQueue(spendTx.newNoteCommitment);
+        insertNoteCommitment(spendTx.newNoteCommitment);
+
         nullifierSet[spendTx.nullifier] = true;
 
         emit Spend(
             spendTx.nullifier,
             spendTx.valueToSpend,
-            noteCommitmentTree.totalCount() - 1
+            merkle.getTotalCount() - 1
         );
+    }
+
+    function root() public view returns (uint256) {
+        return merkle.getRoot();
+    }
+
+    function count() public view returns (uint256) {
+        return merkle.getCount();
+    }
+
+    function totalCount() public view returns (uint256) {
+        return merkle.getTotalCount();
+    }
+
+    function insertNoteCommitment(uint256 nc) internal {
+        uint256[] memory ncs = new uint256[](1);
+        ncs[0] = nc;
+        insertNoteCommitments(ncs);
+    }
+
+    function insertNoteCommitments(uint256[] memory ncs) internal {
+        merkle.insertNoteCommitments(ncs);
+        emit InsertNoteCommitments(ncs);
+    }
+
+    function insertNote(IWallet.Note memory note) internal {
+        IWallet.Note[] memory notes = new IWallet.Note[](1);
+        notes[0] = note;
+        insertNotes(notes);
+    }
+
+    function insertNotes(IWallet.Note[] memory notes) internal {
+        merkle.insertNotes(notes);
+        emit InsertNotes(notes);
+    }
+
+    function fillBatchWithZeros() external {
+        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+        uint256[] memory zeros = new uint256[](numToInsert);
+        insertNoteCommitments(zeros);
+    }
+
+    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof)
+        external
+    {
+        merkle.applySubtreeUpdate(newRoot, proof);
+        pastRoots[newRoot] = true;
     }
 
     function _handleRefund(
         IWallet.FLAXAddress memory refundAddr,
-        uint256 refundAddrHash,
         address asset,
         uint256 id,
         uint256 value
     ) internal {
-        uint256 noteCommitment = hasherT6.hash(
-            [refundAddrHash, nonce, uint256(uint160(asset)), id, value]
-        );
+        IWallet.Note memory note;
+        note.ownerH1 = refundAddr.h1X;
+        note.ownerH2 = refundAddr.h2X;
+        note.nonce = nonce;
+        note.asset = uint256(uint160(asset));
+        note.id = id;
+        note.value = value;
+
+        insertNote(note);
 
         uint256 _nonce = nonce;
         nonce++;
-
-        noteCommitmentTree.insertLeafToQueue(noteCommitment);
 
         emit Refund(
             refundAddr,
@@ -127,7 +165,7 @@ contract CommitmentTreeManager {
             asset,
             id,
             value,
-            noteCommitmentTree.totalCount() - 1
+            merkle.getTotalCount() - 1
         );
     }
 

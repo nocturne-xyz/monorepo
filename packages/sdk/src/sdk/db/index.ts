@@ -123,7 +123,6 @@ export abstract class LocalMerkleDBExtension {
   }
 
   abstract storeLeaf(index: number, leaf: bigint): Promise<boolean>;
-
   abstract getLeaf(index: number): bigint | undefined;
 }
 

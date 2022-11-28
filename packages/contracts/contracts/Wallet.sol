@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 pragma abicoder v2;
 
 import "./interfaces/IWallet.sol";
@@ -19,11 +19,9 @@ import "hardhat/console.sol";
 contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
-        address _verifier,
-        address _merkle,
-        address _hasherT5,
-        address _hasherT6
-    ) BalanceManager(_vault, _verifier, _merkle, _hasherT5, _hasherT6) {} // solhint-disable-line no-empty-blocks
+        address _spend2Verifier,
+        address _subtreeUpdateVerifier
+    ) BalanceManager(_vault, _spend2Verifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");

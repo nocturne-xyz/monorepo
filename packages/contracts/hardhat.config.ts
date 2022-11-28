@@ -16,7 +16,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
 
-    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test"));
+    return paths.filter((p) => !p.endsWith(".t.sol") && !p.includes("test") || p.includes("TestSubtreeUpdateVerifier"));
   }
 );
 
@@ -25,7 +25,7 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
  */
 module.exports = {
   solidity: {
-    version: "0.8.2",
+    version: "0.8.5",
     settings: {
       optimizer: {
         enabled: true,
@@ -69,7 +69,6 @@ module.exports = {
       "IERC20",
       "IERC721",
       "IERC1155",
-      "IBatchMerkle",
       "IHasherT3",
       "IHasherT4",
       "IHasherT5",
@@ -81,9 +80,10 @@ module.exports = {
       "IPoseidonT6",
       "IPoseidonT7",
       "ISpend2Verifier",
+      "ISubtreeUpdateVerifier",
       "IVault",
       "IWallet",
-      "Pairing",
+      // TODO: deduplicate these in an automated way somehow 
       "PoseidonHasherT3",
       "PoseidonHasherT4",
       "PoseidonHasherT5",
@@ -94,10 +94,11 @@ module.exports = {
       "CommitmentTreeManager",
       "BalanceManager",
       "Spend2Verifier",
-      "BatchBinaryMerkle",
+      "SubtreeUpdateVerifier",
       "SimpleERC20Token",
       "SimpleERC721Token",
       "SimpleERC1155Token",
+      "TestSubtreeUpdateVerifier"
     ],
     includeFactories: true,
   },

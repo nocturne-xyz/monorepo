@@ -1,45 +1,66 @@
 import { expect } from "chai";
-import { ethers, deployments } from "hardhat";
+import { ethers } from "hardhat";
 import * as fs from "fs";
 import {
-  BatchBinaryMerkle__factory,
-  PoseidonHasherT3__factory,
-  BatchBinaryMerkle,
+  Wallet,
+  Wallet__factory,
+  TestSubtreeUpdateVerifier__factory,
+  Spend2Verifier__factory,
+  Vault__factory,
+  Vault,
+  SimpleERC20Token__factory
 } from "@flax/contracts";
 import {
-  FlaxPrivKey,
-  FlaxSigner,
   LocalMerkleProver,
   FlaxLMDB,
   DEFAULT_DB_PATH,
+  BinaryPoseidonTree,
+  FlaxPrivKey,
+  FlaxSigner,
 } from "@flax/sdk";
+import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
+import { depositFunds } from "./utils";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
-  let merkle: BatchBinaryMerkle;
-  let flaxSigner: FlaxSigner;
+  let alice: ethers.Signer;
+  let wallet: Wallet;
+  let token: SimpleERC20Token;
+  let vault: Vault;
   let db: FlaxLMDB;
   let localMerkle: LocalMerkleProver;
+  let flaxSigner: FlaxSigner;
 
   async function setup() {
     const sk = BigInt(1);
     const flaxPrivKey = new FlaxPrivKey(sk);
     flaxSigner = new FlaxSigner(flaxPrivKey);
+
     db = new FlaxLMDB({ dbPath: DEFAULT_DB_PATH, localMerkle: true });
 
-    [deployer] = await ethers.getSigners();
-    await deployments.fixture(["PoseidonLibs"]);
+    [deployer, alice] = await ethers.getSigners();
+    const subtreeupdateVerifierFactory = new TestSubtreeUpdateVerifier__factory(deployer);
+    const subtreeUpdateVerifier = await subtreeupdateVerifierFactory.deploy();
 
-    const poseidonT3Lib = await ethers.getContract("PoseidonT3Lib");
-    const poseidonT3Factory = new PoseidonHasherT3__factory(deployer);
-    const poseidonHasherT3 = await poseidonT3Factory.deploy(
-      poseidonT3Lib.address
-    );
+    const spend2VerifierFactory = new Spend2Verifier__factory(deployer);
+    const spend2Verifier = await spend2VerifierFactory.deploy();
 
-    const merkleFactory = new BatchBinaryMerkle__factory(deployer);
-    merkle = await merkleFactory.deploy(32, 0, poseidonHasherT3.address);
+    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    token = await tokenFactory.deploy();
 
-    localMerkle = new LocalMerkleProver(merkle.address, ethers.provider, db);
+    const vaultFactory = new Vault__factory(deployer);
+    vault = await vaultFactory.deploy();
+
+    const walletFactory = new Wallet__factory(deployer);
+    wallet = await walletFactory.deploy(vault.address, spend2Verifier.address, subtreeUpdateVerifier.address);
+
+    await vault.initialize(wallet.address);
+    localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
+  }
+
+  async function applySubtreeUpdate() {
+    const root = localMerkle.root();
+    await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
   }
 
   beforeEach(async () => {
@@ -57,15 +78,34 @@ describe("LocalMerkle", async () => {
 
   it("Local merkle prover self syncs", async () => {
     console.log("Depositing 2 notes");
-    await merkle.insertLeavesToQueue([0n, 1n]);
-    await merkle.commit2FromQueue();
+    const ncs = await depositFunds(
+      wallet,
+      vault,
+      token,
+      alice,
+      flaxSigner.address,
+      [100n, 100n] 
+    );
 
     console.log("Fetching and storing leaves from events");
     await localMerkle.fetchLeavesAndUpdate();
     expect(localMerkle.count).to.eql(2);
 
     console.log("Ensure leaves match enqueued");
-    expect(BigInt(localMerkle.getProof(0).leaf)).to.equal(0n);
-    expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(1n);
+    expect(BigInt(localMerkle.getProof(0).leaf)).to.equal(ncs[0]);
+    expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(ncs[1]);
+
+    console.log("filling subtree");
+    await wallet.fillBatchWithZeros();
+
+    console.log("local merkle prover picks up the zeros")
+    await localMerkle.fetchLeavesAndUpdate();
+    expect(localMerkle.count).to.eql(BinaryPoseidonTree.BATCH_SIZE);
+
+    console.log("Local merkle doesn't care when subtree update is applied")
+    await applySubtreeUpdate();
+    expect(localMerkle.count).to.eql(BinaryPoseidonTree.BATCH_SIZE);
+    expect(BigInt(localMerkle.getProof(0).leaf)).to.equal(ncs[0]);
+    expect(BigInt(localMerkle.getProof(1).leaf)).to.equal(ncs[1]);
   });
 });

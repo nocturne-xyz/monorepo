@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add `update` method to `BinaryPoseidonTree`
+- use `bigint-conversion` for bigint packing stuff
+- Update merkle prover indexing logic to work with off-chain updates
+- add script to generate input signals for `subtreeupdate` circuit 
+- Fix indexing bug when only querying a single block
 - Add scripts to generate test cases for joinsplit circuit
 - Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `FlaxContext`
 - Add `FlaxLMDB` as local SDK `FlaxDB`

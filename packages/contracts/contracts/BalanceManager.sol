@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
@@ -10,8 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-
-import {IHasherT3, IHasherT5, IHasherT6} from "./interfaces/IHasher.sol";
+import {Utils} from "./libs/Utils.sol";
 
 contract BalanceManager is
     IERC721Receiver,
@@ -20,17 +19,13 @@ contract BalanceManager is
 {
     IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
     IVault public vault;
-    IHasherT5 public hasherT5;
 
     constructor(
         address _vault,
-        address _verifier,
-        address _merkle,
-        address _hasherT5,
-        address _hasherT6
-    ) CommitmentTreeManager(_verifier, _merkle, _hasherT6) {
+        address _spend2Verifier,
+        address _subtreeUpdateVerifier
+    ) CommitmentTreeManager(_spend2Verifier, _subtreeUpdateVerifier) {
         vault = IVault(_vault);
-        hasherT5 = IHasherT5(_hasherT5);
     }
 
     function onERC721Received(
@@ -96,18 +91,9 @@ contract BalanceManager is
             uint256 index = successfulTransfers[i];
             IWallet.FLAXAddress memory depositAddr = approvedDeposits[index]
                 .depositAddr;
-            uint256 depositAddrHash = hasherT5.hash(
-                [
-                    depositAddr.h1X,
-                    depositAddr.h1Y,
-                    depositAddr.h2X,
-                    depositAddr.h2Y
-                ]
-            );
 
             _handleRefund(
                 depositAddr,
-                depositAddrHash,
                 approvedDeposits[index].asset,
                 approvedDeposits[index].id,
                 approvedDeposits[index].value
@@ -117,17 +103,8 @@ contract BalanceManager is
 
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
         IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
-        uint256 depositAddrHash = hasherT5.hash(
-            [depositAddr.h1X, depositAddr.h1Y, depositAddr.h2X, depositAddr.h2Y]
-        );
 
-        _handleRefund(
-            depositAddr,
-            depositAddrHash,
-            deposit.asset,
-            deposit.id,
-            deposit.value
-        );
+        _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
 
         require(vault.makeDeposit(deposit), "Deposit failed");
     }
@@ -141,7 +118,7 @@ contract BalanceManager is
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
             _handleSpend(spendTxs[i], operationHash);
-            if (spendTxs[i].id == SNARK_SCALAR_FIELD - 1) {
+            if (spendTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[spendTxs[i].asset] += spendTxs[i]
                     .valueToSpend;
             } else if (spendTxs[i].valueToSpend == 0) {
@@ -168,27 +145,17 @@ contract BalanceManager is
         address[] calldata refundTokens,
         IWallet.FLAXAddress calldata refundAddr
     ) internal {
-        uint256 refundAddrHash = hasherT5.hash(
-            [refundAddr.h1X, refundAddr.h1Y, refundAddr.h2X, refundAddr.h2Y]
-        );
+        _handleERC20Refunds(spendTokens, refundTokens, refundAddr);
 
-        _handleERC20Refunds(
-            spendTokens,
-            refundTokens,
-            refundAddr,
-            refundAddrHash
-        );
+        _handleERC721Refunds(refundAddr);
 
-        _handleERC721Refunds(refundAddr, refundAddrHash);
-
-        _handleERC1155Refunds(refundAddr, refundAddrHash);
+        _handleERC1155Refunds(refundAddr);
     }
 
     function _handleERC20Refunds(
         address[] calldata spendTokens,
         address[] calldata refundTokens,
-        IWallet.FLAXAddress calldata refundAddr,
-        uint256 refundAddrHash
+        IWallet.FLAXAddress calldata refundAddr
     ) internal {
         for (uint256 i = 0; i < spendTokens.length; i++) {
             uint256 newBal = IERC20(spendTokens[i]).balanceOf(address(this));
@@ -196,9 +163,8 @@ contract BalanceManager is
             if (newBal != 0) {
                 _handleRefund(
                     refundAddr,
-                    refundAddrHash,
                     spendTokens[i],
-                    SNARK_SCALAR_FIELD - 1,
+                    Utils.SNARK_SCALAR_FIELD - 1,
                     newBal
                 );
                 require(
@@ -214,9 +180,8 @@ contract BalanceManager is
             if (bal != 0) {
                 _handleRefund(
                     refundAddr,
-                    refundAddrHash,
                     refundTokens[i],
-                    SNARK_SCALAR_FIELD - 1,
+                    Utils.SNARK_SCALAR_FIELD - 1,
                     bal
                 );
                 require(
@@ -227,22 +192,15 @@ contract BalanceManager is
         }
     }
 
-    function _handleERC721Refunds(
-        IWallet.FLAXAddress calldata refundAddr,
-        uint256 refundAddrHash
-    ) internal {
+    function _handleERC721Refunds(IWallet.FLAXAddress calldata refundAddr)
+        internal
+    {
         for (uint256 i = 0; i < balanceInfo.erc721Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc721Addresses[i];
             uint256[] memory ids = balanceInfo.erc721Ids[tokenAddress];
             for (uint256 k = 0; k < ids.length; k++) {
                 if (IERC721(tokenAddress).ownerOf(ids[k]) == address(this)) {
-                    _handleRefund(
-                        refundAddr,
-                        refundAddrHash,
-                        tokenAddress,
-                        ids[k],
-                        0
-                    );
+                    _handleRefund(refundAddr, tokenAddress, ids[k], 0);
                     IERC721(tokenAddress).transferFrom(
                         address(this),
                         address(vault),
@@ -255,10 +213,9 @@ contract BalanceManager is
         delete balanceInfo.erc721Addresses;
     }
 
-    function _handleERC1155Refunds(
-        IWallet.FLAXAddress calldata refundAddr,
-        uint256 refundAddrHash
-    ) internal {
+    function _handleERC1155Refunds(IWallet.FLAXAddress calldata refundAddr)
+        internal
+    {
         for (uint256 i = 0; i < balanceInfo.erc1155Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc1155Addresses[i];
             uint256[] memory ids = balanceInfo.erc1155Ids[tokenAddress];
@@ -268,13 +225,7 @@ contract BalanceManager is
                     ids[k]
                 );
                 if (currBal != 0) {
-                    _handleRefund(
-                        refundAddr,
-                        refundAddrHash,
-                        tokenAddress,
-                        ids[k],
-                        currBal
-                    );
+                    _handleRefund(refundAddr, tokenAddress, ids[k], currBal);
                     IERC1155(tokenAddress).safeTransferFrom(
                         address(this),
                         address(vault),

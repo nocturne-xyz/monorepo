@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add script to download subtreeupdate's chonky ptau file
+- add rapidsnark option to subtreeupdate build script
+- restructure build scripts with a layer of indirection so they can be invoked all at once
+- add subtreeupdate circuit and build script for it
+- update spend2 to use new address hashing scheme (2 elements instead of 4)
 - Add joinsplit circuit
 - Add postprocessing script for circom generated solidity verifier
 - Add missing check to ensure `H1^vk === H2` holds

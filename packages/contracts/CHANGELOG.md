@@ -2,6 +2,20 @@
 
 ### Unreleased
 
+- move `OffchainMerkleTree` into a library and have `CommitmentTreeManager` hold the state
+- remove `IBatchMerkle` and `BatchBinaryMerkle`
+- split `Utils` into `TreeUtils` and `Utils`
+- Add fixture unit test for `SubtreeUpdateVerifier`
+- Update `DummyWallet` unit test to use `OffchainMerkleTree` instead
+- Add unit test for `OffchainMerkleTree`
+- Add `TreeTest` lib to test utils. Containins helpers for computing / maintaining subtree roots
+- Add `TestSubtreeUpdateVerifier` to test utils
+- Change `CommitmentTreeManager` to use `OffchainMerkleTree` instead of `BatchBinaryMerkle`
+- Remove Poseidon from all contracts
+- Split `LeavesInserted` event into `InsertNoteCommitment` and `InsertNote`
+- Add `IOffChainMerkleTree` and `MerkleTree` for Offchain ZK updates
+- Add `Utils` lib for encoding / hashing details
+- Add `SubtreeUpdateVerifier` contract
 - Make Pairing library from circom reusable for different circuits
 - Fix events to have fields > 32 bytes be not `indexed`
 - Add `Spend` event and emit on `handleSpend`

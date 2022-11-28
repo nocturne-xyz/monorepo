@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 pragma abicoder v2;
 
 interface IWallet {
@@ -19,11 +19,26 @@ interface IWallet {
     struct SpendTransaction {
         uint256 commitmentTreeRoot;
         uint256 nullifier;
-        uint256 newNoteCommitment;
         uint256[8] proof;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
         uint256 valueToSpend; // 0 for ERC721
+        uint256 newNoteCommitment;
+    }
+
+    struct Note {
+        uint256 ownerH1;
+        uint256 ownerH2;
+        uint256 nonce;
+        uint256 asset;
+        uint256 id;
+        uint256 value;
+    }
+
+    struct SubtreeUpdateArgs {
+        uint256 oldRoot;
+        uint256 newRoot;
+        uint256[8] proof;
     }
 
     struct Tokens {

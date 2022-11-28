@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -8,26 +8,32 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
-import {IBatchMerkle} from "../interfaces/IBatchMerkle.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {BatchBinaryMerkle} from "../BatchBinaryMerkle.sol";
 import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
+import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {Utils} from "../libs/Utils.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
+    using OffchainMerkleTree for OffchainMerkleTreeData;
+    uint256 public constant SNARK_SCALAR_FIELD =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
     using stdJson for string;
+    using TreeTestLib for TreeTest;
 
     uint256 constant DEFAULT_GAS_LIMIT = 10000000;
-    uint256 constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
     uint256 constant ERC20_ID = SNARK_SCALAR_FIELD - 1;
 
     address constant ALICE = address(1);
@@ -35,10 +41,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
     Wallet wallet;
     Vault vault;
-    IBatchMerkle merkle;
-    ISpend2Verifier verifier;
+    TreeTest treeTest;
+    ISpend2Verifier spend2Verifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
+    IHasherT3 hasherT3;
+    IHasherT6 hasherT6;
 
     event Refund(
         IWallet.FLAXAddress refundAddr,
@@ -46,14 +55,44 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address indexed asset,
         uint256 indexed id,
         uint256 value,
-        uint256 merkleIndex
+        uint128 merkleIndex
     );
 
     event Spend(
         uint256 indexed oldNoteNullifier,
         uint256 indexed valueSpent,
-        uint256 indexed merkleIndex
+        uint128 indexed merkleIndex
     );
+
+    function setUp() public virtual {
+        // Deploy poseidon hasher libraries
+        deployPoseidon3Through6();
+
+        // Instantiate vault, spend2Verifier, tree, and wallet
+        vault = new Vault();
+        spend2Verifier = new TestSpend2Verifier();
+
+        subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
+
+        wallet = new Wallet(
+            address(vault),
+            address(spend2Verifier),
+            address(subtreeUpdateVerifier)
+        );
+
+        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
+        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
+
+        treeTest.initialize(hasherT3, hasherT6);
+
+        vault.initialize(address(wallet));
+
+        // Instantiate token contracts
+        for (uint256 i = 0; i < 3; i++) {
+            ERC20s[i] = new SimpleERC20Token();
+            ERC721s[i] = new SimpleERC721Token();
+        }
+    }
 
     function defaultFlaxAddress()
         internal
@@ -69,11 +108,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             });
     }
 
-    function defaultSpendProof()
-        internal
-        pure
-        returns (uint256[8] memory _values)
-    {
+    function dummyProof() internal pure returns (uint256[8] memory _values) {
         for (uint256 i = 0; i < 8; i++) {
             _values[i] = uint256(4757829);
         }
@@ -104,55 +139,37 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         vm.prank(ALICE);
         token.approve(address(vault), 800);
 
+        uint256[] memory batch = new uint256[](16);
+
         // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
             vm.expectEmit(true, true, true, true);
-            emit Refund(
-                defaultFlaxAddress(),
-                i,
-                address(token),
-                ERC20_ID,
-                100,
-                i
-            );
+            IWallet.FLAXAddress memory addr = defaultFlaxAddress();
+            emit Refund(addr, i, address(token), ERC20_ID, 100, uint128(i));
 
             vm.prank(ALICE);
-            depositFunds(
-                wallet,
-                ALICE,
-                address(token),
-                100,
+            depositFunds(wallet, ALICE, address(token), 100, ERC20_ID, addr);
+
+            IWallet.Note memory note = IWallet.Note(
+                addr.h1X,
+                addr.h2X,
+                i,
+                uint256(uint160(address(token))),
                 ERC20_ID,
-                defaultFlaxAddress()
+                100
             );
+            uint256 noteCommitment = treeTest.computeNoteCommitment(note);
+
+            batch[i] = noteCommitment;
         }
 
-        wallet.commit8FromQueue();
-    }
+        uint256[] memory path = treeTest.computeInitialRoot(batch);
+        uint256 root = path[path.length - 1];
 
-    function setUp() public virtual {
-        // Deploy poseidon hasher libraries
-        deployPoseidon3Through6();
+        // fill the tree batch
+        wallet.fillBatchWithZeros();
 
-        // Instantiate vault, verifier, tree, and wallet
-        vault = new Vault();
-        merkle = new BatchBinaryMerkle(32, 0, new PoseidonHasherT3(poseidonT3));
-        verifier = new TestSpend2Verifier();
-        wallet = new Wallet(
-            address(vault),
-            address(verifier),
-            address(merkle),
-            address(IHasherT5(new PoseidonHasherT5(poseidonT5))),
-            address(IHasherT6(new PoseidonHasherT6(poseidonT6)))
-        );
-
-        vault.initialize(address(wallet));
-
-        // Instantiate token contracts
-        for (uint256 i = 0; i < 3; i++) {
-            ERC20s[i] = new SimpleERC20Token();
-            ERC721s[i] = new SimpleERC721Token();
-        }
+        wallet.applySubtreeUpdate(root, dummyProof());
     }
 
     function testPoseidon() public {
@@ -192,12 +209,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedFunction: encodedFunction
         });
 
-        uint256 root = wallet.getRoot();
+        uint256 root = wallet.root();
         IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
             commitmentTreeRoot: root,
             nullifier: uint256(182),
             newNoteCommitment: uint256(1038),
-            proof: defaultSpendProof(),
+            proof: dummyProof(),
             valueToSpend: uint256(50),
             asset: address(token),
             id: ERC20_ID
@@ -236,7 +253,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vm.expectEmit(false, true, true, true);
-        emit Spend(0, 50, 8); // only checking value and merkleIndex are valid
+        emit Spend(0, 50, uint128(16)); // only checking value and merkleIndex are valid
 
         wallet.processBundle(bundle);
 

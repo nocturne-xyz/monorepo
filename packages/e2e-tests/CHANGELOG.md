@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Modify tests tests to use `Wallet` which now internally uses `OffchainMerkleTree` as a lib
+- Modify tests to use `OffchainMerkleTree` with dummy ZK tree updates
 - Modify `WalletAndFlaxContext` to use local merkle prover and notes managers to sync state and generate proof for bundle
 - Add `LocalMerkleProver` test suite to check syncing functionality
 - Refactor single test case to `FlaxContext`

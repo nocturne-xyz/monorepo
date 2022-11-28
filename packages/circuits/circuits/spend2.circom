@@ -55,12 +55,10 @@ template Spend(levels) {
     signal output valueToSpend;
     signal output nullifier;
 
-    // Compute hash of oldNoteOwner as H(h1X, h1Y, h2X, h2Y)
-    component oldNoteOwnerHash = Poseidon(4);
+    // Compute hash of oldNoteOwner as H(h1X, h2X)
+    component oldNoteOwnerHash = Poseidon(2);
     oldNoteOwnerHash.inputs[0] <== oldNoteOwnerH1X;
-    oldNoteOwnerHash.inputs[1] <== oldNoteOwnerH1Y;
-    oldNoteOwnerHash.inputs[2] <== oldNoteOwnerH2X;
-    oldNoteOwnerHash.inputs[3] <== oldNoteOwnerH2Y;
+    oldNoteOwnerHash.inputs[1] <== oldNoteOwnerH2X;
 
     // Computing oldNoteCommitment
     signal oldNoteCommitment;
@@ -122,12 +120,10 @@ template Spend(levels) {
     sigVerify.c <== c;
     sigVerify.z <== z;
 
-    // Compute hash of newNoteOwner as H(h1X, h1Y, h2X, h2Y)
-    component newNoteOwnerHash = Poseidon(4);
+    // Compute hash of newNoteOwner as H(h1X, h2X)
+    component newNoteOwnerHash = Poseidon(2);
     newNoteOwnerHash.inputs[0] <== newNoteOwnerH1X;
-    newNoteOwnerHash.inputs[1] <== newNoteOwnerH1Y;
-    newNoteOwnerHash.inputs[2] <== newNoteOwnerH2X;
-    newNoteOwnerHash.inputs[3] <== newNoteOwnerH2Y;
+    newNoteOwnerHash.inputs[1] <== newNoteOwnerH2X;
 
 
     // Computing newNoteCommitment

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.5;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -14,6 +14,11 @@ struct JoinsplitProofWithPublicSignals {
 
 struct Spend2ProofWithPublicSignals {
     uint256[7] publicSignals;
+    BaseProof proof;
+}
+
+struct SubtreeUpdateProofWithPublicSignals {
+    uint256[4] publicSignals;
     BaseProof proof;
 }
 
@@ -65,7 +70,35 @@ contract JsonDecodings is Test, TestUtils {
             });
     }
 
-    function spend2BaseProofToProof8(BaseProof memory proof)
+    function loadSubtreeUpdateProofFromFixture(string memory path)
+        public
+        returns (SubtreeUpdateProofWithPublicSignals memory)
+    {
+        string memory json = loadFixtureJson(path);
+        bytes memory proofBytes = json.parseRaw(".proof");
+        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
+
+        uint256[4] memory publicSignals;
+        for (uint256 i = 0; i < 4; i++) {
+            bytes memory jsonSelector = abi.encodePacked(
+                bytes(".publicSignals["),
+                Strings.toString(i)
+            );
+            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
+
+            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
+            string memory signal = abi.decode(signalBytes, (string));
+            publicSignals[i] = parseInt(signal);
+        }
+
+        return
+            SubtreeUpdateProofWithPublicSignals({
+                publicSignals: publicSignals,
+                proof: proof
+            });
+    }
+
+    function baseProofTo8(BaseProof memory proof)
         public
         returns (uint256[8] memory)
     {

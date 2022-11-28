@@ -6,7 +6,10 @@ import {
 import { poseidon } from "circomlibjs";
 
 export class BinaryPoseidonTree {
+  static readonly R = 28;
+  static readonly S = 4;
   static readonly DEPTH = 32;
+  static readonly BATCH_SIZE = 16;
 
   tree: IncrementalMerkleTree;
   count: number;
@@ -28,6 +31,10 @@ export class BinaryPoseidonTree {
   insert(leaf: Node): void {
     this.tree.insert(leaf);
     this.count += 1;
+  }
+
+  update(index: number, leaf: Node): void {
+    this.tree.update(index, leaf);
   }
 
   getProof(index: number): MerkleProof {

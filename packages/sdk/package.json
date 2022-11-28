@@ -12,7 +12,8 @@
     "build": "tsc --build",
     "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
     "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
-    "gen-test-cases": "yarn gen-test-cases:joinsplit",
+    "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
+    "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
     "test:unit": "mocha --require ts-node/register test/**",
     "check": "tsc --noEmit",
     "lint": "eslint --fix src --ext .ts",
@@ -37,10 +38,12 @@
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
+    "bigint-conversion": "^2.3.0",
     "circomlib": "0.0.18",
     "circomlibjs": "0.0.8",
     "ethers": "^5.0.0",
     "ffjavascript": "^0.2.38",
+    "js-sha256": "^0.9.0",
     "lmdb": "^2.6.8",
     "snarkjs": "0.5.0"
   }
