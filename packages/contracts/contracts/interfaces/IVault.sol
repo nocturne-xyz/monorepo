@@ -18,15 +18,17 @@ interface IVault {
         uint256 value
     ) external;
 
-    function approveFunds(uint256[] calldata values, address[] calldata assets)
-        external;
+    function approveFunds(
+        uint256[] calldata values,
+        address[] calldata assets
+    ) external;
 
     function makeBatchDeposit(
         IWallet.Deposit[] calldata deposits,
         uint256 numApprovedDeposits
     ) external returns (uint256[] memory, uint256);
 
-    function makeDeposit(IWallet.Deposit calldata deposit)
-        external
-        returns (bool);
+    function makeDeposit(
+        IWallet.Deposit calldata deposit
+    ) external returns (bool);
 }

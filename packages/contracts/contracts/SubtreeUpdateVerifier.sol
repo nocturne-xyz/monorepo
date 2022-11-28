@@ -94,11 +94,10 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
     }
 
-    function verify(uint256[] memory input, Proof memory proof)
-        internal
-        view
-        returns (uint256)
-    {
+    function verify(
+        uint256[] memory input,
+        Proof memory proof
+    ) internal view returns (uint256) {
         uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
         VerifyingKey memory vk = verifyingKey();
         require(input.length + 1 == vk.IC.length, "verifier-bad-input");

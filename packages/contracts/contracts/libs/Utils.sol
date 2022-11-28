@@ -8,39 +8,32 @@ library Utils {
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // hash array of field elements / uint256s as big-endian bytes with sha256
-    function sha256FieldElems(uint256[] memory elems)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function sha256FieldElems(
+        uint256[] memory elems
+    ) internal pure returns (bytes32) {
         return sha256(abi.encodePacked(elems));
     }
 
     // split a uint256 into 2 limbs, one containing the high (256 - lowerBits) bits, the other containing the lower `lowerBits` bits
-    function splitUint256ToLimbs(uint256 n, uint256 lowerBits)
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+    function splitUint256ToLimbs(
+        uint256 n,
+        uint256 lowerBits
+    ) internal pure returns (uint256, uint256) {
         uint256 hi = n >> lowerBits;
         uint256 lo = n & ((1 << lowerBits) - 1);
         return (hi, lo);
     }
 
     // return uint256 as two limbs - one uint256 containing the 3 hi bits, the other containing the lower 253 bits
-    function uint256ToFieldElemLimbs(uint256 n)
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+    function uint256ToFieldElemLimbs(
+        uint256 n
+    ) internal pure returns (uint256, uint256) {
         return splitUint256ToLimbs(n, 253);
     }
 
-    function sha256Note(IWallet.Note memory note)
-        internal
-        pure
-        returns (uint256)
-    {
+    function sha256Note(
+        IWallet.Note memory note
+    ) internal pure returns (uint256) {
         uint256[] memory elems = new uint256[](6);
         elems[0] = note.ownerH1;
         elems[1] = note.ownerH2;

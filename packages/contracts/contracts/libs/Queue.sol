@@ -29,10 +29,10 @@ library QueueLib {
      * @param _item New element to be enqueued
      * @return _last Index of newly enqueued element
      **/
-    function enqueue(Queue storage _q, uint256 _item)
-        internal
-        returns (uint128 _last)
-    {
+    function enqueue(
+        Queue storage _q,
+        uint256 _item
+    ) internal returns (uint128 _last) {
         _last = _q.last + 1;
         _q.last = _last;
         if (_item != uint256(0)) {
@@ -63,10 +63,10 @@ library QueueLib {
      * @param _items Array of elements to be enqueued
      * @return _last Index of last enqueued element
      **/
-    function enqueue(Queue storage _q, uint256[] memory _items)
-        internal
-        returns (uint128 _last)
-    {
+    function enqueue(
+        Queue storage _q,
+        uint256[] memory _items
+    ) internal returns (uint128 _last) {
         _last = _q.last;
         for (uint256 i = 0; i < _items.length; i += 1) {
             _last += 1;
@@ -150,11 +150,10 @@ library QueueLib {
      * @param _item Item being searched for in queue
      * @return True if `_item` currently exists in queue, false if otherwise
      **/
-    function contains(Queue storage _q, uint256 _item)
-        internal
-        view
-        returns (bool)
-    {
+    function contains(
+        Queue storage _q,
+        uint256 _item
+    ) internal view returns (bool) {
         for (uint256 i = _q.first; i <= _q.last; i++) {
             if (_q.queue[i] == _item) {
                 return true;
@@ -190,11 +189,10 @@ library QueueLib {
     }
 
     /// @notice Returns number of elements between `_last` and `_first` (used internally)
-    function _length(uint128 _last, uint128 _first)
-        internal
-        pure
-        returns (uint256)
-    {
+    function _length(
+        uint128 _last,
+        uint128 _first
+    ) internal pure returns (uint256) {
         return uint256(_last + 1 - _first);
     }
 }

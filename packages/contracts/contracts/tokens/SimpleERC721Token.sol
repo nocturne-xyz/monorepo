@@ -13,9 +13,10 @@ contract SimpleERC721Token is ERC721, Ownable {
         _safeMint(account, tokenId);
     }
 
-    function reserveTokens(address account, uint256[] calldata tokenIds)
-        external
-    {
+    function reserveTokens(
+        address account,
+        uint256[] calldata tokenIds
+    ) external {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             _safeMint(account, tokenIds[i]);
         }

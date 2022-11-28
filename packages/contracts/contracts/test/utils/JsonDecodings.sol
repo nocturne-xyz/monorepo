@@ -33,19 +33,17 @@ struct BaseProof {
 contract JsonDecodings is Test, TestUtils {
     using stdJson for string;
 
-    function loadFixtureJson(string memory path)
-        public
-        returns (string memory)
-    {
+    function loadFixtureJson(
+        string memory path
+    ) public returns (string memory) {
         string memory root = vm.projectRoot();
         bytes memory path = abi.encodePacked(bytes(root), bytes(path));
         return vm.readFile(string(path));
     }
 
-    function loadSpend2ProofFromFixture(string memory path)
-        public
-        returns (Spend2ProofWithPublicSignals memory)
-    {
+    function loadSpend2ProofFromFixture(
+        string memory path
+    ) public returns (Spend2ProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
@@ -70,10 +68,9 @@ contract JsonDecodings is Test, TestUtils {
             });
     }
 
-    function loadSubtreeUpdateProofFromFixture(string memory path)
-        public
-        returns (SubtreeUpdateProofWithPublicSignals memory)
-    {
+    function loadSubtreeUpdateProofFromFixture(
+        string memory path
+    ) public returns (SubtreeUpdateProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
@@ -98,10 +95,9 @@ contract JsonDecodings is Test, TestUtils {
             });
     }
 
-    function baseProofTo8(BaseProof memory proof)
-        public
-        returns (uint256[8] memory)
-    {
+    function baseProofTo8(
+        BaseProof memory proof
+    ) public returns (uint256[8] memory) {
         return [
             parseInt(proof.pi_a[0]),
             parseInt(proof.pi_a[1]),
@@ -114,10 +110,9 @@ contract JsonDecodings is Test, TestUtils {
         ];
     }
 
-    function loadJoinsplitProofFromFixture(string memory path)
-        public
-        returns (JoinsplitProofWithPublicSignals memory)
-    {
+    function loadJoinsplitProofFromFixture(
+        string memory path
+    ) public returns (JoinsplitProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
@@ -142,10 +137,9 @@ contract JsonDecodings is Test, TestUtils {
             });
     }
 
-    function joinsplitBaseProofToProof8(BaseProof memory proof)
-        public
-        returns (uint256[8] memory)
-    {
+    function joinsplitBaseProofToProof8(
+        BaseProof memory proof
+    ) public returns (uint256[8] memory) {
         return [
             parseInt(proof.pi_a[0]),
             parseInt(proof.pi_a[1]),

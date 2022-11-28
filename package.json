@@ -1,22 +1,6 @@
 {
   "name": "monorepo",
   "scripts": {
-    "circuits:build": "yarn workspaces foreach run circuits-build --include @flax/circuits",
-    "sdk:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @flax/sdk",
-    "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn sdk:gen-test-cases",
-    "lint": "yarn turbo run lint",
-    "build": "yarn turbo run build",
-    "build-nocache": "yarn turbo run build --force",
-    "test": "yarn turbo run test --filter=!@flax/circuits...",
-    "test:unit": "yarn turbo run test:unit --filter=!@flax/circuits...",
-    "test:e2e": "yarn turbo run test:e2e --filter=@flax/e2e-tests"
-  },
-  "workspaces": {
-    "packages": [
-      "packages/*"
-    ]
-  },
-  "scripts": {
     "build": "yarn turbo run build",
     "circuits:build": "yarn workspaces foreach run circuits-build --include @flax/circuits",
     "lint": "yarn turbo run lint",
@@ -25,6 +9,11 @@
     "test": "yarn turbo run test --filter=!@flax/circuits...",
     "test:e2e": "yarn turbo run test:e2e --filter=@flax/e2e-tests",
     "test:unit": "yarn turbo run test:unit --filter=!@flax/circuits..."
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
   },
   "resolutions": {
     "ffjavascript": "FLAXPrivacy/ffjavascript#3bfd14daf3f0b22cdaddc17a39bf10d6ee79716f"

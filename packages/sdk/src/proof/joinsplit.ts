@@ -4,8 +4,9 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as snarkjs from "snarkjs";
 import * as path from "path";
 import * as fs from "fs";
-import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
+import { normalizePublicSignals, normalizeBigInt } from "./utils";
 import { FlaxAddressStruct } from "../crypto/address";
+import { BaseProof } from "./types";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;

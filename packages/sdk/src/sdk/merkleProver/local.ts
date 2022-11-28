@@ -17,7 +17,7 @@ const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
 export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
-  protected treeContract: BatchBinaryMerkle;
+  protected contract: Wallet;
   protected provider: ethers.providers.Provider;
   protected db: LocalMerkleDBExtension;
 

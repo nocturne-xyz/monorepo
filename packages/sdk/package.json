@@ -10,12 +10,12 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
-    "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
-    "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
-    "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
     "check": "tsc --noEmit",
     "clean": "rm -rf dist",
+    "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
+    "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
+    "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
+    "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
     "lint": "eslint --fix src --ext .ts",
     "test:unit": "mocha --require ts-node/register test/**"
   },
@@ -27,7 +27,7 @@
     "circomlibjs": "0.0.8",
     "ethers": "^5.0.0",
     "ffjavascript": "0.2.57",
-	"js-sha256": "^0.9.0",
+    "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0"
   },
   "devDependencies": {

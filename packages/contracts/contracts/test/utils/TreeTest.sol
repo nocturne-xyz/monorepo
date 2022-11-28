@@ -23,10 +23,10 @@ library TreeTestLib {
         self.hasherT6 = _hasherT6;
     }
 
-    function computeSubtreeRoot(TreeTest storage self, uint256[] memory batch)
-        internal
-        returns (uint256)
-    {
+    function computeSubtreeRoot(
+        TreeTest storage self,
+        uint256[] memory batch
+    ) internal returns (uint256) {
         require(batch.length <= TreeUtils.BATCH_SIZE, "batch too large");
         uint256[] memory scratch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < batch.length; i++) {
@@ -38,7 +38,7 @@ library TreeTestLib {
             i >= 0;
             i--
         ) {
-            for (uint256 j = 0; j < 2**uint256(i); j++) {
+            for (uint256 j = 0; j < 2 ** uint256(i); j++) {
                 uint256 left = scratch[2 * j];
                 uint256 right = scratch[2 * j + 1];
                 scratch[j] = self.hasherT3.hash([left, right]);
@@ -50,10 +50,10 @@ library TreeTestLib {
 
     // compute the new tree root after inserting a batch to an empty tree
     // returns the path to the subtree, from the subtree root (inclusive) to the overall tree root
-    function computeInitialRoot(TreeTest storage self, uint256[] memory batch)
-        internal
-        returns (uint256[] memory)
-    {
+    function computeInitialRoot(
+        TreeTest storage self,
+        uint256[] memory batch
+    ) internal returns (uint256[] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 zero = EMPTY_SUBTREE_ROOT;
 

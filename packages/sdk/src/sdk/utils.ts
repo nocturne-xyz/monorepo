@@ -1,5 +1,4 @@
 import { TypedEvent } from "@flax/contracts/dist/src/common";
-import { bigintToBuf } from "bigint-conversion";
 import { BaseContract, EventFilter } from "ethers";
 import { Result } from "ethers/lib/utils";
 
@@ -32,7 +31,10 @@ export async function query<T extends Result, C extends BaseContract>(
 }
 
 // splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
-export function splitBigint256ToLimbs(n: bigint, lowerBits: number): [bigint, bigint] {
+export function splitBigint256ToLimbs(
+  n: bigint,
+  lowerBits: number
+): [bigint, bigint] {
   n = BigInt.asUintN(256, n);
 
   const hi = n >> BigInt(lowerBits);
@@ -47,10 +49,30 @@ export function bigInt256ToFieldElems(n: bigint): [bigint, bigint] {
 
 // converts a bigint256 into a 32-byte buffer containing it's big-endian repr
 export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
-  const res = [...new Uint8Array(bigintToBuf(n, true))];
+  const res = [...bigintToBuf(n)];
   while (res.length < numBytes) {
     res.unshift(0);
   }
 
   return res;
+}
+
+export function bigintToBuf(bn: bigint): Uint8Array {
+  var hex = BigInt(bn).toString(16);
+  if (hex.length % 2) {
+    hex = "0" + hex;
+  }
+
+  var len = hex.length / 2;
+  var u8 = new Uint8Array(len);
+
+  var i = 0;
+  var j = 0;
+  while (i < len) {
+    u8[i] = parseInt(hex.slice(j, j + 2), 16);
+    i += 1;
+    j += 2;
+  }
+
+  return u8;
 }

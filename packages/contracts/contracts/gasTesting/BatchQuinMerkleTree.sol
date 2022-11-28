@@ -68,7 +68,7 @@ library BatchQuinMerkleTree {
             "IncrementalQuinTree: leaf must be < SNARK_SCALAR_FIELD"
         );
         require(
-            self.numberOfLeaves < 5**self.depth,
+            self.numberOfLeaves < 5 ** self.depth,
             "IncrementalQuinTree: tree is full"
         );
 
@@ -105,7 +105,7 @@ library BatchQuinMerkleTree {
             );
         }
         require(
-            self.numberOfLeaves + 5 <= 5**self.depth,
+            self.numberOfLeaves + 5 <= 5 ** self.depth,
             "IncrementalQuinTree: tree is full"
         );
 
