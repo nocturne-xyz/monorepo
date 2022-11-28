@@ -128,8 +128,8 @@ contract CommitmentTreeManager {
     }
 
     function fillBatchWithZeros() external {
-		uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
-		uint256[] memory zeros = new uint256[](numToInsert);
+        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+        uint256[] memory zeros = new uint256[](numToInsert);
         insertNoteCommitments(zeros);
     }
 

@@ -13,9 +13,12 @@ contract TestTreeUtils is Test, TestUtils {
         (uint256 hi, ) = Utils.uint256ToFieldElemLimbs(accumulatorHash);
         assertEq(3, hi);
 
-        uint256 encodedPathAndhash = TreeUtils.encodePathAndHash(uint128(idx), hi);
-        uint256 expected = (3 << (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH)) |
-            12;
+        uint256 encodedPathAndhash = TreeUtils.encodePathAndHash(
+            uint128(idx),
+            hi
+        );
+        uint256 expected = (3 <<
+            (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH)) | 12;
 
         assertEq(expected, encodedPathAndhash);
     }

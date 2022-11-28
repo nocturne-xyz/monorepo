@@ -20,7 +20,7 @@ contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
         address _spend2Verifier,
-        address _subtreeUpdateVerifier 
+        address _subtreeUpdateVerifier
     ) BalanceManager(_vault, _spend2Verifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {

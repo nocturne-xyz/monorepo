@@ -33,7 +33,11 @@ library TreeTestLib {
             scratch[i] = batch[i];
         }
 
-        for (int256 i = int256(TreeUtils.BATCH_SUBTREE_DEPTH - 1); i >= 0; i--) {
+        for (
+            int256 i = int256(TreeUtils.BATCH_SUBTREE_DEPTH - 1);
+            i >= 0;
+            i--
+        ) {
             for (uint256 j = 0; j < 2**uint256(i); j++) {
                 uint256 left = scratch[2 * j];
                 uint256 right = scratch[2 * j + 1];
@@ -57,7 +61,11 @@ library TreeTestLib {
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
         path[0] = subtreeRoot;
-        for (uint256 i = 0; i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH; i++) {
+        for (
+            uint256 i = 0;
+            i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
+            i++
+        ) {
             path[i + 1] = self.hasherT3.hash([path[i], zero]);
             zero = self.hasherT3.hash([zero, zero]);
         }
@@ -81,7 +89,11 @@ library TreeTestLib {
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
         newPath[0] = subtreeRoot;
-        for (uint256 i = 0; i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH; i++) {
+        for (
+            uint256 i = 0;
+            i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
+            i++
+        ) {
             if (subtreeIdx & 1 == 1) {
                 newPath[i + 1] = self.hasherT3.hash([path[i], newPath[i]]);
             } else {

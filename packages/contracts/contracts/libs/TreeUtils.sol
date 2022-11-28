@@ -28,5 +28,5 @@ library TreeUtils {
             (DEPTH - BATCH_SUBTREE_DEPTH);
 
         return encodedPathAndHash;
-    } 
+    }
 }
