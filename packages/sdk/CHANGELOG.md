@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- create separate "indexing" module for shared indexing logic
+- separate out subtree update input signal gen into its own module
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - Break out SDK methods into sub methods and expose a method for gathering spend tx inputs for site/snap to use

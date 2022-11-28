@@ -1,3 +1,4 @@
+
 import {
   IncrementalMerkleTree,
   Node,
@@ -35,6 +36,11 @@ export class BinaryPoseidonTree {
 
   update(index: number, leaf: Node): void {
     this.tree.update(index, leaf);
+  }
+
+  pop(): void {
+    this.tree.delete(this.count - 1);
+    this.count -= 1;
   }
 
   getProof(index: number): MerkleProof {
