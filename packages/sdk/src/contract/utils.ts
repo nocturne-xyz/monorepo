@@ -1,8 +1,11 @@
 import { ethers } from "ethers";
 import { SNARK_SCALAR_FIELD } from "../commonTypes";
-import { PreProofOperation, PreProofSpendTx } from "./types";
+import {
+  PreSignOperation,
+  PreSignJoinSplitTx
+} from "./types";
 
-function hashOperation(op: PreProofOperation): string {
+function hashOperation(op: PreSignOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload = [] as any;
   for (let i = 0; i < op.actions.length; i++) {
@@ -24,8 +27,21 @@ function hashOperation(op: PreProofOperation): string {
     ethers.utils.solidityPack(["address[]"], [op.tokens.refundTokens])
   );
 
+  let joinSplitTxsHash = [] as any;
+  for (let i = 0; i < op.joinSplitTxs.length; i++) {
+    const tx = op.joinSplitTxs[i];
+    joinSplitTxsHash = ethers.utils.solidityPack(
+      ["bytes", "bytes32"],
+      [
+        payload,
+        hashJoinSplit(tx),
+      ]
+    );
+  }
+
   payload = ethers.utils.solidityPack(
     [
+      "bytes",
       "bytes",
       "uint256",
       "uint256",
@@ -37,6 +53,7 @@ function hashOperation(op: PreProofOperation): string {
     ],
     [
       payload,
+      joinSplitTxsHash,
       op.refundAddr.h1X,
       op.refundAddr.h1Y,
       op.refundAddr.h2X,
@@ -50,38 +67,27 @@ function hashOperation(op: PreProofOperation): string {
   return ethers.utils.keccak256(payload);
 }
 
-function hashSpend(spend: PreProofSpendTx): string {
+function hashJoinSplit(joinsplit: PreSignJoinSplitTx): string {
   const payload = ethers.utils.solidityPack(
-    ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
+    ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint256"],
     [
-      spend.commitmentTreeRoot,
-      spend.nullifier,
-      spend.newNoteCommitment,
-      spend.valueToSpend,
-      spend.asset,
-      spend.id,
+      joinsplit.commitmentTreeRoot,
+      joinsplit.nullifierA,
+      joinsplit.nullifierB,
+      joinsplit.newNoteACommitment,
+      joinsplit.newNoteBCommitment,
+      joinsplit.publicSpend,
+      joinsplit.asset,
+      joinsplit.id,
     ]
   );
 
   return ethers.utils.keccak256(payload);
 }
 
-function calcOperationDigest(operationHash: string, spendHash: string): string {
-  return ethers.utils.keccak256(
-    ethers.utils.solidityPack(
-      ["bytes32", "bytes32"],
-      [operationHash, spendHash]
-    )
-  );
-}
-
 export function calculateOperationDigest(
-  operation: PreProofOperation,
-  spend: PreProofSpendTx
+  operation: PreSignOperation
 ): bigint {
   const operationHash = hashOperation(operation);
-  const spendHash = hashSpend(spend);
-  return (
-    BigInt(calcOperationDigest(operationHash, spendHash)) % SNARK_SCALAR_FIELD
-  );
+  return BigInt(operationHash) % SNARK_SCALAR_FIELD;
 }

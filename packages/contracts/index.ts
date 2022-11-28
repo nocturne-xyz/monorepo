@@ -2,7 +2,7 @@
 /* eslint-disable */
 export type { Wallet } from "./src/Wallet";
 export type { Vault } from "./src/Vault";
-export type { Spend2Verifier } from "./src/Spend2Verifier";
+export type { JoinSplitVerifier } from "./src/JoinSplitVerifier";
 export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
 export type { TestSubtreeUpdateVerifier } from './src/TestSubtreeUpdateVerifier';
 export type { CommitmentTreeManager } from "./src/CommitmentTreeManager";
@@ -17,7 +17,7 @@ export type { IERC1155Interface } from "./src/IERC1155";
 
 export { Wallet__factory } from "./src/factories/Wallet__factory";
 export { Vault__factory } from "./src/factories/Vault__factory";
-export { Spend2Verifier__factory } from "./src/factories/Spend2Verifier__factory";
+export { JoinSplitVerifier__factory } from "./src/factories/JoinSplitVerifier__factory";
 export { SubtreeUpdateVerifier__factory } from "./src/factories/SubtreeUpdateVerifier__factory";
 export { TestSubtreeUpdateVerifier__factory } from "./src/factories/TestSubtreeUpdateVerifier__factory";
 export { CommitmentTreeManager__factory } from "./src/factories/CommitmentTreeManager__factory";

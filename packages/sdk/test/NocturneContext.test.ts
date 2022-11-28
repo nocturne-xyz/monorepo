@@ -6,11 +6,11 @@ import { AssetRequest, AssetStruct } from "../src/commonTypes";
 import { IncludedNoteStruct } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
-import { MockSpend2Prover } from "../src/proof/mock";
+import { MockJoinSplitProver } from "../src/proof/mock";
 import {
   DEFAULT_DB_PATH,
   LocalObjectDB,
-  LocalMerkleProver,
+  MockMerkleProver,
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
@@ -18,7 +18,7 @@ import { getDefaultProvider } from "ethers";
 describe("NocturneContext", () => {
   let db = new LocalObjectDB({ localMerkle: true });
   let nocturneContext: NocturneContext;
-  const asset: AssetStruct = { address: "0x12345", id: 11111n };
+  const asset: AssetStruct = { address: "0x1234", id: 11111n };
 
   async function setupNocturneContextWithFourNotes(
     asset: AssetStruct
@@ -67,12 +67,9 @@ describe("NocturneContext", () => {
       fourthOldNote,
     ]);
 
-    const prover = new MockSpend2Prover();
-    const merkleProver = new LocalMerkleProver(
-      "0xaaaa",
-      getDefaultProvider(),
-      db
-    );
+    const prover = new MockJoinSplitProver();
+    const merkleProver = new MockMerkleProver();
+
     const notesManager = new LocalNotesManager(
       db,
       signer,
@@ -102,33 +99,45 @@ describe("NocturneContext", () => {
   });
 
   it("Gathers minimum notes for asset request", async () => {
-    const refundAddr = nocturneContext.signer.address.rerand().toStruct();
-
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {
       asset,
       value: 5n,
     };
-    const minimumFor5 = await nocturneContext.gatherMinimumNotes(
-      refundAddr,
+    const minimumFor5 = (await nocturneContext.gatherMinimumNotes(
       assetRequest5
-    );
+    ))[0];
     expect(minimumFor5.length).to.equal(1);
-    expect(minimumFor5[0].oldNote.inner.value).to.equal(10n);
+    expect(minimumFor5[0].inner.value).to.equal(10n);
 
     // Request 80 tokens, consume next smallest two notes
     const assetRequest80: AssetRequest = {
       asset,
       value: 80n,
     };
-    const minimumFor80 = await nocturneContext.gatherMinimumNotes(
-      refundAddr,
+    const minimumFor80 = (await nocturneContext.gatherMinimumNotes(
       assetRequest80
-    );
+    ))[0];
 
     expect(minimumFor80.length).to.equal(3);
-    expect(minimumFor80[2].oldNote.inner.value).to.equal(50n);
-    expect(minimumFor80[1].oldNote.inner.value).to.equal(25n);
-    expect(minimumFor80[0].oldNote.inner.value).to.equal(10n);
+    expect(minimumFor80[2].inner.value).to.equal(50n);
+    expect(minimumFor80[1].inner.value).to.equal(25n);
+    expect(minimumFor80[0].inner.value).to.equal(10n);
+  });
+
+  it("Generates PreProofOpeartion", async () => {
+    // Request 40 tokens, should generate two joinsplits
+    const assetRequest: AssetRequest = {
+      asset,
+      value: 40n,
+    };
+    const preProofOp = await
+      nocturneContext.tryGetPreProofOperation({
+        assetRequests: [assetRequest],
+        refundTokens: ["0x1245"],
+        actions: [{contractAddress: "0x1111",
+          encodedFunction: "0x6d6168616d000000000000000000000000000000000000000000000000000000"}]
+      });
+    expect(preProofOp.joinSplitTxs.length).to.equal(2);
   });
 });

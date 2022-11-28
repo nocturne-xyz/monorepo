@@ -1,5 +1,8 @@
 import { Address } from "../commonTypes";
 import { NocturneAddressStruct } from "../crypto/address";
+import { JoinSplitInputs } from "../proof/joinsplit";
+import { MerkleProofInput } from "../proof";
+import { IncludedNote, Note } from "../sdk/note";
 
 export interface SpendAndRefundTokens {
   spendTokens: Address[];
@@ -11,34 +14,54 @@ export interface Action {
   encodedFunction: string;
 }
 
-export interface PreProofSpendTx {
+export interface BaseJoinSplitTx {
   commitmentTreeRoot: bigint;
-  nullifier: bigint;
-  newNoteCommitment: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
   asset: Address;
   id: bigint;
-  valueToSpend: bigint;
+  publicSpend: bigint;
 }
 
-export interface PreProofOperation {
+export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
+  oldNoteA: IncludedNote;
+  oldNoteB: IncludedNote;
+  newNoteA: Note;
+  newNoteB: Note;
+  merkleInputA: MerkleProofInput;
+  merkleInputB: MerkleProofInput;
+}
+
+export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
+  opDigest: bigint;
+  proofInputs: JoinSplitInputs
+}
+
+export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
+  opDigest: bigint;
+  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+}
+
+export interface PreSignOperation {
+  joinSplitTxs: PreSignJoinSplitTx[];
   refundAddr: NocturneAddressStruct;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
 }
 
-export interface ProvenSpendTx {
-  commitmentTreeRoot: bigint;
-  nullifier: bigint;
-  newNoteCommitment: bigint;
-  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
-  asset: Address;
-  valueToSpend: bigint;
-  id: bigint;
+export interface PreProofOperation {
+  joinSplitTxs: PreProofJoinSplitTx[];
+  refundAddr: NocturneAddressStruct;
+  tokens: SpendAndRefundTokens;
+  actions: Action[];
+  gasLimit: bigint;
 }
 
 export interface ProvenOperation {
-  spendTxs: ProvenSpendTx[];
+  joinSplitTxs: ProvenJoinSplitTx[];
   refundAddr: NocturneAddressStruct;
   tokens: SpendAndRefundTokens;
   actions: Action[];

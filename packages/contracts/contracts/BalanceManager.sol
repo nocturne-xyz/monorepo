@@ -110,24 +110,25 @@ contract BalanceManager is
     }
 
     function _handleAllSpends(
-        IWallet.SpendTransaction[] calldata spendTxs,
+        IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
         IWallet.Tokens calldata tokens,
         bytes32 operationHash
     ) internal {
-        uint256 numSpendTxs = spendTxs.length;
+        uint256 numSpendTxs = joinSplitTxs.length;
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            _handleSpend(spendTxs[i], operationHash);
-            if (spendTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
-                balanceInfo.erc20Balances[spendTxs[i].asset] += spendTxs[i]
-                    .valueToSpend;
-            } else if (spendTxs[i].valueToSpend == 0) {
-                _gatherERC721(spendTxs[i].asset, spendTxs[i].id);
+            _handleJoinSplit(joinSplitTxs[i], operationHash);
+            if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
+                balanceInfo.erc20Balances[
+                    joinSplitTxs[i].asset
+                ] += joinSplitTxs[i].publicValue;
+            } else if (joinSplitTxs[i].valueToSpend == 0) {
+                _gatherERC721(joinSplitTxs[i].asset, joinSplitTxs[i].id);
             } else {
                 _gatherERC1155(
-                    spendTxs[i].asset,
-                    spendTxs[i].id,
-                    spendTxs[i].valueToSpend
+                    joinSplitTxs[i].asset,
+                    joinSplitTxs[i].id,
+                    joinSplitTxs[i].valueToSpend
                 );
             }
         }
@@ -136,7 +137,7 @@ contract BalanceManager is
 
         // reset ERC20 balances
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            balanceInfo.erc20Balances[spendTxs[i].asset] = 0;
+            balanceInfo.erc20Balances[joinSplitTxs[i].asset] = 0;
         }
     }
 

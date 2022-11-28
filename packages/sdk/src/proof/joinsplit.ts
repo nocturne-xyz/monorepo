@@ -44,16 +44,16 @@ export interface JoinSplitPublicSignals {
 
 export interface JoinSplitInputs {
   vk: bigint;
-  operationDigest: bigint;
-  oldNoteA: NoteInput;
-  oldNoteB: NoteInput;
   spendPk: [bigint, bigint];
-  newNoteA: NoteInput;
-  newNoteB: NoteInput;
-  merkleProofA: MerkleProofInput;
-  merkleProofB: MerkleProofInput;
+  operationDigest: bigint;
   c: bigint;
   z: bigint;
+  oldNoteA: NoteInput;
+  oldNoteB: NoteInput;
+  merkleProofA: MerkleProofInput;
+  merkleProofB: MerkleProofInput;
+  newNoteA: NoteInput;
+  newNoteB: NoteInput;
 }
 
 export function joinsplitPublicSignalsArrayToTyped(

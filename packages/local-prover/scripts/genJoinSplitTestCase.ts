@@ -100,7 +100,7 @@ const merkleProofBInput: MerkleProofInput = {
   siblings: merkleProofB.siblings,
 };
 
-// New notes where 75 + 75 = 150, swapping addrs
+// New notes where 75 + 75 = 150
 const newNoteA: NoteInput = {
   owner: nocturneAddrBInput,
   nonce: 3n,

@@ -16,14 +16,16 @@ interface IWallet {
         uint256 h2Y;
     }
 
-    struct SpendTransaction {
+    struct JoinSplitTransaction {
         uint256 commitmentTreeRoot;
-        uint256 nullifier;
+        uint256 nullifierA;
+        uint256 nullifierB;
+        uint256 newNoteACommitment;
+        uint256 newNoteBCommitment;
         uint256[8] proof;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
-        uint256 valueToSpend; // 0 for ERC721
-        uint256 newNoteCommitment;
+        uint256 publicSpend;
     }
 
     struct Note {
@@ -60,6 +62,7 @@ interface IWallet {
 
     struct Operation {
         SpendTransaction[] spendTxs;
+        JoinSplitTransaction[] joinSplitTxs;
         NocturneAddress refundAddr;
         Tokens tokens;
         Action[] actions;

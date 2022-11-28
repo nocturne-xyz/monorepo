@@ -25,6 +25,20 @@ export class Note {
     this.inner = note;
   }
 
+  static newDummy(
+    owner: NocturneAddressStruct,
+    asset: Address,
+    id: bigint): Note
+    {
+      return new Note({
+        owner,
+        nonce: 0n,
+        asset,
+        id,
+        value: 0n,
+      });
+  }
+
   get owner(): NocturneAddressStruct {
     return this.inner.owner;
   }
@@ -117,6 +131,21 @@ export class IncludedNote extends Note {
     const { owner, nonce, asset, id, value } = includedNote;
     super({ owner, nonce, asset, id, value });
     this.merkleIndex = includedNote.merkleIndex;
+  }
+
+  static newDummy(
+    owner: NocturneAddressStruct,
+    asset: Address,
+    id: bigint): IncludedNote
+    {
+      return new IncludedNote({
+        owner,
+        nonce: 0n,
+        asset,
+        id,
+        value: 0n,
+        merkleIndex: 0
+      });
   }
 
   toStruct(): IncludedNoteStruct {

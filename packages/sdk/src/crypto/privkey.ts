@@ -22,9 +22,14 @@ export class NocturnePrivKey {
     return new NocturnePrivKey(BigInt(sk));
   }
 
+  toCanonAddress(): NocturneAddress {
+    const addr = babyjub.mulPointEscalar(babyjub.Base8, this.sk);
+    return addr;
+  }
+
   toAddress(): NocturneAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32);
+    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
     const h2 = babyjub.mulPointEscalar(h1, this.vk);
     return NocturneAddress.fromArrayForm({ h1, h2 });
