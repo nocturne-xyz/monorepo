@@ -1,11 +1,6 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import {
-  TestSubtreeUpdateVerifier__factory,
-  SimpleERC20Token__factory,
-  Vault,
-  Wallet,
-} from "@flax/contracts";
+import { ethers, network } from "hardhat";
+import { SimpleERC20Token__factory, Vault, Wallet } from "@flax/contracts";
 import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
 
 import {
@@ -19,14 +14,14 @@ import {
   LocalObjectDB,
   LocalMerkleProver,
 } from "@flax/sdk";
-import { setup } from "../deploy/deployScript";
+import { setup } from "../deploy/deployFlax";
 import { depositFunds } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
-const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
@@ -58,7 +53,6 @@ describe("Wallet", async () => {
     bob = flaxSetup.bob;
     vault = flaxSetup.vault;
     wallet = flaxSetup.wallet;
-    merkle = flaxSetup.merkle;
     token = token;
     flaxContext = flaxSetup.flaxContext;
     db = flaxSetup.db;
@@ -69,7 +63,7 @@ describe("Wallet", async () => {
   });
 
   after(async () => {
-    await hre.network.provider.send("hardhat_reset");
+    await network.provider.send("hardhat_reset");
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
@@ -82,18 +76,18 @@ describe("Wallet", async () => {
       token,
       alice,
       flaxContext.signer.address,
-      [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT],
+      [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
-    console.log("fill the subtree with zeros")
+    console.log("fill the subtree with zeros");
     await wallet.fillBatchWithZeros();
 
-    console.log("apply subtree update")
+    console.log("apply subtree update");
     await (
       flaxContext.merkleProver as LocalMerkleProver
     ).fetchLeavesAndUpdate();
     await applySubtreeUpdate();
-    
+
     console.log("Sync SDK notes manager");
     await flaxContext.syncNotes();
     const notesForAsset = await flaxContext.db.getNotesFor(asset);
@@ -101,9 +95,9 @@ describe("Wallet", async () => {
 
     console.log("Sync SDK merkle prover");
     await flaxContext.syncLeaves();
-    expect(
-      (flaxContext.merkleProver as LocalMerkleProver).localTree.root()
-    ).to.equal((await wallet.getRoot()).toBigInt());
+    expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
+      (await wallet.root()).toBigInt()
+    );
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {

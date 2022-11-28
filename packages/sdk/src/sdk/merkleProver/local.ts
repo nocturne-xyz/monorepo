@@ -57,6 +57,14 @@ export class LocalMerkleProver extends MerkleProver {
     }
   }
 
+  root(): bigint {
+    return this.localTree.root();
+  }
+
+  count(): number {
+    return this.localTree.count;
+  }
+
   async getProof(index: number): Promise<MerkleProof> {
     return this.localTree.getProof(index);
   }
