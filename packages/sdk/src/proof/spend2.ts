@@ -1,5 +1,5 @@
 import { FlaxAddressStruct } from "../crypto";
-import { BaseProof } from "./types";
+import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 import { normalizeBigInt } from "./utils";
 
 export interface Spend2Prover {
@@ -38,19 +38,6 @@ export interface Spend2PublicSignals {
   operationDigest: bigint;
 }
 
-export interface NoteInput {
-  owner: FlaxAddressStruct;
-  nonce: bigint;
-  asset: bigint;
-  value: bigint;
-  id: bigint;
-}
-
-export interface MerkleProofInput {
-  path: bigint[];
-  siblings: any[];
-}
-
 export interface Spend2Inputs {
   vk: bigint;
   operationDigest: bigint;
@@ -62,7 +49,7 @@ export interface Spend2Inputs {
   z: bigint;
 }
 
-export function publicSignalsArrayToTyped(
+export function spend2PublicSignalsArrayToTyped(
   publicSignals: bigint[]
 ): Spend2PublicSignals {
   return {

@@ -1,19 +1,22 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
-import { BinaryPoseidonTree } from "../src/primitives/binaryPoseidonTree";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
+import { poseidon } from "circomlibjs";
+import { LocalJoinsplitProver } from "../src/joinsplit";
 import {
-  proveJoinSplit,
-  verifyJoinSplitProof,
+  BinaryPoseidonTree,
+  FlaxPrivKey,
+  FlaxSigner,
+  JoinSplitInputs,
   MerkleProofInput,
   NoteInput,
-  JoinSplitInputs,
-} from "../src/proof/joinsplit";
-import { poseidon } from "circomlibjs";
+} from "@flax/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const JOINSPLIT_FIXTURE_PATH = path.join(
   ROOT_DIR,
   "fixtures/joinsplitProof.json"
@@ -153,8 +156,13 @@ const joinsplitInputs: JoinSplitInputs = {
 console.log(joinsplitInputs);
 
 (async () => {
-  const proof = await proveJoinSplit(joinsplitInputs);
-  if (!(await verifyJoinSplitProof(proof))) {
+  const prover = new LocalJoinsplitProver();
+  const proof = await prover.proveJoinsplit(
+    joinsplitInputs,
+    WASM_PATH,
+    ZKEY_PATH
+  );
+  if (!(await prover.verifyJoinsplitProof(proof, VKEY_PATH))) {
     throw new Error("Proof invalid!");
   }
   const json = JSON.stringify(proof);

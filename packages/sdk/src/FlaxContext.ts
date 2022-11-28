@@ -11,16 +11,12 @@ import { FlaxSigner } from "./sdk/signer";
 import { FlaxAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
-import {
-  MerkleProofInput,
-  Spend2Prover,
-  publicSignalsArrayToTyped,
-  Spend2Inputs,
-} from "./proof/spend2";
+import { Spend2Prover, Spend2Inputs } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { FlaxDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
+import { MerkleProofInput, spend2PublicSignalsArrayToTyped } from "./proof";
 
 export interface OldAndNewNotePair {
   oldNote: IncludedNote;
@@ -281,7 +277,7 @@ export class FlaxContext {
       spend2ZkeyPath
     );
 
-    const publicSignals = publicSignalsArrayToTyped(proof.publicSignals);
+    const publicSignals = spend2PublicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
     return {
       commitmentTreeRoot: publicSignals.anchor,

@@ -4,16 +4,16 @@ import * as fs from "fs";
 
 //@ts-ignore
 import * as snarkjs from "snarkjs";
-import {
-  bigInt256ToFieldElems,
-  Note,
-  FlaxSigner,
-  bigintToBuf,
-} from "../src/sdk";
-import { BinaryPoseidonTree } from "../src/primitives";
-import { FlaxPrivKey } from "../src/crypto";
 import { sha256 } from "js-sha256";
-import { BaseProof } from "../src/proof";
+import {
+  BaseProof,
+  bigInt256ToFieldElems,
+  bigintToBuf,
+  BinaryPoseidonTree,
+  FlaxPrivKey,
+  FlaxSigner,
+  Note,
+} from "@flax/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");

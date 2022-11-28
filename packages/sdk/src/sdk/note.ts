@@ -5,10 +5,10 @@ import {
 } from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
-import { NoteInput } from "../proof/spend2";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
 import JSON from "json-bigint";
+import { NoteInput } from "../proof";
 
 interface NoteStruct {
   owner: FlaxAddressStruct;
@@ -72,8 +72,15 @@ export class Note {
     const asset = bigintToBEPadded(note.asset, 32);
     const id = bigintToBEPadded(note.id, 32);
     const value = bigintToBEPadded(note.value, 32);
-    
-    const preimage = [...ownerH1, ...ownerH2, ...nonce, ...asset, ...id, ...value];
+
+    const preimage = [
+      ...ownerH1,
+      ...ownerH2,
+      ...nonce,
+      ...asset,
+      ...id,
+      ...value,
+    ];
     return sha256.array(preimage);
   }
 
