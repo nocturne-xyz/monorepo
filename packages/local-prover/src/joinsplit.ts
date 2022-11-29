@@ -4,13 +4,13 @@ import * as snarkjs from "snarkjs";
 import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
-  JoinsplitProver,
+  JoinSplitProver,
   normalizeJoinSplitInputs,
   normalizePublicSignals,
 } from "@flax/sdk";
 
-export class LocalJoinsplitProver implements JoinsplitProver {
-  async proveJoinsplit(
+export class LocalJoinSplitProver implements JoinSplitProver {
+  async proveJoinSplit(
     inputs: JoinSplitInputs,
     wasmPath: string,
     zkeyPath: string
@@ -88,7 +88,7 @@ export class LocalJoinsplitProver implements JoinsplitProver {
     return proof;
   }
 
-  async verifyJoinsplitProof(
+  async verifyJoinSplitProof(
     { proof, publicSignals }: JoinSplitProofWithPublicSignals,
     vkey: any
   ): Promise<boolean> {

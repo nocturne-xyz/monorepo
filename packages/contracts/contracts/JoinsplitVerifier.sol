@@ -12,10 +12,10 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
-import {IJoinsplitVerifier} from "./interfaces/IJoinsplitVerifier.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
 
-contract JoinsplitVerifier is IJoinsplitVerifier {
+contract JoinSplitVerifier is IJoinSplitVerifier {
     using Pairing for *;
     struct VerifyingKey {
         Pairing.G1Point alfa1;

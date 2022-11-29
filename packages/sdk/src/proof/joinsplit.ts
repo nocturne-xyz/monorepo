@@ -2,14 +2,14 @@ import { normalizeBigInt } from "./utils";
 import { FlaxAddressStruct } from "../crypto/address";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 
-export interface JoinsplitProver {
-  proveJoinsplit(
+export interface JoinSplitProver {
+  proveJoinSplit(
     inputs: JoinSplitInputs,
     wasmPath: string,
     zkeyPath: string
   ): Promise<JoinSplitProofWithPublicSignals>;
 
-  verifyJoinsplitProof(
+  verifyJoinSplitProof(
     { proof, publicSignals }: JoinSplitProofWithPublicSignals,
     vkey: any
   ): Promise<boolean>;

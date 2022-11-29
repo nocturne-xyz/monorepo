@@ -6,25 +6,25 @@ import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {JsonDecodings, JoinsplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
+import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
-import {IJoinsplitVerifier} from "../interfaces/IJoinsplitVerifier.sol";
-import {JoinsplitVerifier} from "../JoinsplitVerifier.sol";
+import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
+import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
 
-contract TestJoinsplitVerifier is Test, TestUtils, JsonDecodings {
+contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";
 
-    IJoinsplitVerifier verifier;
+    IJoinSplitVerifier verifier;
 
     function setUp() public virtual {
-        verifier = IJoinsplitVerifier(new JoinsplitVerifier());
+        verifier = IJoinSplitVerifier(new JoinSplitVerifier());
     }
 
     function verifyFixture(string memory path) public {
-        JoinsplitProofWithPublicSignals
-            memory proof = loadJoinsplitProofFromFixture(path);
+        JoinSplitProofWithPublicSignals
+            memory proof = loadJoinSplitProofFromFixture(path);
 
         require(
             verifier.verifyProof(

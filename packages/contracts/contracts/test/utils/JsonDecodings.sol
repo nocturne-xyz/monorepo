@@ -7,7 +7,7 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {TestUtils} from "./TestUtils.sol";
 
-struct JoinsplitProofWithPublicSignals {
+struct JoinSplitProofWithPublicSignals {
     uint256[9] publicSignals;
     BaseProof proof;
 }
@@ -110,9 +110,9 @@ contract JsonDecodings is Test, TestUtils {
         ];
     }
 
-    function loadJoinsplitProofFromFixture(
+    function loadJoinSplitProofFromFixture(
         string memory path
-    ) public returns (JoinsplitProofWithPublicSignals memory) {
+    ) public returns (JoinSplitProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
@@ -131,7 +131,7 @@ contract JsonDecodings is Test, TestUtils {
         }
 
         return
-            JoinsplitProofWithPublicSignals({
+            JoinSplitProofWithPublicSignals({
                 publicSignals: publicSignals,
                 proof: proof
             });

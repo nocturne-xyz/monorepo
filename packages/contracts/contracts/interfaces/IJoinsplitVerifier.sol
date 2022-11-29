@@ -3,7 +3,7 @@ pragma solidity ^0.8.2;
 
 /// @title Verifier interface.
 /// @dev Interface of JoinSplit Verifier contract.
-interface IJoinsplitVerifier {
+interface IJoinSplitVerifier {
     function verifyProof(
         uint256[2] memory a,
         uint256[2][2] memory b,

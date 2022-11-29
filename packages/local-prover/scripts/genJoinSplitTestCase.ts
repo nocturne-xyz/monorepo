@@ -2,7 +2,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { poseidon } from "circomlibjs";
-import { LocalJoinsplitProver } from "../src/joinsplit";
+import { LocalJoinSplitProver } from "../src/joinsplit";
 import {
   BinaryPoseidonTree,
   FlaxPrivKey,
@@ -158,13 +158,13 @@ const joinsplitInputs: JoinSplitInputs = {
 console.log(joinsplitInputs);
 
 (async () => {
-  const prover = new LocalJoinsplitProver();
-  const proof = await prover.proveJoinsplit(
+  const prover = new LocalJoinSplitProver();
+  const proof = await prover.proveJoinSplit(
     joinsplitInputs,
     WASM_PATH,
     ZKEY_PATH
   );
-  if (!(await prover.verifyJoinsplitProof(proof, VKEY))) {
+  if (!(await prover.verifyJoinSplitProof(proof, VKEY))) {
     throw new Error("Proof invalid!");
   }
   const json = toJSON(proof);

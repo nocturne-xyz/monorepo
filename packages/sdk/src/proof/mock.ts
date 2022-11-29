@@ -2,7 +2,7 @@
 import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
-  JoinsplitProver,
+  JoinSplitProver,
 } from "./joinsplit";
 import {
   Spend2Inputs,
@@ -62,8 +62,8 @@ export class MockSpend2Prover implements Spend2Prover {
   }
 }
 
-export class MockJoinSplitProver implements JoinsplitProver {
-  async proveJoinsplit(
+export class MockJoinSplitProver implements JoinSplitProver {
+  async proveJoinSplit(
     inputs: JoinSplitInputs,
     wasmPath?: string,
     zkeyPath?: string
@@ -108,7 +108,7 @@ export class MockJoinSplitProver implements JoinsplitProver {
     };
   }
 
-  async verifyJoinsplitProof(
+  async verifyJoinSplitProof(
     { proof, publicSignals }: JoinSplitProofWithPublicSignals,
     vkeyPath?: string | undefined
   ): Promise<boolean> {
