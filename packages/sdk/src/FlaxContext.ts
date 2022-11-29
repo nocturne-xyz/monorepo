@@ -164,6 +164,47 @@ export class FlaxContext {
   }
 
   /**
+   * Create a `ProvenSpendTx` given the `oldNote`, resulting
+   * `newNote`, and operation to use for the `operationDigest`
+   *
+   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
+   * post-spend
+   * @param preProofOperation Operation included when generating a proof
+   */
+  protected async generateProvenSpendTxFor(
+    { oldNewNotePair, preProofOperation }: PreProofSpendTxInputs,
+    spend2WasmPath: string,
+    spend2ZkeyPath: string
+  ): Promise<ProvenSpendTx> {
+    const { oldNote, newNote } = oldNewNotePair;
+    const nullifier = this.signer.createNullifier(oldNote);
+    const newNoteCommitment = newNote.toCommitment();
+
+    const inputs = await this.getProofInputsFor({
+      oldNewNotePair,
+      preProofOperation,
+    });
+
+    const proof = await this.prover.proveSpend2(
+      inputs,
+      spend2WasmPath,
+      spend2ZkeyPath
+    );
+
+    const publicSignals = spend2PublicSignalsArrayToTyped(proof.publicSignals);
+    const solidityProof = packToSolidityProof(proof.proof);
+    return {
+      commitmentTreeRoot: publicSignals.anchor,
+      nullifier,
+      newNoteCommitment,
+      proof: solidityProof,
+      asset: oldNewNotePair.oldNote.asset,
+      valueToSpend: publicSignals.valueToSpend,
+      id: publicSignals.id,
+    };
+  }
+
+  /**
    * Given a set of asset requests, gather the necessary notes to fullfill the
    * requests and format the data into PreProofSpendTxInputs (all inputs needed
    * to generate proof for spend tx and format into ProvenSpendTx).
@@ -246,47 +287,6 @@ export class FlaxContext {
       oldNote: oldNote.toNoteInput(),
       newNote: newNote.toNoteInput(),
       merkleProof: merkleInput,
-    };
-  }
-
-  /**
-   * Create a `ProvenSpendTx` given the `oldNote`, resulting
-   * `newNote`, and operation to use for the `operationDigest`
-   *
-   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
-   * post-spend
-   * @param preProofOperation Operation included when generating a proof
-   */
-  protected async generateProvenSpendTxFor(
-    { oldNewNotePair, preProofOperation }: PreProofSpendTxInputs,
-    spend2WasmPath: string,
-    spend2ZkeyPath: string
-  ): Promise<ProvenSpendTx> {
-    const { oldNote, newNote } = oldNewNotePair;
-    const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = newNote.toCommitment();
-
-    const inputs = await this.getProofInputsFor({
-      oldNewNotePair,
-      preProofOperation,
-    });
-
-    const proof = await this.prover.proveSpend2(
-      inputs,
-      spend2WasmPath,
-      spend2ZkeyPath
-    );
-
-    const publicSignals = spend2PublicSignalsArrayToTyped(proof.publicSignals);
-    const solidityProof = packToSolidityProof(proof.proof);
-    return {
-      commitmentTreeRoot: publicSignals.anchor,
-      nullifier,
-      newNoteCommitment,
-      proof: solidityProof,
-      asset: oldNewNotePair.oldNote.asset,
-      valueToSpend: publicSignals.valueToSpend,
-      id: publicSignals.id,
     };
   }
 

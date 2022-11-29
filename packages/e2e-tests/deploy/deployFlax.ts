@@ -91,7 +91,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deterministicDeployment: true,
   });
 
-  const spend2Verifier = await deploy("Verifier", {
+  const spend2Verifier = await deploy("Spend2Verifier", {
     from: owner,
     contract: {
       abi: Spend2Verifier__factory.abi,

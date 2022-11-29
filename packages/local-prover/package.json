@@ -12,7 +12,7 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",
+    "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:spend2 && yarn gen-test-cases:subtreeupdate",
     "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
     "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",
     "gen-test-cases:subtreeupdate": "npx ts-node ./scripts/genSubtreeUpdateTestCase.ts --writeFixture",
