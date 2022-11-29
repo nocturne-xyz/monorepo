@@ -6,7 +6,7 @@ import {
   Vault,
   Wallet,
   TestSubtreeUpdateVerifier__factory,
-} from "@flax/contracts";
+} from "@nocturne-xyz/contracts";
 
 import {
   FlaxPrivKey,
@@ -15,8 +15,8 @@ import {
   LocalObjectDB,
   LocalMerkleProver,
   LocalNotesManager,
-} from "@flax/sdk";
-import { LocalSpend2Prover } from "@flax/local-prover";
+} from "@nocturne-xyz/sdk";
+import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";

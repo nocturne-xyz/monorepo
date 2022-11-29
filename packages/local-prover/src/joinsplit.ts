@@ -7,7 +7,7 @@ import {
   JoinSplitProver,
   normalizeJoinSplitInputs,
   normalizePublicSignals,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 
 export class LocalJoinSplitProver implements JoinSplitProver {
   async proveJoinSplit(

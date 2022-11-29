@@ -1,7 +1,11 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { SimpleERC20Token__factory, Vault, Wallet } from "@flax/contracts";
-import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
+import {
+  SimpleERC20Token__factory,
+  Vault,
+  Wallet,
+} from "@nocturne-xyz/contracts";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 import {
   Action,
@@ -13,7 +17,7 @@ import {
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployFlax";
 import { depositFunds } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";

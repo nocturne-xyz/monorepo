@@ -11,7 +11,7 @@ import {
   MerkleProofInput,
   NoteInput,
   toJSON,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");

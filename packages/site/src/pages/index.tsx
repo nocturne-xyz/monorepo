@@ -24,10 +24,15 @@ import {
   ClearDbButton,
   GenerateProofButton,
 } from "../components";
-import { Action, AssetRequest, ERC20_ID, OperationRequest } from "@flax/sdk";
-import { SimpleERC20Token__factory } from "@flax/contracts";
+import {
+  Action,
+  AssetRequest,
+  ERC20_ID,
+  OperationRequest,
+} from "@nocturne-xyz/sdk";
+import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import JSON from "json-bigint";
-import { LocalSpend2Prover } from "@flax/local-prover";
+import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
 
 const Container = styled.div`
   display: flex;

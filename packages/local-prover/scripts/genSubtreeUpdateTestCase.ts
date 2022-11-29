@@ -14,7 +14,7 @@ import {
   FlaxSigner,
   Note,
   toJSON,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");

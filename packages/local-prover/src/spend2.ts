@@ -1,12 +1,12 @@
 //@ts-ignore
 import * as snarkjs from "snarkjs";
-import { normalizePublicSignals } from "@flax/sdk";
+import { normalizePublicSignals } from "@nocturne-xyz/sdk";
 import {
   normalizeSpend2Inputs,
   Spend2Inputs,
   Spend2ProofWithPublicSignals,
   Spend2Prover,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 
 export class LocalSpend2Prover implements Spend2Prover {
   async proveSpend2(

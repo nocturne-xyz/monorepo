@@ -9,7 +9,7 @@ import {
   MerkleProofInput,
   Spend2Inputs,
   toJSON,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 import { LocalSpend2Prover } from "../src/spend2";
 import { poseidon } from "circomlibjs";
 

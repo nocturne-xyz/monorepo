@@ -1,5 +1,5 @@
 {
-  "name": "@flax/sdk",
+  "name": "@nocturne-xyz/sdk",
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "test:unit": "mocha --require ts-node/register test/**"
   },
   "dependencies": {
-    "@flax/contracts": "workspace:^",
+    "@nocturne-xyz/contracts": "workspace:^",
     "@types/json-bigint": "^1.0.1",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",

@@ -1,5 +1,5 @@
 {
-  "name": "@flax/site",
+  "name": "@nocturne-xyz/site",
   "version": "0.1.0",
   "private": true,
   "license": "(MIT-0 OR Apache-2.0)",
@@ -25,10 +25,10 @@
     ]
   },
   "dependencies": {
-    "@flax/contracts": "workspace:^",
-    "@flax/local-prover": "workspace:^",
-    "@flax/sdk": "workspace:^",
     "@metamask/providers": "^9.0.0",
+    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",

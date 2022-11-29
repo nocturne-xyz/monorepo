@@ -1,4 +1,4 @@
-import { Wallet, Wallet__factory } from "@flax/contracts";
+import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { FlaxDB } from "../db";
@@ -6,7 +6,7 @@ import { query } from "../utils";
 import {
   RefundEvent as EthRefundEvent,
   SpendEvent as EthSpendEvent,
-} from "@flax/contracts/dist/src/Wallet";
+} from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { NotesManager, SpendEvent } from ".";
 import { FlaxSigner } from "../signer";
 import { IncludedNoteStruct } from "../note";

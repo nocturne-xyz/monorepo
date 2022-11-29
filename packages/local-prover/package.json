@@ -1,5 +1,5 @@
 {
-  "name": "@flax/local-prover",
+  "name": "@nocturne-xyz/local-prover",
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -20,7 +20,7 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@flax/sdk": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "snarkjs": "^0.5.0"
   },
   "devDependencies": {

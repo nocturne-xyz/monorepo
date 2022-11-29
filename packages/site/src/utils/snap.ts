@@ -1,4 +1,4 @@
-import { OperationRequest, toJSON } from "@flax/sdk";
+import { OperationRequest, toJSON } from "@nocturne-xyz/sdk";
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
 /**
