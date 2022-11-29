@@ -12,7 +12,6 @@
     "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "check_deps": "./scripts/install_deps.sh",
     "download-big-ptau": "./scripts/download_big_ptau.sh",
-    "install-circom": "./scripts/install_deps.sh",
     "lint": "",
     "test:unit": ""
   },
