@@ -11388,7 +11388,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
@@ -12097,25 +12097,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ffjavascript@npm:0.2.56":
-  version: 0.2.56
-  resolution: "ffjavascript@npm:0.2.56"
-  dependencies:
-    wasmbuilder: 0.0.16
-    wasmcurves: 0.2.0
-    web-worker: ^1.2.0
-  checksum: d4e02263db4a94d111cdc7c1211ae96769370f5c8c3c338331e0ef99faed7b55e640bedf23fa8a83fc9a77f0e81140ea8f32e392812a00e15ca504221b879a4f
-  languageName: node
-  linkType: hard
-
-"ffjavascript@npm:0.2.57, ffjavascript@npm:^0.2.38, ffjavascript@npm:^0.2.45, ffjavascript@npm:^0.2.48":
+"ffjavascript@FLAXPrivacy/ffjavascript#3bfd14daf3f0b22cdaddc17a39bf10d6ee79716f":
   version: 0.2.57
-  resolution: "ffjavascript@npm:0.2.57"
+  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=3bfd14daf3f0b22cdaddc17a39bf10d6ee79716f"
   dependencies:
     wasmbuilder: 0.0.16
     wasmcurves: 0.2.0
-    web-worker: ^1.2.0
-  checksum: 8f3e87b3e2739c607dfc2ef8cb36d92202da57b1323987cca09ade378c584a946b9d784607ee5e2193a2de6200afdc254c19f72f79145aa55d9a8688f83f6708
+    web-worker: "FLAXPrivacy/web-worker#master"
+  checksum: 29bb325442f56448730ee6e240e29540459ad47ddc44eda88c2c113e2a2c4c387cfd56642e32c4d90549e56eb388bb49c14fcb28c4660af4ad3bd38e75c5a8fb
   languageName: node
   linkType: hard
 
@@ -23809,10 +23798,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-worker@npm:^1.2.0":
+"web-worker@FLAXPrivacy/web-worker#master":
   version: 1.2.0
-  resolution: "web-worker@npm:1.2.0"
-  checksum: 1bb28348ddcf9b2e7c62c5fd02e49a84098795856cd905456de957271bba288e9618941cf69d8960f0a7ae81f5dfb74b427c0634be47ec69e3e955c4ec5213be
+  resolution: "web-worker@https://github.com/FLAXPrivacy/web-worker.git#commit=e3135df13d2ab8c32640e596ceae6a9a83d8efa6"
+  checksum: 805fceeed0a3229a9f53059668c0bfb85498deb53e10755d960987680c624908877187d1aafd3ae09808afd58a81c69ac8aa4fa2f9107534d0ed6cfa457d4f34
   languageName: node
   linkType: hard
 
