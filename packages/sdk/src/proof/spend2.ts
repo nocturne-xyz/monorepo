@@ -1,18 +1,19 @@
-import findWorkspaceRoot from "find-yarn-workspace-root";
+import { FlaxAddressStruct } from "../crypto";
+import { BaseProof, MerkleProofInput, NoteInput } from "./types";
+import { normalizeBigInt } from "./utils";
 
-//@ts-ignore
-import * as snarkjs from "snarkjs";
-import * as path from "path";
-import * as fs from "fs";
-import { BaseProof, normalizePublicSignals, normalizeBigInt } from "./common";
-import { FlaxAddressStruct } from "../crypto/address";
+export interface Spend2Prover {
+  proveSpend2(
+    inputs: Spend2Inputs,
+    wasmPath: string,
+    zkeyPath: string
+  ): Promise<Spend2ProofWithPublicSignals>;
 
-// eslint-disable-next-line
-const ROOT_DIR = findWorkspaceRoot()!;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
-const VKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/vkey.json`;
+  verifySpend2Proof(
+    { proof, publicSignals }: Spend2ProofWithPublicSignals,
+    vkey: any
+  ): Promise<boolean>;
+}
 
 export interface Spend2ProofWithPublicSignals {
   proof: BaseProof;
@@ -37,19 +38,6 @@ export interface Spend2PublicSignals {
   operationDigest: bigint;
 }
 
-export interface NoteInput {
-  owner: FlaxAddressStruct;
-  nonce: bigint;
-  asset: bigint;
-  value: bigint;
-  id: bigint;
-}
-
-export interface MerkleProofInput {
-  path: bigint[];
-  siblings: any[];
-}
-
 export interface Spend2Inputs {
   vk: bigint;
   operationDigest: bigint;
@@ -61,7 +49,7 @@ export interface Spend2Inputs {
   z: bigint;
 }
 
-export function publicSignalsArrayToTyped(
+export function spend2PublicSignalsArrayToTyped(
   publicSignals: bigint[]
 ): Spend2PublicSignals {
   return {
@@ -127,59 +115,4 @@ export function normalizeSpend2Inputs(inputs: Spend2Inputs): Spend2Inputs {
     c: normalizeBigInt(c),
     z: normalizeBigInt(z),
   };
-}
-
-export async function proveSpend2(
-  inputs: Spend2Inputs,
-  wasmPath = WASM_PATH,
-  zkeyPath = ZKEY_PATH
-): Promise<Spend2ProofWithPublicSignals> {
-  inputs = normalizeSpend2Inputs(inputs);
-  const { vk, operationDigest, oldNote, spendPk, newNote, merkleProof, c, z } =
-    inputs;
-  const signals = {
-    vk,
-
-    spendPkX: spendPk[0],
-    spendPkY: spendPk[1],
-    spendPkNonce: BigInt(1),
-
-    operationDigest,
-
-    c,
-    z,
-
-    oldNoteOwnerH1X: oldNote.owner.h1X,
-    oldNoteOwnerH1Y: oldNote.owner.h1Y,
-    oldNoteOwnerH2X: oldNote.owner.h2X,
-    oldNoteOwnerH2Y: oldNote.owner.h2Y,
-    oldNoteNonce: oldNote.nonce,
-    oldNoteAsset: oldNote.asset,
-    oldNoteId: oldNote.id,
-    oldNoteValue: oldNote.value,
-
-    path: merkleProof.path,
-    siblings: merkleProof.siblings,
-
-    newNoteOwnerH1X: newNote.owner.h1X,
-    newNoteOwnerH1Y: newNote.owner.h1Y,
-    newNoteOwnerH2X: newNote.owner.h2X,
-    newNoteOwnerH2Y: newNote.owner.h2Y,
-    newNoteNonce: newNote.nonce,
-    newNoteAsset: newNote.asset,
-    newNoteId: newNote.id,
-    newNoteValue: newNote.value,
-  };
-
-  const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
-  proof.publicSignals = normalizePublicSignals(proof.publicSignals);
-  return proof;
-}
-
-export async function verifySpend2Proof(
-  { proof, publicSignals }: Spend2ProofWithPublicSignals,
-  vkeyPath = VKEY_PATH
-): Promise<boolean> {
-  const verificationKey = JSON.parse(fs.readFileSync(vkeyPath, "utf-8"));
-  return await snarkjs.groth16.verify(verificationKey, publicSignals, proof);
 }

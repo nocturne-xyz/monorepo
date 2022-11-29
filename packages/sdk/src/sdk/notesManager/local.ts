@@ -37,7 +37,8 @@ export class LocalNotesManager extends NotesManager {
   async fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]> {
     // TODO: load default from network-specific config
     const lastSeen =
-      this.db.getNumberKv(REFUNDS_LAST_INDEXED_BLOCK) ?? DEFAULT_START_BLOCK;
+      (await this.db.getNumberKv(REFUNDS_LAST_INDEXED_BLOCK)) ??
+      DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
     const filter = this.walletContract.filters.Refund();
@@ -76,7 +77,7 @@ export class LocalNotesManager extends NotesManager {
   }
 
   async postStoreNotesFromRefunds(): Promise<void> {
-    const tentativeLastSeen = this.db.getKv(
+    const tentativeLastSeen = await this.db.getKv(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK
     );
 
@@ -92,7 +93,8 @@ export class LocalNotesManager extends NotesManager {
   async fetchSpends(): Promise<SpendEvent[]> {
     // TODO: load default from network-specific config
     const lastSeen =
-      this.db.getNumberKv(SPENDS_LAST_INDEXED_BLOCK) ?? DEFAULT_START_BLOCK;
+      (await this.db.getNumberKv(SPENDS_LAST_INDEXED_BLOCK)) ??
+      DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
     const filter = this.walletContract.filters.Spend();
@@ -122,7 +124,7 @@ export class LocalNotesManager extends NotesManager {
   }
 
   async postApplySpends(): Promise<void> {
-    const tentativeLastSeen = this.db.getKv(
+    const tentativeLastSeen = await this.db.getKv(
       SPENDS_TENTATIVE_LAST_INDEXED_BLOCK
     );
 

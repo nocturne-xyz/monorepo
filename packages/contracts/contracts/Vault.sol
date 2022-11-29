@@ -48,11 +48,10 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         }
     }
 
-    function requestERC721(address assetAddress, uint256 id)
-        external
-        override
-        onlyTeller
-    {
+    function requestERC721(
+        address assetAddress,
+        uint256 id
+    ) external override onlyTeller {
         IERC721(assetAddress).safeTransferFrom(address(this), wallet, id);
     }
 
@@ -70,11 +69,10 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         );
     }
 
-    function approveFunds(uint256[] calldata values, address[] calldata assets)
-        external
-        override
-        onlyTeller
-    {
+    function approveFunds(
+        uint256[] calldata values,
+        address[] calldata assets
+    ) external override onlyTeller {
         require(
             values.length == assets.length,
             "Non matching input array lengths"
@@ -106,12 +104,9 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         return (successfulTransfers, numSuccessfulTransfers);
     }
 
-    function makeDeposit(IWallet.Deposit calldata deposit)
-        public
-        override
-        onlyTeller
-        returns (bool)
-    {
+    function makeDeposit(
+        IWallet.Deposit calldata deposit
+    ) public override onlyTeller returns (bool) {
         if (deposit.id == SNARK_SCALAR_FIELD - 1) {
             return
                 IERC20(deposit.asset).transferFrom(

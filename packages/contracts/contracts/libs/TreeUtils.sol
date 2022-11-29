@@ -13,11 +13,10 @@ library TreeUtils {
     // packs a field element for the `encodedPathAndHash` input to the subtree update verifier
     // `subtreeIdx` is the index of the subtree's leftmost element in the tree
     // `accumulatorHashHi` is the top 3 bits of `accumulatorHash` gotten from `uint256ToFieldElemLimbs`
-    function encodePathAndHash(uint128 subtreeIdx, uint256 accumulatorHashHi)
-        internal
-        pure
-        returns (uint256)
-    {
+    function encodePathAndHash(
+        uint128 subtreeIdx,
+        uint256 accumulatorHashHi
+    ) internal pure returns (uint256) {
         require(
             subtreeIdx % BATCH_SIZE == 0,
             "subtreeIdx not multiple of BATCH_SIZE"

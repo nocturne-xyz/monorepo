@@ -2,6 +2,7 @@ import { babyjub, poseidon } from "circomlibjs";
 import { FlaxAddrPrefix } from "./common";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
+import JSON from "json-bigint";
 
 export interface FlaxAddressStruct {
   h1X: bigint;

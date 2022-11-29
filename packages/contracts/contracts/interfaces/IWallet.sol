@@ -79,9 +79,9 @@ interface IWallet {
         FLAXAddress depositAddr;
     }
 
-    function processBundle(Bundle calldata bundle)
-        external
-        returns (bool[] memory successes, bytes[][] memory results);
+    function processBundle(
+        Bundle calldata bundle
+    ) external returns (bool[] memory successes, bytes[][] memory results);
 
     function batchDepositFunds(
         Deposit[] calldata deposits,

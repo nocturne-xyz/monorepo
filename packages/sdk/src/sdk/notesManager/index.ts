@@ -9,8 +9,8 @@ export interface SpendEvent {
 }
 
 export abstract class NotesManager {
-  db: FlaxDB;
-  signer: FlaxSigner;
+  protected db: FlaxDB;
+  protected signer: FlaxSigner;
 
   constructor(db: FlaxDB, signer: FlaxSigner) {
     this.db = db;
@@ -35,7 +35,7 @@ export abstract class NotesManager {
   }
 
   private async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
-    const allNotes = [...this.db.getAllNotes().values()].flat();
+    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const spend of newSpends) {
       for (const oldNote of allNotes) {
         const oldNullifier = this.signer.createNullifier(
@@ -67,3 +67,4 @@ export abstract class NotesManager {
 }
 
 export { LocalNotesManager } from "./local";
+export { MockNotesManager } from "./mock";

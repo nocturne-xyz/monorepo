@@ -29,7 +29,9 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     // TODO: do we want to return successes/results?
-    function processBundle(Bundle calldata bundle)
+    function processBundle(
+        Bundle calldata bundle
+    )
         external
         override
         returns (bool[] memory successes, bytes[][] memory results)
@@ -67,11 +69,9 @@ contract Wallet is IWallet, BalanceManager {
         _makeDeposit(deposit);
     }
 
-    function performOperation(Operation calldata op)
-        external
-        onlyThis
-        returns (bool success, bytes[] memory results)
-    {
+    function performOperation(
+        Operation calldata op
+    ) external onlyThis returns (bool success, bytes[] memory results) {
         bytes32 operationHash = _hashOperation(op);
         _handleAllSpends(op.spendTxs, op.tokens, operationHash);
 
@@ -90,10 +90,9 @@ contract Wallet is IWallet, BalanceManager {
         );
     }
 
-    function _makeExternalCall(Action calldata action)
-        internal
-        returns (bytes memory)
-    {
+    function _makeExternalCall(
+        Action calldata action
+    ) internal returns (bytes memory) {
         require(
             action.contractAddress != address(vault),
             "Cannot call the FLAX vault"
@@ -109,11 +108,9 @@ contract Wallet is IWallet, BalanceManager {
 
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
-    function _hashOperation(Operation calldata op)
-        private
-        pure
-        returns (bytes32)
-    {
+    function _hashOperation(
+        Operation calldata op
+    ) private pure returns (bytes32) {
         bytes memory payload;
 
         Action calldata action;

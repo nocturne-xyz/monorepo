@@ -47,29 +47,23 @@ library OffchainMerkleTree {
     }
 
     // returns the current root of the tree
-    function getRoot(OffchainMerkleTreeData storage self)
-        internal
-        view
-        returns (uint256)
-    {
+    function getRoot(
+        OffchainMerkleTreeData storage self
+    ) internal view returns (uint256) {
         return self.root;
     }
 
     // returns the current number of leaves in the tree
-    function getCount(OffchainMerkleTreeData storage self)
-        internal
-        view
-        returns (uint128)
-    {
+    function getCount(
+        OffchainMerkleTreeData storage self
+    ) internal view returns (uint128) {
         return self.count;
     }
 
     // returns the number of leaves in the tree plus the number of leaves waiting in the queue
-    function getTotalCount(OffchainMerkleTreeData storage self)
-        internal
-        view
-        returns (uint128)
-    {
+    function getTotalCount(
+        OffchainMerkleTreeData storage self
+    ) internal view returns (uint128) {
         return
             self.count +
             self.batchLen +
@@ -77,11 +71,9 @@ library OffchainMerkleTree {
             uint128(self.accumulatorQueue.length());
     }
 
-    function computeAccumulatorHash(OffchainMerkleTreeData storage self)
-        internal
-        view
-        returns (uint256)
-    {
+    function computeAccumulatorHash(
+        OffchainMerkleTreeData storage self
+    ) internal view returns (uint256) {
         require(
             self.batchLen == TreeUtils.BATCH_SIZE,
             "batchLen != TreeUtils.BATCH_SIZE"

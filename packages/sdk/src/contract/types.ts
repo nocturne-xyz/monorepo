@@ -1,7 +1,7 @@
 import { Address } from "../commonTypes";
 import { FlaxAddressStruct } from "../crypto/address";
 
-export interface Tokens {
+export interface SpendAndRefundTokens {
   spendTokens: Address[];
   refundTokens: Address[];
 }
@@ -11,7 +11,7 @@ export interface Action {
   encodedFunction: string;
 }
 
-export interface PreProofSpendTransaction {
+export interface PreProofSpendTx {
   commitmentTreeRoot: bigint;
   nullifier: bigint;
   newNoteCommitment: bigint;
@@ -22,12 +22,12 @@ export interface PreProofSpendTransaction {
 
 export interface PreProofOperation {
   refundAddr: FlaxAddressStruct;
-  tokens: Tokens;
+  tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
 }
 
-export interface PostProofSpendTransaction {
+export interface ProvenSpendTx {
   commitmentTreeRoot: bigint;
   nullifier: bigint;
   newNoteCommitment: bigint;
@@ -37,16 +37,16 @@ export interface PostProofSpendTransaction {
   id: bigint;
 }
 
-export interface PostProofOperation {
-  spendTxs: PostProofSpendTransaction[];
+export interface ProvenOperation {
+  spendTxs: ProvenSpendTx[];
   refundAddr: FlaxAddressStruct;
-  tokens: Tokens;
+  tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
 }
 
 export interface Bundle {
-  operations: PostProofOperation[];
+  operations: ProvenOperation[];
 }
 
 export interface Deposit {

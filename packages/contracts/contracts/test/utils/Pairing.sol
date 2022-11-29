@@ -52,11 +52,10 @@ library Pairing {
     }
 
     /// @return r the sum of two points of G1
-    function addition(G1Point memory p1, G1Point memory p2)
-        internal
-        view
-        returns (G1Point memory r)
-    {
+    function addition(
+        G1Point memory p1,
+        G1Point memory p2
+    ) internal view returns (G1Point memory r) {
         // By EIP-196 all input is validated to be less than the BASE_MODULUS and form points
         // on the curve.
         uint256[4] memory input;
@@ -74,11 +73,10 @@ library Pairing {
 
     /// @return r the product of a point on G1 and a scalar, i.e.
     /// p == p.scalar_mul(1) and p.addition(p) == p.scalar_mul(2) for all points p.
-    function scalar_mul(G1Point memory p, uint256 s)
-        internal
-        view
-        returns (G1Point memory r)
-    {
+    function scalar_mul(
+        G1Point memory p,
+        uint256 s
+    ) internal view returns (G1Point memory r) {
         // By EIP-196 the values p.X and p.Y are verified to less than the BASE_MODULUS and
         // form a valid point on the curve. But the scalar is not verified, so we do that explicitelly.
         if (s >= SCALAR_MODULUS) revert("Pairing invalid proof");
@@ -97,10 +95,10 @@ library Pairing {
     /// Asserts the pairing check
     /// e(p1[0], p2[0]) *  .... * e(p1[n], p2[n]) == 1
     /// For example pairing([P1(), P1().negate()], [P2(), P2()]) should succeed
-    function pairingCheck(G1Point[] memory p1, G2Point[] memory p2)
-        internal
-        view
-    {
+    function pairingCheck(
+        G1Point[] memory p1,
+        G2Point[] memory p2
+    ) internal view {
         // By EIP-197 all input is verified to be less than the BASE_MODULUS and form elements in their
         // respective groups of the right order.
         if (p1.length != p2.length) revert("Pairing invalid proof");

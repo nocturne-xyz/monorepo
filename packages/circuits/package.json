@@ -1,37 +1,32 @@
 {
   "name": "@flax/circuits",
   "version": "1.0.0",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "license": "MIT",
   "scripts": {
-    "install-circom": "./scripts/install_circom.sh",
-    "build-all-circuits": "./scripts/build_all.sh",
-    "build:spend2": "./scripts/spend2/build.sh",
-    "build:joinsplit": "./scripts/joinsplit/build.sh",
-    "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "build": "tsc --build",
-    "download-big-ptau": "./scripts/download_big_ptau.sh",
+    "build-all-circuits": "./scripts/build_all.sh",
+    "build:joinsplit": "./scripts/joinsplit/build.sh",
+    "build:spend2": "./scripts/spend2/build.sh",
+    "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "check_deps": "./scripts/install_deps.sh",
-    "test:unit": "",
-    "lint": ""
+    "download-big-ptau": "./scripts/download_big_ptau.sh",
+    "lint": "",
+    "test:unit": ""
+  },
+  "dependencies": {
+    "snarkjs": "^0.5.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
     "@types/node": "^18.8.0",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
-    "circomlib": "^2.0.5",
     "circomlibjs": "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
-  },
-  "dependencies": {
-    "@zk-kit/incremental-merkle-tree": "^1.0.0",
-    "node-fetch": "^3.2.10",
-    "snarkjs": "^0.5.0",
-    "wasmsnark": "^0.0.10"
   }
 }

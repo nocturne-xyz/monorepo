@@ -192,9 +192,9 @@ contract BalanceManager is
         }
     }
 
-    function _handleERC721Refunds(IWallet.FLAXAddress calldata refundAddr)
-        internal
-    {
+    function _handleERC721Refunds(
+        IWallet.FLAXAddress calldata refundAddr
+    ) internal {
         for (uint256 i = 0; i < balanceInfo.erc721Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc721Addresses[i];
             uint256[] memory ids = balanceInfo.erc721Ids[tokenAddress];
@@ -213,9 +213,9 @@ contract BalanceManager is
         delete balanceInfo.erc721Addresses;
     }
 
-    function _handleERC1155Refunds(IWallet.FLAXAddress calldata refundAddr)
-        internal
-    {
+    function _handleERC1155Refunds(
+        IWallet.FLAXAddress calldata refundAddr
+    ) internal {
         for (uint256 i = 0; i < balanceInfo.erc1155Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc1155Addresses[i];
             uint256[] memory ids = balanceInfo.erc1155Ids[tokenAddress];

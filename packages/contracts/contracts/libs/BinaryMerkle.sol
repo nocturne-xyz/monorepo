@@ -58,7 +58,7 @@ library BinaryMerkle {
     function insert(IncrementalTreeData storage self, uint256 leaf) internal {
         require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
-            self.numberOfLeaves < 2**self.depth,
+            self.numberOfLeaves < 2 ** self.depth,
             "BinaryTree: tree is full"
         );
 
@@ -80,9 +80,10 @@ library BinaryMerkle {
         self.numberOfLeaves += 1;
     }
 
-    function insert2(IncrementalTreeData storage self, uint256[2] memory leaves)
-        internal
-    {
+    function insert2(
+        IncrementalTreeData storage self,
+        uint256[2] memory leaves
+    ) internal {
         for (uint256 i = 0; i < 2; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
@@ -90,7 +91,7 @@ library BinaryMerkle {
             );
         }
         require(
-            self.numberOfLeaves + 2 <= 2**self.depth,
+            self.numberOfLeaves + 2 <= 2 ** self.depth,
             "BinaryTree: tree is full"
         );
 
@@ -112,9 +113,10 @@ library BinaryMerkle {
         self.numberOfLeaves += 2;
     }
 
-    function insert8(IncrementalTreeData storage self, uint256[8] memory leaves)
-        internal
-    {
+    function insert8(
+        IncrementalTreeData storage self,
+        uint256[8] memory leaves
+    ) internal {
         for (uint256 i = 0; i < 8; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
@@ -122,7 +124,7 @@ library BinaryMerkle {
             );
         }
         require(
-            self.numberOfLeaves + 8 <= 2**self.depth,
+            self.numberOfLeaves + 8 <= 2 ** self.depth,
             "BinaryTree: tree is full"
         );
 
@@ -157,7 +159,7 @@ library BinaryMerkle {
             );
         }
         require(
-            self.numberOfLeaves + 16 <= 2**self.depth,
+            self.numberOfLeaves + 16 <= 2 ** self.depth,
             "BinaryTree: tree is full"
         );
 

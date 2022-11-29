@@ -8,10 +8,10 @@ contract ProxyDeployer {
 
     function initialize(address dummy) external {}
 
-    function createProxy(address impl, address admin)
-        external
-        returns (address)
-    {
+    function createProxy(
+        address impl,
+        address admin
+    ) external returns (address) {
         return
             address(
                 new TransparentUpgradeableProxy(

@@ -133,9 +133,10 @@ contract CommitmentTreeManager {
         insertNoteCommitments(zeros);
     }
 
-    function applySubtreeUpdate(uint256 newRoot, uint256[8] calldata proof)
-        external
-    {
+    function applySubtreeUpdate(
+        uint256 newRoot,
+        uint256[8] calldata proof
+    ) external {
         merkle.applySubtreeUpdate(newRoot, proof);
         pastRoots[newRoot] = true;
     }
@@ -169,11 +170,9 @@ contract CommitmentTreeManager {
         );
     }
 
-    function _hashSpend(IWallet.SpendTransaction calldata spend)
-        private
-        pure
-        returns (bytes32)
-    {
+    function _hashSpend(
+        IWallet.SpendTransaction calldata spend
+    ) private pure returns (bytes32) {
         bytes memory payload = abi.encodePacked(
             spend.commitmentTreeRoot,
             spend.nullifier,

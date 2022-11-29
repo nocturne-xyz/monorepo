@@ -16,7 +16,7 @@ powersOfTau28_hez_final_21.ptau
 powersOfTau28_hez_final_23.ptau
 
 .yarn/*
-!.yarn/cache
+.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

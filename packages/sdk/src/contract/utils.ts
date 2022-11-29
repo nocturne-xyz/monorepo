@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { SNARK_SCALAR_FIELD } from "../commonTypes";
-import { PreProofOperation, PreProofSpendTransaction } from "./types";
+import { PreProofOperation, PreProofSpendTx } from "./types";
 
 function hashOperation(op: PreProofOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,7 +50,7 @@ function hashOperation(op: PreProofOperation): string {
   return ethers.utils.keccak256(payload);
 }
 
-function hashSpend(spend: PreProofSpendTransaction): string {
+function hashSpend(spend: PreProofSpendTx): string {
   const payload = ethers.utils.solidityPack(
     ["uint256", "uint256", "uint256", "uint256", "address", "uint256"],
     [
@@ -77,7 +77,7 @@ function calcOperationDigest(operationHash: string, spendHash: string): string {
 
 export function calculateOperationDigest(
   operation: PreProofOperation,
-  spend: PreProofSpendTransaction
+  spend: PreProofSpendTx
 ): bigint {
   const operationHash = hashOperation(operation);
   const spendHash = hashSpend(spend);
