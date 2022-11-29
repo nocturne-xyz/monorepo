@@ -1,4 +1,4 @@
-import { FlaxAddressStruct } from "../crypto";
+import { NocturneAddressStruct } from "../crypto";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 import { normalizeBigInt } from "./utils";
 
@@ -63,10 +63,10 @@ export function spend2PublicSignalsArrayToTyped(
   };
 }
 
-function normalizeFlaxAddressInput(
-  flaxAddressInput: FlaxAddressStruct
-): FlaxAddressStruct {
-  const { h1X, h1Y, h2X, h2Y } = flaxAddressInput;
+function normalizeNocturneAddressInput(
+  nocturneAddressInput: NocturneAddressStruct
+): NocturneAddressStruct {
+  const { h1X, h1Y, h2X, h2Y } = nocturneAddressInput;
   return {
     h1X: normalizeBigInt(h1X),
     h1Y: normalizeBigInt(h1Y),
@@ -78,7 +78,7 @@ function normalizeFlaxAddressInput(
 function normalizeNoteInput(noteInput: NoteInput): NoteInput {
   const { owner, nonce, asset, value, id } = noteInput;
   return {
-    owner: normalizeFlaxAddressInput(owner),
+    owner: normalizeNocturneAddressInput(owner),
     nonce: normalizeBigInt(nonce),
     asset: normalizeBigInt(asset),
     value: normalizeBigInt(value),

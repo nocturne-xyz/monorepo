@@ -5,7 +5,7 @@ export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
 export const LEAVES_PREFIX = "LEAVES_";
 
-export abstract class FlaxDB {
+export abstract class NocturneDB {
   /**
    * Get arbitrary `value` for `key`.
    *
@@ -117,7 +117,7 @@ export abstract class FlaxDB {
   abstract close(): Promise<void>;
 }
 
-export abstract class LocalMerkleDBExtension extends FlaxDB {
+export abstract class LocalMerkleDBExtension extends NocturneDB {
   static leafKey(index: number): string {
     return LEAVES_PREFIX + index;
   }

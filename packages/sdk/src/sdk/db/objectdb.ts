@@ -1,4 +1,4 @@
-import { FlaxDB, LocalMerkleDBExtension } from ".";
+import { NocturneDB, LocalMerkleDBExtension } from ".";
 import { AssetStruct, toJSON } from "../../commonTypes";
 import { IncludedNoteStruct, includedNoteStructFromJSON } from "../note";
 
@@ -67,7 +67,7 @@ export function structuredToSerializableState(
   };
 }
 
-export abstract class ObjectDB extends FlaxDB {
+export abstract class ObjectDB extends NocturneDB {
   abstract getSerializableState(): Promise<SerializableState>;
 
   abstract storeSerializableState(state: SerializableState): Promise<boolean>;
@@ -121,7 +121,7 @@ export abstract class ObjectDB extends FlaxDB {
   async storeNote(note: IncludedNoteStruct): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.notesKey({ address: note.asset, id: note.id });
     const existingNotesFor = state.notes.get(key) ?? [];
 
     if (existingNotesFor.includes(note)) {
@@ -136,7 +136,7 @@ export abstract class ObjectDB extends FlaxDB {
   async removeNote(note: IncludedNoteStruct): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = FlaxDB.notesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.notesKey({ address: note.asset, id: note.id });
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter((n) => toJSON(n) != toJSON(note))
@@ -160,7 +160,7 @@ export abstract class ObjectDB extends FlaxDB {
 
   async getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]> {
     const state = await this.getStructuredState();
-    const jsonNotesFor = state.notes.get(FlaxDB.notesKey(asset)) ?? [];
+    const jsonNotesFor = state.notes.get(NocturneDB.notesKey(asset)) ?? [];
     return jsonNotesFor.map(includedNoteStructFromJSON);
   }
 

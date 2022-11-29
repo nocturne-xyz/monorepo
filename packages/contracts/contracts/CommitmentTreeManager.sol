@@ -21,7 +21,7 @@ contract CommitmentTreeManager {
     ISpend2Verifier public spend2Verifier;
 
     event Refund(
-        IWallet.FLAXAddress refundAddr,
+        IWallet.NocturneAddress refundAddr,
         uint256 indexed nonce,
         address indexed asset,
         uint256 indexed id,
@@ -142,7 +142,7 @@ contract CommitmentTreeManager {
     }
 
     function _handleRefund(
-        IWallet.FLAXAddress memory refundAddr,
+        IWallet.NocturneAddress memory refundAddr,
         address asset,
         uint256 id,
         uint256 value

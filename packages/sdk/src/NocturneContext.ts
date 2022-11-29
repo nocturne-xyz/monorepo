@@ -7,14 +7,14 @@ import {
   SpendAndRefundTokens,
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
-import { FlaxSigner } from "./sdk/signer";
-import { FlaxAddressStruct } from "./crypto/address";
+import { NocturneSigner } from "./sdk/signer";
+import { NocturneAddressStruct } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import { Spend2Prover, Spend2Inputs } from "./proof/spend2";
 import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
-import { FlaxDB } from "./sdk/db";
+import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput, spend2PublicSignalsArrayToTyped } from "./proof";
 
@@ -33,19 +33,19 @@ export interface PreProofSpendTxInputsAndProofInputs {
   proofInputs: Spend2Inputs;
 }
 
-export class FlaxContext {
-  readonly signer: FlaxSigner;
+export class NocturneContext {
+  readonly signer: NocturneSigner;
   protected prover: Spend2Prover;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
-  protected db: FlaxDB;
+  protected db: NocturneDB;
 
   constructor(
-    signer: FlaxSigner,
+    signer: NocturneSigner,
     prover: Spend2Prover,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
-    db: FlaxDB
+    db: NocturneDB
   ) {
     this.signer = signer;
     this.prover = prover;
@@ -69,7 +69,7 @@ export class FlaxContext {
 
   /**
    * Attempt to create a `ProvenOperation` provided an `OperationRequest`.
-   * `FlaxContext` will attempt to gather all notes to fullfill the operation
+   * `NocturneContext` will attempt to gather all notes to fullfill the operation
    * request's asset requests. It will then generate spend proofs for each and
    * include that in the final `ProvenOperation`.
    *
@@ -84,7 +84,7 @@ export class FlaxContext {
     operationRequest: OperationRequest,
     spend2WasmPath: string,
     spend2ZkeyPath: string,
-    refundAddr?: FlaxAddressStruct,
+    refundAddr?: NocturneAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const { assetRequests, refundTokens, actions } = operationRequest;
@@ -129,7 +129,7 @@ export class FlaxContext {
 
   async tryGetPreProofSpendTxInputsAndProofInputs(
     operationRequest: OperationRequest,
-    refundAddr?: FlaxAddressStruct,
+    refundAddr?: NocturneAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<PreProofSpendTxInputsAndProofInputs[]> {
     const { assetRequests, refundTokens } = operationRequest;
@@ -219,7 +219,7 @@ export class FlaxContext {
   protected async getPreProofSpendTxInputsMultiple(
     { assetRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
-    refundAddr: FlaxAddressStruct,
+    refundAddr: NocturneAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<PreProofSpendTxInputs[]> {
     const preProofOperation: PreProofOperation = {
@@ -298,7 +298,7 @@ export class FlaxContext {
    * @param assetRequest Asset request
    */
   async gatherMinimumNotes(
-    refundAddr: FlaxAddressStruct,
+    refundAddr: NocturneAddressStruct,
     assetRequest: AssetRequest
   ): Promise<OldAndNewNotePair[]> {
     const balance = await this.getAssetBalance(assetRequest.asset);

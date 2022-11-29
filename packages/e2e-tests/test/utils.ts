@@ -1,5 +1,5 @@
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { SNARK_SCALAR_FIELD, FlaxAddress, Note } from "@nocturne-xyz/sdk";
+import { SNARK_SCALAR_FIELD, NocturneAddress, Note } from "@nocturne-xyz/sdk";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { ethers } from "hardhat";
 
@@ -10,7 +10,7 @@ export async function depositFunds(
   vault: Vault,
   token: SimpleERC20Token,
   eoa: ethers.Signer,
-  flaxAddress: FlaxAddress,
+  nocturneAddress: NocturneAddress,
   amounts: bigint[],
   startNonce = 0
 ): Promise<bigint[]> {
@@ -24,10 +24,10 @@ export async function depositFunds(
       asset: token.address,
       value: amounts[i],
       id: ERC20_ID,
-      depositAddr: flaxAddress.toStruct(),
+      depositAddr: nocturneAddress.toStruct(),
     });
 
-    const owner = flaxAddress.toStruct();
+    const owner = nocturneAddress.toStruct();
     const noteStruct = {
       owner,
       nonce: BigInt(i + startNonce),

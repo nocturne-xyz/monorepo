@@ -1,14 +1,14 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
-import { FlaxDB } from "../db";
+import { NocturneDB } from "../db";
 import { query } from "../utils";
 import {
   RefundEvent as EthRefundEvent,
   SpendEvent as EthSpendEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { NotesManager, SpendEvent } from ".";
-import { FlaxSigner } from "../signer";
+import { NocturneSigner } from "../signer";
 import { IncludedNoteStruct } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
@@ -24,8 +24,8 @@ export class LocalNotesManager extends NotesManager {
   provider: ethers.providers.Provider;
 
   constructor(
-    db: FlaxDB,
-    signer: FlaxSigner,
+    db: NocturneDB,
+    signer: NocturneSigner,
     walletAddress: Address,
     provider: ethers.providers.Provider
   ) {

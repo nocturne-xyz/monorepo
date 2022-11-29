@@ -1,7 +1,7 @@
 {
   "name": "@nocturne-xyz/contracts",
   "version": "0.1.0",
-  "description": "FLAX contracts",
+  "description": "Nocturne contracts",
   "license": "MIT OR Apache-2.0",
   "author": "Luke Tchang",
   "main": "dist/index.js",

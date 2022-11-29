@@ -9,9 +9,9 @@ import {
 } from "@nocturne-xyz/contracts";
 
 import {
-  FlaxPrivKey,
-  FlaxSigner,
-  FlaxContext,
+  NocturnePrivKey,
+  NocturneSigner,
+  NocturneContext,
   LocalObjectDB,
   LocalMerkleProver,
   LocalNotesManager,
@@ -21,29 +21,29 @@ import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
-export interface FlaxSetup {
+export interface NocturneSetup {
   alice: ethers.Signer;
   bob: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
-  flaxContext: FlaxContext;
+  nocturneContext: NocturneContext;
   db: LocalObjectDB;
 }
 
-export async function setup(): Promise<FlaxSetup> {
+export async function setup(): Promise<NocturneSetup> {
   const db = new LocalObjectDB({ localMerkle: true });
   const sk = BigInt(1);
-  const flaxPrivKey = new FlaxPrivKey(sk);
-  const flaxSigner = new FlaxSigner(flaxPrivKey);
+  const nocturnePrivKey = new NocturnePrivKey(sk);
+  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
   const [_, alice, bob] = await ethers.getSigners();
 
-  await deployments.fixture(["FlaxContracts"]);
+  await deployments.fixture(["NocturneContracts"]);
   const vault = await ethers.getContract("Vault");
   const wallet = await ethers.getContract("Wallet");
 
   await vault.initialize(wallet.address);
 
-  console.log("Create FlaxContext");
+  console.log("Create NocturneContext");
   const prover = new LocalSpend2Prover();
   const merkleProver = new LocalMerkleProver(
     wallet.address,
@@ -52,12 +52,12 @@ export async function setup(): Promise<FlaxSetup> {
   );
   const notesManager = new LocalNotesManager(
     db,
-    flaxSigner,
+    nocturneSigner,
     wallet.address,
     ethers.provider
   );
-  const flaxContext = new FlaxContext(
-    flaxSigner,
+  const nocturneContext = new NocturneContext(
+    nocturneSigner,
     prover,
     merkleProver,
     notesManager,
@@ -69,7 +69,7 @@ export async function setup(): Promise<FlaxSetup> {
     bob,
     vault,
     wallet,
-    flaxContext,
+    nocturneContext,
     db,
   };
 }
@@ -128,4 +128,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 };
 
 export default func;
-func.tags = ["FlaxContracts"];
+func.tags = ["NocturneContracts"];

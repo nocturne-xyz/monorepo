@@ -5,8 +5,8 @@ import { poseidon } from "circomlibjs";
 import { LocalJoinSplitProver } from "../src/joinsplit";
 import {
   BinaryPoseidonTree,
-  FlaxPrivKey,
-  FlaxSigner,
+  NocturnePrivKey,
+  NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
   NoteInput,
@@ -30,20 +30,20 @@ const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
 );
 
-// Instantiate flax keypair and addr
-const flaxPrivKey = new FlaxPrivKey(sk);
-const vk = flaxPrivKey.vk;
-const flaxSigner = new FlaxSigner(flaxPrivKey);
-const flaxAddrA = flaxSigner.address;
-const flaxAddrB = flaxSigner.address;
-const spendPk = flaxSigner.privkey.spendPk();
+// Instantiate nocturne keypair and addr
+const nocturnePrivKey = new NocturnePrivKey(sk);
+const vk = nocturnePrivKey.vk;
+const nocturneSigner = new NocturneSigner(nocturnePrivKey);
+const nocturneAddrA = nocturneSigner.address;
+const nocturneAddrB = nocturneSigner.address;
+const spendPk = nocturneSigner.privkey.spendPk();
 
-const flaxAddrAInput = flaxAddrA.toStruct();
-const flaxAddrBInput = flaxAddrB.toStruct();
+const nocturneAddrAInput = nocturneAddrA.toStruct();
+const nocturneAddrBInput = nocturneAddrB.toStruct();
 
 // Two old notes: 100 + 50 = 150
 const oldNoteA: NoteInput = {
-  owner: flaxAddrAInput,
+  owner: nocturneAddrAInput,
   nonce: 1n,
   asset: 10n,
   value: 100n,
@@ -51,7 +51,7 @@ const oldNoteA: NoteInput = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash = flaxAddrA.hash();
+const oldNoteAOwnerHash = nocturneAddrA.hash();
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
@@ -62,7 +62,7 @@ const oldNoteACommitment = poseidon([
 console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
 
 const oldNoteB: NoteInput = {
-  owner: flaxAddrBInput,
+  owner: nocturneAddrBInput,
   nonce: 2n,
   asset: 10n,
   value: 50n,
@@ -70,7 +70,7 @@ const oldNoteB: NoteInput = {
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
-const oldNoteBOwnerHash = flaxAddrB.hash();
+const oldNoteBOwnerHash = nocturneAddrB.hash();
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,
@@ -102,7 +102,7 @@ const merkleProofBInput: MerkleProofInput = {
 
 // New notes where 75 + 75 = 150, swapping addrs
 const newNoteA: NoteInput = {
-  owner: flaxAddrBInput,
+  owner: nocturneAddrBInput,
   nonce: 3n,
   asset: 10n,
   value: 75n,
@@ -111,7 +111,7 @@ const newNoteA: NoteInput = {
 console.log("NEW NOTE A: ", newNoteA);
 
 const newNoteB: NoteInput = {
-  owner: flaxAddrAInput,
+  owner: nocturneAddrAInput,
   nonce: 4n,
   asset: 10n,
   value: 75n,
@@ -139,7 +139,7 @@ console.log("NEW NOTE COMMITMENT B: ", newNoteBCommitment);
 
 // Sign operation hash
 const operationDigest = BigInt(12345);
-const opSig = flaxSigner.sign(operationDigest);
+const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
 const joinsplitInputs: JoinSplitInputs = {

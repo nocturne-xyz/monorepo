@@ -50,7 +50,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     IHasherT6 hasherT6;
 
     event Refund(
-        IWallet.FLAXAddress refundAddr,
+        IWallet.NocturneAddress refundAddr,
         uint256 indexed nonce,
         address indexed asset,
         uint256 indexed id,
@@ -94,13 +94,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         }
     }
 
-    function defaultFlaxAddress()
+    function defaultNocturneAddress()
         internal
         pure
-        returns (IWallet.FLAXAddress memory)
+        returns (IWallet.NocturneAddress memory)
     {
         return
-            IWallet.FLAXAddress({
+            IWallet.NocturneAddress({
                 h1X: 1938477,
                 h1Y: 9104058,
                 h2X: 1032988,
@@ -120,7 +120,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address _asset,
         uint256 _value,
         uint256 _id,
-        IWallet.FLAXAddress memory _depositAddr
+        IWallet.NocturneAddress memory _depositAddr
     ) public {
         wallet.depositFunds(
             IWallet.Deposit({
@@ -144,7 +144,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Deposit funds to vault
         for (uint256 i = 0; i < 8; i++) {
             vm.expectEmit(true, true, true, true);
-            IWallet.FLAXAddress memory addr = defaultFlaxAddress();
+            IWallet.NocturneAddress memory addr = defaultNocturneAddress();
             emit Refund(addr, i, address(token), ERC20_ID, 100, uint128(i));
 
             vm.prank(ALICE);
@@ -236,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         actions[0] = transferAction;
         IWallet.Operation memory op = IWallet.Operation({
             spendTxs: spendTxs,
-            refundAddr: defaultFlaxAddress(),
+            refundAddr: defaultNocturneAddress(),
             tokens: tokens,
             actions: actions,
             gasLimit: DEFAULT_GAS_LIMIT

@@ -1,15 +1,15 @@
 /* eslint-disable */
 import { NotesManager, SpendEvent } from ".";
-import { FlaxPrivKey } from "../../crypto";
+import { NocturnePrivKey } from "../../crypto";
 import { LocalObjectDB } from "../db/local";
 import { IncludedNoteStruct } from "../note";
-import { FlaxSigner } from "../signer";
+import { NocturneSigner } from "../signer";
 
 export class MockNotesManager extends NotesManager {
   constructor() {
     super(
       new LocalObjectDB({ localMerkle: true }),
-      new FlaxSigner(new FlaxPrivKey(1n))
+      new NocturneSigner(new NocturnePrivKey(1n))
     );
   }
 

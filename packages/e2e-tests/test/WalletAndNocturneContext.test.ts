@@ -11,14 +11,14 @@ import {
   Action,
   SNARK_SCALAR_FIELD,
   Bundle,
-  FlaxContext,
+  NocturneContext,
   AssetStruct,
   AssetRequest,
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
 } from "@nocturne-xyz/sdk";
-import { setup } from "../deploy/deployFlax";
+import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
@@ -38,11 +38,11 @@ describe("Wallet", async () => {
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
-  let flaxContext: FlaxContext;
+  let nocturneContext: NocturneContext;
   let db: LocalObjectDB;
 
   async function applySubtreeUpdate() {
-    const root = (flaxContext.merkleProver as LocalMerkleProver).root();
+    const root = (nocturneContext.merkleProver as LocalMerkleProver).root();
     await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
   }
 
@@ -52,14 +52,14 @@ describe("Wallet", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const flaxSetup = await setup();
-    alice = flaxSetup.alice;
-    bob = flaxSetup.bob;
-    vault = flaxSetup.vault;
-    wallet = flaxSetup.wallet;
+    const nocturneSetup = await setup();
+    alice = nocturneSetup.alice;
+    bob = nocturneSetup.bob;
+    vault = nocturneSetup.vault;
+    wallet = nocturneSetup.wallet;
     token = token;
-    flaxContext = flaxSetup.flaxContext;
-    db = flaxSetup.db;
+    nocturneContext = nocturneSetup.nocturneContext;
+    db = nocturneSetup.db;
   });
 
   afterEach(async () => {
@@ -79,7 +79,7 @@ describe("Wallet", async () => {
       vault,
       token,
       alice,
-      flaxContext.signer.address,
+      nocturneContext.signer.address,
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
@@ -88,18 +88,18 @@ describe("Wallet", async () => {
 
     console.log("apply subtree update");
     await (
-      flaxContext.merkleProver as LocalMerkleProver
+      nocturneContext.merkleProver as LocalMerkleProver
     ).fetchLeavesAndUpdate();
     await applySubtreeUpdate();
 
     console.log("Sync SDK notes manager");
-    await flaxContext.syncNotes();
-    const notesForAsset = await flaxContext.db.getNotesFor(asset);
+    await nocturneContext.syncNotes();
+    const notesForAsset = await nocturneContext.db.getNotesFor(asset);
     expect(notesForAsset.length).to.equal(2);
 
     console.log("Sync SDK merkle prover");
-    await flaxContext.syncLeaves();
-    expect((flaxContext.merkleProver as LocalMerkleProver).root()).to.equal(
+    await nocturneContext.syncLeaves();
+    expect((nocturneContext.merkleProver as LocalMerkleProver).root()).to.equal(
       (await wallet.root()).toBigInt()
     );
 
@@ -126,8 +126,8 @@ describe("Wallet", async () => {
       actions: [action],
     };
 
-    console.log("Create post-proof operation with FlaxContext");
-    const operation = await flaxContext.tryCreateProvenOperation(
+    console.log("Create post-proof operation with NocturneContext");
+    const operation = await nocturneContext.tryCreateProvenOperation(
       operationRequest,
       WASM_PATH,
       ZKEY_PATH
@@ -145,8 +145,8 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
 
     console.log("Sync SDK notes manager post-spend");
-    await flaxContext.syncNotes();
-    const updatedNotesForAsset = await flaxContext.db.getNotesFor(asset)!;
+    await nocturneContext.syncNotes();
+    const updatedNotesForAsset = await nocturneContext.db.getNotesFor(asset)!;
     const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
     expect(updatedNote.value).to.equal(50n);
   });

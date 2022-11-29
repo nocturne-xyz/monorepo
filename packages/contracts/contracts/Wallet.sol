@@ -95,7 +95,7 @@ contract Wallet is IWallet, BalanceManager {
     ) internal returns (bytes memory) {
         require(
             action.contractAddress != address(vault),
-            "Cannot call the FLAX vault"
+            "Cannot call the Nocturne vault"
         );
 
         (bool success, bytes memory result) = action.contractAddress.call(
