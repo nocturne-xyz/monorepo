@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Rename `Joinsplit` to `JoinSplit`
 - move `OffchainMerkleTree` into a library and have `CommitmentTreeManager` hold the state
 - remove `IBatchMerkle` and `BatchBinaryMerkle`
 - split `Utils` into `TreeUtils` and `Utils`
