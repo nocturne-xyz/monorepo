@@ -16,7 +16,7 @@ jobs:
         with:
           version: nightly
       - run: |
-          yarn install
+          yarn install --immutable
       - run: |
           yarn lint
       - run: |
