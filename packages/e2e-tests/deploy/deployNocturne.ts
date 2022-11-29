@@ -7,7 +7,6 @@ import {
   Wallet,
   TestSubtreeUpdateVerifier__factory,
 } from "@nocturne-xyz/contracts";
-
 import {
   NocturnePrivKey,
   NocturneSigner,
@@ -16,7 +15,7 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
+import { localSpend2Prover } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
@@ -44,7 +43,7 @@ export async function setup(): Promise<NocturneSetup> {
   await vault.initialize(wallet.address);
 
   console.log("Create NocturneContext");
-  const prover = new LocalSpend2Prover();
+  console.log("Create FlaxContext");
   const merkleProver = new LocalMerkleProver(
     wallet.address,
     ethers.provider,
@@ -58,11 +57,12 @@ export async function setup(): Promise<NocturneSetup> {
   );
   const nocturneContext = new NocturneContext(
     nocturneSigner,
-    prover,
+    localSpend2Prover,
     merkleProver,
     notesManager,
     db
   );
+
 
   return {
     alice,

@@ -32,7 +32,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import JSON from "json-bigint";
-import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
+import { localSpend2Prover } from "@nocturne-xyz/local-prover";
 
 const Container = styled.div`
   display: flex;
@@ -215,8 +215,7 @@ const Index = () => {
         (await generateProof(operationRequest)) as string
       );
       console.log("From snap inputs: ", inputs);
-      const prover = new LocalSpend2Prover();
-      const proof = await prover.proveSpend2(
+      const proof = await localSpend2Prover.prove(
         inputs[0].proofInputs,
         "./spend2.wasm",
         "./spend2.zkey"

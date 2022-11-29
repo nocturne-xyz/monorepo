@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change `fixSolidityVerifier` to default to bash
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - add script to download subtreeupdate's chonky ptau file

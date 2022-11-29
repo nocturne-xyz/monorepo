@@ -6,7 +6,7 @@ import { AssetRequest, AssetStruct } from "../src/commonTypes";
 import { IncludedNoteStruct } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
-import { MockSpend2Prover } from "../src/proof/mock";
+import { mockSpend2Prover } from "../src/proof/mock";
 import {
   DEFAULT_DB_PATH,
   LocalObjectDB,
@@ -67,7 +67,6 @@ describe("NocturneContext", () => {
       fourthOldNote,
     ]);
 
-    const prover = new MockSpend2Prover();
     const merkleProver = new LocalMerkleProver(
       "0xaaaa",
       getDefaultProvider(),
@@ -80,7 +79,7 @@ describe("NocturneContext", () => {
       getDefaultProvider()
     );
 
-    return new NocturneContext(signer, prover, merkleProver, notesManager, db);
+    return new NocturneContext(signer, mockSpend2Prover, merkleProver, notesManager, db);
   }
 
   beforeEach(async () => {

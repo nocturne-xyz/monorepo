@@ -3,13 +3,13 @@ import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 import { normalizeBigInt } from "./utils";
 
 export interface Spend2Prover {
-  proveSpend2(
+  prove(
     inputs: Spend2Inputs,
     wasmPath: string,
     zkeyPath: string
   ): Promise<Spend2ProofWithPublicSignals>;
 
-  verifySpend2Proof(
+  verify(
     { proof, publicSignals }: Spend2ProofWithPublicSignals,
     vkey: any
   ): Promise<boolean>;

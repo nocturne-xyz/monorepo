@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add a check for the root in LocalMerkle test
+- Use subtree updater for tests
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - Move contract setup to hardhat deploy script method `setup` (allows us to deploy against local hh node)

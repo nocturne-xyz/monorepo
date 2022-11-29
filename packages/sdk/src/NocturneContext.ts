@@ -185,7 +185,7 @@ export class NocturneContext {
       preProofOperation,
     });
 
-    const proof = await this.prover.proveSpend2(
+    const proof = await this.prover.prove(
       inputs,
       spend2WasmPath,
       spend2ZkeyPath

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Modify prover implementations to export singletons instead of classes
+- Add local `subtreeUpdate` implementation and port over SDK gen test case scripts
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - Add local `joinsplit` implementation and port over SDK gen test case scripts

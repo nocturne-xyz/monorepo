@@ -8,8 +8,12 @@ import {
   Spend2Prover,
 } from "@nocturne-xyz/sdk";
 
-export class LocalSpend2Prover implements Spend2Prover {
-  async proveSpend2(
+export const localSpend2Prover: Spend2Prover = {
+  prove: proveSpend2,   
+  verify: verifySpend2Proof,
+};
+
+async function proveSpend2(
     inputs: Spend2Inputs,
     wasmPath: string,
     zkeyPath: string
@@ -62,12 +66,11 @@ export class LocalSpend2Prover implements Spend2Prover {
     const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
     proof.publicSignals = normalizePublicSignals(proof.publicSignals);
     return proof;
-  }
+}
 
-  async verifySpend2Proof(
-    { proof, publicSignals }: Spend2ProofWithPublicSignals,
-    vkey: any
-  ): Promise<boolean> {
-    return await snarkjs.groth16.verify(vkey, publicSignals, proof);
-  }
+async function verifySpend2Proof(
+  { proof, publicSignals }: Spend2ProofWithPublicSignals,
+  vkey: any
+): Promise<boolean> {
+  return await snarkjs.groth16.verify(vkey, publicSignals, proof);
 }

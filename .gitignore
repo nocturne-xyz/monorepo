@@ -5,9 +5,12 @@ dist/
 cache/
 lib/
 /db
+/rapidsnark-tmp
 
 .DS_Store
-
+**/.DS_Store"
+MyLogFile.log
+**/MyLogFile.log
 
 # ignore really chonky ptau files
 # instead, download them from here and put them into `packages/circuits/data`

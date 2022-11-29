@@ -6,19 +6,13 @@ import {
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { FlaxLMDB } from "../db";
+import { LocalMerkleDBExtension } from "../db";
 import { MerkleProver } from ".";
 import { fetchInsertions } from "../../indexing";
+import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
-
-interface OrderedLeaf {
-  leaf: bigint;
-  blockNumber: number;
-  txIdx: number;
-  logIdx: number;
-}
 
 export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;

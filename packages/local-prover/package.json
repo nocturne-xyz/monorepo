@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@nocturne-xyz/sdk": "workspace:^",
+    "@zk-kit/incremental-merkle-tree": "^1.0.0",
+    "bigint-conversion": "^2.3.0",
     "snarkjs": "^0.5.0"
   },
   "devDependencies": {

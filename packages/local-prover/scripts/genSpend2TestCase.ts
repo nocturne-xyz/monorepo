@@ -10,7 +10,7 @@ import {
   Spend2Inputs,
   toJSON,
 } from "@nocturne-xyz/sdk";
-import { LocalSpend2Prover } from "../src/spend2";
+import { localSpend2Prover } from "../src/spend2";
 import { poseidon } from "circomlibjs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -103,9 +103,8 @@ const spend2Inputs: Spend2Inputs = {
 console.log(spend2Inputs);
 
 (async () => {
-  const prover = new LocalSpend2Prover();
-  const proof = await prover.proveSpend2(spend2Inputs, WASM_PATH, ZKEY_PATH);
-  if (!(await prover.verifySpend2Proof(proof, VKEY))) {
+  const proof = await localSpend2Prover.prove(spend2Inputs, WASM_PATH, ZKEY_PATH);
+  if (!(await localSpend2Prover.verify(proof, VKEY))) {
     throw new Error("Proof invalid!");
   }
   const json = toJSON(proof);

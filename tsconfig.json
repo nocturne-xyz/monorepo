@@ -45,6 +45,9 @@
     },
     {
       "path": "./packages/site"
+    },
+    {
+      "path": "./packages/subtree-updater"
     }
   ]
 }

@@ -1,6 +1,6 @@
 
-import { Wallet } from "@flax/contracts";
-import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@flax/contracts/dist/src/Wallet";
+import { Wallet } from "@nocturne-xyz/contracts";
+import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
 

@@ -9,8 +9,12 @@ import {
   normalizePublicSignals,
 } from "@nocturne-xyz/sdk";
 
-export class LocalJoinSplitProver implements JoinSplitProver {
-  async proveJoinSplit(
+export const localJoinSplitProver: JoinSplitProver = {
+  prove: proveJoinSplit,
+  verify: verifyJoinSplitProof,
+};
+
+async function proveJoinSplit(
     inputs: JoinSplitInputs,
     wasmPath: string,
     zkeyPath: string
@@ -86,12 +90,11 @@ export class LocalJoinSplitProver implements JoinSplitProver {
     const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
     proof.publicSignals = normalizePublicSignals(proof.publicSignals);
     return proof;
-  }
+}
 
-  async verifyJoinSplitProof(
-    { proof, publicSignals }: JoinSplitProofWithPublicSignals,
-    vkey: any
-  ): Promise<boolean> {
-    return await snarkjs.groth16.verify(vkey, publicSignals, proof);
-  }
+async function verifyJoinSplitProof(
+  { proof, publicSignals }: JoinSplitProofWithPublicSignals,
+  vkey: any
+): Promise<boolean> {
+  return await snarkjs.groth16.verify(vkey, publicSignals, proof);
 }

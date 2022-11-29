@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- change mock provers to be singletons
+- add subtreeUpdate prove / verify functions
 - create separate "indexing" module for shared indexing logic
 - separate out subtree update input signal gen into its own module
 - Rename all "flax" instances to "nocturne"

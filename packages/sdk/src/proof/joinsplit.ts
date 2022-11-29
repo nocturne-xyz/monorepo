@@ -3,13 +3,13 @@ import { NocturneAddressStruct } from "../crypto/address";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 
 export interface JoinSplitProver {
-  proveJoinSplit(
+  prove(
     inputs: JoinSplitInputs,
     wasmPath: string,
     zkeyPath: string
   ): Promise<JoinSplitProofWithPublicSignals>;
 
-  verifyJoinSplitProof(
+  verify(
     { proof, publicSignals }: JoinSplitProofWithPublicSignals,
     vkey: any
   ): Promise<boolean>;
