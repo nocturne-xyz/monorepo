@@ -13,7 +13,8 @@
     "check_deps": "./scripts/install_deps.sh",
     "download-big-ptau": "./scripts/download_big_ptau.sh",
     "lint": "",
-    "test:unit": ""
+    "test:unit": "",
+    "clean": ""
   },
   "dependencies": {
     "snarkjs": "^0.5.0"

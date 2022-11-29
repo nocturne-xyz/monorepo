@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf .turbo dist",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:spend2 && yarn gen-test-cases:subtreeupdate",
     "gen-test-cases:joinsplit": "npx ts-node ./scripts/genJoinSplitTestCase.ts --writeFixture",
     "gen-test-cases:spend2": "npx ts-node ./scripts/genSpend2TestCase.ts --writeFixture",

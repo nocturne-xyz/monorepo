@@ -8,18 +8,16 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build:deps": "../../scripts/install-deps.sh",
     "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
-    "clean": "hardhat clean && rm -rf dist && rm -rf src",
+    "build:deps": "../../scripts/install-deps.sh",
+    "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
     "lint": "solhint contracts/*.sol && yarn prettier",
     "lint:fix": "solhint --fix contracts/*.sol && yarn prettier --write",
     "prettier": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test:unit": "FOUNDRY_PROFILE=contracts-ci forge test",
-    "test:unit-local": "FOUNDRY_PROFILE=contracts forge test",
-    "link:node_modules": "ln -s ../../node_modules"
+    "test:unit": "FOUNDRY_PROFILE=contracts forge test"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.7.3",

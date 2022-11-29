@@ -9,7 +9,8 @@
     "build": "",
     "hh-node": "npx hardhat node",
     "test:e2e": "npx hardhat test",
-    "test:hh-node": "npx hardhat test --network localhost"
+    "test:hh-node": "npx hardhat test --network localhost",
+    "clean": "rm -rf .turbo cache artifacts"
   },
   "devDependencies": {
     "@flax/contracts": "workspace:^",
