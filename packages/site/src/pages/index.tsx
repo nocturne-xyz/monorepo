@@ -4,7 +4,7 @@ import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
   clearDb,
   connectSnap,
-  getOperationInputs,
+  generateProof,
   getSnap,
   sendHello,
   sendSetAndShowKv,
@@ -22,13 +22,12 @@ import {
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
-  GetOperationInputsButton,
+  GenerateProofButton,
 } from "../components";
 import { Action, AssetRequest, ERC20_ID, OperationRequest } from "@flax/sdk";
 import { SimpleERC20Token__factory } from "@flax/contracts";
 import JSON from "json-bigint";
 import { LocalSpend2Prover } from "@flax/local-prover";
-const snarkjs = require("snarkjs");
 
 const Container = styled.div`
   display: flex;
@@ -180,7 +179,7 @@ const Index = () => {
     }
   };
 
-  const handleGetOperationInputs = async () => {
+  const handleGenerateProof = async () => {
     await instantiateCircuitData();
 
     const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -207,7 +206,9 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const inputs = JSON.parse(await getOperationInputs(operationRequest));
+      const inputs = JSON.parse(
+        (await generateProof(operationRequest)) as string
+      );
       console.log("From snap inputs: ", inputs);
       const prover = new LocalSpend2Prover();
       const proof = await prover.proveSpend2(
@@ -363,11 +364,11 @@ const Index = () => {
         />
         <Card
           content={{
-            title: "GetOperationInputs",
-            description: "Get operation inputs",
+            title: "Generate proof",
+            description: "Generate spend proof",
             button: (
-              <GetOperationInputsButton
-                onClick={handleGetOperationInputs}
+              <GenerateProofButton
+                onClick={handleGenerateProof}
                 disabled={!state.installedSnap}
               />
             ),

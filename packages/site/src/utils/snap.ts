@@ -112,16 +112,14 @@ export const syncLeaves = async () => {
   });
 };
 
-export const getOperationInputs = async (
-  operationRequest: OperationRequest
-) => {
-  console.log("Invoking flax_getOperationInputs");
+export const generateProof = async (operationRequest: OperationRequest) => {
+  console.log("Invoking flax_generateProof");
   const res = await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_getOperationInputs",
+        method: "flax_generateProof",
         params: { operationRequest: toJSON(operationRequest) },
       },
     ],

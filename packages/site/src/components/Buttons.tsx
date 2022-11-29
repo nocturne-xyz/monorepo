@@ -110,10 +110,8 @@ export const SyncLeavesButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>SyncLeaves</Button>;
 };
 
-export const GetOperationInputsButton = (
-  props: ComponentProps<typeof Button>
-) => {
-  return <Button {...props}>GetOperationInputs</Button>;
+export const GenerateProofButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>GenerateProof</Button>;
 };
 
 export const ClearDbButton = (props: ComponentProps<typeof Button>) => {
