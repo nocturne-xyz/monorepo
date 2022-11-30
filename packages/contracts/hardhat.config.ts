@@ -1,7 +1,6 @@
 import 'hardhat-gas-reporter';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-packager';
-import 'hardhat-preprocessor';
 
 import { subtask } from 'hardhat/config';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';

@@ -2789,7 +2789,6 @@ __metadata:
     hardhat: ^2.11.2
     hardhat-gas-reporter: ^1.0.4
     hardhat-packager: ~1.2.1
-    hardhat-preprocessor: ^0.1.5
     prettier: ^2.2.1
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
@@ -13223,17 +13222,6 @@ __metadata:
     lodash: ^4.17.15
     typechain: ^5.1.2
   checksum: 06ba173af1e9208cb83fc6e3b2eba07989809dcd94928d1cd5815b997a8ba850367e13deb2308b298ab3ba6bae6422dc7879d8cd8882265ca67b297c29fed587
-  languageName: node
-  linkType: hard
-
-"hardhat-preprocessor@npm:^0.1.5":
-  version: 0.1.5
-  resolution: "hardhat-preprocessor@npm:0.1.5"
-  dependencies:
-    murmur-128: ^0.2.1
-  peerDependencies:
-    hardhat: ^2.0.5
-  checksum: 7d543c2965828441741950b153d584ff096d7a006975f06af9870e05a928e56122b463c4a1b3b346f9a3baccaa6ee2dec1dfd026a434ac714ebf127bbe842fef
   languageName: node
   linkType: hard
 
