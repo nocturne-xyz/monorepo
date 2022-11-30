@@ -1,4 +1,4 @@
-import { LocalSpend2Prover } from "@flax/local-prover";
+import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
 import { GatsbyFunctionRequest, GatsbyFunctionResponse } from "gatsby";
 
 const Prover = new LocalSpend2Prover();

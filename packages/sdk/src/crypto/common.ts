@@ -1,1 +1,1 @@
-export const FlaxAddrPrefix = "0f";
+export const NocturneAddrPrefix = "0f";

@@ -1,6 +1,6 @@
 {
-  "name": "@flax/circuits",
-  "version": "1.0.0",
+  "name": "@nocturne-xyz/circuits",
+  "version": "1.0.0-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,8 @@
     "check_deps": "./scripts/install_deps.sh",
     "download-big-ptau": "./scripts/download_big_ptau.sh",
     "lint": "",
-    "test:unit": ""
+    "test:unit": "",
+    "clean": ""
   },
   "dependencies": {
     "snarkjs": "^0.5.0"
@@ -23,7 +24,6 @@
     "@types/node": "^18.8.0",
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
-    "circomlibjs": "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "ts-node": "^10.9.1",

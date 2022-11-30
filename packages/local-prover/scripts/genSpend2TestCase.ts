@@ -3,13 +3,13 @@ import * as path from "path";
 import * as fs from "fs";
 import {
   BinaryPoseidonTree,
-  FlaxSigner,
-  FlaxPrivKey,
+  NocturneSigner,
+  NocturnePrivKey,
   NoteInput,
   MerkleProofInput,
   Spend2Inputs,
   toJSON,
-} from "@flax/sdk";
+} from "@nocturne-xyz/sdk";
 import { LocalSpend2Prover } from "../src/spend2";
 import { poseidon } from "circomlibjs";
 
@@ -27,18 +27,18 @@ const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
 );
 
-// Instantiate flax keypair and addr
-const flaxPrivKey = new FlaxPrivKey(sk);
-const vk = flaxPrivKey.vk;
-const flaxSigner = new FlaxSigner(flaxPrivKey);
-const flaxAddr = flaxSigner.address;
-const spendPk = flaxSigner.privkey.spendPk();
+// Instantiate nocturne keypair and addr
+const nocturnePrivKey = new NocturnePrivKey(sk);
+const vk = nocturnePrivKey.vk;
+const nocturneSigner = new NocturneSigner(nocturnePrivKey);
+const nocturneAddr = nocturneSigner.address;
+const spendPk = nocturneSigner.privkey.spendPk();
 
-const flaxAddrInput = flaxAddr.toStruct();
+const nocturneAddrInput = nocturneAddr.toStruct();
 
 // Old note input to spend
 const oldNote: NoteInput = {
-  owner: flaxAddrInput,
+  owner: nocturneAddrInput,
   nonce: 1n,
   asset: 10n,
   value: 100n,
@@ -46,7 +46,7 @@ const oldNote: NoteInput = {
 };
 console.log("OLD NOTE: ", oldNote);
 
-const ownerHash = flaxAddr.hash();
+const ownerHash = nocturneAddr.hash();
 const oldNoteCommitment = poseidon([
   ownerHash,
   oldNote.asset,
@@ -69,7 +69,7 @@ console.log(merkleProofInput);
 
 // New note resulting from spend of 50 units
 const newNote: NoteInput = {
-  owner: flaxAddrInput,
+  owner: nocturneAddrInput,
   nonce: 2n,
   asset: 10n,
   value: 50n,
@@ -87,7 +87,7 @@ console.log("NEW NOTE COMMITMENT: ", newNoteCommitment);
 
 // Sign operation hash
 const operationDigest = BigInt(12345);
-const opSig = flaxSigner.sign(operationDigest);
+const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
 const spend2Inputs: Spend2Inputs = {

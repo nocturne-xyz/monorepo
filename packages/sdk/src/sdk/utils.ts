@@ -1,4 +1,4 @@
-import { TypedEvent } from "@flax/contracts/dist/src/common";
+import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, EventFilter } from "ethers";
 import { Result } from "ethers/lib/utils";
 

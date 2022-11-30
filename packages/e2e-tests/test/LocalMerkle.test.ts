@@ -1,15 +1,19 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { SimpleERC20Token__factory, Vault, Wallet } from "@flax/contracts";
+import {
+  SimpleERC20Token__factory,
+  Vault,
+  Wallet,
+} from "@nocturne-xyz/contracts";
 import {
   BinaryPoseidonTree,
-  FlaxContext,
+  NocturneContext,
   LocalMerkleProver,
   LocalObjectDB,
-} from "@flax/sdk";
-import { setup } from "../deploy/deployFlax";
+} from "@nocturne-xyz/sdk";
+import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
-import { SimpleERC20Token } from "@flax/contracts/dist/src/SimpleERC20Token";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
@@ -19,7 +23,7 @@ describe("LocalMerkle", async () => {
   let db: LocalObjectDB;
   let localMerkle: LocalMerkleProver;
   let token: SimpleERC20Token;
-  let flaxContext: FlaxContext;
+  let nocturneContext: NocturneContext;
 
   beforeEach(async () => {
     db = new LocalObjectDB({ localMerkle: true });
@@ -29,13 +33,13 @@ describe("LocalMerkle", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const flaxSetup = await setup();
-    alice = flaxSetup.alice;
-    vault = flaxSetup.vault;
-    wallet = flaxSetup.wallet;
+    const nocturneSetup = await setup();
+    alice = nocturneSetup.alice;
+    vault = nocturneSetup.vault;
+    wallet = nocturneSetup.wallet;
     token = token;
-    db = flaxSetup.db;
-    flaxContext = flaxSetup.flaxContext;
+    db = nocturneSetup.db;
+    nocturneContext = nocturneSetup.nocturneContext;
 
     localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
   });
@@ -60,7 +64,7 @@ describe("LocalMerkle", async () => {
       vault,
       token,
       alice,
-      flaxContext.signer.address,
+      nocturneContext.signer.address,
       [100n, 100n]
     );
 

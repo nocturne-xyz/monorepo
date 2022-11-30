@@ -8,20 +8,20 @@
       "dependsOn": ["lint"],
       "outputs": ["dist/**"]
     },
-    "@flax/sdk#build": {
-      "dependsOn": ["@flax/contracts#build"]
+    "@nocturne-xyz/sdk#build": {
+      "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
-    "@flax/site#build": {
-      "dependsOn": ["@flax/sdk#build", "@flax/local-prover#build"]
+    "@nocturne-xyz/site#build": {
+      "dependsOn": [
+        "@nocturne-xyz/sdk#build",
+        "@nocturne-xyz/local-prover#build"
+      ]
     },
-    "@flax/snap#build": {
-      "dependsOn": ["@flax/sdk#build"]
+    "@nocturne-xyz/local-prover#build": {
+      "dependsOn": ["@nocturne-xyz/sdk#build"]
     },
-    "@flax/local-prover#build": {
-      "dependsOn": ["@flax/sdk#build"]
-    },
-    "@flax/e2e-tests#build": {
-      "dependsOn": ["@flax/contracts#build", "@flax/sdk#build"]
+    "@nocturne-xyz/e2e-tests#build": {
+      "dependsOn": ["@nocturne-xyz/contracts#build", "@nocturne-xyz/sdk#build"]
     },
     "test": {
       "dependsOn": ["build"],

@@ -1,11 +1,10 @@
 {
-  "name": "@flax/site",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@nocturne-xyz/site",
+  "version": "1.0.1-alpha",
   "license": "(MIT-0 OR Apache-2.0)",
   "scripts": {
     "build": "cross-env GATSBY_TELEMETRY_DISABLED=1 gatsby build",
-    "clean": "rimraf build",
+    "clean": "rimraf build && rm -rf .cache .turbo public",
     "lint": "eslint --fix src --ext .ts",
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
@@ -25,10 +24,10 @@
     ]
   },
   "dependencies": {
-    "@flax/contracts": "workspace:^",
-    "@flax/local-prover": "workspace:^",
-    "@flax/sdk": "workspace:^",
     "@metamask/providers": "^9.0.0",
+    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-is": "^18.2.0",

@@ -3,29 +3,29 @@ import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
 import {
-  FlaxAddressStruct,
-  flattenedFlaxAddressToArrayForm,
-  FlaxAddress,
+  NocturneAddressStruct,
+  flattenedNocturneAddressToArrayForm,
+  NocturneAddress,
 } from "../crypto/address";
-import { FlaxPrivKey } from "../crypto/privkey";
+import { NocturnePrivKey } from "../crypto/privkey";
 
-export interface FlaxSignature {
+export interface NocturneSignature {
   c: bigint;
   z: bigint;
 }
 
-export class FlaxSigner {
-  privkey: FlaxPrivKey;
-  address: FlaxAddress;
+export class NocturneSigner {
+  privkey: NocturnePrivKey;
+  address: NocturneAddress;
 
-  constructor(privkey: FlaxPrivKey) {
+  constructor(privkey: NocturnePrivKey) {
     const address = privkey.toAddress();
 
     this.privkey = privkey;
     this.address = address;
   }
 
-  sign(m: bigint): FlaxSignature {
+  sign(m: bigint): NocturneSignature {
     // TODO: make this deterministic
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
@@ -44,7 +44,11 @@ export class FlaxSigner {
     };
   }
 
-  static verify(pk: [bigint, bigint], m: bigint, sig: FlaxSignature): boolean {
+  static verify(
+    pk: [bigint, bigint],
+    m: bigint,
+    sig: NocturneSignature
+  ): boolean {
     const c = sig.c;
     const z = sig.z;
     const Z = babyjub.mulPointEscalar(babyjub.Base8, z);
@@ -66,12 +70,14 @@ export class FlaxSigner {
     return poseidon([this.privkey.vk, oldNullifier]);
   }
 
-  testOwn(addr: FlaxAddress | FlaxAddressStruct): boolean {
-    const flaxAddr =
-      addr instanceof FlaxAddress
+  testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {
+    const nocturneAddr =
+      addr instanceof NocturneAddress
         ? addr.toArrayForm()
-        : flattenedFlaxAddressToArrayForm(addr);
-    const H2prime = babyjub.mulPointEscalar(flaxAddr.h1, this.privkey.vk);
-    return flaxAddr.h2[0] === H2prime[0] && flaxAddr.h2[1] === H2prime[1];
+        : flattenedNocturneAddressToArrayForm(addr);
+    const H2prime = babyjub.mulPointEscalar(nocturneAddr.h1, this.privkey.vk);
+    return (
+      nocturneAddr.h2[0] === H2prime[0] && nocturneAddr.h2[1] === H2prime[1]
+    );
   }
 }

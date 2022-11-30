@@ -89,7 +89,7 @@ contract BalanceManager is
 
         for (uint256 i = 0; i < numSuccessfulTransfer; i++) {
             uint256 index = successfulTransfers[i];
-            IWallet.FLAXAddress memory depositAddr = approvedDeposits[index]
+            IWallet.NocturneAddress memory depositAddr = approvedDeposits[index]
                 .depositAddr;
 
             _handleRefund(
@@ -102,7 +102,7 @@ contract BalanceManager is
     }
 
     function _makeDeposit(IWallet.Deposit calldata deposit) internal {
-        IWallet.FLAXAddress calldata depositAddr = deposit.depositAddr;
+        IWallet.NocturneAddress calldata depositAddr = deposit.depositAddr;
 
         _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
 
@@ -143,7 +143,7 @@ contract BalanceManager is
     function _handleAllRefunds(
         address[] calldata spendTokens,
         address[] calldata refundTokens,
-        IWallet.FLAXAddress calldata refundAddr
+        IWallet.NocturneAddress calldata refundAddr
     ) internal {
         _handleERC20Refunds(spendTokens, refundTokens, refundAddr);
 
@@ -155,7 +155,7 @@ contract BalanceManager is
     function _handleERC20Refunds(
         address[] calldata spendTokens,
         address[] calldata refundTokens,
-        IWallet.FLAXAddress calldata refundAddr
+        IWallet.NocturneAddress calldata refundAddr
     ) internal {
         for (uint256 i = 0; i < spendTokens.length; i++) {
             uint256 newBal = IERC20(spendTokens[i]).balanceOf(address(this));
@@ -193,7 +193,7 @@ contract BalanceManager is
     }
 
     function _handleERC721Refunds(
-        IWallet.FLAXAddress calldata refundAddr
+        IWallet.NocturneAddress calldata refundAddr
     ) internal {
         for (uint256 i = 0; i < balanceInfo.erc721Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc721Addresses[i];
@@ -214,7 +214,7 @@ contract BalanceManager is
     }
 
     function _handleERC1155Refunds(
-        IWallet.FLAXAddress calldata refundAddr
+        IWallet.NocturneAddress calldata refundAddr
     ) internal {
         for (uint256 i = 0; i < balanceInfo.erc1155Addresses.length; i++) {
             address tokenAddress = balanceInfo.erc1155Addresses[i];

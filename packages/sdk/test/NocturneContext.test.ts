@@ -1,11 +1,11 @@
 import "mocha";
 import * as fs from "fs";
 import { expect } from "chai";
-import { FlaxContext } from "../src/FlaxContext";
+import { NocturneContext } from "../src/NocturneContext";
 import { AssetRequest, AssetStruct } from "../src/commonTypes";
 import { IncludedNoteStruct } from "../src/sdk/note";
-import { FlaxSigner } from "../src/sdk/signer";
-import { FlaxPrivKey } from "../src/crypto/privkey";
+import { NocturneSigner } from "../src/sdk/signer";
+import { NocturnePrivKey } from "../src/crypto/privkey";
 import { MockSpend2Prover } from "../src/proof/mock";
 import {
   DEFAULT_DB_PATH,
@@ -15,17 +15,17 @@ import {
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
-describe("FlaxContext", () => {
+describe("NocturneContext", () => {
   let db = new LocalObjectDB({ localMerkle: true });
-  let flaxContext: FlaxContext;
+  let nocturneContext: NocturneContext;
   const asset: AssetStruct = { address: "0x12345", id: 11111n };
 
-  async function setupFlaxContextWithFourNotes(
+  async function setupNocturneContextWithFourNotes(
     asset: AssetStruct
-  ): Promise<FlaxContext> {
+  ): Promise<NocturneContext> {
     const sk = BigInt(1);
-    const flaxPrivKey = new FlaxPrivKey(sk);
-    const signer = new FlaxSigner(flaxPrivKey);
+    const nocturnePrivKey = new NocturnePrivKey(sk);
+    const signer = new NocturneSigner(nocturnePrivKey);
 
     const firstOldNote: IncludedNoteStruct = {
       owner: signer.address.toStruct(),
@@ -80,11 +80,11 @@ describe("FlaxContext", () => {
       getDefaultProvider()
     );
 
-    return new FlaxContext(signer, prover, merkleProver, notesManager, db);
+    return new NocturneContext(signer, prover, merkleProver, notesManager, db);
   }
 
   beforeEach(async () => {
-    flaxContext = await setupFlaxContextWithFourNotes(asset);
+    nocturneContext = await setupNocturneContextWithFourNotes(asset);
   });
 
   afterEach(async () => {
@@ -97,19 +97,19 @@ describe("FlaxContext", () => {
   });
 
   it("Gets total balance for an asset", async () => {
-    const assetBalance = await flaxContext.getAssetBalance(asset);
+    const assetBalance = await nocturneContext.getAssetBalance(asset);
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
   it("Gathers minimum notes for asset request", async () => {
-    const refundAddr = flaxContext.signer.address.rerand().toStruct();
+    const refundAddr = nocturneContext.signer.address.rerand().toStruct();
 
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {
       asset,
       value: 5n,
     };
-    const minimumFor5 = await flaxContext.gatherMinimumNotes(
+    const minimumFor5 = await nocturneContext.gatherMinimumNotes(
       refundAddr,
       assetRequest5
     );
@@ -121,7 +121,7 @@ describe("FlaxContext", () => {
       asset,
       value: 80n,
     };
-    const minimumFor80 = await flaxContext.gatherMinimumNotes(
+    const minimumFor80 = await nocturneContext.gatherMinimumNotes(
       refundAddr,
       assetRequest80
     );

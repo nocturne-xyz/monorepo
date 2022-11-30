@@ -9,7 +9,7 @@ interface IWallet {
         bytes32 s;
     }
 
-    struct FLAXAddress {
+    struct NocturneAddress {
         uint256 h1X;
         uint256 h1Y;
         uint256 h2X;
@@ -60,7 +60,7 @@ interface IWallet {
 
     struct Operation {
         SpendTransaction[] spendTxs;
-        FLAXAddress refundAddr;
+        NocturneAddress refundAddr;
         Tokens tokens;
         Action[] actions;
         uint256 gasLimit;
@@ -76,7 +76,7 @@ interface IWallet {
         address asset;
         uint256 value;
         uint256 id;
-        FLAXAddress depositAddr;
+        NocturneAddress depositAddr;
     }
 
     function processBundle(

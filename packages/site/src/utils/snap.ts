@@ -1,4 +1,4 @@
-import { OperationRequest, toJSON } from "@flax/sdk";
+import { OperationRequest, toJSON } from "@nocturne-xyz/sdk";
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
 /**
@@ -94,7 +94,7 @@ export const syncNotes = async () => {
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_syncNotes",
+        method: "nocturne_syncNotes",
       },
     ],
   });
@@ -106,20 +106,20 @@ export const syncLeaves = async () => {
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_syncLeaves",
+        method: "nocturne_syncLeaves",
       },
     ],
   });
 };
 
 export const generateProof = async (operationRequest: OperationRequest) => {
-  console.log("Invoking flax_generateProof");
+  console.log("Invoking nocturne_generateProof");
   const res = await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_generateProof",
+        method: "nocturne_generateProof",
         params: { operationRequest: toJSON(operationRequest) },
       },
     ],
@@ -134,7 +134,7 @@ export const clearDb = async () => {
     params: [
       defaultSnapOrigin,
       {
-        method: "flax_clearDb",
+        method: "nocturne_clearDb",
       },
     ],
   });

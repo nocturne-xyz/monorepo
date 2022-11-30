@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Rename all "flax" instances to "nocturne"
+- Change package version to `-alpha`
 - Rename `Joinsplit` to `JoinSplit`
 - move `OffchainMerkleTree` into a library and have `CommitmentTreeManager` hold the state
 - remove `IBatchMerkle` and `BatchBinaryMerkle`
@@ -25,7 +27,7 @@
 - Start test suite for `PoseidonBatchBinaryMerkle`
 - Break up `BatchBinaryMerkle` lib into `BinaryMerkle` and `Queue`
 - Add `Refund` events to `CommitmentTreeManager`
-- Update `Spend2Verifier` to match simplified `FLAXAddress` + vk/sk scheme
+- Update `Spend2Verifier` to match simplified `NocturneAddress` + vk/sk scheme
 - Rename `SpendTransaction.noteCommitment` to `newNoteCommitment` for clarity
 - Add tests for verifier contract
 - Make commitment tree and hash functions generic behind interfaces

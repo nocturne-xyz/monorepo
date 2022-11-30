@@ -1,6 +1,6 @@
 {
-  "name": "@flax/sdk",
-  "version": "1.0.0",
+  "name": "@nocturne-xyz/sdk",
+  "version": "1.0.1-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,12 +11,12 @@
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
     "test:unit": "mocha --require ts-node/register test/**"
   },
   "dependencies": {
-    "@flax/contracts": "workspace:^",
+    "@nocturne-xyz/contracts": "workspace:^",
     "@types/json-bigint": "^1.0.1",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
