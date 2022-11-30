@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Rename all "flax" instances to "nocturne"
+- Change package version to `-alpha`
 - Rename `Joinsplit` to `JoinSplit`
 - move `OffchainMerkleTree` into a library and have `CommitmentTreeManager` hold the state
 - remove `IBatchMerkle` and `BatchBinaryMerkle`

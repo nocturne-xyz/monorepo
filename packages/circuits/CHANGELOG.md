@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Rename all "flax" instances to "nocturne"
+- Change package version to `-alpha`
 - add script to download subtreeupdate's chonky ptau file
 - add rapidsnark option to subtreeupdate build script
 - restructure build scripts with a layer of indirection so they can be invoked all at once

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Rename all "flax" instances to "nocturne"
+- Change package version to `-alpha`
 - Break out SDK methods into sub methods and expose a method for gathering spend tx inputs for site/snap to use
 - Replace `LMDB` with `ObjectDB`, which fits structure of MM snap schema
 - Take out all fs and proving related capabilities from SDK and replace with blank interfaces (turn SDK into shim)
