@@ -2762,7 +2762,6 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    circomlibjs: "https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6"
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     snarkjs: ^0.5.0
@@ -8040,18 +8039,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"circomlibjs@https://github.com/FLAXPrivacy/circomlibjs#629a5c4dcec70ad9a5c5db06bda952507be560c6":
-  version: 0.1.7
-  resolution: "circomlibjs@https://github.com/FLAXPrivacy/circomlibjs.git#commit=629a5c4dcec70ad9a5c5db06bda952507be560c6"
-  dependencies:
-    blake-hash: ^2.0.0
-    blake2b: ^2.1.3
-    ethers: ^5.5.1
-    ffjavascript: ^0.2.45
-  checksum: 8f91d9d2a998f96029f9cae5af6862f4f16bd4658e9df0a8283590260bb245bdf948f93d0ba4540c247987ea83c5165e7fc0302fc0c9117fa457283480c780b7
-  languageName: node
-  linkType: hard
-
 "circomlibjs@npm:0.0.8":
   version: 0.0.8
   resolution: "circomlibjs@npm:0.0.8"
@@ -11102,7 +11089,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.5.1, ethers@npm:^5.5.2, ethers@npm:^5.5.3":
+"ethers@npm:^5.0.0, ethers@npm:^5.0.1, ethers@npm:^5.0.2, ethers@npm:^5.4.4, ethers@npm:^5.5.2, ethers@npm:^5.5.3":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -11546,14 +11533,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ffjavascript@FLAXPrivacy/ffjavascript#3bfd14daf3f0b22cdaddc17a39bf10d6ee79716f":
-  version: 0.2.57
-  resolution: "ffjavascript@https://github.com/FLAXPrivacy/ffjavascript.git#commit=3bfd14daf3f0b22cdaddc17a39bf10d6ee79716f"
+"ffjavascript@npm:0.2.56":
+  version: 0.2.56
+  resolution: "ffjavascript@npm:0.2.56"
   dependencies:
     wasmbuilder: 0.0.16
     wasmcurves: 0.2.0
-    web-worker: "FLAXPrivacy/web-worker#master"
-  checksum: 29bb325442f56448730ee6e240e29540459ad47ddc44eda88c2c113e2a2c4c387cfd56642e32c4d90549e56eb388bb49c14fcb28c4660af4ad3bd38e75c5a8fb
+    web-worker: ^1.2.0
+  checksum: d4e02263db4a94d111cdc7c1211ae96769370f5c8c3c338331e0ef99faed7b55e640bedf23fa8a83fc9a77f0e81140ea8f32e392812a00e15ca504221b879a4f
+  languageName: node
+  linkType: hard
+
+"ffjavascript@npm:0.2.57, ffjavascript@npm:^0.2.38, ffjavascript@npm:^0.2.48":
+  version: 0.2.57
+  resolution: "ffjavascript@npm:0.2.57"
+  dependencies:
+    wasmbuilder: 0.0.16
+    wasmcurves: 0.2.0
+    web-worker: ^1.2.0
+  checksum: 8f3e87b3e2739c607dfc2ef8cb36d92202da57b1323987cca09ade378c584a946b9d784607ee5e2193a2de6200afdc254c19f72f79145aa55d9a8688f83f6708
   languageName: node
   linkType: hard
 
@@ -22692,10 +22690,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web-worker@FLAXPrivacy/web-worker#master":
+"web-worker@npm:^1.2.0":
   version: 1.2.0
-  resolution: "web-worker@https://github.com/FLAXPrivacy/web-worker.git#commit=e3135df13d2ab8c32640e596ceae6a9a83d8efa6"
-  checksum: 805fceeed0a3229a9f53059668c0bfb85498deb53e10755d960987680c624908877187d1aafd3ae09808afd58a81c69ac8aa4fa2f9107534d0ed6cfa457d4f34
+  resolution: "web-worker@npm:1.2.0"
+  checksum: 1bb28348ddcf9b2e7c62c5fd02e49a84098795856cd905456de957271bba288e9618941cf69d8960f0a7ae81f5dfb74b427c0634be47ec69e3e955c4ec5213be
   languageName: node
   linkType: hard
 
