@@ -112,14 +112,14 @@ export const syncLeaves = async () => {
   });
 };
 
-export const generateProof = async (operationRequest: OperationRequest) => {
-  console.log("Invoking nocturne_generateProof");
+export const getSpendInputs = async (operationRequest: OperationRequest) => {
+  console.log("Invoking nocturne_getSpendInputs");
   const res = await window.ethereum.request({
     method: "wallet_invokeSnap",
     params: [
       defaultSnapOrigin,
       {
-        method: "nocturne_generateProof",
+        method: "nocturne_getSpendInputs",
         params: { operationRequest: toJSON(operationRequest) },
       },
     ],
