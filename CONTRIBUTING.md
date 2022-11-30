@@ -15,5 +15,4 @@ Before publishing any package to `npm` perform the following steps:
 11. **Pull and checkout _latest_ main** and tag the commit (`git tag -s <package-to-release>@<new-package-version> <commit>`)
 12. Push tags (`git push --tags`)
 13. From the tagged commit, ensure your working tree is clean with `git status`
-14. Ensure that you are on the root of the monorepo before publishing. Publishing from the individual package folder will not replace versions with `workspace:^` with the actual versions in the package.json that is uploaded to npm. This will cause errors when you try to install the packages from npm.
-15. Publish to npm (run this from the root `yarn <package-to-release> npm publish --access public`)
+14. Publish to npm (run this from the package you want to publish `yarn npm publish --access public`)
