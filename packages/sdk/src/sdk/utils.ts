@@ -76,3 +76,16 @@ export function bigintToBuf(bn: bigint): Uint8Array {
 
   return u8;
 }
+
+// Extended Euclidean algorithm
+export function egcd(
+  a: bigint,
+  b: bigint
+): [bigint, bigint, bigint] {
+  if (b == 0n) {
+    return [1n, 0n, a];
+  } else {
+    const [x, y, d] = egcd(b, a % b);
+    return [y, x - y * (a / b), d];
+  }
+}

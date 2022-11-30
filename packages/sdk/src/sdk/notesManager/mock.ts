@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { NotesManager, SpendEvent } from ".";
+import { NotesManager, JoinSplitEvent } from ".";
 import { NocturnePrivKey } from "../../crypto";
 import { LocalObjectDB } from "../db/local";
 import { IncludedNoteStruct } from "../note";
@@ -19,9 +19,9 @@ export class MockNotesManager extends NotesManager {
 
   protected async postStoreNotesFromRefunds(): Promise<void> {}
 
-  protected async fetchSpends(): Promise<SpendEvent[]> {
+  protected async fetchJoinSplits(): Promise<JoinSplitEvent[]> {
     return [];
   }
 
-  protected async postApplySpends(): Promise<void> {}
+  protected async postApplyJoinSplits(): Promise<void> {}
 }

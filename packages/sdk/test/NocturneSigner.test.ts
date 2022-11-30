@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { NocturneAddress } from "../src/crypto/address";
+import { Note } from "../src/sdk/note";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
@@ -42,5 +43,22 @@ describe("NocturneSigner", () => {
     const m = BigInt(123);
     const sig = signer.sign(m);
     expect(NocturneSigner.verify(pk, m, sig)).to.equal(true);
+  });
+
+  it("Test note encryption and decryption", () => {
+    const priv = NocturnePrivKey.genPriv();
+    const signer = new NocturneSigner(priv);
+    const targets = [priv.toCanonAddress()];
+    const note = new Note({
+      owner: priv.toAddress().toStruct(),
+      nonce: 55n,
+      asset: '0x12345',
+      id: 1n,
+      value: 33n
+    });
+    const [, encappedKeys, encryptedNote] = signer.encryptNote(targets, note);
+    const [nonce, value] = signer.decryptNote(encappedKeys[0], encryptedNote);
+    expect(nonce).to.equal(55n);
+    expect(value).to.equal(33n);
   });
 });

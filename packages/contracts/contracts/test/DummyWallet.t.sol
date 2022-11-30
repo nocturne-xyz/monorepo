@@ -216,11 +216,27 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 nullifierA: uint256(182),
                 nullifierB: uint256(183),
                 newNoteACommitment: uint256(1038),
-                newNoteBCommitment: uint256(1038),
+                newNoteAOwner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKeyA: uint256(111),
+                encryptedNoteA: [uint256(111), uint256(111)],
+                newNoteBCommitment: uint256(1032),
+                newNoteBOwner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKeyB: uint256(111),
+                encryptedNoteB: [uint256(111), uint256(111)],
                 proof: dummyProof(),
-                publicSpend: uint256(50),
                 asset: address(token),
-                id: ERC20_ID
+                id: ERC20_ID,
+                publicSpend: uint256(50)
             });
 
         address[] memory spendTokens = new address[](1);

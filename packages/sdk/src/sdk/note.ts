@@ -18,6 +18,9 @@ interface NoteStruct {
   value: bigint;
 }
 
+export type EncryptedNote = [bigint, bigint];
+export type EncappedKey = bigint;
+
 export class Note {
   inner: NoteStruct;
 

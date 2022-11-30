@@ -2,7 +2,12 @@ import { Address } from "../commonTypes";
 import { NocturneAddressStruct } from "../crypto/address";
 import { JoinSplitInputs } from "../proof/joinsplit";
 import { MerkleProofInput } from "../proof";
-import { IncludedNote, Note } from "../sdk/note";
+import {
+  IncludedNote,
+  Note,
+  EncappedKey,
+  EncryptedNote
+} from "../sdk/note";
 
 export interface SpendAndRefundTokens {
   spendTokens: Address[];
@@ -19,7 +24,13 @@ export interface BaseJoinSplitTx {
   nullifierA: bigint;
   nullifierB: bigint;
   newNoteACommitment: bigint;
+  newNoteAOwner: NocturneAddressStruct;
+  encappedKeyA: EncappedKey;
+  encryptedNoteA: EncryptedNote;
   newNoteBCommitment: bigint;
+  newNoteBOwner: NocturneAddressStruct;
+  encappedKeyB: EncappedKey;
+  encryptedNoteB: EncryptedNote;
   asset: Address;
   id: bigint;
   publicSpend: bigint;

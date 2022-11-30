@@ -30,18 +30,11 @@ contract CommitmentTreeManager {
     );
 
     event JoinSplit(
-        uint256 indexed nullifierA,
-        uint256 indexed nullifierB,
-        IWallet.NocturneAddress ownerAddrA,
-        uint256 newNoteCommitmentA,
-        uint128 merkleIndexA,
-        uint256 encappedKeyA,
-        uint256 encryptedNoteA,
-        IWallet.NocturneAddress ownerAddrB,
-        uint256 newNoteCommitmentB,
-        uint128 merkleIndexB,
-        uint256 encappedKeyB,
-        uint256 encryptedNoteB,
+        uint256 indexed oldNoteANullifier,
+        uint256 indexed oldNoteBNullifier,
+        uint128 newNoteAIndex,
+        uint128 newNoteBIndex,
+        IWallet.JoinSplitTransaction joinSplitTx
     );
 
     event InsertNoteCommitments(uint256[] commitments);
@@ -99,6 +92,10 @@ contract CommitmentTreeManager {
             "JoinSplit proof invalid"
         );
 
+        // Compute newNote indices in the merkle tree
+        uint128 newNoteIndexA = merkle.getTotalCount();
+        uint128 newNoteIndexB = newNoteIndexA + 1;
+
         uint256[] memory noteCommitments = new uint256[](2);
         noteCommitments[0] = joinSplitTx.newNoteACommitment;
         noteCommitments[1] = joinSplitTx.newNoteBCommitment;
@@ -107,8 +104,13 @@ contract CommitmentTreeManager {
         nullifierSet[joinSplitTx.nullifierA] = true;
         nullifierSet[joinSplitTx.nullifierB] = true;
 
-        emit Nullify(joinSplitTx.nullifierA);
-        emit Nullify(joinSplitTx.nullifierB);
+        emit JoinSplit(
+            joinSplitTx.nullifierA,
+            joinSplitTx.nullifierB,
+            newNoteIndexA,
+            newNoteIndexB,
+            joinSplitTx
+        );
     }
 
     function root() public view returns (uint256) {

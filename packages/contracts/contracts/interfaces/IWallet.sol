@@ -16,12 +16,23 @@ interface IWallet {
         uint256 h2Y;
     }
 
+    struct EncodedNocturneAddress {
+        uint256 h1X;
+        uint256 h2X;
+    }
+
     struct JoinSplitTransaction {
         uint256 commitmentTreeRoot;
         uint256 nullifierA;
         uint256 nullifierB;
         uint256 newNoteACommitment;
+        NocturneAddress newNoteAOwner;
+        uint256 encappedKeyA;
+        uint256[2] encryptedNoteA;
         uint256 newNoteBCommitment;
+        NocturneAddress newNoteBOwner;
+        uint256 encappedKeyB;
+        uint256[2] encryptedNoteB;
         uint256[8] proof;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20

@@ -53,7 +53,7 @@ export class NocturneContext {
 
   async syncNotes(): Promise<void> {
     await this.notesManager.fetchAndStoreNewNotesFromRefunds();
-    await this.notesManager.fetchAndApplyNewSpends();
+    await this.notesManager.fetchAndApplyNewJoinSplits();
   }
 
   async syncLeaves(): Promise<void> {
@@ -161,16 +161,8 @@ export class NocturneContext {
     joinSplitZkeyPath: string
   ): Promise<ProvenJoinSplitTx> {
     const {
-      commitmentTreeRoot,
-      nullifierA,
-      nullifierB,
-      newNoteACommitment,
-      newNoteBCommitment,
-      asset,
-      id,
-      publicSpend,
-      opDigest,
-      proofInputs
+      proofInputs,
+      ...baseJoinSplitTx
     } = preProofJoinSplitTx;
     const proof = await this.prover.proveJoinSplit(
       proofInputs,
@@ -181,16 +173,8 @@ export class NocturneContext {
     // const publicSignals = joinSplitPublicSignalsArrayToTyped(proof.publicSignals);
     const solidityProof = packToSolidityProof(proof.proof);
     return {
-      commitmentTreeRoot,
-      nullifierA,
-      nullifierB,
-      newNoteACommitment,
-      newNoteBCommitment,
-      opDigest,
       proof: solidityProof,
-      asset,
-      publicSpend,
-      id,
+      ...baseJoinSplitTx
     };
   }
 
@@ -211,15 +195,18 @@ export class NocturneContext {
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteA);
-    const newAddr = this.signer.address.rerand().toStruct();
+    const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
+    const newNoteBOwner = newNoteAOwner;
     const newNoteA = new Note({
-      owner: newAddr,
+      owner: newNoteAOwner,
       nonce: 0n,
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue
     });
-    const newNoteB = Note.newDummy(newAddr, oldNoteA.asset, oldNoteA.id);
+    const [,[encappedKeyA], encryptedNoteA] = this.signer.encryptNote([this.signer.canonAddress], newNoteA);
+    const newNoteB = Note.newDummy(newNoteAOwner, oldNoteA.asset, oldNoteA.id);
+    const [,[encappedKeyB], encryptedNoteB] = this.signer.encryptNote([this.signer.canonAddress], newNoteB);
     const newNoteACommitment = newNoteA.toCommitment();
     const newNoteBCommitment = newNoteA.toCommitment();
     const publicSpend = oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
@@ -247,7 +234,13 @@ export class NocturneContext {
       nullifierA,
       nullifierB,
       newNoteACommitment,
+      newNoteAOwner,
+      encappedKeyA,
+      encryptedNoteA,
       newNoteBCommitment,
+      newNoteBOwner,
+      encappedKeyB,
+      encryptedNoteB,
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       publicSpend,
@@ -326,20 +319,13 @@ export class NocturneContext {
     opSig: NocturneSignature
   ): Promise<PreProofJoinSplitTx> {
     const {
-      nullifierA,
-      nullifierB,
-      newNoteACommitment,
-      newNoteBCommitment,
-      asset,
-      id,
-      publicSpend,
-      commitmentTreeRoot,
       merkleInputA,
       merkleInputB,
       oldNoteA,
       oldNoteB,
       newNoteA,
-      newNoteB
+      newNoteB,
+      ...baseJoinSplitTx
     } = preSignJoinSplitTx;
 
     const proofInputs: JoinSplitInputs = {
@@ -357,16 +343,9 @@ export class NocturneContext {
     };
 
     return {
-      commitmentTreeRoot,
-      nullifierA,
-      nullifierB,
-      newNoteACommitment,
-      newNoteBCommitment,
-      asset,
-      id,
-      publicSpend,
       opDigest,
-      proofInputs
+      proofInputs,
+      ...baseJoinSplitTx
     };
   }
 

@@ -1,11 +1,17 @@
 import { NocturneDB } from "../db";
-import { IncludedNote, IncludedNoteStruct } from "../note";
+import {
+  // IncludedNote,
+  IncludedNoteStruct
+} from "../note";
 import { NocturneSigner } from "../signer";
+import { BaseJoinSplitTx } from "../../contract/types";
 
 export interface JoinSplitEvent {
-  oldNoteNullifier: bigint;
-  valueSpent: bigint;
-  merkleIndex: number;
+  oldNoteANullifier: bigint;
+  oldNoteBNullifier: bigint;
+  newNoteAIndex: number;
+  newNoteBIndex: number;
+  joinSplitTx: BaseJoinSplitTx;
 }
 
 export abstract class NotesManager {
@@ -35,29 +41,29 @@ export abstract class NotesManager {
   }
 
   private async applyNewJoinSplits(newJoinSplits: JoinSplitEvent[]): Promise<void> {
-    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
-    for (const joinSplit of newJoinSplits) {
-      for (const oldNote of allNotes) {
-        // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(
-          new IncludedNote(oldNote)
-        );
-        if (oldNullifier == spend.oldNoteNullifier) {
-          const newNoteNonce = this.signer.generateNewNonce(oldNullifier);
-          const newNote: IncludedNoteStruct = {
-            owner: oldNote.owner,
-            nonce: newNoteNonce,
-            asset: oldNote.asset,
-            id: oldNote.id,
-            value: oldNote.value - spend.valueSpent,
-            merkleIndex: spend.merkleIndex,
-          };
+    // const allNotes = [...(await this.db.getAllNotes()).values()].flat();
+    // for (const joinSplit of newJoinSplits) {
+    //   for (const oldNote of allNotes) {
+    //     // TODO implement note indexing by nullifiers
+    //     const oldNullifier = this.signer.createNullifier(
+    //       new IncludedNote(oldNote)
+    //     );
+    //     if (oldNullifier == joinSplit.oldNoteANullifier) {
+    //       const newNoteNonce = this.signer.generateNewNonce(oldNullifier);
+    //       const newNote: IncludedNoteStruct = {
+    //         owner: oldNote.owner,
+    //         nonce: newNoteNonce,
+    //         asset: oldNote.asset,
+    //         id: oldNote.id,
+    //         value: oldNote.value - joinSplit.valueSpent,
+    //         merkleIndex: joinSplit.merkleIndex,
+    //       };
 
-          await this.db.removeNote(oldNote);
-          await this.db.storeNote(newNote);
-        }
-      }
-    }
+    //       await this.db.removeNote(oldNote);
+    //       await this.db.storeNote(newNote);
+    //     }
+    //   }
+    // }
   }
 
   async fetchAndApplyNewJoinSplits(): Promise<void> {
