@@ -98,6 +98,20 @@ describe("NocturneContext", () => {
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
+  it("Rejects asset request attempting to overspend", async () => {
+    // Request 1000 tokens, more than user owns
+    const assetRequest1000: AssetRequest = {
+      asset,
+      value: 1000n,
+    };
+    try {
+      await nocturneContext.ensureMinimumForAssetRequest(assetRequest1000);
+      throw new Error("Request should have failed");
+    } catch (e) {
+      expect(e).to.be.instanceOf(Error);
+    }
+  });
+
   it("Gathers minimum notes for asset request", async () => {
     // Request 20 tokens, consume smallest note
     const assetRequest5: AssetRequest = {

@@ -104,6 +104,16 @@ export class NocturneContext {
     };
   }
 
+  /**
+   */
+   * Given `operationRequest`, gather the necessary notes and proof inputs to
+   * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
+   * proof inputs.
+   *
+   * @param operationRequest Operation request
+   * @param refundAddr Optional refund address. Context will generate
+   * rerandomized address if left empty
+   * @param gasLimit Gas limit
   async tryGetPreProofOperation(
     operationRequest: OperationRequest,
     refundAddr?: NocturneAddressStruct,
@@ -139,6 +149,50 @@ export class NocturneContext {
       })
     );
 
+  /**
+   * Ensure user has balances to fullfill all asset requests in
+   * `operationRequest`. Throws error if any asset request exceeds owned balance.
+   *
+   * @param assetRequests Asset requests
+   */
+  async ensureMinimumForOperationRequest({
+    assetRequests,
+  }: OperationRequest): Promise<void> {
+    for (const assetRequest of assetRequests) {
+      await this.ensureMinimumForAssetRequest(assetRequest);
+    }
+  }
+
+  /**
+   * Create a `ProvenSpendTx` given the `oldNote`, resulting
+   * `newNote`, and operation to use for the `operationDigest`
+   *
+   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
+   * post-spend
+   * @param preProofOperation Operation included when generating a proof
+   */
+  protected async generateProvenSpendTxFor(
+    { oldNewNotePair, preProofOperation }: PreProofSpendTxInputs,
+    spend2WasmPath: string,
+    spend2ZkeyPath: string
+  ): Promise<ProvenSpendTx> {
+    const { oldNote, newNote } = oldNewNotePair;
+    const nullifier = this.signer.createNullifier(oldNote);
+    const newNoteCommitment = newNote.toCommitment();
+
+    const inputs = await this.getProofInputsFor({
+      oldNewNotePair,
+      preProofOperation,
+    });
+
+    const proof = await this.prover.proveSpend2(
+      inputs,
+      spend2WasmPath,
+      spend2ZkeyPath
+    );
+
+    const publicSignals = spend2PublicSignalsArrayToTyped(proof.publicSignals);
+    const solidityProof = packToSolidityProof(proof.proof);
     return {
       joinSplitTxs: preProofJoinSplitTxs,
       refundAddr: preSignOperation.refundAddr,
@@ -386,6 +440,23 @@ export class NocturneContext {
       proofInputs,
       ...baseJoinSplitTx,
     };
+  }
+
+  /**
+   * Ensure user has balances to fullfill `assetRequest`. Throws error if
+   * attempted request exceeds owned balance.
+   *
+   * @param assetRequest Asset request
+   */
+  async ensureMinimumForAssetRequest(
+    assetRequest: AssetRequest
+  ): Promise<void> {
+    const balance = await this.getAssetBalance(assetRequest.asset);
+    if (balance < assetRequest.value) {
+      throw new Error(
+        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+      );
+    }
   }
 
   /**
