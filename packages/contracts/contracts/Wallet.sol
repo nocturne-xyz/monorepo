@@ -19,9 +19,9 @@ import "hardhat/console.sol";
 contract Wallet is IWallet, BalanceManager {
     constructor(
         address _vault,
-        address _spend2Verifier,
+        address _joinSplitVerifier,
         address _subtreeUpdateVerifier
-    ) BalanceManager(_vault, _spend2Verifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+    ) BalanceManager(_vault, _joinSplitVerifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
@@ -73,7 +73,7 @@ contract Wallet is IWallet, BalanceManager {
         Operation calldata op
     ) external onlyThis returns (bool success, bytes[] memory results) {
         bytes32 operationHash = _hashOperation(op);
-        _handleAllSpends(op.spendTxs, op.tokens, operationHash);
+        _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;

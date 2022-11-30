@@ -109,6 +109,7 @@ contract BalanceManager is
         require(vault.makeDeposit(deposit), "Deposit failed");
     }
 
+    // TODO: Fix below according to design doc
     function _handleAllSpends(
         IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
         IWallet.Tokens calldata tokens,
@@ -121,14 +122,14 @@ contract BalanceManager is
             if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[
                     joinSplitTxs[i].asset
-                ] += joinSplitTxs[i].publicValue;
-            } else if (joinSplitTxs[i].valueToSpend == 0) {
+                ] += joinSplitTxs[i].publicSpend;
+            } else if (joinSplitTxs[i].publicSpend == 0) {
                 _gatherERC721(joinSplitTxs[i].asset, joinSplitTxs[i].id);
             } else {
                 _gatherERC1155(
                     joinSplitTxs[i].asset,
                     joinSplitTxs[i].id,
-                    joinSplitTxs[i].valueToSpend
+                    joinSplitTxs[i].publicSpend
                 );
             }
         }

@@ -61,7 +61,6 @@ interface IWallet {
     }
 
     struct Operation {
-        SpendTransaction[] spendTxs;
         JoinSplitTransaction[] joinSplitTxs;
         NocturneAddress refundAddr;
         Tokens tokens;

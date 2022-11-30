@@ -1,4 +1,4 @@
-//spdx-license-identifier: unlicense
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.5;
 
 import "../interfaces/ISubtreeUpdateVerifier.sol";

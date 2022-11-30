@@ -29,7 +29,20 @@ contract CommitmentTreeManager {
         uint128 merkleIndex
     );
 
-    event Nullify(uint256 indexed nullifier);
+    event JoinSplit(
+        uint256 indexed nullifierA,
+        uint256 indexed nullifierB,
+        IWallet.NocturneAddress ownerAddrA,
+        uint256 newNoteCommitmentA,
+        uint128 merkleIndexA,
+        uint256 encappedKeyA,
+        uint256 encryptedNoteA,
+        IWallet.NocturneAddress ownerAddrB,
+        uint256 newNoteCommitmentB,
+        uint128 merkleIndexB,
+        uint256 encappedKeyB,
+        uint256 encryptedNoteB,
+    );
 
     event InsertNoteCommitments(uint256[] commitments);
 
@@ -49,7 +62,14 @@ contract CommitmentTreeManager {
             pastRoots[joinSplitTx.commitmentTreeRoot],
             "Given tree root not a past root"
         );
-        require(!nullifierSet[joinSplitTx.nullifier], "Nullifier already used");
+        require(
+            !nullifierSet[joinSplitTx.nullifierA],
+            "Nullifier A already used"
+        );
+        require(
+            !nullifierSet[joinSplitTx.nullifierB],
+            "Nullifier B already used"
+        );
 
         bytes32 spendHash = _hashJoinSplit(joinSplitTx);
         uint256 operationDigest = uint256(
@@ -79,9 +99,10 @@ contract CommitmentTreeManager {
             "JoinSplit proof invalid"
         );
 
-        insertNoteCommitments(
-            [joinSplitTx.newNoteACommitment, joinSplitTx.newNoteACommitment]
-        );
+        uint256[] memory noteCommitments = new uint256[](2);
+        noteCommitments[0] = joinSplitTx.newNoteACommitment;
+        noteCommitments[1] = joinSplitTx.newNoteBCommitment;
+        insertNoteCommitments(noteCommitments);
 
         nullifierSet[joinSplitTx.nullifierA] = true;
         nullifierSet[joinSplitTx.nullifierB] = true;

@@ -2,7 +2,7 @@ import { NocturneDB } from "../db";
 import { IncludedNote, IncludedNoteStruct } from "../note";
 import { NocturneSigner } from "../signer";
 
-export interface SpendEvent {
+export interface JoinSplitEvent {
   oldNoteNullifier: bigint;
   valueSpent: bigint;
   merkleIndex: number;
@@ -19,8 +19,8 @@ export abstract class NotesManager {
 
   protected abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
   protected abstract postStoreNotesFromRefunds(): Promise<void>;
-  protected abstract fetchSpends(): Promise<SpendEvent[]>;
-  protected abstract postApplySpends(): Promise<void>;
+  protected abstract fetchJoinSplits(): Promise<JoinSplitEvent[]>;
+  protected abstract postApplyJoinSplits(): Promise<void>;
 
   private async storeNewNotesFromRefunds(
     newNotesFromRefunds: IncludedNoteStruct[]
@@ -34,10 +34,11 @@ export abstract class NotesManager {
     await this.postStoreNotesFromRefunds();
   }
 
-  private async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
+  private async applyNewJoinSplits(newJoinSplits: JoinSplitEvent[]): Promise<void> {
     const allNotes = [...(await this.db.getAllNotes()).values()].flat();
-    for (const spend of newSpends) {
+    for (const joinSplit of newJoinSplits) {
       for (const oldNote of allNotes) {
+        // TODO implement note indexing by nullifiers
         const oldNullifier = this.signer.createNullifier(
           new IncludedNote(oldNote)
         );
@@ -59,10 +60,10 @@ export abstract class NotesManager {
     }
   }
 
-  async fetchAndApplyNewSpends(): Promise<void> {
-    const newSpends = await this.fetchSpends();
-    await this.applyNewSpends(newSpends);
-    await this.postApplySpends();
+  async fetchAndApplyNewJoinSplits(): Promise<void> {
+    const newJoinSplits = await this.fetchJoinSplits();
+    await this.applyNewJoinSplits(newJoinSplits);
+    await this.postApplyJoinSplits();
   }
 }
 

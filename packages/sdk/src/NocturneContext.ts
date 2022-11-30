@@ -80,7 +80,7 @@ export class NocturneContext {
     operationRequest: OperationRequest,
     joinSplitWasmPath: string,
     joinSplitZkeyPath: string,
-    refundAddr?: NoctruneAddressStruct,
+    refundAddr?: NocturneAddressStruct,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const preProofOp: PreProofOperation = await this.tryGetPreProofOperation(
