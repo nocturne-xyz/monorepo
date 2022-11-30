@@ -127,6 +127,16 @@ export class NocturneContext {
     };
   }
 
+  /**
+   * Given `operationRequest`, gather the necessary notes and proof inputs to
+   * fullfill the operation's asset requests. Return the SpendTxInputs and
+   * ProofInputs together.
+   *
+   * @param operationRequest Operation request
+   * @param refundAddr Optional refund address. Context will generate
+   * rerandomized address if left empty
+   * @param gasLimit Gas limit
+   */
   async tryGetPreProofSpendTxInputsAndProofInputs(
     operationRequest: OperationRequest,
     refundAddr?: NocturneAddressStruct,
@@ -161,6 +171,20 @@ export class NocturneContext {
         };
       })
     );
+  }
+
+  /**
+   * Ensure user has balances to fullfill all asset requests in
+   * `operationRequest`. Throws error if any asset request exceeds owned balance.
+   *
+   * @param assetRequests Asset requests
+   */
+  async ensureMinimumForOperationRequest({
+    assetRequests,
+  }: OperationRequest): Promise<void> {
+    for (const assetRequest of assetRequests) {
+      await this.ensureMinimumForAssetRequest(assetRequest);
+    }
   }
 
   /**
@@ -291,6 +315,23 @@ export class NocturneContext {
   }
 
   /**
+   * Ensure user has balances to fullfill `assetRequest`. Throws error if
+   * attempted request exceeds owned balance.
+   *
+   * @param assetRequest Asset request
+   */
+  async ensureMinimumForAssetRequest(
+    assetRequest: AssetRequest
+  ): Promise<void> {
+    const balance = await this.getAssetBalance(assetRequest.asset);
+    if (balance < assetRequest.value) {
+      throw new Error(
+        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+      );
+    }
+  }
+
+  /**
    * Return minimum list of notes required to fullfill asset request.
    * Returned list is sorted from smallest to largest. The last note in the list
    * may produce a non-zero new note.
@@ -301,12 +342,7 @@ export class NocturneContext {
     refundAddr: NocturneAddressStruct,
     assetRequest: AssetRequest
   ): Promise<OldAndNewNotePair[]> {
-    const balance = await this.getAssetBalance(assetRequest.asset);
-    if (balance < assetRequest.value) {
-      throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
-      );
-    }
+    await this.ensureMinimumForAssetRequest(assetRequest);
 
     const notes = await this.db.getNotesFor(assetRequest.asset);
     const sortedNotes = [...notes].sort((a, b) => {
