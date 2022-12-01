@@ -1,6 +1,15 @@
 import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
-import { Action } from "./contract";
+import { Action, SpendAndRefundTokens } from "./contract";
+import { JoinSplitInputs } from "./proof/joinsplit";
+import { NocturneAddressStruct } from "./crypto/address";
+import { MerkleProofInput } from "./proof";
+import {
+  IncludedNote,
+  Note,
+  EncappedKey,
+  EncryptedNote,
+} from "./sdk/note";
 import JSON from "json-bigint";
 
 export const SNARK_SCALAR_FIELD =
@@ -69,4 +78,63 @@ export function operationRequestFromJSON(
       };
     }),
   };
+}
+
+export interface BaseJoinSplitTx {
+  commitmentTreeRoot: bigint;
+  nullifierA: bigint;
+  nullifierB: bigint;
+  newNoteACommitment: bigint;
+  newNoteAOwner: NocturneAddressStruct;
+  encappedKeyA: EncappedKey;
+  encryptedNoteA: EncryptedNote;
+  newNoteBCommitment: bigint;
+  newNoteBOwner: NocturneAddressStruct;
+  encappedKeyB: EncappedKey;
+  encryptedNoteB: EncryptedNote;
+  asset: Address;
+  id: bigint;
+  publicSpend: bigint;
+}
+
+export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
+  oldNoteA: IncludedNote;
+  oldNoteB: IncludedNote;
+  newNoteA: Note;
+  newNoteB: Note;
+  merkleInputA: MerkleProofInput;
+  merkleInputB: MerkleProofInput;
+}
+
+export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
+  opDigest: bigint;
+  proofInputs: JoinSplitInputs
+}
+
+export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
+  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+}
+
+export interface PreSignOperation {
+  joinSplitTxs: PreSignJoinSplitTx[];
+  refundAddr: NocturneAddressStruct;
+  tokens: SpendAndRefundTokens;
+  actions: Action[];
+  gasLimit: bigint;
+}
+
+export interface PreProofOperation {
+  joinSplitTxs: PreProofJoinSplitTx[];
+  refundAddr: NocturneAddressStruct;
+  tokens: SpendAndRefundTokens;
+  actions: Action[];
+  gasLimit: bigint;
+}
+
+export interface ProvenOperation {
+  joinSplitTxs: ProvenJoinSplitTx[];
+  refundAddr: NocturneAddressStruct;
+  tokens: SpendAndRefundTokens;
+  actions: Action[];
+  gasLimit: bigint;
 }

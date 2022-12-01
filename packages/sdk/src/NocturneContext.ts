@@ -1,13 +1,15 @@
 import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
 import {
+  SpendAndRefundTokens,
+} from "./contract/types";
+import {
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
   ProvenJoinSplitTx,
   PreSignOperation,
   PreProofOperation,
   ProvenOperation,
-  SpendAndRefundTokens,
-} from "./contract/types";
+} from "./commonTypes";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { NocturneAddressStruct, NocturneAddress } from "./crypto/address";

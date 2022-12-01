@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
-import { SNARK_SCALAR_FIELD } from "../commonTypes";
 import {
+  SNARK_SCALAR_FIELD,
   PreSignOperation,
   PreSignJoinSplitTx,
-} from "./types";
+} from "../commonTypes";
 
 function hashOperation(op: PreSignOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

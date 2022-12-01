@@ -4,7 +4,7 @@ import {
   IncludedNoteStruct,
 } from "../note";
 import { NocturneSigner } from "../signer";
-import { BaseJoinSplitTx } from "../../contract/types";
+import { BaseJoinSplitTx } from "../../commonTypes";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
