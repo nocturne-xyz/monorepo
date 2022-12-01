@@ -104,9 +104,9 @@ export class NocturneSigner {
   }
 
   /**
-   * Decrypte an encrypted note, assuming that encappedKey is
-   * generated against the stored viewing key. Returns the
-   * decrypted nonce and value.
+   * Decrypt an encrypted note, assuming that encappedKey is
+   * generated against the stored viewing key. Returns the decrypted
+   * nonce and value.
    *
    * @param encappedKey: encapsulated key
    * @param encryptedNote: note to decrypt

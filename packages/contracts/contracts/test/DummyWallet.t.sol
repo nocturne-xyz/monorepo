@@ -58,10 +58,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint128 merkleIndex
     );
 
-    event Spend(
-        uint256 indexed oldNoteNullifier,
-        uint256 indexed valueSpent,
-        uint128 indexed merkleIndex
+    event JoinSplit(
+        uint256 indexed oldNoteANullifier,
+        uint256 indexed oldNoteBNullifier,
+        uint128 newNoteAIndex,
+        uint128 newNoteBIndex,
+        IWallet.JoinSplitTransaction joinSplitTx
     );
 
     function setUp() public virtual {
@@ -269,6 +271,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(vault)), uint256(800));
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // check all values
+        vm.expectEmit(true, true, false, true);
+        emit JoinSplit(joinSplitTx.nullifierA,
+                       joinSplitTx.nullifierB,
+                       16, // newNoteAIndex
+                       17, // newNoteBIndex
+                       joinSplitTx);
 
         wallet.processBundle(bundle);
 
