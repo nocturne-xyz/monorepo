@@ -114,6 +114,8 @@ template BitRange(n) {
     }
 }
 
+// Encrypt each input value, using poseidon as as a blockcipher in counter
+// mode, with rand as initial value (IV)
 template Encrypt(n) {
     signal input rand;
     signal input in[n];

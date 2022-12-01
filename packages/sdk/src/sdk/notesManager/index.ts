@@ -3,7 +3,7 @@ import {
   IncludedNote,
   IncludedNoteStruct,
   EncryptedNote,
-  EncappedKey
+  EncappedKey,
 } from "../note";
 import { NocturneSigner } from "../signer";
 import { NocturneAddressStruct } from "../../crypto/address";
@@ -79,7 +79,7 @@ export abstract class NotesManager {
   }
 
   private async processNewEncryptedNote(
-    newNoteCommitment: BigInt,
+    newNoteCommitment: bigint,
     owner: NocturneAddressStruct,
     encappedKey: EncappedKey,
     encryptedNote: EncryptedNote,
