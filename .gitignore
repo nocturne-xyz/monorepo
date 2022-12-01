@@ -5,7 +5,6 @@ dist/
 cache/
 lib/
 /db
-/rapidsnark-tmp
 
 .DS_Store
 **/.DS_Store"
