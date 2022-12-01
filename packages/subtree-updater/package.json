@@ -9,7 +9,8 @@
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 10000 --require ts-node/register --exit test/**",
     "check": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "lint": "eslint --fix src --ext .ts"
+    "lint": "eslint --fix src --ext .ts",
+    "server": "yarn ts-node ./server.ts"
   },
   "packageManager": "yarn@3.2.0",
   "devDependencies": {

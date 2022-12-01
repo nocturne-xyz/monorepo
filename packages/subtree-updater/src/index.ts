@@ -39,7 +39,7 @@ export async function subtreeUpdater(params: UpdaterParams, prover: SubtreeUpdat
   let index = parseInt(indexStr);
 
   const tryGenAndSubmitProof = async () => {
-    if (insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
+    while (insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
       const merkleProof = applyBatchUpdateToTree(batch, tree);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
