@@ -133,12 +133,15 @@ template JoinSplit(levels) {
     // Nullifier derivation for oldNoteB
     nullifierB <== Poseidon(2)([oldNoteBCommitment, userViewKey]);
 
-    signal valInput <== oldNoteAValue + oldNoteBValue;
-    signal valOutput <== newNoteAValue + newNoteBValue;
+    // Make sure new note values are in range
     BitRange(252)(newNoteAValue); // newNoteAValue < 2**252
     BitRange(252)(newNoteBValue); // newNoteBValue < 2**252
+    // Make sure sum of old and new note values are in range
+    signal valInput <== oldNoteAValue + oldNoteBValue;
+    signal valOutput <== newNoteAValue + newNoteBValue;
     BitRange(252)(valInput); // valInput < 2**252
     BitRange(252)(valOutput); // valOutput < 2**252
+    // Make sure we are old note values are more than new note values
     signal compOut <== LessEqThan(252)([valOutput, valInput]);
     compOut === 1;
     publicSpend <== valInput - valOutput;
