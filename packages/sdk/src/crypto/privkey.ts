@@ -23,7 +23,7 @@ export class NocturnePrivKey {
   }
 
   toCanonAddress(): CanonAddress {
-    const addr = babyjub.mulPointEscalar(babyjub.Base8, this.sk);
+    const addr = babyjub.mulPointEscalar(babyjub.Base8, this.vk);
     return addr;
   }
 

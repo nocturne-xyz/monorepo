@@ -56,8 +56,10 @@ describe("NocturneSigner", () => {
       id: 1n,
       value: 33n
     });
-    const [, encappedKeys, encryptedNote] = signer.encryptNote(targets, note);
-    const [nonce, value] = signer.decryptNote(encappedKeys[0], encryptedNote);
+    const [, [encappedKey], encryptedNote] = signer.encryptNote(targets, note);
+    const [nonce, value] = signer.decryptNote(
+      encappedKey, encryptedNote
+    );
     expect(nonce).to.equal(55n);
     expect(value).to.equal(33n);
   });

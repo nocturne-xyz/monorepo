@@ -9,8 +9,8 @@ import {
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
-import { egcd } from "../sdk/utils";
-import { SNARK_SCALAR_FIELD } from "../commonTypes";
+import { egcd, decompressPoint, mod_p } from "../sdk/utils";
+// import { SNARK_SCALAR_FIELD } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;
@@ -92,12 +92,13 @@ export class NocturneSigner {
     const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const R = babyjub.mulPointEscalar(babyjub.Base8, r);
     const encryptedNote: EncryptedNote = [
-     (poseidon([R[0]]) + note.nonce) % SNARK_SCALAR_FIELD,
-     (poseidon([R[0] + 1]) + note.value) % SNARK_SCALAR_FIELD
+     mod_p(BigInt(poseidon([R[0]])) + note.nonce),
+     mod_p(BigInt(poseidon([R[0] + 1n])) + note.value)
     ];
 
     const encappedKeys: EncappedKey[] = targets.map((addr) => {
-      return babyjub.mulPointEscalar(addr, r)[0];
+      const p = babyjub.mulPointEscalar(addr, r);
+      return p[0];
     });
     return [BigInt(r), encappedKeys, encryptedNote]
   }
@@ -116,11 +117,14 @@ export class NocturneSigner {
     encappedKey: EncappedKey,
     encryptedNote: EncryptedNote
   ): [bigint, bigint] {
-    const [,,vkInv] = egcd(this.privkey.vk, babyjub.subOrder);
-    console.log(this.privkey.vk, vkInv);
-    const R = babyjub.mulPointEscalar(encappedKey, vkInv);
-    const nonce = (BigInt(poseidon([R[0]])) + encryptedNote[0]) % SNARK_SCALAR_FIELD;
-    const value = (BigInt(poseidon([R[0] + 1])) + encryptedNote[1]) % SNARK_SCALAR_FIELD;
+    let [vkInv,,] = egcd(this.privkey.vk, babyjub.subOrder);
+    if (vkInv < babyjub.subOrder) {
+      vkInv += babyjub.subOrder;
+    }
+    const eR = decompressPoint(encappedKey);
+    const R = babyjub.mulPointEscalar(eR, vkInv);
+    const nonce = mod_p(encryptedNote[0] - BigInt(poseidon([R[0]])));
+    const value = mod_p(encryptedNote[1] - BigInt(poseidon([R[0] + 1n])));
     return [nonce, value]
   }
 
