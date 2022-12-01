@@ -171,7 +171,7 @@ export class NocturneContext {
     );
 
     // Check that snarkjs output is consistent with our precomputed joinsplit values
-    const publicSignals = joinSplitPublicSignalsArrayToTyped(proof.publicSignals);
+    const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
     if ( (baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment) ||
       (baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment) ||
       (baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot) ||

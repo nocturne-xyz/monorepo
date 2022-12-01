@@ -56,7 +56,7 @@ export interface JoinSplitInputs {
   newNoteB: NoteInput;
 }
 
-export function joinSplitPublicSignalsArrayToTyped(
+export function joinSplitPublicSignalsFromArray(
   publicSignals: bigint[]
 ): JoinSplitPublicSignals {
   return {
