@@ -22,9 +22,9 @@ contract BalanceManager is
 
     constructor(
         address _vault,
-        address _spend2Verifier,
+        address _joinSplitVerifier,
         address _subtreeUpdateVerifier
-    ) CommitmentTreeManager(_spend2Verifier, _subtreeUpdateVerifier) {
+    ) CommitmentTreeManager(_joinSplitVerifier, _subtreeUpdateVerifier) {
         vault = IVault(_vault);
     }
 

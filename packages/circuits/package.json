@@ -8,7 +8,6 @@
     "build": "tsc --build",
     "build-all-circuits": "./scripts/build_all.sh",
     "build:joinsplit": "./scripts/joinsplit/build.sh",
-    "build:spend2": "./scripts/spend2/build.sh",
     "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
     "check_deps": "./scripts/install_deps.sh",
     "download-big-ptau": "./scripts/download_big_ptau.sh",
