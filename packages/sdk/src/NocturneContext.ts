@@ -17,7 +17,7 @@ import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
-  joinSplitPublicSignalsArrayToTyped,
+  joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
 import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";

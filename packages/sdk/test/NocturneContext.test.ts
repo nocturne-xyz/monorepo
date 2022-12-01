@@ -106,7 +106,7 @@ describe("NocturneContext", () => {
     };
     const [minimumFor5,] = (await nocturneContext.gatherMinimumNotes(
       assetRequest5
-    ))];
+    ));
     expect(minimumFor5.length).to.equal(1);
     expect(minimumFor5[0].inner.value).to.equal(10n);
 
