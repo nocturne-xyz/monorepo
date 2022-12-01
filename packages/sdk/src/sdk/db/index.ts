@@ -1,5 +1,5 @@
 import { AssetHash, AssetStruct, hashAsset } from "../../commonTypes";
-import { IncludedNoteStruct } from "../note";
+import { IncludedNote } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
@@ -65,25 +65,25 @@ export abstract class NocturneDB {
   }
 
   /**
-   * Store `IncludedNoteStruct` in it's appropriate place in DB.
+   * Store `IncludedNote` in it's appropriate place in DB.
    *
-   * @param note an `IncludedNoteStruct`
+   * @param note an `IncludedNote`
    */
-  abstract storeNote(note: IncludedNoteStruct): Promise<boolean>;
+  abstract storeNote(note: IncludedNote): Promise<boolean>;
 
   /**
-   * Remove `IncludedNoteStruct` from DB.
+   * Remove `IncludedNote` from DB.
    *
-   * @param note an `IncludedNoteStruct`
+   * @param note an `IncludedNote`
    */
-  abstract removeNote(note: IncludedNoteStruct): Promise<boolean>;
+  abstract removeNote(note: IncludedNote): Promise<boolean>;
 
   /**
-   * Store several `IncludedNoteStruct` in db.
+   * Store several `IncludedNote` in db.
    *
-   * @param notes array of `IncludedNoteStruct
+   * @param notes array of `IncludedNote
    */
-  async storeNotes(notes: IncludedNoteStruct[]): Promise<void> {
+  async storeNotes(notes: IncludedNote[]): Promise<void> {
     for (const note of notes) {
       const success = await this.storeNote(note);
       if (!success) {
@@ -93,18 +93,18 @@ export abstract class NocturneDB {
   }
 
   /**
-   * Get mapping of all asset types to `IncludedNoteStruct[]`;
+   * Get mapping of all asset types to `IncludedNote[]`;
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getAllNotes(): Promise<Map<AssetHash, IncludedNoteStruct[]>>;
+  abstract getAllNotes(): Promise<Map<AssetHash, IncludedNote[]>>;
 
   /**
-   * Get mapping of all asset types to `IncludedNoteStruct[]`;
+   * Get mapping of all asset types to `IncludedNote[]`;
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]>;
+  abstract getNotesFor(asset: AssetStruct): Promise<IncludedNote[]>;
 
   /**
    * Clear entire database.

@@ -178,7 +178,7 @@ export class NocturneContext {
   ): Promise<ProvenSpendTx> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = newNote.toCommitment();
+    const newNoteCommitment = noteToCommitment(newNote);
 
     const inputs = await this.getProofInputsFor({
       oldNewNotePair,

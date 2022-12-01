@@ -16,8 +16,8 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/sdk": "workspace:^",
-    "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
