@@ -9,7 +9,7 @@ import {
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
-import { egcd, decompressPoint, mod_p } from "../sdk/utils";
+import { egcd, encodePoint, decodePoint, mod_p } from "../sdk/utils";
 
 export interface NocturneSignature {
   c: bigint;
@@ -80,7 +80,8 @@ export class NocturneSigner {
    * @param targets: list of canonical NocturnAddress
    * @param note: note to encrypt
    * @return r: encryption randomness
-   * @return encappedKeys: encapsulated keys for each target
+   * @return encappedKeys: encapsulated keys, each is an encoded
+   * point, for each target
    * @return encryptedNote: symetrically encrypted note
    */
   encryptNote(
@@ -91,8 +92,8 @@ export class NocturneSigner {
     const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const R = babyjub.mulPointEscalar(babyjub.Base8, r);
     const encryptedNote: EncryptedNote = [
-     mod_p(BigInt(poseidon([R[0]])) + note.nonce),
-     mod_p(BigInt(poseidon([R[0] + 1n])) + note.value),
+     mod_p(BigInt(poseidon([encodePoint(R)])) + note.nonce),
+     mod_p(BigInt(poseidon([encodePoint(R) + 1n])) + note.value),
     ];
 
     const encappedKeys: EncappedKey[] = targets.map((addr) => {
@@ -120,10 +121,11 @@ export class NocturneSigner {
     if (vkInv < babyjub.subOrder) {
       vkInv += babyjub.subOrder;
     }
-    const eR = decompressPoint(encappedKey);
+    const eR = decodePoint(encappedKey);
     const R = babyjub.mulPointEscalar(eR, vkInv);
-    const nonce = mod_p(encryptedNote[0] - BigInt(poseidon([R[0]])));
-    const value = mod_p(encryptedNote[1] - BigInt(poseidon([R[0] + 1n])));
+    const encodedR = encodePoint(R);
+    const nonce = mod_p(encryptedNote[0] - BigInt(poseidon([encodedR])));
+    const value = mod_p(encryptedNote[1] - BigInt(poseidon([encodedR + 1n])));
     return [nonce, value];
   }
 

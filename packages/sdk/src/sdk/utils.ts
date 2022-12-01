@@ -79,13 +79,13 @@ export function bigintToBuf(bn: bigint): Uint8Array {
   return u8;
 }
 
-// Compress babyjubpoint to field
-export function compressPoint(point: [bigint, bigint]): bigint {
+// Encode a babyjub point to field
+export function encodePoint(point: [bigint, bigint]): bigint {
   return point[0];
 }
 
-// Decompress babyjubpoint to point on subgroup
-export function decompressPoint(x: bigint): [bigint, bigint] {
+// Decode a babyjub point (on prime order subgroup) from an encoding
+export function decodePoint(x: bigint): [bigint, bigint] {
   const F = babyjub.F;
   const x2 = F.mul(F.e(x), F.e(x));
   const ax2 = F.mul(babyjub.A, x2);
