@@ -125,10 +125,3 @@ template Encrypt(n) {
       out[i] <== pad + in[i];
     }
 }
-
-template KeyEncap() {
-    signal input rand;
-    signal output key;
-    signal output encappedKey;
-
-}
