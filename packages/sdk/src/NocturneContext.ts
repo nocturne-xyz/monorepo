@@ -69,9 +69,9 @@ export class NocturneContext {
 
   /**
    * Attempt to create a `ProvenOperation` provided an `OperationRequest`.
-   * `NocturneContext` will attempt to gather all notes to fullfill the operation
-   * request's asset requests. It will then generate spend proofs for each and
-   * include that in the final `ProvenOperation`.
+   * `NocturneContext` will attempt to gather all notes to fulfill the
+   * operation request's asset requests. It will then generate joinsplit proofs
+   * for each and include that in the final `ProvenOperation`.
    *
    * @param OperationRequest Asset requested to spend
    * @param joinSplit{Wasm,Zkey}Path paths to circuit runtime and prooving key
@@ -152,11 +152,7 @@ export class NocturneContext {
   }
 
   /**
-   * Generate a `ProvenJoinSplitTx`
-   *
-   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
-   * post-spend
-   * @param preProofOperation Operation included when generating a proof
+   * Generate a `ProvenJoinSplitTx` from a `PreProofJoinSplitTx`
    */
   protected async proveJoinSplitTx(
     preProofJoinSplitTx: PreProofJoinSplitTx,
@@ -202,8 +198,9 @@ export class NocturneContext {
    *
    * @param oldNoteA, oldNoteB old notes to spend
    * @param refundValue value to be given back to the spender
-   * @param receiverAddr recipient of confidential payment
    * @param outGoingValue value of confidential payment
+   * @param receiverAddr recipient of confidential payment
+   * @return a PreSignJoinSplitTx
    */
   protected async genPreSignJoinSplitTx(
     oldNoteA: IncludedNote,
@@ -279,16 +276,14 @@ export class NocturneContext {
   }
 
   /**
-   * Given a set of asset requests, gather the necessary notes to
-   * fulfill the requests and format the data into PreSignOpeartion
-   * (all data needed to compute opeartionDigest).
+   * Given an opeartion request, gather the necessary notes to fulfill the
+   * requests and format the data into PreSignOpeartion (all data needed to
+   * compute opeartionDigest).
    *
-   * @param assetRequests Asset requested to spend
-   * @param actions Encoded contract actions to take
+   * @param OperationRequest
    * @param tokens spend and refund token addresses
-   * @param refundAddr Optional refund address. Context will generate
-   * rerandomized address if left empty
-   * @param gasLimit Gas limit
+   * @param refundAddr refund address
+   * @param gasLimit:Gas limit
    */
   protected async getPreSignOperation(
     { assetRequests, actions }: OperationRequest,
@@ -335,15 +330,12 @@ export class NocturneContext {
   }
 
   /**
-   * Given two included notes and intended transaction semantics,
-   * generate inputs to the joinsplit circuit
+   * Format a PreProofJoinSplitTx from a preSignJoinSplitTx, an
+   * operationDigest, and a signature
    *
-   * @param oldNoteA, oldNoteB old notes to spend
-   * @param refundValue value to be given back to the spender
-   * @param opDigest
-   * @param opSig
-   * @param receiverAddr recipient of confidential payment
-   * @param outGoingValue value of confidential payment
+   * @param preSignJoinSplitTx
+   * @param opDigest: operation digest of the operation that the joinsplit is part of
+   * @param opSig: signature of the opDigest
    */
   protected async genPreProofJoinSplitTx(
     preSignJoinSplitTx: PreSignJoinSplitTx,
@@ -382,13 +374,13 @@ export class NocturneContext {
   }
 
   /**
-   * Gather minimum list of notes required to fulfill asset request.
-   * Returned list is sorted from smallest to largest.
-   * The total value of returned notes could exceed the requested
-   * amount.
+   * Gather minimum list of notes required to fulfill asset request. Returned
+   * list is sorted from smallest to largest. The total value of returned notes
+   * could exceed the requested amount.
    *
    * @param assetRequest Asset request
    * @return a list of included notes to spend the total value.
+   * @return the total value of the returned notes.
    */
   async gatherMinimumNotes(
     assetRequest: AssetRequest
