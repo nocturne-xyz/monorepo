@@ -101,8 +101,8 @@ describe("Wallet", async () => {
     );
 
     console.log("Sync SDK notes manager");
-    await flaxContext.syncNotes();
-    const notesForAsset = await flaxContext.db.getNotesFor(asset);
+    await nocturneContext.syncNotes();
+    const notesForAsset = await nocturneContext.db.getNotesFor(asset);
     expect(notesForAsset.length).to.equal(2);
 
 

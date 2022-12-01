@@ -1,9 +1,7 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
-import { Note, NocturneSigner } from "@nocturne-xyz/sdk";
-import { BinaryPoseidonTree } from "../src/primitives";
-import { NocturnePrivKey } from "../src/crypto";
+import { Note, NocturneSigner, BinaryPoseidonTree, NocturnePrivKey, toJSON } from "@nocturne-xyz/sdk";
 import { applyBatchUpdateToTree, localSubtreeUpdateProver, subtreeUpdateInputsFromBatch } from "../src/subtreeUpdate";
 
 //@ts-ignore

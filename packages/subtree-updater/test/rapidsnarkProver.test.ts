@@ -1,11 +1,9 @@
-//@ts-ignore
-import * as wtf from "wtfnode";
 import "mocha";
 
 import * as fs from "fs";
 import { expect } from "chai";
 import * as path from "path";
-import { Note, FlaxPrivKey, FlaxSigner, BinaryPoseidonTree } from "@nocturne-xyz/sdk";
+import { Note, NocturnePrivKey, NocturneSigner, BinaryPoseidonTree } from "@nocturne-xyz/sdk";
 import { subtreeUpdateInputsFromBatch, applyBatchUpdateToTree } from "@nocturne-xyz/local-prover";
 import { getRapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -28,8 +26,8 @@ describe('rapidsnark subtree update prover', async () =>  {
   const sk = BigInt(
   "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
   );
-  const flaxPrivKey = new FlaxPrivKey(sk);
-  const flaxSigner = new FlaxSigner(flaxPrivKey);
+  const flaxPrivKey = new NocturnePrivKey(sk);
+  const flaxSigner = new NocturneSigner(flaxPrivKey);
   const flaxAddr = flaxSigner.address;
   const flaxAddrInput = flaxAddr.toStruct();
 
@@ -59,23 +57,19 @@ describe('rapidsnark subtree update prover', async () =>  {
     });
   }
 
-  after(() => {
-    wtf.dump();
-  });
+  if (SKIP) {
+    console.log("skipping rapidsnark tests...");
+  } else {
+    it("generates proofs for valid input", async () => {
+      const tree = new BinaryPoseidonTree();
+      const batch = dummyBatch();
+      
+      const merkleProof = applyBatchUpdateToTree(batch, tree);
+      const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
+      const proof = await prover.prove(inputs);
+      const verifierAccepts = await prover.verify(proof, VKEY);
 
-  it("generates proofs for valid input", async () => {
-    if (SKIP) {
-      console.log("skipping rapidsnark tests...");
-      return;
-    }
-    const tree = new BinaryPoseidonTree();
-    const batch = dummyBatch();
-    
-    const merkleProof = applyBatchUpdateToTree(batch, tree);
-    const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
-    const proof = await prover.prove(inputs);
-    const verifierAccepts = await prover.verify(proof, VKEY);
-
-    expect(verifierAccepts).to.be.true;
-  });
+      expect(verifierAccepts).to.be.true;
+    });
+  }
 });
