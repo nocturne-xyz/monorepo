@@ -9,6 +9,7 @@ import {
   MerkleProofInput,
   Spend2Inputs,
   toJSON,
+  hashNocturneAddress,
 } from "@nocturne-xyz/sdk";
 import { spend2Prover as prover } from "../src/spend2";
 import { poseidon } from "circomlibjs";
@@ -34,11 +35,9 @@ const nocturneSigner = new NocturneSigner(nocturnePrivKey);
 const nocturneAddr = nocturneSigner.address;
 const spendPk = nocturneSigner.privkey.spendPk();
 
-const nocturneAddrInput = nocturneAddr.toStruct();
-
 // Old note input to spend
 const oldNote: NoteInput = {
-  owner: nocturneAddrInput,
+  owner: nocturneAddr,
   nonce: 1n,
   asset: 10n,
   value: 100n,
@@ -46,7 +45,7 @@ const oldNote: NoteInput = {
 };
 console.log("OLD NOTE: ", oldNote);
 
-const ownerHash = nocturneAddr.hash();
+const ownerHash = hashNocturneAddress(nocturneAddr);
 const oldNoteCommitment = poseidon([
   ownerHash,
   oldNote.asset,
@@ -69,7 +68,7 @@ console.log(merkleProofInput);
 
 // New note resulting from spend of 50 units
 const newNote: NoteInput = {
-  owner: nocturneAddrInput,
+  owner: nocturneAddr,
   nonce: 2n,
   asset: 10n,
   value: 50n,

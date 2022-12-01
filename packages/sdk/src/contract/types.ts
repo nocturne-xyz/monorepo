@@ -1,5 +1,5 @@
 import { Address } from "../commonTypes";
-import { NocturneAddressStruct } from "../crypto/address";
+import { NocturneAddress } from "../crypto/address";
 
 export interface SpendAndRefundTokens {
   spendTokens: Address[];
@@ -21,7 +21,7 @@ export interface PreProofSpendTx {
 }
 
 export interface PreProofOperation {
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -39,7 +39,7 @@ export interface ProvenSpendTx {
 
 export interface ProvenOperation {
   spendTxs: ProvenSpendTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -54,5 +54,5 @@ export interface Deposit {
   asset: Address;
   value: bigint;
   id: bigint;
-  depositAddr: NocturneAddressStruct;
+  depositAddr: NocturneAddress;
 }

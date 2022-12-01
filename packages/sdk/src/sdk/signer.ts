@@ -2,11 +2,7 @@ import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
 import { Note } from "./note";
-import {
-  NocturneAddressStruct,
-  flattenedNocturneAddressToArrayForm,
-  NocturneAddress,
-} from "../crypto/address";
+import { NocturneAddress, nocturneAddressToArrayForm } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 
 export interface NocturneSignature {
@@ -70,11 +66,8 @@ export class NocturneSigner {
     return poseidon([this.privkey.vk, oldNullifier]);
   }
 
-  testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {
-    const nocturneAddr =
-      addr instanceof NocturneAddress
-        ? addr.toArrayForm()
-        : flattenedNocturneAddressToArrayForm(addr);
+  testOwn(addr: NocturneAddress): boolean {
+    const nocturneAddr = nocturneAddressToArrayForm(addr);
     const H2prime = babyjub.mulPointEscalar(nocturneAddr.h1, this.privkey.vk);
     return (
       nocturneAddr.h2[0] === H2prime[0] && nocturneAddr.h2[1] === H2prime[1]

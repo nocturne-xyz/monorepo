@@ -8,7 +8,7 @@ import {
 } from "./contract/types";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner } from "./sdk/signer";
-import { NocturneAddressStruct } from "./crypto/address";
+import { NocturneAddress, rerandNocturneAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
 import { calculateOperationDigest } from "./contract/utils";
 import { Spend2Prover, Spend2Inputs } from "./proof/spend2";
@@ -84,7 +84,7 @@ export class NocturneContext {
     operationRequest: OperationRequest,
     spend2WasmPath: string,
     spend2ZkeyPath: string,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const { assetRequests, refundTokens, actions } = operationRequest;
@@ -92,7 +92,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toStruct();
+      : rerandNocturneAddress(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -139,7 +139,7 @@ export class NocturneContext {
    */
   async tryGetPreProofSpendTxInputsAndProofInputs(
     operationRequest: OperationRequest,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofSpendTxInputsAndProofInputs[]> {
     const { assetRequests, refundTokens } = operationRequest;
@@ -147,7 +147,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toStruct();
+      : rerandNocturneAddress(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -243,7 +243,7 @@ export class NocturneContext {
   protected async getPreProofSpendTxInputsMultiple(
     { assetRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
-    refundAddr: NocturneAddressStruct,
+    refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofSpendTxInputs[]> {
     const preProofOperation: PreProofOperation = {
@@ -339,7 +339,7 @@ export class NocturneContext {
    * @param assetRequest Asset request
    */
   async gatherMinimumNotes(
-    refundAddr: NocturneAddressStruct,
+    refundAddr: NocturneAddress,
     assetRequest: AssetRequest
   ): Promise<OldAndNewNotePair[]> {
     await this.ensureMinimumForAssetRequest(assetRequest);

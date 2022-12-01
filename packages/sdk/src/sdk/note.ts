@@ -1,7 +1,7 @@
 import {
-  NocturneAddressStruct,
-  flattenedNocturneAddressFromJSON,
+  hashNocturneAddress,
   NocturneAddress,
+  nocturneAddressFromJSON,
 } from "../crypto/address";
 import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
@@ -11,7 +11,7 @@ import JSON from "json-bigint";
 import { NoteInput } from "../proof";
 
 interface NoteStruct {
-  owner: NocturneAddressStruct;
+  owner: NocturneAddress;
   nonce: bigint;
   asset: Address;
   id: bigint;
@@ -25,7 +25,7 @@ export class Note {
     this.inner = note;
   }
 
-  get owner(): NocturneAddressStruct {
+  get owner(): NocturneAddress {
     return this.inner.owner;
   }
 
@@ -47,9 +47,8 @@ export class Note {
 
   toCommitment(): bigint {
     const { owner, nonce, asset, id, value } = this.inner;
-    const ownerNocturneAddr = new NocturneAddress(owner);
     return BigInt(
-      poseidon([ownerNocturneAddr.hash(), nonce, BigInt(asset), id, value])
+      poseidon([hashNocturneAddress(owner), nonce, BigInt(asset), id, value])
     );
   }
 
@@ -101,7 +100,7 @@ export function includedNoteStructFromJSON(
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
-    owner: flattenedNocturneAddressFromJSON(owner),
+    owner: nocturneAddressFromJSON(owner),
     nonce: BigInt(nonce),
     asset: asset.toString(),
     id: BigInt(id),

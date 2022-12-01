@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { NocturneAddress } from "./address";
+import { NocturneAddress, nocturneAddressFromArrayForm } from "./address";
 
 // TODO: rewrite Babyjub library to have constant time crypto
 export class NocturnePrivKey {
@@ -27,7 +27,7 @@ export class NocturnePrivKey {
     const r = Scalar.fromRprBE(r_buf, 0, 32);
     const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
     const h2 = babyjub.mulPointEscalar(h1, this.vk);
-    return NocturneAddress.fromArrayForm({ h1, h2 });
+    return nocturneAddressFromArrayForm({ h1, h2 });
   }
 
   spendPk(): [bigint, bigint] {

@@ -16,7 +16,7 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
+import { spend2Prover as prover } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
@@ -44,7 +44,6 @@ export async function setup(): Promise<NocturneSetup> {
   await vault.initialize(wallet.address);
 
   console.log("Create NocturneContext");
-  const prover = new LocalSpend2Prover();
   const merkleProver = new LocalMerkleProver(
     wallet.address,
     ethers.provider,

@@ -1,5 +1,5 @@
 import { normalizeBigInt } from "./utils";
-import { NocturneAddressStruct } from "../crypto/address";
+import { NocturneAddress } from "../crypto/address";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 
 export interface JoinSplitProver {
@@ -73,8 +73,8 @@ export function joinsplitPublicSignalsArrayToTyped(
 }
 
 function normalizeNocturneAddressInput(
-  nocturneAddressInput: NocturneAddressStruct
-): NocturneAddressStruct {
+  nocturneAddressInput: NocturneAddress
+): NocturneAddress {
   const { h1X, h1Y, h2X, h2Y } = nocturneAddressInput;
   return {
     h1X: normalizeBigInt(h1X),

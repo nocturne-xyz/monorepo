@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-import { NocturneAddressStruct } from "../crypto";
+import { NocturneAddress } from "../crypto";
 
 export interface BaseProof {
   pi_a: any;
@@ -16,7 +16,7 @@ export interface MerkleProofInput {
 }
 
 export interface NoteInput {
-  owner: NocturneAddressStruct;
+  owner: NocturneAddress;
   nonce: bigint;
   asset: bigint;
   value: bigint;
