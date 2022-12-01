@@ -122,8 +122,10 @@ template JoinSplit(levels) {
 
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
-    BitRange(251)(newNoteAValue); // newNoteAValue < 2**251
-    BitRange(251)(newNoteBValue); // newNoteBValue < 2**251
+    BitRange(252)(newNoteAValue); // newNoteAValue < 2**252
+    BitRange(252)(newNoteBValue); // newNoteBValue < 2**252
+    BitRange(252)(valInput); // valInput < 2**252
+    BitRange(252)(valOutput); // valOutput < 2**252
     signal compOut <== LessEqThan(252)([valOutput, valInput]);
     compOut === 1;
     publicSpend <== valInput - valOutput;
