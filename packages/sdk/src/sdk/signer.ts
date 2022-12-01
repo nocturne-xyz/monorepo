@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note } from "./note";
+import { Note, noteToCommitment } from "./note";
 import { NocturneAddress, nocturneAddressToArrayForm } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 
@@ -59,7 +59,7 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
+    return BigInt(poseidon([this.privkey.vk, noteToCommitment(note)]));
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {

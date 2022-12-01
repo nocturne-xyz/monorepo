@@ -6,7 +6,12 @@ import {
   PreProofSpendTx,
   SpendAndRefundTokens,
 } from "./contract/types";
-import { Note, IncludedNote } from "./sdk/note";
+import {
+  Note,
+  IncludedNote,
+  noteToCommitment,
+  noteToNoteInput,
+} from "./sdk/note";
 import { NocturneSigner } from "./sdk/signer";
 import { NocturneAddress, rerandNocturneAddress } from "./crypto/address";
 import { SNARK_SCALAR_FIELD } from "./commonTypes";
@@ -202,7 +207,7 @@ export class NocturneContext {
   ): Promise<ProvenSpendTx> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = newNote.toCommitment();
+    const newNoteCommitment = noteToCommitment(newNote);
 
     const inputs = await this.getProofInputsFor({
       oldNewNotePair,
@@ -280,7 +285,7 @@ export class NocturneContext {
   }: PreProofSpendTxInputs): Promise<Spend2Inputs> {
     const { oldNote, newNote } = oldNewNotePair;
     const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = newNote.toCommitment();
+    const newNoteCommitment = noteToCommitment(newNote);
     const merkleProof = await this.merkleProver.getProof(oldNote.merkleIndex);
     const preProofSpendTx: PreProofSpendTx = {
       commitmentTreeRoot: merkleProof.root,
@@ -308,8 +313,8 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNote: oldNote.toNoteInput(),
-      newNote: newNote.toNoteInput(),
+      oldNote: noteToNoteInput(oldNote),
+      newNote: noteToNoteInput(newNote),
       merkleProof: merkleInput,
     };
   }
@@ -365,16 +370,16 @@ export class NocturneContext {
         newNoteValue = 0n; // spend whole note
       }
 
-      const newNote = new Note({
+      const newNote = {
         owner: refundAddr,
         nonce: randNonce,
         asset: assetRequest.asset.address,
         id: assetRequest.asset.id,
         value: newNoteValue,
-      });
+      };
 
       oldAndNewNotePairs.push({
-        oldNote: new IncludedNote(oldNote),
+        oldNote,
         newNote,
       });
     }

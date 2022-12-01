@@ -23,7 +23,7 @@ import { ERC20_ID } from "@nocturne-xyz/sdk";
       asset: token.address,
       value: amounts[i],
       id: ERC20_ID,
-      depositAddr: nocturneAddress.toStruct(),
+      depositAddr: nocturneAddress,
     });
   }
 })();

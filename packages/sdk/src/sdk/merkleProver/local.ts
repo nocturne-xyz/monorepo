@@ -10,7 +10,7 @@ import { LocalMerkleDBExtension } from "../db";
 import { query } from "../utils";
 import { MerkleProver } from ".";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-import { Note } from "../note";
+import { noteToCommitment } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
@@ -141,7 +141,7 @@ export class LocalMerkleProver extends MerkleProver {
           h2Y: 0n,
         };
 
-        const noteStruct = {
+        const note = {
           owner,
           nonce: noteValues.nonce.toBigInt(),
           asset: noteValues.asset.toHexString(),
@@ -149,8 +149,7 @@ export class LocalMerkleProver extends MerkleProver {
           value: noteValues.value.toBigInt(),
         };
 
-        const note = new Note(noteStruct);
-        const leaf = note.toCommitment();
+        const leaf = noteToCommitment(note);
         leaves.push({
           leaf,
           blockNumber: event.blockNumber,

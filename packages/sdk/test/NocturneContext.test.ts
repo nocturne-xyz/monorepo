@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
 import { AssetRequest, AssetStruct } from "../src/commonTypes";
-import { IncludedNoteStruct } from "../src/sdk/note";
+import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { MockSpend2Prover } from "../src/proof/mock";
@@ -28,7 +28,7 @@ describe("NocturneContext", () => {
     const nocturnePrivKey = new NocturnePrivKey(sk);
     const signer = new NocturneSigner(nocturnePrivKey);
 
-    const firstOldNote: IncludedNoteStruct = {
+    const firstOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 0n,
       asset: asset.address,
@@ -36,7 +36,7 @@ describe("NocturneContext", () => {
       value: 100n,
       merkleIndex: 0,
     };
-    const secondOldNote: IncludedNoteStruct = {
+    const secondOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 1n,
       asset: asset.address,
@@ -44,7 +44,7 @@ describe("NocturneContext", () => {
       value: 50n,
       merkleIndex: 1,
     };
-    const thirdOldNote: IncludedNoteStruct = {
+    const thirdOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 2n,
       asset: asset.address,
@@ -52,7 +52,7 @@ describe("NocturneContext", () => {
       value: 25n,
       merkleIndex: 2,
     };
-    const fourthOldNote: IncludedNoteStruct = {
+    const fourthOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 3n,
       asset: asset.address,
@@ -129,7 +129,7 @@ describe("NocturneContext", () => {
       assetRequest5
     );
     expect(minimumFor5.length).to.equal(1);
-    expect(minimumFor5[0].oldNote.inner.value).to.equal(10n);
+    expect(minimumFor5[0].oldNote.value).to.equal(10n);
 
     // Request 80 tokens, consume next smallest two notes
     const assetRequest80: AssetRequest = {
@@ -142,8 +142,8 @@ describe("NocturneContext", () => {
     );
 
     expect(minimumFor80.length).to.equal(3);
-    expect(minimumFor80[2].oldNote.inner.value).to.equal(50n);
-    expect(minimumFor80[1].oldNote.inner.value).to.equal(25n);
-    expect(minimumFor80[0].oldNote.inner.value).to.equal(10n);
+    expect(minimumFor80[2].oldNote.value).to.equal(50n);
+    expect(minimumFor80[1].oldNote.value).to.equal(25n);
+    expect(minimumFor80[0].oldNote.value).to.equal(10n);
   });
 });

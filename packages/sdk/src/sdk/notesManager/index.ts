@@ -1,5 +1,5 @@
 import { NocturneDB } from "../db";
-import { IncludedNote, IncludedNoteStruct } from "../note";
+import { IncludedNote } from "../note";
 import { NocturneSigner } from "../signer";
 
 export interface SpendEvent {
@@ -17,13 +17,13 @@ export abstract class NotesManager {
     this.signer = signer;
   }
 
-  protected abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
+  protected abstract fetchNotesFromRefunds(): Promise<IncludedNote[]>;
   protected abstract postStoreNotesFromRefunds(): Promise<void>;
   protected abstract fetchSpends(): Promise<SpendEvent[]>;
   protected abstract postApplySpends(): Promise<void>;
 
   private async storeNewNotesFromRefunds(
-    newNotesFromRefunds: IncludedNoteStruct[]
+    newNotesFromRefunds: IncludedNote[]
   ): Promise<void> {
     await this.db.storeNotes(newNotesFromRefunds);
   }
@@ -38,12 +38,10 @@ export abstract class NotesManager {
     const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const spend of newSpends) {
       for (const oldNote of allNotes) {
-        const oldNullifier = this.signer.createNullifier(
-          new IncludedNote(oldNote)
-        );
+        const oldNullifier = this.signer.createNullifier(oldNote);
         if (oldNullifier == spend.oldNoteNullifier) {
           const newNoteNonce = this.signer.generateNewNonce(oldNullifier);
-          const newNote: IncludedNoteStruct = {
+          const newNote: IncludedNote = {
             owner: oldNote.owner,
             nonce: newNoteNonce,
             asset: oldNote.asset,

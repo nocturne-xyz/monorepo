@@ -2,7 +2,7 @@ import "mocha";
 import * as fs from "fs";
 import { expect } from "chai";
 import { DEFAULT_DB_PATH, NocturneDB, LocalObjectDB } from "../src/sdk/db";
-import { IncludedNoteStruct } from "../src/sdk/note";
+import { IncludedNote } from "../src/sdk/note";
 import { AssetStruct } from "../src/commonTypes";
 
 describe("LocalObjectDB", async () => {
@@ -29,7 +29,7 @@ describe("LocalObjectDB", async () => {
 
   it("Stores, gets, and removes note", async () => {
     const asset: AssetStruct = { address: "0x1234", id: 1234n };
-    const note: IncludedNoteStruct = {
+    const note: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
@@ -56,7 +56,7 @@ describe("LocalObjectDB", async () => {
 
   it("Stores, gets, and removes multiple notes for same asset", async () => {
     const asset: AssetStruct = { address: "0x1234", id: 1234n };
-    const noteOne: IncludedNoteStruct = {
+    const noteOne: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
@@ -70,7 +70,7 @@ describe("LocalObjectDB", async () => {
       merkleIndex: 6,
     };
 
-    const noteTwo: IncludedNoteStruct = {
+    const noteTwo: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
