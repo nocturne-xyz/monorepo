@@ -68,7 +68,7 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
+    return BigInt(poseidon([note.toCommitment(), this.privkey.vk]));
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {

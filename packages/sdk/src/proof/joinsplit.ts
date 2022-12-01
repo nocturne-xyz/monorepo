@@ -31,15 +31,15 @@ export interface JoinSplitProofWithPublicSignals {
 }
 
 export interface JoinSplitPublicSignals {
-  newNoteCommitmentA: bigint;
-  newNoteCommitmentB: bigint;
-  anchor: bigint;
-  asset: bigint;
-  id: bigint;
-  valueToSpend: bigint;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  commitmentTreeRoot: bigint;
+  publicSpend: bigint;
   nullifierA: bigint;
   nullifierB: bigint;
-  operationDigest: bigint;
+  opDigest: bigint;
+  asset: bigint;
+  id: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -56,19 +56,19 @@ export interface JoinSplitInputs {
   newNoteB: NoteInput;
 }
 
-export function joinsplitPublicSignalsArrayToTyped(
+export function joinSplitPublicSignalsArrayToTyped(
   publicSignals: bigint[]
 ): JoinSplitPublicSignals {
   return {
-    newNoteCommitmentA: publicSignals[0],
-    newNoteCommitmentB: publicSignals[1],
-    anchor: publicSignals[2],
-    asset: publicSignals[3],
-    id: publicSignals[4],
-    valueToSpend: publicSignals[5],
-    nullifierA: publicSignals[6],
-    nullifierB: publicSignals[7],
-    operationDigest: publicSignals[8],
+    newNoteACommitment: publicSignals[0],
+    newNoteBCommitment: publicSignals[1],
+    commitmentTreeRoot: publicSignals[2],
+    publicSpend: publicSignals[3],
+    nullifierA: publicSignals[4],
+    nullifierB: publicSignals[5],
+    opDigest: publicSignals[6],
+    asset: publicSignals[7],
+    id: publicSignals[8],
   };
 }
 

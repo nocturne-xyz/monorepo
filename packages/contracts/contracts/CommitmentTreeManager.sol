@@ -64,10 +64,8 @@ contract CommitmentTreeManager {
             "Nullifier B already used"
         );
 
-        bytes32 spendHash = _hashJoinSplit(joinSplitTx);
-        uint256 operationDigest = uint256(
-            keccak256(abi.encodePacked(operationHash, spendHash))
-        ) % Utils.SNARK_SCALAR_FIELD;
+        uint256 operationDigest = uint256(operationHash) %
+            Utils.SNARK_SCALAR_FIELD;
 
         require(
             joinSplitVerifier.verifyProof(
@@ -79,14 +77,14 @@ contract CommitmentTreeManager {
                 [joinSplitTx.proof[6], joinSplitTx.proof[7]],
                 [
                     joinSplitTx.newNoteACommitment,
-                    joinSplitTx.newNoteACommitment,
+                    joinSplitTx.newNoteBCommitment,
                     joinSplitTx.commitmentTreeRoot,
-                    uint256(uint160(joinSplitTx.asset)),
-                    joinSplitTx.id,
                     joinSplitTx.publicSpend,
                     joinSplitTx.nullifierA,
                     joinSplitTx.nullifierB,
-                    operationDigest
+                    operationDigest,
+                    uint256(uint160(joinSplitTx.asset)),
+                    joinSplitTx.id
                 ]
             ),
             "JoinSplit proof invalid"
@@ -188,22 +186,5 @@ contract CommitmentTreeManager {
             value,
             merkle.getTotalCount() - 1
         );
-    }
-
-    function _hashJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplit
-    ) private pure returns (bytes32) {
-        bytes memory payload = abi.encodePacked(
-            joinSplit.commitmentTreeRoot,
-            joinSplit.nullifierA,
-            joinSplit.nullifierB,
-            joinSplit.newNoteACommitment,
-            joinSplit.newNoteBCommitment,
-            joinSplit.publicSpend,
-            joinSplit.asset,
-            joinSplit.id
-        );
-
-        return keccak256(payload);
     }
 }

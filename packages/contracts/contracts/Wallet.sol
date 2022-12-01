@@ -123,6 +123,14 @@ contract Wallet is IWallet, BalanceManager {
             );
         }
 
+        bytes memory joinSplitTxsHash;
+        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
+            joinSplitTxsHash = abi.encodePacked(
+                joinSplitTxsHash,
+                _hashJoinSplit(op.joinSplitTxs[i])
+            );
+        }
+
         bytes32 spendTokensHash = keccak256(
             abi.encodePacked(op.tokens.spendTokens)
         );
@@ -132,6 +140,7 @@ contract Wallet is IWallet, BalanceManager {
 
         payload = abi.encodePacked(
             payload,
+            joinSplitTxsHash,
             op.refundAddr.h1X,
             op.refundAddr.h1Y,
             op.refundAddr.h2X,
@@ -139,6 +148,23 @@ contract Wallet is IWallet, BalanceManager {
             spendTokensHash,
             refundTokensHash,
             op.gasLimit
+        );
+
+        return keccak256(payload);
+    }
+
+    function _hashJoinSplit(
+        IWallet.JoinSplitTransaction calldata joinSplit
+    ) private pure returns (bytes32) {
+        bytes memory payload = abi.encodePacked(
+            joinSplit.commitmentTreeRoot,
+            joinSplit.nullifierA,
+            joinSplit.nullifierB,
+            joinSplit.newNoteACommitment,
+            joinSplit.newNoteBCommitment,
+            joinSplit.publicSpend,
+            joinSplit.asset,
+            joinSplit.id
         );
 
         return keccak256(payload);

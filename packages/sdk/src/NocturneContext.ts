@@ -15,13 +15,14 @@ import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
-  // joinSplitPublicSignalsArrayToTyped
+  joinSplitPublicSignalsArrayToTyped
 } from "./proof/joinsplit";
 import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
+import { poseidon } from "circomlibjs";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -170,7 +171,22 @@ export class NocturneContext {
       joinSplitZkeyPath
     );
 
-    // const publicSignals = joinSplitPublicSignalsArrayToTyped(proof.publicSignals);
+    // Check that snarkjs output is consistent with our precomputed joinsplit values
+    const publicSignals = joinSplitPublicSignalsArrayToTyped(proof.publicSignals);
+    if ( (baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment) ||
+      (baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment) ||
+      (baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot) ||
+      (baseJoinSplitTx.publicSpend != publicSignals.publicSpend) ||
+      (baseJoinSplitTx.nullifierA != publicSignals.nullifierA) ||
+      (baseJoinSplitTx.nullifierB != publicSignals.nullifierB) ||
+      (baseJoinSplitTx.nullifierB != publicSignals.nullifierB) ||
+      (BigInt(baseJoinSplitTx.asset) != publicSignals.asset) ||
+      (baseJoinSplitTx.id != publicSignals.id) ||
+      (baseJoinSplitTx.opDigest != publicSignals.opDigest)
+    ) {
+      throw new Error( `SnarkJS generated public input differs from precomputed ones.`);
+    }
+
     const solidityProof = packToSolidityProof(proof.proof);
     return {
       proof: solidityProof,
@@ -189,26 +205,32 @@ export class NocturneContext {
   protected async genPreSignJoinSplitTx(
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
-    refundValue = 0n,
+    refundValue: bigint,
     outGoingValue = 0n,
     receiverAddr?: NocturneAddress,
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
-    const nullifierB = this.signer.createNullifier(oldNoteA);
+    const nullifierB = this.signer.createNullifier(oldNoteB);
     const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
     const newNoteBOwner = newNoteAOwner;
     const newNoteA = new Note({
       owner: newNoteAOwner,
-      nonce: 0n,
+      nonce: poseidon([this.signer.privkey.vk, nullifierA]),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue
     });
     const [,[encappedKeyA], encryptedNoteA] = this.signer.encryptNote([this.signer.canonAddress], newNoteA);
-    const newNoteB = Note.newDummy(newNoteAOwner, oldNoteA.asset, oldNoteA.id);
+    const newNoteB = new Note({
+      owner: newNoteBOwner,
+      nonce: poseidon([this.signer.privkey.vk, nullifierB]),
+      asset: oldNoteA.asset,
+      id: oldNoteA.id,
+      value: 0n
+    });
     const [,[encappedKeyB], encryptedNoteB] = this.signer.encryptNote([this.signer.canonAddress], newNoteB);
     const newNoteACommitment = newNoteA.toCommitment();
-    const newNoteBCommitment = newNoteA.toCommitment();
+    const newNoteBCommitment = newNoteB.toCommitment();
     const publicSpend = oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
 
     const merkleProofA = await this.merkleProver.getProof(oldNoteA.merkleIndex);
@@ -277,7 +299,7 @@ export class NocturneContext {
       const [notesToUse, totalVal] = await this.gatherMinimumNotes(assetRequest);
       let refundVal = totalVal - assetRequest.value;
       if (notesToUse.length % 2 == 1) {
-          const newAddr = this.signer.address.rerand().toStruct();
+          const newAddr = this.signer.privkey.toCanonAddressStruct();
           notesToUse.push(IncludedNote.newDummy(newAddr, notesToUse[0].asset, notesToUse[0].id));
       }
       for (var i = 0; i < notesToUse.length / 2; i++) {

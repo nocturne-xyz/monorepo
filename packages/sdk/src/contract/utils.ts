@@ -33,7 +33,7 @@ function hashOperation(op: PreSignOperation): string {
     joinSplitTxsHash = ethers.utils.solidityPack(
       ["bytes", "bytes32"],
       [
-        payload,
+        joinSplitTxsHash,
         hashJoinSplit(tx),
       ]
     );
