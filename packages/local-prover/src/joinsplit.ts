@@ -9,7 +9,7 @@ import {
   normalizePublicSignals,
 } from "@nocturne-xyz/sdk";
 
-export class LocalJoinSplitProver implements JoinSplitProver {
+class LocalJoinSplitProver implements JoinSplitProver {
   async proveJoinSplit(
     inputs: JoinSplitInputs,
     wasmPath: string,
@@ -95,3 +95,5 @@ export class LocalJoinSplitProver implements JoinSplitProver {
     return await snarkjs.groth16.verify(vkey, publicSignals, proof);
   }
 }
+
+export const joinSplitProver = new LocalJoinSplitProver();

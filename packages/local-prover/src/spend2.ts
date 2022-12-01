@@ -8,7 +8,7 @@ import {
   Spend2Prover,
 } from "@nocturne-xyz/sdk";
 
-export class LocalSpend2Prover implements Spend2Prover {
+class LocalSpend2Prover implements Spend2Prover {
   async proveSpend2(
     inputs: Spend2Inputs,
     wasmPath: string,
@@ -71,3 +71,5 @@ export class LocalSpend2Prover implements Spend2Prover {
     return await snarkjs.groth16.verify(vkey, publicSignals, proof);
   }
 }
+
+export const spend2Prover = new LocalSpend2Prover();
