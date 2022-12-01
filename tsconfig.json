@@ -38,6 +38,9 @@
       "path": "./packages/sdk"
     },
     {
+      "path": "./packages/frontend-sdk"
+    },
+    {
       "path": "./packages/local-prover"
     },
     {
