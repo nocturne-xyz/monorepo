@@ -2,9 +2,12 @@ import { NocturneDB } from "../db";
 import {
   IncludedNote,
   IncludedNoteStruct,
+  EncryptedNote,
+  EncappedKey
 } from "../note";
 import { NocturneSigner } from "../signer";
-import { BaseJoinSplitTx } from "../../commonTypes";
+import { NocturneAddressStruct } from "../../crypto/address";
+import { Address, BaseJoinSplitTx } from "../../commonTypes";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -53,46 +56,54 @@ export abstract class NotesManager {
         }
       }
 
-      // Test if newNoteA is for us
-      if (this.signer.testOwn(e.joinSplitTx.newNoteAOwner)) {
-        const [nonce, value] = this.signer.decryptNote(
-          e.joinSplitTx.encappedKeyA,
-          e.joinSplitTx.encryptedNoteA
-        );
-        const newNoteA: IncludedNoteStruct = {
-          owner: this.signer.privkey.toCanonAddressStruct(),
-          nonce,
-          asset: e.joinSplitTx.asset,
-          id: e.joinSplitTx.id,
-          value,
-          merkleIndex: e.newNoteAIndex,
-        };
-        if ((newNoteA.value > 0n) &&
-            (new IncludedNote(newNoteA)).toCommitment()
-              == e.joinSplitTx.newNoteACommitment) {
-          await this.db.storeNote(newNoteA);
-        }
-      }
+      this.processNewEncryptedNote(
+        e.joinSplitTx.newNoteACommitment,
+        e.joinSplitTx.newNoteAOwner,
+        e.joinSplitTx.encappedKeyA,
+        e.joinSplitTx.encryptedNoteA,
+        e.newNoteAIndex,
+        e.joinSplitTx.asset,
+        e.joinSplitTx.id,
+      );
 
-      // Test if newNoteB is for us
-      if (this.signer.testOwn(e.joinSplitTx.newNoteBOwner)) {
-        const [nonce, value] = this.signer.decryptNote(
-          e.joinSplitTx.encappedKeyB,
-          e.joinSplitTx.encryptedNoteB
-        );
-        const newNoteB = new IncludedNote({
-          owner: this.signer.privkey.toCanonAddressStruct(),
-          nonce,
-          asset: e.joinSplitTx.asset,
-          id: e.joinSplitTx.id,
-          value,
-          merkleIndex: e.newNoteAIndex,
-        });
-        if ((newNoteB.value > 0n) &&
-            (new IncludedNote(newNoteB)).toCommitment()
-              == e.joinSplitTx.newNoteBCommitment) {
-          await this.db.storeNote(newNoteB);
-        }
+      this.processNewEncryptedNote(
+        e.joinSplitTx.newNoteBCommitment,
+        e.joinSplitTx.newNoteBOwner,
+        e.joinSplitTx.encappedKeyB,
+        e.joinSplitTx.encryptedNoteB,
+        e.newNoteBIndex,
+        e.joinSplitTx.asset,
+        e.joinSplitTx.id,
+      );
+    }
+  }
+
+  private async processNewEncryptedNote(
+    newNoteCommitment: BigInt,
+    owner: NocturneAddressStruct,
+    encappedKey: EncappedKey,
+    encryptedNote: EncryptedNote,
+    newNoteIndex: number,
+    asset: Address,
+    id: bigint
+  ): Promise<void> {
+    if (this.signer.testOwn(owner)) {
+      const [nonce, value] = this.signer.decryptNote(
+        encappedKey,
+        encryptedNote
+      );
+      const newNote = {
+        owner: this.signer.privkey.toCanonAddressStruct(),
+        nonce,
+        asset: asset,
+        id: id,
+        value,
+        merkleIndex: newNoteIndex,
+      };
+      if ((newNote.value > 0n) &&
+          (new IncludedNote(newNote)).toCommitment()
+            == newNoteCommitment) {
+        await this.db.storeNote(newNote);
       }
     }
   }
