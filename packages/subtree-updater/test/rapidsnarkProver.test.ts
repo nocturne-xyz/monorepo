@@ -16,9 +16,7 @@ const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
 const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
-
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
-const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
 const prover = getRapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXECUTABLE_PATH, ZKEY_PATH, TMP_PATH);
 
@@ -67,7 +65,9 @@ describe('rapidsnark subtree update prover', async () =>  {
       const merkleProof = applyBatchUpdateToTree(batch, tree);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
       const proof = await prover.prove(inputs);
-      const verifierAccepts = await prover.verify(proof, VKEY);
+
+      const vkey = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+      const verifierAccepts = await prover.verify(proof, vkey);
 
       expect(verifierAccepts).to.be.true;
     });
