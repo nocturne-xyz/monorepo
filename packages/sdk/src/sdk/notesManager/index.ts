@@ -1,6 +1,6 @@
 import { NocturneDB } from "../db";
 import {
-  // IncludedNote,
+  IncludedNote,
   IncludedNoteStruct
 } from "../note";
 import { NocturneSigner } from "../signer";
@@ -41,29 +41,56 @@ export abstract class NotesManager {
   }
 
   private async applyNewJoinSplits(newJoinSplits: JoinSplitEvent[]): Promise<void> {
-    // const allNotes = [...(await this.db.getAllNotes()).values()].flat();
-    // for (const joinSplit of newJoinSplits) {
-    //   for (const oldNote of allNotes) {
-    //     // TODO implement note indexing by nullifiers
-    //     const oldNullifier = this.signer.createNullifier(
-    //       new IncludedNote(oldNote)
-    //     );
-    //     if (oldNullifier == joinSplit.oldNoteANullifier) {
-    //       const newNoteNonce = this.signer.generateNewNonce(oldNullifier);
-    //       const newNote: IncludedNoteStruct = {
-    //         owner: oldNote.owner,
-    //         nonce: newNoteNonce,
-    //         asset: oldNote.asset,
-    //         id: oldNote.id,
-    //         value: oldNote.value - joinSplit.valueSpent,
-    //         merkleIndex: joinSplit.merkleIndex,
-    //       };
+    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
+    for (const e of newJoinSplits) {
+      // Delete nullified notes
+      for (const oldNote of allNotes) {
+        // TODO implement note indexing by nullifiers
+        const oldNullifier = this.signer.createNullifier(new IncludedNote(oldNote));
+        if (oldNullifier == e.oldNoteANullifier ||
+           oldNullifier == e.oldNoteBNullifier) {
+          await this.db.removeNote(oldNote);
+        }
+      }
 
-    //       await this.db.removeNote(oldNote);
-    //       await this.db.storeNote(newNote);
-    //     }
-    //   }
-    // }
+      // Test if newNoteA is for us
+      if (this.signer.testOwn(e.joinSplitTx.newNoteAOwner)) {
+        const [nonce, value] = this.signer.decryptNote(
+          e.joinSplitTx.encappedKeyA,
+          e.joinSplitTx.encryptedNoteA
+        );
+        const newNoteA = new IncludedNote({
+          owner: this.signer.privkey.toCanonAddressStruct(),
+          nonce,
+          asset: e.joinSplitTx.asset,
+          id: e.joinSplitTx.id,
+          value,
+          merkleIndex: e.newNoteAIndex
+        });
+        if (newNoteA.value > 0n) {
+          await this.db.storeNote(newNoteA);
+        }
+      }
+
+      // Test if newNoteB is for us
+      if (this.signer.testOwn(e.joinSplitTx.newNoteBOwner)) {
+        const [nonce, value] = this.signer.decryptNote(
+          e.joinSplitTx.encappedKeyB,
+          e.joinSplitTx.encryptedNoteB
+        );
+        const newNoteB = new IncludedNote({
+          owner: this.signer.privkey.toCanonAddressStruct(),
+          nonce,
+          asset: e.joinSplitTx.asset,
+          id: e.joinSplitTx.id,
+          value,
+          merkleIndex: e.newNoteAIndex
+        });
+        if (newNoteB.value > 0n) {
+          await this.db.storeNote(newNoteB);
+        }
+      }
+    }
   }
 
   async fetchAndApplyNewJoinSplits(): Promise<void> {

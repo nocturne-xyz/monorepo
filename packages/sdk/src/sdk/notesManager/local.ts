@@ -108,7 +108,6 @@ export class LocalNotesManager extends NotesManager {
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
     const newJoinSplits = events.map((event) => {
-      console.log(event);
       const {
         oldNoteANullifier,
         oldNoteBNullifier,
