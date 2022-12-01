@@ -23,14 +23,16 @@ template JoinSplit(levels) {
     signal input c;
     signal input z;
 
+    // Shared note values
+    signal input encodedAsset;
+    signal input encodedId;
+
     // Old note A
     signal input oldNoteAOwnerH1X;
     signal input oldNoteAOwnerH1Y;
     signal input oldNoteAOwnerH2X;
     signal input oldNoteAOwnerH2Y;
     signal input oldNoteANonce;
-    signal input oldNoteAEncodedAsset;
-    signal input oldNoteAEncodedId;
     signal input oldNoteAValue;
 
     // Path to old note A
@@ -43,8 +45,6 @@ template JoinSplit(levels) {
     signal input oldNoteBOwnerH2X;
     signal input oldNoteBOwnerH2Y;
     signal input oldNoteBNonce;
-    signal input oldNoteBEncodedAsset;
-    signal input oldNoteBEncodedId;
     signal input oldNoteBValue;
 
     // Path to old note B
@@ -53,22 +53,16 @@ template JoinSplit(levels) {
 
     // New note A
     signal input newNoteANonce;
-    signal input newNoteAEncodedAsset;
-    signal input newNoteAEncodedId;
     signal input newNoteAValue;
 
     // New note B
     signal input receiverAddr[2];
-    signal input newNoteBEncodedAsset;
-    signal input newNoteBEncodedId;
     signal input newNoteBValue;
 
     // Public outputs
     signal output newNoteACommitment;
     signal output newNoteBCommitment;
     signal output anchor;
-    signal output encodedAsset;
-    signal output encodedId;
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
@@ -111,8 +105,8 @@ template JoinSplit(levels) {
     signal oldNoteACommitment <== NoteCommit()(
       Poseidon(2)([oldNoteAOwnerH1X, oldNoteAOwnerH2X]),
       oldNoteANonce,
-      oldNoteAEncodedAsset,
-      oldNoteAEncodedId,
+      encodedAsset,
+      encodedId,
       oldNoteAValue
     );
 
@@ -120,8 +114,8 @@ template JoinSplit(levels) {
     signal oldNoteBCommitment <== NoteCommit()(
       Poseidon(2)([oldNoteBOwnerH1X, oldNoteBOwnerH2X]),
       oldNoteBNonce,
-      oldNoteBEncodedAsset,
-      oldNoteBEncodedId,
+      encodedAsset,
+      encodedId,
       oldNoteBValue
     );
 
@@ -138,16 +132,6 @@ template JoinSplit(levels) {
 
     // Nullifier derivation for oldNoteB
     nullifierB <== Poseidon(2)([oldNoteBCommitment, userViewKey]);
-
-    // Asset, id, value, nonce
-    encodedAsset <== oldNoteAEncodedAsset;
-    oldNoteAEncodedAsset === oldNoteBEncodedAsset;
-    oldNoteBEncodedAsset === newNoteAEncodedAsset;
-    newNoteAEncodedAsset === newNoteBEncodedAsset;
-    encodedId <== oldNoteAEncodedId;
-    oldNoteAEncodedId === oldNoteBEncodedId;
-    oldNoteBEncodedId === newNoteAEncodedId;
-    newNoteAEncodedId === newNoteBEncodedId;
 
     signal valInput <== oldNoteAValue + oldNoteBValue;
     signal valOutput <== newNoteAValue + newNoteBValue;
@@ -174,8 +158,8 @@ template JoinSplit(levels) {
     newNoteACommitment <== NoteCommit()(
       Poseidon(2)([newNoteAOwnerH1X, newNoteAOwnerH2X]),
       newNoteANonce,
-      newNoteAEncodedAsset,
-      newNoteAEncodedId,
+      encodedAsset,
+      encodedId,
       newNoteAValue
     );
 
@@ -186,8 +170,8 @@ template JoinSplit(levels) {
     newNoteBCommitment <== NoteCommit()(
       Poseidon(2)([newNoteBOwnerH1X, newNoteBOwnerH2X]),
       newNoteBNonce,
-      newNoteBEncodedAsset,
-      newNoteBEncodedId,
+      encodedAsset,
+      encodedId,
       newNoteBValue
     );
 
@@ -208,4 +192,4 @@ template JoinSplit(levels) {
     encSenderInfo <== Encrypt(3)(RB[0], [receiverAddr[0], newNoteANonce, newNoteAValue]);
 }
 
-component main { public [operationDigest, issuerViewKeyX] } = JoinSplit(32);
+component main { public [encodedAsset, encodedId, operationDigest, issuerViewKeyX] } = JoinSplit(32);
