@@ -24,12 +24,12 @@ const prover = getRapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXEC
 // server params
 const WALLET_CONTRACT_ADDRESS = process.env.WALLET_CONTRACT_ADDRESS;
 if (WALLET_CONTRACT_ADDRESS === undefined) {
-	throw new Error("WALLET_CONTRACT_ADDRESS env var not set");
+  throw new Error("WALLET_CONTRACT_ADDRESS env var not set");
 }
 
 const SERVER_SECRET_KEY = process.env.SERVER_SECRET_KEY;
 if (SERVER_SECRET_KEY === undefined) {
-	throw new Error("SERVER_SECRET_KEY env var not set");
+  throw new Error("SERVER_SECRET_KEY env var not set");
 }
 
 const NETWORK = process.env.NETWORK ?? "https://localhost:8545";
@@ -43,13 +43,13 @@ const rootDB = open({ path: dbPath });
 const interval= process.env.INTERVAL ? parseInt(process.env.INTERVAL) : TEN_SECONDS;
 
 async function main() {
-	const params = { walletContract, rootDB };
-	const updater = await subtreeUpdater(params, prover);
-	
-	setTimeout(async () => {
-		await updater.fillbatch();
-		await updater.poll();
-	}, interval);
+  const params = { walletContract, rootDB };
+  const updater = await subtreeUpdater(params, prover);
+  
+  setTimeout(async () => {
+    await updater.fillbatch();
+    await updater.poll();
+  }, interval);
 }
 
 main();

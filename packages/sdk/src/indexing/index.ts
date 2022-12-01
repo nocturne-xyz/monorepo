@@ -45,32 +45,32 @@ export async function fetchInsertions(contract: Wallet, from: number, to: number
   }
 
   for (const event of noteEvents) {
-		for (const noteValues of event.args.notes) {
-			const owner = {
-				h1X: noteValues.ownerH1.toBigInt(),
-				h2X: noteValues.ownerH2.toBigInt(),
-				h1Y: 0n,
-				h2Y: 0n,
-			};
+    for (const noteValues of event.args.notes) {
+      const owner = {
+        h1X: noteValues.ownerH1.toBigInt(),
+        h2X: noteValues.ownerH2.toBigInt(),
+        h1Y: 0n,
+        h2Y: 0n,
+      };
 
-			const noteStruct = {
-				owner,
-				nonce: noteValues.nonce.toBigInt(),
-				asset: noteValues.asset.toHexString(),
-				id: noteValues.id.toBigInt(),
-				value: noteValues.value.toBigInt(),
-			};
+      const noteStruct = {
+        owner,
+        nonce: noteValues.nonce.toBigInt(),
+        asset: noteValues.asset.toHexString(),
+        id: noteValues.id.toBigInt(),
+        value: noteValues.value.toBigInt(),
+      };
 
-			const note = new Note(noteStruct);
-			insertions.push({
-				insertion: note,
-				blockNumber: event.blockNumber,
-				txIdx: event.transactionIndex,
-				logIdx: event.logIndex,
-			});
-		}
+      const note = new Note(noteStruct);
+      insertions.push({
+        insertion: note,
+        blockNumber: event.blockNumber,
+        txIdx: event.transactionIndex,
+        logIdx: event.logIndex,
+      });
+    }
   }
 
   insertions = insertions.sort((a, b) => a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx);
-	return insertions.map(({ insertion }) => insertion);
+  return insertions.map(({ insertion }) => insertion);
 }

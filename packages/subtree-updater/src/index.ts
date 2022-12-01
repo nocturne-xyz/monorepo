@@ -22,7 +22,7 @@ const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION";
 
 function insertionKey(idx: number) {
-	return `${INSERTION_PREFIX}-${idx}`;
+  return `${INSERTION_PREFIX}-${idx}`;
 }
 
 export async function subtreeUpdater(params: UpdaterParams, prover: SubtreeUpdateProver): Promise<SubtreeUpdater> {

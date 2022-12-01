@@ -6,10 +6,10 @@ import * as fs from "fs";
 import { spawn } from "child_process";
 
 export function getRapidsnarkSubtreeUpdateProver(executableCmd: string, witnessGeneratorPath: string, _zkeyPath: string, tmpPath: string): SubtreeUpdateProver {
-	return {
-		prove: (inputs: SubtreeUpdateInputSignals, wasmPath: string = witnessGeneratorPath, zkeyPath = _zkeyPath) => proveSubtreeUpdateRapidsnark(inputs, executableCmd, wasmPath, zkeyPath, tmpPath),
-		verify: ({ proof, publicSignals }: SubtreeUpdateProofWithPublicSignals, vkey: any) => snarkjs.groth16.verify(vkey, publicSignals, proof),
-	};
+  return {
+    prove: (inputs: SubtreeUpdateInputSignals, wasmPath: string = witnessGeneratorPath, zkeyPath = _zkeyPath) => proveSubtreeUpdateRapidsnark(inputs, executableCmd, wasmPath, zkeyPath, tmpPath),
+    verify: ({ proof, publicSignals }: SubtreeUpdateProofWithPublicSignals, vkey: any) => snarkjs.groth16.verify(vkey, publicSignals, proof),
+  };
 };
 
 async function proveSubtreeUpdateRapidsnark(inputs: SubtreeUpdateInputSignals, rapidsnarkExecutablePath: string, witnessGeneratorPath: string, zkeyPath: string, tmpPath: string): Promise<SubtreeUpdateProofWithPublicSignals> {
