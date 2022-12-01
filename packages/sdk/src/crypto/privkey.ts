@@ -33,7 +33,7 @@ export class NocturnePrivKey {
       h1X: babyjub.Base8[0],
       h1Y: babyjub.Base8[1],
       h2X: canonAddr[0],
-      h2Y: canonAddr[1]
+      h2Y: canonAddr[1],
     };
   }
 

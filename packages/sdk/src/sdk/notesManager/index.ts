@@ -1,7 +1,7 @@
 import { NocturneDB } from "../db";
 import {
   IncludedNote,
-  IncludedNoteStruct
+  IncludedNoteStruct,
 } from "../note";
 import { NocturneSigner } from "../signer";
 import { BaseJoinSplitTx } from "../../contract/types";
@@ -65,7 +65,7 @@ export abstract class NotesManager {
           asset: e.joinSplitTx.asset,
           id: e.joinSplitTx.id,
           value,
-          merkleIndex: e.newNoteAIndex
+          merkleIndex: e.newNoteAIndex,
         };
         if ((newNoteA.value > 0n) &&
             (new IncludedNote(newNoteA)).toCommitment()
@@ -86,7 +86,7 @@ export abstract class NotesManager {
           asset: e.joinSplitTx.asset,
           id: e.joinSplitTx.id,
           value,
-          merkleIndex: e.newNoteAIndex
+          merkleIndex: e.newNoteAIndex,
         });
         if ((newNoteB.value > 0n) &&
             (new IncludedNote(newNoteB)).toCommitment()

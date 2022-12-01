@@ -15,7 +15,7 @@ import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
-  joinSplitPublicSignalsArrayToTyped
+  joinSplitPublicSignalsArrayToTyped,
 } from "./proof/joinsplit";
 import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
@@ -94,7 +94,7 @@ export class NocturneContext {
       return this.proveJoinSplitTx(
         tx,
         joinSplitWasmPath,
-        joinSplitZkeyPath)
+        joinSplitZkeyPath);
     });
 
     return {
@@ -145,7 +145,7 @@ export class NocturneContext {
       refundAddr: preSignOperation.refundAddr,
       tokens: preSignOperation.tokens,
       actions: preSignOperation.actions,
-      gasLimit: preSignOperation.gasLimit
+      gasLimit: preSignOperation.gasLimit,
     };
   }
 
@@ -191,7 +191,7 @@ export class NocturneContext {
     const solidityProof = packToSolidityProof(proof.proof);
     return {
       proof: solidityProof,
-      ...baseJoinSplitTx
+      ...baseJoinSplitTx,
     };
   }
 
@@ -219,7 +219,7 @@ export class NocturneContext {
       nonce: poseidon([this.signer.privkey.vk, nullifierA]),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
-      value: refundValue
+      value: refundValue,
     });
     const [,[encappedKeyA], encryptedNoteA] = this.signer.encryptNote([this.signer.canonAddress], newNoteA);
     const newNoteB = new Note({
@@ -227,7 +227,7 @@ export class NocturneContext {
       nonce: poseidon([this.signer.privkey.vk, nullifierB]),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
-      value: 0n
+      value: 0n,
     });
     const [,[encappedKeyB], encryptedNoteB] = this.signer.encryptNote([this.signer.canonAddress], newNoteB);
     const newNoteACommitment = newNoteA.toCommitment();
@@ -310,7 +310,7 @@ export class NocturneContext {
             merkleIndex: 0,
           }));
       }
-      for (var i = 0; i < notesToUse.length / 2; i++) {
+      for (let i = 0; i < notesToUse.length / 2; i++) {
         let val = 0n;
         if (notesToUse[i].value + notesToUse[i].value > refundVal) {
           val = refundVal;
@@ -328,7 +328,7 @@ export class NocturneContext {
       refundAddr,
       tokens,
       actions,
-      gasLimit
+      gasLimit,
     };
   }
 
@@ -375,7 +375,7 @@ export class NocturneContext {
     return {
       opDigest,
       proofInputs,
-      ...baseJoinSplitTx
+      ...baseJoinSplitTx,
     };
   }
 

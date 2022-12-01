@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { SNARK_SCALAR_FIELD } from "../commonTypes";
 import {
   PreSignOperation,
-  PreSignJoinSplitTx
+  PreSignJoinSplitTx,
 } from "./types";
 
 function hashOperation(op: PreSignOperation): string {

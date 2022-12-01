@@ -92,14 +92,14 @@ export class NocturneSigner {
     const R = babyjub.mulPointEscalar(babyjub.Base8, r);
     const encryptedNote: EncryptedNote = [
      mod_p(BigInt(poseidon([R[0]])) + note.nonce),
-     mod_p(BigInt(poseidon([R[0] + 1n])) + note.value)
+     mod_p(BigInt(poseidon([R[0] + 1n])) + note.value),
     ];
 
     const encappedKeys: EncappedKey[] = targets.map((addr) => {
       const p = babyjub.mulPointEscalar(addr, r);
       return p[0];
     });
-    return [BigInt(r), encappedKeys, encryptedNote]
+    return [BigInt(r), encappedKeys, encryptedNote];
   }
 
   /**
@@ -124,7 +124,7 @@ export class NocturneSigner {
     const R = babyjub.mulPointEscalar(eR, vkInv);
     const nonce = mod_p(encryptedNote[0] - BigInt(poseidon([R[0]])));
     const value = mod_p(encryptedNote[1] - BigInt(poseidon([R[0] + 1n])));
-    return [nonce, value]
+    return [nonce, value];
   }
 
   testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {

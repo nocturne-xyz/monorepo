@@ -94,7 +94,7 @@ export function decompressPoint(x: bigint): [bigint, bigint] {
   const y = F.sqrt(y2);
   let point: [bigint, bigint] = [BigInt(x), BigInt(y)];
   if (!babyjub.inSubgroup(point)) {
-    point = [point[0], mod_p(-point[1])]
+    point = [point[0], mod_p(-point[1])];
   }
   return point;
 }

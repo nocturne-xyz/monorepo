@@ -113,7 +113,7 @@ export class LocalNotesManager extends NotesManager {
         oldNoteBNullifier,
         newNoteAIndex,
         newNoteBIndex,
-        joinSplitTx
+        joinSplitTx,
       } = event.args;
       const {
         commitmentTreeRoot,
@@ -129,29 +129,29 @@ export class LocalNotesManager extends NotesManager {
         encryptedNoteB,
         asset,
         id,
-        publicSpend
+        publicSpend,
       } = joinSplitTx;
       let { h1X, h1Y, h2X, h2Y } = newNoteAOwner;
       const newNoteAOwnerBigInt = {
         h1X: h1X.toBigInt(),
         h1Y: h1Y.toBigInt(),
         h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt()
+        h2Y: h2Y.toBigInt(),
       };
       ({ h1X, h1Y, h2X, h2Y } = newNoteBOwner);
       const newNoteBOwnerBigInt = {
         h1X: h1X.toBigInt(),
         h1Y: h1Y.toBigInt(),
         h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt()
+        h2Y: h2Y.toBigInt(),
       };
       const encryptedNoteABigInt: EncryptedNote = [
         encryptedNoteA[0].toBigInt(),
-        encryptedNoteA[1].toBigInt()
+        encryptedNoteA[1].toBigInt(),
       ];
       const encryptedNoteBBigInt: EncryptedNote = [
         encryptedNoteB[0].toBigInt(),
-        encryptedNoteB[1].toBigInt()
+        encryptedNoteB[1].toBigInt(),
       ];
       return {
         oldNoteANullifier: oldNoteANullifier.toBigInt(),
@@ -172,8 +172,8 @@ export class LocalNotesManager extends NotesManager {
           encryptedNoteB: encryptedNoteBBigInt,
           asset,
           id: id.toBigInt(),
-          publicSpend: publicSpend.toBigInt()
-        }
+          publicSpend: publicSpend.toBigInt(),
+        },
       };
     });
 

@@ -6,7 +6,7 @@ import {
   IncludedNote,
   Note,
   EncappedKey,
-  EncryptedNote
+  EncryptedNote,
 } from "../sdk/note";
 
 export interface SpendAndRefundTokens {
