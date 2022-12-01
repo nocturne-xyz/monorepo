@@ -59,15 +59,17 @@ export abstract class NotesManager {
           e.joinSplitTx.encappedKeyA,
           e.joinSplitTx.encryptedNoteA
         );
-        const newNoteA = new IncludedNote({
+        const newNoteA: IncludedNoteStruct = {
           owner: this.signer.privkey.toCanonAddressStruct(),
           nonce,
           asset: e.joinSplitTx.asset,
           id: e.joinSplitTx.id,
           value,
           merkleIndex: e.newNoteAIndex
-        });
-        if (newNoteA.value > 0n) {
+        };
+        if ((newNoteA.value > 0n) &&
+            (new IncludedNote(newNoteA)).toCommitment()
+              == e.joinSplitTx.newNoteACommitment) {
           await this.db.storeNote(newNoteA);
         }
       }
@@ -86,7 +88,9 @@ export abstract class NotesManager {
           value,
           merkleIndex: e.newNoteAIndex
         });
-        if (newNoteB.value > 0n) {
+        if ((newNoteB.value > 0n) &&
+            (new IncludedNote(newNoteB)).toCommitment()
+              == e.joinSplitTx.newNoteBCommitment) {
           await this.db.storeNote(newNoteB);
         }
       }

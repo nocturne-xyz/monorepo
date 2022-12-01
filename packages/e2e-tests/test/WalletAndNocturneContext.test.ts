@@ -147,8 +147,7 @@ describe("Wallet", async () => {
     console.log("Sync SDK notes manager post-operation");
     await nocturneContext.syncNotes();
     const updatedNotesForAsset = await nocturneContext.db.getNotesFor(asset)!;
-    console.log(updatedNotesForAsset);
-    // const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
-    // expect(updatedNote.value).to.equal(50n);
+    const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
+    expect(updatedNote.value).to.equal(50n);
   });
 });
