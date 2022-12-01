@@ -1,13 +1,8 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note, IncludedNoteStruct } from "./note";
-import {
-  NocturneAddressStruct,
-  flattenedNocturneAddressToArrayForm,
-  NocturneAddress,
-  CanonAddress,
-} from "../crypto/address";
+import { Note, IncludedNote } from "./note";
+import { NocturneAddress, nocturneAddressToArrayForm, CanonAddress } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
 import { Address, NoteTransmission } from "../commonTypes";

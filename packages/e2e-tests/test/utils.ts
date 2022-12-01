@@ -24,12 +24,11 @@ export async function depositFunds(
       asset: token.address,
       value: amounts[i],
       id: ERC20_ID,
-      depositAddr: nocturneAddress.toStruct(),
+      depositAddr: nocturneAddress,
     });
 
-    const owner = nocturneAddress.toStruct();
     const noteStruct = {
-      owner,
+      owner: nocturneAddress,
       nonce: BigInt(i + startNonce),
       asset: token.address,
       id: ERC20_ID,

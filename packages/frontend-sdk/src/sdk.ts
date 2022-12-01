@@ -20,7 +20,7 @@ export class NocturneFrontendSDK {
   ): Promise<ProvenOperation> {
     const spendInputs = await this.getSpendInputsFromSnap(operationRequest);
 
-    let provenSpendTxPromises: Promise<ProvenSpendTx>[] = spendInputs.map(
+    const provenSpendTxPromises: Promise<ProvenSpendTx>[] = spendInputs.map(
       async ({ preProofSpendTxInputs, proofInputs }) => {
         const { proof, publicSignals } = await spend2Prover.proveSpend2(
           proofInputs,

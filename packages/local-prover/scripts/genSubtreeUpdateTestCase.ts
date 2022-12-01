@@ -179,7 +179,6 @@ export function getSubtreeUpdateInputs(
 const nocturnePrivKey = new NocturnePrivKey(sk);
 const nocturneSigner = new NocturneSigner(nocturnePrivKey);
 const nocturneAddr = nocturneSigner.address;
-const nocturneAddrInput = nocturneAddr.toStruct();
 
 // start with empty tree
 const tree = new BinaryPoseidonTree();
@@ -188,7 +187,7 @@ const tree = new BinaryPoseidonTree();
 const notes = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
   (_) =>
     new Note({
-      owner: nocturneAddrInput,
+      owner: nocturneAddr,
       nonce: 1n,
       asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
       id: 5n,

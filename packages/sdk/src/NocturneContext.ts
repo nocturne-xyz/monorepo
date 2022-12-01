@@ -10,7 +10,7 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddressStruct } from "./crypto/address";
+import { NocturneAddress, rerandNocturneAddress } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -116,7 +116,7 @@ export class NocturneContext {
    * @param gasLimit Gas limit
   async tryGetPreProofOperation(
     operationRequest: OperationRequest,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofOperation> {
     const { assetRequests, refundTokens } = operationRequest;
@@ -124,7 +124,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toStruct();
+      : rerandNocturneAddress(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -352,7 +352,7 @@ export class NocturneContext {
   protected async getPreSignOperation(
     { assetRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
-    refundAddr: NocturneAddressStruct,
+    refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreSignOperation> {
     // For each asset request, gather necessary notes

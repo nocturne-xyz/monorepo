@@ -1,4 +1,4 @@
-import { NocturneAddressStruct } from "../crypto";
+import { NocturneAddress } from "../crypto";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 import { normalizeBigInt } from "./utils";
 
@@ -64,8 +64,8 @@ export function spend2PublicSignalsArrayToTyped(
 }
 
 function normalizeNocturneAddressInput(
-  nocturneAddressInput: NocturneAddressStruct
-): NocturneAddressStruct {
+  nocturneAddressInput: NocturneAddress
+): NocturneAddress {
   const { h1X, h1Y, h2X, h2Y } = nocturneAddressInput;
   return {
     h1X: normalizeBigInt(h1X),

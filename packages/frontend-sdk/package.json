@@ -13,7 +13,7 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": "mocha --require ts-node/register test/**"
+    "test:unit": ""
   },
   "dependencies": {
     "@nocturne-xyz/sdk": "workspace:^",

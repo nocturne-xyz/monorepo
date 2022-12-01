@@ -14,6 +14,7 @@ import {
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
+import { rerandNocturneAddress } from "../src/crypto";
 
 describe("NocturneContext", () => {
   let db = new LocalObjectDB({ localMerkle: true });
@@ -28,7 +29,7 @@ describe("NocturneContext", () => {
     const signer = new NocturneSigner(nocturnePrivKey);
 
     const firstOldNote: IncludedNoteStruct = {
-      owner: signer.address.toStruct(),
+      owner: signer.address,
       nonce: 0n,
       asset: asset.address,
       id: asset.id,
@@ -36,7 +37,7 @@ describe("NocturneContext", () => {
       merkleIndex: 0,
     };
     const secondOldNote: IncludedNoteStruct = {
-      owner: signer.address.toStruct(),
+      owner: signer.address,
       nonce: 1n,
       asset: asset.address,
       id: asset.id,
@@ -44,7 +45,7 @@ describe("NocturneContext", () => {
       merkleIndex: 1,
     };
     const thirdOldNote: IncludedNoteStruct = {
-      owner: signer.address.toStruct(),
+      owner: signer.address,
       nonce: 2n,
       asset: asset.address,
       id: asset.id,
@@ -52,7 +53,7 @@ describe("NocturneContext", () => {
       merkleIndex: 2,
     };
     const fourthOldNote: IncludedNoteStruct = {
-      owner: signer.address.toStruct(),
+      owner: signer.address,
       nonce: 3n,
       asset: asset.address,
       id: asset.id,

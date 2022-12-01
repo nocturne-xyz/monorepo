@@ -11,6 +11,7 @@ import {
   MerkleProofInput,
   NoteInput,
   toJSON,
+  hashNocturneAddress,
 } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -38,12 +39,9 @@ const nocturneAddrA = nocturneSigner.address;
 const nocturneAddrB = nocturneSigner.address;
 const spendPk = nocturneSigner.privkey.spendPk();
 
-const nocturneAddrAInput = nocturneAddrA.toStruct();
-const nocturneAddrBInput = nocturneAddrB.toStruct();
-
 // Two old notes: 100 + 50 = 150
 const oldNoteA: NoteInput = {
-  owner: nocturneAddrAInput,
+  owner: nocturneAddrA,
   nonce: 1n,
   asset: 10n,
   value: 100n,
@@ -51,7 +49,7 @@ const oldNoteA: NoteInput = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash = nocturneAddrA.hash();
+const oldNoteAOwnerHash = hashNocturneAddress(nocturneAddrA);
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
@@ -62,7 +60,7 @@ const oldNoteACommitment = poseidon([
 console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
 
 const oldNoteB: NoteInput = {
-  owner: nocturneAddrBInput,
+  owner: nocturneAddrB,
   nonce: 2n,
   asset: 10n,
   value: 50n,
@@ -70,7 +68,7 @@ const oldNoteB: NoteInput = {
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
-const oldNoteBOwnerHash = nocturneAddrB.hash();
+const oldNoteBOwnerHash = hashNocturneAddress(nocturneAddrB);
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,
@@ -102,7 +100,7 @@ const merkleProofBInput: MerkleProofInput = {
 
 // New notes where 75 + 75 = 150
 const newNoteA: NoteInput = {
-  owner: nocturneAddrBInput,
+  owner: nocturneAddrB,
   nonce: 3n,
   asset: 10n,
   value: 75n,
@@ -111,7 +109,7 @@ const newNoteA: NoteInput = {
 console.log("NEW NOTE A: ", newNoteA);
 
 const newNoteB: NoteInput = {
-  owner: nocturneAddrAInput,
+  owner: nocturneAddrA,
   nonce: 4n,
   asset: 10n,
   value: 75n,
