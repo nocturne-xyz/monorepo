@@ -274,11 +274,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // check all values
         vm.expectEmit(true, true, false, true);
-        emit JoinSplit(joinSplitTx.nullifierA,
-                       joinSplitTx.nullifierB,
-                       16, // newNoteAIndex
-                       17, // newNoteBIndex
-                       joinSplitTx);
+        emit JoinSplit(
+            joinSplitTx.nullifierA,
+            joinSplitTx.nullifierB,
+            16, // newNoteAIndex
+            17, // newNoteBIndex
+            joinSplitTx
+        );
 
         wallet.processBundle(bundle);
 
