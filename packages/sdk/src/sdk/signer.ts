@@ -10,7 +10,6 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, decompressPoint, mod_p } from "../sdk/utils";
-// import { SNARK_SCALAR_FIELD } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;

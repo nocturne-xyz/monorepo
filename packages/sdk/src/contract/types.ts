@@ -51,7 +51,6 @@ export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
 }
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
-  opDigest: bigint;
   proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 }
 

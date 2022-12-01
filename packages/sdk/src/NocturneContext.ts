@@ -162,6 +162,7 @@ export class NocturneContext {
     joinSplitZkeyPath: string
   ): Promise<ProvenJoinSplitTx> {
     const {
+      opDigest,
       proofInputs,
       ...baseJoinSplitTx
     } = preProofJoinSplitTx;
@@ -182,7 +183,7 @@ export class NocturneContext {
       (baseJoinSplitTx.nullifierB != publicSignals.nullifierB) ||
       (BigInt(baseJoinSplitTx.asset) != publicSignals.asset) ||
       (baseJoinSplitTx.id != publicSignals.id) ||
-      (baseJoinSplitTx.opDigest != publicSignals.opDigest)
+      (opDigest != publicSignals.opDigest)
     ) {
       throw new Error( `SnarkJS generated public input differs from precomputed ones.`);
     }
@@ -300,7 +301,14 @@ export class NocturneContext {
       let refundVal = totalVal - assetRequest.value;
       if (notesToUse.length % 2 == 1) {
           const newAddr = this.signer.privkey.toCanonAddressStruct();
-          notesToUse.push(IncludedNote.newDummy(newAddr, notesToUse[0].asset, notesToUse[0].id));
+          notesToUse.push(new IncludedNote({
+            owner: newAddr,
+            nonce: 0n,
+            asset: notesToUse[0].asset,
+            id: notesToUse[0].id,
+            value: 0n,
+            merkleIndex: 0,
+          }));
       }
       for (var i = 0; i < notesToUse.length / 2; i++) {
         let val = 0n;

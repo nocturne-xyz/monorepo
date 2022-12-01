@@ -34,7 +34,6 @@ interface IWallet {
         uint256 encappedKeyB;
         uint256[2] encryptedNoteB;
         uint256[8] proof;
-        uint256 opDigest;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
         uint256 publicSpend;

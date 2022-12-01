@@ -234,7 +234,6 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 encappedKeyB: uint256(111),
                 encryptedNoteB: [uint256(111), uint256(111)],
                 proof: dummyProof(),
-                opDigest: uint256(321),
                 asset: address(token),
                 id: ERC20_ID,
                 publicSpend: uint256(50)

@@ -7,8 +7,8 @@ import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
-import JSON from "json-bigint";
 import { NoteInput } from "../proof";
+import JSON from "json-bigint";
 
 interface NoteStruct {
   owner: NocturneAddressStruct;
@@ -26,20 +26,6 @@ export class Note {
 
   constructor(note: NoteStruct) {
     this.inner = note;
-  }
-
-  static newDummy(
-    owner: NocturneAddressStruct,
-    asset: Address,
-    id: bigint): Note
-    {
-      return new Note({
-        owner,
-        nonce: 0n,
-        asset,
-        id,
-        value: 0n,
-      });
   }
 
   get owner(): NocturneAddressStruct {
@@ -134,21 +120,6 @@ export class IncludedNote extends Note {
     const { owner, nonce, asset, id, value } = includedNote;
     super({ owner, nonce, asset, id, value });
     this.merkleIndex = includedNote.merkleIndex;
-  }
-
-  static newDummy(
-    owner: NocturneAddressStruct,
-    asset: Address,
-    id: bigint): IncludedNote
-    {
-      return new IncludedNote({
-        owner,
-        nonce: 0n,
-        asset,
-        id,
-        value: 0n,
-        merkleIndex: 0
-      });
   }
 
   toStruct(): IncludedNoteStruct {

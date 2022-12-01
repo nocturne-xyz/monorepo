@@ -11,8 +11,6 @@ export interface NocturneAddressStruct {
   h2Y: bigint;
 }
 
-export type NocturneAddressArray = [bigint, bigint, bigint, bigint];
-
 export function flattenedNocturneAddressToArrayForm(
   flattened: NocturneAddressStruct
 ): ArrayNocturneAddress {
