@@ -3,9 +3,9 @@ import { BaseContract, EventFilter } from "ethers";
 import { randomBytes, Result } from "ethers/lib/utils";
 import { babyjub, poseidon } from "circomlibjs";
 import { NoteTransmission, SNARK_SCALAR_FIELD } from "../commonTypes";
-import {Scalar} from "ffjavascript";
-import {CanonAddress, NocturneAddress} from "../crypto";
-import {Note} from "./note";
+import { Scalar } from "ffjavascript";
+import { CanonAddress, NocturneAddress } from "../crypto";
+import { Note } from "./note";
 
 const CHUNK_SIZE = 2000;
 
@@ -127,9 +127,7 @@ export function genNoteTransmission(
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
   const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-  const encryptedNonce = mod_p(
-    BigInt(poseidon([encodePoint(R)])) + note.nonce
-  );
+  const encryptedNonce = mod_p(BigInt(poseidon([encodePoint(R)])) + note.nonce);
   const encryptedValue = mod_p(
     BigInt(poseidon([encodePoint(R) + 1n])) + note.value
   );
