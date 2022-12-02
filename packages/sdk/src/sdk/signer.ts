@@ -9,7 +9,7 @@ import {
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
-import { egcd, encodePoint, decodePoint, mod_p } from "./utils";
+import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
 import { Address, NoteTransmission } from "../commonTypes";
 
 export interface NocturneSignature {

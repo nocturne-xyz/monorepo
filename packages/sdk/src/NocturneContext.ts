@@ -22,7 +22,7 @@ import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { genNoteTransmission } from "./sdk/utils";
+import { genNoteTransmission } from "./crypto/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
