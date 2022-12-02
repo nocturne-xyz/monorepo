@@ -7,8 +7,6 @@ import { MerkleProofInput } from "./proof";
 import {
   IncludedNote,
   Note,
-  EncappedKey,
-  EncryptedNote,
 } from "./sdk/note";
 import JSON from "json-bigint";
 
@@ -80,21 +78,24 @@ export function operationRequestFromJSON(
   };
 }
 
+export interface NoteTransmission {
+  owner: NocturneAddressStruct;
+  encappedKey: bigint;
+  encryptedNonce: bigint;
+  encryptedValue: bigint;
+}
+
 export interface BaseJoinSplitTx {
   commitmentTreeRoot: bigint;
   nullifierA: bigint;
   nullifierB: bigint;
   newNoteACommitment: bigint;
-  newNoteAOwner: NocturneAddressStruct;
-  encappedKeyA: EncappedKey;
-  encryptedNoteA: EncryptedNote;
   newNoteBCommitment: bigint;
-  newNoteBOwner: NocturneAddressStruct;
-  encappedKeyB: EncappedKey;
-  encryptedNoteB: EncryptedNote;
   asset: Address;
   id: bigint;
   publicSpend: bigint;
+  newNoteATransmission: NoteTransmission;
+  newNoteBTransmission: NoteTransmission;
 }
 
 export interface PreSignJoinSplitTx extends BaseJoinSplitTx {

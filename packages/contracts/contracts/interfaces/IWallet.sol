@@ -21,22 +21,25 @@ interface IWallet {
         uint256 h2X;
     }
 
+    struct NoteTransmission {
+        NocturneAddress owner;
+        uint256 encappedKey;
+        uint256 encryptedNonce;
+        uint256 encryptedValue;
+    }
+
     struct JoinSplitTransaction {
         uint256 commitmentTreeRoot;
         uint256 nullifierA;
         uint256 nullifierB;
         uint256 newNoteACommitment;
-        NocturneAddress newNoteAOwner;
-        uint256 encappedKeyA;
-        uint256[2] encryptedNoteA;
         uint256 newNoteBCommitment;
-        NocturneAddress newNoteBOwner;
-        uint256 encappedKeyB;
-        uint256[2] encryptedNoteB;
         uint256[8] proof;
         address asset;
         uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
         uint256 publicSpend;
+        NoteTransmission newNoteATransmission;
+        NoteTransmission newNoteBTransmission;
     }
 
     struct Note {

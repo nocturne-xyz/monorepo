@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note, EncappedKey, EncryptedNote } from "./note";
+import { Note  } from "./note";
 import {
   NocturneAddressStruct,
   flattenedNocturneAddressToArrayForm,
@@ -76,6 +76,7 @@ export class NocturneSigner {
 
   /**
    * Encrypt a note to a list of target addresses.
+   * TODO: this is non privkey dependent, maybe move out of signer?
    *
    * @param targets: list of canonical NocturnAddress
    * @param note: note to encrypt
@@ -87,20 +88,20 @@ export class NocturneSigner {
   encryptNote(
     targets: CanonAddress[],
     note: Note
-  ): [bigint, EncappedKey[], EncryptedNote] {
+  ): [bigint, bigint[], bigint, bigint] {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const encryptedNote: EncryptedNote = [
-     mod_p(BigInt(poseidon([encodePoint(R)])) + note.nonce),
-     mod_p(BigInt(poseidon([encodePoint(R) + 1n])) + note.value),
-    ];
-
-    const encappedKeys: EncappedKey[] = targets.map((addr) => {
-      const p = babyjub.mulPointEscalar(addr, r);
-      return p[0];
+    const encryptedNonce = mod_p(
+      BigInt(poseidon([encodePoint(R)])) + note.nonce
+    );
+    const encryptedValue = mod_p(
+      BigInt(poseidon([encodePoint(R) + 1n])) + note.value
+    );
+    const encappedKeys: bigint[] = targets.map((addr) => {
+      return encodePoint(babyjub.mulPointEscalar(addr, r));
     });
-    return [BigInt(r), encappedKeys, encryptedNote];
+    return [BigInt(r), encappedKeys, encryptedNonce, encryptedValue];
   }
 
   /**
@@ -109,13 +110,15 @@ export class NocturneSigner {
    * nonce and value.
    *
    * @param encappedKey: encapsulated key
-   * @param encryptedNote: note to decrypt
+   * @param encryptedNonce
+   * @param encryptedValue
    * @return nonce
    * @return value
    */
   decryptNote(
-    encappedKey: EncappedKey,
-    encryptedNote: EncryptedNote
+    encappedKey: bigint,
+    encryptedNonce: bigint,
+    encryptedValue: bigint
   ): [bigint, bigint] {
     let [vkInv,,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {
@@ -123,9 +126,8 @@ export class NocturneSigner {
     }
     const eR = decodePoint(encappedKey);
     const R = babyjub.mulPointEscalar(eR, vkInv);
-    const encodedR = encodePoint(R);
-    const nonce = mod_p(encryptedNote[0] - BigInt(poseidon([encodedR])));
-    const value = mod_p(encryptedNote[1] - BigInt(poseidon([encodedR + 1n])));
+    const nonce = mod_p(encryptedNonce - BigInt(poseidon([encodePoint(R)])));
+    const value = mod_p(encryptedValue - BigInt(poseidon([encodePoint(R) + 1n])));
     return [nonce, value];
   }
 

@@ -212,29 +212,39 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         uint256 root = wallet.root();
+        IWallet.NoteTransmission memory newNoteATransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
+        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
         IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
             .JoinSplitTransaction({
                 commitmentTreeRoot: root,
                 nullifierA: uint256(182),
                 nullifierB: uint256(183),
                 newNoteACommitment: uint256(1038),
-                newNoteAOwner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKeyA: uint256(111),
-                encryptedNoteA: [uint256(111), uint256(111)],
+                newNoteATransmission: newNoteATransmission,
                 newNoteBCommitment: uint256(1032),
-                newNoteBOwner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKeyB: uint256(111),
-                encryptedNoteB: [uint256(111), uint256(111)],
+                newNoteBTransmission: newNoteBTransmission,
                 proof: dummyProof(),
                 asset: address(token),
                 id: ERC20_ID,

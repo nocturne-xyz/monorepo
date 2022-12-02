@@ -2,12 +2,9 @@ import { NocturneDB } from "../db";
 import {
   IncludedNote,
   IncludedNoteStruct,
-  EncryptedNote,
-  EncappedKey,
 } from "../note";
 import { NocturneSigner } from "../signer";
-import { NocturneAddressStruct } from "../../crypto/address";
-import { Address, BaseJoinSplitTx } from "../../commonTypes";
+import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -58,9 +55,7 @@ export abstract class NotesManager {
 
       this.processNewEncryptedNote(
         e.joinSplitTx.newNoteACommitment,
-        e.joinSplitTx.newNoteAOwner,
-        e.joinSplitTx.encappedKeyA,
-        e.joinSplitTx.encryptedNoteA,
+        e.joinSplitTx.newNoteATransmission,
         e.newNoteAIndex,
         e.joinSplitTx.asset,
         e.joinSplitTx.id,
@@ -68,9 +63,7 @@ export abstract class NotesManager {
 
       this.processNewEncryptedNote(
         e.joinSplitTx.newNoteBCommitment,
-        e.joinSplitTx.newNoteBOwner,
-        e.joinSplitTx.encappedKeyB,
-        e.joinSplitTx.encryptedNoteB,
+        e.joinSplitTx.newNoteBTransmission,
         e.newNoteBIndex,
         e.joinSplitTx.asset,
         e.joinSplitTx.id,
@@ -80,17 +73,16 @@ export abstract class NotesManager {
 
   private async processNewEncryptedNote(
     newNoteCommitment: bigint,
-    owner: NocturneAddressStruct,
-    encappedKey: EncappedKey,
-    encryptedNote: EncryptedNote,
+    newNoteTransmission: NoteTransmission,
     newNoteIndex: number,
     asset: Address,
     id: bigint
   ): Promise<void> {
-    if (this.signer.testOwn(owner)) {
+    if (this.signer.testOwn(newNoteTransmission.owner)) {
       const [nonce, value] = this.signer.decryptNote(
-        encappedKey,
-        encryptedNote
+        newNoteTransmission.encappedKey,
+        newNoteTransmission.encryptedNonce,
+        newNoteTransmission.encryptedValue
       );
       const newNote = {
         owner: this.signer.privkey.toCanonAddressStruct(),

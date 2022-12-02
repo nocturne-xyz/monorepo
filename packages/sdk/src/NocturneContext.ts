@@ -3,6 +3,7 @@ import {
   SpendAndRefundTokens,
 } from "./contract/types";
 import {
+  NoteTransmission,
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
   ProvenJoinSplitTx,
@@ -12,7 +13,7 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddressStruct, NocturneAddress } from "./crypto/address";
+import { CanonAddress, NocturneAddressStruct, NocturneAddress } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -24,7 +25,6 @@ import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { poseidon } from "circomlibjs";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -215,22 +215,26 @@ export class NocturneContext {
     const newNoteBOwner = newNoteAOwner;
     const newNoteA = new Note({
       owner: newNoteAOwner,
-      nonce: poseidon([this.signer.privkey.vk, nullifierA]),
+      nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue,
     });
-    const [,[encappedKeyA], encryptedNoteA] = this.signer.encryptNote([this.signer.canonAddress], newNoteA);
     const newNoteB = new Note({
       owner: newNoteBOwner,
-      nonce: poseidon([this.signer.privkey.vk, nullifierB]),
+      nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: 0n,
     });
-    const [,[encappedKeyB], encryptedNoteB] = this.signer.encryptNote([this.signer.canonAddress], newNoteB);
     const newNoteACommitment = newNoteA.toCommitment();
     const newNoteBCommitment = newNoteB.toCommitment();
+    const newNoteATransmission = this.genNoteTransmission(
+      this.signer.privkey.toCanonAddress(), newNoteA
+    );
+    const newNoteBTransmission = this.genNoteTransmission(
+      this.signer.privkey.toCanonAddress(), newNoteB
+    );
     const publicSpend = oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
 
     const merkleProofA = await this.merkleProver.getProof(oldNoteA.merkleIndex);
@@ -247,6 +251,9 @@ export class NocturneContext {
         path: merkleProofB.pathIndices.map((n) => BigInt(n)),
         siblings: merkleProofB.siblings,
       };
+      if (merkleProofB.root != merkleProofB.root) {
+        throw Error("Commitment merkle tree was updated during joinsplit creation.");
+      }
     } else { // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
@@ -256,13 +263,9 @@ export class NocturneContext {
       nullifierA,
       nullifierB,
       newNoteACommitment,
-      newNoteAOwner,
-      encappedKeyA,
-      encryptedNoteA,
+      newNoteATransmission,
       newNoteBCommitment,
-      newNoteBOwner,
-      encappedKeyB,
-      encryptedNoteB,
+      newNoteBTransmission,
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       publicSpend,
@@ -294,8 +297,10 @@ export class NocturneContext {
     // For each asset request, gather necessary notes
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
     for (const assetRequest of assetRequests) {
-      const [notesToUse, totalVal] = await this.gatherMinimumNotes(assetRequest);
+      let notesToUse = await this.gatherMinimumNotes(assetRequest);
+      const totalVal = notesToUse.reduce((s, note) => {return note.value}, 0n);
       let refundVal = totalVal - assetRequest.value;
+      // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
           const newAddr = this.signer.privkey.toCanonAddressStruct();
           notesToUse.push(new IncludedNote({
@@ -307,17 +312,16 @@ export class NocturneContext {
             merkleIndex: 0,
           }));
       }
-      for (let i = 0; i < notesToUse.length / 2; i++) {
+      let noteA, noteB;
+      while (notesToUse.length > 0) {
+        ([noteA, noteB, ...notesToUse] = notesToUse);
         let val = 0n;
-        if (notesToUse[i].value + notesToUse[i].value > refundVal) {
+        // add in the refund value if noteA and noteB spend enough
+        if (noteA.value + noteB.value > refundVal) {
           val = refundVal;
           refundVal = 0n;
         }
-        preSignJoinSplitTxs.push(this.genPreSignJoinSplitTx(
-          notesToUse[i],
-          notesToUse[i+1],
-          val
-        ));
+        preSignJoinSplitTxs.push(this.genPreSignJoinSplitTx(noteA, noteB, val));
       }
     }
     return {
@@ -380,11 +384,10 @@ export class NocturneContext {
    *
    * @param assetRequest Asset request
    * @return a list of included notes to spend the total value.
-   * @return the total value of the returned notes.
    */
   async gatherMinimumNotes(
     assetRequest: AssetRequest
-  ): Promise<[IncludedNote[], bigint]> {
+  ): Promise<IncludedNote[]> {
     const balance = await this.getAssetBalance(assetRequest.asset);
     if (balance < assetRequest.value) {
       throw new Error(
@@ -405,7 +408,21 @@ export class NocturneContext {
       totalSpend += oldNote.value;
     }
 
-    return [notesToUse, totalSpend];
+    return notesToUse;
+  }
+
+  /**
+   * Generate a note to be transmission given a note
+   */
+  protected genNoteTransmission(addr: CanonAddress, note: Note): NoteTransmission {
+    const [,[encappedKey], encryptedNonce, encryptedValue] =
+      this.signer.encryptNote([addr], note);
+    return {
+      owner: (new NocturneAddress(note.owner)).rerand().toStruct(),
+      encappedKey,
+      encryptedNonce,
+      encryptedValue,
+    }
   }
 
   /**

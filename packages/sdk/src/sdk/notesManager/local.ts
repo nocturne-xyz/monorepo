@@ -9,7 +9,7 @@ import {
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { NotesManager, JoinSplitEvent } from ".";
 import { NocturneSigner } from "../signer";
-import { IncludedNoteStruct, EncryptedNote } from "../note";
+import { IncludedNoteStruct } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
@@ -107,6 +107,7 @@ export class LocalNotesManager extends NotesManager {
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
+    // TODO figure out how to do type conversion better
     const newJoinSplits = events.map((event) => {
       const {
         oldNoteANullifier,
@@ -120,39 +121,44 @@ export class LocalNotesManager extends NotesManager {
         nullifierA,
         nullifierB,
         newNoteACommitment,
-        newNoteAOwner,
-        encappedKeyA,
-        encryptedNoteA,
+        newNoteATransmission,
         newNoteBCommitment,
-        newNoteBOwner,
-        encappedKeyB,
-        encryptedNoteB,
+        newNoteBTransmission,
         asset,
         id,
         publicSpend,
       } = joinSplitTx;
-      let { h1X, h1Y, h2X, h2Y } = newNoteAOwner;
-      const newNoteAOwnerBigInt = {
+      let {
+        owner,
+        encappedKey,
+        encryptedNonce,
+        encryptedValue,
+      } = newNoteATransmission;
+      let { h1X, h1Y, h2X, h2Y } = owner;
+      const newNoteAOwner = {
         h1X: h1X.toBigInt(),
         h1Y: h1Y.toBigInt(),
         h2X: h2X.toBigInt(),
         h2Y: h2Y.toBigInt(),
       };
-      ({ h1X, h1Y, h2X, h2Y } = newNoteBOwner);
-      const newNoteBOwnerBigInt = {
+      const encappedKeyA = encappedKey.toBigInt();
+      const encryptedNonceA = encryptedNonce.toBigInt();
+      const encryptedValueA = encryptedValue.toBigInt();
+      ({owner,
+        encappedKey,
+        encryptedNonce,
+        encryptedValue,
+      } = newNoteBTransmission);
+      ({ h1X, h1Y, h2X, h2Y } = owner);
+      const newNoteBOwner = {
         h1X: h1X.toBigInt(),
         h1Y: h1Y.toBigInt(),
         h2X: h2X.toBigInt(),
         h2Y: h2Y.toBigInt(),
       };
-      const encryptedNoteABigInt: EncryptedNote = [
-        encryptedNoteA[0].toBigInt(),
-        encryptedNoteA[1].toBigInt(),
-      ];
-      const encryptedNoteBBigInt: EncryptedNote = [
-        encryptedNoteB[0].toBigInt(),
-        encryptedNoteB[1].toBigInt(),
-      ];
+      const encappedKeyB = encappedKey.toBigInt();
+      const encryptedNonceB = encryptedNonce.toBigInt();
+      const encryptedValueB = encryptedValue.toBigInt();
       return {
         oldNoteANullifier: oldNoteANullifier.toBigInt(),
         oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
@@ -163,13 +169,19 @@ export class LocalNotesManager extends NotesManager {
           nullifierA: nullifierA.toBigInt(),
           nullifierB: nullifierB.toBigInt(),
           newNoteACommitment: newNoteACommitment.toBigInt(),
-          newNoteAOwner: newNoteAOwnerBigInt,
-          encappedKeyA: encappedKeyA.toBigInt(),
-          encryptedNoteA: encryptedNoteABigInt,
+          newNoteATransmission: {
+            owner: newNoteAOwner,
+            encappedKey: encappedKeyA,
+            encryptedNonce: encryptedNonceA,
+            encryptedValue: encryptedValueA,
+          },
           newNoteBCommitment: newNoteBCommitment.toBigInt(),
-          newNoteBOwner: newNoteBOwnerBigInt,
-          encappedKeyB: encappedKeyB.toBigInt(),
-          encryptedNoteB: encryptedNoteBBigInt,
+          newNoteBTransmission: {
+            owner: newNoteBOwner,
+            encappedKey: encappedKeyB,
+            encryptedNonce: encryptedNonceB,
+            encryptedValue: encryptedValueB,
+          },
           asset,
           id: id.toBigInt(),
           publicSpend: publicSpend.toBigInt(),
