@@ -210,13 +210,14 @@ export class NocturneContext {
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
     refundValue: bigint,
-    outGoingValue = 0n,
-    receiverAddr?: NocturneAddress
+    outGoingValue = 0n // TODO: add back receiverAddr for confidential payments
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
+
     const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
     const newNoteBOwner = newNoteAOwner;
+
     const newNoteA = new Note({
       owner: newNoteAOwner,
       nonce: this.signer.generateNewNonce(nullifierA),
@@ -231,8 +232,10 @@ export class NocturneContext {
       id: oldNoteA.id,
       value: 0n,
     });
+
     const newNoteACommitment = newNoteA.toCommitment();
     const newNoteBCommitment = newNoteB.toCommitment();
+
     const newNoteATransmission = this.genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
       newNoteA

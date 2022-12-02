@@ -13,7 +13,7 @@
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
-    "lint": "solhint contracts/*.sol && yarn prettier",
+    "lint": "solhint contracts/*.sol",
     "lint:fix": "solhint --fix contracts/*.sol && yarn prettier --write",
     "prettier:check": "prettier --check ./contracts",
     "prettier:write": "prettier --write './contracts'",
