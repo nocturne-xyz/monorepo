@@ -14,7 +14,6 @@ import {
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
-import { rerandNocturneAddress } from "../src/crypto";
 
 describe("NocturneContext", () => {
   let db = new LocalObjectDB({ localMerkle: true });
@@ -121,7 +120,7 @@ describe("NocturneContext", () => {
     };
     const minimumFor5 = await nocturneContext.gatherMinimumNotes(assetRequest5);
     expect(minimumFor5.length).to.equal(1);
-    expect(minimumFor5[0].oldNote.value).to.equal(10n);
+    expect(minimumFor5[0].value).to.equal(10n);
 
     // Request 80 tokens, consume next smallest two notes
     const assetRequest80: AssetRequest = {
@@ -133,8 +132,8 @@ describe("NocturneContext", () => {
     );
 
     expect(minimumFor80.length).to.equal(3);
-    expect(minimumFor80[2].oldNote.value).to.equal(50n);
-    expect(minimumFor80[1].oldNote.value).to.equal(25n);
-    expect(minimumFor80[0].oldNote.value).to.equal(10n);
+    expect(minimumFor80[2].value).to.equal(50n);
+    expect(minimumFor80[1].value).to.equal(25n);
+    expect(minimumFor80[0].value).to.equal(10n);
   });
 });

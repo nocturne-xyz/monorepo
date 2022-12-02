@@ -1,7 +1,11 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { NocturneAddress, CanonAddress, nocturneAddressFromArrayForm } from "./address";
+import {
+  NocturneAddress,
+  CanonAddress,
+  nocturneAddressFromArrayForm,
+} from "./address";
 
 // TODO: rewrite Babyjub library to have constant time crypto
 export class NocturnePrivKey {
@@ -27,7 +31,7 @@ export class NocturnePrivKey {
     return addr;
   }
 
-  toCanonAddressStruct(): NocturneAddressStruct {
+  toCanonAddressStruct(): NocturneAddress {
     const canonAddr = this.toCanonAddress();
     return {
       h1X: babyjub.Base8[0],

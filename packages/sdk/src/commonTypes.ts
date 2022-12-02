@@ -2,8 +2,8 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddressStruct } from "./crypto/address";
-import { MerkleProofInput } from "./proof";
+import { NocturneAddress } from "./crypto/address";
+import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 import JSON from "json-bigint";
 
@@ -75,8 +75,32 @@ export function operationRequestFromJSON(
   };
 }
 
+export type SolidityProof = [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+];
+
+export function packToSolidityProof(proof: BaseProof): SolidityProof {
+  return [
+    proof.pi_a[0],
+    proof.pi_a[1],
+    proof.pi_b[0][1],
+    proof.pi_b[0][0],
+    proof.pi_b[1][1],
+    proof.pi_b[1][0],
+    proof.pi_c[0],
+    proof.pi_c[1],
+  ];
+}
+
 export interface NoteTransmission {
-  owner: NocturneAddressStruct;
+  owner: NocturneAddress;
   encappedKey: bigint;
   encryptedNonce: bigint;
   encryptedValue: bigint;
@@ -110,12 +134,12 @@ export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
 }
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
-  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+  proof: SolidityProof;
 }
 
 export interface PreSignOperation {
   joinSplitTxs: PreSignJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -123,7 +147,7 @@ export interface PreSignOperation {
 
 export interface PreProofOperation {
   joinSplitTxs: PreProofJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -131,7 +155,7 @@ export interface PreProofOperation {
 
 export interface ProvenOperation {
   joinSplitTxs: ProvenJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;

@@ -1,4 +1,9 @@
-import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
+import {
+  AssetRequest,
+  AssetStruct,
+  OperationRequest,
+  packToSolidityProof,
+} from "./commonTypes";
 import { SpendAndRefundTokens } from "./contract/types";
 import {
   PreSignJoinSplitTx,
@@ -8,7 +13,12 @@ import {
   PreProofOperation,
   ProvenOperation,
 } from "./commonTypes";
-import { Note, IncludedNote } from "./sdk/note";
+import {
+  Note,
+  IncludedNote,
+  noteToCommitment,
+  noteToNoteInput,
+} from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { NocturneAddress, rerandNocturneAddress } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
@@ -17,7 +27,6 @@ import {
   JoinSplitInputs,
   joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
-import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
@@ -81,7 +90,7 @@ export class NocturneContext {
     operationRequest: OperationRequest,
     joinSplitWasmPath: string,
     joinSplitZkeyPath: string,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const preProofOp: PreProofOperation = await this.tryGetPreProofOperation(
@@ -105,7 +114,7 @@ export class NocturneContext {
   }
 
   /**
-   */
+   *
    * Given `operationRequest`, gather the necessary notes and proof inputs to
    * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
@@ -114,6 +123,7 @@ export class NocturneContext {
    * @param refundAddr Optional refund address. Context will generate
    * rerandomized address if left empty
    * @param gasLimit Gas limit
+   */
   async tryGetPreProofOperation(
     operationRequest: OperationRequest,
     refundAddr?: NocturneAddress,
@@ -149,6 +159,15 @@ export class NocturneContext {
       })
     );
 
+    return {
+      joinSplitTxs: preProofJoinSplitTxs,
+      refundAddr: preSignOperation.refundAddr,
+      tokens: preSignOperation.tokens,
+      actions: preSignOperation.actions,
+      gasLimit: preSignOperation.gasLimit,
+    };
+  }
+
   /**
    * Ensure user has balances to fullfill all asset requests in
    * `operationRequest`. Throws error if any asset request exceeds owned balance.
@@ -161,45 +180,6 @@ export class NocturneContext {
     for (const assetRequest of assetRequests) {
       await this.ensureMinimumForAssetRequest(assetRequest);
     }
-  }
-
-  /**
-   * Create a `ProvenSpendTx` given the `oldNote`, resulting
-   * `newNote`, and operation to use for the `operationDigest`
-   *
-   * @param oldNewNotePair Old `IncludedNote` and its resulting `newNote`
-   * post-spend
-   * @param preProofOperation Operation included when generating a proof
-   */
-  protected async generateProvenSpendTxFor(
-    { oldNewNotePair, preProofOperation }: PreProofSpendTxInputs,
-    spend2WasmPath: string,
-    spend2ZkeyPath: string
-  ): Promise<ProvenSpendTx> {
-    const { oldNote, newNote } = oldNewNotePair;
-    const nullifier = this.signer.createNullifier(oldNote);
-    const newNoteCommitment = noteToCommitment(newNote);
-
-    const inputs = await this.getProofInputsFor({
-      oldNewNotePair,
-      preProofOperation,
-    });
-
-    const proof = await this.prover.proveSpend2(
-      inputs,
-      spend2WasmPath,
-      spend2ZkeyPath
-    );
-
-    const publicSignals = spend2PublicSignalsArrayToTyped(proof.publicSignals);
-    const solidityProof = packToSolidityProof(proof.proof);
-    return {
-      joinSplitTxs: preProofJoinSplitTxs,
-      refundAddr: preSignOperation.refundAddr,
-      tokens: preSignOperation.tokens,
-      actions: preSignOperation.actions,
-      gasLimit: preSignOperation.gasLimit,
-    };
   }
 
   /**
@@ -264,23 +244,23 @@ export class NocturneContext {
     const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
     const newNoteBOwner = newNoteAOwner;
 
-    const newNoteA = new Note({
+    const newNoteA: Note = {
       owner: newNoteAOwner,
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue,
-    });
-    const newNoteB = new Note({
+    };
+    const newNoteB: Note = {
       owner: newNoteBOwner,
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: 0n,
-    });
+    };
 
-    const newNoteACommitment = newNoteA.toCommitment();
-    const newNoteBCommitment = newNoteB.toCommitment();
+    const newNoteACommitment = noteToCommitment(newNoteA);
+    const newNoteBCommitment = noteToCommitment(newNoteB);
 
     const newNoteATransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
@@ -366,16 +346,14 @@ export class NocturneContext {
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
         const newAddr = this.signer.privkey.toCanonAddressStruct();
-        notesToUse.push(
-          new IncludedNote({
-            owner: newAddr,
-            nonce: 0n,
-            asset: notesToUse[0].asset,
-            id: notesToUse[0].id,
-            value: 0n,
-            merkleIndex: 0,
-          })
-        );
+        notesToUse.push({
+          owner: newAddr,
+          nonce: 0n,
+          asset: notesToUse[0].asset,
+          id: notesToUse[0].id,
+          value: 0n,
+          merkleIndex: 0,
+        });
       }
       let noteA, noteB;
       while (notesToUse.length > 0) {
@@ -427,12 +405,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: oldNoteA.toNoteInput(),
-      oldNoteB: oldNoteB.toNoteInput(),
+      oldNoteA: noteToNoteInput(oldNoteA),
+      oldNoteB: noteToNoteInput(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: newNoteA.toNoteInput(),
-      newNoteB: newNoteB.toNoteInput(),
+      newNoteA: noteToNoteInput(newNoteA),
+      newNoteB: noteToNoteInput(newNoteB),
     };
 
     return {
@@ -486,7 +464,7 @@ export class NocturneContext {
     let totalSpend = 0n;
     while (totalSpend < assetRequest.value) {
       const oldNote = sortedNotes.shift()!;
-      notesToUse.push(new IncludedNote(oldNote));
+      notesToUse.push(oldNote);
       totalSpend += oldNote.value;
     }
 

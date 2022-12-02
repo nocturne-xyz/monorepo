@@ -1,4 +1,4 @@
-import { Address } from "../commonTypes";
+import { Address, ProvenOperation } from "../commonTypes";
 import { NocturneAddress } from "../crypto/address";
 
 export interface SpendAndRefundTokens {

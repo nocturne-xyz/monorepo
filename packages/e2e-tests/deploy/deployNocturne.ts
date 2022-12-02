@@ -16,7 +16,7 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { spend2Prover as prover } from "@nocturne-xyz/local-prover";
+import { joinSplitProver as prover } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";

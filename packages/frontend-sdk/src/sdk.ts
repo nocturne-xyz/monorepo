@@ -2,14 +2,13 @@ import {
   OperationRequest,
   packToSolidityProof,
   ProvenOperation,
-  ProvenSpendTx,
-  spend2PublicSignalsArrayToTyped,
-  SpendAndRefundTokens,
+  ProvenJoinSplitTx,
   toJSON,
+  PreProofOperation,
+  SpendAndRefundTokens,
 } from "@nocturne-xyz/sdk";
-import { PreProofSpendTxInputsAndProofInputs } from "@nocturne-xyz/sdk/dist/src/NocturneContext";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
-import { spend2Prover } from "@nocturne-xyz/local-prover";
+import { joinSplitProver } from "@nocturne-xyz/local-prover";
 
 export class NocturneFrontendSDK {
   protected async generateProvenOperation(
@@ -18,30 +17,25 @@ export class NocturneFrontendSDK {
     wasmPath: string,
     zkeyPath: string
   ): Promise<ProvenOperation> {
-    const spendInputs = await this.getSpendInputsFromSnap(operationRequest);
-
-    const provenSpendTxPromises: Promise<ProvenSpendTx>[] = spendInputs.map(
-      async ({ preProofSpendTxInputs, proofInputs }) => {
-        const { proof, publicSignals } = await spend2Prover.proveSpend2(
-          proofInputs,
-          wasmPath,
-          zkeyPath
-        );
-
-        const { anchor, nullifier, newNoteCommitment, valueToSpend, id } =
-          spend2PublicSignalsArrayToTyped(publicSignals);
-
-        return {
-          commitmentTreeRoot: anchor,
-          nullifier,
-          newNoteCommitment,
-          proof: packToSolidityProof(proof),
-          asset: preProofSpendTxInputs.oldNewNotePair.oldNote.asset,
-          valueToSpend,
-          id,
-        };
-      }
+    const joinSplitInputs = await this.getJoinSplitInputsFromSnap(
+      operationRequest
     );
+
+    const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
+      joinSplitInputs.joinSplitTxs.map(
+        async ({ proofInputs, ...joinSplitTx }) => {
+          const { proof } = await joinSplitProver.proveJoinSplit(
+            proofInputs,
+            wasmPath,
+            zkeyPath
+          );
+
+          return {
+            proof: packToSolidityProof(proof),
+            ...joinSplitTx,
+          };
+        }
+      );
 
     const { assetRequests, refundTokens, actions } = operationRequest;
     const tokens: SpendAndRefundTokens = {
@@ -49,9 +43,9 @@ export class NocturneFrontendSDK {
       refundTokens,
     };
 
-    const spendTxs = await Promise.all(provenSpendTxPromises);
+    const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
     return {
-      spendTxs,
+      joinSplitTxs,
       refundAddr: {
         h1X: 0n,
         h1Y: 0n,
@@ -64,19 +58,19 @@ export class NocturneFrontendSDK {
     };
   }
 
-  protected async getSpendInputsFromSnap(
+  protected async getJoinSplitInputsFromSnap(
     operationRequest: OperationRequest
-  ): Promise<PreProofSpendTxInputsAndProofInputs[]> {
+  ): Promise<PreProofOperation> {
     return (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
         DEFAULT_SNAP_ORIGIN,
         {
-          method: "nocturne_getSpendInputs",
+          method: "nocturne_getJoinSplitInputs",
           params: { operationRequest: toJSON(operationRequest) },
         },
       ],
-    })) as PreProofSpendTxInputsAndProofInputs[];
+    })) as PreProofOperation;
   }
 
   // protected async getRandomizedAddr(): Promise<NocturneAddressStruct> {}

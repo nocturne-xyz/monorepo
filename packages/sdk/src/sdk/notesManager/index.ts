@@ -1,5 +1,5 @@
 import { NocturneDB } from "../db";
-import { IncludedNote } from "../note";
+import { IncludedNote, noteToCommitment } from "../note";
 import { NocturneSigner } from "../signer";
 import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
@@ -45,9 +45,7 @@ export abstract class NotesManager {
       // Delete nullified notes
       for (const oldNote of allNotes) {
         // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(
-          oldNote
-        );
+        const oldNullifier = this.signer.createNullifier(oldNote);
         if (
           oldNullifier == e.oldNoteANullifier ||
           oldNullifier == e.oldNoteBNullifier
@@ -90,7 +88,7 @@ export abstract class NotesManager {
       );
       if (
         newNote.value > 0n &&
-        new IncludedNote(newNote).toCommitment() == newNoteCommitment
+        noteToCommitment(newNote) == newNoteCommitment
       ) {
         await this.db.storeNote(newNote);
       }
