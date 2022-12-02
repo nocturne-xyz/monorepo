@@ -53,34 +53,34 @@ export abstract class NotesManager {
         }
       }
 
-      this.processNewEncryptedNote(
+      this.processNoteTransmission(
         e.joinSplitTx.newNoteACommitment,
         e.joinSplitTx.newNoteATransmission,
+        e.newNoteAIndex,
         e.joinSplitTx.asset,
         e.joinSplitTx.id,
-        e.newNoteAIndex,
       );
 
-      this.processNewEncryptedNote(
+      this.processNoteTransmission(
         e.joinSplitTx.newNoteBCommitment,
         e.joinSplitTx.newNoteBTransmission,
+        e.newNoteBIndex,
         e.joinSplitTx.asset,
         e.joinSplitTx.id,
-        e.newNoteBIndex,
       );
     }
   }
 
-  private async processNewEncryptedNote(
+  private async processNoteTransmission(
     newNoteCommitment: bigint,
     newNoteTransmission: NoteTransmission,
+    newNoteIndex: number,
     asset: Address,
     id: bigint,
-    newNoteIndex: number
   ): Promise<void> {
     if (this.signer.testOwn(newNoteTransmission.owner)) {
       const newNote =  this.signer.getNoteFromNoteTransmission(
-        newNoteTransmission, asset, id, newNoteIndex
+        newNoteTransmission, newNoteIndex, asset, id,
       );
       if ((newNote.value > 0n) &&
           (new IncludedNote(newNote)).toCommitment()

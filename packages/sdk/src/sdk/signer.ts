@@ -85,9 +85,9 @@ export class NocturneSigner {
    */
   getNoteFromNoteTransmission(
     noteTransmission: NoteTransmission,
+    merkleIndex: number,
     asset: Address,
     id: bigint,
-    merkleIndex: number,
   ): IncludedNoteStruct {
     let [vkInv,,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {

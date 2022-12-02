@@ -302,7 +302,7 @@ export class NocturneContext {
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
     for (const assetRequest of assetRequests) {
       let notesToUse = await this.gatherMinimumNotes(assetRequest);
-      const totalVal = notesToUse.reduce((s, note) => {return note.value}, 0n);
+      const totalVal = notesToUse.reduce((s, note) => {return note.value;}, 0n);
       let refundVal = totalVal - assetRequest.value;
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
@@ -416,7 +416,7 @@ export class NocturneContext {
   }
 
   /**
-   * Generate note transmission for an receiver canonical address and
+   * Generate note transmission for a receiver canonical address and
    * a note
    */
   protected genNoteTransmission(
@@ -437,7 +437,7 @@ export class NocturneContext {
       encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
       encryptedNonce,
       encryptedValue,
-    }
+    };
   }
 
   /**
