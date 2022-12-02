@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note  } from "./note";
+import { Note, IncludedNoteStruct  } from "./note";
 import {
   NocturneAddressStruct,
   flattenedNocturneAddressToArrayForm,
@@ -9,7 +9,8 @@ import {
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
-import { egcd, encodePoint, decodePoint, mod_p } from "../sdk/utils";
+import { egcd, encodePoint, decodePoint, mod_p } from "./utils";
+import { Address, NoteTransmission } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;
@@ -75,60 +76,31 @@ export class NocturneSigner {
   }
 
   /**
-   * Encrypt a note to a list of target addresses.
-   * TODO: this is non privkey dependent, maybe move out of signer?
+   * Obtain the note from a note transmission. Assumes that the signer owns the
+   * note transmission.
    *
-   * @param targets: list of canonical NocturnAddress
-   * @param note: note to encrypt
-   * @return r: encryption randomness
-   * @return encappedKeys: encapsulated keys, each is an encoded
-   * point, for each target
-   * @return encryptedNote: symetrically encrypted note
+   * @param noteTransmission
+   * @param asset, id, merkleIndex additional params from the joinsplit event
+   * @return note
    */
-  encryptNote(
-    targets: CanonAddress[],
-    note: Note
-  ): [bigint, bigint[], bigint, bigint] {
-    const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
-    const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const encryptedNonce = mod_p(
-      BigInt(poseidon([encodePoint(R)])) + note.nonce
-    );
-    const encryptedValue = mod_p(
-      BigInt(poseidon([encodePoint(R) + 1n])) + note.value
-    );
-    const encappedKeys: bigint[] = targets.map((addr) => {
-      return encodePoint(babyjub.mulPointEscalar(addr, r));
-    });
-    return [BigInt(r), encappedKeys, encryptedNonce, encryptedValue];
-  }
-
-  /**
-   * Decrypt an encrypted note, assuming that encappedKey is
-   * generated against the stored viewing key. Returns the decrypted
-   * nonce and value.
-   *
-   * @param encappedKey: encapsulated key
-   * @param encryptedNonce
-   * @param encryptedValue
-   * @return nonce
-   * @return value
-   */
-  decryptNote(
-    encappedKey: bigint,
-    encryptedNonce: bigint,
-    encryptedValue: bigint
-  ): [bigint, bigint] {
+  getNoteFromNoteTransmission(
+    noteTransmission: NoteTransmission,
+    asset: Address,
+    id: bigint,
+    merkleIndex: number,
+  ): IncludedNoteStruct {
     let [vkInv,,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {
       vkInv += babyjub.subOrder;
     }
-    const eR = decodePoint(encappedKey);
+    const eR = decodePoint(noteTransmission.encappedKey);
     const R = babyjub.mulPointEscalar(eR, vkInv);
-    const nonce = mod_p(encryptedNonce - BigInt(poseidon([encodePoint(R)])));
-    const value = mod_p(encryptedValue - BigInt(poseidon([encodePoint(R) + 1n])));
-    return [nonce, value];
+    const nonce = mod_p(noteTransmission.encryptedNonce - BigInt(poseidon([encodePoint(R)])));
+    const value = mod_p(noteTransmission.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n])));
+    return {
+      owner: this.privkey.toCanonAddressStruct(),
+      nonce, asset, id, value, merkleIndex,
+    };
   }
 
   testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {

@@ -25,6 +25,10 @@ import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
+import { babyjub, poseidon } from "circomlibjs";
+import { randomBytes } from "crypto";
+import { Scalar } from "ffjavascript";
+import { encodePoint, mod_p } from "./sdk/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -412,14 +416,25 @@ export class NocturneContext {
   }
 
   /**
-   * Generate a note to be transmission given a note
+   * Generate note transmission for an receiver canonical address and
+   * a note
    */
-  protected genNoteTransmission(addr: CanonAddress, note: Note): NoteTransmission {
-    const [,[encappedKey], encryptedNonce, encryptedValue] =
-      this.signer.encryptNote([addr], note);
+  protected genNoteTransmission(
+    addr: CanonAddress,
+    note: Note
+  ): NoteTransmission {
+    const r_buf = randomBytes(Math.floor(256 / 8));
+    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
+    const R = babyjub.mulPointEscalar(babyjub.Base8, r);
+    const encryptedNonce = mod_p(
+      BigInt(poseidon([encodePoint(R)])) + note.nonce
+    );
+    const encryptedValue = mod_p(
+      BigInt(poseidon([encodePoint(R) + 1n])) + note.value
+    );
     return {
       owner: (new NocturneAddress(note.owner)).rerand().toStruct(),
-      encappedKey,
+      encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
       encryptedNonce,
       encryptedValue,
     }
