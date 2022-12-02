@@ -1,7 +1,6 @@
 import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
 import { SpendAndRefundTokens } from "./contract/types";
 import {
-  NoteTransmission,
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
   ProvenJoinSplitTx,
@@ -11,11 +10,7 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import {
-  CanonAddress,
-  NocturneAddressStruct,
-  NocturneAddress,
-} from "./crypto/address";
+import { NocturneAddressStruct } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -27,10 +22,7 @@ import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { babyjub, poseidon } from "circomlibjs";
-import { randomBytes } from "crypto";
-import { Scalar } from "ffjavascript";
-import { encodePoint, mod_p } from "./sdk/utils";
+import { genNoteTransmission } from "./sdk/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -236,11 +228,11 @@ export class NocturneContext {
     const newNoteACommitment = newNoteA.toCommitment();
     const newNoteBCommitment = newNoteB.toCommitment();
 
-    const newNoteATransmission = this.genNoteTransmission(
+    const newNoteATransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
       newNoteA
     );
-    const newNoteBTransmission = this.genNoteTransmission(
+    const newNoteBTransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
       newNoteB
     );
@@ -263,7 +255,7 @@ export class NocturneContext {
         path: merkleProofB.pathIndices.map((n) => BigInt(n)),
         siblings: merkleProofB.siblings,
       };
-      if (merkleProofB.root != merkleProofB.root) {
+      if (merkleProofA.root != merkleProofB.root) {
         throw Error(
           "Commitment merkle tree was updated during joinsplit creation."
         );
@@ -314,7 +306,7 @@ export class NocturneContext {
     for (const assetRequest of assetRequests) {
       let notesToUse = await this.gatherMinimumNotes(assetRequest);
       const totalVal = notesToUse.reduce((s, note) => {
-        return note.value;
+        return s + note.value;
       }, 0n);
       let refundVal = totalVal - assetRequest.value;
       // Insert a dummy note if length of notes to use is odd
@@ -428,31 +420,6 @@ export class NocturneContext {
     }
 
     return notesToUse;
-  }
-
-  /**
-   * Generate note transmission for a receiver canonical address and
-   * a note
-   */
-  protected genNoteTransmission(
-    addr: CanonAddress,
-    note: Note
-  ): NoteTransmission {
-    const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
-    const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const encryptedNonce = mod_p(
-      BigInt(poseidon([encodePoint(R)])) + note.nonce
-    );
-    const encryptedValue = mod_p(
-      BigInt(poseidon([encodePoint(R) + 1n])) + note.value
-    );
-    return {
-      owner: new NocturneAddress(note.owner).rerand().toStruct(),
-      encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
-      encryptedNonce,
-      encryptedValue,
-    };
   }
 
   /**

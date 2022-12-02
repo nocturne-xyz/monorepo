@@ -89,6 +89,9 @@ export class NocturneSigner {
     asset: Address,
     id: bigint
   ): IncludedNoteStruct {
+    if (!this.testOwn(noteTransmission.owner)) {
+      throw Error("Cannot decrypt a note that is not owned by signer.");
+    }
     let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {
       vkInv += babyjub.subOrder;

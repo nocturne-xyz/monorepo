@@ -1,8 +1,11 @@
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, EventFilter } from "ethers";
-import { Result } from "ethers/lib/utils";
-import { babyjub } from "circomlibjs";
-import { SNARK_SCALAR_FIELD } from "../commonTypes";
+import { randomBytes, Result } from "ethers/lib/utils";
+import { babyjub, poseidon } from "circomlibjs";
+import { NoteTransmission, SNARK_SCALAR_FIELD } from "../commonTypes";
+import {Scalar} from "ffjavascript";
+import {CanonAddress, NocturneAddress} from "../crypto";
+import {Note} from "./note";
 
 const CHUNK_SIZE = 2000;
 
@@ -111,4 +114,29 @@ export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
     const [x, y, d] = egcd(b, a % b);
     return [y, x - y * (a / b), d];
   }
+}
+
+/**
+ * Generate note transmission for a receiver canonical address and
+ * a note
+ */
+export function genNoteTransmission(
+  addr: CanonAddress,
+  note: Note
+): NoteTransmission {
+  const r_buf = randomBytes(Math.floor(256 / 8));
+  const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
+  const R = babyjub.mulPointEscalar(babyjub.Base8, r);
+  const encryptedNonce = mod_p(
+    BigInt(poseidon([encodePoint(R)])) + note.nonce
+  );
+  const encryptedValue = mod_p(
+    BigInt(poseidon([encodePoint(R) + 1n])) + note.value
+  );
+  return {
+    owner: new NocturneAddress(note.owner).rerand().toStruct(),
+    encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
+    encryptedNonce,
+    encryptedValue,
+  };
 }
