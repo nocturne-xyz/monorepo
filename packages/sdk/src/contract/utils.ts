@@ -8,8 +8,7 @@ import {
 function hashOperation(op: PreSignOperation): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload = [] as any;
-  for (let i = 0; i < op.actions.length; i++) {
-    const action = op.actions[i];
+  for (const action of op.actions) {
     payload = ethers.utils.solidityPack(
       ["bytes", "address", "bytes32"],
       [
@@ -28,8 +27,7 @@ function hashOperation(op: PreSignOperation): string {
   );
 
   let joinSplitTxsHash = [] as any;
-  for (let i = 0; i < op.joinSplitTxs.length; i++) {
-    const tx = op.joinSplitTxs[i];
+  for (const tx of op.joinSplitTxs) {
     joinSplitTxsHash = ethers.utils.solidityPack(
       ["bytes", "bytes32"],
       [joinSplitTxsHash, hashJoinSplit(tx)]
