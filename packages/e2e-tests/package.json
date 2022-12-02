@@ -7,6 +7,8 @@
   "main": "index.js",
   "scripts": {
     "build": "",
+    "prettier:check": "prettier --check ./src ./deploy",
+    "prettier:write": "prettier --write ./test ./deploy",
     "hh-node": "npx hardhat node",
     "test:e2e": "npx hardhat test",
     "test:hh-node": "npx hardhat test --network localhost",
@@ -23,6 +25,7 @@
     "circomlibjs": "0.0.8",
     "find-yarn-workspace-root": "^2.0.0",
     "hardhat": "^2.12.0",
-    "hardhat-deploy": "^0.11.18"
+    "hardhat-deploy": "^0.11.18",
+    "prettier": "^2.8.0"
   }
 }

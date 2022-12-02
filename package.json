@@ -8,6 +8,8 @@
     "build": "yarn turbo run build",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "lint": "yarn turbo run lint",
+    "prettier:write": "yarn workspaces foreach run prettier:write --include @nocturne-xyz/circuits",
+    "prettier:check": "yarn workspaces foreach run prettier:check --include @nocturne-xyz/circuits",
     "local-prover:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @nocturne-xyz/local-prover",
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn local-prover:gen-test-cases",
     "test": "yarn turbo run test --filter=!@nocturne-xyz/circuits...",

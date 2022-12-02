@@ -1,4 +1,4 @@
-import { getLocalStorage, setLocalStorage } from './localStorage';
+import { getLocalStorage, setLocalStorage } from "./localStorage";
 
 /**
  * Get the user's preferred theme in local storage.
@@ -7,21 +7,21 @@ import { getLocalStorage, setLocalStorage } from './localStorage';
  * @returns True if the theme is "dark" otherwise, false.
  */
 export const getThemePreference = () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return false;
   }
 
   const darkModeSystem = window?.matchMedia(
-    '(prefers-color-scheme: dark)',
+    "(prefers-color-scheme: dark)"
   ).matches;
 
-  const localStoragePreference = getLocalStorage('theme');
-  const systemPreference = darkModeSystem ? 'dark' : 'light';
+  const localStoragePreference = getLocalStorage("theme");
+  const systemPreference = darkModeSystem ? "dark" : "light";
   const preference = localStoragePreference ?? systemPreference;
 
   if (!localStoragePreference) {
-    setLocalStorage('theme', systemPreference);
+    setLocalStorage("theme", systemPreference);
   }
 
-  return preference === 'dark';
+  return preference === "dark";
 };

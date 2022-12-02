@@ -128,12 +128,8 @@ export class LocalNotesManager extends NotesManager {
         id,
         publicSpend,
       } = joinSplitTx;
-      let {
-        owner,
-        encappedKey,
-        encryptedNonce,
-        encryptedValue,
-      } = newNoteATransmission;
+      let { owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteATransmission;
       let { h1X, h1Y, h2X, h2Y } = owner;
       const newNoteAOwner = {
         h1X: h1X.toBigInt(),
@@ -144,11 +140,8 @@ export class LocalNotesManager extends NotesManager {
       const encappedKeyA = encappedKey.toBigInt();
       const encryptedNonceA = encryptedNonce.toBigInt();
       const encryptedValueA = encryptedValue.toBigInt();
-      ({owner,
-        encappedKey,
-        encryptedNonce,
-        encryptedValue,
-      } = newNoteBTransmission);
+      ({ owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteBTransmission);
       ({ h1X, h1Y, h2X, h2Y } = owner);
       const newNoteBOwner = {
         h1X: h1X.toBigInt(),

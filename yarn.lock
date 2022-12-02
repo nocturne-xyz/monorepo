@@ -2789,7 +2789,7 @@ __metadata:
     hardhat: ^2.11.2
     hardhat-gas-reporter: ^1.0.4
     hardhat-packager: ~1.2.1
-    prettier: ^2.2.1
+    prettier: ^2.8.0
     prettier-plugin-solidity: ^1.0.0-beta.5
     solhint: ^3.3.2
     solhint-plugin-prettier: ^0.0.5
@@ -2814,6 +2814,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     hardhat: ^2.12.0
     hardhat-deploy: ^0.11.18
+    prettier: ^2.8.0
   languageName: unknown
   linkType: soft
 
@@ -2833,6 +2834,7 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     find-yarn-workspace-root: ^2.0.0
     mocha: ^10.1.0
+    prettier: ^2.8.0
     snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -2862,6 +2864,7 @@ __metadata:
     js-sha256: ^0.9.0
     json-bigint: ^1.0.0
     mocha: ^10.1.0
+    prettier: ^2.8.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -2903,6 +2906,7 @@ __metadata:
     gatsby-plugin-styled-components: ^5.24.0
     gatsby-plugin-svgr: ^3.0.0-beta.0
     mocha: ^10.1.0
+    prettier: ^2.8.0
     react: ^18.2.0
     react-dom: ^18.2.0
     react-is: ^18.2.0
@@ -10832,7 +10836,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
@@ -18577,7 +18581,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.1.2, prettier@npm:^2.2.1":
+"prettier@npm:^2.1.2, prettier@npm:^2.8.0":
   version: 2.8.0
   resolution: "prettier@npm:2.8.0"
   bin:

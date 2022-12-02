@@ -32,10 +32,7 @@ function hashOperation(op: PreSignOperation): string {
     const tx = op.joinSplitTxs[i];
     joinSplitTxsHash = ethers.utils.solidityPack(
       ["bytes", "bytes32"],
-      [
-        joinSplitTxsHash,
-        hashJoinSplit(tx),
-      ]
+      [joinSplitTxsHash, hashJoinSplit(tx)]
     );
   }
 
@@ -69,7 +66,16 @@ function hashOperation(op: PreSignOperation): string {
 
 function hashJoinSplit(joinsplit: PreSignJoinSplitTx): string {
   const payload = ethers.utils.solidityPack(
-    ["uint256", "uint256", "uint256", "uint256", "uint256", "uint256", "address", "uint256"],
+    [
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "address",
+      "uint256",
+    ],
     [
       joinsplit.commitmentTreeRoot,
       joinsplit.nullifierA,
@@ -85,9 +91,7 @@ function hashJoinSplit(joinsplit: PreSignJoinSplitTx): string {
   return ethers.utils.keccak256(payload);
 }
 
-export function calculateOperationDigest(
-  operation: PreSignOperation
-): bigint {
+export function calculateOperationDigest(operation: PreSignOperation): bigint {
   const operationHash = hashOperation(operation);
   return BigInt(operationHash) % SNARK_SCALAR_FIELD;
 }

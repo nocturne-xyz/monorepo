@@ -104,10 +104,7 @@ export function mod_p(n: bigint): bigint {
 }
 
 // Extended Euclidean algorithm
-export function egcd(
-  a: bigint,
-  b: bigint
-): [bigint, bigint, bigint] {
+export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
   if (b == 0n) {
     return [1n, 0n, a];
   } else {

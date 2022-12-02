@@ -1,8 +1,5 @@
 import { NocturneDB } from "../db";
-import {
-  IncludedNote,
-  IncludedNoteStruct,
-} from "../note";
+import { IncludedNote, IncludedNoteStruct } from "../note";
 import { NocturneSigner } from "../signer";
 import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
@@ -40,15 +37,21 @@ export abstract class NotesManager {
     await this.postStoreNotesFromRefunds();
   }
 
-  private async applyNewJoinSplits(newJoinSplits: JoinSplitEvent[]): Promise<void> {
+  private async applyNewJoinSplits(
+    newJoinSplits: JoinSplitEvent[]
+  ): Promise<void> {
     const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const e of newJoinSplits) {
       // Delete nullified notes
       for (const oldNote of allNotes) {
         // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(new IncludedNote(oldNote));
-        if (oldNullifier == e.oldNoteANullifier ||
-           oldNullifier == e.oldNoteBNullifier) {
+        const oldNullifier = this.signer.createNullifier(
+          new IncludedNote(oldNote)
+        );
+        if (
+          oldNullifier == e.oldNoteANullifier ||
+          oldNullifier == e.oldNoteBNullifier
+        ) {
           await this.db.removeNote(oldNote);
         }
       }
@@ -58,7 +61,7 @@ export abstract class NotesManager {
         e.joinSplitTx.newNoteATransmission,
         e.newNoteAIndex,
         e.joinSplitTx.asset,
-        e.joinSplitTx.id,
+        e.joinSplitTx.id
       );
 
       this.processNoteTransmission(
@@ -66,7 +69,7 @@ export abstract class NotesManager {
         e.joinSplitTx.newNoteBTransmission,
         e.newNoteBIndex,
         e.joinSplitTx.asset,
-        e.joinSplitTx.id,
+        e.joinSplitTx.id
       );
     }
   }
@@ -76,15 +79,19 @@ export abstract class NotesManager {
     newNoteTransmission: NoteTransmission,
     newNoteIndex: number,
     asset: Address,
-    id: bigint,
+    id: bigint
   ): Promise<void> {
     if (this.signer.testOwn(newNoteTransmission.owner)) {
-      const newNote =  this.signer.getNoteFromNoteTransmission(
-        newNoteTransmission, newNoteIndex, asset, id,
+      const newNote = this.signer.getNoteFromNoteTransmission(
+        newNoteTransmission,
+        newNoteIndex,
+        asset,
+        id
       );
-      if ((newNote.value > 0n) &&
-          (new IncludedNote(newNote)).toCommitment()
-            == newNoteCommitment) {
+      if (
+        newNote.value > 0n &&
+        new IncludedNote(newNote).toCommitment() == newNoteCommitment
+      ) {
         await this.db.storeNote(newNote);
       }
     }

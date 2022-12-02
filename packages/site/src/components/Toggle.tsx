@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import styled from 'styled-components';
+import { useState } from "react";
+import styled from "styled-components";
 
 type CheckedProps = {
   readonly checked: boolean;
@@ -79,7 +79,7 @@ const ToggleCircle = styled.div<CheckedProps>`
   transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1) 0ms;
   position: absolute;
   top: 4px;
-  left: ${({ checked }) => (checked ? '36px' : '4px')};
+  left: ${({ checked }) => (checked ? "36px" : "4px")};
   width: 28px;
   height: 28px;
   box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.14);

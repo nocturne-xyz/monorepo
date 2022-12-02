@@ -1,7 +1,5 @@
 import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
-import {
-  SpendAndRefundTokens,
-} from "./contract/types";
+import { SpendAndRefundTokens } from "./contract/types";
 import {
   NoteTransmission,
   PreSignJoinSplitTx,
@@ -13,7 +11,11 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { CanonAddress, NocturneAddressStruct, NocturneAddress } from "./crypto/address";
+import {
+  CanonAddress,
+  NocturneAddressStruct,
+  NocturneAddress,
+} from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -96,12 +98,10 @@ export class NocturneContext {
       gasLimit
     );
 
-    const allProofPromises: Promise<ProvenJoinSplitTx>[] = preProofOp.joinSplitTxs.map((tx) => {
-      return this.proveJoinSplitTx(
-        tx,
-        joinSplitWasmPath,
-        joinSplitZkeyPath);
-    });
+    const allProofPromises: Promise<ProvenJoinSplitTx>[] =
+      preProofOp.joinSplitTxs.map((tx) => {
+        return this.proveJoinSplitTx(tx, joinSplitWasmPath, joinSplitZkeyPath);
+      });
 
     return {
       joinSplitTxs: await Promise.all(allProofPromises),
@@ -144,7 +144,8 @@ export class NocturneContext {
     const preProofJoinSplitTxs: PreProofJoinSplitTx[] = await Promise.all(
       preSignOperation.joinSplitTxs.map((tx) => {
         return this.genPreProofJoinSplitTx(tx, opDigest, opSig);
-    }));
+      })
+    );
 
     return {
       joinSplitTxs: preProofJoinSplitTxs,
@@ -163,11 +164,7 @@ export class NocturneContext {
     joinSplitWasmPath: string,
     joinSplitZkeyPath: string
   ): Promise<ProvenJoinSplitTx> {
-    const {
-      opDigest,
-      proofInputs,
-      ...baseJoinSplitTx
-    } = preProofJoinSplitTx;
+    const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
     const proof = await this.prover.proveJoinSplit(
       proofInputs,
       joinSplitWasmPath,
@@ -176,18 +173,21 @@ export class NocturneContext {
 
     // Check that snarkjs output is consistent with our precomputed joinsplit values
     const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
-    if ( (baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment) ||
-      (baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment) ||
-      (baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot) ||
-      (baseJoinSplitTx.publicSpend != publicSignals.publicSpend) ||
-      (baseJoinSplitTx.nullifierA != publicSignals.nullifierA) ||
-      (baseJoinSplitTx.nullifierB != publicSignals.nullifierB) ||
-      (baseJoinSplitTx.nullifierB != publicSignals.nullifierB) ||
-      (BigInt(baseJoinSplitTx.asset) != publicSignals.asset) ||
-      (baseJoinSplitTx.id != publicSignals.id) ||
-      (opDigest != publicSignals.opDigest)
+    if (
+      baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment ||
+      baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment ||
+      baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot ||
+      baseJoinSplitTx.publicSpend != publicSignals.publicSpend ||
+      baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
+      baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
+      baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
+      BigInt(baseJoinSplitTx.asset) != publicSignals.asset ||
+      baseJoinSplitTx.id != publicSignals.id ||
+      opDigest != publicSignals.opDigest
     ) {
-      throw new Error( `SnarkJS generated public input differs from precomputed ones.`);
+      throw new Error(
+        `SnarkJS generated public input differs from precomputed ones.`
+      );
     }
 
     const solidityProof = packToSolidityProof(proof.proof);
@@ -211,7 +211,7 @@ export class NocturneContext {
     oldNoteB: IncludedNote,
     refundValue: bigint,
     outGoingValue = 0n,
-    receiverAddr?: NocturneAddress,
+    receiverAddr?: NocturneAddress
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
@@ -234,12 +234,15 @@ export class NocturneContext {
     const newNoteACommitment = newNoteA.toCommitment();
     const newNoteBCommitment = newNoteB.toCommitment();
     const newNoteATransmission = this.genNoteTransmission(
-      this.signer.privkey.toCanonAddress(), newNoteA
+      this.signer.privkey.toCanonAddress(),
+      newNoteA
     );
     const newNoteBTransmission = this.genNoteTransmission(
-      this.signer.privkey.toCanonAddress(), newNoteB
+      this.signer.privkey.toCanonAddress(),
+      newNoteB
     );
-    const publicSpend = oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
+    const publicSpend =
+      oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
 
     const merkleProofA = await this.merkleProver.getProof(oldNoteA.merkleIndex);
     const merkleInputA: MerkleProofInput = {
@@ -250,15 +253,20 @@ export class NocturneContext {
     let merkleInputB;
 
     if (oldNoteB.value != 0n) {
-      const merkleProofB = await this.merkleProver.getProof(oldNoteB.merkleIndex);
+      const merkleProofB = await this.merkleProver.getProof(
+        oldNoteB.merkleIndex
+      );
       merkleInputB = {
         path: merkleProofB.pathIndices.map((n) => BigInt(n)),
         siblings: merkleProofB.siblings,
       };
       if (merkleProofB.root != merkleProofB.root) {
-        throw Error("Commitment merkle tree was updated during joinsplit creation.");
+        throw Error(
+          "Commitment merkle tree was updated during joinsplit creation."
+        );
       }
-    } else { // Note B is dummy. Any input works here
+    } else {
+      // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
 
@@ -302,23 +310,27 @@ export class NocturneContext {
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
     for (const assetRequest of assetRequests) {
       let notesToUse = await this.gatherMinimumNotes(assetRequest);
-      const totalVal = notesToUse.reduce((s, note) => {return note.value;}, 0n);
+      const totalVal = notesToUse.reduce((s, note) => {
+        return note.value;
+      }, 0n);
       let refundVal = totalVal - assetRequest.value;
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
-          const newAddr = this.signer.privkey.toCanonAddressStruct();
-          notesToUse.push(new IncludedNote({
+        const newAddr = this.signer.privkey.toCanonAddressStruct();
+        notesToUse.push(
+          new IncludedNote({
             owner: newAddr,
             nonce: 0n,
             asset: notesToUse[0].asset,
             id: notesToUse[0].id,
             value: 0n,
             merkleIndex: 0,
-          }));
+          })
+        );
       }
       let noteA, noteB;
       while (notesToUse.length > 0) {
-        ([noteA, noteB, ...notesToUse] = notesToUse);
+        [noteA, noteB, ...notesToUse] = notesToUse;
         let val = 0n;
         // add in the refund value if noteA and noteB spend enough
         if (noteA.value + noteB.value > refundVal) {
@@ -433,7 +445,7 @@ export class NocturneContext {
       BigInt(poseidon([encodePoint(R) + 1n])) + note.value
     );
     return {
-      owner: (new NocturneAddress(note.owner)).rerand().toStruct(),
+      owner: new NocturneAddress(note.owner).rerand().toStruct(),
       encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
       encryptedNonce,
       encryptedValue,

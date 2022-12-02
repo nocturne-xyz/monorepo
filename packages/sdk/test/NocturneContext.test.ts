@@ -104,9 +104,7 @@ describe("NocturneContext", () => {
       asset,
       value: 5n,
     };
-    const minimumFor5 = (await nocturneContext.gatherMinimumNotes(
-      assetRequest5
-    ));
+    const minimumFor5 = await nocturneContext.gatherMinimumNotes(assetRequest5);
     expect(minimumFor5.length).to.equal(1);
     expect(minimumFor5[0].inner.value).to.equal(10n);
 
@@ -115,9 +113,9 @@ describe("NocturneContext", () => {
       asset,
       value: 80n,
     };
-    const minimumFor80 = (await nocturneContext.gatherMinimumNotes(
+    const minimumFor80 = await nocturneContext.gatherMinimumNotes(
       assetRequest80
-    ));
+    );
 
     expect(minimumFor80.length).to.equal(3);
     expect(minimumFor80[2].inner.value).to.equal(50n);
@@ -131,13 +129,17 @@ describe("NocturneContext", () => {
       asset,
       value: 40n,
     };
-    const preProofOp = await
-      nocturneContext.tryGetPreProofOperation({
-        assetRequests: [assetRequest],
-        refundTokens: ["0x1245"],
-        actions: [{contractAddress: "0x1111",
-          encodedFunction: "0x6d6168616d000000000000000000000000000000000000000000000000000000"}]
-      });
+    const preProofOp = await nocturneContext.tryGetPreProofOperation({
+      assetRequests: [assetRequest],
+      refundTokens: ["0x1245"],
+      actions: [
+        {
+          contractAddress: "0x1111",
+          encodedFunction:
+            "0x6d6168616d000000000000000000000000000000000000000000000000000000",
+        },
+      ],
+    });
     expect(preProofOp.joinSplitTxs.length).to.equal(2);
   });
 });

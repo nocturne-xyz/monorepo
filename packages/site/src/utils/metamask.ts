@@ -8,10 +8,10 @@ export const isFlask = async () => {
 
   try {
     const clientVersion = await provider?.request({
-      method: 'web3_clientVersion',
+      method: "web3_clientVersion",
     });
 
-    const isFlaskDetected = (clientVersion as string[])?.includes('flask');
+    const isFlaskDetected = (clientVersion as string[])?.includes("flask");
 
     return Boolean(provider && isFlaskDetected);
   } catch {

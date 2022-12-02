@@ -4,10 +4,7 @@ import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
 import { NocturneAddressStruct } from "./crypto/address";
 import { MerkleProofInput } from "./proof";
-import {
-  IncludedNote,
-  Note,
-} from "./sdk/note";
+import { IncludedNote, Note } from "./sdk/note";
 import JSON from "json-bigint";
 
 export const SNARK_SCALAR_FIELD =
@@ -109,7 +106,7 @@ export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
 
 export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
   opDigest: bigint;
-  proofInputs: JoinSplitInputs
+  proofInputs: JoinSplitInputs;
 }
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {

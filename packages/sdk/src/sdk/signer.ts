@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note, IncludedNoteStruct  } from "./note";
+import { Note, IncludedNoteStruct } from "./note";
 import {
   NocturneAddressStruct,
   flattenedNocturneAddressToArrayForm,
@@ -87,19 +87,27 @@ export class NocturneSigner {
     noteTransmission: NoteTransmission,
     merkleIndex: number,
     asset: Address,
-    id: bigint,
+    id: bigint
   ): IncludedNoteStruct {
-    let [vkInv,,] = egcd(this.privkey.vk, babyjub.subOrder);
+    let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {
       vkInv += babyjub.subOrder;
     }
     const eR = decodePoint(noteTransmission.encappedKey);
     const R = babyjub.mulPointEscalar(eR, vkInv);
-    const nonce = mod_p(noteTransmission.encryptedNonce - BigInt(poseidon([encodePoint(R)])));
-    const value = mod_p(noteTransmission.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n])));
+    const nonce = mod_p(
+      noteTransmission.encryptedNonce - BigInt(poseidon([encodePoint(R)]))
+    );
+    const value = mod_p(
+      noteTransmission.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n]))
+    );
     return {
       owner: this.privkey.toCanonAddressStruct(),
-      nonce, asset, id, value, merkleIndex,
+      nonce,
+      asset,
+      id,
+      value,
+      merkleIndex,
     };
   }
 
