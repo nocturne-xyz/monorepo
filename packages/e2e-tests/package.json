@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "build": "",
-    "prettier:check": "prettier --check ./src ./deploy",
+    "prettier:check": "prettier --check ./test ./deploy",
     "prettier:write": "prettier --write ./test ./deploy",
     "hh-node": "npx hardhat node",
     "test:e2e": "npx hardhat test",
