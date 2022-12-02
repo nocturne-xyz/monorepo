@@ -1,1 +1,1 @@
-export { defaultSnapOrigin } from './snap';
+export { defaultSnapOrigin } from "./snap";

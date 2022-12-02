@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # USGGE: ./fixSolidityVerifier.sh [path to solidity verifier]
 # Apply various changes the default circom solidity verifier

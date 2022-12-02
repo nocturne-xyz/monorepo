@@ -7,8 +7,8 @@ import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
-import JSON from "json-bigint";
 import { NoteInput } from "../proof";
+import JSON from "json-bigint";
 
 interface NoteStruct {
   owner: NocturneAddressStruct;

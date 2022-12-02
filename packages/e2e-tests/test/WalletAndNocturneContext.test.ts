@@ -25,8 +25,8 @@ import * as path from "path";
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/spend2/spend2_js/spend2.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/spend2/spend2_cpp/spend2.zkey`;
+const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -144,10 +144,12 @@ describe("Wallet", async () => {
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
 
-    console.log("Sync SDK notes manager post-spend");
+    console.log("Sync SDK notes manager post-operation");
     await nocturneContext.syncNotes();
     const updatedNotesForAsset = await nocturneContext.db.getNotesFor(asset)!;
-    const updatedNote = updatedNotesForAsset.find((n) => n.merkleIndex == 16)!; // 3rd note, but the subtree commit put in 14 empty commitments.
-    expect(updatedNote.value).to.equal(50n);
+    const FoundNote = updatedNotesForAsset.filter((n) => n.value > 0);
+    // There should be one new note of value 50n
+    expect(FoundNote.length).to.equal(2);
+    expect(FoundNote[1].value).to.equal(50n);
   });
 });

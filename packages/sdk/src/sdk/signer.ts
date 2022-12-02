@@ -1,13 +1,16 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note } from "./note";
+import { Note, IncludedNoteStruct } from "./note";
 import {
   NocturneAddressStruct,
   flattenedNocturneAddressToArrayForm,
   NocturneAddress,
+  CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
+import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
+import { Address, NoteTransmission } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;
@@ -17,18 +20,20 @@ export interface NocturneSignature {
 export class NocturneSigner {
   privkey: NocturnePrivKey;
   address: NocturneAddress;
+  canonAddress: CanonAddress;
 
   constructor(privkey: NocturnePrivKey) {
     const address = privkey.toAddress();
 
     this.privkey = privkey;
+    this.canonAddress = privkey.toCanonAddress();
     this.address = address;
   }
 
   sign(m: bigint): NocturneSignature {
     // TODO: make this deterministic
     const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32);
+    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const R = babyjub.mulPointEscalar(babyjub.Base8, r);
     const c = poseidon([R[0], R[1], m]);
 
@@ -63,11 +68,50 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidon([this.privkey.vk, note.toCommitment()]));
+    return BigInt(poseidon([note.toCommitment(), this.privkey.vk]));
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {
     return poseidon([this.privkey.vk, oldNullifier]);
+  }
+
+  /**
+   * Obtain the note from a note transmission. Assumes that the signer owns the
+   * note transmission.
+   *
+   * @param noteTransmission
+   * @param asset, id, merkleIndex additional params from the joinsplit event
+   * @return note
+   */
+  getNoteFromNoteTransmission(
+    noteTransmission: NoteTransmission,
+    merkleIndex: number,
+    asset: Address,
+    id: bigint
+  ): IncludedNoteStruct {
+    if (!this.testOwn(noteTransmission.owner)) {
+      throw Error("Cannot decrypt a note that is not owned by signer.");
+    }
+    let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
+    if (vkInv < babyjub.subOrder) {
+      vkInv += babyjub.subOrder;
+    }
+    const eR = decodePoint(noteTransmission.encappedKey);
+    const R = babyjub.mulPointEscalar(eR, vkInv);
+    const nonce = mod_p(
+      noteTransmission.encryptedNonce - BigInt(poseidon([encodePoint(R)]))
+    );
+    const value = mod_p(
+      noteTransmission.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n]))
+    );
+    return {
+      owner: this.privkey.toCanonAddressStruct(),
+      nonce,
+      asset,
+      id,
+      value,
+      merkleIndex,
+    };
   }
 
   testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {

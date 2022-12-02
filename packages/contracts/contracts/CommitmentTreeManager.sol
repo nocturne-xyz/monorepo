@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.5;
 
-import "./interfaces/ISpend2Verifier.sol";
+import "./interfaces/IJoinSplitVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
@@ -18,7 +18,7 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     OffchainMerkleTreeData internal merkle;
-    ISpend2Verifier public spend2Verifier;
+    IJoinSplitVerifier public joinSplitVerifier;
 
     event Refund(
         IWallet.NocturneAddress refundAddr,
@@ -29,67 +29,85 @@ contract CommitmentTreeManager {
         uint128 merkleIndex
     );
 
-    event Spend(
-        uint256 indexed oldNoteNullifier,
-        uint256 indexed valueSpent,
-        uint128 indexed merkleIndex
+    event JoinSplit(
+        uint256 indexed oldNoteANullifier,
+        uint256 indexed oldNoteBNullifier,
+        uint128 newNoteAIndex,
+        uint128 newNoteBIndex,
+        IWallet.JoinSplitTransaction joinSplitTx
     );
 
     event InsertNoteCommitments(uint256[] commitments);
 
     event InsertNotes(IWallet.Note[] notes);
 
-    constructor(address _spend2verifier, address _subtreeUpdateVerifier) {
+    constructor(address _joinSplitVerifier, address _subtreeUpdateVerifier) {
         merkle.initialize(_subtreeUpdateVerifier);
-        spend2Verifier = ISpend2Verifier(_spend2verifier);
+        joinSplitVerifier = IJoinSplitVerifier(_joinSplitVerifier);
         pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
-    // TODO: add default noteCommitment for when there is no output note.
-    function _handleSpend(
-        IWallet.SpendTransaction calldata spendTx,
+    function _handleJoinSplit(
+        IWallet.JoinSplitTransaction calldata joinSplitTx,
         bytes32 operationHash
     ) internal {
         require(
-            pastRoots[spendTx.commitmentTreeRoot],
+            pastRoots[joinSplitTx.commitmentTreeRoot],
             "Given tree root not a past root"
         );
-        require(!nullifierSet[spendTx.nullifier], "Nullifier already used");
-
-        bytes32 spendHash = _hashSpend(spendTx);
-        uint256 operationDigest = uint256(
-            keccak256(abi.encodePacked(operationHash, spendHash))
-        ) % Utils.SNARK_SCALAR_FIELD;
-
         require(
-            spend2Verifier.verifyProof(
-                [spendTx.proof[0], spendTx.proof[1]],
-                [
-                    [spendTx.proof[2], spendTx.proof[3]],
-                    [spendTx.proof[4], spendTx.proof[5]]
-                ],
-                [spendTx.proof[6], spendTx.proof[7]],
-                [
-                    spendTx.newNoteCommitment,
-                    spendTx.commitmentTreeRoot,
-                    uint256(uint160(spendTx.asset)),
-                    spendTx.id,
-                    spendTx.valueToSpend,
-                    spendTx.nullifier,
-                    operationDigest
-                ]
-            ),
-            "Spend proof invalid"
+            !nullifierSet[joinSplitTx.nullifierA],
+            "Nullifier A already used"
+        );
+        require(
+            !nullifierSet[joinSplitTx.nullifierB],
+            "Nullifier B already used"
         );
 
-        insertNoteCommitment(spendTx.newNoteCommitment);
+        uint256 operationDigest = uint256(operationHash) %
+            Utils.SNARK_SCALAR_FIELD;
 
-        nullifierSet[spendTx.nullifier] = true;
+        require(
+            joinSplitVerifier.verifyProof(
+                [joinSplitTx.proof[0], joinSplitTx.proof[1]],
+                [
+                    [joinSplitTx.proof[2], joinSplitTx.proof[3]],
+                    [joinSplitTx.proof[4], joinSplitTx.proof[5]]
+                ],
+                [joinSplitTx.proof[6], joinSplitTx.proof[7]],
+                [
+                    joinSplitTx.newNoteACommitment,
+                    joinSplitTx.newNoteBCommitment,
+                    joinSplitTx.commitmentTreeRoot,
+                    joinSplitTx.publicSpend,
+                    joinSplitTx.nullifierA,
+                    joinSplitTx.nullifierB,
+                    operationDigest,
+                    uint256(uint160(joinSplitTx.asset)),
+                    joinSplitTx.id
+                ]
+            ),
+            "JoinSplit proof invalid"
+        );
 
-        emit Spend(
-            spendTx.nullifier,
-            spendTx.valueToSpend,
-            merkle.getTotalCount() - 1
+        // Compute newNote indices in the merkle tree
+        uint128 newNoteIndexA = merkle.getTotalCount();
+        uint128 newNoteIndexB = newNoteIndexA + 1;
+
+        uint256[] memory noteCommitments = new uint256[](2);
+        noteCommitments[0] = joinSplitTx.newNoteACommitment;
+        noteCommitments[1] = joinSplitTx.newNoteBCommitment;
+        insertNoteCommitments(noteCommitments);
+
+        nullifierSet[joinSplitTx.nullifierA] = true;
+        nullifierSet[joinSplitTx.nullifierB] = true;
+
+        emit JoinSplit(
+            joinSplitTx.nullifierA,
+            joinSplitTx.nullifierB,
+            newNoteIndexA,
+            newNoteIndexB,
+            joinSplitTx
         );
     }
 
@@ -168,20 +186,5 @@ contract CommitmentTreeManager {
             value,
             merkle.getTotalCount() - 1
         );
-    }
-
-    function _hashSpend(
-        IWallet.SpendTransaction calldata spend
-    ) private pure returns (bytes32) {
-        bytes memory payload = abi.encodePacked(
-            spend.commitmentTreeRoot,
-            spend.nullifier,
-            spend.newNoteCommitment,
-            spend.valueToSpend,
-            spend.asset,
-            spend.id
-        );
-
-        return keccak256(payload);
     }
 }

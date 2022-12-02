@@ -2,7 +2,7 @@ import { ethers, deployments } from "hardhat";
 import {
   Wallet__factory,
   Vault__factory,
-  Spend2Verifier__factory,
+  JoinSplitVerifier__factory,
   Vault,
   Wallet,
   TestSubtreeUpdateVerifier__factory,
@@ -16,7 +16,7 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
+import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
@@ -44,7 +44,7 @@ export async function setup(): Promise<NocturneSetup> {
   await vault.initialize(wallet.address);
 
   console.log("Create NocturneContext");
-  const prover = new LocalSpend2Prover();
+  const prover = new LocalJoinSplitProver();
   const merkleProver = new LocalMerkleProver(
     wallet.address,
     ethers.provider,
@@ -91,11 +91,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deterministicDeployment: true,
   });
 
-  const spend2Verifier = await deploy("Spend2Verifier", {
+  const joinSplitVerifier = await deploy("JoinSplitVerifier", {
     from: owner,
     contract: {
-      abi: Spend2Verifier__factory.abi,
-      bytecode: Spend2Verifier__factory.bytecode,
+      abi: JoinSplitVerifier__factory.abi,
+      bytecode: JoinSplitVerifier__factory.bytecode,
     },
     log: true,
     deterministicDeployment: true,
@@ -119,7 +119,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     args: [
       vault.address,
-      spend2Verifier.address,
+      joinSplitVerifier.address,
       subtreeUpdateVerifier.address,
     ],
     log: true,

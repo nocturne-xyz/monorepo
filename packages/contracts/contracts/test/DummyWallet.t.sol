@@ -7,14 +7,14 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
-import {ISpend2Verifier} from "../interfaces/ISpend2Verifier.sol";
+import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {TestSpend2Verifier} from "./utils/TestSpend2Verifier.sol";
+import {TestJoinSplitVerifier} from "./utils/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
@@ -42,7 +42,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     Wallet wallet;
     Vault vault;
     TreeTest treeTest;
-    ISpend2Verifier spend2Verifier;
+    IJoinSplitVerifier joinSplitVerifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -58,25 +58,27 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint128 merkleIndex
     );
 
-    event Spend(
-        uint256 indexed oldNoteNullifier,
-        uint256 indexed valueSpent,
-        uint128 indexed merkleIndex
+    event JoinSplit(
+        uint256 indexed oldNoteANullifier,
+        uint256 indexed oldNoteBNullifier,
+        uint128 newNoteAIndex,
+        uint128 newNoteBIndex,
+        IWallet.JoinSplitTransaction joinSplitTx
     );
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
 
-        // Instantiate vault, spend2Verifier, tree, and wallet
+        // Instantiate vault, joinSplitVerifier, tree, and wallet
         vault = new Vault();
-        spend2Verifier = new TestSpend2Verifier();
+        joinSplitVerifier = new TestJoinSplitVerifier();
 
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
         wallet = new Wallet(
             address(vault),
-            address(spend2Verifier),
+            address(joinSplitVerifier),
             address(subtreeUpdateVerifier)
         );
 
@@ -210,15 +212,44 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         uint256 root = wallet.root();
-        IWallet.SpendTransaction memory spendTx = IWallet.SpendTransaction({
-            commitmentTreeRoot: root,
-            nullifier: uint256(182),
-            newNoteCommitment: uint256(1038),
-            proof: dummyProof(),
-            valueToSpend: uint256(50),
-            asset: address(token),
-            id: ERC20_ID
-        });
+        IWallet.NoteTransmission memory newNoteATransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
+        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
+        IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
+            .JoinSplitTransaction({
+                commitmentTreeRoot: root,
+                nullifierA: uint256(182),
+                nullifierB: uint256(183),
+                newNoteACommitment: uint256(1038),
+                newNoteATransmission: newNoteATransmission,
+                newNoteBCommitment: uint256(1032),
+                newNoteBTransmission: newNoteBTransmission,
+                proof: dummyProof(),
+                asset: address(token),
+                id: ERC20_ID,
+                publicSpend: uint256(50)
+            });
 
         address[] memory spendTokens = new address[](1);
         spendTokens[0] = address(token);
@@ -229,19 +260,18 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             refundTokens: refundTokens
         });
 
-        IWallet.SpendTransaction[]
-            memory spendTxs = new IWallet.SpendTransaction[](1);
-        spendTxs[0] = spendTx;
+        IWallet.JoinSplitTransaction[]
+            memory joinSplitTxs = new IWallet.JoinSplitTransaction[](1);
+        joinSplitTxs[0] = joinSplitTx;
         IWallet.Action[] memory actions = new IWallet.Action[](1);
         actions[0] = transferAction;
         IWallet.Operation memory op = IWallet.Operation({
-            spendTxs: spendTxs,
+            joinSplitTxs: joinSplitTxs,
             refundAddr: defaultNocturneAddress(),
             tokens: tokens,
             actions: actions,
             gasLimit: DEFAULT_GAS_LIMIT
         });
-
         IWallet.Operation[] memory ops = new IWallet.Operation[](1);
         ops[0] = op;
         IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
@@ -252,8 +282,15 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        vm.expectEmit(false, true, true, true);
-        emit Spend(0, 50, uint128(16)); // only checking value and merkleIndex are valid
+        // check all values
+        vm.expectEmit(true, true, false, true);
+        emit JoinSplit(
+            joinSplitTx.nullifierA,
+            joinSplitTx.nullifierB,
+            16, // newNoteAIndex
+            17, // newNoteBIndex
+            joinSplitTx
+        );
 
         wallet.processBundle(bundle);
 

@@ -20,6 +20,8 @@ jobs:
       - run: |
           yarn lint
       - run: |
+          yarn prettier:check
+      - run: |
           yarn build
       - run: |
           yarn test:unit

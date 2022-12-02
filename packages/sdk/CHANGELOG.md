@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Migrate to joinsplit circuit
+  - Nocturne context refractoe: Presign -> PreProof -> Proven
+  - Note encryption and decryption
+  - New note fetching logic
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - Break out SDK methods into sub methods and expose a method for gathering spend tx inputs for site/snap to use

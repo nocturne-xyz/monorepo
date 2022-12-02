@@ -34,12 +34,15 @@ export function flattenedNocturneAddressFromJSON(
   };
 }
 
+export type CanonAddress = [bigint, bigint];
+
 export interface ArrayNocturneAddress {
   h1: [bigint, bigint];
   h2: [bigint, bigint];
 }
 
 // TODO: Fix binary / base64 format of a NocturneAddress
+// TODO: Change to type
 export class NocturneAddress {
   inner: NocturneAddressStruct;
 

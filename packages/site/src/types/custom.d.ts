@@ -2,7 +2,7 @@
 
 /// <reference types="react-scripts" />
 
-import { MetaMaskInpageProvider } from '@metamask/providers';
+import { MetaMaskInpageProvider } from "@metamask/providers";
 /*
  * Window type extension to support ethereum
  */

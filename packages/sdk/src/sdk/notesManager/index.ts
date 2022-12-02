@@ -1,11 +1,14 @@
 import { NocturneDB } from "../db";
 import { IncludedNote, IncludedNoteStruct } from "../note";
 import { NocturneSigner } from "../signer";
+import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
-export interface SpendEvent {
-  oldNoteNullifier: bigint;
-  valueSpent: bigint;
-  merkleIndex: number;
+export interface JoinSplitEvent {
+  oldNoteANullifier: bigint;
+  oldNoteBNullifier: bigint;
+  newNoteAIndex: number;
+  newNoteBIndex: number;
+  joinSplitTx: BaseJoinSplitTx;
 }
 
 export abstract class NotesManager {
@@ -19,8 +22,8 @@ export abstract class NotesManager {
 
   protected abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
   protected abstract postStoreNotesFromRefunds(): Promise<void>;
-  protected abstract fetchSpends(): Promise<SpendEvent[]>;
-  protected abstract postApplySpends(): Promise<void>;
+  protected abstract fetchJoinSplits(): Promise<JoinSplitEvent[]>;
+  protected abstract postApplyJoinSplits(): Promise<void>;
 
   private async storeNewNotesFromRefunds(
     newNotesFromRefunds: IncludedNoteStruct[]
@@ -34,35 +37,70 @@ export abstract class NotesManager {
     await this.postStoreNotesFromRefunds();
   }
 
-  private async applyNewSpends(newSpends: SpendEvent[]): Promise<void> {
+  private async applyNewJoinSplits(
+    newJoinSplits: JoinSplitEvent[]
+  ): Promise<void> {
     const allNotes = [...(await this.db.getAllNotes()).values()].flat();
-    for (const spend of newSpends) {
+    for (const e of newJoinSplits) {
+      // Delete nullified notes
       for (const oldNote of allNotes) {
+        // TODO implement note indexing by nullifiers
         const oldNullifier = this.signer.createNullifier(
           new IncludedNote(oldNote)
         );
-        if (oldNullifier == spend.oldNoteNullifier) {
-          const newNoteNonce = this.signer.generateNewNonce(oldNullifier);
-          const newNote: IncludedNoteStruct = {
-            owner: oldNote.owner,
-            nonce: newNoteNonce,
-            asset: oldNote.asset,
-            id: oldNote.id,
-            value: oldNote.value - spend.valueSpent,
-            merkleIndex: spend.merkleIndex,
-          };
-
+        if (
+          oldNullifier == e.oldNoteANullifier ||
+          oldNullifier == e.oldNoteBNullifier
+        ) {
           await this.db.removeNote(oldNote);
-          await this.db.storeNote(newNote);
         }
+      }
+
+      this.processNoteTransmission(
+        e.joinSplitTx.newNoteACommitment,
+        e.joinSplitTx.newNoteATransmission,
+        e.newNoteAIndex,
+        e.joinSplitTx.asset,
+        e.joinSplitTx.id
+      );
+
+      this.processNoteTransmission(
+        e.joinSplitTx.newNoteBCommitment,
+        e.joinSplitTx.newNoteBTransmission,
+        e.newNoteBIndex,
+        e.joinSplitTx.asset,
+        e.joinSplitTx.id
+      );
+    }
+  }
+
+  private async processNoteTransmission(
+    newNoteCommitment: bigint,
+    newNoteTransmission: NoteTransmission,
+    newNoteIndex: number,
+    asset: Address,
+    id: bigint
+  ): Promise<void> {
+    if (this.signer.testOwn(newNoteTransmission.owner)) {
+      const newNote = this.signer.getNoteFromNoteTransmission(
+        newNoteTransmission,
+        newNoteIndex,
+        asset,
+        id
+      );
+      if (
+        newNote.value > 0n &&
+        new IncludedNote(newNote).toCommitment() == newNoteCommitment
+      ) {
+        await this.db.storeNote(newNote);
       }
     }
   }
 
-  async fetchAndApplyNewSpends(): Promise<void> {
-    const newSpends = await this.fetchSpends();
-    await this.applyNewSpends(newSpends);
-    await this.postApplySpends();
+  async fetchAndApplyNewJoinSplits(): Promise<void> {
+    const newJoinSplits = await this.fetchJoinSplits();
+    await this.applyNewJoinSplits(newJoinSplits);
+    await this.postApplyJoinSplits();
   }
 }
 

@@ -1,4 +1,4 @@
-pragma circom 2.0.0;
+pragma circom 2.1.0;
 
 include "include/poseidon.circom";
 include "include/escalarmulany.circom";
@@ -59,11 +59,9 @@ template vkIntegrity() {
 }
 
 template SigVerify() {
-    signal input pkx;
-    signal input pky;
+    signal input pk[2];
     signal input m;
-    signal input c;
-    signal input z;
+    signal input sig[2]; // [c, z]
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -74,14 +72,13 @@ template SigVerify() {
     component zBits = Num2Bits(254);
     component cBits = Num2Bits(254);
 
-    zBits.in <== z;
+    zBits.in <== sig[1];
     for (var i = 0; i < 254; i++) {
         gz.e[i] <== zBits.out[i];
     }
 
-    pkc.p[0] <== pkx;
-    pkc.p[1] <== pky;
-    cBits.in <== c;
+    pkc.p <== pk;
+    cBits.in <== sig[0];
     for (var i = 0; i < 254; i++) {
         pkc.e[i] <== cBits.out[i];
     }
@@ -92,14 +89,33 @@ template SigVerify() {
     R.x2 <== pkc.out[0];
     R.y2 <== pkc.out[1];
 
-    component hash = Poseidon(3);
-    hash.inputs[0] <== R.xout; // TODO changed to compressed format
-    hash.inputs[1] <== R.yout; // TODO changed to compressed format
-    hash.inputs[2] <== m;
-
-    hash.out === c;
+    signal cp <== Poseidon(3)([R.xout, R.yout, m]);
+    cp === sig[0];
 }
 
+template canonAddr() {
+    signal input userViewKey;
+    signal output addr[2];
+
+    var BASE8[2] = [
+        5299619240641551281634865583518297030282874472190772894086521144482721001553,
+        16950150798460657717958625567821834550301663161624707787222815936182638968203
+    ];
+
+    addr <== EscalarMulFix(254, BASE8)(Num2Bits(254)(userViewKey));
+}
+
+// Forces the input signal to be of value between 0 and 2**n - 1
+template BitRange(n) {
+    signal input in;
+    signal bits[254] <== Num2Bits(254)(in);
+    for (var i = 253; i >= n; i--) {
+      bits[i] === 0;
+    }
+}
+
+// Encrypt each input value, using poseidon as as a blockcipher in counter
+// mode, with rand as initial value (IV)
 template Encrypt(n) {
     signal input rand;
     signal input in[n];

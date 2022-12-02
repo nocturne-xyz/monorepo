@@ -12,7 +12,7 @@ export const getLocalStorage = (key: string) => {
     return data;
   }
 
-  throw new Error('Local storage is not available.');
+  throw new Error("Local storage is not available.");
 };
 
 /**
@@ -29,5 +29,5 @@ export const setLocalStorage = (key: string, value: string) => {
     return;
   }
 
-  throw new Error('Local storage is not available.');
+  throw new Error("Local storage is not available.");
 };

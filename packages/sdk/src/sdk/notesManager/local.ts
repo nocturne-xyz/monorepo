@@ -5,9 +5,9 @@ import { NocturneDB } from "../db";
 import { query } from "../utils";
 import {
   RefundEvent as EthRefundEvent,
-  SpendEvent as EthSpendEvent,
+  JoinSplitEvent as EthJoinSplitEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { NotesManager, SpendEvent } from ".";
+import { NotesManager, JoinSplitEvent } from ".";
 import { NocturneSigner } from "../signer";
 import { IncludedNoteStruct } from "../note";
 
@@ -15,9 +15,9 @@ const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
 const REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK =
   "REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK";
-const SPENDS_LAST_INDEXED_BLOCK = "SPENDS_LAST_INDEXED_BLOCK";
-const SPENDS_TENTATIVE_LAST_INDEXED_BLOCK =
-  "SPENDS_TENTATIVE_LAST_INDEXED_BLOCK";
+const JOINSPLITS_LAST_INDEXED_BLOCK = "JOINSPLITS_LAST_INDEXED_BLOCK";
+const JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK =
+  "JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK";
 
 export class LocalNotesManager extends NotesManager {
   walletContract: Wallet;
@@ -90,15 +90,15 @@ export class LocalNotesManager extends NotesManager {
     await this.db.putKv(REFUNDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
   }
 
-  async fetchSpends(): Promise<SpendEvent[]> {
+  async fetchJoinSplits(): Promise<JoinSplitEvent[]> {
     // TODO: load default from network-specific config
     const lastSeen =
-      (await this.db.getNumberKv(SPENDS_LAST_INDEXED_BLOCK)) ??
+      (await this.db.getNumberKv(JOINSPLITS_LAST_INDEXED_BLOCK)) ??
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
-    const filter = this.walletContract.filters.Spend();
-    let events: EthSpendEvent[] = await query(
+    const filter = this.walletContract.filters.JoinSplit();
+    let events: EthJoinSplitEvent[] = await query(
       this.walletContract,
       filter,
       lastSeen,
@@ -107,33 +107,99 @@ export class LocalNotesManager extends NotesManager {
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    const newSpends = events.map((event) => {
-      const { oldNoteNullifier, valueSpent, merkleIndex } = event.args;
+    // TODO figure out how to do type conversion better
+    const newJoinSplits = events.map((event) => {
+      const {
+        oldNoteANullifier,
+        oldNoteBNullifier,
+        newNoteAIndex,
+        newNoteBIndex,
+        joinSplitTx,
+      } = event.args;
+      const {
+        commitmentTreeRoot,
+        nullifierA,
+        nullifierB,
+        newNoteACommitment,
+        newNoteATransmission,
+        newNoteBCommitment,
+        newNoteBTransmission,
+        asset,
+        id,
+        publicSpend,
+      } = joinSplitTx;
+      let { owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteATransmission;
+      let { h1X, h1Y, h2X, h2Y } = owner;
+      const newNoteAOwner = {
+        h1X: h1X.toBigInt(),
+        h1Y: h1Y.toBigInt(),
+        h2X: h2X.toBigInt(),
+        h2Y: h2Y.toBigInt(),
+      };
+      const encappedKeyA = encappedKey.toBigInt();
+      const encryptedNonceA = encryptedNonce.toBigInt();
+      const encryptedValueA = encryptedValue.toBigInt();
+      ({ owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteBTransmission);
+      ({ h1X, h1Y, h2X, h2Y } = owner);
+      const newNoteBOwner = {
+        h1X: h1X.toBigInt(),
+        h1Y: h1Y.toBigInt(),
+        h2X: h2X.toBigInt(),
+        h2Y: h2Y.toBigInt(),
+      };
+      const encappedKeyB = encappedKey.toBigInt();
+      const encryptedNonceB = encryptedNonce.toBigInt();
+      const encryptedValueB = encryptedValue.toBigInt();
       return {
-        oldNoteNullifier: oldNoteNullifier.toBigInt(),
-        valueSpent: valueSpent.toBigInt(),
-        merkleIndex: merkleIndex.toNumber(),
+        oldNoteANullifier: oldNoteANullifier.toBigInt(),
+        oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
+        newNoteAIndex: newNoteAIndex.toNumber(),
+        newNoteBIndex: newNoteBIndex.toNumber(),
+        joinSplitTx: {
+          commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
+          nullifierA: nullifierA.toBigInt(),
+          nullifierB: nullifierB.toBigInt(),
+          newNoteACommitment: newNoteACommitment.toBigInt(),
+          newNoteATransmission: {
+            owner: newNoteAOwner,
+            encappedKey: encappedKeyA,
+            encryptedNonce: encryptedNonceA,
+            encryptedValue: encryptedValueA,
+          },
+          newNoteBCommitment: newNoteBCommitment.toBigInt(),
+          newNoteBTransmission: {
+            owner: newNoteBOwner,
+            encappedKey: encappedKeyB,
+            encryptedNonce: encryptedNonceB,
+            encryptedValue: encryptedValueB,
+          },
+          asset,
+          id: id.toBigInt(),
+          publicSpend: publicSpend.toBigInt(),
+        },
       };
     });
 
     await this.db.putKv(
-      SPENDS_TENTATIVE_LAST_INDEXED_BLOCK,
+      JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK,
       latestBlock.toString()
     );
-    return newSpends;
+    return newJoinSplits;
   }
 
-  async postApplySpends(): Promise<void> {
+  async postApplyJoinSplits(): Promise<void> {
     const tentativeLastSeen = await this.db.getKv(
-      SPENDS_TENTATIVE_LAST_INDEXED_BLOCK
+      JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK
     );
 
     if (!tentativeLastSeen) {
       throw new Error(
-        "Should never call `postApplySpends` without having stored a tentative last seen block"
+        "Should never call `postApplyJoinSplits` without having stored a tentative last seen block"
       );
     }
 
-    await this.db.putKv(SPENDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
+    await this.db.putKv(JOINSPLITS_LAST_INDEXED_BLOCK, tentativeLastSeen);
   }
 }
