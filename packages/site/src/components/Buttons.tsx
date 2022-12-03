@@ -110,6 +110,10 @@ export const SyncLeavesButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>SyncLeaves</Button>;
 };
 
+export const GetAllBalancesButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>GetAllBalances</Button>;
+};
+
 export const GetJoinSplitInputsButton = (
   props: ComponentProps<typeof Button>
 ) => {

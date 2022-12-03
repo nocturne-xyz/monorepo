@@ -9,9 +9,12 @@ import {
   preProofOperationFromJSON,
   NocturneAddress,
   nocturneAddressFromJSON,
+  AssetWithBalance,
+  assetWithBalanceFromJSON,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { joinSplitProver } from "@nocturne-xyz/local-prover";
+import JSON from "json-bigint";
 
 export class NocturneFrontendSDK {
   async generateProvenOperation(
@@ -55,6 +58,20 @@ export class NocturneFrontendSDK {
       actions,
       gasLimit,
     };
+  }
+
+  async getAllBalances(): Promise<AssetWithBalance[]> {
+    const json = (await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: [
+        DEFAULT_SNAP_ORIGIN,
+        {
+          method: "nocturne_getAllBalances",
+        },
+      ],
+    })) as string;
+
+    return JSON.parse(json).map(assetWithBalanceFromJSON);
   }
 
   protected async getJoinSplitInputsFromSnap(

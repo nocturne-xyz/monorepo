@@ -4,7 +4,6 @@ import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
   clearDb,
   connectSnap,
-  getJoinSplitInputs,
   getSnap,
   sendHello,
   sendSetAndShowKv,
@@ -23,16 +22,16 @@ import {
   SyncLeavesButton,
   ClearDbButton,
   GetJoinSplitInputsButton,
+  GetAllBalancesButton,
 } from "../components";
 import {
   Action,
   AssetRequest,
   ERC20_ID,
   OperationRequest,
+  toJSON,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
-import JSON from "json-bigint";
-import { joinSplitProver } from "@nocturne-xyz/local-prover";
 import { nocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
 
 const Container = styled.div`
@@ -179,6 +178,16 @@ const Index = () => {
   const handleSyncLeavesClick = async () => {
     try {
       await syncLeaves();
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleGetAllBalancesClick = async () => {
+    try {
+      const balances = await nocturneFrontendSDK.getAllBalances();
+      console.log(toJSON(balances));
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -352,6 +361,24 @@ const Index = () => {
             button: (
               <SyncLeavesButton
                 onClick={handleSyncLeavesClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "Get All Balances",
+            description: "Get all balances",
+            button: (
+              <GetAllBalancesButton
+                onClick={handleGetAllBalancesClick}
                 disabled={!state.installedSnap}
               />
             ),

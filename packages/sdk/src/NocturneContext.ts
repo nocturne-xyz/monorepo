@@ -1,6 +1,7 @@
 import {
   AssetRequest,
   AssetStruct,
+  AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
 } from "./commonTypes";
@@ -469,6 +470,24 @@ export class NocturneContext {
     }
 
     return notesToUse;
+  }
+
+  /**
+   * Sum up the note values for a all notes and return array of assets with
+   * their balances.
+   *
+   * @param asset Asset
+   */
+  async getAllAssetBalances(): Promise<AssetWithBalance[]> {
+    const notes = await this.db.getAllNotes();
+    return Array.from(notes.entries()).map(([assetString, notes]) => {
+      const asset = NocturneDB.parseNotesKey(assetString);
+      const balance = BigInt(notes.reduce((a, b) => a + Number(b.value), 0));
+      return {
+        asset,
+        balance,
+      };
+    });
   }
 
   /**

@@ -38,6 +38,22 @@ export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {
   };
 }
 
+export interface AssetWithBalance {
+  asset: AssetStruct;
+  balance: bigint;
+}
+
+export function assetWithBalanceFromJSON(
+  jsonOrString: any | string
+): AssetWithBalance {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    asset: assetStructFromJSON(json.asset),
+    balance: BigInt(json.balance),
+  };
+}
+
 export interface AssetRequest {
   asset: AssetStruct;
   value: bigint;

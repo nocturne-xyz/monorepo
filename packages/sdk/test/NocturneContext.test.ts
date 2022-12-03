@@ -98,6 +98,27 @@ describe("NocturneContext", () => {
     expect(assetBalance).to.equal(100n + 50n + 25n + 10n);
   });
 
+  it("Gets balances for all notes", async () => {
+    const diffNote: IncludedNote = {
+      owner: nocturneContext.signer.address,
+      nonce: 5555n,
+      asset: "0x5555",
+      id: 5555n,
+      value: 5555n,
+      merkleIndex: 4,
+    };
+
+    await db.storeNote(diffNote);
+
+    const allBalances = await nocturneContext.getAllAssetBalances();
+    allBalances.sort((a, b) => {
+      return Number(a.asset.id - b.asset.id);
+    });
+    expect(allBalances.length).to.equal(2);
+    expect(allBalances[0].balance).to.equal(5555n);
+    expect(allBalances[1].balance).to.equal(100n + 50n + 25n + 10n);
+  });
+
   it("Rejects asset request attempting to overspend", async () => {
     // Request 1000 tokens, more than user owns
     const assetRequest1000: AssetRequest = {
