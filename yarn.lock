@@ -2818,7 +2818,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/frontend-sdk@workspace:packages/frontend-sdk":
+"@nocturne-xyz/frontend-sdk@workspace:^, @nocturne-xyz/frontend-sdk@workspace:packages/frontend-sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/frontend-sdk@workspace:packages/frontend-sdk"
   dependencies:
@@ -2900,6 +2900,7 @@ __metadata:
     "@metamask/eslint-config-typescript": ^10.0.0
     "@metamask/providers": ^9.0.0
     "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/frontend-sdk": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@svgr/webpack": ^6.4.0

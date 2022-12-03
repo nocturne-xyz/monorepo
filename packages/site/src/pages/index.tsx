@@ -4,7 +4,7 @@ import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
   clearDb,
   connectSnap,
-  getSpendInputs,
+  getJoinSplitInputs,
   getSnap,
   sendHello,
   sendSetAndShowKv,
@@ -22,7 +22,7 @@ import {
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
-  GetSpendInputsButton,
+  GetJoinSplitInputsButton,
 } from "../components";
 import {
   Action,
@@ -32,7 +32,8 @@ import {
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import JSON from "json-bigint";
-import { spend2Prover } from "@nocturne-xyz/local-prover";
+import { joinSplitProver } from "@nocturne-xyz/local-prover";
+import { nocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
 
 const Container = styled.div`
   display: flex;
@@ -121,15 +122,15 @@ const ErrorMessage = styled.div`
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
-  let spend2Wasm: any;
-  let spend2Zkey: any;
+  let joinSplitWasm: any;
+  let joinSplitZkey: any;
 
   const instantiateCircuitData = async () => {
-    if (!spend2Wasm) {
-      spend2Wasm = await fetch("./public/spend2.wasm");
+    if (!joinSplitWasm) {
+      joinSplitWasm = await fetch("./public/joinsplit.wasm");
     }
-    if (!spend2Zkey) {
-      spend2Zkey = await fetch("./public/spend2.zkey");
+    if (!joinSplitZkey) {
+      joinSplitZkey = await fetch("./public/joinsplit.zkey");
     }
   };
 
@@ -184,7 +185,7 @@ const Index = () => {
     }
   };
 
-  const handleGetSpendInputs = async () => {
+  const handleGetJoinSplitInputs = async () => {
     await instantiateCircuitData();
 
     const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
@@ -211,16 +212,22 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const inputs = JSON.parse(
-        (await getSpendInputs(operationRequest)) as string
+      const provenOperation = await nocturneFrontendSDK.generateProvenOperation(
+        operationRequest,
+        "./joinsplit.wasm",
+        "./joinsplit.zkey"
       );
-      console.log("From snap inputs: ", inputs);
-      const proof = await spend2Prover.proveSpend2(
-        inputs[0].proofInputs,
-        "./spend2.wasm",
-        "./spend2.zkey"
-      );
-      console.log(proof);
+      console.log(provenOperation);
+      // const inputs = JSON.parse(
+      //   (await getJoinSplitInputs(operationRequest)) as string
+      // );
+      // console.log("From snap inputs: ", inputs);
+      // const proof = await joinSplitProver.proveJoinSplit(
+      //   inputs.proofInputs,
+      //   "./joinsplit.wasm",
+      //   "./joinsplit.zkey"
+      // );
+      // console.log(proof);
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -369,10 +376,10 @@ const Index = () => {
         <Card
           content={{
             title: "Generate proof",
-            description: "Generate spend proof",
+            description: "Generate joinsplit proof",
             button: (
-              <GetSpendInputsButton
-                onClick={handleGetSpendInputs}
+              <GetJoinSplitInputsButton
+                onClick={handleGetJoinSplitInputs}
                 disabled={!state.installedSnap}
               />
             ),

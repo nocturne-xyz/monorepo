@@ -11,7 +11,7 @@
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
-    "start": "./scripts/copySpend2DataToStatic.sh && cross-env GATSBY_TELEMETRY_DISABLED=1 gatsby develop"
+    "start": "./scripts/copyJoinSplitDataToStatic.sh && cross-env GATSBY_TELEMETRY_DISABLED=1 gatsby develop"
   },
   "browserslist": {
     "production": [
@@ -28,6 +28,7 @@
   "dependencies": {
     "@metamask/providers": "^9.0.0",
     "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/frontend-sdk": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",
     "react": "^18.2.0",

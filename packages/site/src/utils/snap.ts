@@ -112,7 +112,9 @@ export const syncLeaves = async () => {
   });
 };
 
-export const getSpendInputs = async (operationRequest: OperationRequest) => {
+export const getJoinSplitInputs = async (
+  operationRequest: OperationRequest
+) => {
   console.log("Invoking nocturne_getSpendInputs");
   const res = await window.ethereum.request({
     method: "wallet_invokeSnap",

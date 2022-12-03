@@ -11,11 +11,11 @@ import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { joinSplitProver } from "@nocturne-xyz/local-prover";
 
 export class NocturneFrontendSDK {
-  protected async generateProvenOperation(
+  async generateProvenOperation(
     operationRequest: OperationRequest,
-    gasLimit = 1_000_000n,
     wasmPath: string,
-    zkeyPath: string
+    zkeyPath: string,
+    gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const joinSplitInputs = await this.getJoinSplitInputsFromSnap(
       operationRequest
@@ -76,4 +76,4 @@ export class NocturneFrontendSDK {
   // protected async getRandomizedAddr(): Promise<NocturneAddressStruct> {}
 }
 
-export default new NocturneFrontendSDK();
+export const nocturneFrontendSDK = new NocturneFrontendSDK();
