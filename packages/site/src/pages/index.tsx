@@ -218,16 +218,6 @@ const Index = () => {
         "./joinsplit.zkey"
       );
       console.log(provenOperation);
-      // const inputs = JSON.parse(
-      //   (await getJoinSplitInputs(operationRequest)) as string
-      // );
-      // console.log("From snap inputs: ", inputs);
-      // const proof = await joinSplitProver.proveJoinSplit(
-      //   inputs.proofInputs,
-      //   "./joinsplit.wasm",
-      //   "./joinsplit.zkey"
-      // );
-      // console.log(proof);
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });

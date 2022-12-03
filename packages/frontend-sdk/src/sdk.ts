@@ -6,6 +6,9 @@ import {
   toJSON,
   PreProofOperation,
   SpendAndRefundTokens,
+  preProofOperationFromJSON,
+  NocturneAddress,
+  nocturneAddressFromJSON,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { joinSplitProver } from "@nocturne-xyz/local-prover";
@@ -44,14 +47,10 @@ export class NocturneFrontendSDK {
     };
 
     const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
+    const refundAddr = await this.getRandomizedAddr();
     return {
       joinSplitTxs,
-      refundAddr: {
-        h1X: 0n,
-        h1Y: 0n,
-        h2X: 0n,
-        h2Y: 0n,
-      },
+      refundAddr,
       tokens,
       actions,
       gasLimit,
@@ -61,7 +60,7 @@ export class NocturneFrontendSDK {
   protected async getJoinSplitInputsFromSnap(
     operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
-    return (await window.ethereum.request({
+    const json = await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
         DEFAULT_SNAP_ORIGIN,
@@ -70,10 +69,24 @@ export class NocturneFrontendSDK {
           params: { operationRequest: toJSON(operationRequest) },
         },
       ],
-    })) as PreProofOperation;
+    });
+
+    return preProofOperationFromJSON(json);
   }
 
-  // protected async getRandomizedAddr(): Promise<NocturneAddressStruct> {}
+  protected async getRandomizedAddr(): Promise<NocturneAddress> {
+    const json = await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: [
+        DEFAULT_SNAP_ORIGIN,
+        {
+          method: "nocturne_getRandomizedAddr",
+        },
+      ],
+    });
+
+    return nocturneAddressFromJSON(json);
+  }
 }
 
 export const nocturneFrontendSDK = new NocturneFrontendSDK();

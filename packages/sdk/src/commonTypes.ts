@@ -2,7 +2,7 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddress } from "./crypto/address";
+import { NocturneAddress, nocturneAddressFromJSON } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 import JSON from "json-bigint";
@@ -106,6 +106,19 @@ export interface NoteTransmission {
   encryptedValue: bigint;
 }
 
+export function noteTransmissionFromJSON(
+  jsonOrString: any | string
+): NoteTransmission {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    owner: nocturneAddressFromJSON(json.owner),
+    encappedKey: BigInt(json.encappedKey),
+    encryptedNonce: BigInt(json.encryptedNonce),
+    encryptedValue: BigInt(json.encryptedValue),
+  };
+}
+
 export interface BaseJoinSplitTx {
   commitmentTreeRoot: bigint;
   nullifierA: bigint;
@@ -131,6 +144,27 @@ export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
 export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
+}
+
+export function preProofJoinSplitTxFromJSON(
+  jsonOrString: any | string
+): PreProofJoinSplitTx {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    opDigest: BigInt(json.opDigest),
+    proofInputs: json.proofInputs,
+    commitmentTreeRoot: BigInt(json.commitmentTreeRoot),
+    nullifierA: BigInt(json.nullifierA),
+    nullifierB: BigInt(json.nullifierB),
+    newNoteACommitment: BigInt(json.newNoteACommitment),
+    newNoteBCommitment: BigInt(json.newNoteBCommitment),
+    asset: json.asset,
+    id: BigInt(json.id),
+    publicSpend: BigInt(json.publicSpend),
+    newNoteATransmission: noteTransmissionFromJSON(json.newNoteATransmission),
+    newNoteBTransmission: noteTransmissionFromJSON(json.newNoteBTransmission),
+  };
 }
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
@@ -159,4 +193,19 @@ export interface ProvenOperation {
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
+}
+
+export function preProofOperationFromJSON(
+  jsonOrString: any | string
+): PreProofOperation {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+
+  return {
+    joinSplitTxs: json.joinSplitTxs.map(preProofJoinSplitTxFromJSON),
+    refundAddr: nocturneAddressFromJSON(json.refundAddr),
+    tokens: json.tokens,
+    actions: json.actions,
+    gasLimit: BigInt(json.gasLimit),
+  };
 }
