@@ -5,19 +5,13 @@ import {
   clearDb,
   connectSnap,
   getSnap,
-  sendHello,
-  sendSetAndShowKv,
   shouldDisplayReconnectButton,
-  syncLeaves,
-  syncNotes,
 } from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
   ReconnectButton,
-  SendHelloButton,
   Card,
-  SetAndShowKButton,
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
@@ -148,27 +142,9 @@ const Index = () => {
     }
   };
 
-  const handleSendHelloClick = async () => {
-    try {
-      await sendHello();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const handleSetAndShowKvClick = async () => {
-    try {
-      await sendSetAndShowKv();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   const handleSyncNotesClick = async () => {
     try {
-      await syncNotes();
+      await nocturneFrontendSDK.syncNotes();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -177,7 +153,7 @@ const Index = () => {
 
   const handleSyncLeavesClick = async () => {
     try {
-      await syncLeaves();
+      await nocturneFrontendSDK.syncLeaves();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -299,43 +275,6 @@ const Index = () => {
             disabled={!state.installedSnap}
           />
         )}
-        <Card
-          content={{
-            title: "Send Hello message",
-            description:
-              "Display a custom message within a confirmation screen in MetaMask.",
-            button: (
-              <SendHelloButton
-                onClick={handleSendHelloClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Send SetAndShowKv",
-            description: "Display SetAndShowKv message.",
-            button: (
-              <SetAndShowKButton
-                onClick={handleSetAndShowKvClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
         <Card
           content={{
             title: "Sync Notes",

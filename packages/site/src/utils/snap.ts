@@ -1,4 +1,3 @@
-import { OperationRequest, toJSON } from "@nocturne-xyz/sdk";
 import { defaultSnapOrigin } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
 /**
@@ -54,80 +53,6 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
     console.log("Failed to obtain installed snap", e);
     return undefined;
   }
-};
-
-/**
- * Invoke the "hello" method from the example snap.
- */
-
-export const sendHello = async () => {
-  await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
-        method: "hello",
-      },
-    ],
-  });
-};
-
-/**
- * Invoke the "hello" method from the example snap.
- */
-
-export const sendSetAndShowKv = async () => {
-  await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
-        method: "setAndShowKv",
-      },
-    ],
-  });
-};
-
-export const syncNotes = async () => {
-  await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
-        method: "nocturne_syncNotes",
-      },
-    ],
-  });
-};
-
-export const syncLeaves = async () => {
-  await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
-        method: "nocturne_syncLeaves",
-      },
-    ],
-  });
-};
-
-export const getJoinSplitInputs = async (
-  operationRequest: OperationRequest
-) => {
-  console.log("Invoking nocturne_getSpendInputs");
-  const res = await window.ethereum.request({
-    method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
-        method: "nocturne_getSpendInputs",
-        params: { operationRequest: toJSON(operationRequest) },
-      },
-    ],
-  });
-
-  return res;
 };
 
 export const clearDb = async () => {

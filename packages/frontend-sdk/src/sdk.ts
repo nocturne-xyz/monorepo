@@ -74,6 +74,30 @@ export class NocturneFrontendSDK {
     return JSON.parse(json).map(assetWithBalanceFromJSON);
   }
 
+  async syncNotes(): Promise<void> {
+    await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: [
+        DEFAULT_SNAP_ORIGIN,
+        {
+          method: "nocturne_syncNotes",
+        },
+      ],
+    });
+  }
+
+  async syncLeaves(): Promise<void> {
+    await window.ethereum.request({
+      method: "wallet_invokeSnap",
+      params: [
+        DEFAULT_SNAP_ORIGIN,
+        {
+          method: "nocturne_syncLeaves",
+        },
+      ],
+    });
+  }
+
   protected async getJoinSplitInputsFromSnap(
     operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
