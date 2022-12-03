@@ -121,7 +121,7 @@ export abstract class ObjectDB extends NocturneDB {
   async storeNote(note: IncludedNote): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = NocturneDB.notesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.formatNotesKey({ address: note.asset, id: note.id });
     const existingNotesFor = state.notes.get(key) ?? [];
 
     if (existingNotesFor.includes(note)) {
@@ -136,7 +136,7 @@ export abstract class ObjectDB extends NocturneDB {
   async removeNote(note: IncludedNote): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = NocturneDB.notesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.formatNotesKey({ address: note.asset, id: note.id });
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter((n) => toJSON(n) != toJSON(note))
@@ -150,9 +150,9 @@ export abstract class ObjectDB extends NocturneDB {
     const state = await this.getStructuredState();
 
     const notesMap: Map<string, IncludedNote[]> = new Map();
-    for (const [assetHash, jsonNotes] of state.notes.entries()) {
+    for (const [assetString, jsonNotes] of state.notes.entries()) {
       const notes = [...jsonNotes].map(includedNoteFromJSON);
-      notesMap.set(assetHash, notes);
+      notesMap.set(assetString, notes);
     }
 
     return notesMap;
@@ -160,7 +160,8 @@ export abstract class ObjectDB extends NocturneDB {
 
   async getNotesFor(asset: AssetStruct): Promise<IncludedNote[]> {
     const state = await this.getStructuredState();
-    const jsonNotesFor = state.notes.get(NocturneDB.notesKey(asset)) ?? [];
+    const jsonNotesFor =
+      state.notes.get(NocturneDB.formatNotesKey(asset)) ?? [];
     return jsonNotesFor.map(includedNoteFromJSON);
   }
 

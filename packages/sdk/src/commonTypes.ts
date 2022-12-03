@@ -12,21 +12,21 @@ export const SNARK_SCALAR_FIELD =
 export const ERC20_ID = SNARK_SCALAR_FIELD - 1n; // TODO: fix
 
 export type Address = string;
-export type AssetHash = string;
+export type StringifiedAssetStruct = string;
 
 export function hashAsset(asset: AssetStruct): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
-}
-
-export interface AssetStruct {
-  address: Address;
-  id: bigint;
 }
 
 export function toJSON(object: any): string {
   return JSON.stringify(object, (_, value) =>
     typeof value === "bigint" ? value.toString() : value
   );
+}
+
+export interface AssetStruct {
+  address: Address;
+  id: bigint;
 }
 
 export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {

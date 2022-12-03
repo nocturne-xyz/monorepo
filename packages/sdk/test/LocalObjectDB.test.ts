@@ -46,12 +46,12 @@ describe("LocalObjectDB", async () => {
     await db.storeNote(note);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NocturneDB.notesKey(asset))!;
+    const notesArray = map.get(NocturneDB.formatNotesKey(asset))!;
     expect(notesArray[0]).to.eql(note);
 
     await db.removeNote(note);
     const newMap = await db.getAllNotes();
-    expect(newMap.get(NocturneDB.notesKey(asset))).to.eql([]);
+    expect(newMap.get(NocturneDB.formatNotesKey(asset))).to.eql([]);
   });
 
   it("Stores, gets, and removes multiple notes for same asset", async () => {
@@ -88,13 +88,13 @@ describe("LocalObjectDB", async () => {
     await db.storeNote(noteTwo);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NocturneDB.notesKey(asset))!;
+    const notesArray = map.get(NocturneDB.formatNotesKey(asset))!;
     expect(notesArray[0]).to.eql(noteOne);
     expect(notesArray[1]).to.eql(noteTwo);
 
     await db.removeNote(noteOne);
     const newMap = await db.getAllNotes();
-    const newNotesArray = newMap.get(NocturneDB.notesKey(asset))!;
+    const newNotesArray = newMap.get(NocturneDB.formatNotesKey(asset))!;
     expect(newNotesArray.length).to.eql(1);
     expect(newNotesArray[0]).to.eql(noteTwo);
   });

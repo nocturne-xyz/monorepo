@@ -1,4 +1,4 @@
-import { AssetHash, AssetStruct, hashAsset } from "../../commonTypes";
+import { StringifiedAssetStruct, AssetStruct } from "../../commonTypes";
 import { IncludedNote } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
@@ -60,8 +60,22 @@ export abstract class NocturneDB {
    *
    * @param asset asset
    */
-  static notesKey(asset: AssetStruct): string {
-    return NOTES_PREFIX + hashAsset(asset);
+  static formatNotesKey(asset: AssetStruct): string {
+    return NOTES_PREFIX + asset.address + "_" + asset.id;
+  }
+
+  /**
+   * Format an `Asset` into a key for the notes db by prefixing with
+   * `NOTES_PREFIX`.
+   *
+   * @param asset asset
+   */
+  static parseNotesKey(key: string): AssetStruct {
+    const arr = key.split("_");
+    return {
+      address: arr[1],
+      id: BigInt(arr[2]),
+    };
   }
 
   /**
@@ -97,7 +111,7 @@ export abstract class NocturneDB {
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getAllNotes(): Promise<Map<AssetHash, IncludedNote[]>>;
+  abstract getAllNotes(): Promise<Map<StringifiedAssetStruct, IncludedNote[]>>;
 
   /**
    * Get mapping of all asset types to `IncludedNote[]`;
