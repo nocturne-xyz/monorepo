@@ -11,7 +11,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 const SKIP = process.env.RUN_RAPIDSNARK_TESTS === "true" ? false : true;
 
 const ROOT_DIR = findWorkspaceRoot()!;
-const EXECUTABLE_CMD = "~/rapidsnark/build/prover";
+const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
 const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
