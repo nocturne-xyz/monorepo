@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add interfaces for subtree update prover
 - Add context methods for ensuring min asset balance and reading all balances
 - Proving no longer takes files as function args (moved to local-prover class instantiation)
 - Migrate to joinsplit circuit
