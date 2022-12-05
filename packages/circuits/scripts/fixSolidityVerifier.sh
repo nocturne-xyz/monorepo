@@ -28,3 +28,34 @@ $CMD -ni \
   '1,/^import/p
   /^import/aimport {Pairing} from "./libs/Pairing.sol";
   /contract/,$p' "$FILE"
+
+$CMD -ni \
+  '2,/^import/p
+  /^import/aimport {BatchVerifier} from "./libs/BatchVerifier.sol";
+  /contract/,$p' "$FILE"
+
+# delete the closing brace
+
+head -n -1 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" && rm "$FILE.tmp"
+
+# then insert the method code and reinsert closing brace afterwards
+
+echo "
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) public view override returns (bool) {
+        VerifyingKey memory vk = verifyingKey();
+        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
+            vk.alfa1,
+            vk.beta2,
+            vk.gamma2,
+            vk.delta2
+        );
+
+        return BatchVerifier.batchVerifyProofs(vkFlat, vk.IC, proofsFlat, pisFlat, numProofs);
+    }
+}
+" >> "$FILE"
