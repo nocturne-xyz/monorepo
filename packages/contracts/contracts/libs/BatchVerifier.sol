@@ -3,8 +3,7 @@ pragma solidity ^0.8.5;
 import {Pairing} from "./Pairing.sol";
 import {Utils} from "./Utils.sol";
 
-library IBatchVerifier {
-
+library BatchVerifier {
     function flattenVK(
         Pairing.G1Point memory alfa1,
         Pairing.G2Point memory beta2,
@@ -29,18 +28,6 @@ library IBatchVerifier {
         return vkFlat;
     }
 
-    function flattenProofs(
-        uint256[8][] memory proofs
-    ) internal pure returns (uint256[] memory proofsFlat) {
-        for (uint256 i = 0; i < proofs.length; i++) {
-            for (uint256 j = 0; j < 8; j++) {
-                proofsFlat[i * 8 + j] = proofs[i][j];
-            }
-        }
-
-        return proofsFlat;
-    }
-
     function accumulate(
         uint256[] memory proofsFlat,
         uint256[] memory pisFlat,
@@ -54,11 +41,14 @@ library IBatchVerifier {
         publicInputAccumulators = new uint256[](numPublicInputs + 1);
 
         // Generate entropy for each proof and accumulate each PI
+        // seed a challenger by hashing all of the proofs and the current blockhash togethre
+        uint256 challengerState = uint256(keccak256(abi.encodePacked(proofsFlat, blockhash(block.number - 1))));
         for (uint256 proofIndex = 0; proofIndex < numProofs; proofIndex++) {
             if (proofIndex == 0) {
                 entropy[proofIndex] = 1;
             } else {
-                entropy[proofIndex] = uint256(blockhash(block.number - proofIndex)) % Utils.SNARK_SCALAR_FIELD;
+                challengerState = uint256(keccak256(abi.encodePacked(challengerState)));
+                entropy[proofIndex] = challengerState;
             }
             require(entropy[proofIndex] != 0, "Entropy should not be zero");
             // here multiplication by 1 is implied
@@ -106,23 +96,23 @@ library IBatchVerifier {
         // First two fields are used as the sum and are initially zero
 
         // Performs an MSM(vkIC, publicInputAccumulators)
-        Pairing.G1Point memory msmProduct = Pairing.scalar_mul(vkIC[0], publicInputAccumulators[1]); 
+        Pairing.G1Point memory msmProduct = Pairing.scalar_mul(vkIC[0], publicInputAccumulators[0]); 
         for (uint256 i = 1; i < publicInputAccumulators.length; i++) {
             Pairing.G1Point memory product = Pairing.scalar_mul(vkIC[i], publicInputAccumulators[i]);
             msmProduct = Pairing.addition(msmProduct, product);
         }
 
-        finalVkAlphaXs[0] = msmProduct;
+        finalVkAlphaXs[1] = msmProduct;
 
         // add one extra memory slot for scalar for multiplication usage
         Pairing.G1Point memory finalVKalpha = Pairing.G1Point(vkFlat[0], vkFlat[1]);
         finalVKalpha = Pairing.scalar_mul(finalVKalpha, publicInputAccumulators[0]);
-        finalVkAlphaXs[1] = finalVKalpha;
+        finalVkAlphaXs[0] = finalVKalpha;
 
         return finalVkAlphaXs;
     }
 
-    function BatchVerify ( 
+    function batchVerifyProofs ( 
         uint256[14] memory vkFlat,
         Pairing.G1Point[] memory vkIC,
         uint256[] memory proofsFlat,
@@ -131,7 +121,7 @@ library IBatchVerifier {
     ) internal view returns (bool success) {
         require(proofsFlat.length == numProofs * 8, "Invalid proofs length for a batch");
         require(pisFlat.length % numProofs == 0, "Invalid inputs length for a batch");
-        require(vkIC.length - 1 == pisFlat.length / numProofs);
+        require(vkIC.length == (pisFlat.length / numProofs) + 1);
 
         // strategy is to accumulate entropy separately for some proof elements
         // (accumulate only for G1, can't in G2) of the pairing equation, as well as input verification key,
@@ -145,8 +135,8 @@ library IBatchVerifier {
         uint256[] memory inputs = new uint256[](6*numProofs + 18);
         // first numProofs pairings e(ProofA, ProofB)
         for (uint256 proofNumber = 0; proofNumber < numProofs; proofNumber++) {
-            inputs[proofNumber*6] = proofAandCs[proofNumber*2].X;
-            inputs[proofNumber*6 + 1] = proofAandCs[proofNumber*2].Y;
+            inputs[proofNumber*6] = proofAandCs[proofNumber].X;
+            inputs[proofNumber*6 + 1] = proofAandCs[proofNumber].Y;
             inputs[proofNumber*6 + 2] = proofsFlat[proofNumber*8 + 2];
             inputs[proofNumber*6 + 3] = proofsFlat[proofNumber*8 + 3];
             inputs[proofNumber*6 + 4] = proofsFlat[proofNumber*8 + 4];
@@ -174,8 +164,8 @@ library IBatchVerifier {
         // fourth pairing e(-proof.C, finalVKdelta)
         // third pairing e(-finalVKx, vk.gamma)
         proofAandCs[numProofs] = Pairing.negate(proofAandCs[numProofs]);
-        inputs[numProofs*6 + 12] = proofAandCs[numProofs*2].X;
-        inputs[numProofs*6 + 13] = proofAandCs[numProofs*2].Y;
+        inputs[numProofs*6 + 12] = proofAandCs[numProofs].X;
+        inputs[numProofs*6 + 13] = proofAandCs[numProofs].Y;
         inputs[numProofs*6 + 14] = vkFlat[10];
         inputs[numProofs*6 + 15] = vkFlat[11];
         inputs[numProofs*6 + 16] = vkFlat[12];

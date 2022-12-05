@@ -14,6 +14,7 @@
 pragma solidity ^0.8.5;
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
+import {BatchVerifier} from "./libs/BatchVerifier.sol";
 
 contract JoinSplitVerifier is IJoinSplitVerifier {
     using Pairing for *;
@@ -174,5 +175,21 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         } else {
             return false;
         }
+    }
+
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) public view override returns (bool) {
+        VerifyingKey memory vk = verifyingKey();
+        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
+            vk.alfa1,
+            vk.beta2,
+            vk.gamma2,
+            vk.delta2
+        );
+
+        return BatchVerifier.batchVerifyProofs(vkFlat, vk.IC, proofsFlat, pisFlat, numProofs);
     }
 }
