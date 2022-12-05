@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Refactor joinsplit prover to take circuit files as class fields not function args
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - Add local `joinsplit` implementation and port over SDK gen test case scripts
