@@ -38,24 +38,20 @@ export interface NocturneSetup {
   bob: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
-  nocturneContext: NocturneContext;
-  db: LocalObjectDB;
+  dbAlice: LocalObjectDB;
+  nocturneContextAlice: NocturneContext;
+  dbBob: LocalObjectDB;
+  nocturneContextBob: NocturneContext;
 }
 
-export async function setup(): Promise<NocturneSetup> {
-  const db = new LocalObjectDB({ localMerkle: true });
-  const sk = BigInt(1);
+function setupNocturneContext(
+  sk: bigint,
+  db: LocalObjectDB,
+  wallet: any
+): NocturneContext {
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-  const [_, alice, bob] = await ethers.getSigners();
 
-  await deployments.fixture(["NocturneContracts"]);
-  const vault = await ethers.getContract("Vault");
-  const wallet = await ethers.getContract("Wallet");
-
-  await vault.initialize(wallet.address);
-
-  console.log("Create NocturneContext");
   const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new LocalMerkleProver(
     wallet.address,
@@ -68,21 +64,39 @@ export async function setup(): Promise<NocturneSetup> {
     wallet.address,
     ethers.provider
   );
-  const nocturneContext = new NocturneContext(
+  return new NocturneContext(
     nocturneSigner,
     prover,
     merkleProver,
     notesManager,
     db
   );
+}
+
+export async function setup(): Promise<NocturneSetup> {
+  await deployments.fixture(["NocturneContracts"]);
+  const vault = await ethers.getContract("Vault");
+  const wallet = await ethers.getContract("Wallet");
+  await vault.initialize(wallet.address);
+  const [_, alice, bob] = await ethers.getSigners();
+
+  console.log("Create NocturneContextAlice");
+  const dbAlice = new LocalObjectDB({ localMerkle: true });
+  const nocturneContextAlice = setupNocturneContext(3n, dbAlice, wallet);
+
+  console.log("Create NocturneContextBob");
+  const dbBob = new LocalObjectDB({ localMerkle: true });
+  const nocturneContextBob = setupNocturneContext(5n, dbBob, wallet);
 
   return {
     alice,
     bob,
     vault,
     wallet,
-    nocturneContext,
-    db,
+    dbAlice,
+    nocturneContextAlice,
+    dbBob,
+    nocturneContextBob,
   };
 }
 

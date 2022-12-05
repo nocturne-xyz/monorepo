@@ -42,8 +42,8 @@ describe("LocalMerkle", async () => {
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
     token = token;
-    db = nocturneSetup.db;
-    nocturneContext = nocturneSetup.nocturneContext;
+    db = nocturneSetup.dbAlice;
+    nocturneContext = nocturneSetup.nocturneContextAlice;
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = new MockSubtreeUpdateProver();

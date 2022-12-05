@@ -3,6 +3,10 @@ import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
 import { NocturneAddress } from "./crypto/address";
+import {
+  CanonAddress,
+  NocturneAddress,
+} from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 
@@ -27,13 +31,19 @@ export interface AssetWithBalance {
   balance: bigint;
 }
 
-export interface AssetRequest {
-  asset: Asset;
+export interface PaymentIntent {
+  receiver: CanonAddress;
   value: bigint;
 }
 
+export interface UnwrapAndPayRequest {
+  asset: Asset;
+  value: bigint; // total value to use, publicSpend is value - payment.value
+  paymentIntent?: PaymentIntent;
+}
+
 export interface OperationRequest {
-  assetRequests: AssetRequest[];
+  unwrapAndPayRequests: UnwrapAndPayRequest[];
   refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
   actions: Action[];
 }

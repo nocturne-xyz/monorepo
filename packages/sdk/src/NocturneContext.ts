@@ -1,5 +1,5 @@
 import {
-  AssetRequest,
+  UnwrapAndPayRequest,
   Asset,
   AssetWithBalance,
   OperationRequest,
@@ -16,7 +16,11 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
+import {
+  CanonAddress,
+  NocturneAddress,
+  NocturneAddressTrait,
+} from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -110,6 +114,7 @@ export class NocturneContext {
   /**
    *
    * Given `operationRequest`, gather the necessary notes and proof inputs to
+   *
    * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
    *
@@ -123,7 +128,7 @@ export class NocturneContext {
     refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofOperation> {
-    const { assetRequests, refundTokens } = operationRequest;
+    const { unwrapAndPayRequests, refundTokens } = operationRequest;
 
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
@@ -132,7 +137,7 @@ export class NocturneContext {
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
-      spendTokens: assetRequests.map((a) => a.asset.address),
+      spendTokens: unwrapAndPayRequests.map((a) => a.asset.address),
       refundTokens,
     };
 
@@ -166,13 +171,13 @@ export class NocturneContext {
    * Ensure user has balances to fullfill all asset requests in
    * `operationRequest`. Throws error if any asset request exceeds owned balance.
    *
-   * @param assetRequests Asset requests
+   * @param unwrapAndPayRequests requests
    */
   async ensureMinimumForOperationRequest({
-    assetRequests,
+    unwrapAndPayRequests,
   }: OperationRequest): Promise<void> {
-    for (const assetRequest of assetRequests) {
-      await this.ensureMinimumForAssetRequest(assetRequest);
+    for (const unwrapAndPayRequest of unwrapAndPayRequests) {
+      await this.ensureMinimumForAssetRequest(unwrapAndPayRequest);
     }
   }
 
@@ -216,7 +221,7 @@ export class NocturneContext {
    *
    * @param oldNoteA, oldNoteB old notes to spend
    * @param refundValue value to be given back to the spender
-   * @param outGoingValue value of confidential payment
+   * @param paymentValue value of confidential payment
    * @param receiverAddr recipient of confidential payment
    * @return a PreSignJoinSplitTx
    */
@@ -224,27 +229,30 @@ export class NocturneContext {
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
     refundValue: bigint,
-    outGoingValue = 0n // TODO: add back receiverAddr for confidential payments
+    paymentValue = 0n,
+    receiver?: CanonAddress
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
 
-    const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
-    const newNoteBOwner = newNoteAOwner;
+    const canonOwner = this.signer.privkey.toCanonAddress();
+    if (receiver == undefined) {
+      receiver = canonOwner;
+    }
 
     const newNoteA: Note = {
-      owner: newNoteAOwner,
+      owner: NocturneAddressTrait.canonAddressToNocturneAddress(canonOwner),
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue,
     };
     const newNoteB: Note = {
-      owner: newNoteBOwner,
+      owner: NocturneAddressTrait.canonAddressToNocturneAddress(receiver),
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
-      value: 0n,
+      value: paymentValue,
     };
 
     const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
@@ -254,12 +262,9 @@ export class NocturneContext {
       this.signer.privkey.toCanonAddress(),
       newNoteA
     );
-    const newNoteBTransmission = genNoteTransmission(
-      this.signer.privkey.toCanonAddress(),
-      newNoteB
-    );
+    const newNoteBTransmission = genNoteTransmission(receiver, newNoteB);
     const publicSpend =
-      oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
+      oldNoteA.value + oldNoteB.value - refundValue - paymentValue;
 
     const merkleProofA = await this.merkleProver.getProof(oldNoteA.merkleIndex);
     const merkleInputA: MerkleProofInput = {
@@ -318,19 +323,25 @@ export class NocturneContext {
    * @param gasLimit:Gas limit
    */
   protected async getPreSignOperation(
-    { assetRequests, actions }: OperationRequest,
+    { unwrapAndPayRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
     refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreSignOperation> {
     // For each asset request, gather necessary notes
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
-    for (const assetRequest of assetRequests) {
-      let notesToUse = await this.gatherMinimumNotes(assetRequest);
-      const totalVal = notesToUse.reduce((s, note) => {
+    for (const rq of unwrapAndPayRequests) {
+      let notesToUse = await this.gatherMinimumNotes(rq);
+      const totalUsedValue = notesToUse.reduce((s, note) => {
         return s + note.value;
       }, 0n);
-      let refundVal = totalVal - assetRequest.value;
+      let paymentVal;
+      if (rq.paymentIntent == undefined) {
+        paymentVal = 0n;
+      } else {
+        paymentVal = rq.paymentIntent.value;
+      }
+      let refundVal = totalUsedValue - rq.value - paymentVal;
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
         const newAddr = this.signer.privkey.toCanonAddressStruct();
@@ -346,13 +357,36 @@ export class NocturneContext {
       let noteA, noteB;
       while (notesToUse.length > 0) {
         [noteA, noteB, ...notesToUse] = notesToUse;
-        let val = 0n;
+        let r_val = 0n; // refund value for this joinsplit of (old) noteA and (old) noteB
+        let p_val = 0n; // payment value for this joinsplit
         // add in the refund value if noteA and noteB spend enough
-        if (noteA.value + noteB.value > refundVal) {
-          val = refundVal;
+        if (noteA.value + noteB.value > refundVal + paymentVal) {
+          r_val = refundVal;
+          p_val = paymentVal;
           refundVal = 0n;
+          paymentVal = 0n;
+        } else if (noteA.value + noteB.value > refundVal) {
+          r_val = refundVal;
+          refundVal = 0n;
+        } else if (noteA.value + noteB.value > paymentVal) {
+          p_val = paymentVal;
+          paymentVal = 0n;
         }
-        preSignJoinSplitTxs.push(this.genPreSignJoinSplitTx(noteA, noteB, val));
+        if (p_val > 0n) {
+          preSignJoinSplitTxs.push(
+            this.genPreSignJoinSplitTx(
+              noteA,
+              noteB,
+              r_val,
+              p_val,
+              rq.paymentIntent?.receiver
+            )
+          );
+        } else {
+          preSignJoinSplitTxs.push(
+            this.genPreSignJoinSplitTx(noteA, noteB, r_val)
+          );
+        }
       }
     }
     return {
@@ -409,18 +443,22 @@ export class NocturneContext {
   }
 
   /**
-   * Ensure user has balances to fullfill `assetRequest`. Throws error if
+   * Ensure user has balances to fullfill `unwrapAndPayRequest`. Throws error if
    * attempted request exceeds owned balance.
    *
-   * @param assetRequest Asset request
+   * @param unwrapAndPayRequest request
    */
   async ensureMinimumForAssetRequest(
-    assetRequest: AssetRequest
+    unwrapAndPayRequest: UnwrapAndPayRequest
   ): Promise<void> {
-    const balance = await this.getAssetBalance(assetRequest.asset);
-    if (balance < assetRequest.value) {
+    let totalVal = unwrapAndPayRequest.value;
+    if (unwrapAndPayRequest.paymentIntent !== undefined) {
+      totalVal += unwrapAndPayRequest.paymentIntent.value;
+    }
+    const balance = await this.getAssetBalance(unwrapAndPayRequest.asset);
+    if (balance < totalVal) {
       throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+        `Attempted to spend more funds than owned. Address: ${unwrapAndPayRequest.asset.address}. Attempted: ${unwrapAndPayRequest.value}. Owned: ${balance}.`
       );
     }
   }
@@ -430,27 +468,26 @@ export class NocturneContext {
    * list is sorted from smallest to largest. The total value of returned notes
    * could exceed the requested amount.
    *
-   * @param assetRequest Asset request
+   * @param unwrapAndPayRequest Asset request
    * @return a list of included notes to spend the total value.
    */
   async gatherMinimumNotes(
-    assetRequest: AssetRequest
+    unwrapAndPayRequest: UnwrapAndPayRequest
   ): Promise<IncludedNote[]> {
-    const balance = await this.getAssetBalance(assetRequest.asset);
-    if (balance < assetRequest.value) {
-      throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
-      );
+    this.ensureMinimumForAssetRequest(unwrapAndPayRequest);
+    let totalVal = unwrapAndPayRequest.value;
+    if (unwrapAndPayRequest.paymentIntent !== undefined) {
+      totalVal += unwrapAndPayRequest.paymentIntent.value;
     }
 
-    const notes = await this.db.getNotesFor(assetRequest.asset);
+    const notes = await this.db.getNotesFor(unwrapAndPayRequest.asset);
     const sortedNotes = [...notes].sort((a, b) => {
       return Number(a.value - b.value);
     });
 
     const notesToUse: IncludedNote[] = [];
     let totalSpend = 0n;
-    while (totalSpend < assetRequest.value) {
+    while (totalSpend < totalVal) {
       const oldNote = sortedNotes.shift()!;
       notesToUse.push(oldNote);
       totalSpend += oldNote.value;

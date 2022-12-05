@@ -14,12 +14,13 @@ import {
   Bundle,
   NocturneContext,
   Asset,
-  AssetRequest,
+  UnwrapAndPayRequest,
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
   MockSubtreeUpdateProver,
   query,
+  PaymentIntent,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
@@ -27,7 +28,10 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
-const PER_SPEND_AMOUNT = 100n;
+const PER_NOTE_AMOUNT = 100n;
+const ALICE_UNWRAP_VAL = 50n;
+const ALICE_TO_BOB_PUB_VAL = 40n;
+const ALICE_TO_BOB_PRIV_VAL = 30n;
 
 describe("Wallet", async () => {
   let deployer: ethers.Signer;
@@ -36,9 +40,18 @@ describe("Wallet", async () => {
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
-  let nocturneContext: NocturneContext;
-  let db: LocalObjectDB;
   let updater: SubtreeUpdater;
+  let dbAlice: LocalObjectDB;
+  let nocturneContextAlice: NocturneContext;
+  let dbBob: LocalObjectDB;
+  let nocturneContextBob: NocturneContext;
+
+  // async function applySubtreeUpdate() {
+  //   const root = (
+  //     nocturneContextAlice.merkleProver as LocalMerkleProver
+  //   ).root();
+  //   await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+  // }
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
@@ -46,14 +59,16 @@ describe("Wallet", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const nocturneSetup = await setup();
-    alice = nocturneSetup.alice;
-    bob = nocturneSetup.bob;
-    vault = nocturneSetup.vault;
-    wallet = nocturneSetup.wallet;
-    token = token;
-    nocturneContext = nocturneSetup.nocturneContext;
-    db = nocturneSetup.db;
+    ({
+      alice,
+      bob,
+      vault,
+      wallet,
+      dbAlice,
+      nocturneContextAlice,
+      dbBob,
+      nocturneContextBob,
+    } = await setup());
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = new MockSubtreeUpdateProver();
@@ -68,7 +83,8 @@ describe("Wallet", async () => {
   }
 
   afterEach(async () => {
-    await db.clear();
+    await dbAlice.clear();
+    await dbBob.clear();
     await updater.dropDB();
   });
 
@@ -76,7 +92,7 @@ describe("Wallet", async () => {
     await network.provider.send("hardhat_reset");
   });
 
-  it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
+  it(`Alice deposits two 100 token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
     const asset: Asset = { address: token.address, id: ERC20_ID };
 
     console.log("Deposit funds and commit note commitments");
@@ -85,28 +101,43 @@ describe("Wallet", async () => {
       vault,
       token,
       alice,
-      nocturneContext.signer.address,
-      [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
+      nocturneContextAlice.signer.address,
+      [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
 
     console.log("apply subtree update");
+
     await applySubtreeUpdate();
+    await (
+      nocturneContextAlice.merkleProver as LocalMerkleProver
+    ).fetchLeavesAndUpdate();
+
+    console.log("Alice: Sync SDK notes manager");
+    await nocturneContextAlice.syncNotes();
+    const notesForAlice = await nocturneContextAlice.db.getNotesFor(asset);
+    expect(notesForAlice.length).to.equal(2);
+
+    console.log("Bob: Sync SDK notes manager");
+    await nocturneContextBob.syncNotes();
+    const notesForBob = await nocturneContextBob.db.getNotesFor(asset);
+    expect(notesForBob.length).to.equal(0);
 
     console.log("Sync SDK merkle prover");
-    await nocturneContext.syncLeaves();
-    expect((nocturneContext.merkleProver as LocalMerkleProver).root()).to.equal(
-      (await wallet.root()).toBigInt()
+    await nocturneContextAlice.syncLeaves();
+    expect(
+      (nocturneContextAlice.merkleProver as LocalMerkleProver).root()
+    ).to.equal((await wallet.root()).toBigInt());
+
+    console.log(
+      "Create asset request to public spend 20 tokens and send 30 to Bob privately."
     );
-
-    console.log("Sync SDK notes manager");
-    await nocturneContext.syncNotes();
-    const notesForAsset = await nocturneContext.db.getNotesFor(asset);
-    expect(notesForAsset.length).to.equal(2);
-
-    console.log("Create asset request to spend 50 units of token");
-    const assetRequest: AssetRequest = {
+    const unwrapAndPayRequest: UnwrapAndPayRequest = {
       asset,
-      value: 50n,
+      value: ALICE_UNWRAP_VAL,
+      paymentIntent: {
+        receiver: nocturneContextBob.signer.canonAddress,
+        value: ALICE_TO_BOB_PRIV_VAL,
+      },
     };
 
     console.log("Encode operation request");
@@ -114,20 +145,20 @@ describe("Wallet", async () => {
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [bob.address, 50]
+        [bob.address, ALICE_TO_BOB_PUB_VAL]
       );
     const action: Action = {
       contractAddress: token.address,
       encodedFunction: encodedFunction,
     };
     const operationRequest: OperationRequest = {
-      assetRequests: [assetRequest],
+      unwrapAndPayRequests: [unwrapAndPayRequest],
       refundTokens,
       actions: [action],
     };
 
     console.log("Create post-proof operation with NocturneContext");
-    const operation = await nocturneContext.tryCreateProvenOperation(
+    const operation = await nocturneContextAlice.tryCreateProvenOperation(
       operationRequest
     );
 
@@ -150,16 +181,40 @@ describe("Wallet", async () => {
     expect(events[0].args.opSuccess).to.equal(true);
     expect(events[0].args.callSuccesses[0]).to.equal(true);
 
-    expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
-    expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
-    expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(150n);
+    expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(
+      1000n - 2n * PER_NOTE_AMOUNT
+    );
+    expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(
+      ALICE_TO_BOB_PUB_VAL
+    );
+    expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(
+      2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
+    );
 
-    console.log("Sync SDK notes manager post-operation");
-    await nocturneContext.syncNotes();
-    const updatedNotesForAsset = await nocturneContext.db.getNotesFor(asset)!;
-    const FoundNote = updatedNotesForAsset.filter((n) => n.value > 0);
-    // There should be one new note of value 50n
-    expect(FoundNote.length).to.equal(2);
-    expect(FoundNote[1].value).to.equal(50n);
+    console.log("Alice: Sync SDK notes manager post-operation");
+    await nocturneContextAlice.syncNotes();
+    const updatedNotesAlice = await dbAlice.getNotesFor(asset)!;
+    const FoundNoteAlice = updatedNotesAlice.filter((n) => n.value > 0);
+
+    console.log("Bob: Sync SDK notes manager post-operation");
+    await nocturneContextBob.syncNotes();
+    const updatedNotesBob = await dbBob.getNotesFor(asset)!;
+    const FoundNoteBob = updatedNotesBob.filter((n) => n.value > 0);
+
+    // console.log("ALICE NOTES:", FoundNoteAlice);
+    // console.log("Bob NOTES:", FoundNoteBob);
+
+    // There should be one new note of value 50n for Alice
+    expect(FoundNoteAlice.length).to.equal(3);
+    expect(FoundNoteAlice[1].value).to.equal(
+      ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
+    ); // refund for leftover value in public spend
+    expect(FoundNoteAlice[2].value).to.equal(
+      PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
+    ); // refund from joinsplit
+
+    // There should be one new note containing payment
+    expect(FoundNoteBob.length).to.equal(1);
+    expect(FoundNoteBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
   });
 });

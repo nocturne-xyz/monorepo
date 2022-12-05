@@ -66,4 +66,15 @@ export class NocturneAddressTrait {
     const h2 = babyjub.mulPointEscalar(points.h2, r);
     return NocturneAddressTrait.fromPoints({ h1, h2 });
   }
+
+  static canonAddressToNocturneAddress(
+    canonAddr: CanonAddress
+  ): NocturneAddress {
+    return {
+      h1X: BigInt(babyjub.Base8[0]),
+      h1Y: BigInt(babyjub.Base8[1]),
+      h2X: BigInt(canonAddr[0]),
+      h2Y: BigInt(canonAddr[1]),
+    };
+  }
 }
