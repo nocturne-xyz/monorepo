@@ -13,4 +13,12 @@ contract TestJoinSplitVerifier is IJoinSplitVerifier {
     ) external view override returns (bool) {
         return true;
     }
+
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) external view override returns (bool) {
+        return true;
+    }
 }

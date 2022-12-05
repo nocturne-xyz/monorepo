@@ -14,6 +14,7 @@
 pragma solidity ^0.8.5;
 import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
+import {BatchVerifier} from "./libs/BatchVerifier.sol";
 
 contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     using Pairing for *;
@@ -58,12 +59,12 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                11058274375939673914135651655973148518292938769896078273490559643684699521295,
-                20756119478359134777427669301054003966528457459501729206791797430347569979368
+                20982740898175791991495983987857085770426606771988608689973536200514960704278,
+                16230403929903199002213691148035795871020286437662046814473513458528330080854
             ],
             [
-                15359251180066783873261974948214906211946355314268171330918342415682583965671,
-                7857149754711395033794971646937494251878049406928919646595222852330490103495
+                10944084562148035678313884880730141058194572693711617446883569919384462138217,
+                16812161972733117025321508482363121699342797998240361248267230558679611286097
             ]
         );
         vk.IC = new Pairing.G1Point[](5);
@@ -149,5 +150,29 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         } else {
             return false;
         }
+    }
+
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) public view override returns (bool) {
+        VerifyingKey memory vk = verifyingKey();
+        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
+            vk.alfa1,
+            vk.beta2,
+            vk.gamma2,
+            vk.delta2
+        );
+
+        return
+            BatchVerifier.batchVerifyProofs(
+                vkFlat,
+                vk.IC,
+                proofsFlat,
+                pisFlat,
+                numProofs
+            );
     }
 }

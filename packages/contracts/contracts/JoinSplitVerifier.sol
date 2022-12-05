@@ -14,6 +14,7 @@
 pragma solidity ^0.8.5;
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
+import {BatchVerifier} from "./libs/BatchVerifier.sol";
 
 contract JoinSplitVerifier is IJoinSplitVerifier {
     using Pairing for *;
@@ -58,12 +59,12 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                892100084181594739092153383930145054722006615728965445968585405739429889240,
-                15100490548420672308402728607054994269904700357717542673260030346945373510074
+                857427905641452408804939822909076632983250260440662539601121971919975665978,
+                13415576357306120229821676532104251948794035856280290342483011613947400263937
             ],
             [
-                13680598552664081317268931690572846886074461539608668571276293080859680274581,
-                16892268370747543244728217670769592027828958855630360501847565873511693296096
+                21159456065466347729969538338966285287902764346544856955032194023178566772935,
+                19782346218678784458867904869571464459019140879004471690723147304734408892974
             ]
         );
         vk.IC = new Pairing.G1Point[](10);
@@ -174,5 +175,29 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         } else {
             return false;
         }
+    }
+
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) public view override returns (bool) {
+        VerifyingKey memory vk = verifyingKey();
+        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
+            vk.alfa1,
+            vk.beta2,
+            vk.gamma2,
+            vk.delta2
+        );
+
+        return
+            BatchVerifier.batchVerifyProofs(
+                vkFlat,
+                vk.IC,
+                proofsFlat,
+                pisFlat,
+                numProofs
+            );
     }
 }
