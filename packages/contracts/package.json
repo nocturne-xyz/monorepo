@@ -18,7 +18,8 @@
     "prettier:check": "prettier --check ./contracts",
     "prettier:write": "prettier --write './contracts'",
     "prepublish": "yarn bootstrap && yarn build",
-    "test:unit": "FOUNDRY_PROFILE=contracts forge test"
+    "test:unit": "FOUNDRY_PROFILE=contracts forge test",
+    "test:gas-report": "yarn test:unit --gas-report"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.7.3",
