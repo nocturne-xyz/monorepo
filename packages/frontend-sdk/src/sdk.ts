@@ -27,6 +27,11 @@ export class NocturneFrontendSDK {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
   }
 
+  /**
+   * Generate `ProvenOperation` given an `operationRequest`.
+   *
+   * @param operationRequest Operation request
+   */
   async generateProvenOperation(
     operationRequest: OperationRequest,
     gasLimit = 1_000_000n
@@ -64,6 +69,9 @@ export class NocturneFrontendSDK {
     };
   }
 
+  /**
+   * Return a list of snap's assets (address & id) along with its given balance.
+   */
   async getAllBalances(): Promise<AssetWithBalance[]> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
@@ -78,6 +86,9 @@ export class NocturneFrontendSDK {
     return JSON.parse(json).map(assetWithBalanceFromJSON);
   }
 
+  /**
+   * Invoke snap `syncNotes` method.
+   */
   async syncNotes(): Promise<void> {
     await window.ethereum.request({
       method: "wallet_invokeSnap",
@@ -90,6 +101,9 @@ export class NocturneFrontendSDK {
     });
   }
 
+  /**
+   * Invoke snap `syncLeaves` method.
+   */
   async syncLeaves(): Promise<void> {
     await window.ethereum.request({
       method: "wallet_invokeSnap",
@@ -102,6 +116,12 @@ export class NocturneFrontendSDK {
     });
   }
 
+  /**
+   * Retrieve a `PreProofOperation` from the snap given an `OperationRequest`.
+   * This includes all joinsplit tx inputs.
+   *
+   * @param operationRequest Operation request
+   */
   protected async getJoinSplitInputsFromSnap(
     operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
@@ -119,6 +139,9 @@ export class NocturneFrontendSDK {
     return preProofOperationFromJSON(json);
   }
 
+  /**
+   * Retrieve a freshly randomized address from the snap.
+   */
   protected async getRandomizedAddr(): Promise<NocturneAddress> {
     const json = await window.ethereum.request({
       method: "wallet_invokeSnap",
@@ -134,6 +157,15 @@ export class NocturneFrontendSDK {
   }
 }
 
+/**
+ * Load a `NocturneFrontendSDK` instance, provided paths to local prover's wasm,
+ * zkey, and vkey. Circuit file paths default to caller's current directory
+ * (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.json).
+ *
+ * @param wasmPath Wasm path
+ * @param zkeyPath Zkey path
+ * @param vkeyPath Vkey path
+ */
 export async function loadNocturneFrontendSDK(
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
