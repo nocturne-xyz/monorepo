@@ -8,7 +8,7 @@ import {
   SpendAndRefundTokens,
   preProofOperationFromJSON,
   NocturneAddress,
-  nocturneAddressFromJSON,
+  NocturneAddressTrait,
   AssetWithBalance,
   assetWithBalanceFromJSON,
 } from "@nocturne-xyz/sdk";
@@ -153,7 +153,7 @@ export class NocturneFrontendSDK {
       ],
     });
 
-    return nocturneAddressFromJSON(json);
+    return NocturneAddressTrait.nocturneAddressFromJSON(json);
   }
 }
 

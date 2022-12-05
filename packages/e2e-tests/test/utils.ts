@@ -2,7 +2,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   SNARK_SCALAR_FIELD,
   NocturneAddress,
-  noteToCommitment,
+  NoteTrait,
 } from "@nocturne-xyz/sdk";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { ethers } from "hardhat";
@@ -38,7 +38,7 @@ export async function depositFunds(
       id: ERC20_ID,
       value: amounts[i],
     };
-    commitments.push(noteToCommitment(note));
+    commitments.push(NoteTrait.noteToCommitment(note));
   }
 
   return commitments;

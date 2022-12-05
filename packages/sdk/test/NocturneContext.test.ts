@@ -157,4 +157,24 @@ describe("NocturneContext", () => {
     expect(minimumFor80[1].value).to.equal(25n);
     expect(minimumFor80[0].value).to.equal(10n);
   });
+
+  it("Generates PreProofOpeartion", async () => {
+    // Request 40 tokens, should generate two joinsplits
+    const assetRequest: AssetRequest = {
+      asset,
+      value: 40n,
+    };
+    const preProofOp = await nocturneContext.tryGetPreProofOperation({
+      assetRequests: [assetRequest],
+      refundTokens: ["0x1245"],
+      actions: [
+        {
+          contractAddress: "0x1111",
+          encodedFunction:
+            "0x6d6168616d000000000000000000000000000000000000000000000000000000",
+        },
+      ],
+    });
+    expect(preProofOp.joinSplitTxs.length).to.equal(2);
+  });
 });

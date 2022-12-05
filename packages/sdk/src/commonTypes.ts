@@ -2,7 +2,7 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddress, nocturneAddressFromJSON } from "./crypto/address";
+import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 import JSON from "json-bigint";
@@ -128,7 +128,7 @@ export function noteTransmissionFromJSON(
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   return {
-    owner: nocturneAddressFromJSON(json.owner),
+    owner: NocturneAddressTrait.nocturneAddressFromJSON(json.owner),
     encappedKey: BigInt(json.encappedKey),
     encryptedNonce: BigInt(json.encryptedNonce),
     encryptedValue: BigInt(json.encryptedValue),
@@ -219,7 +219,7 @@ export function preProofOperationFromJSON(
 
   return {
     joinSplitTxs: json.joinSplitTxs.map(preProofJoinSplitTxFromJSON),
-    refundAddr: nocturneAddressFromJSON(json.refundAddr),
+    refundAddr: NocturneAddressTrait.nocturneAddressFromJSON(json.refundAddr),
     tokens: json.tokens,
     actions: json.actions,
     gasLimit: BigInt(json.gasLimit),
