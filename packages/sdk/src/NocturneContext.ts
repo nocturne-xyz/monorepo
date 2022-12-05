@@ -46,7 +46,7 @@ export class NocturneContext {
   protected prover: JoinSplitProver;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
-  protected db: NocturneDB;
+  readonly db: NocturneDB;
 
   constructor(
     signer: NocturneSigner,
