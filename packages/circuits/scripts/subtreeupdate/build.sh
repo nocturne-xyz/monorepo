@@ -36,7 +36,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****GENERATING ZKEY 0****"
 start=`date +%s`
-npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1_PATH" "$OUTPUT_DIR"/"$CIRCUIT_NAME"_0.zkey --verbose
+npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1_PATH" "$OUTPUT_DIR"/"$CIRCUIT_NAME"_0.zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -76,8 +76,6 @@ echo "DONE ($((end-start))s)"
 # npx snarkjs groth16 verify "$OUTPUT_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
-
-\cp "$ROOT_DIR/fixtures/subtreeupdateProof.json"
 
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`

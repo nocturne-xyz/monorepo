@@ -15,6 +15,8 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";
+    uint256 constant NUM_PROOFS = 8;
+    uint256 constant NUM_PIS = 9;
 
     IJoinSplitVerifier verifier;
 
@@ -56,7 +58,35 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
         );
     }
 
+    function batchVerifyFixture(string memory path) public {
+        uint256[] memory proofsFlat = new uint256[](NUM_PROOFS * 8);
+        uint256[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
+        for (uint256 i = 0; i < 8; i++) {
+            JoinSplitProofWithPublicSignals
+                memory proof = loadJoinSplitProofFromFixture(path);
+
+            for (uint256 j = 0; j < NUM_PIS; j++) {
+                pisFlat[i * NUM_PIS + j] = proof.publicSignals[j];
+            }
+
+            uint256[8] memory proof8 = baseProofTo8(proof.proof);
+
+            for (uint256 j = 0; j < 8; j++) {
+                proofsFlat[i * 8 + j] = proof8[j];
+            }
+        }
+
+        require(
+            verifier.batchVerifyProofs(proofsFlat, pisFlat, NUM_PROOFS),
+            "Invalid proof"
+        );
+    }
+
     function testBasicVerify() public {
         verifyFixture(BASIC_FIXTURE_PATH);
+    }
+
+    function testBatchVerify() public {
+        batchVerifyFixture(BASIC_FIXTURE_PATH);
     }
 }

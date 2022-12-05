@@ -14,6 +14,7 @@
 pragma solidity ^0.8.5;
 import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
+import {BatchVerifier} from "./libs/BatchVerifier.sol";
 
 contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     using Pairing for *;
@@ -58,12 +59,12 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                20895331361626691126383210576463289017004763505784994045648518310227048276839,
-                3360925106233175013558377300491845254186221044723334652859224064513155860756
+                20982740898175791991495983987857085770426606771988608689973536200514960704278,
+                16230403929903199002213691148035795871020286437662046814473513458528330080854
             ],
             [
-                11881497998498121446772515101586336634133781725055336933543277593587021904096,
-                14031388759444375835273255277991804267619553491072551689422617278107422479252
+                10944084562148035678313884880730141058194572693711617446883569919384462138217,
+                16812161972733117025321508482363121699342797998240361248267230558679611286097
             ]
         );
         vk.IC = new Pairing.G1Point[](5);
@@ -95,15 +96,15 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     }
 
     function verify(
-        uint256[] memory input,
+        uint[] memory input,
         Proof memory proof
-    ) internal view returns (uint256) {
+    ) internal view returns (uint) {
         uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
         VerifyingKey memory vk = verifyingKey();
         require(input.length + 1 == vk.IC.length, "verifier-bad-input");
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-        for (uint256 i = 0; i < input.length; i++) {
+        for (uint i = 0; i < input.length; i++) {
             require(
                 input[i] < snark_scalar_field,
                 "verifier-gte-snark-scalar-field"
@@ -131,17 +132,17 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
 
     /// @return r  bool true if proof is valid
     function verifyProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[4] memory input
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[4] memory input
     ) public view override returns (bool r) {
         Proof memory proof;
         proof.A = Pairing.G1Point(a[0], a[1]);
         proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
         proof.C = Pairing.G1Point(c[0], c[1]);
-        uint256[] memory inputValues = new uint256[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
+        uint[] memory inputValues = new uint[](input.length);
+        for (uint i = 0; i < input.length; i++) {
             inputValues[i] = input[i];
         }
         if (verify(inputValues, proof) == 0) {
@@ -149,5 +150,29 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         } else {
             return false;
         }
+    }
+
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        uint256[] memory proofsFlat,
+        uint256[] memory pisFlat,
+        uint256 numProofs
+    ) public view override returns (bool) {
+        VerifyingKey memory vk = verifyingKey();
+        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
+            vk.alfa1,
+            vk.beta2,
+            vk.gamma2,
+            vk.delta2
+        );
+
+        return
+            BatchVerifier.batchVerifyProofs(
+                vkFlat,
+                vk.IC,
+                proofsFlat,
+                pisFlat,
+                numProofs
+            );
     }
 }
