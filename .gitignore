@@ -7,6 +7,9 @@ lib/
 /db
 
 .DS_Store
+**/.DS_Store"
+MyLogFile.log
+**/MyLogFile.log
 
 
 # ignore really chonky ptau files

@@ -5,5 +5,6 @@ export * from "./src/crypto";
 export * from "./src/proof";
 export * from "./src/contract";
 export * from "./src/primitives";
+export * from "./src/indexing";
 
 export { NocturneContext } from "./src/NocturneContext";
