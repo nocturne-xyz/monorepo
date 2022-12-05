@@ -77,8 +77,6 @@ echo "DONE ($((end-start))s)"
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
-\cp "$ROOT_DIR/fixtures/subtreeupdateProof.json"
-
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`
 npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR/SubtreeUpdateVerifier.sol""

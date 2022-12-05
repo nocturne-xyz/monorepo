@@ -69,7 +69,7 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
                 pisFlat[i * NUM_PIS + j] = proof.publicSignals[j];
             }
 
-            uint256[8] memory proof8 = baseProofTo8(proof.proof);  
+            uint256[8] memory proof8 = baseProofTo8(proof.proof);
 
             for (uint256 j = 0; j < 8; j++) {
                 proofsFlat[i * 8 + j] = proof8[j];
@@ -77,11 +77,7 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
         }
 
         require(
-            verifier.batchVerifyProofs(
-                proofsFlat,
-                pisFlat,
-                NUM_PROOFS
-            ),
+            verifier.batchVerifyProofs(proofsFlat, pisFlat, NUM_PROOFS),
             "Invalid proof"
         );
     }
