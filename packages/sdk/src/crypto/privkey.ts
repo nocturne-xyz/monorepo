@@ -42,7 +42,7 @@ export class NocturnePrivKey {
     const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
     const h2 = babyjub.mulPointEscalar(h1, this.vk);
-    return NocturneAddressTrait.nocturneAddressFromArrayForm({ h1, h2 });
+    return NocturneAddressTrait.fromPoints({ h1, h2 });
   }
 
   spendPk(): [bigint, bigint] {

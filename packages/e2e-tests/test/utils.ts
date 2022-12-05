@@ -38,7 +38,7 @@ export async function depositFunds(
       id: ERC20_ID,
       value: amounts[i],
     };
-    commitments.push(NoteTrait.noteToCommitment(note));
+    commitments.push(NoteTrait.toCommitment(note));
   }
 
   return commitments;

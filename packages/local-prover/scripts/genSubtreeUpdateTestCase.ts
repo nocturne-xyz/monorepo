@@ -127,8 +127,8 @@ export function getSubtreeUpdateInputs(
       ids.push(note.id);
       values.push(note.value);
       bitmap.push(1n);
-      noteHashes.push(NoteTrait.sha256Note(note));
-      leaves.push(NoteTrait.noteToCommitment(note));
+      noteHashes.push(NoteTrait.sha256(note));
+      leaves.push(NoteTrait.toCommitment(note));
 
       noteIdx++;
     }
@@ -199,7 +199,7 @@ const notes: Note[] = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
 
 const noteCommitmentIndices = [1, 7, 9];
 const spendNoteCommitments = noteCommitmentIndices.map((i) =>
-  NoteTrait.noteToCommitment(notes[i])
+  NoteTrait.toCommitment(notes[i])
 );
 const fullyRevealedNotes = notes.filter(
   (_, i) => !noteCommitmentIndices.includes(i)

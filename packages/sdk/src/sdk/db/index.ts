@@ -1,4 +1,4 @@
-import { NotesKey, AssetStruct } from "../../commonTypes";
+import { NotesKey, Asset } from "../../commonTypes";
 import { IncludedNote } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
@@ -60,7 +60,7 @@ export abstract class NocturneDB {
    *
    * @param asset asset
    */
-  static formatNotesKey(asset: AssetStruct): string {
+  static formatNotesKey(asset: Asset): string {
     return NOTES_PREFIX + asset.address + "_" + asset.id;
   }
 
@@ -70,7 +70,7 @@ export abstract class NocturneDB {
    *
    * @param asset asset
    */
-  static parseNotesKey(key: string): AssetStruct {
+  static parseNotesKey(key: string): Asset {
     const arr = key.split("_");
     return {
       address: arr[1],
@@ -118,7 +118,7 @@ export abstract class NocturneDB {
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getNotesFor(asset: AssetStruct): Promise<IncludedNote[]>;
+  abstract getNotesFor(asset: Asset): Promise<IncludedNote[]>;
 
   /**
    * Clear entire database.

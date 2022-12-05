@@ -2,7 +2,7 @@ import "mocha";
 import * as fs from "fs";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { AssetRequest, AssetStruct } from "../src/commonTypes";
+import { AssetRequest, Asset } from "../src/commonTypes";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
@@ -18,10 +18,10 @@ import { getDefaultProvider } from "ethers";
 describe("NocturneContext", () => {
   let db = new LocalObjectDB({ localMerkle: true });
   let nocturneContext: NocturneContext;
-  const asset: AssetStruct = { address: "0x1234", id: 11111n };
+  const asset: Asset = { address: "0x1234", id: 11111n };
 
   async function setupNocturneContextWithFourNotes(
-    asset: AssetStruct
+    asset: Asset
   ): Promise<NocturneContext> {
     const sk = BigInt(1);
     const nocturnePrivKey = new NocturnePrivKey(sk);

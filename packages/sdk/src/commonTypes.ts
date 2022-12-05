@@ -14,7 +14,7 @@ export const ERC20_ID = SNARK_SCALAR_FIELD - 1n; // TODO: fix
 export type Address = string;
 export type NotesKey = string; // Takes form of NOTES_<address>_<id>
 
-export function hashAsset(asset: AssetStruct): string {
+export function hashAsset(asset: Asset): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
 }
 
@@ -24,12 +24,12 @@ export function toJSON(object: any): string {
   );
 }
 
-export interface AssetStruct {
+export interface Asset {
   address: Address;
   id: bigint;
 }
 
-export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {
+export function assetStructFromJSON(jsonOrString: any | string): Asset {
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   return {
@@ -39,7 +39,7 @@ export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {
 }
 
 export interface AssetWithBalance {
-  asset: AssetStruct;
+  asset: Asset;
   balance: bigint;
 }
 
@@ -55,7 +55,7 @@ export function assetWithBalanceFromJSON(
 }
 
 export interface AssetRequest {
-  asset: AssetStruct;
+  asset: Asset;
   value: bigint;
 }
 
@@ -128,7 +128,7 @@ export function noteTransmissionFromJSON(
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   return {
-    owner: NocturneAddressTrait.nocturneAddressFromJSON(json.owner),
+    owner: NocturneAddressTrait.fromJSON(json.owner),
     encappedKey: BigInt(json.encappedKey),
     encryptedNonce: BigInt(json.encryptedNonce),
     encryptedValue: BigInt(json.encryptedValue),
@@ -219,7 +219,7 @@ export function preProofOperationFromJSON(
 
   return {
     joinSplitTxs: json.joinSplitTxs.map(preProofJoinSplitTxFromJSON),
-    refundAddr: NocturneAddressTrait.nocturneAddressFromJSON(json.refundAddr),
+    refundAddr: NocturneAddressTrait.fromJSON(json.refundAddr),
     tokens: json.tokens,
     actions: json.actions,
     gasLimit: BigInt(json.gasLimit),

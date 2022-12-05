@@ -153,7 +153,7 @@ export class NocturneFrontendSDK {
       ],
     });
 
-    return NocturneAddressTrait.nocturneAddressFromJSON(json);
+    return NocturneAddressTrait.fromJSON(json);
   }
 }
 

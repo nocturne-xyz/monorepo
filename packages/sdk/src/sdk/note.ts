@@ -15,12 +15,12 @@ export interface Note {
 }
 
 export class NoteTrait {
-  static noteFromJSON(jsonOrString: string | any): Note {
+  static fromJSON(jsonOrString: string | any): Note {
     const json: any =
       typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
     const { owner, nonce, asset, id, value } = json;
     return {
-      owner: NocturneAddressTrait.nocturneAddressFromJSON(owner),
+      owner: NocturneAddressTrait.fromJSON(owner),
       nonce: BigInt(nonce),
       asset: asset.toString(),
       id: BigInt(id),
@@ -28,10 +28,10 @@ export class NoteTrait {
     };
   }
 
-  static noteToCommitment({ owner, nonce, asset, id, value }: Note): bigint {
+  static toCommitment({ owner, nonce, asset, id, value }: Note): bigint {
     return BigInt(
       poseidon([
-        NocturneAddressTrait.hashNocturneAddress(owner),
+        NocturneAddressTrait.hash(owner),
         nonce,
         BigInt(asset),
         id,
@@ -40,7 +40,7 @@ export class NoteTrait {
     );
   }
 
-  static noteToNoteInput({ owner, nonce, asset, id, value }: Note): NoteInput {
+  static toNoteInput({ owner, nonce, asset, id, value }: Note): NoteInput {
     return {
       owner: owner,
       nonce: nonce,
@@ -50,8 +50,8 @@ export class NoteTrait {
     };
   }
 
-  static sha256Note(note: Note): number[] {
-    const noteInput = NoteTrait.noteToNoteInput(note);
+  static sha256(note: Note): number[] {
+    const noteInput = NoteTrait.toNoteInput(note);
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
@@ -70,7 +70,7 @@ export class NoteTrait {
     return sha256.array(preimage);
   }
 
-  static noteToIncludedNote(
+  static toIncludedNote(
     { owner, nonce, asset, id, value }: Note,
     merkleIndex: number
   ): IncludedNote {
@@ -87,7 +87,7 @@ export function includedNoteFromJSON(jsonOrString: string | any): IncludedNote {
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   const { owner, nonce, asset, id, value, merkleIndex } = json;
   return {
-    owner: NocturneAddressTrait.nocturneAddressFromJSON(owner),
+    owner: NocturneAddressTrait.fromJSON(owner),
     nonce: BigInt(nonce),
     asset: asset.toString(),
     id: BigInt(id),

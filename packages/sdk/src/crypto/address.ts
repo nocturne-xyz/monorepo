@@ -12,13 +12,13 @@ export interface NocturneAddress {
 
 export type CanonAddress = [bigint, bigint];
 
-export interface ArrayNocturneAddress {
+export interface AddressPoints {
   h1: [bigint, bigint];
   h2: [bigint, bigint];
 }
 
 export class NocturneAddressTrait {
-  static nocturneAddressFromJSON(jsonOrString: string | any): NocturneAddress {
+  static fromJSON(jsonOrString: string | any): NocturneAddress {
     const json: any =
       typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
     const { h1X, h1Y, h2X, h2Y } = json;
@@ -30,19 +30,15 @@ export class NocturneAddressTrait {
     };
   }
 
-  static nocturneAddressToArrayForm(
-    flattened: NocturneAddress
-  ): ArrayNocturneAddress {
+  static toPoints(flattened: NocturneAddress): AddressPoints {
     return {
       h1: [flattened.h1X, flattened.h1Y],
       h2: [flattened.h2X, flattened.h2Y],
     };
   }
 
-  static nocturneAddressFromArrayForm(
-    arrayAddress: ArrayNocturneAddress
-  ): NocturneAddress {
-    const { h1, h2 } = arrayAddress;
+  static fromPoints(addressPoints: AddressPoints): NocturneAddress {
+    const { h1, h2 } = addressPoints;
     return {
       h1X: h1[0],
       h1Y: h1[1],
@@ -51,35 +47,35 @@ export class NocturneAddressTrait {
     };
   }
 
-  static nocturneAddressToString(address: NocturneAddress): string {
-    const { h1, h2 } = NocturneAddressTrait.nocturneAddressToArrayForm(address);
+  static toString(address: NocturneAddress): string {
+    const { h1, h2 } = NocturneAddressTrait.toPoints(address);
     const b1 = Buffer.from(babyjub.packPoint(h1));
     const b2 = Buffer.from(babyjub.packPoint(h2));
     const b = Buffer.concat([b1, b2]);
     return NocturneAddrPrefix + b.toString("base64");
   }
 
-  static nocturneAddressFromString(str: string): NocturneAddress {
+  static fromString(str: string): NocturneAddress {
     const base64str = str.slice(NocturneAddrPrefix.length);
     const b = Buffer.from(base64str, "base64");
     const b1 = b.slice(0, 32);
     const b2 = b.slice(32, 64);
     const h1 = babyjub.unpackPoint(b1) as [bigint, bigint];
     const h2 = babyjub.unpackPoint(b2) as [bigint, bigint];
-    return NocturneAddressTrait.nocturneAddressFromArrayForm({ h1, h2 });
+    return NocturneAddressTrait.fromPoints({ h1, h2 });
   }
 
-  static hashNocturneAddress(address: NocturneAddress): bigint {
+  static hash(address: NocturneAddress): bigint {
     const { h1X, h2X } = address;
     return BigInt(poseidon([h1X, h2X]));
   }
 
-  static rerandNocturneAddress(address: NocturneAddress): NocturneAddress {
-    const arrayAddr = NocturneAddressTrait.nocturneAddressToArrayForm(address);
+  static randomize(address: NocturneAddress): NocturneAddress {
+    const points = NocturneAddressTrait.toPoints(address);
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
-    const h1 = babyjub.mulPointEscalar(arrayAddr.h1, r);
-    const h2 = babyjub.mulPointEscalar(arrayAddr.h2, r);
-    return NocturneAddressTrait.nocturneAddressFromArrayForm({ h1, h2 });
+    const h1 = babyjub.mulPointEscalar(points.h1, r);
+    const h2 = babyjub.mulPointEscalar(points.h2, r);
+    return NocturneAddressTrait.fromPoints({ h1, h2 });
   }
 }

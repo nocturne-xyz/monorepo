@@ -1,5 +1,5 @@
 import { NocturneDB, LocalMerkleDBExtension } from ".";
-import { AssetStruct, toJSON } from "../../commonTypes";
+import { Asset, toJSON } from "../../commonTypes";
 import { IncludedNote, includedNoteFromJSON } from "../note";
 
 export const DEFAULT_SERIALIZABLE_STATE: SerializableState = {
@@ -158,7 +158,7 @@ export abstract class ObjectDB extends NocturneDB {
     return notesMap;
   }
 
-  async getNotesFor(asset: AssetStruct): Promise<IncludedNote[]> {
+  async getNotesFor(asset: Asset): Promise<IncludedNote[]> {
     const state = await this.getStructuredState();
     const jsonNotesFor =
       state.notes.get(NocturneDB.formatNotesKey(asset)) ?? [];

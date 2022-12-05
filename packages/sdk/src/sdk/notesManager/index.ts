@@ -88,7 +88,7 @@ export abstract class NotesManager {
       );
       if (
         newNote.value > 0n &&
-        NoteTrait.noteToCommitment(newNote) == newNoteCommitment
+        NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
         await this.db.storeNote(newNote);
       }

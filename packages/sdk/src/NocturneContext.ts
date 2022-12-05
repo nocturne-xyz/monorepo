@@ -1,6 +1,6 @@
 import {
   AssetRequest,
-  AssetStruct,
+  Asset,
   AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
@@ -128,7 +128,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : NocturneAddressTrait.rerandNocturneAddress(this.signer.address);
+      : NocturneAddressTrait.randomize(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -247,8 +247,8 @@ export class NocturneContext {
       value: 0n,
     };
 
-    const newNoteACommitment = NoteTrait.noteToCommitment(newNoteA);
-    const newNoteBCommitment = NoteTrait.noteToCommitment(newNoteB);
+    const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
+    const newNoteBCommitment = NoteTrait.toCommitment(newNoteB);
 
     const newNoteATransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
@@ -393,12 +393,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: NoteTrait.noteToNoteInput(oldNoteA),
-      oldNoteB: NoteTrait.noteToNoteInput(oldNoteB),
+      oldNoteA: NoteTrait.toNoteInput(oldNoteA),
+      oldNoteB: NoteTrait.toNoteInput(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: NoteTrait.noteToNoteInput(newNoteA),
-      newNoteB: NoteTrait.noteToNoteInput(newNoteB),
+      newNoteA: NoteTrait.toNoteInput(newNoteA),
+      newNoteB: NoteTrait.toNoteInput(newNoteB),
     };
 
     return {
@@ -482,7 +482,7 @@ export class NocturneContext {
    *
    * @param asset Asset
    */
-  async getAssetBalance(asset: AssetStruct): Promise<bigint> {
+  async getAssetBalance(asset: Asset): Promise<bigint> {
     const notes = await this.db.getNotesFor(asset);
 
     if (!notes) {

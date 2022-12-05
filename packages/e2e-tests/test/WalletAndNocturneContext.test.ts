@@ -12,7 +12,7 @@ import {
   SNARK_SCALAR_FIELD,
   Bundle,
   NocturneContext,
-  AssetStruct,
+  Asset,
   AssetRequest,
   OperationRequest,
   LocalObjectDB,
@@ -64,7 +64,7 @@ describe("Wallet", async () => {
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
-    const asset: AssetStruct = { address: token.address, id: ERC20_ID };
+    const asset: Asset = { address: token.address, id: ERC20_ID };
 
     console.log("Deposit funds and commit note commitments");
     await depositFunds(

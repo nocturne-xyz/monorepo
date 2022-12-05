@@ -49,8 +49,7 @@ const oldNoteA: NoteInput = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash =
-  NocturneAddressTrait.hashNocturneAddress(nocturneAddrA);
+const oldNoteAOwnerHash = NocturneAddressTrait.hash(nocturneAddrA);
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
@@ -69,8 +68,7 @@ const oldNoteB: NoteInput = {
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
-const oldNoteBOwnerHash =
-  NocturneAddressTrait.hashNocturneAddress(nocturneAddrB);
+const oldNoteBOwnerHash = NocturneAddressTrait.hash(nocturneAddrB);
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,

@@ -149,7 +149,7 @@ export class LocalMerkleProver extends MerkleProver {
           value: noteValues.value.toBigInt(),
         };
 
-        const leaf = NoteTrait.noteToCommitment(note);
+        const leaf = NoteTrait.toCommitment(note);
         leaves.push({
           leaf,
           blockNumber: event.blockNumber,

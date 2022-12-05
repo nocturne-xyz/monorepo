@@ -55,7 +55,7 @@ export function genNoteTransmission(
     BigInt(poseidon([encodePoint(R) + 1n])) + note.value
   );
   return {
-    owner: NocturneAddressTrait.rerandNocturneAddress(note.owner),
+    owner: NocturneAddressTrait.randomize(note.owner),
     encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
     encryptedNonce,
     encryptedValue,
