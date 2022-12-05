@@ -29,6 +29,18 @@ library IBatchVerifier {
         return vkFlat;
     }
 
+    function flattenProofs(
+        uint256[8][] memory proofs
+    ) internal pure returns (uint256[] memory proofsFlat) {
+        for (uint256 i = 0; i < proofs.length; i++) {
+            for (uint256 j = 0; j < 8; j++) {
+                proofsFlat[i * 8 + j] = proofs[i][j];
+            }
+        }
+
+        return proofsFlat;
+    }
+
     function accumulate(
         uint256[] memory proofsFlat,
         uint256[] memory pisFlat,
