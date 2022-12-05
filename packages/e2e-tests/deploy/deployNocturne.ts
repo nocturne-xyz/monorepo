@@ -1,4 +1,5 @@
 import { ethers, deployments } from "hardhat";
+import * as fs from "fs";
 import {
   Wallet__factory,
   Vault__factory,
@@ -16,10 +17,21 @@ import {
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { joinSplitProver as prover } from "@nocturne-xyz/local-prover";
+import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
+
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import * as path from "path";
+
+// eslint-disable-next-line
+const ROOT_DIR = findWorkspaceRoot()!;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
+const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
 export interface NocturneSetup {
   alice: ethers.Signer;
@@ -44,6 +56,7 @@ export async function setup(): Promise<NocturneSetup> {
   await vault.initialize(wallet.address);
 
   console.log("Create NocturneContext");
+  const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new LocalMerkleProver(
     wallet.address,
     ethers.provider,

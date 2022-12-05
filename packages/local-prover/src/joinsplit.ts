@@ -9,11 +9,19 @@ import {
   normalizePublicSignals,
 } from "@nocturne-xyz/sdk";
 
-class LocalJoinSplitProver implements JoinSplitProver {
+export class LocalJoinSplitProver implements JoinSplitProver {
+  wasmPath: string;
+  zkeyPath: string;
+  vkey: any;
+
+  constructor(wasmPath: string, zkeyPath: string, vkey: any) {
+    this.wasmPath = wasmPath;
+    this.zkeyPath = zkeyPath;
+    this.vkey = vkey;
+  }
+
   async proveJoinSplit(
-    inputs: JoinSplitInputs,
-    wasmPath: string,
-    zkeyPath: string
+    inputs: JoinSplitInputs
   ): Promise<JoinSplitProofWithPublicSignals> {
     inputs = normalizeJoinSplitInputs(inputs);
     const {
@@ -68,17 +76,19 @@ class LocalJoinSplitProver implements JoinSplitProver {
       newNoteBValue: newNoteB.value,
     };
 
-    const proof = await snarkjs.groth16.fullProve(signals, wasmPath, zkeyPath);
+    const proof = await snarkjs.groth16.fullProve(
+      signals,
+      this.wasmPath,
+      this.zkeyPath
+    );
     proof.publicSignals = normalizePublicSignals(proof.publicSignals);
     return proof;
   }
 
-  async verifyJoinSplitProof(
-    { proof, publicSignals }: JoinSplitProofWithPublicSignals,
-    vkey: any
-  ): Promise<boolean> {
-    return await snarkjs.groth16.verify(vkey, publicSignals, proof);
+  async verifyJoinSplitProof({
+    proof,
+    publicSignals,
+  }: JoinSplitProofWithPublicSignals): Promise<boolean> {
+    return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
   }
 }
-
-export const joinSplitProver = new LocalJoinSplitProver();

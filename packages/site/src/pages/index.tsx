@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
@@ -26,7 +26,10 @@ import {
   toJSON,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
-import { nocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
+import {
+  loadNocturneFrontendSDK,
+  NocturneFrontendSDK,
+} from "@nocturne-xyz/frontend-sdk";
 
 const Container = styled.div`
   display: flex;
@@ -115,17 +118,13 @@ const ErrorMessage = styled.div`
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
-  let joinSplitWasm: any;
-  let joinSplitZkey: any;
+  const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
-  const instantiateCircuitData = async () => {
-    if (!joinSplitWasm) {
-      joinSplitWasm = await fetch("./public/joinsplit.wasm");
-    }
-    if (!joinSplitZkey) {
-      joinSplitZkey = await fetch("./public/joinsplit.zkey");
-    }
-  };
+  useEffect(() => {
+    loadNocturneFrontendSDK().then((sdk) => {
+      setFrontendSDK(sdk);
+    });
+  }, [loadNocturneFrontendSDK]);
 
   const handleConnectClick = async () => {
     try {
@@ -144,7 +143,7 @@ const Index = () => {
 
   const handleSyncNotesClick = async () => {
     try {
-      await nocturneFrontendSDK.syncNotes();
+      await nocturneFrontendSDK!.syncNotes();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -153,7 +152,7 @@ const Index = () => {
 
   const handleSyncLeavesClick = async () => {
     try {
-      await nocturneFrontendSDK.syncLeaves();
+      await nocturneFrontendSDK!.syncLeaves();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -162,7 +161,7 @@ const Index = () => {
 
   const handleGetAllBalancesClick = async () => {
     try {
-      const balances = await nocturneFrontendSDK.getAllBalances();
+      const balances = await nocturneFrontendSDK!.getAllBalances();
       console.log(toJSON(balances));
     } catch (e) {
       console.error(e);
@@ -171,8 +170,6 @@ const Index = () => {
   };
 
   const handleGetJoinSplitInputs = async () => {
-    await instantiateCircuitData();
-
     const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
     const assetRequest: AssetRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
@@ -197,11 +194,8 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const provenOperation = await nocturneFrontendSDK.generateProvenOperation(
-        operationRequest,
-        "./joinsplit.wasm",
-        "./joinsplit.zkey"
-      );
+      const provenOperation =
+        await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
       console.log(provenOperation);
     } catch (e) {
       console.error("error: ", e);

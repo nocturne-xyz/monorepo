@@ -13,14 +13,22 @@ import {
   assetWithBalanceFromJSON,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
-import { joinSplitProver } from "@nocturne-xyz/local-prover";
+import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import JSON from "json-bigint";
 
+const WASM_PATH = "./joinsplit.wasm";
+const ZKEY_PATH = "./joinsplit.zkey";
+const VKEY_PATH = "./joinSplitVkey.json";
+
 export class NocturneFrontendSDK {
+  localProver: LocalJoinSplitProver;
+
+  constructor(wasmPath: string, zkeyPath: string, vkey: any) {
+    this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+  }
+
   async generateProvenOperation(
     operationRequest: OperationRequest,
-    wasmPath: string,
-    zkeyPath: string,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const joinSplitInputs = await this.getJoinSplitInputsFromSnap(
@@ -30,11 +38,7 @@ export class NocturneFrontendSDK {
     const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
       joinSplitInputs.joinSplitTxs.map(
         async ({ proofInputs, ...joinSplitTx }) => {
-          const { proof } = await joinSplitProver.proveJoinSplit(
-            proofInputs,
-            wasmPath,
-            zkeyPath
-          );
+          const { proof } = await this.localProver.proveJoinSplit(proofInputs);
 
           return {
             proof: packToSolidityProof(proof),
@@ -130,4 +134,11 @@ export class NocturneFrontendSDK {
   }
 }
 
-export const nocturneFrontendSDK = new NocturneFrontendSDK();
+export async function loadNocturneFrontendSDK(
+  wasmPath: string = WASM_PATH,
+  zkeyPath: string = ZKEY_PATH,
+  vkeyPath: string = VKEY_PATH
+): Promise<NocturneFrontendSDK> {
+  const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
+  return new NocturneFrontendSDK(wasmPath, zkeyPath, vkey);
+}

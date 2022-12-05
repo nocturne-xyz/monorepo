@@ -89,8 +89,6 @@ export class NocturneContext {
    */
   async tryCreateProvenOperation(
     operationRequest: OperationRequest,
-    joinSplitWasmPath: string,
-    joinSplitZkeyPath: string,
     refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
@@ -102,7 +100,7 @@ export class NocturneContext {
 
     const allProofPromises: Promise<ProvenJoinSplitTx>[] =
       preProofOp.joinSplitTxs.map((tx) => {
-        return this.proveJoinSplitTx(tx, joinSplitWasmPath, joinSplitZkeyPath);
+        return this.proveJoinSplitTx(tx);
       });
 
     return {
@@ -187,16 +185,10 @@ export class NocturneContext {
    * Generate a `ProvenJoinSplitTx` from a `PreProofJoinSplitTx`
    */
   protected async proveJoinSplitTx(
-    preProofJoinSplitTx: PreProofJoinSplitTx,
-    joinSplitWasmPath: string,
-    joinSplitZkeyPath: string
+    preProofJoinSplitTx: PreProofJoinSplitTx
   ): Promise<ProvenJoinSplitTx> {
     const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
-    const proof = await this.prover.proveJoinSplit(
-      proofInputs,
-      joinSplitWasmPath,
-      joinSplitZkeyPath
-    );
+    const proof = await this.prover.proveJoinSplit(proofInputs);
 
     // Check that snarkjs output is consistent with our precomputed joinsplit values
     const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
