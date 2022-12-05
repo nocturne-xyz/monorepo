@@ -11,7 +11,7 @@ import {
   MerkleProofInput,
   NoteInput,
   toJSON,
-  hashNocturneAddress,
+  NocturneAddressTrait,
 } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -49,7 +49,8 @@ const oldNoteA: NoteInput = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash = hashNocturneAddress(nocturneAddrA);
+const oldNoteAOwnerHash =
+  NocturneAddressTrait.hashNocturneAddress(nocturneAddrA);
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
@@ -68,7 +69,8 @@ const oldNoteB: NoteInput = {
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
-const oldNoteBOwnerHash = hashNocturneAddress(nocturneAddrB);
+const oldNoteBOwnerHash =
+  NocturneAddressTrait.hashNocturneAddress(nocturneAddrB);
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,

@@ -1,5 +1,5 @@
 import { NocturneDB } from "../db";
-import { IncludedNote, noteToCommitment } from "../note";
+import { IncludedNote, NoteTrait } from "../note";
 import { NocturneSigner } from "../signer";
 import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
@@ -88,7 +88,7 @@ export abstract class NotesManager {
       );
       if (
         newNote.value > 0n &&
-        noteToCommitment(newNote) == newNoteCommitment
+        NoteTrait.noteToCommitment(newNote) == newNoteCommitment
       ) {
         await this.db.storeNote(newNote);
       }

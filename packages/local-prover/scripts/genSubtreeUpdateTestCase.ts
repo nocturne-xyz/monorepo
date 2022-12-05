@@ -13,8 +13,7 @@ import {
   NocturnePrivKey,
   NocturneSigner,
   Note,
-  noteToCommitment,
-  sha256Note,
+  NoteTrait,
   toJSON,
 } from "@nocturne-xyz/sdk";
 
@@ -128,8 +127,8 @@ export function getSubtreeUpdateInputs(
       ids.push(note.id);
       values.push(note.value);
       bitmap.push(1n);
-      noteHashes.push(sha256Note(note));
-      leaves.push(noteToCommitment(note));
+      noteHashes.push(NoteTrait.sha256Note(note));
+      leaves.push(NoteTrait.noteToCommitment(note));
 
       noteIdx++;
     }
@@ -200,7 +199,7 @@ const notes: Note[] = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
 
 const noteCommitmentIndices = [1, 7, 9];
 const spendNoteCommitments = noteCommitmentIndices.map((i) =>
-  noteToCommitment(notes[i])
+  NoteTrait.noteToCommitment(notes[i])
 );
 const fullyRevealedNotes = notes.filter(
   (_, i) => !noteCommitmentIndices.includes(i)

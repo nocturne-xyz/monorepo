@@ -14,14 +14,9 @@ import {
   PreProofOperation,
   ProvenOperation,
 } from "./commonTypes";
-import {
-  Note,
-  IncludedNote,
-  noteToCommitment,
-  noteToNoteInput,
-} from "./sdk/note";
+import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddress, rerandNocturneAddress } from "./crypto/address";
+import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -133,7 +128,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : rerandNocturneAddress(this.signer.address);
+      : NocturneAddressTrait.rerandNocturneAddress(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -252,8 +247,8 @@ export class NocturneContext {
       value: 0n,
     };
 
-    const newNoteACommitment = noteToCommitment(newNoteA);
-    const newNoteBCommitment = noteToCommitment(newNoteB);
+    const newNoteACommitment = NoteTrait.noteToCommitment(newNoteA);
+    const newNoteBCommitment = NoteTrait.noteToCommitment(newNoteB);
 
     const newNoteATransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
@@ -398,12 +393,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: noteToNoteInput(oldNoteA),
-      oldNoteB: noteToNoteInput(oldNoteB),
+      oldNoteA: NoteTrait.noteToNoteInput(oldNoteA),
+      oldNoteB: NoteTrait.noteToNoteInput(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: noteToNoteInput(newNoteA),
-      newNoteB: noteToNoteInput(newNoteB),
+      newNoteA: NoteTrait.noteToNoteInput(newNoteA),
+      newNoteB: NoteTrait.noteToNoteInput(newNoteB),
     };
 
     return {
