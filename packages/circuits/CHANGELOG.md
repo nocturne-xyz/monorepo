@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add batch verifier method to auto-generated solidity verifiers
 - New `joinsplit` and `joinsplit_compliance` circuit
   - Removed Spend2 and old circuits
 - Rename all "flax" instances to "nocturne"
