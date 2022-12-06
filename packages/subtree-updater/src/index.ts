@@ -2,8 +2,8 @@
 import { BinaryPoseidonTree, packToSolidityProof, SubtreeUpdateInputs, SubtreeUpdateProver, toJSON } from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from 'lmdb';
 import { Wallet } from "@nocturne-xyz/contracts";
-import { subtreeUpdateInputsFromBatch, applyBatchUpdateToTree } from "@nocturne-xyz/local-prover";
-import { Note } from "@nocturne-xyz/sdk";
+import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
+import { NoteTrait, Note } from "@nocturne-xyz/sdk";
 import { fetchInsertions } from "@nocturne-xyz/sdk";
 
 
@@ -60,7 +60,7 @@ export class SubtreeUpdater {
   }
 
   private async genAndSubmitProof(inputs: SubtreeUpdateInputs, newRoot: bigint): Promise<void> {
-    const { proof } = await this.prover.prove(inputs);
+    const { proof } = await this.prover.proveSubtreeUpdate(inputs);
     const solidityProof = packToSolidityProof(proof);
     await this.walletContract.applySubtreeUpdate(newRoot, solidityProof);
   }
@@ -68,7 +68,9 @@ export class SubtreeUpdater {
   private async tryGenAndSubmitProof(): Promise<void> {
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
-      const merkleProof = applyBatchUpdateToTree(batch, this.tree);
+      applyBatchUpdateToTree(batch, this.tree);
+
+      const merkleProof = this.tree.getProof(this.tree.count - batch.length);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
       const newRoot = this.tree.root() as bigint;
 
@@ -113,5 +115,17 @@ export class SubtreeUpdater {
 
   public async dropDB(): Promise<void> {
     await this.db.drop();
+  }
+}
+
+
+export function applyBatchUpdateToTree(batch: (Note | bigint)[], tree: BinaryPoseidonTree): void {
+  for (let i = 0; i < batch.length; i++) {
+    const item = batch[i];
+    if (typeof item === "bigint") {
+      tree.insert(item);
+    } else {
+      tree.insert(NoteTrait.toCommitment(item));
+    }
   }
 }

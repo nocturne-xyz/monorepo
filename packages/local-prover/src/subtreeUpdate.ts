@@ -1,4 +1,4 @@
-import { BinaryPoseidonTree, Note, bigInt256ToFieldElems, SubtreeUpdateProver, SubtreeUpdateInputs, SubtreeUpdateProofWithPublicSignals } from "@nocturne-xyz/sdk";
+import { BinaryPoseidonTree, Note, bigInt256ToFieldElems, SubtreeUpdateProver, SubtreeUpdateInputs, SubtreeUpdateProofWithPublicSignals, NoteTrait } from "@nocturne-xyz/sdk";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { bigintToBuf, hexToBigint } from "bigint-conversion";
 import { sha256 } from "js-sha256";
@@ -21,7 +21,7 @@ export class LocalSubtreeUpdateProver implements SubtreeUpdateProver {
     return await snarkjs.groth16.fullProve(inputs, this.wasmPath, this.zkeyPath);
   }
 
-  async verifySubtreeUpdat({ proof, publicSignals }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
+  async verifySubtreeUpdate({ proof, publicSignals }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
     return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
   }
 }
@@ -44,7 +44,7 @@ export function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigin
  * @param batch - array of notes or commitments
  * @param merkle - proof to the leftmost element of the batch. Assumes the batch is the last batch to have been inserted in the tree.
 */
-export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], merkleProof: MerkleProof): SubtreeUpdateInputSignals {
+export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], merkleProof: MerkleProof): SubtreeUpdateInputs {
   if (batch.length !== BinaryPoseidonTree.BATCH_SIZE) {
     throw new Error(`\`batch.length\` ${BinaryPoseidonTree.BATCH_SIZE}, `);
   }
@@ -76,8 +76,8 @@ export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], merklePro
       values.push(0n);
     } else {
       const note = noteOrCommitment;
-      accumulatorPreimage.push(...note.sha256());
-      leaves.push(note.toCommitment());
+      accumulatorPreimage.push(...NoteTrait.sha256(note));
+      leaves.push(NoteTrait.toCommitment(note));
       bitmap.push(1n);
 
       ownerH1s.push(note.owner.h1X);

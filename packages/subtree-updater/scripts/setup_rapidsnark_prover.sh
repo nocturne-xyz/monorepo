@@ -22,7 +22,7 @@ else
 	echo "checking rapidsnark is installed at the expected location..."
 	if [[ ! -f "$RAPIDSNARK_PATH" ]]; then
 		echo "rapidsnark not found at $RAPIDSNARK_PATH. installing..."
-		$SCRIPT_DIR/install_rapidsnark.sh	
+		$SCRIPT_DIR/install_rapidsnark.sh || exit 1
 	else
 		echo "rapidsnark found at $RAPIDSNARK_PATH"
 	fi
@@ -30,7 +30,7 @@ else
 	echo "checking C++ witness generator binary has been built..."
 	if [[ ! -f "$CIRCUIT_CPP_DIR"/subtreeupdate ]]; then
 		echo "witness generator has not been built. building..."
-		$SCRIPT_DIR/build_witness_generator.sh	
+		$SCRIPT_DIR/build_witness_generator.sh || exit 1
 	else
 		echo "witness generator found at $CIRCUIT_CPP_PATH/subtreeupdate"
 	fi

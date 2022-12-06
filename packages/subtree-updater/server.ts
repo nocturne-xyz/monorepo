@@ -23,10 +23,11 @@ export class SubtreeUpdateServer {
     const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
     const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
     const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
+    const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
     const EXECUTABLE_CMD = "~/rapidsnark/build/prover";
     const TMP_DIR = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp`;
 
-    const prover = new RapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXECUTABLE_PATH, ZKEY_PATH, TMP_DIR);
+    const prover = new RapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXECUTABLE_PATH, ZKEY_PATH, VKEY_PATH, TMP_DIR);
 
     // server params
     const WALLET_CONTRACT_ADDRESS = process.env.WALLET_CONTRACT_ADDRESS;

@@ -1,14 +1,29 @@
 #!/bin/bash
+
+SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR="$SCRIPT_DIR/../../../"
 RAPIDSNARK_DIR="$ROOT_DIR/rapidsnark"
+
+echo $ROOT_DIR
 
 echo "cloning rapdisnark..."
 pushd $ROOT_DIR
 git submodule update
 popd
 
-echo "installing rapidsnark dependencies..."
-sudo apt install build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+echo "checking for rapidsnark dependencies..."
+
+dpkg -l | grep build-essential \
+	&& dpkg -l | grep libgmp-dev \
+	&& dpkg -l | grep libsodium-dev \
+	&& dpkg -l | grep nasm \
+	&& dpkg -l | grep nlohmann-json3-dev
+
+if [ $? -ne 0 ]; then
+	echo "rapidsnark dependencies not found. please install them with the following command:"
+	echo "sudo apt install build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev"
+	exit 1
+fi
 
 echo "installing rapidsnark..."
 pushd $RAPIDSNARK_DIR

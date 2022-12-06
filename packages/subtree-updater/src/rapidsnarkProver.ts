@@ -12,11 +12,12 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   tmpDir: string;
   vkey: any;
 
-  constructor(rapidsnarkExecutablePath: string, witnessGeneratorExecutablePath: string, zkeyPath: string, tmpDir: string = __dirname) {
+  constructor(rapidsnarkExecutablePath: string, witnessGeneratorExecutablePath: string, zkeyPath: string, vkeyPath: string, tmpDir: string = __dirname) {
     this.rapidsnarkExecutablePath = rapidsnarkExecutablePath;
     this.witnessGeneratorExecutablePath = witnessGeneratorExecutablePath;
     this.zkeyPath = zkeyPath;
     this.tmpDir = tmpDir;
+    this.vkey = JSON.parse(fs.readFileSync(vkeyPath).toString());
   }
 
   async proveSubtreeUpdate(inputs: SubtreeUpdateInputs): Promise<SubtreeUpdateProofWithPublicSignals> {
