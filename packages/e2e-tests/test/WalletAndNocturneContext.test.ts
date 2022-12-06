@@ -28,9 +28,12 @@ import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
+
+// ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
+// and and 2 * PER_NOTE_AMOUNT
 const PER_NOTE_AMOUNT = 100n;
-const ALICE_UNWRAP_VAL = 50n;
-const ALICE_TO_BOB_PUB_VAL = 40n;
+const ALICE_UNWRAP_VAL = 120n;
+const ALICE_TO_BOB_PUB_VAL = 100n;
 const ALICE_TO_BOB_PRIV_VAL = 30n;
 
 describe("Wallet", async () => {
@@ -205,12 +208,12 @@ describe("Wallet", async () => {
     // console.log("Bob NOTES:", FoundNoteBob);
 
     // There should be one new note of value 50n for Alice
-    expect(FoundNoteAlice.length).to.equal(3);
-    expect(FoundNoteAlice[1].value).to.equal(
+    expect(FoundNoteAlice.length).to.equal(2);
+    expect(FoundNoteAlice[0].value).to.equal(
       ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
     ); // refund for leftover value in public spend
-    expect(FoundNoteAlice[2].value).to.equal(
-      PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
+    expect(FoundNoteAlice[1].value).to.equal(
+      2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
     ); // refund from joinsplit
 
     // There should be one new note containing payment
