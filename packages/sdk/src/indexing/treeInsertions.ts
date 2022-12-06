@@ -1,9 +1,14 @@
-
-
 import { Wallet } from "@nocturne-xyz/contracts";
 import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
+
+interface OrderedInsertion {
+  insertion: bigint | Note,
+  blockNumber: number,
+  txIdx: number,
+  logIdx: number
+}
 
 export async function fetchInsertions(contract: Wallet, from: number, to: number): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
@@ -25,13 +30,6 @@ export async function fetchInsertions(contract: Wallet, from: number, to: number
   // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
   // combine them into a single list
   // and sort them in the order in which they appeared on-chain
-
-  interface OrderedInsertion {
-    insertion: bigint | Note,
-    blockNumber: number,
-    txIdx: number,
-    logIdx: number
-  }
 
   let insertions: OrderedInsertion[] = [];
   for (const event of noteCommitmentEvents) {
