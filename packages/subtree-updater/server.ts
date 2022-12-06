@@ -3,8 +3,7 @@ import { open } from 'lmdb';
 import { SubtreeUpdater } from "./src";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
 import { RapidsnarkSubtreeUpdateProver } from './src/rapidsnarkProver';
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as path from "path";
+import { program } from "commander";
 import * as dotenv from 'dotenv';
 import { clearTimeout } from "timers";
 
@@ -17,36 +16,27 @@ export class SubtreeUpdateServer {
   private interval: number;
   private timer?: NodeJS.Timeout;
 
-  constructor() {
-    // prover params
-    const ROOT_DIR = findWorkspaceRoot()!;
-    const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-    const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
-    const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
-    const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
-    const EXECUTABLE_CMD = "~/rapidsnark/build/prover";
-    const TMP_DIR = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp`;
-
-    const prover = new RapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXECUTABLE_PATH, ZKEY_PATH, VKEY_PATH, TMP_DIR);
+  constructor(zkeyPath: string, vkeyPath: string, rapidsnarkExecutablePath: string, witnessGeneratorExecutablePath: string, rapidsnarkTmpDir: string, ) {
+    const prover = new RapidsnarkSubtreeUpdateProver(rapidsnarkExecutablePath, witnessGeneratorExecutablePath, zkeyPath, vkeyPath, rapidsnarkTmpDir);
 
     // server params
-    const WALLET_CONTRACT_ADDRESS = process.env.WALLET_CONTRACT_ADDRESS;
-    if (WALLET_CONTRACT_ADDRESS === undefined) {
+    const walletContractAddress = process.env.WALLET_CONTRACT_ADDRESS;
+    if (walletContractAddress === undefined) {
       throw new Error("WALLET_CONTRACT_ADDRESS env var not set");
     }
 
-    const SERVER_SECRET_KEY = process.env.SERVER_SECRET_KEY;
-    if (SERVER_SECRET_KEY === undefined) {
+    const serverSecretKey = process.env.SERVER_SECRET_KEY;
+    if (serverSecretKey === undefined) {
       throw new Error("SERVER_SECRET_KEY env var not set");
     }
 
-    const NETWORK = process.env.NETWORK ?? "https://localhost:8545";
+    const network = process.env.NETWORK ?? "https://localhost:8545";
 
     const dbPath = process.env.DB_PATH ?? "./db";
-    const provider = ethers.getDefaultProvider(NETWORK);
-    const signer = new ethers.Wallet(SERVER_SECRET_KEY, provider);
+    const provider = ethers.getDefaultProvider(network);
+    const signer = new ethers.Wallet(serverSecretKey, provider);
 
-    const walletContract = Wallet__factory.connect(WALLET_CONTRACT_ADDRESS, signer);
+    const walletContract = Wallet__factory.connect(walletContractAddress, signer);
     const rootDB = open({ path: dbPath });
 
     this.interval = process.env.INTERVAL ? parseInt(process.env.INTERVAL) : TEN_SECONDS;
@@ -69,8 +59,18 @@ export class SubtreeUpdateServer {
       clearTimeout(this.timer);
     });
   } 
-
 }
 
-const server = new SubtreeUpdateServer();
+program
+  .requiredOption("--zkey <string>", "path to the subtree update circuit's proving key")
+  .requiredOption("--vkey <string>", "path to the subtree update circuit's verifying key")
+  .requiredOption("--prover <string>", "path to the rapidsnark prover executable")
+  .requiredOption("--witnessGenerator <string>", "path to the subtree update circuit's witness generator executable")
+  .option("--tmpDir <string>", "path to a dirctory to use for rapidsnark intermediate files", "./prover-tmp");
+
+program.parse();
+
+const { zkey, vkey, prover, witnessGenreator, tmpDir } = program.opts();
+
+const server = new SubtreeUpdateServer(zkey, vkey, prover, witnessGenreator, tmpDir);
 server.start();
