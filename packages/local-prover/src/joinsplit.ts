@@ -5,8 +5,6 @@ import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
-  normalizeJoinSplitInputs,
-  normalizePublicSignals,
 } from "@nocturne-xyz/sdk";
 
 export class LocalJoinSplitProver implements JoinSplitProver {
@@ -23,7 +21,6 @@ export class LocalJoinSplitProver implements JoinSplitProver {
   async proveJoinSplit(
     inputs: JoinSplitInputs
   ): Promise<JoinSplitProofWithPublicSignals> {
-    inputs = normalizeJoinSplitInputs(inputs);
     const {
       vk,
       spendPk,
@@ -81,7 +78,6 @@ export class LocalJoinSplitProver implements JoinSplitProver {
       this.wasmPath,
       this.zkeyPath
     );
-    proof.publicSignals = normalizePublicSignals(proof.publicSignals);
     return proof;
   }
 
