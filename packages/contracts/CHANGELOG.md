@@ -2,9 +2,11 @@
 
 ### Unreleased
 
-- Add a `SubtreeUpdate` event to `CommitmentTreeManager` for when a subtree update is committed 
+- change verifier interfaces to take structs instead of `uint256` arrays
+- Add a `SubtreeUpdate` event to `CommitmentTreeManager` for when a subtree update is committed
 - Add `test:gas-report` command
 - Add batch proof verification
+- Add `test:gas-report` command
 - Migrate for joinsplit
   - Compute operationDigest once for the entire operation
 - Rename all "flax" instances to "nocturne"
