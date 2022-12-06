@@ -1,5 +1,5 @@
 import { Scalar } from "ffjavascript";
-import { CanonAddress, NocturneAddress } from "../crypto";
+import { CanonAddress, NocturneAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
 import { randomBytes } from "ethers/lib/utils";
 import { babyjub, poseidon } from "circomlibjs";
@@ -55,7 +55,7 @@ export function genNoteTransmission(
     BigInt(poseidon([encodePoint(R) + 1n])) + note.value
   );
   return {
-    owner: new NocturneAddress(note.owner).rerand().toStruct(),
+    owner: NocturneAddressTrait.randomize(note.owner),
     encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
     encryptedNonce,
     encryptedValue,

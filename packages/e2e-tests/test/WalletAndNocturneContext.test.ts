@@ -12,7 +12,7 @@ import {
   SNARK_SCALAR_FIELD,
   Bundle,
   NocturneContext,
-  AssetStruct,
+  Asset,
   AssetRequest,
   OperationRequest,
   LocalObjectDB,
@@ -20,13 +20,6 @@ import {
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as path from "path";
-// eslint-disable-next-line
-const ROOT_DIR = findWorkspaceRoot()!;
-const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
-const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
-const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -71,7 +64,7 @@ describe("Wallet", async () => {
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
-    const asset: AssetStruct = { address: token.address, id: ERC20_ID };
+    const asset: Asset = { address: token.address, id: ERC20_ID };
 
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
@@ -128,9 +121,7 @@ describe("Wallet", async () => {
 
     console.log("Create post-proof operation with NocturneContext");
     const operation = await nocturneContext.tryCreateProvenOperation(
-      operationRequest,
-      WASM_PATH,
-      ZKEY_PATH
+      operationRequest
     );
 
     const bundle: Bundle = {

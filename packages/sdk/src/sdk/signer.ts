@@ -1,11 +1,10 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { randomBytes } from "crypto";
 import { Scalar } from "ffjavascript";
-import { Note, IncludedNoteStruct } from "./note";
+import { Note, IncludedNote, NoteTrait } from "./note";
 import {
-  NocturneAddressStruct,
-  flattenedNocturneAddressToArrayForm,
   NocturneAddress,
+  NocturneAddressTrait,
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
@@ -68,7 +67,7 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidon([note.toCommitment(), this.privkey.vk]));
+    return BigInt(poseidon([NoteTrait.toCommitment(note), this.privkey.vk]));
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {
@@ -88,7 +87,7 @@ export class NocturneSigner {
     merkleIndex: number,
     asset: Address,
     id: bigint
-  ): IncludedNoteStruct {
+  ): IncludedNote {
     if (!this.testOwn(noteTransmission.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
@@ -114,14 +113,9 @@ export class NocturneSigner {
     };
   }
 
-  testOwn(addr: NocturneAddress | NocturneAddressStruct): boolean {
-    const nocturneAddr =
-      addr instanceof NocturneAddress
-        ? addr.toArrayForm()
-        : flattenedNocturneAddressToArrayForm(addr);
-    const H2prime = babyjub.mulPointEscalar(nocturneAddr.h1, this.privkey.vk);
-    return (
-      nocturneAddr.h2[0] === H2prime[0] && nocturneAddr.h2[1] === H2prime[1]
-    );
+  testOwn(addr: NocturneAddress): boolean {
+    const points = NocturneAddressTrait.toPoints(addr);
+    const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
+    return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
   }
 }

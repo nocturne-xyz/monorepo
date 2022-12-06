@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Instantiate local prover on page load with `useEffect`
+- Import `frontend-sdk` for calling snap and remove all snap utils
 - Rename all "flax" instances to "nocturne"
 - Change package version to `-alpha`
 - `ffjavascript` resolution removed, so proof gen works now

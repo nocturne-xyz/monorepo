@@ -1,38 +1,35 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
   clearDb,
   connectSnap,
-  generateProof,
   getSnap,
-  sendHello,
-  sendSetAndShowKv,
   shouldDisplayReconnectButton,
-  syncLeaves,
-  syncNotes,
 } from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
   ReconnectButton,
-  SendHelloButton,
   Card,
-  SetAndShowKButton,
   SyncNotesButton,
   SyncLeavesButton,
   ClearDbButton,
-  GenerateProofButton,
+  GetJoinSplitInputsButton,
+  GetAllBalancesButton,
 } from "../components";
 import {
   Action,
   AssetRequest,
   ERC20_ID,
   OperationRequest,
+  toJSON,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
-import JSON from "json-bigint";
-import { LocalSpend2Prover } from "@nocturne-xyz/local-prover";
+import {
+  loadNocturneFrontendSDK,
+  NocturneFrontendSDK,
+} from "@nocturne-xyz/frontend-sdk";
 
 const Container = styled.div`
   display: flex;
@@ -121,17 +118,13 @@ const ErrorMessage = styled.div`
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
-  let spend2Wasm: any;
-  let spend2Zkey: any;
+  const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
-  const instantiateCircuitData = async () => {
-    if (!spend2Wasm) {
-      spend2Wasm = await fetch("./public/spend2.wasm");
-    }
-    if (!spend2Zkey) {
-      spend2Zkey = await fetch("./public/spend2.zkey");
-    }
-  };
+  useEffect(() => {
+    loadNocturneFrontendSDK().then((sdk) => {
+      setFrontendSDK(sdk);
+    });
+  }, [loadNocturneFrontendSDK]);
 
   const handleConnectClick = async () => {
     try {
@@ -148,27 +141,9 @@ const Index = () => {
     }
   };
 
-  const handleSendHelloClick = async () => {
-    try {
-      await sendHello();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const handleSetAndShowKvClick = async () => {
-    try {
-      await sendSetAndShowKv();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   const handleSyncNotesClick = async () => {
     try {
-      await syncNotes();
+      await nocturneFrontendSDK!.syncNotes();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -177,17 +152,25 @@ const Index = () => {
 
   const handleSyncLeavesClick = async () => {
     try {
-      await syncLeaves();
+      await nocturneFrontendSDK!.syncLeaves();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
 
-  const handleGenerateProof = async () => {
-    await instantiateCircuitData();
+  const handleGetAllBalancesClick = async () => {
+    try {
+      const balances = await nocturneFrontendSDK!.getAllBalances();
+      console.log(toJSON(balances));
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
 
-    const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  const handleGetJoinSplitInputs = async () => {
+    const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
     const assetRequest: AssetRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
       value: 25n,
@@ -211,17 +194,9 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const inputs = JSON.parse(
-        (await generateProof(operationRequest)) as string
-      );
-      console.log("From snap inputs: ", inputs);
-      const prover = new LocalSpend2Prover();
-      const proof = await prover.proveSpend2(
-        inputs[0].proofInputs,
-        "./spend2.wasm",
-        "./spend2.zkey"
-      );
-      console.log(proof);
+      const provenOperation =
+        await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
+      console.log(provenOperation);
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -296,43 +271,6 @@ const Index = () => {
         )}
         <Card
           content={{
-            title: "Send Hello message",
-            description:
-              "Display a custom message within a confirmation screen in MetaMask.",
-            button: (
-              <SendHelloButton
-                onClick={handleSendHelloClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Send SetAndShowKv",
-            description: "Display SetAndShowKv message.",
-            button: (
-              <SetAndShowKButton
-                onClick={handleSetAndShowKvClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
             title: "Sync Notes",
             description: "Sync notes.",
             button: (
@@ -369,11 +307,29 @@ const Index = () => {
         />
         <Card
           content={{
-            title: "Generate proof",
-            description: "Generate spend proof",
+            title: "Get All Balances",
+            description: "Get all balances",
             button: (
-              <GenerateProofButton
-                onClick={handleGenerateProof}
+              <GetAllBalancesButton
+                onClick={handleGetAllBalancesClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        />
+        <Card
+          content={{
+            title: "Generate proof",
+            description: "Generate joinsplit proof",
+            button: (
+              <GetJoinSplitInputsButton
+                onClick={handleGetJoinSplitInputs}
                 disabled={!state.installedSnap}
               />
             ),

@@ -13,6 +13,7 @@ import {
   NocturnePrivKey,
   NocturneSigner,
   Note,
+  NoteTrait,
   toJSON,
 } from "@nocturne-xyz/sdk";
 
@@ -126,8 +127,8 @@ export function getSubtreeUpdateInputs(
       ids.push(note.id);
       values.push(note.value);
       bitmap.push(1n);
-      noteHashes.push(note.sha256());
-      leaves.push(note.toCommitment());
+      noteHashes.push(NoteTrait.sha256(note));
+      leaves.push(NoteTrait.toCommitment(note));
 
       noteIdx++;
     }
@@ -179,26 +180,26 @@ export function getSubtreeUpdateInputs(
 const nocturnePrivKey = new NocturnePrivKey(sk);
 const nocturneSigner = new NocturneSigner(nocturnePrivKey);
 const nocturneAddr = nocturneSigner.address;
-const nocturneAddrInput = nocturneAddr.toStruct();
 
 // start with empty tree
 const tree = new BinaryPoseidonTree();
 
 // dummy notes
-const notes = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
-  (_) =>
-    new Note({
-      owner: nocturneAddrInput,
+const notes: Note[] = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
+  (_) => {
+    return {
+      owner: nocturneAddr,
       nonce: 1n,
       asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
       id: 5n,
       value: 100n,
-    })
+    };
+  }
 );
 
 const noteCommitmentIndices = [1, 7, 9];
 const spendNoteCommitments = noteCommitmentIndices.map((i) =>
-  notes[i].toCommitment()
+  NoteTrait.toCommitment(notes[i])
 );
 const fullyRevealedNotes = notes.filter(
   (_, i) => !noteCommitmentIndices.includes(i)

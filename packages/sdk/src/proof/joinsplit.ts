@@ -1,18 +1,16 @@
 import { normalizeBigInt } from "./utils";
-import { NocturneAddressStruct } from "../crypto/address";
+import { NocturneAddress } from "../crypto/address";
 import { BaseProof, MerkleProofInput, NoteInput } from "./types";
 
 export interface JoinSplitProver {
   proveJoinSplit(
-    inputs: JoinSplitInputs,
-    wasmPath: string,
-    zkeyPath: string
+    inputs: JoinSplitInputs
   ): Promise<JoinSplitProofWithPublicSignals>;
 
-  verifyJoinSplitProof(
-    { proof, publicSignals }: JoinSplitProofWithPublicSignals,
-    vkey: any
-  ): Promise<boolean>;
+  verifyJoinSplitProof({
+    proof,
+    publicSignals,
+  }: JoinSplitProofWithPublicSignals): Promise<boolean>;
 }
 
 export interface JoinSplitProofWithPublicSignals {
@@ -73,8 +71,8 @@ export function joinSplitPublicSignalsFromArray(
 }
 
 function normalizeNocturneAddressInput(
-  nocturneAddressInput: NocturneAddressStruct
-): NocturneAddressStruct {
+  nocturneAddressInput: NocturneAddress
+): NocturneAddress {
   const { h1X, h1Y, h2X, h2Y } = nocturneAddressInput;
   return {
     h1X: normalizeBigInt(h1X),

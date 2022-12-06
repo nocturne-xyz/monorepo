@@ -2,8 +2,8 @@ import "mocha";
 import * as fs from "fs";
 import { expect } from "chai";
 import { DEFAULT_DB_PATH, NocturneDB, LocalObjectDB } from "../src/sdk/db";
-import { IncludedNoteStruct } from "../src/sdk/note";
-import { AssetStruct } from "../src/commonTypes";
+import { IncludedNote } from "../src/sdk/note";
+import { Asset } from "../src/commonTypes";
 
 describe("LocalObjectDB", async () => {
   let db = new LocalObjectDB({ localMerkle: true });
@@ -28,8 +28,8 @@ describe("LocalObjectDB", async () => {
   });
 
   it("Stores, gets, and removes note", async () => {
-    const asset: AssetStruct = { address: "0x1234", id: 1234n };
-    const note: IncludedNoteStruct = {
+    const asset: Asset = { address: "0x1234", id: 1234n };
+    const note: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
@@ -46,17 +46,17 @@ describe("LocalObjectDB", async () => {
     await db.storeNote(note);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NocturneDB.notesKey(asset))!;
+    const notesArray = map.get(NocturneDB.formatNotesKey(asset))!;
     expect(notesArray[0]).to.eql(note);
 
     await db.removeNote(note);
     const newMap = await db.getAllNotes();
-    expect(newMap.get(NocturneDB.notesKey(asset))).to.eql([]);
+    expect(newMap.get(NocturneDB.formatNotesKey(asset))).to.eql([]);
   });
 
   it("Stores, gets, and removes multiple notes for same asset", async () => {
-    const asset: AssetStruct = { address: "0x1234", id: 1234n };
-    const noteOne: IncludedNoteStruct = {
+    const asset: Asset = { address: "0x1234", id: 1234n };
+    const noteOne: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
@@ -70,7 +70,7 @@ describe("LocalObjectDB", async () => {
       merkleIndex: 6,
     };
 
-    const noteTwo: IncludedNoteStruct = {
+    const noteTwo: IncludedNote = {
       owner: {
         h1X: 1n,
         h1Y: 2n,
@@ -88,13 +88,13 @@ describe("LocalObjectDB", async () => {
     await db.storeNote(noteTwo);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NocturneDB.notesKey(asset))!;
+    const notesArray = map.get(NocturneDB.formatNotesKey(asset))!;
     expect(notesArray[0]).to.eql(noteOne);
     expect(notesArray[1]).to.eql(noteTwo);
 
     await db.removeNote(noteOne);
     const newMap = await db.getAllNotes();
-    const newNotesArray = newMap.get(NocturneDB.notesKey(asset))!;
+    const newNotesArray = newMap.get(NocturneDB.formatNotesKey(asset))!;
     expect(newNotesArray.length).to.eql(1);
     expect(newNotesArray[0]).to.eql(noteTwo);
   });

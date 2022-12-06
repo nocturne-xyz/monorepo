@@ -1,5 +1,5 @@
 import { NocturneDB } from "../db";
-import { IncludedNote, IncludedNoteStruct } from "../note";
+import { IncludedNote, NoteTrait } from "../note";
 import { NocturneSigner } from "../signer";
 import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
 
@@ -20,13 +20,13 @@ export abstract class NotesManager {
     this.signer = signer;
   }
 
-  protected abstract fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]>;
+  protected abstract fetchNotesFromRefunds(): Promise<IncludedNote[]>;
   protected abstract postStoreNotesFromRefunds(): Promise<void>;
   protected abstract fetchJoinSplits(): Promise<JoinSplitEvent[]>;
   protected abstract postApplyJoinSplits(): Promise<void>;
 
   private async storeNewNotesFromRefunds(
-    newNotesFromRefunds: IncludedNoteStruct[]
+    newNotesFromRefunds: IncludedNote[]
   ): Promise<void> {
     await this.db.storeNotes(newNotesFromRefunds);
   }
@@ -45,9 +45,7 @@ export abstract class NotesManager {
       // Delete nullified notes
       for (const oldNote of allNotes) {
         // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(
-          new IncludedNote(oldNote)
-        );
+        const oldNullifier = this.signer.createNullifier(oldNote);
         if (
           oldNullifier == e.oldNoteANullifier ||
           oldNullifier == e.oldNoteBNullifier
@@ -90,7 +88,7 @@ export abstract class NotesManager {
       );
       if (
         newNote.value > 0n &&
-        new IncludedNote(newNote).toCommitment() == newNoteCommitment
+        NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
         await this.db.storeNote(newNote);
       }

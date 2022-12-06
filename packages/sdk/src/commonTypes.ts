@@ -2,8 +2,8 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddressStruct } from "./crypto/address";
-import { MerkleProofInput } from "./proof";
+import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
+import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 import JSON from "json-bigint";
 
@@ -12,15 +12,10 @@ export const SNARK_SCALAR_FIELD =
 export const ERC20_ID = SNARK_SCALAR_FIELD - 1n; // TODO: fix
 
 export type Address = string;
-export type AssetHash = string;
+export type NotesKey = string; // Takes form of NOTES_<address>_<id>
 
-export function hashAsset(asset: AssetStruct): string {
+export function hashAsset(asset: Asset): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
-}
-
-export interface AssetStruct {
-  address: Address;
-  id: bigint;
 }
 
 export function toJSON(object: any): string {
@@ -29,7 +24,12 @@ export function toJSON(object: any): string {
   );
 }
 
-export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {
+export interface Asset {
+  address: Address;
+  id: bigint;
+}
+
+export function assetStructFromJSON(jsonOrString: any | string): Asset {
   const json: any =
     typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
   return {
@@ -38,8 +38,24 @@ export function assetStructFromJSON(jsonOrString: any | string): AssetStruct {
   };
 }
 
+export interface AssetWithBalance {
+  asset: Asset;
+  balance: bigint;
+}
+
+export function assetWithBalanceFromJSON(
+  jsonOrString: any | string
+): AssetWithBalance {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    asset: assetStructFromJSON(json.asset),
+    balance: BigInt(json.balance),
+  };
+}
+
 export interface AssetRequest {
-  asset: AssetStruct;
+  asset: Asset;
   value: bigint;
 }
 
@@ -75,11 +91,48 @@ export function operationRequestFromJSON(
   };
 }
 
+export type SolidityProof = [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+];
+
+export function packToSolidityProof(proof: BaseProof): SolidityProof {
+  return [
+    proof.pi_a[0],
+    proof.pi_a[1],
+    proof.pi_b[0][1],
+    proof.pi_b[0][0],
+    proof.pi_b[1][1],
+    proof.pi_b[1][0],
+    proof.pi_c[0],
+    proof.pi_c[1],
+  ];
+}
+
 export interface NoteTransmission {
-  owner: NocturneAddressStruct;
+  owner: NocturneAddress;
   encappedKey: bigint;
   encryptedNonce: bigint;
   encryptedValue: bigint;
+}
+
+export function noteTransmissionFromJSON(
+  jsonOrString: any | string
+): NoteTransmission {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    owner: NocturneAddressTrait.fromJSON(json.owner),
+    encappedKey: BigInt(json.encappedKey),
+    encryptedNonce: BigInt(json.encryptedNonce),
+    encryptedValue: BigInt(json.encryptedValue),
+  };
 }
 
 export interface BaseJoinSplitTx {
@@ -109,13 +162,34 @@ export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
   proofInputs: JoinSplitInputs;
 }
 
+export function preProofJoinSplitTxFromJSON(
+  jsonOrString: any | string
+): PreProofJoinSplitTx {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+  return {
+    opDigest: BigInt(json.opDigest),
+    proofInputs: json.proofInputs,
+    commitmentTreeRoot: BigInt(json.commitmentTreeRoot),
+    nullifierA: BigInt(json.nullifierA),
+    nullifierB: BigInt(json.nullifierB),
+    newNoteACommitment: BigInt(json.newNoteACommitment),
+    newNoteBCommitment: BigInt(json.newNoteBCommitment),
+    asset: json.asset,
+    id: BigInt(json.id),
+    publicSpend: BigInt(json.publicSpend),
+    newNoteATransmission: noteTransmissionFromJSON(json.newNoteATransmission),
+    newNoteBTransmission: noteTransmissionFromJSON(json.newNoteBTransmission),
+  };
+}
+
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
-  proof: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint];
+  proof: SolidityProof;
 }
 
 export interface PreSignOperation {
   joinSplitTxs: PreSignJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -123,7 +197,7 @@ export interface PreSignOperation {
 
 export interface PreProofOperation {
   joinSplitTxs: PreProofJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
@@ -131,8 +205,23 @@ export interface PreProofOperation {
 
 export interface ProvenOperation {
   joinSplitTxs: ProvenJoinSplitTx[];
-  refundAddr: NocturneAddressStruct;
+  refundAddr: NocturneAddress;
   tokens: SpendAndRefundTokens;
   actions: Action[];
   gasLimit: bigint;
+}
+
+export function preProofOperationFromJSON(
+  jsonOrString: any | string
+): PreProofOperation {
+  const json: any =
+    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
+
+  return {
+    joinSplitTxs: json.joinSplitTxs.map(preProofJoinSplitTxFromJSON),
+    refundAddr: NocturneAddressTrait.fromJSON(json.refundAddr),
+    tokens: json.tokens,
+    actions: json.actions,
+    gasLimit: BigInt(json.gasLimit),
+  };
 }

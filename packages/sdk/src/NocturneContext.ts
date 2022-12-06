@@ -1,4 +1,10 @@
-import { AssetRequest, AssetStruct, OperationRequest } from "./commonTypes";
+import {
+  AssetRequest,
+  Asset,
+  AssetWithBalance,
+  OperationRequest,
+  packToSolidityProof,
+} from "./commonTypes";
 import { SpendAndRefundTokens } from "./contract/types";
 import {
   PreSignJoinSplitTx,
@@ -8,16 +14,15 @@ import {
   PreProofOperation,
   ProvenOperation,
 } from "./commonTypes";
-import { Note, IncludedNote } from "./sdk/note";
+import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddressStruct } from "./crypto/address";
+import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
   joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
-import { packToSolidityProof } from "./contract/proof";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
@@ -36,7 +41,7 @@ export class NocturneContext {
   protected prover: JoinSplitProver;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
-  protected db: NocturneDB;
+  readonly db: NocturneDB;
 
   constructor(
     signer: NocturneSigner,
@@ -79,9 +84,7 @@ export class NocturneContext {
    */
   async tryCreateProvenOperation(
     operationRequest: OperationRequest,
-    joinSplitWasmPath: string,
-    joinSplitZkeyPath: string,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<ProvenOperation> {
     const preProofOp: PreProofOperation = await this.tryGetPreProofOperation(
@@ -92,7 +95,7 @@ export class NocturneContext {
 
     const allProofPromises: Promise<ProvenJoinSplitTx>[] =
       preProofOp.joinSplitTxs.map((tx) => {
-        return this.proveJoinSplitTx(tx, joinSplitWasmPath, joinSplitZkeyPath);
+        return this.proveJoinSplitTx(tx);
       });
 
     return {
@@ -104,9 +107,20 @@ export class NocturneContext {
     };
   }
 
+  /**
+   *
+   * Given `operationRequest`, gather the necessary notes and proof inputs to
+   * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
+   * proof inputs.
+   *
+   * @param operationRequest Operation request
+   * @param refundAddr Optional refund address. Context will generate
+   * rerandomized address if left empty
+   * @param gasLimit Gas limit
+   */
   async tryGetPreProofOperation(
     operationRequest: OperationRequest,
-    refundAddr?: NocturneAddressStruct,
+    refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofOperation> {
     const { assetRequests, refundTokens } = operationRequest;
@@ -114,7 +128,7 @@ export class NocturneContext {
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
       ? refundAddr
-      : this.signer.address.rerand().toStruct();
+      : NocturneAddressTrait.randomize(this.signer.address);
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
@@ -149,19 +163,27 @@ export class NocturneContext {
   }
 
   /**
+   * Ensure user has balances to fullfill all asset requests in
+   * `operationRequest`. Throws error if any asset request exceeds owned balance.
+   *
+   * @param assetRequests Asset requests
+   */
+  async ensureMinimumForOperationRequest({
+    assetRequests,
+  }: OperationRequest): Promise<void> {
+    for (const assetRequest of assetRequests) {
+      await this.ensureMinimumForAssetRequest(assetRequest);
+    }
+  }
+
+  /**
    * Generate a `ProvenJoinSplitTx` from a `PreProofJoinSplitTx`
    */
   protected async proveJoinSplitTx(
-    preProofJoinSplitTx: PreProofJoinSplitTx,
-    joinSplitWasmPath: string,
-    joinSplitZkeyPath: string
+    preProofJoinSplitTx: PreProofJoinSplitTx
   ): Promise<ProvenJoinSplitTx> {
     const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
-    const proof = await this.prover.proveJoinSplit(
-      proofInputs,
-      joinSplitWasmPath,
-      joinSplitZkeyPath
-    );
+    const proof = await this.prover.proveJoinSplit(proofInputs);
 
     // Check that snarkjs output is consistent with our precomputed joinsplit values
     const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
@@ -210,23 +232,23 @@ export class NocturneContext {
     const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
     const newNoteBOwner = newNoteAOwner;
 
-    const newNoteA = new Note({
+    const newNoteA: Note = {
       owner: newNoteAOwner,
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue,
-    });
-    const newNoteB = new Note({
+    };
+    const newNoteB: Note = {
       owner: newNoteBOwner,
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: 0n,
-    });
+    };
 
-    const newNoteACommitment = newNoteA.toCommitment();
-    const newNoteBCommitment = newNoteB.toCommitment();
+    const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
+    const newNoteBCommitment = NoteTrait.toCommitment(newNoteB);
 
     const newNoteATransmission = genNoteTransmission(
       this.signer.privkey.toCanonAddress(),
@@ -298,7 +320,7 @@ export class NocturneContext {
   protected async getPreSignOperation(
     { assetRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
-    refundAddr: NocturneAddressStruct,
+    refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreSignOperation> {
     // For each asset request, gather necessary notes
@@ -312,16 +334,14 @@ export class NocturneContext {
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
         const newAddr = this.signer.privkey.toCanonAddressStruct();
-        notesToUse.push(
-          new IncludedNote({
-            owner: newAddr,
-            nonce: 0n,
-            asset: notesToUse[0].asset,
-            id: notesToUse[0].id,
-            value: 0n,
-            merkleIndex: 0,
-          })
-        );
+        notesToUse.push({
+          owner: newAddr,
+          nonce: 0n,
+          asset: notesToUse[0].asset,
+          id: notesToUse[0].id,
+          value: 0n,
+          merkleIndex: 0,
+        });
       }
       let noteA, noteB;
       while (notesToUse.length > 0) {
@@ -373,12 +393,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: oldNoteA.toNoteInput(),
-      oldNoteB: oldNoteB.toNoteInput(),
+      oldNoteA: NoteTrait.toNoteInput(oldNoteA),
+      oldNoteB: NoteTrait.toNoteInput(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: newNoteA.toNoteInput(),
-      newNoteB: newNoteB.toNoteInput(),
+      newNoteA: NoteTrait.toNoteInput(newNoteA),
+      newNoteB: NoteTrait.toNoteInput(newNoteB),
     };
 
     return {
@@ -386,6 +406,23 @@ export class NocturneContext {
       proofInputs,
       ...baseJoinSplitTx,
     };
+  }
+
+  /**
+   * Ensure user has balances to fullfill `assetRequest`. Throws error if
+   * attempted request exceeds owned balance.
+   *
+   * @param assetRequest Asset request
+   */
+  async ensureMinimumForAssetRequest(
+    assetRequest: AssetRequest
+  ): Promise<void> {
+    const balance = await this.getAssetBalance(assetRequest.asset);
+    if (balance < assetRequest.value) {
+      throw new Error(
+        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+      );
+    }
   }
 
   /**
@@ -415,7 +452,7 @@ export class NocturneContext {
     let totalSpend = 0n;
     while (totalSpend < assetRequest.value) {
       const oldNote = sortedNotes.shift()!;
-      notesToUse.push(new IncludedNote(oldNote));
+      notesToUse.push(oldNote);
       totalSpend += oldNote.value;
     }
 
@@ -423,11 +460,29 @@ export class NocturneContext {
   }
 
   /**
+   * Sum up the note values for a all notes and return array of assets with
+   * their balances.
+   *
+   * @param asset Asset
+   */
+  async getAllAssetBalances(): Promise<AssetWithBalance[]> {
+    const notes = await this.db.getAllNotes();
+    return Array.from(notes.entries()).map(([assetString, notes]) => {
+      const asset = NocturneDB.parseNotesKey(assetString);
+      const balance = BigInt(notes.reduce((a, b) => a + Number(b.value), 0));
+      return {
+        asset,
+        balance,
+      };
+    });
+  }
+
+  /**
    * Sum up the note values for a given `tokenToNote` entry array.
    *
    * @param asset Asset
    */
-  async getAssetBalance(asset: AssetStruct): Promise<bigint> {
+  async getAssetBalance(asset: Asset): Promise<bigint> {
     const notes = await this.db.getNotesFor(asset);
 
     if (!notes) {

@@ -2,9 +2,8 @@ import "mocha";
 import { expect } from "chai";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
-import { NocturneAddress } from "../src/crypto/address";
+import { NocturneAddressTrait } from "../src/crypto/address";
 import { genNoteTransmission } from "../src/crypto/utils";
-import { Note } from "../src/sdk/note";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
@@ -21,7 +20,7 @@ describe("NocturneSigner", () => {
   it("Test rerand", () => {
     const priv1 = NocturnePrivKey.genPriv();
     const signer1 = new NocturneSigner(priv1);
-    const rerandAddr1 = signer1.address.rerand();
+    const rerandAddr1 = NocturneAddressTrait.randomize(signer1.address);
     const priv2 = NocturnePrivKey.genPriv();
     const signer2 = new NocturneSigner(priv2);
     expect(signer1.testOwn(signer1.address)).to.equal(true);
@@ -33,8 +32,8 @@ describe("NocturneSigner", () => {
   it("Test address (de)serialization", () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toAddress();
-    const str = addr.toString();
-    expect(NocturneAddress.parse(str)).to.eql(addr);
+    const str = NocturneAddressTrait.toString(addr);
+    expect(NocturneAddressTrait.fromString(str)).to.eql(addr);
   });
 
   it("Test Sign / verify", () => {
@@ -50,13 +49,13 @@ describe("NocturneSigner", () => {
     const priv = NocturnePrivKey.genPriv();
     const signer = new NocturneSigner(priv);
     const addr = priv.toCanonAddress();
-    const note = new Note({
-      owner: priv.toAddress().toStruct(),
+    const note = {
+      owner: priv.toAddress(),
       nonce: 33n,
       asset: "0x123",
       id: 1n,
       value: 55n,
-    });
+    };
     const noteTransmission = genNoteTransmission(addr, note);
     const note2 = signer.getNoteFromNoteTransmission(
       noteTransmission,

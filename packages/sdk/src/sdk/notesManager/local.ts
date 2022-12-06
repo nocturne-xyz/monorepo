@@ -9,7 +9,7 @@ import {
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { NotesManager, JoinSplitEvent } from ".";
 import { NocturneSigner } from "../signer";
-import { IncludedNoteStruct } from "../note";
+import { IncludedNote } from "../note";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
@@ -34,7 +34,7 @@ export class LocalNotesManager extends NotesManager {
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }
 
-  async fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]> {
+  async fetchNotesFromRefunds(): Promise<IncludedNote[]> {
     // TODO: load default from network-specific config
     const lastSeen =
       (await this.db.getNumberKv(REFUNDS_LAST_INDEXED_BLOCK)) ??

@@ -2,7 +2,7 @@
 import { NotesManager, JoinSplitEvent } from ".";
 import { NocturnePrivKey } from "../../crypto";
 import { LocalObjectDB } from "../db/local";
-import { IncludedNoteStruct } from "../note";
+import { IncludedNote } from "../note";
 import { NocturneSigner } from "../signer";
 
 export class MockNotesManager extends NotesManager {
@@ -13,7 +13,7 @@ export class MockNotesManager extends NotesManager {
     );
   }
 
-  protected async fetchNotesFromRefunds(): Promise<IncludedNoteStruct[]> {
+  protected async fetchNotesFromRefunds(): Promise<IncludedNote[]> {
     return [];
   }
 

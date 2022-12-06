@@ -1,5 +1,5 @@
-import { AssetHash, AssetStruct, hashAsset } from "../../commonTypes";
-import { IncludedNoteStruct } from "../note";
+import { NotesKey, Asset } from "../../commonTypes";
+import { IncludedNote } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
 export const NOTES_PREFIX = "NOTES_";
@@ -55,35 +55,49 @@ export abstract class NocturneDB {
   abstract removeKv(key: string): Promise<boolean>;
 
   /**
-   * Format an `Asset` into a key for the notes db by prefixing with
-   * `NOTES_PREFIX`.
+   * Format an `Asset` into a key for the notes db using the form
+   * NOTES_<address>_<id>.
    *
    * @param asset asset
    */
-  static notesKey(asset: AssetStruct): string {
-    return NOTES_PREFIX + hashAsset(asset);
+  static formatNotesKey(asset: Asset): string {
+    return NOTES_PREFIX + asset.address + "_" + asset.id;
   }
 
   /**
-   * Store `IncludedNoteStruct` in it's appropriate place in DB.
+   * Parse a notes key into an `Asset`. Parses key of form NOTES_<address>_<id>
+   * into address with asset and id fields.
    *
-   * @param note an `IncludedNoteStruct`
+   * @param asset asset
    */
-  abstract storeNote(note: IncludedNoteStruct): Promise<boolean>;
+  static parseNotesKey(key: string): Asset {
+    const arr = key.split("_");
+    return {
+      address: arr[1],
+      id: BigInt(arr[2]),
+    };
+  }
 
   /**
-   * Remove `IncludedNoteStruct` from DB.
+   * Store `IncludedNote` in it's appropriate place in DB.
    *
-   * @param note an `IncludedNoteStruct`
+   * @param note an `IncludedNote`
    */
-  abstract removeNote(note: IncludedNoteStruct): Promise<boolean>;
+  abstract storeNote(note: IncludedNote): Promise<boolean>;
 
   /**
-   * Store several `IncludedNoteStruct` in db.
+   * Remove `IncludedNote` from DB.
    *
-   * @param notes array of `IncludedNoteStruct
+   * @param note an `IncludedNote`
    */
-  async storeNotes(notes: IncludedNoteStruct[]): Promise<void> {
+  abstract removeNote(note: IncludedNote): Promise<boolean>;
+
+  /**
+   * Store several `IncludedNote` in db.
+   *
+   * @param notes array of `IncludedNote
+   */
+  async storeNotes(notes: IncludedNote[]): Promise<void> {
     for (const note of notes) {
       const success = await this.storeNote(note);
       if (!success) {
@@ -93,18 +107,18 @@ export abstract class NocturneDB {
   }
 
   /**
-   * Get mapping of all asset types to `IncludedNoteStruct[]`;
+   * Get mapping of all assets (with keys of form NOTES_<address>_<id>) to `IncludedNote[]`.
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getAllNotes(): Promise<Map<AssetHash, IncludedNoteStruct[]>>;
+  abstract getAllNotes(): Promise<Map<NotesKey, IncludedNote[]>>;
 
   /**
-   * Get mapping of all asset types to `IncludedNoteStruct[]`;
+   * Get mapping of all asset types to `IncludedNote[]`;
    *
    * @returns mapping of all assets to their respective notes
    */
-  abstract getNotesFor(asset: AssetStruct): Promise<IncludedNoteStruct[]>;
+  abstract getNotesFor(asset: Asset): Promise<IncludedNote[]>;
 
   /**
    * Clear entire database.
