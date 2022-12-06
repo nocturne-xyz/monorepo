@@ -29,14 +29,11 @@ $CMD -ni \
   /^import/aimport {Pairing} from "./libs/Pairing.sol";
   /contract/,$p' "$FILE"
 
-$CMD -ni \
-  '2,/^import/p
-  /^import/aimport {BatchVerifier} from "./libs/BatchVerifier.sol";
-  /contract/,$p' "$FILE"
+$CMD -i '/^import {Pairing}/aimport {BatchVerifier} from "./libs/BatchVerifier.sol";' "$FILE"
 
 # delete the closing brace
 
-head -n -1 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" && rm "$FILE.tmp"
+head -n -1 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" 
 
 # then insert the method code and reinsert closing brace afterwards
 

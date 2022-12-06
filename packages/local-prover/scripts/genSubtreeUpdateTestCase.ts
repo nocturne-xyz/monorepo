@@ -139,7 +139,7 @@ export function getSubtreeUpdateInputs(
     ...acc,
     ...hash,
   ]);
-  const accumulatorHashU256 = BigInt(sha256.hex(accumulatorPreimage));
+  const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));
   const [accumulatorHashHi, accumulatorHash] =
     bigInt256ToFieldElems(accumulatorHashU256);
 
