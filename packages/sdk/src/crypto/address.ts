@@ -67,9 +67,7 @@ export class NocturneAddressTrait {
     return NocturneAddressTrait.fromPoints({ h1, h2 });
   }
 
-  static canonAddressToNocturneAddress(
-    canonAddr: CanonAddress
-  ): NocturneAddress {
+  static fromCanonAddress(canonAddr: CanonAddress): NocturneAddress {
     return {
       h1X: BigInt(babyjub.Base8[0]),
       h1Y: BigInt(babyjub.Base8[1]),

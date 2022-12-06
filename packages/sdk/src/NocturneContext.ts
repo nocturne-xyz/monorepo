@@ -241,14 +241,14 @@ export class NocturneContext {
     }
 
     const newNoteA: Note = {
-      owner: NocturneAddressTrait.canonAddressToNocturneAddress(canonOwner),
+      owner: NocturneAddressTrait.fromCanonAddress(canonOwner),
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
       value: refundValue,
     };
     const newNoteB: Note = {
-      owner: NocturneAddressTrait.canonAddressToNocturneAddress(receiver),
+      owner: NocturneAddressTrait.fromCanonAddress(receiver),
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,

@@ -45,7 +45,9 @@ export class LocalNotesManager extends NotesManager {
 
     events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-    const newRefunds = events.reduce((acc: IncludedNote[], event) => {
+    const newRefunds: IncludedNote[] = [];
+
+    for (const event of events) {
       const { refundAddr, nonce, asset, id, value, merkleIndex } = event.args;
       const { h1X, h1Y, h2X, h2Y } = refundAddr;
       const noteOwner = {
@@ -55,7 +57,7 @@ export class LocalNotesManager extends NotesManager {
         h2Y: h2Y.toBigInt(),
       };
       if (this.signer.testOwn(noteOwner)) {
-        acc.push({
+        newRefunds.push({
           owner: noteOwner,
           nonce: nonce.toBigInt(),
           asset,
@@ -64,8 +66,7 @@ export class LocalNotesManager extends NotesManager {
           merkleIndex: merkleIndex.toNumber(),
         });
       }
-      return acc;
-    }, []);
+    }
 
     await this.db.putKv(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK,
