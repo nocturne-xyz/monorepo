@@ -2890,6 +2890,7 @@ __metadata:
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/subtree-updater": "workspace:^"
     "@nomicfoundation/hardhat-chai-matchers": ^1.0.4
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13"
@@ -3025,7 +3026,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater":
+"@nocturne-xyz/subtree-updater@workspace:^, @nocturne-xyz/subtree-updater@workspace:packages/subtree-updater":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:

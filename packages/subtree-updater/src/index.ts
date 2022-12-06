@@ -68,8 +68,8 @@ export class SubtreeUpdater {
   private async tryGenAndSubmitProof(): Promise<void> {
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
-      applyBatchUpdateToTree(batch, this.tree);
 
+      applyBatchUpdateToTree(batch, this.tree);
       const merkleProof = this.tree.getProof(this.tree.count - batch.length);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
       const newRoot = this.tree.root() as bigint;

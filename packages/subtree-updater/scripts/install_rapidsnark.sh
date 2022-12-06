@@ -4,8 +4,6 @@ SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR="$SCRIPT_DIR/../../../"
 RAPIDSNARK_DIR="$ROOT_DIR/rapidsnark"
 
-echo $ROOT_DIR
-
 echo "cloning rapdisnark..."
 pushd $ROOT_DIR
 git submodule update
