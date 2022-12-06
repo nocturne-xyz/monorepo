@@ -53,7 +53,7 @@ describe("Wallet", async () => {
     nocturneContext = nocturneSetup.nocturneContext;
     db = nocturneSetup.db;
 
-    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB`});
+    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = new MockSubtreeUpdateProver();
     updater = new SubtreeUpdater(wallet, serverDB, prover);
   });
@@ -98,7 +98,6 @@ describe("Wallet", async () => {
     await nocturneContext.syncNotes();
     const notesForAsset = await nocturneContext.db.getNotesFor(asset);
     expect(notesForAsset.length).to.equal(2);
-
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {

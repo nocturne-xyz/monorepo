@@ -4,9 +4,9 @@ export interface SubtreeUpdateProofWithPublicSignals {
   proof: BaseProof;
   publicSignals: [
     bigint, // oldRoot
-    bigint, // newRoot 
+    bigint, // newRoot
     bigint, // encodedPathAndHash
-    bigint, // accumulatorHash
+    bigint // accumulatorHash
   ];
 }
 
@@ -27,10 +27,11 @@ export interface SubtreeUpdateInputs {
 
 export interface SubtreeUpdateProver {
   proveSubtreeUpdate(
-    inputs: SubtreeUpdateInputs,
+    inputs: SubtreeUpdateInputs
   ): Promise<SubtreeUpdateProofWithPublicSignals>;
 
-  verifySubtreeUpdate(
-    { proof, publicSignals }: SubtreeUpdateProofWithPublicSignals,
-  ): Promise<boolean>;
+  verifySubtreeUpdate({
+    proof,
+    publicSignals,
+  }: SubtreeUpdateProofWithPublicSignals): Promise<boolean>;
 }

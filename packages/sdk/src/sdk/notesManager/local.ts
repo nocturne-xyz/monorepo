@@ -37,7 +37,11 @@ export class LocalNotesManager extends NotesManager {
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
-    const newRefunds = await fetchNotesFromRefunds(this.walletContract, lastSeen, latestBlock);
+    const newRefunds = await fetchNotesFromRefunds(
+      this.walletContract,
+      lastSeen,
+      latestBlock
+    );
 
     await this.db.putKv(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK,
@@ -67,7 +71,11 @@ export class LocalNotesManager extends NotesManager {
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
-    const newJoinSplits = await fetchJoinSplits(this.walletContract, lastSeen, latestBlock);
+    const newJoinSplits = await fetchJoinSplits(
+      this.walletContract,
+      lastSeen,
+      latestBlock
+    );
 
     await this.db.putKv(
       JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK,

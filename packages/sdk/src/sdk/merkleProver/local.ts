@@ -85,11 +85,10 @@ export class LocalMerkleProver extends MerkleProver {
     );
   }
 
-
   async fetchNewLeaves(from: number, to: number): Promise<bigint[]> {
     const insertions = await fetchInsertions(this.contract, from, to);
-    return insertions.map(insertion => {
-      if (typeof insertion === 'bigint') {
+    return insertions.map((insertion) => {
+      if (typeof insertion === "bigint") {
         // it's a note commitment
         return insertion;
       } else {

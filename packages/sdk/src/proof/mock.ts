@@ -4,7 +4,11 @@ import {
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
 } from "./joinsplit";
-import { SubtreeUpdateInputs, SubtreeUpdateProofWithPublicSignals, SubtreeUpdateProver } from "./subtreeUpdate";
+import {
+  SubtreeUpdateInputs,
+  SubtreeUpdateProofWithPublicSignals,
+  SubtreeUpdateProver,
+} from "./subtreeUpdate";
 
 export class MockJoinSplitProver implements JoinSplitProver {
   async proveJoinSplit(
@@ -60,23 +64,23 @@ export class MockJoinSplitProver implements JoinSplitProver {
 
 export class MockSubtreeUpdateProver implements SubtreeUpdateProver {
   async proveSubtreeUpdate(
-    inputs: SubtreeUpdateInputs 
+    inputs: SubtreeUpdateInputs
   ): Promise<SubtreeUpdateProofWithPublicSignals> {
     return {
       proof: {
         pi_a: [
           21088015562295919926803007890523568907362626291725881492664119321070036198844n,
           18570299120553316626792639026460482794951743347320028016548836843484744601335n,
-          1n
+          1n,
         ],
         pi_b: [
           [
             18399076212437565331601882738293618999410619553961059546664055085420817858275n,
-            661678711464783610447054290055633914866586497386275419245879093835853047122n
+            661678711464783610447054290055633914866586497386275419245879093835853047122n,
           ],
           [
             8762533967649298463154446960143798824114623972911546605629977597809947169997n,
-            10802211552993792951695387914431138160620068296816508977496234075923402867880n
+            10802211552993792951695387914431138160620068296816508977496234075923402867880n,
           ],
           [1n, 0n],
         ],
@@ -86,14 +90,14 @@ export class MockSubtreeUpdateProver implements SubtreeUpdateProver {
           1n,
         ],
         protocol: "groth16",
-        curve:"bn128",
+        curve: "bn128",
       },
       publicSignals: [
         21443572485391568159800782191812935835534334817699172242223315142338162256601n,
         5509827880219772731374375585669724524727973663155755687024864114523504664635n,
         0n,
-        12722949430739793925828359129762327968511013213886745107919442221783126903327n
-      ] 
+        12722949430739793925828359129762327968511013213886745107919442221783126903327n,
+      ],
     };
   }
 

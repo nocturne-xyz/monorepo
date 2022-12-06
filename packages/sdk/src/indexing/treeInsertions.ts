@@ -1,16 +1,23 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { InsertNoteCommitmentsEvent, InsertNotesEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
+import {
+  InsertNoteCommitmentsEvent,
+  InsertNotesEvent,
+} from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
 
 interface OrderedInsertion {
-  insertion: bigint | Note,
-  blockNumber: number,
-  txIdx: number,
-  logIdx: number
+  insertion: bigint | Note;
+  blockNumber: number;
+  txIdx: number;
+  logIdx: number;
 }
 
-export async function fetchInsertions(contract: Wallet, from: number, to: number): Promise<(Note | bigint)[]> {
+export async function fetchInsertions(
+  contract: Wallet,
+  from: number,
+  to: number
+): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
   const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = query(
     contract,
@@ -25,7 +32,10 @@ export async function fetchInsertions(contract: Wallet, from: number, to: number
     to
   );
 
-  const [noteCommitmentEvents, noteEvents] = await Promise.all([ncEventsProm, noteEventsProm]);
+  const [noteCommitmentEvents, noteEvents] = await Promise.all([
+    ncEventsProm,
+    noteEventsProm,
+  ]);
 
   // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
   // combine them into a single list
@@ -33,14 +43,14 @@ export async function fetchInsertions(contract: Wallet, from: number, to: number
 
   let insertions: OrderedInsertion[] = [];
   for (const event of noteCommitmentEvents) {
-      const ncs = event.args.commitments.map((l) => l.toBigInt());
-      const orderedNoteCommitments = ncs.map(nc => ({
-        insertion :nc,
-        blockNumber: event.blockNumber,
-        txIdx: event.transactionIndex,
-        logIdx: event.logIndex,
-      }));
-      insertions.push(...orderedNoteCommitments);
+    const ncs = event.args.commitments.map((l) => l.toBigInt());
+    const orderedNoteCommitments = ncs.map((nc) => ({
+      insertion: nc,
+      blockNumber: event.blockNumber,
+      txIdx: event.transactionIndex,
+      logIdx: event.logIndex,
+    }));
+    insertions.push(...orderedNoteCommitments);
   }
 
   for (const event of noteEvents) {
@@ -69,6 +79,9 @@ export async function fetchInsertions(contract: Wallet, from: number, to: number
     }
   }
 
-  insertions = insertions.sort((a, b) => a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx);
+  insertions = insertions.sort(
+    (a, b) =>
+      a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx
+  );
   return insertions.map(({ insertion }) => insertion);
 }

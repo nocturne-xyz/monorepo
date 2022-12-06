@@ -1,4 +1,12 @@
-import { BinaryPoseidonTree, Note, bigInt256ToFieldElems, SubtreeUpdateProver, SubtreeUpdateInputs, SubtreeUpdateProofWithPublicSignals, NoteTrait } from "@nocturne-xyz/sdk";
+import {
+  BinaryPoseidonTree,
+  Note,
+  bigInt256ToFieldElems,
+  SubtreeUpdateProver,
+  SubtreeUpdateInputs,
+  SubtreeUpdateProofWithPublicSignals,
+  NoteTrait,
+} from "@nocturne-xyz/sdk";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { bigintToBuf, hexToBigint } from "bigint-conversion";
 import { sha256 } from "js-sha256";
@@ -17,17 +25,28 @@ export class LocalSubtreeUpdateProver implements SubtreeUpdateProver {
     this.vkey = vkey;
   }
 
-  async proveSubtreeUpdate(inputs: SubtreeUpdateInputs): Promise<SubtreeUpdateProofWithPublicSignals> {
-    return await snarkjs.groth16.fullProve(inputs, this.wasmPath, this.zkeyPath);
+  async proveSubtreeUpdate(
+    inputs: SubtreeUpdateInputs
+  ): Promise<SubtreeUpdateProofWithPublicSignals> {
+    return await snarkjs.groth16.fullProve(
+      inputs,
+      this.wasmPath,
+      this.zkeyPath
+    );
   }
 
-  async verifySubtreeUpdate({ proof, publicSignals }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
+  async verifySubtreeUpdate({
+    proof,
+    publicSignals,
+  }: SubtreeUpdateProofWithPublicSignals): Promise<boolean> {
     return await snarkjs.groth16.verify(this.vkey, publicSignals, proof);
   }
 }
 
-
-export function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
+export function encodePathAndHash(
+  idx: bigint,
+  accumulatorHashHi: bigint
+): bigint {
   idx = BigInt.asUintN(256, idx);
   accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
 
@@ -40,11 +59,14 @@ export function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigin
   return encodedPathAndHash;
 }
 
-/* generates inputs for subtree update circuit 
+/* generates inputs for subtree update circuit
  * @param batch - array of notes or commitments
  * @param merkle - proof to the leftmost element of the batch. Assumes the batch is the last batch to have been inserted in the tree.
-*/
-export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], merkleProof: MerkleProof): SubtreeUpdateInputs {
+ */
+export function subtreeUpdateInputsFromBatch(
+  batch: (Note | bigint)[],
+  merkleProof: MerkleProof
+): SubtreeUpdateInputs {
   if (batch.length !== BinaryPoseidonTree.BATCH_SIZE) {
     throw new Error(`\`batch.length\` ${BinaryPoseidonTree.BATCH_SIZE}, `);
   }
@@ -91,10 +113,16 @@ export function subtreeUpdateInputsFromBatch(batch: (Note | bigint)[], merklePro
 
   // accumulatorHash
   const accumulatorHashU256 = hexToBigint(sha256.hex(accumulatorPreimage));
-  const [accumulatorHashHi, accumulatorHash] = bigInt256ToFieldElems(accumulatorHashU256);
+  const [accumulatorHashHi, accumulatorHash] =
+    bigInt256ToFieldElems(accumulatorHashU256);
 
-  const siblings = merkleProof.siblings.slice(BinaryPoseidonTree.S).map(arr => arr[0]);
-  const idx = merkleProof.pathIndices.reduce((idx, bit) => (idx << 1n) | BigInt(bit), 0n);
+  const siblings = merkleProof.siblings
+    .slice(BinaryPoseidonTree.S)
+    .map((arr) => arr[0]);
+  const idx = merkleProof.pathIndices.reduce(
+    (idx, bit) => (idx << 1n) | BigInt(bit),
+    0n
+  );
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
