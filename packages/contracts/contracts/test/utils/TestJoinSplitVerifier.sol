@@ -3,21 +3,19 @@ pragma solidity ^0.8.5;
 
 import "../../interfaces/IJoinSplitVerifier.sol";
 import "./Pairing.sol";
+import {IVerifier} from "../../interfaces/IVerifier.sol";
 
 contract TestJoinSplitVerifier is IJoinSplitVerifier {
     function verifyProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[9] memory input
+        IVerifier.Proof memory proof,
+        uint256[] memory pis 
     ) external view override returns (bool) {
         return true;
     }
 
     function batchVerifyProofs(
-        uint256[] memory proofsFlat,
-        uint256[] memory pisFlat,
-        uint256 numProofs
+        IVerifier.Proof[] memory proofs,
+        uint256[] memory pisFlat
     ) external view override returns (bool) {
         return true;
     }

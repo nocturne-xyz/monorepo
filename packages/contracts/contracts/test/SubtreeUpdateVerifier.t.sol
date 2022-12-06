@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
+import {Utils} from "../libs/Utils.sol";
+import {IVerifier} from "../interfaces/IVerifier.sol"; 
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {SubtreeUpdateVerifier} from "../SubtreeUpdateVerifier.sol";
 
@@ -15,6 +17,8 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/subtreeupdateProof.json";
+    uint256 constant NUM_PROOFS = 8;
+    uint256 constant NUM_PIS = 4;
 
     ISubtreeUpdateVerifier verifier;
 
@@ -22,36 +26,48 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
         verifier = ISubtreeUpdateVerifier(new SubtreeUpdateVerifier());
     }
 
-    function verifyFixture(string memory path) public {
+    function loadSubtreeUpdateProof(string memory path) internal returns (IVerifier.Proof memory proof, uint256[] memory pis) {
         SubtreeUpdateProofWithPublicSignals
-            memory proof = loadSubtreeUpdateProofFromFixture(path);
+            memory proofWithPIs = loadSubtreeUpdateProofFromFixture(path);
+        proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
+        pis = new uint256[](NUM_PIS);
+        for (uint256 i = 0; i < NUM_PIS; i++) {
+            pis[i] = proofWithPIs.publicSignals[i];
+        }
+
+        return (proof, pis);
+    }
+
+    function verifyFixture(string memory path) public {
+        (IVerifier.Proof memory proof, uint[] memory pis) = loadSubtreeUpdateProof(path);
+        require(
+            verifier.verifyProof(proof, pis),
+            "Invalid proof"
+        );
+    }
+
+    function batchVerifyFixture(string memory path) public {
+        IVerifier.Proof[] memory proofs = new IVerifier.Proof[](NUM_PROOFS);
+        uint[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
+        for (uint256 i = 0; i < NUM_PROOFS; i++) {
+            (IVerifier.Proof memory proof, uint[] memory pis) = loadSubtreeUpdateProof(path);
+            proofs[i] = proof;
+            for (uint256 j = 0; j < NUM_PIS; j++) {
+                pisFlat[i * NUM_PIS + j] = pis[j];
+            }
+        }
 
         require(
-            verifier.verifyProof(
-                [parseInt(proof.proof.pi_a[0]), parseInt(proof.proof.pi_a[1])],
-                [
-                    [
-                        parseInt(proof.proof.pi_b[0][1]),
-                        parseInt(proof.proof.pi_b[0][0])
-                    ],
-                    [
-                        parseInt(proof.proof.pi_b[1][1]),
-                        parseInt(proof.proof.pi_b[1][0])
-                    ]
-                ],
-                [parseInt(proof.proof.pi_c[0]), parseInt(proof.proof.pi_c[1])],
-                [
-                    proof.publicSignals[0],
-                    proof.publicSignals[1],
-                    proof.publicSignals[2],
-                    proof.publicSignals[3]
-                ]
-            ),
+            verifier.batchVerifyProofs(proofs, pisFlat),
             "Invalid proof"
         );
     }
 
     function testBasicVerify() public {
         verifyFixture(BASIC_FIXTURE_PATH);
+    }
+
+    function testBatchVerify() public {
+        batchVerifyFixture(BASIC_FIXTURE_PATH);
     }
 }

@@ -10,6 +10,8 @@ import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodi
 import {TestUtils} from "./utils/TestUtils.sol";
 import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
+import {IVerifier} from "../interfaces/IVerifier.sol";
+import {Utils} from "../libs/Utils.sol";
 
 contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     using stdJson for string;
@@ -24,60 +26,43 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
         verifier = IJoinSplitVerifier(new JoinSplitVerifier());
     }
 
+    function loadJoinSplitProof(string memory path) internal returns (IVerifier.Proof memory proof, uint256[] memory pis) {
+       JoinSplitProofWithPublicSignals 
+            memory proofWithPIs = loadJoinSplitProofFromFixture(path);
+        proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
+        pis = new uint256[](NUM_PIS);
+        for (uint256 i = 0; i < NUM_PIS; i++) {
+            pis[i] = proofWithPIs.publicSignals[i];
+        }
+
+        return (proof, pis);
+    }
+
     function verifyFixture(string memory path) public {
-        JoinSplitProofWithPublicSignals
-            memory proof = loadJoinSplitProofFromFixture(path);
+        (IVerifier.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(path);
 
         require(
             verifier.verifyProof(
-                [parseInt(proof.proof.pi_a[0]), parseInt(proof.proof.pi_a[1])],
-                [
-                    [
-                        parseInt(proof.proof.pi_b[0][1]),
-                        parseInt(proof.proof.pi_b[0][0])
-                    ],
-                    [
-                        parseInt(proof.proof.pi_b[1][1]),
-                        parseInt(proof.proof.pi_b[1][0])
-                    ]
-                ],
-                [parseInt(proof.proof.pi_c[0]), parseInt(proof.proof.pi_c[1])],
-                [
-                    proof.publicSignals[0],
-                    proof.publicSignals[1],
-                    proof.publicSignals[2],
-                    proof.publicSignals[3],
-                    proof.publicSignals[4],
-                    proof.publicSignals[5],
-                    proof.publicSignals[6],
-                    proof.publicSignals[7],
-                    proof.publicSignals[8]
-                ]
+                proof,
+                pis
             ),
             "Invalid proof"
         );
     }
 
     function batchVerifyFixture(string memory path) public {
-        uint256[] memory proofsFlat = new uint256[](NUM_PROOFS * 8);
+        IVerifier.Proof[] memory proofs = new IVerifier.Proof[](NUM_PROOFS);
         uint256[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
-        for (uint256 i = 0; i < 8; i++) {
-            JoinSplitProofWithPublicSignals
-                memory proof = loadJoinSplitProofFromFixture(path);
-
+        for (uint256 i = 0; i < NUM_PROOFS; i++) {
+            (IVerifier.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(path);
+            proofs[i] = proof;
             for (uint256 j = 0; j < NUM_PIS; j++) {
-                pisFlat[i * NUM_PIS + j] = proof.publicSignals[j];
-            }
-
-            uint256[8] memory proof8 = baseProofTo8(proof.proof);
-
-            for (uint256 j = 0; j < 8; j++) {
-                proofsFlat[i * 8 + j] = proof8[j];
+                pisFlat[i * NUM_PIS + j] = pis[j];
             }
         }
 
         require(
-            verifier.batchVerifyProofs(proofsFlat, pisFlat, NUM_PROOFS),
+            verifier.batchVerifyProofs(proofs, pisFlat),
             "Invalid proof"
         );
     }

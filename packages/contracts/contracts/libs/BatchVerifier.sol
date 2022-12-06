@@ -1,21 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.5;
 import {Pairing} from "./Pairing.sol";
+import {IVerifier} from "../interfaces/IVerifier.sol";
 import {Utils} from "./Utils.sol";
 
 library BatchVerifier {
-    struct VerifyingKey {
-        Pairing.G1Point alpha1;
-        Pairing.G2Point beta2;
-        Pairing.G2Point gamma2;
-        Pairing.G2Point delta2;
-        Pairing.G1Point[] IC;
-    }
-
     function accumulate(
-        uint256[] memory proofsFlat,
-        uint256[] memory pisFlat,
-        uint256 numProofs
+        IVerifier.Proof[] memory proofs,
+        uint256[] memory pisFlat
     )
         internal
         view
@@ -24,16 +16,16 @@ library BatchVerifier {
             uint256[] memory publicInputAccumulators
         )
     {
-        uint256 numPublicInputs = pisFlat.length / numProofs;
-        uint256[] memory entropy = new uint256[](numProofs);
+        uint256 numPublicInputs = pisFlat.length / proofs.length;
+        uint256[] memory entropy = new uint256[](proofs.length);
         publicInputAccumulators = new uint256[](numPublicInputs + 1);
 
         // Generate entropy for each proof and accumulate each PI
         // seed a challenger by hashing all of the proofs and the current blockhash togethre
         uint256 challengerState = uint256(
-            keccak256(abi.encodePacked(proofsFlat, blockhash(block.number - 1)))
+            keccak256(abi.encode(proofs, blockhash(block.number - 1)))
         );
-        for (uint256 proofIndex = 0; proofIndex < numProofs; proofIndex++) {
+        for (uint256 proofIndex = 0; proofIndex < proofs.length; proofIndex++) {
             if (proofIndex == 0) {
                 entropy[proofIndex] = 1;
             } else {
@@ -63,47 +55,33 @@ library BatchVerifier {
             }
         }
 
-        proofAsandAggegateC = new Pairing.G1Point[](numProofs + 1);
-        proofAsandAggegateC[0].X = proofsFlat[0];
-        proofAsandAggegateC[0].Y = proofsFlat[1];
+        proofAsandAggegateC = new Pairing.G1Point[](proofs.length + 1);
+        proofAsandAggegateC[0] = proofs[0].A;
 
         // raise As from each proof to entropy[i]
-        for (uint256 proofIndex = 1; proofIndex < numProofs; proofIndex++) {
-            Pairing.G1Point memory p = Pairing.G1Point(
-                proofsFlat[proofIndex * 8],
-                proofsFlat[proofIndex * 8 + 1]
-            );
+        for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
             uint256 s = entropy[proofIndex];
-
-            proofAsandAggegateC[proofIndex] = Pairing.scalar_mul(p, s);
+            proofAsandAggegateC[proofIndex] = Pairing.scalar_mul(proofs[proofIndex].A, s);
         }
 
-        // MSM(proofC, entropy) for each proof
-        Pairing.G1Point memory msmProduct = Pairing.G1Point(
-            proofsFlat[6],
-            proofsFlat[7]
-        );
-        for (uint256 proofIndex = 1; proofIndex < numProofs; proofIndex++) {
-            Pairing.G1Point memory p = Pairing.G1Point(
-                proofsFlat[proofIndex * 8 + 6],
-                proofsFlat[proofIndex * 8 + 7]
-            );
+        // MSM(proofCs, entropy)
+        Pairing.G1Point memory msmProduct = proofs[0].C;
+        for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
             uint256 s = entropy[proofIndex];
-            Pairing.G1Point memory term = Pairing.scalar_mul(p, s);
+            Pairing.G1Point memory term = Pairing.scalar_mul(proofs[proofIndex].C, s);
             msmProduct = Pairing.addition(msmProduct, term);
         }
 
-        proofAsandAggegateC[numProofs] = msmProduct;
+        proofAsandAggegateC[proofs.length] = msmProduct;
 
         return (proofAsandAggegateC, publicInputAccumulators);
     }
 
     function prepareBatch(
-        VerifyingKey memory vk,
+        IVerifier.VerifyingKey memory vk,
         uint256[] memory publicInputAccumulators
     ) internal view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
         // Compute the linear combination vk_x using accumulator
-        // First two fields are used as the sum and are initially zero
 
         // Performs an MSM(vkIC, publicInputAccumulators)
         Pairing.G1Point memory msmProduct = Pairing.scalar_mul(
@@ -132,65 +110,51 @@ library BatchVerifier {
     }
 
     function batchVerifyProofs(
-        VerifyingKey memory vk,
-        uint256[] memory proofsFlat,
-        uint256[] memory pisFlat,
-        uint256 numProofs
+        IVerifier.VerifyingKey memory vk,
+        IVerifier.Proof[] memory proofs,
+        uint256[] memory pisFlat
     ) internal view returns (bool success) {
         require(
-            proofsFlat.length == numProofs * 8,
-            "Invalid proofs length for a batch"
-        );
-        require(
-            pisFlat.length % numProofs == 0,
+            pisFlat.length % proofs.length == 0,
             "Invalid inputs length for a batch"
         );
-        require(vk.IC.length == (pisFlat.length / numProofs) + 1);
+        require(vk.IC.length == (pisFlat.length / proofs.length) + 1);
 
         // strategy is to accumulate entropy separately for some proof elements
         // (accumulate only for G1, can't in G2) of the pairing equation, as well as input verification key,
         // postpone scalar multiplication as much as possible and check only one equation
-        // by using 3 + numProofs pairings only plus 2*numProofs + (num_inputs+1) + 1 scalar multiplications compared to naive
-        // 4*numProofs pairings and numProofs*(num_inputs+1) scalar multiplications
+        // by using 3 + proofs.length pairings only plus 2*proofs.length + (num_inputs+1) + 1 scalar multiplications compared to naive
+        // 4*proofs.length pairings and proofs.length*(num_inputs+1) scalar multiplications
 
         (
             Pairing.G1Point[] memory proofAsandAggegateC,
             uint256[] memory publicInputAccumulators
-        ) = accumulate(proofsFlat, pisFlat, numProofs);
+        ) = accumulate(proofs, pisFlat);
         Pairing.G1Point[2] memory finalVKAlphaAndX = prepareBatch(
             vk,
             publicInputAccumulators
         );
 
-        Pairing.G1Point[] memory p1s = new Pairing.G1Point[](numProofs + 3);
-        Pairing.G2Point[] memory p2s = new Pairing.G2Point[](numProofs + 3);
+        Pairing.G1Point[] memory p1s = new Pairing.G1Point[](proofs.length + 3);
+        Pairing.G2Point[] memory p2s = new Pairing.G2Point[](proofs.length + 3);
 
-        // first numProofs pairings e(ProofA, ProofB)
-        for (uint256 proofNumber = 0; proofNumber < numProofs; proofNumber++) {
+        // first proofs.length pairings e(ProofA, ProofB)
+        for (uint256 proofNumber = 0; proofNumber < proofs.length; proofNumber++) {
             p1s[proofNumber] = proofAsandAggegateC[proofNumber];
-            p2s[proofNumber] = Pairing.G2Point(
-                [
-                    proofsFlat[proofNumber * 8 + 2],
-                    proofsFlat[proofNumber * 8 + 3]
-                ],
-                [
-                    proofsFlat[proofNumber * 8 + 4],
-                    proofsFlat[proofNumber * 8 + 5]
-                ]
-            );
+            p2s[proofNumber] = proofs[proofNumber].B;
         }
 
         // second pairing e(-finalVKaplha, vk.beta)
-        p1s[numProofs] = Pairing.negate(finalVKAlphaAndX[0]);
-        p2s[numProofs] = vk.beta2;
+        p1s[proofs.length] = Pairing.negate(finalVKAlphaAndX[0]);
+        p2s[proofs.length] = vk.beta2;
 
         // third pairing e(-finalVKx, vk.gamma)
-        p1s[numProofs + 1] = Pairing.negate(finalVKAlphaAndX[1]);
-        p2s[numProofs + 1] = vk.gamma2;
+        p1s[proofs.length + 1] = Pairing.negate(finalVKAlphaAndX[1]);
+        p2s[proofs.length + 1] = vk.gamma2;
 
         // fourth pairing e(-proof.C, vk.delta)
-        p1s[numProofs + 2] = Pairing.negate(proofAsandAggegateC[numProofs]);
-        p2s[numProofs + 2] = vk.delta2;
+        p1s[proofs.length + 2] = Pairing.negate(proofAsandAggegateC[proofs.length]);
+        p2s[proofs.length + 2] = vk.delta2;
 
         return Pairing.pairing(p1s, p2s);
     }

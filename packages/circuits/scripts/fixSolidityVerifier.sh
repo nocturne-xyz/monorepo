@@ -18,41 +18,63 @@ fi
 
 echo "Post processing solidity vierfier at $FILE with verifier name $VERIFIERNAME.."
 
+# fix pragma, import interface and declare contract to implement it
 $CMD -i \
   '/^pragma/s/.*/pragma solidity ^0.8.5;/
   /^pragma/aimport {I'$VERIFIERNAME'} from "./interfaces/I'$VERIFIERNAME'.sol";
-  s/contract Verifier/contract '$VERIFIERNAME' is I'$VERIFIERNAME'/
-  s/public view returns (bool r)/public override view returns (bool r)/' "$FILE"
+  s/contract Verifier/contract '$VERIFIERNAME' is I'$VERIFIERNAME'/' "$FILE"
 
+# import Pairing
 $CMD -ni \
   '1,/^import/p
   /^import/aimport {Pairing} from "./libs/Pairing.sol";
   /contract/,$p' "$FILE"
 
+# import BatchVerifier
 $CMD -i '/^import {Pairing}/aimport {BatchVerifier} from "./libs/BatchVerifier.sol";' "$FILE"
 
-# delete the closing brace
+# import IVerifier 
+$CMD -i '/^import {BatchVerifier}/aimport {IVerifier} from "./interfaces/IVerifier.sol";' "$FILE"
 
-head -n -1 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" 
+# delete local defn of VerifyingKey and Proof
+$CMD -i '/struct VerifyingKey/,+11d' "$FILE"
 
-# then insert the method code and reinsert closing brace afterwards
+# replace all mentions of Proof with `IVerifier.Proof`
+$CMD -i 's/\(\s*\)Proof/\1IVerifier.Proof/g' "$FILE"
 
+# replace all mentions of VerifyingKey with `IVerifier.VerifyingKey`
+$CMD -i 's/\(\s*\)VerifyingKey/\1IVerifier.VerifyingKey/g' "$FILE"
+
+# replace all mentions of alfa1 with `alpha1`
+$CMD -i 's/alfa1/alpha1/g' "$FILE"
+
+# delete the old `verifyProof` method and closing brace
+head -n -22 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" 
+
+# then insert the public methods code and closing brace afterwards
 echo "
-    /// @return r bool true iff proofs are valid
-    function batchVerifyProofs(
-        uint256[] memory proofsFlat,
-        uint256[] memory pisFlat,
-        uint256 numProofs
-    ) public view override returns (bool) {
-        VerifyingKey memory _vk = verifyingKey();
-        BatchVerifier.VerifyingKey memory vk = BatchVerifier.VerifyingKey(_vk.alfa1, _vk.beta2, _vk.gamma2, _vk.delta2, _vk.IC);
+    /// @return r  bool true if proof is valid
+    function verifyProof(
+        IVerifier.Proof memory proof,
+        uint256[] memory pis
+    ) public view override returns (bool r) {
+        if (verify(pis, proof) == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        IVerifier.Proof[] memory proofs,
+        uint256[] memory pisFlat
+    ) public view override returns (bool) {
         return
             BatchVerifier.batchVerifyProofs(
-                vk,
-                proofsFlat,
-                pisFlat,
-                numProofs
+                verifyingKey(),
+                proofs,
+                pisFlat
             );
     }
 }
