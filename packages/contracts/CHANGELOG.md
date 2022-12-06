@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `test:gas-report` command
 - Migrate for joinsplit
   - Compute operationDigest once for the entire operation
 - Rename all "flax" instances to "nocturne"
