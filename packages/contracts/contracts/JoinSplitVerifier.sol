@@ -183,18 +183,12 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         uint256[] memory pisFlat,
         uint256 numProofs
     ) public view override returns (bool) {
-        VerifyingKey memory vk = verifyingKey();
-        uint256[14] memory vkFlat = BatchVerifier.flattenVK(
-            vk.alfa1,
-            vk.beta2,
-            vk.gamma2,
-            vk.delta2
-        );
+        VerifyingKey memory _vk = verifyingKey();
+        BatchVerifier.VerifyingKey memory vk = BatchVerifier.VerifyingKey(_vk.alfa1, _vk.beta2, _vk.gamma2, _vk.delta2, _vk.IC);
 
         return
             BatchVerifier.batchVerifyProofs(
-                vkFlat,
-                vk.IC,
+                vk,
                 proofsFlat,
                 pisFlat,
                 numProofs
