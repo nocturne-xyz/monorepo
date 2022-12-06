@@ -8,7 +8,7 @@ import {IVerifier} from "../../interfaces/IVerifier.sol";
 contract TestJoinSplitVerifier is IJoinSplitVerifier {
     function verifyProof(
         IVerifier.Proof memory proof,
-        uint256[] memory pis 
+        uint256[] memory pis
     ) external view override returns (bool) {
         return true;
     }

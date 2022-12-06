@@ -115,7 +115,7 @@ library OffchainMerkleTree {
             hi
         );
 
-        IVerifier.Proof memory proof = Utils.proof8ToStruct(proof); 
+        IVerifier.Proof memory proof = Utils.proof8ToStruct(proof);
         uint256[] memory pis = new uint256[](4);
         pis[0] = self.root;
         pis[1] = newRoot;

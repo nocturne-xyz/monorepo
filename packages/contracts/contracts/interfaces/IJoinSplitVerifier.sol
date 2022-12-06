@@ -4,4 +4,6 @@ import {IVerifier} from "./IVerifier.sol";
 
 /// @title Verifier interface.
 /// @dev Interface of Verifier contract.
-interface IJoinSplitVerifier is IVerifier {}
+interface IJoinSplitVerifier is IVerifier {
+
+}

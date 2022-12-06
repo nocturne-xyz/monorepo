@@ -26,7 +26,7 @@ interface IVerifier {
         uint256[] memory pis
     ) external view returns (bool);
 
-    /// @param proofs: an array containing the proofs to verify 
+    /// @param proofs: an array containing the proofs to verify
     /// @param pisFlat: an array of length `NUM_PIS * numProofs` containing the PIs for each proof concatenated together
     function batchVerifyProofs(
         Proof[] memory proofs,

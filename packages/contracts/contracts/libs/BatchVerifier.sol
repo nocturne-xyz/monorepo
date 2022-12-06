@@ -61,14 +61,20 @@ library BatchVerifier {
         // raise As from each proof to entropy[i]
         for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
             uint256 s = entropy[proofIndex];
-            proofAsandAggegateC[proofIndex] = Pairing.scalar_mul(proofs[proofIndex].A, s);
+            proofAsandAggegateC[proofIndex] = Pairing.scalar_mul(
+                proofs[proofIndex].A,
+                s
+            );
         }
 
         // MSM(proofCs, entropy)
         Pairing.G1Point memory msmProduct = proofs[0].C;
         for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
             uint256 s = entropy[proofIndex];
-            Pairing.G1Point memory term = Pairing.scalar_mul(proofs[proofIndex].C, s);
+            Pairing.G1Point memory term = Pairing.scalar_mul(
+                proofs[proofIndex].C,
+                s
+            );
             msmProduct = Pairing.addition(msmProduct, term);
         }
 
@@ -139,7 +145,11 @@ library BatchVerifier {
         Pairing.G2Point[] memory p2s = new Pairing.G2Point[](proofs.length + 3);
 
         // first proofs.length pairings e(ProofA, ProofB)
-        for (uint256 proofNumber = 0; proofNumber < proofs.length; proofNumber++) {
+        for (
+            uint256 proofNumber = 0;
+            proofNumber < proofs.length;
+            proofNumber++
+        ) {
             p1s[proofNumber] = proofAsandAggegateC[proofNumber];
             p2s[proofNumber] = proofs[proofNumber].B;
         }
@@ -153,7 +163,9 @@ library BatchVerifier {
         p2s[proofs.length + 1] = vk.gamma2;
 
         // fourth pairing e(-proof.C, vk.delta)
-        p1s[proofs.length + 2] = Pairing.negate(proofAsandAggegateC[proofs.length]);
+        p1s[proofs.length + 2] = Pairing.negate(
+            proofAsandAggegateC[proofs.length]
+        );
         p2s[proofs.length + 2] = vk.delta2;
 
         return Pairing.pairing(p1s, p2s);

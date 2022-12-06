@@ -26,8 +26,10 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
         verifier = IJoinSplitVerifier(new JoinSplitVerifier());
     }
 
-    function loadJoinSplitProof(string memory path) internal returns (IVerifier.Proof memory proof, uint256[] memory pis) {
-       JoinSplitProofWithPublicSignals 
+    function loadJoinSplitProof(
+        string memory path
+    ) internal returns (IVerifier.Proof memory proof, uint256[] memory pis) {
+        JoinSplitProofWithPublicSignals
             memory proofWithPIs = loadJoinSplitProofFromFixture(path);
         proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
         pis = new uint256[](NUM_PIS);
@@ -39,32 +41,29 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     }
 
     function verifyFixture(string memory path) public {
-        (IVerifier.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(path);
+        (
+            IVerifier.Proof memory proof,
+            uint256[] memory pis
+        ) = loadJoinSplitProof(path);
 
-        require(
-            verifier.verifyProof(
-                proof,
-                pis
-            ),
-            "Invalid proof"
-        );
+        require(verifier.verifyProof(proof, pis), "Invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {
         IVerifier.Proof[] memory proofs = new IVerifier.Proof[](NUM_PROOFS);
         uint256[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
-            (IVerifier.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(path);
+            (
+                IVerifier.Proof memory proof,
+                uint256[] memory pis
+            ) = loadJoinSplitProof(path);
             proofs[i] = proof;
             for (uint256 j = 0; j < NUM_PIS; j++) {
                 pisFlat[i * NUM_PIS + j] = pis[j];
             }
         }
 
-        require(
-            verifier.batchVerifyProofs(proofs, pisFlat),
-            "Invalid proof"
-        );
+        require(verifier.batchVerifyProofs(proofs, pisFlat), "Invalid proof");
     }
 
     function testBasicVerify() public {
