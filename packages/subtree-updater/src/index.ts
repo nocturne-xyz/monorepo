@@ -10,7 +10,6 @@ import { fetchInsertions } from "@nocturne-xyz/sdk";
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION";
-const RECOVERY_CHUNK_SIZE = 100 * BinaryPoseidonTree.BATCH_SIZE;
 
 function insertionKey(idx: number) {
   return `${INSERTION_PREFIX}-${idx}`;
@@ -96,77 +95,8 @@ export class SubtreeUpdater {
     this.submitter = submitter;
   }
 
-  private async getNextBlockToIndex(): Promise<number> {
-    if (this.nextBlockToIndex === undefined) {
-      const nextBlockToIndexStr = (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
-      this.nextBlockToIndex = parseInt(nextBlockToIndexStr);
-    }
-
-    return this.nextBlockToIndex;
-  }
-
-  private async getNextInsertionIndex(): Promise<number> {
-    if (this.index === undefined) {
-      const indexStrs = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
-      this.index = parseInt(indexStrs);
-    }
-
-    return this.index;
-  }
-
-  private async genProof(batch: (Note | bigint)[], subtreeIndex: number): Promise<BaseProof> {
-    const merkleProof = this.tree.getProof(subtreeIndex);
-    const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
-    const { proof } = await this.prover.proveSubtreeUpdate(inputs);
-    return proof;
-  }
-
-  private async shouldGenProof(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-      return !(await this.submitter.subtreeIsCommitted(subtreeIndex, newRoot));
-  }
-
-  private async tryGenAndSubmitProof(): Promise<void> {
-    while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
-      const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
-
-      for (let i = 0; i < batch.length; i++) {
-        const item = batch[i];
-        if (typeof item === "bigint") {
-          this.tree.insert(item);
-        } else {
-          this.tree.insert(NoteTrait.toCommitment(item));
-        }
-      }
-
-      // only generate / submit proof if the batch is not already committed
-      const subtreeIndex = this.tree.count - batch.length;
-      if (await this.shouldGenProof(subtreeIndex, this.tree.root())) {
-        const proof = await this.genProof(batch, subtreeIndex);
-        await this.submitter.submitProof(proof, this.tree.root(), subtreeIndex);
-      }
-
-      this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
-    }
-  }
-
-  public async recoverPersisedState(): Promise<void> {
-    const nextInsertionIndex = await this.getNextInsertionIndex();
-    const start = insertionKey(0);
-    const end = insertionKey(nextInsertionIndex);
-
-    for (const { key, value } of this.db.getRange({ start, end })) {
-      if (value === undefined) {
-        throw new Error(`DB entry not found: ${key}`);
-      }
-      const insertion = JSON.parse(value) as Note | bigint;
-      this.insertions.push(insertion);
-
-      if (this.insertions.length >= RECOVERY_CHUNK_SIZE) {
-        await this.tryGenAndSubmitProof();
-      }
-    }
-
-    await this.tryGenAndSubmitProof();
+  public async init(): Promise<void> {
+    this.recoverPersisedState();
   }
 
   public async pollInsertions(): Promise<void> {
@@ -205,5 +135,89 @@ export class SubtreeUpdater {
   public async dropDB(): Promise<void> {
     await this.submitter.dropDB();
     await this.db.drop();
+  }
+
+  private async getNextBlockToIndex(): Promise<number> {
+    if (this.nextBlockToIndex === undefined) {
+      const nextBlockToIndexStr = (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
+      this.nextBlockToIndex = parseInt(nextBlockToIndexStr);
+    }
+
+    return this.nextBlockToIndex;
+  }
+
+  private async getNextInsertionIndex(): Promise<number> {
+    if (this.index === undefined) {
+      const indexStrs = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
+      this.index = parseInt(indexStrs);
+    }
+
+    return this.index;
+  }
+
+  private async genProof(batch: (Note | bigint)[], subtreeIndex: number): Promise<BaseProof> {
+    const merkleProof = this.tree.getProof(subtreeIndex);
+    const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
+    const { proof } = await this.prover.proveSubtreeUpdate(inputs);
+    return proof;
+  }
+
+  private async shouldGenProof(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
+      return !(await this.submitter.subtreeIsCommitted(subtreeIndex, newRoot));
+  }
+
+  private applyBatch(batch: (Note | bigint)[]): void {
+    for (let i = 0; i < batch.length; i++) {
+      const item = batch[i];
+      if (typeof item === "bigint") {
+        this.tree.insert(item);
+      } else {
+        this.tree.insert(NoteTrait.toCommitment(item));
+      }
+    }
+  }
+
+  private async tryGenAndSubmitProof(): Promise<void> {
+    while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
+      const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
+      this.applyBatch(batch);
+
+      // only generate / submit proof if the batch is not already committed
+      const subtreeIndex = this.tree.count - batch.length;
+      if (await this.shouldGenProof(subtreeIndex, this.tree.root())) {
+        const proof = await this.genProof(batch, subtreeIndex);
+        await this.submitter.submitProof(proof, this.tree.root(), subtreeIndex);
+      }
+
+      this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+    }
+  }
+
+  private async recoverPersisedState(): Promise<void> {
+    const nextInsertionIndex = await this.getNextInsertionIndex();
+    if (nextInsertionIndex === 0) {
+      return;
+    }
+
+    const start = insertionKey(0);
+    const end = insertionKey(nextInsertionIndex);
+
+    for (const { key, value } of this.db.getRange({ start, end })) {
+      if (value === undefined) {
+        throw new Error(`DB entry not found: ${key}`);
+      }
+      const insertion = JSON.parse(value) as Note | bigint;
+      this.insertions.push(insertion);
+
+      if (this.insertions.length === BinaryPoseidonTree.BATCH_SIZE) {
+        const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
+        this.applyBatch(batch);
+
+        const subtreeIndex = this.tree.count - batch.length;
+        if (await this.submitter.subtreeIsCommitted(subtreeIndex, this.tree.root())) {
+          this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+        }
+      }
+    }
   }
 }
