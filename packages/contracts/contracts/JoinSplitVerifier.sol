@@ -3,9 +3,9 @@ pragma solidity ^0.8.5;
 
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 
-contract JoinSplitVerifier is IVerifier {
+contract JoinSplitVerifier is IJoinSplitVerifier {
     function verifyingKey()
         internal
         pure

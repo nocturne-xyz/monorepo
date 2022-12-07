@@ -7,7 +7,8 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
@@ -41,8 +42,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     Wallet wallet;
     Vault vault;
     TreeTest treeTest;
-    IVerifier joinSplitVerifier;
-    IVerifier subtreeUpdateVerifier;
+    IJoinSplitVerifier joinSplitVerifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
     IHasherT3 hasherT3;

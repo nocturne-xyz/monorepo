@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {Utils} from "../libs/Utils.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.solVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {SubtreeUpdateVerifier} from "../SubtreeUpdateVerifier.sol";
 
@@ -20,10 +20,12 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
     uint256 constant NUM_PROOFS = 8;
     uint256 constant NUM_PIS = 4;
 
-    IVerifier verifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
 
     function setUp() public virtual {
-        verifier = IVerifier(new SubtreeUpdateVerifier());
+        subtreeUpdateVerifier = ISubtreeUpdateVerifier(
+            new SubtreeUpdateVerifier()
+        );
     }
 
     function loadSubtreeUpdateProof(
@@ -45,7 +47,7 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
             Groth16.Proof memory proof,
             uint[] memory pis
         ) = loadSubtreeUpdateProof(path);
-        require(verifier.verifyProof(proof, pis), "Invalid proof");
+        require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {
@@ -62,7 +64,10 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
             }
         }
 
-        require(verifier.batchVerifyProofs(proofs, pisFlat), "Invalid proof");
+        require(
+            subtreeUpdateVerifier.batchVerifyProofs(proofs, pisFlat),
+            "Invalid proof"
+        );
     }
 
     function testBasicVerify() public {

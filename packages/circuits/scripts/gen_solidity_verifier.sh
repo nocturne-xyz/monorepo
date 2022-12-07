@@ -29,9 +29,9 @@ pragma solidity ^0.8.5;
 
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {I'"$VERIFIERNAME"'} from "./interfaces/I'"$VERIFIERNAME"'.sol";
 
-contract '"$VERIFIERNAME"' is IVerifier {
+contract '"$VERIFIERNAME"' is I'"$VERIFIERNAME"' {
     function verifyingKey() internal pure returns (Groth16.VerifyingKey memory vk) {' > "$FILE"
 
 # write vkey

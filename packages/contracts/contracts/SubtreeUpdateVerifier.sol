@@ -14,9 +14,9 @@
 pragma solidity ^0.8.5;
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 
-contract SubtreeUpdateVerifier is IVerifier {
+contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     using Pairing for *;
 
     function verifyingKey()

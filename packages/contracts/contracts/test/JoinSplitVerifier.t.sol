@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
 
@@ -20,10 +20,10 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     uint256 constant NUM_PROOFS = 8;
     uint256 constant NUM_PIS = 9;
 
-    IVerifier verifier;
+    IJoinSplitVerifier joinSplitVerifier;
 
     function setUp() public virtual {
-        verifier = IVerifier(new JoinSplitVerifier());
+        joinSplitVerifier = IJoinSplitVerifier(new JoinSplitVerifier());
     }
 
     function loadJoinSplitProof(
@@ -45,7 +45,7 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
             path
         );
 
-        require(verifier.verifyProof(proof, pis), "Invalid proof");
+        require(joinSplitVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {
@@ -62,7 +62,10 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
             }
         }
 
-        require(verifier.batchVerifyProofs(proofs, pisFlat), "Invalid proof");
+        require(
+            joinSplitVerifier.batchVerifyProofs(proofs, pisFlat),
+            "Invalid proof"
+        );
     }
 
     function testBasicVerify() public {

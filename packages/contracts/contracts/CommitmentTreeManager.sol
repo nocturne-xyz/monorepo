@@ -3,7 +3,7 @@ pragma solidity ^0.8.5;
 
 import "./interfaces/IJoinSplitVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
-import {IVerifier} from "./interfaces/IVerifier.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
@@ -20,7 +20,7 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     OffchainMerkleTreeData internal merkle;
-    IVerifier public joinSplitVerifier;
+    IJoinSplitVerifier public joinSplitVerifier;
 
     event Refund(
         IWallet.NocturneAddress refundAddr,

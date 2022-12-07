@@ -4,7 +4,7 @@ pragma solidity ^0.8.5;
 import "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Utils} from "./Utils.sol";
 import {TreeUtils} from "./TreeUtils.sol";
 import {QueueLib} from "./Queue.sol";
@@ -28,7 +28,7 @@ struct OffchainMerkleTreeData {
     // each accumulator commits to an update (a set of note commitments) that will be applied to the tree
     // via the commitSubtree() method
     QueueLib.Queue accumulatorQueue;
-    IVerifier subtreeUpdateVerifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
 }
 
 library OffchainMerkleTree {

@@ -7,7 +7,7 @@ import {TreeUtils} from "../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {PoseidonHasherT3, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
@@ -18,7 +18,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
     OffchainMerkleTreeData merkle;
-    IVerifier verifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
     TreeTest treeTest;
@@ -30,11 +30,13 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
-        verifier = IVerifier(new TestSubtreeUpdateVerifier());
+        subtreeUpdateVerifier = ISubtreeUpdateVerifier(
+            new TestSubtreeUpdateVerifier()
+        );
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
         treeTest.initialize(hasherT3, hasherT6);
-        merkle.initialize(address(verifier));
+        merkle.initialize(address(subtreeUpdateVerifier));
     }
 
     function testTreeTest() public {
