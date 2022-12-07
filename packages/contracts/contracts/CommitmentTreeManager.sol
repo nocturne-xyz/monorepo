@@ -111,10 +111,6 @@ contract CommitmentTreeManager {
         );
     }
 
-    function isPastRoot(uint256 pastRoot) public view returns (bool) {
-        return pastRoots[pastRoot];
-    }
-
     function root() public view returns (uint256) {
         return merkle.getRoot();
     }
