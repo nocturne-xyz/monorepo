@@ -55,7 +55,7 @@ describe("LocalMerkle", async () => {
 
   async function applySubtreeUpdate() {
     await updater.fillBatch();
-    await updater.poll();
+    await updater.pollInsertions();
   }
 
   afterEach(async () => {
