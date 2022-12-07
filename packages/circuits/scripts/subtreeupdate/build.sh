@@ -85,4 +85,4 @@ echo "DONE ($((end-start))s)"
 
 \cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
 
-"$SCRIPT_DIR/../fixSolidityVerifier.sh" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
+"$SCRIPT_DIR/../gen_solidity_verifier.sh" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"

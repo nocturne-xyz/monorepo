@@ -31,7 +31,7 @@ import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {IVerifier} from "./interfaces/IVerifier.sol";
 
-contract JoinSplitVerifier is IVerifier {
+contract '"$VERIFIERNAME"' is IVerifier {
     function verifyingKey() internal pure returns (Groth16.VerifyingKey memory vk) {' > "$FILE"
 
 # write vkey
