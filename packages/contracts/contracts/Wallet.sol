@@ -28,6 +28,50 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
+    // Verifies the joinsplit proofs of a bundle of transactions
+    // DOES NOT check if nullifiers in each transaction has not been used
+    function _verifyBundle(
+        Bundle calldata bundle
+    ) internal returns (bool) {
+        uint256 numOps = bundle.operations.length;
+
+        // compute number of joinsplits in the bundle
+        uint256 numJoinSplits = 0;
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+            numJoinSplits += op.joinSplitTxs.length;
+        }
+        Groth16.Proof[] memory proofs;
+        uint256[] memory pis = new uint256[](numJoinSplits * 9);
+
+        // current index into proofs and pis
+        uint256 index = 0;
+
+        // Batch verify all the joinsplit proofs
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+            uint256 operationDigest = uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
+            for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
+                Groth16.Proof memory proof = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
+                pis[9 * index] = op.joinSplitTxs[j].newNoteACommitment;
+                pis[9 * index + 1] = op.joinSplitTxs[j].newNoteBCommitment;
+                pis[9 * index + 2] = op.joinSplitTxs[j].commitmentTreeRoot;
+                pis[9 * index + 3] = op.joinSplitTxs[j].publicSpend;
+                pis[9 * index + 4] = op.joinSplitTxs[j].nullifierA;
+                pis[9 * index + 5] = op.joinSplitTxs[j].nullifierB;
+                pis[9 * index + 6] = operationDigest;
+                pis[9 * index + 7] = uint256(uint160(op.joinSplitTxs[j].asset));
+                pis[9 * index + 8] = op.joinSplitTxs[j].id;
+                index++;
+            }
+        }
+
+        require(
+            joinSplitVerifier.batchVerifyProofs(proofs, pis),
+            "Batched JoinSplit proof verification failed."
+        );
+    }
+
     // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata bundle

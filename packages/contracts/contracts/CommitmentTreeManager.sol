@@ -51,10 +51,11 @@ contract CommitmentTreeManager {
         pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
+    // Process a joinsplit transaction, assuming that the encoded proof is valid
     function _handleJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplitTx,
-        bytes32 operationHash
+        IWallet.JoinSplitTransaction calldata joinSplitTx
     ) internal {
+        // Check validity of nullifiers
         require(
             pastRoots[joinSplitTx.commitmentTreeRoot],
             "Given tree root not a past root"
@@ -67,24 +68,9 @@ contract CommitmentTreeManager {
             !nullifierSet[joinSplitTx.nullifierB],
             "Nullifier B already used"
         );
-
-        uint256 operationDigest = uint256(operationHash) %
-            Utils.SNARK_SCALAR_FIELD;
-
-        Groth16.Proof memory proof = Utils.proof8ToStruct(joinSplitTx.proof);
-        uint256[] memory pis = new uint256[](9);
-        pis[0] = joinSplitTx.newNoteACommitment;
-        pis[1] = joinSplitTx.newNoteBCommitment;
-        pis[2] = joinSplitTx.commitmentTreeRoot;
-        pis[3] = joinSplitTx.publicSpend;
-        pis[4] = joinSplitTx.nullifierA;
-        pis[5] = joinSplitTx.nullifierB;
-        pis[6] = operationDigest;
-        pis[7] = uint256(uint160(joinSplitTx.asset));
-        pis[8] = joinSplitTx.id;
         require(
-            joinSplitVerifier.verifyProof(proof, pis),
-            "JoinSplit proof invalid"
+            joinSplitTx.nullifierA != joinSplitTx.nullifierB,
+            "Two nullifiers in the joinsplit cannot be equal."
         );
 
         // Compute newNote indices in the merkle tree

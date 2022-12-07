@@ -118,7 +118,7 @@ contract BalanceManager is
         uint256 numSpendTxs = joinSplitTxs.length;
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            _handleJoinSplit(joinSplitTxs[i], operationHash);
+            _handleJoinSplit(joinSplitTxs[i]);
             if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[
                     joinSplitTxs[i].asset
