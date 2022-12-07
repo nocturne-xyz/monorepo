@@ -1,12 +1,41 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.5;
 import {Pairing} from "./Pairing.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
 import {Utils} from "./Utils.sol";
 
-library BatchVerifier {
+library Groth16 {
+    struct VerifyingKey {
+        Pairing.G1Point alpha1;
+        Pairing.G2Point beta2;
+        Pairing.G2Point gamma2;
+        Pairing.G2Point delta2;
+        Pairing.G1Point[] IC;
+    }
+
+    struct Proof {
+        Pairing.G1Point A;
+        Pairing.G2Point B;
+        Pairing.G1Point C;
+    }
+
+    // Verifying a single Groth16 proof
+    function verifyProof(VerifyingKey memory vk, Proof memory proof, uint256[] memory pi) internal view returns (bool) {
+        require(vk.IC.length == pi.length + 1, "Public input length mismatch.");
+        Pairing.G1Point memory vk_x = vk.IC[0];
+        for (uint i = 0; i < pi.length; i++) {
+            require(pi[i] < Utils.SNARK_SCALAR_FIELD, "Malformed public input.");
+            vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[i + 1], pi[i]));
+        }
+        return Pairing.pairingProd4(
+            Pairing.negate(proof.A), proof.B,
+            vk.alpha1, vk.beta2,
+            vk_x, vk.gamma2,
+            proof.C, vk.delta2
+        );
+    }
+
     function accumulate(
-        IVerifier.Proof[] memory proofs,
+        Proof[] memory proofs,
         uint256[] memory pisFlat
     )
         internal
@@ -84,7 +113,7 @@ library BatchVerifier {
     }
 
     function prepareBatch(
-        IVerifier.VerifyingKey memory vk,
+        VerifyingKey memory vk,
         uint256[] memory publicInputAccumulators
     ) internal view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
         // Compute the linear combination vk_x using accumulator
@@ -116,8 +145,8 @@ library BatchVerifier {
     }
 
     function batchVerifyProofs(
-        IVerifier.VerifyingKey memory vk,
-        IVerifier.Proof[] memory proofs,
+        VerifyingKey memory vk,
+        Proof[] memory proofs,
         uint256[] memory pisFlat
     ) internal view returns (bool success) {
         require(

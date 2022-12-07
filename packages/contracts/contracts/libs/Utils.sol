@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.5;
 import {IWallet} from "../interfaces/IWallet.sol";
-import {IVerifier} from "../interfaces/IVerifier.sol";
+import {Groth16} from "../libs/Groth16.sol";
 import {Pairing} from "../libs/Pairing.sol";
 
 // helpers for converting to/from field elems, uint256s, and/or bytes, and hashing them
@@ -48,9 +48,9 @@ library Utils {
 
     function proof8ToStruct(
         uint256[8] memory proof
-    ) internal pure returns (IVerifier.Proof memory) {
+    ) internal pure returns (Groth16.Proof memory) {
         return
-            IVerifier.Proof(
+            Groth16.Proof(
                 Pairing.G1Point(proof[0], proof[1]),
                 Pairing.G2Point([proof[2], proof[3]], [proof[4], proof[5]]),
                 Pairing.G1Point(proof[6], proof[7])

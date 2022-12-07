@@ -1,20 +1,20 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
 
-import "../../interfaces/IJoinSplitVerifier.sol";
 import "./Pairing.sol";
 import {IVerifier} from "../../interfaces/IVerifier.sol";
+import {Groth16} from "../../libs/Groth16.sol";
 
-contract TestJoinSplitVerifier is IJoinSplitVerifier {
+contract TestJoinSplitVerifier is IVerifier {
     function verifyProof(
-        IVerifier.Proof memory proof,
+        Groth16.Proof memory proof,
         uint256[] memory pis
     ) external view override returns (bool) {
         return true;
     }
 
     function batchVerifyProofs(
-        IVerifier.Proof[] memory proofs,
+        Groth16.Proof[] memory proofs,
         uint256[] memory pisFlat
     ) external view override returns (bool) {
         return true;

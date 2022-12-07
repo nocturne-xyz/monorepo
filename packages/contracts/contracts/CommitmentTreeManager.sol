@@ -4,6 +4,7 @@ pragma solidity ^0.8.5;
 import "./interfaces/IJoinSplitVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IVerifier} from "./interfaces/IVerifier.sol";
+import {Groth16} from "./libs/Groth16.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
@@ -19,7 +20,7 @@ contract CommitmentTreeManager {
     uint256 public nonce;
 
     OffchainMerkleTreeData internal merkle;
-    IJoinSplitVerifier public joinSplitVerifier;
+    IVerifier public joinSplitVerifier;
 
     event Refund(
         IWallet.NocturneAddress refundAddr,
@@ -70,7 +71,7 @@ contract CommitmentTreeManager {
         uint256 operationDigest = uint256(operationHash) %
             Utils.SNARK_SCALAR_FIELD;
 
-        IVerifier.Proof memory proof = Utils.proof8ToStruct(joinSplitTx.proof);
+        Groth16.Proof memory proof = Utils.proof8ToStruct(joinSplitTx.proof);
         uint256[] memory pis = new uint256[](9);
         pis[0] = joinSplitTx.newNoteACommitment;
         pis[1] = joinSplitTx.newNoteBCommitment;

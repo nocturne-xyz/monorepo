@@ -15,67 +15,56 @@ if [[ $OSTYPE == 'darwin'* ]]; then
   CMD="gsed"
 fi
 
-
 echo "Post processing solidity vierfier at $FILE with verifier name $VERIFIERNAME.."
 
-# fix pragma, import interface and declare contract to implement it
-$CMD -i \
-  '/^pragma/s/.*/pragma solidity ^0.8.5;/
-  /^pragma/aimport {I'$VERIFIERNAME'} from "./interfaces/I'$VERIFIERNAME'.sol";
-  s/contract Verifier/contract '$VERIFIERNAME' is I'$VERIFIERNAME'/' "$FILE"
+# grab vk from generated solidity file
+VKEY="$(cat "$FILE" | $CMD \
+  's/alfa/alpha/g
+  1,/verifyingKey/d
+  /}/,$d')"
 
-# import Pairing
-$CMD -ni \
-  '1,/^import/p
-  /^import/aimport {Pairing} from "./libs/Pairing.sol";
-  /contract/,$p' "$FILE"
+# write header
+echo '// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.5;
 
-# import BatchVerifier
-$CMD -i '/^import {Pairing}/aimport {BatchVerifier} from "./libs/BatchVerifier.sol";' "$FILE"
+import {Pairing} from "./libs/Pairing.sol";
+import {Groth16} from "./libs/Groth16.sol";
+import {IVerifier} from "./interfaces/IVerifier.sol";
 
-# import IVerifier 
-$CMD -i '/^import {BatchVerifier}/aimport {IVerifier} from "./interfaces/IVerifier.sol";' "$FILE"
+contract JoinSplitVerifier is IVerifier {
+    function verifyingKey() internal pure returns (Groth16.VerifyingKey memory vk) {' > "$FILE"
 
-# delete local defn of VerifyingKey and Proof
-$CMD -i '/struct VerifyingKey/,+11d' "$FILE"
+# write vkey
+echo "$VKEY" >> "$FILE"
 
-# replace all mentions of Proof with `IVerifier.Proof`
-$CMD -i 's/\(\s*\)Proof/\1IVerifier.Proof/g' "$FILE"
+# write the public methods code and closing brace afterwards
+echo '
+    }
 
-# replace all mentions of VerifyingKey with `IVerifier.VerifyingKey`
-$CMD -i 's/\(\s*\)VerifyingKey/\1IVerifier.VerifyingKey/g' "$FILE"
-
-# replace all mentions of alfa1 with `alpha1`
-$CMD -i 's/alfa1/alpha1/g' "$FILE"
-
-# delete the old `verifyProof` method and closing brace
-head -n -22 "$FILE" > "$FILE.tmp" && mv "$FILE.tmp" "$FILE" 
-
-# then insert the public methods code and closing brace afterwards
-echo "
     /// @return r  bool true if proof is valid
     function verifyProof(
-        IVerifier.Proof memory proof,
-        uint256[] memory pis
+        Groth16.Proof memory proof,
+        uint256[] memory pi
     ) public view override returns (bool r) {
-        if (verify(pis, proof) == 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return
+            Groth16.verifyProof(
+                verifyingKey(),
+                proof,
+                pi
+            );
     }
 
     /// @return r bool true if proofs are valid
     function batchVerifyProofs(
-        IVerifier.Proof[] memory proofs,
-        uint256[] memory pisFlat
+        Groth16.Proof[] memory proofs,
+        uint256[] memory pis
     ) public view override returns (bool) {
         return
-            BatchVerifier.batchVerifyProofs(
+            Groth16.batchVerifyProofs(
                 verifyingKey(),
                 proofs,
-                pisFlat
+                pis
             );
     }
 }
-" >> "$FILE"
+' >> "$FILE"

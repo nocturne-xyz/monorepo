@@ -8,9 +8,9 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
-import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
 import {IVerifier} from "../interfaces/IVerifier.sol";
+import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
 
 contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
@@ -20,15 +20,15 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     uint256 constant NUM_PROOFS = 8;
     uint256 constant NUM_PIS = 9;
 
-    IJoinSplitVerifier verifier;
+    IVerifier verifier;
 
     function setUp() public virtual {
-        verifier = IJoinSplitVerifier(new JoinSplitVerifier());
+        verifier = IVerifier(new JoinSplitVerifier());
     }
 
     function loadJoinSplitProof(
         string memory path
-    ) internal returns (IVerifier.Proof memory proof, uint256[] memory pis) {
+    ) internal returns (Groth16.Proof memory proof, uint256[] memory pis) {
         JoinSplitProofWithPublicSignals
             memory proofWithPIs = loadJoinSplitProofFromFixture(path);
         proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
@@ -42,7 +42,7 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
 
     function verifyFixture(string memory path) public {
         (
-            IVerifier.Proof memory proof,
+            Groth16.Proof memory proof,
             uint256[] memory pis
         ) = loadJoinSplitProof(path);
 
@@ -50,11 +50,11 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     }
 
     function batchVerifyFixture(string memory path) public {
-        IVerifier.Proof[] memory proofs = new IVerifier.Proof[](NUM_PROOFS);
+        Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
         uint256[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
             (
-                IVerifier.Proof memory proof,
+                Groth16.Proof memory proof,
                 uint256[] memory pis
             ) = loadJoinSplitProof(path);
             proofs[i] = proof;

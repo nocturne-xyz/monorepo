@@ -12,18 +12,17 @@
 //
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.5;
-import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
-import {BatchVerifier} from "./libs/BatchVerifier.sol";
+import {Groth16} from "./libs/Groth16.sol";
 import {IVerifier} from "./interfaces/IVerifier.sol";
 
-contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
+contract SubtreeUpdateVerifier is IVerifier {
     using Pairing for *;
 
     function verifyingKey()
         internal
         pure
-        returns (IVerifier.VerifyingKey memory vk)
+        returns (Groth16.VerifyingKey memory vk)
     {
         vk.alpha1 = Pairing.G1Point(
             20491192805390485299153009773594534940189261866228447918068658471970481763042,
@@ -88,58 +87,29 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
     }
 
-    function verify(
-        uint[] memory input,
-        IVerifier.Proof memory proof
-    ) internal view returns (uint) {
-        uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-        IVerifier.VerifyingKey memory vk = verifyingKey();
-        require(input.length + 1 == vk.IC.length, "verifier-bad-input");
-        // Compute the linear combination vk_x
-        Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-        for (uint i = 0; i < input.length; i++) {
-            require(
-                input[i] < snark_scalar_field,
-                "verifier-gte-snark-scalar-field"
-            );
-            vk_x = Pairing.addition(
-                vk_x,
-                Pairing.scalar_mul(vk.IC[i + 1], input[i])
-            );
-        }
-        vk_x = Pairing.addition(vk_x, vk.IC[0]);
-        if (
-            !Pairing.pairingProd4(
-                Pairing.negate(proof.A),
-                proof.B,
-                vk.alpha1,
-                vk.beta2,
-                vk_x,
-                vk.gamma2,
-                proof.C,
-                vk.delta2
-            )
-        ) return 1;
-        return 0;
-    }
-
     /// @return r  bool true if proof is valid
     function verifyProof(
-        IVerifier.Proof memory proof,
-        uint256[] memory pis
+        Groth16.Proof memory proof,
+        uint256[] memory pi
     ) public view override returns (bool r) {
-        if (verify(pis, proof) == 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return
+            Groth16.verifyProof(
+                verifyingKey(),
+                proof,
+                pi
+            );
     }
 
     /// @return r bool true if proofs are valid
     function batchVerifyProofs(
-        IVerifier.Proof[] memory proofs,
-        uint256[] memory pisFlat
+        Groth16.Proof[] memory proofs,
+        uint256[] memory pis
     ) public view override returns (bool) {
-        return BatchVerifier.batchVerifyProofs(verifyingKey(), proofs, pisFlat);
+        return
+            Groth16.batchVerifyProofs(
+                verifyingKey(),
+                proofs,
+                pis
+            );
     }
 }
