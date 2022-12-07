@@ -33,10 +33,11 @@ export class SubtreeUpdateServer {
   public async start(): Promise<void> {
     this.stopped = false;
     const prom = new Promise<void>((resolve, reject) => {
-      if (this.stopped) {
-        resolve(undefined);
-      }
       this.timer = setInterval(async () => {
+        if (this.stopped) {
+          resolve(undefined);
+          return;
+        }
         try {
           const batchFilled = await this.updater.pollInsertions();
           if (!batchFilled) {
