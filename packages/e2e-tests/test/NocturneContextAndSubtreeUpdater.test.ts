@@ -50,7 +50,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     server = newServer();
     await server.init();
     (async () => {
-      server.start();
+      await server.start();
     })();
   });
 
@@ -81,7 +81,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
   afterEach(async () => {
     await db.clear();
-    server.stop();
+    await server.stop();
     await server.dropDB();
   });
 
@@ -100,7 +100,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     );
 
     await sleep(2100);
-    server.stop();
+    await server.stop();
 
     const [root, nextBlockToIndex, insertionIndex] = getPrivateServerState();
 

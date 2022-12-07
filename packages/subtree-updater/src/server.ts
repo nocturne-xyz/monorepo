@@ -13,6 +13,8 @@ const TWELVE_SECONDS = 12 * 1000;
 export class SubtreeUpdateServer {
   private updater: SubtreeUpdater;
   private interval: number;
+  private stopped: boolean;
+  private prom?: Promise<void>;
   private timer?: NodeJS.Timeout;
 
   constructor(prover: SubtreeUpdateProver, walletContractAddress: string, dbPath: string, signer: ethers.Signer, interval: number = TWELVE_SECONDS) {
@@ -21,14 +23,16 @@ export class SubtreeUpdateServer {
 
     this.interval = interval;
     this.updater = new SubtreeUpdater(walletContract, rootDB, prover);
+    this.stopped = true;
   }
 
   public async init(): Promise<void> {
     await this.updater.init();
   }
 
-  public async start(): Promise<never> {
-    const prom = new Promise<never>((resolve, reject) => {
+  public async start(): Promise<void> {
+    this.stopped = false;
+    const prom = new Promise<void>((resolve, reject) => {
       this.timer = setInterval(async () => {
         try {
           const batchFilled = await this.updater.pollInsertions();
@@ -39,16 +43,20 @@ export class SubtreeUpdateServer {
           console.error("subtree update server received an error:", err);
           reject(err);
         }
+
+        if (this.stopped) {
+          resolve(undefined);
+        }
       }, this.interval);
     });
 
-    return prom.finally(() => {
-      clearTimeout(this.timer);
-    });
+    this.prom = prom.finally(() => clearTimeout(this.timer));
   } 
 
-  public stop(): void {
+  public async stop(): Promise<void> {
     clearTimeout(this.timer);
+    this.stopped = true;
+    await this.prom;
   }
 
   public async dropDB(): Promise<void> {
