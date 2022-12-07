@@ -111,6 +111,10 @@ contract CommitmentTreeManager {
         );
     }
 
+    function isPastRoot(uint256 pastRoot) public view returns (bool) {
+        return pastRoots[pastRoot];
+    }
+
     function root() public view returns (uint256) {
         return merkle.getRoot();
     }
@@ -155,6 +159,8 @@ contract CommitmentTreeManager {
         uint256 newRoot,
         uint256[8] calldata proof
     ) external {
+        require(!pastRoots[newRoot], "newRoot already a past root");
+
         merkle.applySubtreeUpdate(newRoot, proof);
         pastRoots[newRoot] = true;
     }
