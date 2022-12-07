@@ -6,7 +6,6 @@ import { Note, NocturnePrivKey, NocturneSigner, BinaryPoseidonTree, NoteTrait } 
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
-import { applyBatchUpdateToTree } from "../src";
 
 const SKIP = process.env.RUN_RAPIDSNARK_TESTS === "true" ? false : true;
 
@@ -61,7 +60,14 @@ describe('rapidsnark subtree update prover', async () =>  {
       const tree = new BinaryPoseidonTree();
       const batch = dummyBatch();
       
-      applyBatchUpdateToTree(batch, tree);
+      for (let i = 0; i < batch.length; i++) {
+        const item = batch[i];
+        if (typeof item === "bigint") {
+          tree.insert(item);
+        } else {
+          tree.insert(NoteTrait.toCommitment(item));
+        }
+      }
 
       const merkleProof = tree.getProof(tree.count - batch.length);
       const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);

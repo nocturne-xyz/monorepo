@@ -48,6 +48,7 @@ describe("LocalMerkle", async () => {
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = new MockSubtreeUpdateProver();
     updater = new SubtreeUpdater(wallet, serverDB, prover);
+    await updater.init();
 
     localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
   });

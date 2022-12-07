@@ -1,9 +1,8 @@
 import { ethers } from "ethers";
 import { open } from 'lmdb';
-import { SubtreeUpdater } from "./src";
+import { SubtreeUpdater } from ".";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
-import { RapidsnarkSubtreeUpdateProver } from './src/rapidsnarkProver';
-import { program } from "commander";
+import { RapidsnarkSubtreeUpdateProver } from './rapidsnarkProver';
 import * as dotenv from 'dotenv';
 import { clearTimeout } from "timers";
 
@@ -47,7 +46,7 @@ export class SubtreeUpdateServer {
     const prom = new Promise<never>((resolve, reject) => {
       this.timer = setInterval(() => {
         try {
-          this.updater.poll();
+          this.updater.pollInsertions();
         } catch (err) {
           console.error("subtree update server received an error:", err);
           reject(err);
@@ -60,17 +59,3 @@ export class SubtreeUpdateServer {
     });
   } 
 }
-
-program
-  .requiredOption("--zkey <string>", "path to the subtree update circuit's proving key")
-  .requiredOption("--vkey <string>", "path to the subtree update circuit's verifying key")
-  .requiredOption("--prover <string>", "path to the rapidsnark prover executable")
-  .requiredOption("--witnessGenerator <string>", "path to the subtree update circuit's witness generator executable")
-  .option("--tmpDir <string>", "path to a dirctory to use for rapidsnark intermediate files", "./prover-tmp");
-
-program.parse();
-
-const { zkey, vkey, prover, witnessGenreator, tmpDir } = program.opts();
-
-const server = new SubtreeUpdateServer(zkey, vkey, prover, witnessGenreator, tmpDir);
-server.start();
