@@ -33,6 +33,9 @@ export class SubtreeUpdateServer {
   public async start(): Promise<void> {
     this.stopped = false;
     const prom = new Promise<void>((resolve, reject) => {
+      if (this.stopped) {
+        resolve(undefined);
+      }
       this.timer = setInterval(async () => {
         try {
           const batchFilled = await this.updater.pollInsertions();
@@ -44,9 +47,6 @@ export class SubtreeUpdateServer {
           reject(err);
         }
 
-        if (this.stopped) {
-          resolve(undefined);
-        }
       }, this.interval);
     });
 
@@ -54,9 +54,9 @@ export class SubtreeUpdateServer {
   } 
 
   public async stop(): Promise<void> {
-    clearTimeout(this.timer);
     this.stopped = true;
     await this.prom;
+    clearTimeout(this.timer);
   }
 
   public async dropDB(): Promise<void> {
