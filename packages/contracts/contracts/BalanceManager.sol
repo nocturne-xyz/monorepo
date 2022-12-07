@@ -112,8 +112,7 @@ contract BalanceManager is
     // TODO: Fix below according to design doc
     function _handleAllSpends(
         IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
-        IWallet.Tokens calldata tokens,
-        bytes32 operationHash
+        IWallet.Tokens calldata tokens
     ) internal {
         uint256 numSpendTxs = joinSplitTxs.length;
 

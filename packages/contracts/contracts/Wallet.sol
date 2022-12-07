@@ -117,8 +117,7 @@ contract Wallet is IWallet, BalanceManager {
     function performOperation(
         Operation calldata op
     ) external onlyThis returns (bool success, bytes[] memory results) {
-        bytes32 operationHash = _hashOperation(op);
-        _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
+        _handleAllSpends(op.joinSplitTxs, op.tokens);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
