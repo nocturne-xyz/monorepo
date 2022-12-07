@@ -92,12 +92,7 @@ contract SubtreeUpdateVerifier is IVerifier {
         Groth16.Proof memory proof,
         uint256[] memory pi
     ) public view override returns (bool r) {
-        return
-            Groth16.verifyProof(
-                verifyingKey(),
-                proof,
-                pi
-            );
+        return Groth16.verifyProof(verifyingKey(), proof, pi);
     }
 
     /// @return r bool true if proofs are valid
@@ -105,11 +100,6 @@ contract SubtreeUpdateVerifier is IVerifier {
         Groth16.Proof[] memory proofs,
         uint256[] memory pis
     ) public view override returns (bool) {
-        return
-            Groth16.batchVerifyProofs(
-                verifyingKey(),
-                proofs,
-                pis
-            );
+        return Groth16.batchVerifyProofs(verifyingKey(), proofs, pis);
     }
 }

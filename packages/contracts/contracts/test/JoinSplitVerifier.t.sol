@@ -41,10 +41,9 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
     }
 
     function verifyFixture(string memory path) public {
-        (
-            Groth16.Proof memory proof,
-            uint256[] memory pis
-        ) = loadJoinSplitProof(path);
+        (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
+            path
+        );
 
         require(verifier.verifyProof(proof, pis), "Invalid proof");
     }

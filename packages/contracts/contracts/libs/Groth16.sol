@@ -19,19 +19,34 @@ library Groth16 {
     }
 
     // Verifying a single Groth16 proof
-    function verifyProof(VerifyingKey memory vk, Proof memory proof, uint256[] memory pi) internal view returns (bool) {
+    function verifyProof(
+        VerifyingKey memory vk,
+        Proof memory proof,
+        uint256[] memory pi
+    ) internal view returns (bool) {
         require(vk.IC.length == pi.length + 1, "Public input length mismatch.");
         Pairing.G1Point memory vk_x = vk.IC[0];
         for (uint i = 0; i < pi.length; i++) {
-            require(pi[i] < Utils.SNARK_SCALAR_FIELD, "Malformed public input.");
-            vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[i + 1], pi[i]));
+            require(
+                pi[i] < Utils.SNARK_SCALAR_FIELD,
+                "Malformed public input."
+            );
+            vk_x = Pairing.addition(
+                vk_x,
+                Pairing.scalar_mul(vk.IC[i + 1], pi[i])
+            );
         }
-        return Pairing.pairingProd4(
-            Pairing.negate(proof.A), proof.B,
-            vk.alpha1, vk.beta2,
-            vk_x, vk.gamma2,
-            proof.C, vk.delta2
-        );
+        return
+            Pairing.pairingProd4(
+                Pairing.negate(proof.A),
+                proof.B,
+                vk.alpha1,
+                vk.beta2,
+                vk_x,
+                vk.gamma2,
+                proof.C,
+                vk.delta2
+            );
     }
 
     function accumulate(
