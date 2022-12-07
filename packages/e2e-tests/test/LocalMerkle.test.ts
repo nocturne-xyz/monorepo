@@ -59,8 +59,8 @@ describe("LocalMerkle", async () => {
   }
 
   afterEach(async () => {
-    db.clear();
-    updater.dropDB();
+    await db.clear();
+    await updater.dropDB();
   });
 
   after(async () => {

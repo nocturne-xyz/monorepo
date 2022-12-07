@@ -1,4 +1,3 @@
-
 import { BaseProof, BinaryPoseidonTree, packToSolidityProof, SubtreeUpdateProver, toJSON } from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from 'lmdb';
 import { Wallet } from "@nocturne-xyz/contracts";
@@ -6,17 +5,32 @@ import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { NoteTrait, Note } from "@nocturne-xyz/sdk";
 import { fetchInsertions } from "@nocturne-xyz/sdk";
 
+export { SubtreeUpdateServer } from "./server";
+
 
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION";
 
+function numberToStringPadded(num: number, targetLen: number): string {
+  let res = num.toString();
+  if (res.length > targetLen) {
+    throw new Error(`number ${num} is too large to fit in ${targetLen} digits`);
+  } else if (res.length < targetLen) {
+    res = "0".repeat(targetLen - res.length) + res;
+  }
+
+  return res;
+}
+
 function insertionKey(idx: number) {
-  return `${INSERTION_PREFIX}-${idx}`;
+  // make the keys lexicographically ordered so that we can iterate over them
+  return `${INSERTION_PREFIX}-${numberToStringPadded(idx, 64)}`;
 }
 
 function commitKey(batchIdx: number) {
-  return `${INSERTION_PREFIX}-COMMIT-${batchIdx}`;
+  // make the keys lexicographically ordered so that we can iterate over them
+  return `${INSERTION_PREFIX}-COMMIT-${numberToStringPadded(batchIdx, 64)}`;
 }
 
 export interface UpdaterParams {
@@ -43,7 +57,7 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
 
   async subtreeIsCommitted(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
     const isCommitted = await this.db.get(commitKey(subtreeIndex));
-    if (isCommitted == "true") {
+    if (isCommitted === "true") {
       return true;
     }
 
@@ -96,14 +110,17 @@ export class SubtreeUpdater {
   }
 
   public async init(): Promise<void> {
-    this.recoverPersisedState();
+    this.index = await this.getNextInsertionIndex();
+    this.nextBlockToIndex = await this.getNextBlockToIndex();
+    await this.recoverPersisedState();
   }
 
-  public async pollInsertions(): Promise<void> {
+  // return true if at least one batch was filled 
+  public async pollInsertions(): Promise<boolean> {
     const currentBlockNumber = await this.walletContract.provider.getBlockNumber();
     const nextBlockToIndex = await this.getNextBlockToIndex();
     if (nextBlockToIndex > currentBlockNumber) {
-      return;
+      return false;
     }
 
     const newInsertions = await fetchInsertions(this.walletContract, nextBlockToIndex, currentBlockNumber);
@@ -125,7 +142,7 @@ export class SubtreeUpdater {
     this.nextBlockToIndex = currentBlockNumber + 1;
     this.index = (this.index ?? 0) + newInsertions.length;
     
-    await this.tryGenAndSubmitProof();
+    return await this.tryGenAndSubmitProof();
   }
 
   public async fillBatch(): Promise<void> {
@@ -177,7 +194,9 @@ export class SubtreeUpdater {
     }
   }
 
-  private async tryGenAndSubmitProof(): Promise<void> {
+  // returns true if at least one batch was filled 
+  private async tryGenAndSubmitProof(): Promise<boolean> {
+    let filledBatch = false;
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
       this.applyBatch(batch);
@@ -190,7 +209,10 @@ export class SubtreeUpdater {
       }
 
       this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+      filledBatch = true;
     }
+
+    return filledBatch;
   }
 
   private async recoverPersisedState(): Promise<void> {
@@ -206,8 +228,18 @@ export class SubtreeUpdater {
       if (value === undefined) {
         throw new Error(`DB entry not found: ${key}`);
       }
-      const insertion = JSON.parse(value) as Note | bigint;
-      this.insertions.push(insertion);
+
+      const insertion = JSON.parse(value);
+      if (typeof insertion === "string") {
+        // it's a commitment - turn into a bigint
+        this.insertions.push(BigInt(insertion));
+      } else if (typeof insertion === "object") {
+        // it's a note - push the object as-is
+        this.insertions.push(NoteTrait.fromJSON(insertion));
+      } else {
+        // TODO: can remove this once DB wrapper is added
+        throw new Error("invalid insertion type read from DB");
+      }
 
       if (this.insertions.length === BinaryPoseidonTree.BATCH_SIZE) {
         const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);

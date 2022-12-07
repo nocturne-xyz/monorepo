@@ -2,51 +2,39 @@ import { ethers } from "ethers";
 import { open } from 'lmdb';
 import { SubtreeUpdater } from ".";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
-import { RapidsnarkSubtreeUpdateProver } from './rapidsnarkProver';
 import * as dotenv from 'dotenv';
 import { clearTimeout } from "timers";
+import { SubtreeUpdateProver } from "@nocturne-xyz/sdk";
 
 dotenv.config();
 
-const TEN_SECONDS = 10 * 1000;
+const TWELVE_SECONDS = 12 * 1000;
 
 export class SubtreeUpdateServer {
   private updater: SubtreeUpdater;
   private interval: number;
   private timer?: NodeJS.Timeout;
 
-  constructor(zkeyPath: string, vkeyPath: string, rapidsnarkExecutablePath: string, witnessGeneratorExecutablePath: string, rapidsnarkTmpDir: string, ) {
-    const prover = new RapidsnarkSubtreeUpdateProver(rapidsnarkExecutablePath, witnessGeneratorExecutablePath, zkeyPath, vkeyPath, rapidsnarkTmpDir);
-
-    // server params
-    const walletContractAddress = process.env.WALLET_CONTRACT_ADDRESS;
-    if (walletContractAddress === undefined) {
-      throw new Error("WALLET_CONTRACT_ADDRESS env var not set");
-    }
-
-    const serverSecretKey = process.env.SERVER_SECRET_KEY;
-    if (serverSecretKey === undefined) {
-      throw new Error("SERVER_SECRET_KEY env var not set");
-    }
-
-    const network = process.env.NETWORK ?? "https://localhost:8545";
-
-    const dbPath = process.env.DB_PATH ?? "./db";
-    const provider = ethers.getDefaultProvider(network);
-    const signer = new ethers.Wallet(serverSecretKey, provider);
-
+  constructor(prover: SubtreeUpdateProver, walletContractAddress: string, dbPath: string, signer: ethers.Signer, interval: number = TWELVE_SECONDS) {
     const walletContract = Wallet__factory.connect(walletContractAddress, signer);
     const rootDB = open({ path: dbPath });
 
-    this.interval = process.env.INTERVAL ? parseInt(process.env.INTERVAL) : TEN_SECONDS;
+    this.interval = interval;
     this.updater = new SubtreeUpdater(walletContract, rootDB, prover);
+  }
+
+  public async init(): Promise<void> {
+    await this.updater.init();
   }
 
   public async start(): Promise<never> {
     const prom = new Promise<never>((resolve, reject) => {
-      this.timer = setInterval(() => {
+      this.timer = setInterval(async () => {
         try {
-          this.updater.pollInsertions();
+          const batchFilled = await this.updater.pollInsertions();
+          if (!batchFilled) {
+            await this.updater.fillBatch();
+          }
         } catch (err) {
           console.error("subtree update server received an error:", err);
           reject(err);
@@ -58,4 +46,12 @@ export class SubtreeUpdateServer {
       clearTimeout(this.timer);
     });
   } 
+
+  public stop(): void {
+    clearTimeout(this.timer);
+  }
+
+  public async dropDB(): Promise<void> {
+    await this.updater.dropDB();
+  }
 }

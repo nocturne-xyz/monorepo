@@ -56,12 +56,10 @@ async function runCommand(cmd: string): Promise<[string, string]> {
     const child = spawn('sh', ['-c', cmd]);
     child.stdout.on('data', data => {
       const output = data.toString();
-      console.log(output);
       stdout += output;
     });
     child.stderr.on('data', data => {
       const output = data.toString();
-      console.error(output);
       stderr += output;
     });
     child.on('error', reject);

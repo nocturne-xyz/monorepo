@@ -1,0 +1,113 @@
+import { expect } from "chai";
+import { ethers, network } from "hardhat";
+import {
+  SimpleERC20Token__factory,
+  Vault,
+  Wallet,
+} from "@nocturne-xyz/contracts";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+
+import {
+  NocturneContext,
+  LocalObjectDB,
+  MockSubtreeUpdateProver,
+} from "@nocturne-xyz/sdk";
+import { setup } from "../deploy/deployNocturne";
+import { depositFunds } from "./utils";
+import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
+
+const PER_SPEND_AMOUNT = 100n;
+const TEST_SERVER_POLL_INTERVAL = 1000;
+
+describe("Wallet with standalone SubtreeUpdateServer", async () => {
+  let deployer: ethers.Signer;
+  let alice: ethers.Signer;
+  let serverSigner: ethers.Signer;
+  let vault: Vault;
+  let wallet: Wallet;
+  let token: SimpleERC20Token;
+  let nocturneContext: NocturneContext;
+  let db: LocalObjectDB;
+  let server: SubtreeUpdateServer;
+
+  beforeEach(async () => {
+    const signers = await ethers.getSigners();
+    deployer = signers[0];
+    serverSigner = signers[1];
+
+    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    token = await tokenFactory.deploy();
+    console.log("Token deployed at: ", token.address);
+
+    const nocturneSetup = await setup();
+    alice = nocturneSetup.alice;
+    vault = nocturneSetup.vault;
+    wallet = nocturneSetup.wallet;
+    token = token;
+    nocturneContext = nocturneSetup.nocturneContext;
+    db = nocturneSetup.db;
+
+    server = newServer();
+    await server.init();
+    (async () => {
+      server.start();
+    })();
+  });
+
+  function newServer(): SubtreeUpdateServer {
+    const serverDBPath = `${__dirname}/../db/standaloneServerTestDB`;
+    const prover = new MockSubtreeUpdateProver();
+    const server = new SubtreeUpdateServer(prover, wallet.address, serverDBPath, serverSigner, TEST_SERVER_POLL_INTERVAL);
+    return server;
+  }
+
+  //@ts-ignore
+  function getPrivateServerState(): [any, any, any] {
+    //@ts-ignore
+    const root = server.updater.tree.root();
+    //@ts-ignore
+    const nextBlockToIndex = server.updater.nextBlockToIndex;
+    //@ts-ignore
+    const insertionIndex = server.updater.index;
+    
+    return [root, nextBlockToIndex, insertionIndex];
+  }
+
+  afterEach(async () => {
+    await db.clear();
+    server.stop();
+    await server.dropDB();
+  });
+
+  after(async () => {
+    await network.provider.send("hardhat_reset");
+  });
+  
+  it("can recover state", async () => {
+    await depositFunds(
+      wallet,
+      vault,
+      token,
+      alice,
+      nocturneContext.signer.address,
+      [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
+    );
+
+    await sleep(2100);
+    server.stop();
+
+    const [root, nextBlockToIndex, insertionIndex] = getPrivateServerState();
+
+    server = newServer();
+    await server.init();
+
+    const [recoveredRoot, recoveredNextBlockToIndex, recoveredInsertionIndex] = getPrivateServerState();
+    expect(recoveredRoot).to.equal(root);
+    expect(recoveredNextBlockToIndex).to.equal(nextBlockToIndex);
+    expect(recoveredInsertionIndex).to.equal(insertionIndex);
+  });
+});
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
