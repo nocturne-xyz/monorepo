@@ -57,7 +57,13 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   function newServer(): SubtreeUpdateServer {
     const serverDBPath = `${__dirname}/../db/standaloneServerTestDB`;
     const prover = new MockSubtreeUpdateProver();
-    const server = new SubtreeUpdateServer(prover, wallet.address, serverDBPath, serverSigner, TEST_SERVER_POLL_INTERVAL);
+    const server = new SubtreeUpdateServer(
+      prover,
+      wallet.address,
+      serverDBPath,
+      serverSigner,
+      TEST_SERVER_POLL_INTERVAL
+    );
     return server;
   }
 
@@ -69,7 +75,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     const nextBlockToIndex = server.updater.nextBlockToIndex;
     //@ts-ignore
     const insertionIndex = server.updater.index;
-    
+
     return [root, nextBlockToIndex, insertionIndex];
   }
 
@@ -82,7 +88,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   after(async () => {
     await network.provider.send("hardhat_reset");
   });
-  
+
   it("can recover state", async () => {
     await depositFunds(
       wallet,
@@ -101,7 +107,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     server = newServer();
     await server.init();
 
-    const [recoveredRoot, recoveredNextBlockToIndex, recoveredInsertionIndex] = getPrivateServerState();
+    const [recoveredRoot, recoveredNextBlockToIndex, recoveredInsertionIndex] =
+      getPrivateServerState();
     expect(recoveredRoot).to.equal(root);
     expect(recoveredNextBlockToIndex).to.equal(nextBlockToIndex);
     expect(recoveredInsertionIndex).to.equal(insertionIndex);
