@@ -11,6 +11,7 @@ import { ContractTransaction } from "ethers";
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION";
+const RECOVERY_CHUNK_SIZE = 100 * BinaryPoseidonTree.BATCH_SIZE;
 
 function insertionKey(idx: number) {
   return `${INSERTION_PREFIX}-${idx}`;
@@ -139,6 +140,10 @@ export class SubtreeUpdater {
       }
       const insertion = JSON.parse(value) as Note | bigint;
       this.insertions.push(insertion);
+
+      if (this.insertions.length >= RECOVERY_CHUNK_SIZE) {
+        await this.tryGenAndSubmitProof();
+      }
     }
 
     await this.tryGenAndSubmitProof();
