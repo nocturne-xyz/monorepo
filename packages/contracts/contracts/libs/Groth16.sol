@@ -86,6 +86,11 @@ library Groth16 {
                 Utils.SNARK_SCALAR_FIELD
             );
             for (uint256 i = 0; i < numPublicInputs; i++) {
+                require(
+                    pisFlat[proofIndex * numPublicInputs + i] <
+                        Utils.SNARK_SCALAR_FIELD,
+                    "Malformed public input"
+                );
                 // accumulate the exponent with extra entropy mod Utils.SNARK_SCALAR_FIELD
                 publicInputAccumulators[i + 1] = addmod(
                     publicInputAccumulators[i + 1],

@@ -30,9 +30,7 @@ contract Wallet is IWallet, BalanceManager {
 
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyBundle(
-        Bundle calldata bundle
-    ) internal returns (bool) {
+    function _verifyBundle(Bundle calldata bundle) internal returns (bool) {
         uint256 numOps = bundle.operations.length;
 
         // compute number of joinsplits in the bundle
@@ -50,9 +48,12 @@ contract Wallet is IWallet, BalanceManager {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-            uint256 operationDigest = uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
+            uint256 operationDigest = uint256(_hashOperation(op)) %
+                Utils.SNARK_SCALAR_FIELD;
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
-                Groth16.Proof memory proof = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
+                Groth16.Proof memory proof = Utils.proof8ToStruct(
+                    op.joinSplitTxs[j].proof
+                );
                 pis[9 * index] = op.joinSplitTxs[j].newNoteACommitment;
                 pis[9 * index + 1] = op.joinSplitTxs[j].newNoteBCommitment;
                 pis[9 * index + 2] = op.joinSplitTxs[j].commitmentTreeRoot;
