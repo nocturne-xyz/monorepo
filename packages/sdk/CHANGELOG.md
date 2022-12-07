@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `indexing` module for code that fetches data from chain
 - Add interfaces for subtree update prover
 - Remove unnessary normalization of circuit values
 - Add context methods for ensuring min asset balance and reading all balances
