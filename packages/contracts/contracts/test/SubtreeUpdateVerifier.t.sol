@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "./utils/JsonDecodings.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {Utils} from "../libs/Utils.sol";
-import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.solVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {SubtreeUpdateVerifier} from "../SubtreeUpdateVerifier.sol";
 
