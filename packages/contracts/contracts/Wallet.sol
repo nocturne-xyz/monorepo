@@ -32,7 +32,7 @@ contract Wallet is IWallet, BalanceManager {
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
     function _verifyAllProofs(
-        IWallet.OperationAndDigest[] memory _opsAndDigests
+        OperationAndDigest[] memory _opsAndDigests
     ) internal view returns (bool) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPisFromBundle(_opsAndDigests);
@@ -92,18 +92,19 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function performOperation(
-        Operation calldata op
+        OperationAndDigest calldata _opAndDigest
     ) external onlyThis returns (bool success, bytes[] memory results) {
+        Operation memory op = _opAndDigest.operation;
         _handleAllSpends(op.joinSplitTxs, op.tokens);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
         opSuccess = true; // default to true, set false if any call fails
-        results = new bytes[](numActions);
+        callResults = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
             (bool success, bytes memory res) = _makeExternalCall(actions[i]);
 
-            results[i] = res;
+            callResults[i] = res;
             if (success == false) {
                 opSuccess = false;
             }
