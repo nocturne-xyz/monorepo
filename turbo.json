@@ -28,14 +28,10 @@
       "dependsOn": ["@nocturne-xyz/sdk#build"]
     },
     "@nocturne-xyz/e2e-tests#build": {
-      "dependsOn": ["@nocturne-xyz/contracts#build", "@nocturne-xyz/sdk#build", "@nocturne-xyz/subtree-updater#build"]
+      "dependsOn": ["@nocturne-xyz/contracts#build", "@nocturne-xyz/sdk#build", "@nocturne-xyz/subtree-updater#build", "@nocturne-xyz/local-prover#build"]
     },
     "@nocturne-xyz/subtree-updater#build": {
-      "dependsOn": ["@nocturne-xyz/sdk#build", "@nocturne-xyz/local-prover#build"]
-    },
-    "@nocturne-xyz/subtree-updater#test:unit": {
-      "dependsOn": ["build"],
-      "env": ["RUN_RAPIDSNARK_TESTS"]
+      "dependsOn": ["@nocturne-xyz/sdk#build", "@nocturne-xyz/local-prover#build", "@nocturne-xyz/circuits#build", "@nocturne-xyz/contracts#build"]
     },
     "test": {
       "dependsOn": ["build"],
@@ -44,6 +40,10 @@
     "test:unit": {
       "dependsOn": ["build"],
       "outputs": []
+    },
+    "@nocturne-xyz/subtree-updater#test:unit": {
+      "dependsOn": ["build"],
+      "env": ["RUN_RAPIDSNARK_TESTS"]
     },
     "test:e2e": {
       "dependsOn": ["build"],
