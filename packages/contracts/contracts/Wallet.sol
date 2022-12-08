@@ -36,186 +36,190 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function processBundle(
-        Bundle calldata bundle
-    ) external override returns (IWallet.OperationResult[] memory opResults) {
-        uint256 numOps = bundle.operations.length;
+        Bundle calldata _bundle
+    ) external override returns (IWallet.OperationResult[] memory _opResults) {
+        uint256 _numOps = _bundle.operations.length;
 
-        opResults = new IWallet.OperationResult[](numOps);
-        for (uint256 i = 0; i < numOps; i++) {
-            Operation calldata op = bundle.operations[i];
-            opResults[i] = this.performOperation{gas: op.gasLimit}(op);
+        _opResults = new IWallet.OperationResult[](_numOps);
+        for (uint256 i = 0; i < _numOps; i++) {
+            Operation calldata op = _bundle.operations[i];
+            _opResults[i] = this.performOperation{gas: op.gasLimit}(op);
         }
     }
 
     function batchDepositFunds(
-        Deposit[] calldata deposits,
-        Signature[] calldata sigs
+        Deposit[] calldata _deposits,
+        Signature[] calldata _sigs
     ) external override {
-        Deposit[] memory approvedDeposits = new Deposit[](deposits.length);
-        uint256 numApprovedDeposits;
-        for (uint256 i = 0; i < deposits.length; i++) {
-            if (_verifyApprovalSig(deposits[i], sigs[i])) {
-                approvedDeposits[numApprovedDeposits] = deposits[i];
-                numApprovedDeposits++;
+        Deposit[] memory _approvedDeposits = new Deposit[](_deposits.length);
+        uint256 _numApprovedDeposits;
+        for (uint256 i = 0; i < _deposits.length; i++) {
+            if (_verifyApprovalSig(_deposits[i], _sigs[i])) {
+                _approvedDeposits[_numApprovedDeposits] = _deposits[i];
+                _numApprovedDeposits++;
             }
         }
 
-        _makeBatchDeposit(approvedDeposits, numApprovedDeposits);
+        _makeBatchDeposit(_approvedDeposits, _numApprovedDeposits);
     }
 
-    function depositFunds(Deposit calldata deposit) external override {
-        require(deposit.spender == msg.sender, "Spender must be the sender");
+    function depositFunds(Deposit calldata _deposit) external override {
+        require(_deposit.spender == msg.sender, "Spender must be the sender");
 
-        _makeDeposit(deposit);
+        _makeDeposit(_deposit);
     }
 
     function performOperation(
-        Operation calldata op
-    ) external onlyThis returns (IWallet.OperationResult memory opResult) {
-        uint256 _opDigest = _operationDigest(op);
-        _handleAllSpends(op.joinSplitTxs, op.tokens, _opDigest);
+        Operation calldata _op
+    ) external onlyThis returns (IWallet.OperationResult memory _opResult) {
+        uint256 _opDigest = _operationDigest(_op);
+        _handleAllSpends(_op.joinSplitTxs, _op.tokens, _opDigest);
 
-        Action[] calldata actions = op.actions;
-        uint256 numActions = actions.length;
-        opResult.opSuccess = true; // default to true
-        opResult.callSuccesses = new bool[](numActions);
-        opResult.callResults = new bytes[](numActions);
-        for (uint256 i = 0; i < numActions; i++) {
-            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
+        Action[] calldata _actions = _op.actions;
+        uint256 _numActions = _actions.length;
+        _opResult.opSuccess = true; // default to true
+        _opResult.callSuccesses = new bool[](_numActions);
+        _opResult.callResults = new bytes[](_numActions);
+        for (uint256 i = 0; i < _numActions; i++) {
+            (bool _success, bytes memory _result) = _makeExternalCall(
+                _actions[i]
+            );
 
-            opResult.callSuccesses[i] = success;
-            opResult.callResults[i] = result;
-            if (success == false) {
-                opResult.opSuccess = false; // set opSuccess to false if any call fails
+            _opResult.callSuccesses[i] = _success;
+            _opResult.callResults[i] = _result;
+            if (_success == false) {
+                _opResult.opSuccess = false; // set opSuccess to false if any call fails
             }
         }
 
         // handles refunds and resets balances
         _handleAllRefunds(
-            op.tokens.spendTokens,
-            op.tokens.refundTokens,
-            op.refundAddr
+            _op.tokens.spendTokens,
+            _op.tokens.refundTokens,
+            _op.refundAddr
         );
 
         emit OperationProcessed(
             _opDigest,
-            opResult.opSuccess,
-            opResult.callSuccesses,
-            opResult.callResults
+            _opResult.opSuccess,
+            _opResult.callSuccesses,
+            _opResult.callResults
         );
     }
 
     function _makeExternalCall(
-        Action calldata action
-    ) internal returns (bool success, bytes memory result) {
+        Action calldata _action
+    ) internal returns (bool _success, bytes memory _result) {
         require(
-            action.contractAddress != address(vault),
+            _action.contractAddress != address(vault),
             "Cannot call the Nocturne vault"
         );
 
-        (success, result) = action.contractAddress.call(action.encodedFunction);
+        (_success, _result) = _action.contractAddress.call(
+            _action.encodedFunction
+        );
     }
 
     function _operationDigest(
-        Operation calldata op
+        Operation calldata _op
     ) private pure returns (uint256) {
-        return uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
+        return uint256(_hashOperation(_op)) % Utils.SNARK_SCALAR_FIELD;
     }
 
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
     function _hashOperation(
-        Operation calldata op
+        Operation calldata _op
     ) private pure returns (bytes32) {
-        bytes memory payload;
+        bytes memory _payload;
 
-        Action calldata action;
-        for (uint256 i = 0; i < op.actions.length; i++) {
-            action = op.actions[i];
-            payload = abi.encodePacked(
-                payload,
-                action.contractAddress,
-                keccak256(action.encodedFunction)
+        Action calldata _action;
+        for (uint256 i = 0; i < _op.actions.length; i++) {
+            _action = _op.actions[i];
+            _payload = abi.encodePacked(
+                _payload,
+                _action.contractAddress,
+                keccak256(_action.encodedFunction)
             );
         }
 
-        bytes memory joinSplitTxsHash;
-        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
-            joinSplitTxsHash = abi.encodePacked(
-                joinSplitTxsHash,
-                _hashJoinSplit(op.joinSplitTxs[i])
+        bytes memory _joinSplitTxsHash;
+        for (uint256 i = 0; i < _op.joinSplitTxs.length; i++) {
+            _joinSplitTxsHash = abi.encodePacked(
+                _joinSplitTxsHash,
+                _hashJoinSplit(_op.joinSplitTxs[i])
             );
         }
 
-        bytes32 spendTokensHash = keccak256(
-            abi.encodePacked(op.tokens.spendTokens)
+        bytes32 _spendTokensHash = keccak256(
+            abi.encodePacked(_op.tokens.spendTokens)
         );
-        bytes32 refundTokensHash = keccak256(
-            abi.encodePacked(op.tokens.refundTokens)
-        );
-
-        payload = abi.encodePacked(
-            payload,
-            joinSplitTxsHash,
-            op.refundAddr.h1X,
-            op.refundAddr.h1Y,
-            op.refundAddr.h2X,
-            op.refundAddr.h2Y,
-            spendTokensHash,
-            refundTokensHash,
-            op.gasLimit
+        bytes32 _refundTokensHash = keccak256(
+            abi.encodePacked(_op.tokens.refundTokens)
         );
 
-        return keccak256(payload);
+        _payload = abi.encodePacked(
+            _payload,
+            _joinSplitTxsHash,
+            _op.refundAddr.h1X,
+            _op.refundAddr.h1Y,
+            _op.refundAddr.h2X,
+            _op.refundAddr.h2Y,
+            _spendTokensHash,
+            _refundTokensHash,
+            _op.gasLimit
+        );
+
+        return keccak256(_payload);
     }
 
     function _hashJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplit
+        IWallet.JoinSplitTransaction calldata _joinSplit
     ) private pure returns (bytes32) {
-        bytes memory payload = abi.encodePacked(
-            joinSplit.commitmentTreeRoot,
-            joinSplit.nullifierA,
-            joinSplit.nullifierB,
-            joinSplit.newNoteACommitment,
-            joinSplit.newNoteBCommitment,
-            joinSplit.publicSpend,
-            joinSplit.asset,
-            joinSplit.id
+        bytes memory _payload = abi.encodePacked(
+            _joinSplit.commitmentTreeRoot,
+            _joinSplit.nullifierA,
+            _joinSplit.nullifierB,
+            _joinSplit.newNoteACommitment,
+            _joinSplit.newNoteBCommitment,
+            _joinSplit.publicSpend,
+            _joinSplit.asset,
+            _joinSplit.id
         );
 
-        return keccak256(payload);
+        return keccak256(_payload);
     }
 
     function _verifyApprovalSig(
-        Deposit calldata deposit,
-        Signature calldata sig
-    ) private view returns (bool valid) {
-        bytes32 payloadHash = keccak256(
+        Deposit calldata _deposit,
+        Signature calldata _sig
+    ) private view returns (bool _valid) {
+        bytes32 _payloadHash = keccak256(
             abi.encodePacked(
-                deposit.asset,
-                deposit.value,
-                deposit.spender,
-                deposit.id,
-                deposit.depositAddr.h1X,
-                deposit.depositAddr.h1Y,
-                deposit.depositAddr.h2X,
-                deposit.depositAddr.h2Y
+                _deposit.asset,
+                _deposit.value,
+                _deposit.spender,
+                _deposit.id,
+                _deposit.depositAddr.h1X,
+                _deposit.depositAddr.h1Y,
+                _deposit.depositAddr.h2X,
+                _deposit.depositAddr.h2Y
             )
         );
 
-        bytes32 msgHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", payloadHash)
+        bytes32 _msgHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", _payloadHash)
         );
 
-        address recoveredAddress = ecrecover(msgHash, sig.v, sig.r, sig.s);
+        address _recoveredAddress = ecrecover(_msgHash, _sig.v, _sig.r, _sig.s);
 
         if (
-            recoveredAddress != address(0) &&
-            recoveredAddress == deposit.spender
+            _recoveredAddress != address(0) &&
+            _recoveredAddress == _deposit.spender
         ) {
-            valid = true;
+            _valid = true;
         } else {
-            valid = false;
+            _valid = false;
         }
     }
 }
