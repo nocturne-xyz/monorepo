@@ -92,14 +92,25 @@ export interface SubtreeUpdateCommit {
   subtreeIndex: number;
 }
 
-export async function fetchSubtreeUpdateCommits(contract: Wallet, from: number, to: number): Promise<SubtreeUpdateCommit[]> {
+export async function fetchSubtreeUpdateCommits(
+  contract: Wallet,
+  from: number,
+  to: number
+): Promise<SubtreeUpdateCommit[]> {
   const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
-  const events: SubtreeUpdateEvent[] = await query(contract, subtreeUpdateEventsFilter, from, to);
+  const events: SubtreeUpdateEvent[] = await query(
+    contract,
+    subtreeUpdateEventsFilter,
+    from,
+    to
+  );
 
-  const eventValues = events.map(event => event.args);
-  eventValues.sort((a, b) => a.subtreeIndex.toNumber() - b.subtreeIndex.toNumber());
+  const eventValues = events.map((event) => event.args);
+  eventValues.sort(
+    (a, b) => a.subtreeIndex.toNumber() - b.subtreeIndex.toNumber()
+  );
 
-  return eventValues.map(event => ({
+  return eventValues.map((event) => ({
     newRoot: event.newRoot.toBigInt(),
     subtreeIndex: event.subtreeIndex.toNumber(),
   }));
