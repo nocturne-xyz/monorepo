@@ -346,7 +346,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(50));
     }
 
-    function testDummyTransferFails() public {
+    // NOTE: in practice, a user could not actually create a passing proof to
+    // spend more than they own. This test is just to ensure wallet processes
+    // failing operation
+    function testProcessesFailingOperation() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 1000, 800);
 
