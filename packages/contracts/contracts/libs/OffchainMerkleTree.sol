@@ -93,48 +93,48 @@ library OffchainMerkleTree {
             "batchLen != TreeUtils.BATCH_SIZE"
         );
 
-        uint256 accumulatorHash = computeAccumulatorHash(self);
-        self.accumulatorQueue.enqueue(accumulatorHash);
+        uint256 _accumulatorHash = computeAccumulatorHash(self);
+        self.accumulatorQueue.enqueue(_accumulatorHash);
         self.batchLen = 0;
     }
 
     function applySubtreeUpdate(
         OffchainMerkleTreeData storage self,
-        uint256 newRoot,
-        uint256[8] memory proof
+        uint256 _newRoot,
+        uint256[8] memory _proof
     ) internal {
         require(!self.accumulatorQueue.isEmpty(), "accumulatorQueue is empty");
 
-        uint256 accumulatorHash = self.accumulatorQueue.peek();
-        (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(
-            accumulatorHash
+        uint256 _accumulatorHash = self.accumulatorQueue.peek();
+        (uint256 _hi, uint256 _lo) = Utils.uint256ToFieldElemLimbs(
+            _accumulatorHash
         );
-        uint256 encodedPathAndHash = TreeUtils.encodePathAndHash(
+        uint256 _encodedPathAndHash = TreeUtils.encodePathAndHash(
             self.count,
-            hi
+            _hi
         );
 
         require(
             self.subtreeUpdateVerifier.verifyProof(
-                [proof[0], proof[1]],
-                [[proof[2], proof[3]], [proof[4], proof[5]]],
-                [proof[6], proof[7]],
-                [self.root, newRoot, encodedPathAndHash, lo]
+                [_proof[0], _proof[1]],
+                [[_proof[2], _proof[3]], [_proof[4], _proof[5]]],
+                [_proof[6], _proof[7]],
+                [self.root, _newRoot, _encodedPathAndHash, _lo]
             ),
             "subtree update proof invalid"
         );
 
         self.accumulatorQueue.dequeue();
-        self.root = newRoot;
+        self.root = _newRoot;
         self.count += uint128(TreeUtils.BATCH_SIZE);
     }
 
     function insertUpdates(
         OffchainMerkleTreeData storage self,
-        uint256[] memory updates
+        uint256[] memory _updates
     ) internal {
-        for (uint256 i = 0; i < updates.length; i++) {
-            self.batch[self.batchLen] = updates[i];
+        for (uint256 i = 0; i < _updates.length; i++) {
+            self.batch[self.batchLen] = _updates[i];
             self.batchLen += 1;
 
             if (self.batchLen == TreeUtils.BATCH_SIZE) {
@@ -145,38 +145,38 @@ library OffchainMerkleTree {
 
     function insertNotes(
         OffchainMerkleTreeData storage self,
-        IWallet.Note[] memory notes
+        IWallet.Note[] memory _notes
     ) internal {
-        uint256[] memory hashes = new uint256[](notes.length);
-        for (uint256 i = 0; i < notes.length; i++) {
-            hashes[i] = Utils.sha256Note(notes[i]);
+        uint256[] memory _hashes = new uint256[](_notes.length);
+        for (uint256 i = 0; i < _notes.length; i++) {
+            _hashes[i] = Utils.sha256Note(_notes[i]);
         }
 
-        insertUpdates(self, hashes);
+        insertUpdates(self, _hashes);
     }
 
     function insertNote(
         OffchainMerkleTreeData storage self,
-        IWallet.Note memory note
+        IWallet.Note memory _note
     ) internal {
-        IWallet.Note[] memory notes = new IWallet.Note[](1);
-        notes[0] = note;
-        insertNotes(self, notes);
+        IWallet.Note[] memory _notes = new IWallet.Note[](1);
+        _notes[0] = _note;
+        insertNotes(self, _notes);
     }
 
     function insertNoteCommitments(
         OffchainMerkleTreeData storage self,
-        uint256[] memory ncs
+        uint256[] memory _ncs
     ) internal {
-        insertUpdates(self, ncs);
+        insertUpdates(self, _ncs);
     }
 
     function insertNoteCommitment(
         OffchainMerkleTreeData storage self,
-        uint256 nc
+        uint256 _nc
     ) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        insertNoteCommitments(self, ncs);
+        uint256[] memory _ncs = new uint256[](1);
+        _ncs[0] = _nc;
+        insertNoteCommitments(self, _ncs);
     }
 }

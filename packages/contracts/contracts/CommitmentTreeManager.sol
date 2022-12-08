@@ -48,17 +48,17 @@ contract CommitmentTreeManager {
     }
 
     function fillBatchWithZeros() external {
-        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
-        uint256[] memory zeros = new uint256[](numToInsert);
-        _insertNoteCommitments(zeros);
+        uint256 _numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+        uint256[] memory _zeros = new uint256[](_numToInsert);
+        _insertNoteCommitments(_zeros);
     }
 
     function applySubtreeUpdate(
-        uint256 newRoot,
-        uint256[8] calldata proof
+        uint256 _newRoot,
+        uint256[8] calldata _proof
     ) external {
-        merkle.applySubtreeUpdate(newRoot, proof);
-        pastRoots[newRoot] = true;
+        merkle.applySubtreeUpdate(_newRoot, _proof);
+        pastRoots[_newRoot] = true;
     }
 
     function root() public view returns (uint256) {
@@ -74,113 +74,113 @@ contract CommitmentTreeManager {
     }
 
     function _handleJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplitTx,
-        uint256 operationDigest
+        IWallet.JoinSplitTransaction calldata _joinSplitTx,
+        uint256 _operationDigest
     ) internal {
         require(
-            pastRoots[joinSplitTx.commitmentTreeRoot],
+            pastRoots[_joinSplitTx.commitmentTreeRoot],
             "Given tree root not a past root"
         );
         require(
-            !nullifierSet[joinSplitTx.nullifierA],
+            !nullifierSet[_joinSplitTx.nullifierA],
             "Nullifier A already used"
         );
         require(
-            !nullifierSet[joinSplitTx.nullifierB],
+            !nullifierSet[_joinSplitTx.nullifierB],
             "Nullifier B already used"
         );
 
         require(
             joinSplitVerifier.verifyProof(
-                [joinSplitTx.proof[0], joinSplitTx.proof[1]],
+                [_joinSplitTx.proof[0], _joinSplitTx.proof[1]],
                 [
-                    [joinSplitTx.proof[2], joinSplitTx.proof[3]],
-                    [joinSplitTx.proof[4], joinSplitTx.proof[5]]
+                    [_joinSplitTx.proof[2], _joinSplitTx.proof[3]],
+                    [_joinSplitTx.proof[4], _joinSplitTx.proof[5]]
                 ],
-                [joinSplitTx.proof[6], joinSplitTx.proof[7]],
+                [_joinSplitTx.proof[6], _joinSplitTx.proof[7]],
                 [
-                    joinSplitTx.newNoteACommitment,
-                    joinSplitTx.newNoteBCommitment,
-                    joinSplitTx.commitmentTreeRoot,
-                    joinSplitTx.publicSpend,
-                    joinSplitTx.nullifierA,
-                    joinSplitTx.nullifierB,
-                    operationDigest,
-                    uint256(uint160(joinSplitTx.asset)),
-                    joinSplitTx.id
+                    _joinSplitTx.newNoteACommitment,
+                    _joinSplitTx.newNoteBCommitment,
+                    _joinSplitTx.commitmentTreeRoot,
+                    _joinSplitTx.publicSpend,
+                    _joinSplitTx.nullifierA,
+                    _joinSplitTx.nullifierB,
+                    _operationDigest,
+                    uint256(uint160(_joinSplitTx.asset)),
+                    _joinSplitTx.id
                 ]
             ),
             "JoinSplit proof invalid"
         );
 
         // Compute newNote indices in the merkle tree
-        uint128 newNoteIndexA = merkle.getTotalCount();
-        uint128 newNoteIndexB = newNoteIndexA + 1;
+        uint128 _newNoteIndexA = merkle.getTotalCount();
+        uint128 _newNoteIndexB = _newNoteIndexA + 1;
 
-        uint256[] memory noteCommitments = new uint256[](2);
-        noteCommitments[0] = joinSplitTx.newNoteACommitment;
-        noteCommitments[1] = joinSplitTx.newNoteBCommitment;
-        _insertNoteCommitments(noteCommitments);
+        uint256[] memory _noteCommitments = new uint256[](2);
+        _noteCommitments[0] = _joinSplitTx.newNoteACommitment;
+        _noteCommitments[1] = _joinSplitTx.newNoteBCommitment;
+        _insertNoteCommitments(_noteCommitments);
 
-        nullifierSet[joinSplitTx.nullifierA] = true;
-        nullifierSet[joinSplitTx.nullifierB] = true;
+        nullifierSet[_joinSplitTx.nullifierA] = true;
+        nullifierSet[_joinSplitTx.nullifierB] = true;
 
         emit JoinSplit(
-            joinSplitTx.nullifierA,
-            joinSplitTx.nullifierB,
-            newNoteIndexA,
-            newNoteIndexB,
-            joinSplitTx
+            _joinSplitTx.nullifierA,
+            _joinSplitTx.nullifierB,
+            _newNoteIndexA,
+            _newNoteIndexB,
+            _joinSplitTx
         );
     }
 
-    function _insertNoteCommitment(uint256 nc) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        _insertNoteCommitments(ncs);
+    function _insertNoteCommitment(uint256 _nc) internal {
+        uint256[] memory _ncs = new uint256[](1);
+        _ncs[0] = _nc;
+        _insertNoteCommitments(_ncs);
     }
 
-    function _insertNoteCommitments(uint256[] memory ncs) internal {
-        merkle.insertNoteCommitments(ncs);
-        emit InsertNoteCommitments(ncs);
+    function _insertNoteCommitments(uint256[] memory _ncs) internal {
+        merkle.insertNoteCommitments(_ncs);
+        emit InsertNoteCommitments(_ncs);
     }
 
-    function _insertNote(IWallet.Note memory note) internal {
-        IWallet.Note[] memory notes = new IWallet.Note[](1);
-        notes[0] = note;
-        _insertNotes(notes);
+    function _insertNote(IWallet.Note memory _note) internal {
+        IWallet.Note[] memory _notes = new IWallet.Note[](1);
+        _notes[0] = _note;
+        _insertNotes(_notes);
     }
 
-    function _insertNotes(IWallet.Note[] memory notes) internal {
-        merkle.insertNotes(notes);
-        emit InsertNotes(notes);
+    function _insertNotes(IWallet.Note[] memory _notes) internal {
+        merkle.insertNotes(_notes);
+        emit InsertNotes(_notes);
     }
 
     function _handleRefund(
-        IWallet.NocturneAddress memory refundAddr,
-        address asset,
-        uint256 id,
-        uint256 value
+        IWallet.NocturneAddress memory _refundAddr,
+        address _asset,
+        uint256 _id,
+        uint256 _value
     ) internal {
-        IWallet.Note memory note;
-        note.ownerH1 = refundAddr.h1X;
-        note.ownerH2 = refundAddr.h2X;
-        note.nonce = nonce;
-        note.asset = uint256(uint160(asset));
-        note.id = id;
-        note.value = value;
+        IWallet.Note memory _note;
+        _note.ownerH1 = _refundAddr.h1X;
+        _note.ownerH2 = _refundAddr.h2X;
+        _note.nonce = nonce;
+        _note.asset = uint256(uint160(_asset));
+        _note.id = _id;
+        _note.value = _value;
 
-        _insertNote(note);
+        _insertNote(_note);
 
         uint256 _nonce = nonce;
         nonce++;
 
         emit Refund(
-            refundAddr,
+            _refundAddr,
             _nonce,
-            asset,
-            id,
-            value,
+            _asset,
+            _id,
+            _value,
             merkle.getTotalCount() - 1
         );
     }
