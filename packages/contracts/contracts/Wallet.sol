@@ -40,10 +40,13 @@ contract Wallet is IWallet, BalanceManager {
 
         successes = new bool[](numOps);
         results = new bytes[][](numOps);
-
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-            this.performOperation{gas: op.gasLimit}(op);
+            (bool opSuccess, bytes[] memory opRes) = this.performOperation{
+                gas: op.gasLimit
+            }(op);
+            successes[i] = opSuccess;
+            results[i] = opRes;
         }
     }
 
@@ -71,15 +74,21 @@ contract Wallet is IWallet, BalanceManager {
 
     function performOperation(
         Operation calldata op
-    ) external onlyThis returns (bool success, bytes[] memory results) {
+    ) external onlyThis returns (bool opSuccess, bytes[] memory results) {
         bytes32 operationHash = _hashOperation(op);
         _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
+        opSuccess = true; // default to true, set false if any call fails
         results = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            results[i] = _makeExternalCall(actions[i]);
+            (bool success, bytes memory res) = _makeExternalCall(actions[i]);
+
+            results[i] = res;
+            if (success == false) {
+                opSuccess = false;
+            }
         }
 
         // handles refunds and resets balances
@@ -92,18 +101,13 @@ contract Wallet is IWallet, BalanceManager {
 
     function _makeExternalCall(
         Action calldata action
-    ) internal returns (bytes memory) {
+    ) internal returns (bool success, bytes memory result) {
         require(
             action.contractAddress != address(vault),
             "Cannot call the Nocturne vault"
         );
 
-        (bool success, bytes memory result) = action.contractAddress.call(
-            action.encodedFunction
-        );
-
-        require(success, "Function call failed");
-        return result;
+        (success, result) = action.contractAddress.call(action.encodedFunction);
     }
 
     // TODO: do we need a domain in the payload?
