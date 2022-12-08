@@ -14,6 +14,7 @@ interface OrderedInsertion {
   logIdx: number;
 }
 
+// returns SubtreeUpdateCommit events sorted in the order in which they appeared on-chain
 export async function fetchInsertions(
   contract: Wallet,
   from: number,
@@ -92,26 +93,28 @@ export interface SubtreeUpdateCommit {
   subtreeIndex: number;
 }
 
+// returns SubtreeUpdateCommit events in the order in which they appeared on-chain
 export async function fetchSubtreeUpdateCommits(
   contract: Wallet,
   from: number,
   to: number
 ): Promise<SubtreeUpdateCommit[]> {
   const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
-  const events: SubtreeUpdateEvent[] = await query(
+  let events: SubtreeUpdateEvent[] = await query(
     contract,
     subtreeUpdateEventsFilter,
     from,
     to
   );
 
-  const eventValues = events.map((event) => event.args);
-  eventValues.sort(
-    (a, b) => a.subtreeIndex.toNumber() - b.subtreeIndex.toNumber()
+
+  events = events.sort(
+    (a, b) =>
+      a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex|| a.logIndex - b.logIndex
   );
 
-  return eventValues.map((event) => ({
-    newRoot: event.newRoot.toBigInt(),
-    subtreeIndex: event.subtreeIndex.toNumber(),
+  return events.map(({ args: { newRoot, subtreeIndex} }) => ({
+    newRoot: newRoot.toBigInt(),
+    subtreeIndex: subtreeIndex.toNumber(),
   }));
 }

@@ -18,7 +18,7 @@ export { SubtreeUpdateServer } from "./server";
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
 const INSERTION_PREFIX = "TREE_INSERTION_";
-const COMMIT_PREFIX = "COMMIT_";
+const LAST_COMMITTED_INDEX_KEY = "LAST_COMMITTED_INDEX";
 
 function numberToStringPadded(num: number, targetLen: number): string {
   let res = num.toString();
@@ -34,11 +34,6 @@ function numberToStringPadded(num: number, targetLen: number): string {
 function insertionKey(idx: number) {
   // make the keys lexicographically ordered so that we can iterate over them
   return `${INSERTION_PREFIX}${numberToStringPadded(idx, 64)}`;
-}
-
-function commitKey(batchIdx: number) {
-  // make the keys lexicographically ordered so that we can iterate over them
-  return `${COMMIT_PREFIX}${numberToStringPadded(batchIdx, 64)}`;
 }
 
 export interface UpdaterParams {
@@ -112,10 +107,8 @@ export class SubtreeUpdater {
   
   public async tryGenAndSubmitProofs(): Promise<void> {
     for (const { batch, newRoot, subtreeIndex } of this.batches) {
-      if (await this.shouldGenProof(subtreeIndex, newRoot)) {
-        const proof = await this.genProof(batch, subtreeIndex);
-        await this.submitter.submitProof(proof, newRoot, subtreeIndex);
-      }
+      const proof = await this.genProof(batch, subtreeIndex);
+      await this.submitter.submitProof(proof, newRoot, subtreeIndex);
     }
 
     this.batches = [];
@@ -143,8 +136,9 @@ export class SubtreeUpdater {
           keyIndex += 1;
         }
 
+        
+
         for (const { subtreeIndex } of newCommits) {
-          this.db.put(commitKey(subtreeIndex), "true");
         }
 
         this.db.put(NEXT_INSERTION_INDEX_KEY, (index + newInsertions.length).toString());
@@ -166,10 +160,11 @@ export class SubtreeUpdater {
   }
 
   private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
-    return await this.db.get(commitKey(subtreeIndex)) === "true";
+    const lastCommitedIndex = await this.getLastCommittedIndex();
+    return subtreeIndex <= lastCommitedIndex;
   }
 
-  private tryMakeBatches(): boolean {
+  private async tryMakeBatches(): Promise<boolean> {
     let madeBatch = false;
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
@@ -177,11 +172,14 @@ export class SubtreeUpdater {
 
       const subtreeIndex = this.tree.count - batch.length;
       const newRoot = this.tree.root();
-      this.batches.push({
-        batch,
-        newRoot,
-        subtreeIndex,
-      });
+
+      if (!(await this.subtreeIsCommitted(subtreeIndex))) {
+        this.batches.push({
+          batch,
+          newRoot,
+          subtreeIndex,
+        });
+      }
 
       this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
       madeBatch = true;
@@ -196,8 +194,13 @@ export class SubtreeUpdater {
   }
 
   private async getNextInsertionIndex(): Promise<number> {
-    const indexStrs = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
-    return parseInt(indexStrs);
+    const indexStr = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
+    return parseInt(indexStr);
+  }
+
+  private async getLastCommittedIndex(): Promise<number> {
+    const lastCommittedIndexStr = (await this.db.get(LAST_COMMITTED_INDEX_KEY)) ?? "0";
+    return parseInt(lastCommittedIndexStr);
   }
 
   private async genProof(batch: (Note | bigint)[], subtreeIndex: number): Promise<BaseProof> {
@@ -258,11 +261,7 @@ export class SubtreeUpdater {
 
       const insertion = SubtreeUpdater.parseInsertion(value);
       this.insertions.push(insertion);
-      const madeBatch = this.tryMakeBatches();
-
-      if (madeBatch && await this.subtreeIsCommitted(this.batches[0].subtreeIndex)) {
-        this.batches.shift();
-      }
+      await this.tryMakeBatches();
     }
   }
 }
