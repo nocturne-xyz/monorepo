@@ -23,32 +23,27 @@ contract Wallet is IWallet, BalanceManager {
         address _subtreeUpdateVerifier
     ) BalanceManager(_vault, _joinSplitVerifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
-    event OperationProcessed(uint256 indexed operationDigest);
+    event OperationProcessed(
+        uint256 indexed operationDigest,
+        bool indexed opSuccess,
+        bool[] callSuccesses,
+        bytes[] callResults
+    );
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
         _;
     }
 
-    // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata bundle
-    )
-        external
-        override
-        returns (bool[] memory successes, bytes[][] memory results)
-    {
+    ) external override returns (IWallet.OperationResult[] memory opResults) {
         uint256 numOps = bundle.operations.length;
 
-        successes = new bool[](numOps);
-        results = new bytes[][](numOps);
+        opResults = new IWallet.OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-            (bool opSuccess, bytes[] memory opRes) = this.performOperation{
-                gas: op.gasLimit
-            }(op);
-            successes[i] = opSuccess;
-            results[i] = opRes;
+            opResults[i] = this.performOperation{gas: op.gasLimit}(op);
         }
     }
 
@@ -76,20 +71,22 @@ contract Wallet is IWallet, BalanceManager {
 
     function performOperation(
         Operation calldata op
-    ) external onlyThis returns (bool opSuccess, bytes[] memory callResults) {
-        uint256 operationDigest = _operationDigest(op);
-        _handleAllSpends(op.joinSplitTxs, op.tokens, operationDigest);
+    ) external onlyThis returns (IWallet.OperationResult memory opResult) {
+        uint256 _opDigest = _operationDigest(op);
+        _handleAllSpends(op.joinSplitTxs, op.tokens, _opDigest);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
-        opSuccess = true; // default to true, set false if any call fails
-        callResults = new bytes[](numActions);
+        opResult.opSuccess = true; // default to true
+        opResult.callSuccesses = new bool[](numActions);
+        opResult.callResults = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            (bool success, bytes memory res) = _makeExternalCall(actions[i]);
+            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
 
-            callResults[i] = res;
+            opResult.callSuccesses[i] = success;
+            opResult.callResults[i] = result;
             if (success == false) {
-                opSuccess = false;
+                opResult.opSuccess = false; // set opSuccess to false if any call fails
             }
         }
 
@@ -98,6 +95,13 @@ contract Wallet is IWallet, BalanceManager {
             op.tokens.spendTokens,
             op.tokens.refundTokens,
             op.refundAddr
+        );
+
+        emit OperationProcessed(
+            _opDigest,
+            opResult.opSuccess,
+            opResult.callSuccesses,
+            opResult.callResults
         );
     }
 
