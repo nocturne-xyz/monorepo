@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add check for `OperationProcessed` event
 - Add e2e-test for standalone `SubtreeUpdateServer`
 - Modify e2e-test to use `SubtreeUpdater`
 - Modified e2e-test to use joinsplit
