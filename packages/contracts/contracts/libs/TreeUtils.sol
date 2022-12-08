@@ -14,18 +14,19 @@ library TreeUtils {
     // `subtreeIdx` is the index of the subtree's leftmost element in the tree
     // `accumulatorHashHi` is the top 3 bits of `accumulatorHash` gotten from `uint256ToFieldElemLimbs`
     function encodePathAndHash(
-        uint128 subtreeIdx,
-        uint256 accumulatorHashHi
+        uint128 _subtreeIdx,
+        uint256 _accumulatorHashHi
     ) internal pure returns (uint256) {
         require(
-            subtreeIdx % BATCH_SIZE == 0,
+            _subtreeIdx % BATCH_SIZE == 0,
             "subtreeIdx not multiple of BATCH_SIZE"
         );
-        uint256 encodedPathAndHash = uint256(subtreeIdx) >> BATCH_SUBTREE_DEPTH;
-        encodedPathAndHash |=
-            accumulatorHashHi <<
+        uint256 _encodedPathAndHash = uint256(_subtreeIdx) >>
+            BATCH_SUBTREE_DEPTH;
+        _encodedPathAndHash |=
+            _accumulatorHashHi <<
             (DEPTH - BATCH_SUBTREE_DEPTH);
 
-        return encodedPathAndHash;
+        return _encodedPathAndHash;
     }
 }

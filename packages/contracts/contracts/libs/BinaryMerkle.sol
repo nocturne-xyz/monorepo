@@ -12,7 +12,7 @@ struct IncrementalTreeData {
     uint256 root; // Root hash of the tree.
     uint256 numberOfLeaves; // Number of leaves of the tree.
     IHasherT3 hasherT3; // HasherT3 contract
-    mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> zero hash).
+    mapping(uint256 => uint256) zeroes; // Zero hashes used for empty nodes (level -> _zero hash).
     // The nodes of the subtrees used in the last addition of a leaf (level -> [left node, right node]).
     mapping(uint256 => uint256[2]) lastSubtrees; // Caching these values is essential to efficient appends.
 }
@@ -27,66 +27,66 @@ library BinaryMerkle {
 
     /// @dev Initializes a tree.
     /// @param self: Tree data.
-    /// @param depth: Depth of the tree.
-    /// @param zero: Zero value to be used.
+    /// @param _depth: Depth of the tree.
+    /// @param _zero: Zero value to be used.
     function initialize(
         IncrementalTreeData storage self,
-        uint8 depth,
-        uint256 zero,
+        uint8 _depth,
+        uint256 _zero,
         IHasherT3 _hasherT3
     ) internal {
-        require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(_zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
-            depth > 0 && depth <= MAX_DEPTH,
+            _depth > 0 && _depth <= MAX_DEPTH,
             "Depth must be between 1 and 32"
         );
 
-        self.depth = depth;
+        self.depth = _depth;
         self.hasherT3 = _hasherT3;
 
-        for (uint8 i = 0; i < depth; i++) {
-            self.zeroes[i] = zero;
-            zero = self.hasherT3.hash([zero, zero]);
+        for (uint8 i = 0; i < _depth; i++) {
+            self.zeroes[i] = _zero;
+            _zero = self.hasherT3.hash([_zero, _zero]);
         }
 
-        self.root = zero;
+        self.root = _zero;
     }
 
     /// @dev Inserts a leaf in the tree.
     /// @param self: Tree data.
-    /// @param leaf: Leaf to be inserted.
-    function insert(IncrementalTreeData storage self, uint256 leaf) internal {
-        require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+    /// @param _leaf: Leaf to be inserted.
+    function insert(IncrementalTreeData storage self, uint256 _leaf) internal {
+        require(_leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
             self.numberOfLeaves < 2 ** self.depth,
             "BinaryTree: tree is full"
         );
 
-        uint256 index = self.numberOfLeaves;
-        uint256 hash = leaf;
+        uint256 _index = self.numberOfLeaves;
+        uint256 _hash = _leaf;
 
         for (uint8 i = 0; i < self.depth; i++) {
-            if (index % 2 == 0) {
-                self.lastSubtrees[i] = [hash, self.zeroes[i]];
+            if (_index % 2 == 0) {
+                self.lastSubtrees[i] = [_hash, self.zeroes[i]];
             } else {
-                self.lastSubtrees[i][1] = hash;
+                self.lastSubtrees[i][1] = _hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
-            index /= 2;
+            _hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            _index /= 2;
         }
 
-        self.root = hash;
+        self.root = _hash;
         self.numberOfLeaves += 1;
     }
 
     function insert2(
         IncrementalTreeData storage self,
-        uint256[2] memory leaves
+        uint256[2] memory _leaves
     ) internal {
         for (uint256 i = 0; i < 2; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                _leaves[i] < SNARK_SCALAR_FIELD,
                 "Leaf must be < snark field"
             );
         }
@@ -95,31 +95,31 @@ library BinaryMerkle {
             "BinaryTree: tree is full"
         );
 
-        uint256 index = self.numberOfLeaves / 2;
-        uint256 hash = self.hasherT3.hash(leaves);
+        uint256 _index = self.numberOfLeaves / 2;
+        uint256 _hash = self.hasherT3.hash(_leaves);
 
         for (uint8 i = 1; i < self.depth; i++) {
-            if (index % 2 == 0) {
-                self.lastSubtrees[i] = [hash, self.zeroes[i]];
+            if (_index % 2 == 0) {
+                self.lastSubtrees[i] = [_hash, self.zeroes[i]];
             } else {
-                self.lastSubtrees[i][1] = hash;
+                self.lastSubtrees[i][1] = _hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
-            index /= 2;
+            _hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            _index /= 2;
         }
 
-        self.root = hash;
+        self.root = _hash;
         self.numberOfLeaves += 2;
     }
 
     function insert8(
         IncrementalTreeData storage self,
-        uint256[8] memory leaves
+        uint256[8] memory _leaves
     ) internal {
         for (uint256 i = 0; i < 8; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                _leaves[i] < SNARK_SCALAR_FIELD,
                 "Leaf must be < snark field"
             );
         }
@@ -128,33 +128,33 @@ library BinaryMerkle {
             "BinaryTree: tree is full"
         );
 
-        uint256 index = self.numberOfLeaves / 8;
+        uint256 _index = self.numberOfLeaves / 8;
 
-        uint256 hash = getRootFrom8(self, leaves);
+        uint256 _hash = getRootFrom8(self, _leaves);
 
         for (uint8 i = 2; i < self.depth; i++) {
-            if (index % 2 == 0) {
-                self.lastSubtrees[i] = [hash, self.zeroes[i]];
+            if (_index % 2 == 0) {
+                self.lastSubtrees[i] = [_hash, self.zeroes[i]];
             } else {
-                self.lastSubtrees[i][1] = hash;
+                self.lastSubtrees[i][1] = _hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
-            index /= 2;
+            _hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            _index /= 2;
         }
 
-        self.root = hash;
+        self.root = _hash;
         self.numberOfLeaves += 8;
     }
 
     // TODO: make sure we can allow both insert16 and insert8, that self.lastSubtrees is properly set
     function insert16(
         IncrementalTreeData storage self,
-        uint256[16] memory leaves
+        uint256[16] memory _leaves
     ) internal {
         for (uint256 i = 0; i < 16; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                _leaves[i] < SNARK_SCALAR_FIELD,
                 "Leaf must be < snark field"
             );
         }
@@ -163,58 +163,58 @@ library BinaryMerkle {
             "BinaryTree: tree is full"
         );
 
-        uint256 hash = getRootFrom16(self, leaves);
-        uint256 index = self.numberOfLeaves / 16;
+        uint256 _hash = getRootFrom16(self, _leaves);
+        uint256 _index = self.numberOfLeaves / 16;
 
         for (uint8 i = 3; i < self.depth; i++) {
-            if (index % 2 == 0) {
-                self.lastSubtrees[i] = [hash, self.zeroes[i]];
+            if (_index % 2 == 0) {
+                self.lastSubtrees[i] = [_hash, self.zeroes[i]];
             } else {
-                self.lastSubtrees[i][1] = hash;
+                self.lastSubtrees[i][1] = _hash;
             }
 
-            hash = self.hasherT3.hash(self.lastSubtrees[i]);
-            index /= 2;
+            _hash = self.hasherT3.hash(self.lastSubtrees[i]);
+            _index /= 2;
         }
 
-        self.root = hash;
+        self.root = _hash;
         self.numberOfLeaves += 16;
     }
 
     function getRootFrom8(
         IncrementalTreeData storage self,
-        uint256[8] memory leaves
+        uint256[8] memory _leaves
     ) internal view returns (uint256) {
-        uint256 leftHash = self.hasherT3.hash(
+        uint256 _leftHash = self.hasherT3.hash(
             [
-                self.hasherT3.hash([leaves[0], leaves[1]]),
-                self.hasherT3.hash([leaves[2], leaves[3]])
+                self.hasherT3.hash([_leaves[0], _leaves[1]]),
+                self.hasherT3.hash([_leaves[2], _leaves[3]])
             ]
         );
 
-        uint256 rightHash = self.hasherT3.hash(
+        uint256 _rightHash = self.hasherT3.hash(
             [
-                self.hasherT3.hash([leaves[4], leaves[5]]),
-                self.hasherT3.hash([leaves[6], leaves[7]])
+                self.hasherT3.hash([_leaves[4], _leaves[5]]),
+                self.hasherT3.hash([_leaves[6], _leaves[7]])
             ]
         );
 
-        return self.hasherT3.hash([leftHash, rightHash]);
+        return self.hasherT3.hash([_leftHash, _rightHash]);
     }
 
     function getRootFrom16(
         IncrementalTreeData storage self,
-        uint256[16] memory leaves
+        uint256[16] memory _leaves
     ) internal view returns (uint256) {
-        uint256[8] memory leftHalf;
-        uint256[8] memory rightHalf;
+        uint256[8] memory _leftHalf;
+        uint256[8] memory _rightHalf;
         for (uint256 i = 0; i < 8; i++) {
-            leftHalf[i] = leaves[i];
-            rightHalf[i] = leaves[i * 2];
+            _leftHalf[i] = _leaves[i];
+            _rightHalf[i] = _leaves[i * 2];
         }
         return
             self.hasherT3.hash(
-                [getRootFrom8(self, leftHalf), getRootFrom8(self, rightHalf)]
+                [getRootFrom8(self, _leftHalf), getRootFrom8(self, _rightHalf)]
             );
     }
 }
