@@ -23,6 +23,8 @@ contract Wallet is IWallet, BalanceManager {
         address _subtreeUpdateVerifier
     ) BalanceManager(_vault, _joinSplitVerifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
+    event OperationProcessed(uint256 indexed operationDigest);
+
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
         _;
@@ -75,8 +77,8 @@ contract Wallet is IWallet, BalanceManager {
     function performOperation(
         Operation calldata op
     ) external onlyThis returns (bool opSuccess, bytes[] memory callResults) {
-        bytes32 operationHash = _hashOperation(op);
-        _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
+        uint256 operationDigest = _operationDigest(op);
+        _handleAllSpends(op.joinSplitTxs, op.tokens, operationDigest);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
@@ -108,6 +110,12 @@ contract Wallet is IWallet, BalanceManager {
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    function _operationDigest(
+        Operation calldata op
+    ) private pure returns (uint256) {
+        return uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
     }
 
     // TODO: do we need a domain in the payload?
