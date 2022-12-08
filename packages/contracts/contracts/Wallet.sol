@@ -31,11 +31,11 @@ contract Wallet is IWallet, BalanceManager {
 
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofsInBundle(
-        Bundle calldata bundle
+    function _verifyAllProofs(
+        IWallet.OperationAndDigest[] memory _opsAndDigests
     ) internal view returns (bool) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPisFromBundle(bundle);
+            .extractJoinSplitProofsAndPisFromBundle(_opsAndDigests);
         return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
@@ -47,8 +47,10 @@ contract Wallet is IWallet, BalanceManager {
         override
         returns (bool[] memory successes, bytes[][] memory results)
     {
+        uint256[] memory _opsAndDigests = WalletUtils.extractOperationsAndDigestsFromBundle(bundle);
+
         require(
-            _verifyAllProofsInBundle(bundle),
+            _verifyAllProofsInBundle(_opsAndDigests),
             "Batched JoinSplit proof verification failed."
         );
 
@@ -56,10 +58,13 @@ contract Wallet is IWallet, BalanceManager {
 
         successes = new bool[](numOps);
         results = new bytes[][](numOps);
-
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
-            this.performOperation{gas: op.gasLimit}(op);
+            (bool opSuccess, bytes[] memory opRes) = this.performOperation{
+                gas: op.gasLimit
+            }(op);
+            successes[i] = opSuccess;
+            results[i] = opRes;
         }
     }
 
@@ -93,9 +98,15 @@ contract Wallet is IWallet, BalanceManager {
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
+        opSuccess = true; // default to true, set false if any call fails
         results = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            results[i] = _makeExternalCall(actions[i]);
+            (bool success, bytes memory res) = _makeExternalCall(actions[i]);
+
+            results[i] = res;
+            if (success == false) {
+                opSuccess = false;
+            }
         }
 
         // handles refunds and resets balances
@@ -108,17 +119,12 @@ contract Wallet is IWallet, BalanceManager {
 
     function _makeExternalCall(
         Action calldata action
-    ) internal returns (bytes memory) {
+    ) internal returns (bool success, bytes memory result) {
         require(
             action.contractAddress != address(vault),
             "Cannot call the Nocturne vault"
         );
 
-        (bool success, bytes memory result) = action.contractAddress.call(
-            action.encodedFunction
-        );
-
-        require(success, "Function call failed");
-        return result;
+        (success, result) = action.contractAddress.call(action.encodedFunction);
     }
 }

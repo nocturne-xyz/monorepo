@@ -6,19 +6,33 @@ import {Utils} from "../libs/Utils.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
+    function extractOperationsAndDigestsFromBundle(
+        IWallet.Bundle calldata _bundle
+    ) internal pure returns (IWallet.OperationAndDigest[] memory) {
+        IWallet.Operation[] calldata _ops = _bundle.operations;
+        uint256 _numOps = _ops.length;
+
+        IWallet.OperationAndDigest[] memory _opsAndDigests = new IWallet.OperationAndDigest[](_numOps);
+        for (uint256 i = 0; i < _numOps; i++) {
+            _opsAndDigests[i] = IWallet.OperationAndDigest({operation: _ops[i], operationDigest: calculateOperationDigest(_ops[i]) });
+        }
+
+        return _opsAndDigests;
+    }
+    
     function extractJoinSplitProofsAndPisFromBundle(
-        IWallet.Bundle calldata bundle
+        IWallet.OperationAndDigest[] calldata opAndDigests
     )
         internal
         pure
         returns (Groth16.Proof[] memory proofs, uint256[][] memory allPis)
     {
-        uint256 numOps = bundle.operations.length;
+        uint256 numOps = opAndDigests.length;
 
         // compute number of joinsplits in the bundle
         uint256 numJoinSplits = 0;
         for (uint256 i = 0; i < numOps; i++) {
-            IWallet.Operation calldata op = bundle.operations[i];
+            IWallet.Operation calldata op = opAndDigests[i].operation;
             numJoinSplits += op.joinSplitTxs.length;
         }
         proofs = new Groth16.Proof[](numJoinSplits);
@@ -29,9 +43,7 @@ library WalletUtils {
 
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
-            IWallet.Operation calldata op = bundle.operations[i];
-            uint256 operationDigest = uint256(_hashOperation(op)) %
-                Utils.SNARK_SCALAR_FIELD;
+            IWallet.Operation calldata op = opAndDigests[i].operation;
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
@@ -41,7 +53,7 @@ library WalletUtils {
                 allPis[index][3] = op.joinSplitTxs[j].publicSpend;
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
-                allPis[index][6] = operationDigest;
+                allPis[index][6] = opAndDigests[i].operationDigest;
                 allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
                 allPis[index][8] = op.joinSplitTxs[j].id;
                 index++;
@@ -51,6 +63,12 @@ library WalletUtils {
         return (proofs, allPis);
     }
 
+    function calculateOperationDigest(
+        IWallet.Operation calldata _op
+    ) internal pure returns (uint256) {
+        return uint256(_hashOperation(_op)) % Utils.SNARK_SCALAR_FIELD;
+    }
+
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
     function _hashOperation(
@@ -58,7 +76,7 @@ library WalletUtils {
     ) private pure returns (bytes32) {
         bytes memory payload;
 
-        IWallet.Action calldata action;
+        IWallet.Action memory action;
         for (uint256 i = 0; i < op.actions.length; i++) {
             action = op.actions[i];
             payload = abi.encodePacked(

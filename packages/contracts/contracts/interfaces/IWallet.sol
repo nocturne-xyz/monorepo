@@ -82,6 +82,11 @@ interface IWallet {
         uint256 gasLimit;
     }
 
+    struct OperationAndDigest {
+        Operation operation;
+        uint256 operationDigest;
+    }
+
     struct Action {
         address contractAddress;
         bytes encodedFunction;
