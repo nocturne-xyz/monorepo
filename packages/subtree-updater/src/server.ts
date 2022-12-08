@@ -35,12 +35,9 @@ export class SubtreeUpdateServer {
           resolve(undefined);
           return;
         }
-        
+
         try {
-          const batchFilled = await this.updater.pollInsertions();
-          if (!batchFilled) {
-            await this.updater.fillBatch();
-          }
+          await this.updater.pollInsertions();
         } catch (err) {
           console.error("subtree update server received an error:", err);
           reject(err);

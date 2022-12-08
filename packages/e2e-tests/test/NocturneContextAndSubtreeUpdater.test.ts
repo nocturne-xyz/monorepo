@@ -87,6 +87,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
+    await wallet.fillBatchWithZeros();
+
     await sleep(2100);
     await server.stop();
 

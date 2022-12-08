@@ -150,10 +150,6 @@ export class SubtreeUpdater {
     return filledBatch;
   }
 
-  public async fillBatch(): Promise<void> {
-    await this.walletContract.fillBatchWithZeros();
-  }
-
   public async dropDB(): Promise<void> {
     await this.submitter.dropDB();
     await this.db.drop();
