@@ -236,7 +236,7 @@ export class NocturneContext {
     const nullifierB = this.signer.createNullifier(oldNoteB);
 
     const canonOwner = this.signer.privkey.toCanonAddress();
-    if (receiver == undefined) {
+    if (receiver == undefined || paymentValue == 0n) {
       receiver = canonOwner;
     }
 
@@ -332,16 +332,17 @@ export class NocturneContext {
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
     for (const rq of unwrapAndPayRequests) {
       let notesToUse = await this.gatherMinimumNotes(rq);
+      // Total value of notes in notesToUse
       const totalUsedValue = notesToUse.reduce((s, note) => {
         return s + note.value;
       }, 0n);
-      let paymentVal;
-      if (rq.paymentIntent == undefined) {
-        paymentVal = 0n;
-      } else {
-        paymentVal = rq.paymentIntent.value;
-      }
-      let refundVal = totalUsedValue - rq.value - paymentVal;
+
+      // Compute payment value for this operation (all payment new note values)
+      const opPaymentVal = rq.paymentIntent ? rq.paymentIntent.value : 0n;
+
+      // Compute return value for this operation (all returning new note values)
+      const opReturnVal = totalUsedValue - rq.value - opPaymentVal;
+
       // Insert a dummy note if length of notes to use is odd
       if (notesToUse.length % 2 == 1) {
         const newAddr = this.signer.privkey.toCanonAddressStruct();
@@ -354,39 +355,36 @@ export class NocturneContext {
           merkleIndex: 0,
         });
       }
+
       let noteA, noteB;
+      let remainingPaymentVal = opPaymentVal;
+      let remainingReturnVal = opReturnVal;
       while (notesToUse.length > 0) {
         [noteA, noteB, ...notesToUse] = notesToUse;
-        let r_val = 0n; // refund value for this joinsplit of (old) noteA and (old) noteB
-        let p_val = 0n; // payment value for this joinsplit
-        // add in the refund value if noteA and noteB spend enough
-        if (noteA.value + noteB.value > refundVal + paymentVal) {
-          r_val = refundVal;
-          p_val = paymentVal;
-          refundVal = 0n;
-          paymentVal = 0n;
-        } else if (noteA.value + noteB.value > refundVal) {
-          r_val = refundVal;
-          refundVal = 0n;
-        } else if (noteA.value + noteB.value > paymentVal) {
-          p_val = paymentVal;
-          paymentVal = 0n;
-        }
-        if (p_val > 0n) {
-          preSignJoinSplitTxs.push(
-            this.genPreSignJoinSplitTx(
-              noteA,
-              noteB,
-              r_val,
-              p_val,
-              rq.paymentIntent?.receiver
-            )
-          );
-        } else {
-          preSignJoinSplitTxs.push(
-            this.genPreSignJoinSplitTx(noteA, noteB, r_val)
-          );
-        }
+
+        // Value of newNoteA for this joinsplit
+        const currentReturnVal =
+          noteA.value + noteB.value >= remainingReturnVal
+            ? remainingReturnVal
+            : 0n;
+        remainingReturnVal -= currentReturnVal;
+
+        // Value of newNoteB for this joinsplit
+        const currentPaymentVal =
+          noteA.value + noteB.value - currentReturnVal >= remainingPaymentVal
+            ? remainingPaymentVal
+            : 0n;
+        remainingPaymentVal -= currentPaymentVal;
+
+        preSignJoinSplitTxs.push(
+          this.genPreSignJoinSplitTx(
+            noteA,
+            noteB,
+            currentReturnVal,
+            currentPaymentVal,
+            rq.paymentIntent ? rq.paymentIntent.receiver : undefined
+          )
+        );
       }
     }
     return {

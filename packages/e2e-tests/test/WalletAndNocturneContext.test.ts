@@ -197,25 +197,25 @@ describe("Wallet", async () => {
     console.log("Alice: Sync SDK notes manager post-operation");
     await nocturneContextAlice.syncNotes();
     const updatedNotesAlice = await dbAlice.getNotesFor(asset)!;
-    const FoundNoteAlice = updatedNotesAlice.filter((n) => n.value > 0);
+    const foundNoteAlice = updatedNotesAlice.filter((n) => n.value > 0);
 
     console.log("Bob: Sync SDK notes manager post-operation");
     await nocturneContextBob.syncNotes();
     const updatedNotesBob = await dbBob.getNotesFor(asset)!;
-    const FoundNoteBob = updatedNotesBob.filter((n) => n.value > 0);
+    const foundNoteBob = updatedNotesBob.filter((n) => n.value > 0);
 
-    expect(FoundNoteAlice.length).to.equal(2);
+    expect(foundNoteAlice.length).to.equal(2);
     // Refund for leftover value in public spend
-    expect(FoundNoteAlice[0].value).to.equal(
+    expect(foundNoteAlice[0].value).to.equal(
       ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
     );
     // Refund from joinsplit
-    expect(FoundNoteAlice[1].value).to.equal(
+    expect(foundNoteAlice[1].value).to.equal(
       2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
     );
 
     // There should be one new note containing payment
-    expect(FoundNoteBob.length).to.equal(1);
-    expect(FoundNoteBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
+    expect(foundNoteBob.length).to.equal(1);
+    expect(foundNoteBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
   });
 });
