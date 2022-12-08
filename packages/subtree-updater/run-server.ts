@@ -2,6 +2,9 @@ import { program } from "commander";
 import { SubtreeUpdateServer } from "./src/server";
 import { RapidsnarkSubtreeUpdateProver } from './src/rapidsnarkProver';
 import { ethers } from "ethers";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 program
   .requiredOption("--walletContractAddr <string>", "address of the wallet contract")

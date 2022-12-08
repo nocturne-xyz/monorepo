@@ -2,11 +2,8 @@ import { ethers } from "ethers";
 import { open } from 'lmdb';
 import { SubtreeUpdater } from ".";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
-import * as dotenv from 'dotenv';
 import { clearTimeout } from "timers";
 import { SubtreeUpdateProver } from "@nocturne-xyz/sdk";
-
-dotenv.config();
 
 const TWELVE_SECONDS = 12 * 1000;
 

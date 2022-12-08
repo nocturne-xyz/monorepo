@@ -85,7 +85,7 @@ describe("NocturneContext", () => {
   });
 
   afterEach(async () => {
-    db.clear();
+    await db.clear();
   });
 
   after(async () => {
