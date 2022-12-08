@@ -2,7 +2,7 @@ import "mocha";
 import * as fs from "fs";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { UnwrapAndPayRequest, Asset } from "../src/commonTypes";
+import { JoinSplitRequest, Asset } from "../src/commonTypes";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
@@ -121,7 +121,7 @@ describe("NocturneContext", () => {
 
   it("Rejects asset request attempting to overspend", async () => {
     // Request 1000 tokens, more than user owns
-    const assetRequest1000: UnwrapAndPayRequest = {
+    const assetRequest1000: JoinSplitRequest = {
       asset,
       value: 1000n,
     };
@@ -135,7 +135,7 @@ describe("NocturneContext", () => {
 
   it("Gathers minimum notes for asset request", async () => {
     // Request 20 tokens, consume smallest note
-    const assetRequest5: UnwrapAndPayRequest = {
+    const assetRequest5: JoinSplitRequest = {
       asset,
       value: 5n,
     };
@@ -144,7 +144,7 @@ describe("NocturneContext", () => {
     expect(minimumFor5[0].value).to.equal(10n);
 
     // Request 80 tokens, consume next smallest two notes
-    const assetRequest80: UnwrapAndPayRequest = {
+    const assetRequest80: JoinSplitRequest = {
       asset,
       value: 80n,
     };
@@ -160,12 +160,12 @@ describe("NocturneContext", () => {
 
   it("Generates PreProofOpeartion", async () => {
     // Request 40 tokens, should generate two joinsplits
-    const assetRequest: UnwrapAndPayRequest = {
+    const assetRequest: JoinSplitRequest = {
       asset,
       value: 40n,
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      unwrapAndPayRequests: [assetRequest],
+      joinSplitRequests: [assetRequest],
       refundTokens: ["0x1245"],
       actions: [
         {
@@ -178,21 +178,23 @@ describe("NocturneContext", () => {
     expect(preProofOp.joinSplitTxs.length).to.equal(2);
   });
 
-  it("Generates PreProofOpeartion with a payment intent", async () => {
+  it("Generates PreProofOpeartion from a payment request", async () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toCanonAddress();
+    const request = nocturneContext.genPaymentRequest(asset, addr, 20n);
+    const preProofOp = await nocturneContext.tryGetPreProofOperation(request);
+    expect(preProofOp.joinSplitTxs.length).to.equal(1);
+  });
+
+  it("Generates PreProofOpeartion with a opeartion request", async () => {
     // Request to unwrap 5 tokens and pay 5 tokens
     // Should fit into one joinsplit
-    const assetRequest: UnwrapAndPayRequest = {
+    const assetRequest: JoinSplitRequest = {
       asset,
-      value: 10n,
-      paymentIntent: {
-        receiver: addr,
-        value: 5n,
-      },
+      value: 15n,
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      unwrapAndPayRequests: [assetRequest],
+      joinSplitRequests: [assetRequest],
       refundTokens: ["0x1245"],
       actions: [
         {
@@ -205,12 +207,12 @@ describe("NocturneContext", () => {
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
   });
 
-  it("Generates PreProofOpeartion with a payment intent 2", async () => {
+  it("Generates PreProofOpeartion with a opeartion request with paymentIntent", async () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toCanonAddress();
     // Request to unwrap 5 tokens and pay 10 tokens
     // Should fit into two joinsplits
-    const assetRequest: UnwrapAndPayRequest = {
+    const assetRequest: JoinSplitRequest = {
       asset,
       value: 40n,
       paymentIntent: {
@@ -219,7 +221,7 @@ describe("NocturneContext", () => {
       },
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      unwrapAndPayRequests: [assetRequest],
+      joinSplitRequests: [assetRequest],
       refundTokens: ["0x1245"],
       actions: [
         {

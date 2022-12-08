@@ -1,11 +1,13 @@
 import {
-  UnwrapAndPayRequest,
+  JoinSplitRequest,
+  UnwrapRequest,
+  Address,
   Asset,
   AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
 } from "./commonTypes";
-import { SpendAndRefundTokens } from "./contract/types";
+import { Action, SpendAndRefundTokens } from "./contract/types";
 import {
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
@@ -128,7 +130,7 @@ export class NocturneContext {
     refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofOperation> {
-    const { unwrapAndPayRequests, refundTokens } = operationRequest;
+    const { joinSplitRequests, refundTokens } = operationRequest;
 
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
@@ -137,7 +139,7 @@ export class NocturneContext {
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
-      spendTokens: unwrapAndPayRequests.map((a) => a.asset.address),
+      spendTokens: joinSplitRequests.map((a) => a.asset.address),
       refundTokens,
     };
 
@@ -174,10 +176,10 @@ export class NocturneContext {
    * @param unwrapAndPayRequests requests
    */
   async ensureMinimumForOperationRequest({
-    unwrapAndPayRequests,
+    joinSplitRequests,
   }: OperationRequest): Promise<void> {
-    for (const unwrapAndPayRequest of unwrapAndPayRequests) {
-      await this.ensureMinimumForAssetRequest(unwrapAndPayRequest);
+    for (const joinSplitRequest of joinSplitRequests) {
+      await this.ensureMinimumForAssetRequest(joinSplitRequest);
     }
   }
 
@@ -323,14 +325,14 @@ export class NocturneContext {
    * @param gasLimit:Gas limit
    */
   protected async getPreSignOperation(
-    { unwrapAndPayRequests, actions }: OperationRequest,
+    { joinSplitRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
     refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreSignOperation> {
     // For each asset request, gather necessary notes
     const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
-    for (const rq of unwrapAndPayRequests) {
+    for (const rq of joinSplitRequests) {
       let notesToUse = await this.gatherMinimumNotes(rq);
       // Total value of notes in notesToUse
       const totalUsedValue = notesToUse.reduce((s, note) => {
@@ -447,7 +449,7 @@ export class NocturneContext {
    * @param unwrapAndPayRequest request
    */
   async ensureMinimumForAssetRequest(
-    unwrapAndPayRequest: UnwrapAndPayRequest
+    unwrapAndPayRequest: JoinSplitRequest
   ): Promise<void> {
     let totalVal = unwrapAndPayRequest.value;
     if (unwrapAndPayRequest.paymentIntent !== undefined) {
@@ -470,7 +472,7 @@ export class NocturneContext {
    * @return a list of included notes to spend the total value.
    */
   async gatherMinimumNotes(
-    unwrapAndPayRequest: UnwrapAndPayRequest
+    unwrapAndPayRequest: JoinSplitRequest
   ): Promise<IncludedNote[]> {
     this.ensureMinimumForAssetRequest(unwrapAndPayRequest);
     let totalVal = unwrapAndPayRequest.value;
@@ -492,6 +494,30 @@ export class NocturneContext {
     }
 
     return notesToUse;
+  }
+
+  /**
+   * Generte an operation request for a payment
+   */
+  genPaymentRequest(
+    asset: Asset,
+    receiver: CanonAddress,
+    value: bigint
+  ): OperationRequest {
+    return {
+      joinSplitRequests: [
+        {
+          asset,
+          value: 0n,
+          paymentIntent: {
+            receiver,
+            value,
+          },
+        },
+      ],
+      refundTokens: [],
+      actions: [],
+    };
   }
 
   /**

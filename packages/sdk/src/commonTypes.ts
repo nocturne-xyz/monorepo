@@ -31,19 +31,30 @@ export interface AssetWithBalance {
   balance: bigint;
 }
 
+export interface UnwrapRequest {
+  asset: Asset;
+  value: bigint;
+}
+
+export interface PaymentRequest {
+  asset: Asset;
+  receiver: CanonAddress;
+  value: bigint;
+}
+
 export interface PaymentIntent {
   receiver: CanonAddress;
   value: bigint;
 }
 
-export interface UnwrapAndPayRequest {
+export interface JoinSplitRequest {
   asset: Asset;
-  value: bigint; // total value to use, publicSpend is value - payment.value
+  value: bigint; // public spend
   paymentIntent?: PaymentIntent;
 }
 
 export interface OperationRequest {
-  unwrapAndPayRequests: UnwrapAndPayRequest[];
+  joinSplitRequests: JoinSplitRequest[];
   refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
   actions: Action[];
 }

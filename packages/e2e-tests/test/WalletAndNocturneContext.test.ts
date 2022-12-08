@@ -14,7 +14,7 @@ import {
   Bundle,
   NocturneContext,
   Asset,
-  UnwrapAndPayRequest,
+  JoinSplitRequest,
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
@@ -134,7 +134,7 @@ describe("Wallet", async () => {
     console.log(
       "Create asset request to public spend 20 tokens and send 30 to Bob privately."
     );
-    const unwrapAndPayRequest: UnwrapAndPayRequest = {
+    const unwrapAndPayRequest: JoinSplitRequest = {
       asset,
       value: ALICE_UNWRAP_VAL,
       paymentIntent: {
