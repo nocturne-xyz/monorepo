@@ -67,6 +67,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         IWallet.JoinSplitTransaction joinSplitTx
     );
 
+    event OperationProcessed(
+        uint256 indexed operationDigest,
+        bool indexed opSuccess,
+        bool[] callSuccesses,
+        bytes[] callResults
+    );
+
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
@@ -311,10 +318,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, 1000, 800);
 
         // Create operation to transfer 50 tokens to bob
-        IWallet.Operation memory op = formatTransferOperation(token, BOB, 50);
-        IWallet.Operation[] memory ops = new IWallet.Operation[](1);
-        ops[0] = op;
-        IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
+        IWallet.Bundle memory bundle = IWallet.Bundle({
+            operations: new IWallet.Operation[](1)
+        });
+        bundle.operations[0] = formatTransferOperation(token, BOB, 50);
 
         // Ensure 50 tokens have changed hands
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -322,23 +329,32 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // check all values
+        // Check joinsplit event
         vm.expectEmit(true, true, false, true);
         emit JoinSplit(
-            op.joinSplitTxs[0].nullifierA,
-            op.joinSplitTxs[0].nullifierB,
+            bundle.operations[0].joinSplitTxs[0].nullifierA,
+            bundle.operations[0].joinSplitTxs[0].nullifierB,
             16, // newNoteAIndex
             17, // newNoteBIndex
-            op.joinSplitTxs[0]
+            bundle.operations[0].joinSplitTxs[0]
         );
 
-        (bool[] memory successes, bytes[][] memory results) = wallet
-            .processBundle(bundle);
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = true;
+        bytes[] memory callResults = new bytes[](1);
+        emit OperationProcessed(uint256(0), true, callSuccesses, callResults);
 
-        assertEq(successes.length, uint256(1));
-        assertEq(results.length, uint256(1));
-        assertEq(results[0].length, uint256(1));
-        assertEq(successes[0], true);
+        IWallet.OperationResult[] memory opResults = wallet.processBundle(
+            bundle
+        );
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opSuccess, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(750));
@@ -355,10 +371,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Create transaction to withdraw 1500 tokens and send to Bob (more than
         // alice has)
-        IWallet.Operation memory op = formatTransferOperation(token, BOB, 1500);
-        IWallet.Operation[] memory ops = new IWallet.Operation[](1);
-        ops[0] = op;
-        IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
+        IWallet.Bundle memory bundle = IWallet.Bundle({
+            operations: new IWallet.Operation[](1)
+        });
+        bundle.operations[0] = formatTransferOperation(token, BOB, 1500);
 
         // Ensure balance remain same after call
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -366,13 +382,22 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(200));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        (bool[] memory successes, bytes[][] memory results) = wallet
-            .processBundle(bundle);
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = false;
+        bytes[] memory callResults = new bytes[](1);
+        emit OperationProcessed(uint256(0), false, callSuccesses, callResults);
 
-        assertEq(successes.length, uint256(1));
-        assertEq(results.length, uint256(1));
-        assertEq(results[0].length, uint256(1));
-        assertEq(successes[0], false);
+        IWallet.OperationResult[] memory opResults = wallet.processBundle(
+            bundle
+        );
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opSuccess, false);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], false);
+        assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(800));
