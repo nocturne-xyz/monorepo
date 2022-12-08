@@ -136,22 +136,19 @@ export class SubtreeUpdater {
           keyIndex += 1;
         }
 
-        
-
-        for (const { subtreeIndex } of newCommits) {
-        }
-
         this.db.put(NEXT_INSERTION_INDEX_KEY, (index + newInsertions.length).toString());
         this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
+
+        if (newCommits.length > 0) {
+          const lasCommit = newCommits[newCommits.length - 1];
+          this.db.put(LAST_COMMITTED_INDEX_KEY, lasCommit.subtreeIndex.toString());
+        }
       }
     );
 
     this.insertions.push(...newInsertions);
 
-    const filledBatch = this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE;
-    this.tryMakeBatches();
-
-    return filledBatch;
+    return await this.tryMakeBatches();
   }
 
   public async dropDB(): Promise<void> {
@@ -161,7 +158,7 @@ export class SubtreeUpdater {
 
   private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
     const lastCommitedIndex = await this.getLastCommittedIndex();
-    return subtreeIndex <= lastCommitedIndex;
+    return lastCommitedIndex !== undefined && subtreeIndex <= lastCommitedIndex;
   }
 
   private async tryMakeBatches(): Promise<boolean> {
@@ -198,8 +195,12 @@ export class SubtreeUpdater {
     return parseInt(indexStr);
   }
 
-  private async getLastCommittedIndex(): Promise<number> {
-    const lastCommittedIndexStr = (await this.db.get(LAST_COMMITTED_INDEX_KEY)) ?? "0";
+  private async getLastCommittedIndex(): Promise<number | undefined> {
+    const lastCommittedIndexStr = (await this.db.get(LAST_COMMITTED_INDEX_KEY));
+    if (lastCommittedIndexStr === undefined) {
+      return undefined;
+    }
+
     return parseInt(lastCommittedIndexStr);
   }
 
@@ -208,16 +209,6 @@ export class SubtreeUpdater {
     const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
     const { proof } = await this.prover.proveSubtreeUpdate(inputs);
     return proof;
-  }
-
-  private async shouldGenProof(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-    const isCommittedLocally = await this.subtreeIsCommitted(subtreeIndex);
-
-    if (isCommittedLocally) {
-      return false;
-    }
-
-    return !(await this.walletContract.pastRoots(newRoot));
   }
 
   private applyBatch(batch: (Note | bigint)[]): void {
