@@ -258,12 +258,10 @@ export class SubtreeUpdater {
 
       const insertion = SubtreeUpdater.parseInsertion(value);
       this.insertions.push(insertion);
-      this.tryMakeBatches();
+      const madeBatch = this.tryMakeBatches();
 
-      for (const { subtreeIndex } of this.batches) {
-        if (await this.subtreeIsCommitted(subtreeIndex)) {
-          this.batches.shift();
-        }
+      if (madeBatch && await this.subtreeIsCommitted(this.batches[0].subtreeIndex)) {
+        this.batches.shift();
       }
     }
   }
