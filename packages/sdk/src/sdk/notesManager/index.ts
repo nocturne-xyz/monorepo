@@ -86,6 +86,9 @@ export abstract class NotesManager {
         asset,
         id
       );
+
+      // Check commitment against note, as malicious user could post incorrectly
+      // encrypted note
       if (
         newNote.value > 0n &&
         NoteTrait.toCommitment(newNote) == newNoteCommitment
