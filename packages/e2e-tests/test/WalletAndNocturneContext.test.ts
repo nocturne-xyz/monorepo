@@ -18,10 +18,11 @@ import {
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
-  MockSubtreeUpdateProver,
+  query,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
@@ -135,6 +136,18 @@ describe("Wallet", async () => {
 
     console.log("Process bundle");
     await wallet.processBundle(bundle);
+
+    console.log("Check for OperationProcessed event");
+    const latestBlock = await ethers.provider.getBlockNumber();
+    const events: OperationProcessedEvent[] = await query(
+      wallet,
+      wallet.filters.OperationProcessed(),
+      0,
+      latestBlock
+    );
+    expect(events.length).to.equal(1);
+    expect(events[0].args.opSuccess).to.equal(true);
+    expect(events[0].args.callSuccesses[0]).to.equal(true);
 
     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(800n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(50n);
