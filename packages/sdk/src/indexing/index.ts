@@ -1,2 +1,2 @@
-export * from "./treeInsertions";
+export * from "./tree";
 export * from "./notes";

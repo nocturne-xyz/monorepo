@@ -67,18 +67,6 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     return server;
   }
 
-  //@ts-ignore
-  function getPrivateServerState(): [any, any, any] {
-    //@ts-ignore
-    const root = server.updater.tree.root();
-    //@ts-ignore
-    const nextBlockToIndex = server.updater.nextBlockToIndex;
-    //@ts-ignore
-    const insertionIndex = server.updater.index;
-
-    return [root, nextBlockToIndex, insertionIndex];
-  }
-
   afterEach(async () => {
     await db.clear();
     await server.stop();
@@ -102,16 +90,25 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     await sleep(2100);
     await server.stop();
 
-    const [root, nextBlockToIndex, insertionIndex] = getPrivateServerState();
+    const root = server.updater.tree.root();
+    const nextBlockToIndex = server.updater.nextBlockToIndex;
+    const insertionIndex = server.updater.index;
+    const insertions = server.updater.insertions;
 
+    // simulate restrart
+    // init() will recover its state from DB
     server = newServer();
     await server.init();
 
-    const [recoveredRoot, recoveredNextBlockToIndex, recoveredInsertionIndex] =
-      getPrivateServerState();
+    const recoveredRoot = server.updater.tree.root();
+    const recoveredNextBlockToIndex = server.updater.nextBlockToIndex;
+    const recoveredInsertionIndex = server.updater.index;
+    const recoveredInsertions = server.updater.insertions;
+
     expect(recoveredRoot).to.equal(root);
     expect(recoveredNextBlockToIndex).to.equal(nextBlockToIndex);
     expect(recoveredInsertionIndex).to.equal(insertionIndex);
+    expect(recoveredInsertions).to.deep.equal(insertions);
   });
 });
 

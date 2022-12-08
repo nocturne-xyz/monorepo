@@ -62,6 +62,7 @@ describe("Wallet", async () => {
   async function applySubtreeUpdate() {
     await updater.fillBatch();
     await updater.pollInsertions();
+    await updater.tryGenAndSubmitProofs();
   }
 
   afterEach(async () => {

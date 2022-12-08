@@ -1,16 +1,24 @@
-import { BaseProof, BinaryPoseidonTree, packToSolidityProof, SubtreeUpdateProver, toJSON } from "@nocturne-xyz/sdk";
+import {
+  BaseProof,
+  BinaryPoseidonTree,
+  packToSolidityProof,
+  SubtreeUpdateProver,
+  toJSON,
+  fetchInsertions,
+  fetchSubtreeUpdateCommits,
+  Note,
+  NoteTrait,
+} from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from 'lmdb';
 import { Wallet } from "@nocturne-xyz/contracts";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
-import { NoteTrait, Note } from "@nocturne-xyz/sdk";
-import { fetchInsertions } from "@nocturne-xyz/sdk";
 
 export { SubtreeUpdateServer } from "./server";
 
-
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
-const INSERTION_PREFIX = "TREE_INSERTION";
+const INSERTION_PREFIX = "TREE_INSERTION_";
+const COMMIT_PREFIX = "COMMIT_";
 
 function numberToStringPadded(num: number, targetLen: number): string {
   let res = num.toString();
@@ -25,12 +33,12 @@ function numberToStringPadded(num: number, targetLen: number): string {
 
 function insertionKey(idx: number) {
   // make the keys lexicographically ordered so that we can iterate over them
-  return `${INSERTION_PREFIX}-${numberToStringPadded(idx, 64)}`;
+  return `${INSERTION_PREFIX}${numberToStringPadded(idx, 64)}`;
 }
 
 function commitKey(batchIdx: number) {
   // make the keys lexicographically ordered so that we can iterate over them
-  return `${INSERTION_PREFIX}-COMMIT-${numberToStringPadded(batchIdx, 64)}`;
+  return `${COMMIT_PREFIX}${numberToStringPadded(batchIdx, 64)}`;
 }
 
 export interface UpdaterParams {
@@ -39,50 +47,31 @@ export interface UpdaterParams {
 }
 
 export interface SubtreeUpdateSubmitter {
-  subtreeIsCommitted: (subtreeIndex: number, newRoot: bigint) => Promise<boolean>;
-  submitProof: (proof: BaseProof, newRoot: bigint, subtreeIndex: number) => Promise<void>;
-  dropDB: () => Promise<void>;
+  submitProof (proof: BaseProof, newRoot: bigint, subtreeIndex: number): Promise<void>;
+  dropDB(): Promise<void>;
 }
 
 // Default implementation of `SubtreeUpdateSubmitter` that just sits there and waits
 // for the TX to confirm.
 export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   walletContract: Wallet;
-  db: Database<string, string>;
 
-  constructor(walletContract: Wallet, rootDB: RootDatabase) {
+  constructor(walletContract: Wallet) {
     this.walletContract = walletContract;
-    this.db = rootDB.openDB<string, string>({ name: "comitted-batches" });
   }
 
-  async subtreeIsCommitted(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-    const isCommitted = await this.db.get(commitKey(subtreeIndex));
-    if (isCommitted === "true") {
-      return true;
-    }
-
-    return await this.walletContract.pastRoots(newRoot);
-  }
-
-  async submitProof(proof: BaseProof, newRoot: bigint, subtreeIndex: number): Promise<void> {
+  async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
-    const tx = await this.walletContract.applySubtreeUpdate(newRoot, solidityProof);
-
-    try {
-      await tx.wait();
-      await this.db.put(commitKey(subtreeIndex), "true");
-    } catch (err: any) {
-      if (err.toString().includes("newRoot already a past root")) {
-        await this.db.put(commitKey(subtreeIndex), "true");
-      } else {
-        throw err;
-      }
-    }
+    await this.walletContract.applySubtreeUpdate(newRoot, solidityProof);
   }
 
-  async dropDB(): Promise<void> {
-    await this.db.drop();
-  }
+  async dropDB(): Promise<void> {}
+}
+
+interface SubtreeUpdateBatch {
+  batch: (Note | bigint)[];
+  newRoot: bigint;
+  subtreeIndex: number;
 }
 
 export class SubtreeUpdater {
@@ -92,27 +81,34 @@ export class SubtreeUpdater {
   private submitter: SubtreeUpdateSubmitter;
 
   private insertions: (Note | bigint)[];
+  private batches: SubtreeUpdateBatch[];
   private tree: BinaryPoseidonTree;
-  private nextBlockToIndex?: number;
-  private index?: number;
 
-  constructor(walletContract: Wallet, rootDB: RootDatabase, prover: SubtreeUpdateProver, submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract, rootDB)) {
+  constructor(walletContract: Wallet, rootDB: RootDatabase, prover: SubtreeUpdateProver, submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
     this.prover = prover;
 
     this.insertions = [];
+    this.batches = [];
     this.tree = new BinaryPoseidonTree();
-    this.nextBlockToIndex = undefined;
-    this.index = undefined;
 
     this.submitter = submitter;
   }
 
   public async init(): Promise<void> {
-    this.index = await this.getNextInsertionIndex();
-    this.nextBlockToIndex = await this.getNextBlockToIndex();
     await this.recoverPersisedState();
+  }
+  
+  public async tryGenAndSubmitProofs(): Promise<void> {
+    for (const { batch, newRoot, subtreeIndex } of this.batches) {
+      if (await this.shouldGenProof(subtreeIndex, newRoot)) {
+        const proof = await this.genProof(batch, subtreeIndex);
+        await this.submitter.submitProof(proof, newRoot, subtreeIndex);
+      }
+    }
+
+    this.batches = [];
   }
 
   // return true if at least one batch was filled 
@@ -123,7 +119,10 @@ export class SubtreeUpdater {
       return false;
     }
 
-    const newInsertions = await fetchInsertions(this.walletContract, nextBlockToIndex, currentBlockNumber);
+    const [newInsertions, newCommits] = await Promise.all([
+      fetchInsertions(this.walletContract, nextBlockToIndex, currentBlockNumber),
+      fetchSubtreeUpdateCommits(this.walletContract, nextBlockToIndex, currentBlockNumber),
+    ]);
 
     const index = await this.getNextInsertionIndex();
     await this.db.transaction(
@@ -133,16 +132,22 @@ export class SubtreeUpdater {
           this.db.put(insertionKey(keyIndex), toJSON(insertion));
           keyIndex += 1;
         }
+
+        for (const { subtreeIndex } of newCommits) {
+          this.db.put(commitKey(subtreeIndex), "true");
+        }
+
         this.db.put(NEXT_INSERTION_INDEX_KEY, (index + newInsertions.length).toString());
         this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
       }
     );
 
     this.insertions.push(...newInsertions);
-    this.nextBlockToIndex = currentBlockNumber + 1;
-    this.index = (this.index ?? 0) + newInsertions.length;
-    
-    return await this.tryGenAndSubmitProof();
+
+    const filledBatch = this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE;
+    this.tryMakeBatches();
+
+    return filledBatch;
   }
 
   public async fillBatch(): Promise<void> {
@@ -154,22 +159,40 @@ export class SubtreeUpdater {
     await this.db.drop();
   }
 
-  private async getNextBlockToIndex(): Promise<number> {
-    if (this.nextBlockToIndex === undefined) {
-      const nextBlockToIndexStr = (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
-      this.nextBlockToIndex = parseInt(nextBlockToIndexStr);
+  private async subtreeIsCommitted(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
+    const isCommitted = await this.db.get(commitKey(subtreeIndex));
+    if (isCommitted === "true") {
+      return true;
     }
 
-    return this.nextBlockToIndex;
+    return await this.walletContract.pastRoots(newRoot);
+  }
+
+  private tryMakeBatches() {
+    while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
+      const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
+      this.applyBatch(batch);
+
+      const subtreeIndex = this.tree.count - batch.length;
+      const newRoot = this.tree.root();
+      this.batches.push({
+        batch,
+        newRoot,
+        subtreeIndex,
+      });
+
+      this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+    }
+  }
+
+  private async getNextBlockToIndex(): Promise<number> {
+    const nextBlockToIndexStr = (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
+    return parseInt(nextBlockToIndexStr);
   }
 
   private async getNextInsertionIndex(): Promise<number> {
-    if (this.index === undefined) {
-      const indexStrs = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
-      this.index = parseInt(indexStrs);
-    }
-
-    return this.index;
+    const indexStrs = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
+    return parseInt(indexStrs);
   }
 
   private async genProof(batch: (Note | bigint)[], subtreeIndex: number): Promise<BaseProof> {
@@ -180,7 +203,7 @@ export class SubtreeUpdater {
   }
 
   private async shouldGenProof(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-      return !(await this.submitter.subtreeIsCommitted(subtreeIndex, newRoot));
+      return !(await this.subtreeIsCommitted(subtreeIndex, newRoot));
   }
 
   private applyBatch(batch: (Note | bigint)[]): void {
@@ -194,25 +217,18 @@ export class SubtreeUpdater {
     }
   }
 
-  // returns true if at least one batch was filled 
-  private async tryGenAndSubmitProof(): Promise<boolean> {
-    let filledBatch = false;
-    while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
-      const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
-      this.applyBatch(batch);
-
-      // only generate / submit proof if the batch is not already committed
-      const subtreeIndex = this.tree.count - batch.length;
-      if (await this.shouldGenProof(subtreeIndex, this.tree.root())) {
-        const proof = await this.genProof(batch, subtreeIndex);
-        await this.submitter.submitProof(proof, this.tree.root(), subtreeIndex);
+  private static parseInsertion(value: string): Note | bigint {
+      const insertion = JSON.parse(value);
+      if (typeof insertion === "string") {
+        // it's a commitment - turn into a bigint
+        return BigInt(insertion);
+      } else if (typeof insertion === "object") {
+        // it's a note - push the object as-is
+        return NoteTrait.fromJSON(insertion);
+      } else {
+        // TODO: can remove this once DB wrapper is added
+        throw new Error("invalid insertion type read from DB");
       }
-
-      this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
-      filledBatch = true;
-    }
-
-    return filledBatch;
   }
 
   private async recoverPersisedState(): Promise<void> {
@@ -229,27 +245,9 @@ export class SubtreeUpdater {
         throw new Error(`DB entry not found: ${key}`);
       }
 
-      const insertion = JSON.parse(value);
-      if (typeof insertion === "string") {
-        // it's a commitment - turn into a bigint
-        this.insertions.push(BigInt(insertion));
-      } else if (typeof insertion === "object") {
-        // it's a note - push the object as-is
-        this.insertions.push(NoteTrait.fromJSON(insertion));
-      } else {
-        // TODO: can remove this once DB wrapper is added
-        throw new Error("invalid insertion type read from DB");
-      }
-
-      if (this.insertions.length === BinaryPoseidonTree.BATCH_SIZE) {
-        const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
-        this.applyBatch(batch);
-
-        const subtreeIndex = this.tree.count - batch.length;
-        if (await this.submitter.subtreeIsCommitted(subtreeIndex, this.tree.root())) {
-          this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
-        }
-      }
+      const insertion = SubtreeUpdater.parseInsertion(value);
+      this.insertions.push(insertion);
+      this.tryMakeBatches();
     }
   }
 }

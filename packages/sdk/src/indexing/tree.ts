@@ -2,6 +2,7 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import {
   InsertNoteCommitmentsEvent,
   InsertNotesEvent,
+  SubtreeUpdateEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
@@ -84,4 +85,22 @@ export async function fetchInsertions(
       a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx
   );
   return insertions.map(({ insertion }) => insertion);
+}
+
+export interface SubtreeUpdateCommit {
+  newRoot: bigint;
+  subtreeIndex: number;
+}
+
+export async function fetchSubtreeUpdateCommits(contract: Wallet, from: number, to: number): Promise<SubtreeUpdateCommit[]> {
+  const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
+  const events: SubtreeUpdateEvent[] = await query(contract, subtreeUpdateEventsFilter, from, to);
+
+  const eventValues = events.map(event => event.args);
+  eventValues.sort((a, b) => a.subtreeIndex.toNumber() - b.subtreeIndex.toNumber());
+
+  return eventValues.map(event => ({
+    newRoot: event.newRoot.toBigInt(),
+    subtreeIndex: event.subtreeIndex.toNumber(),
+  }));
 }

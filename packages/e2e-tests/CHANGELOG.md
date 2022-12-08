@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add e2e-test for standalone `SubtreeUpdateServer`
 - Modify e2e-test to use `SubtreeUpdater`
 - Modified e2e-test to use joinsplit
 - Rename all "flax" instances to "nocturne"
