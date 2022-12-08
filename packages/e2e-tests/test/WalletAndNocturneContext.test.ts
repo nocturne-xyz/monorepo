@@ -136,7 +136,7 @@ describe("Wallet", async () => {
     );
     const joinSplitRequest: JoinSplitRequest = {
       asset,
-      value: ALICE_UNWRAP_VAL,
+      unwrapValue: ALICE_UNWRAP_VAL,
       paymentIntent: {
         receiver: nocturneContextBob.signer.canonAddress,
         value: ALICE_TO_BOB_PRIV_VAL,

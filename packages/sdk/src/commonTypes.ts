@@ -33,13 +33,7 @@ export interface AssetWithBalance {
 
 export interface UnwrapRequest {
   asset: Asset;
-  value: bigint;
-}
-
-export interface PaymentRequest {
-  asset: Asset;
-  receiver: CanonAddress;
-  value: bigint;
+  unwrapValue: bigint;
 }
 
 export interface PaymentIntent {
@@ -47,9 +41,8 @@ export interface PaymentIntent {
   value: bigint;
 }
 
-export interface JoinSplitRequest {
-  asset: Asset;
-  value: bigint; // public spend
+// A joinsplit request is an unwrapRequest plus an optional payment
+export interface JoinSplitRequest extends UnwrapRequest {
   paymentIntent?: PaymentIntent;
 }
 

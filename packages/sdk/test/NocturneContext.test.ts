@@ -123,7 +123,7 @@ describe("NocturneContext", () => {
     // Request 1000 tokens, more than user owns
     const assetRequest1000: JoinSplitRequest = {
       asset,
-      value: 1000n,
+      unwrapValue: 1000n,
     };
     try {
       await nocturneContext.ensureMinimumForAssetRequest(assetRequest1000);
@@ -137,16 +137,29 @@ describe("NocturneContext", () => {
     // Request 20 tokens, consume smallest note
     const assetRequest5: JoinSplitRequest = {
       asset,
-      value: 5n,
+      unwrapValue: 5n,
     };
     const minimumFor5 = await nocturneContext.gatherMinimumNotes(assetRequest5);
     expect(minimumFor5.length).to.equal(1);
     expect(minimumFor5[0].value).to.equal(10n);
 
+    // Request 70 tokens
+    const assetRequest70: JoinSplitRequest = {
+      asset,
+      unwrapValue: 70n,
+    };
+    const minimumFor70 = await nocturneContext.gatherMinimumNotes(
+      assetRequest70
+    );
+
+    expect(minimumFor70.length).to.equal(2);
+    expect(minimumFor70[1].value).to.equal(50n);
+    expect(minimumFor70[0].value).to.equal(25n);
+
     // Request 80 tokens, consume next smallest two notes
     const assetRequest80: JoinSplitRequest = {
       asset,
-      value: 80n,
+      unwrapValue: 80n,
     };
     const minimumFor80 = await nocturneContext.gatherMinimumNotes(
       assetRequest80
@@ -162,7 +175,7 @@ describe("NocturneContext", () => {
     // Request 40 tokens, should generate two joinsplits
     const assetRequest: JoinSplitRequest = {
       asset,
-      value: 40n,
+      unwrapValue: 40n,
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
       joinSplitRequests: [assetRequest],
@@ -175,7 +188,41 @@ describe("NocturneContext", () => {
         },
       ],
     });
-    expect(preProofOp.joinSplitTxs.length).to.equal(2);
+    expect(preProofOp.joinSplitTxs.length).to.equal(1);
+  });
+
+  it("Generate PreSignJoinSplitTxs from JoinSplitRequest", async () => {
+    const priv = NocturnePrivKey.genPriv();
+    const addr = priv.toCanonAddress();
+    const preSignJoinSplitTxs = await nocturneContext.genPreSignJoinSplitTxs({
+      asset,
+      unwrapValue: 5n,
+      paymentIntent: {
+        receiver: addr,
+        value: 6n,
+      },
+    });
+    expect(preSignJoinSplitTxs.length).to.equal(1);
+
+    const preSignJoinSplitTxs2 = await nocturneContext.genPreSignJoinSplitTxs({
+      asset,
+      unwrapValue: 10n,
+      paymentIntent: {
+        receiver: addr,
+        value: 1n,
+      },
+    });
+    expect(preSignJoinSplitTxs2.length).to.equal(1);
+
+    const preSignJoinSplitTxs3 = await nocturneContext.genPreSignJoinSplitTxs({
+      asset,
+      unwrapValue: 30n,
+      paymentIntent: {
+        receiver: addr,
+        value: 30n,
+      },
+    });
+    expect(preSignJoinSplitTxs3.length).to.equal(1);
   });
 
   it("Generates PreProofOpeartion from a payment request", async () => {
@@ -187,11 +234,10 @@ describe("NocturneContext", () => {
   });
 
   it("Generates PreProofOpeartion with a opeartion request", async () => {
-    // Request to unwrap 5 tokens and pay 5 tokens
-    // Should fit into one joinsplit
+    // Request to unwraps 15 tokens
     const assetRequest: JoinSplitRequest = {
       asset,
-      value: 15n,
+      unwrapValue: 15n,
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
       joinSplitRequests: [assetRequest],
@@ -205,32 +251,5 @@ describe("NocturneContext", () => {
       ],
     });
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
-  });
-
-  it("Generates PreProofOpeartion with a opeartion request with paymentIntent", async () => {
-    const priv = NocturnePrivKey.genPriv();
-    const addr = priv.toCanonAddress();
-    // Request to unwrap 5 tokens and pay 10 tokens
-    // Should fit into two joinsplits
-    const assetRequest: JoinSplitRequest = {
-      asset,
-      value: 40n,
-      paymentIntent: {
-        receiver: addr,
-        value: 10n,
-      },
-    };
-    const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      joinSplitRequests: [assetRequest],
-      refundTokens: ["0x1245"],
-      actions: [
-        {
-          contractAddress: "0x1111",
-          encodedFunction:
-            "0x6d6168616d000000000000000000000000000000000000000000000000000000",
-        },
-      ],
-    });
-    expect(preProofOp.joinSplitTxs.length).to.equal(2);
   });
 });
