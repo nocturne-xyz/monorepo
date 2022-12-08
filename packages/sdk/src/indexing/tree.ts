@@ -107,13 +107,14 @@ export async function fetchSubtreeUpdateCommits(
     to
   );
 
-
   events = events.sort(
     (a, b) =>
-      a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex|| a.logIndex - b.logIndex
+      a.blockNumber - b.blockNumber ||
+      a.transactionIndex - b.transactionIndex ||
+      a.logIndex - b.logIndex
   );
 
-  return events.map(({ args: { newRoot, subtreeIndex} }) => ({
+  return events.map(({ args: { newRoot, subtreeIndex } }) => ({
     newRoot: newRoot.toBigInt(),
     subtreeIndex: subtreeIndex.toNumber(),
   }));

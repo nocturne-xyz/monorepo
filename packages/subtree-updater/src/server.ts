@@ -37,7 +37,7 @@ export class SubtreeUpdateServer {
         }
 
         try {
-          const filledBatch = await this.updater.pollInsertions();
+          const filledBatch = await this.updater.update();
           if (filledBatch) {
             await this.updater.tryGenAndSubmitProofs();
           }
