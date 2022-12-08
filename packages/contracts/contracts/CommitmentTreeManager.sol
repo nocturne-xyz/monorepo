@@ -49,7 +49,7 @@ contract CommitmentTreeManager {
 
     function _handleJoinSplit(
         IWallet.JoinSplitTransaction calldata joinSplitTx,
-        bytes32 operationHash
+        uint256 operationDigest
     ) internal {
         require(
             pastRoots[joinSplitTx.commitmentTreeRoot],
@@ -63,9 +63,6 @@ contract CommitmentTreeManager {
             !nullifierSet[joinSplitTx.nullifierB],
             "Nullifier B already used"
         );
-
-        uint256 operationDigest = uint256(operationHash) %
-            Utils.SNARK_SCALAR_FIELD;
 
         require(
             joinSplitVerifier.verifyProof(

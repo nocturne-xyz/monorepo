@@ -113,12 +113,12 @@ contract BalanceManager is
     function _handleAllSpends(
         IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
         IWallet.Tokens calldata tokens,
-        bytes32 operationHash
+        uint256 operationDigest
     ) internal {
         uint256 numSpendTxs = joinSplitTxs.length;
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            _handleJoinSplit(joinSplitTxs[i], operationHash);
+            _handleJoinSplit(joinSplitTxs[i], operationDigest);
             if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
                 balanceInfo.erc20Balances[
                     joinSplitTxs[i].asset
