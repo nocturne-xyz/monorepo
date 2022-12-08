@@ -82,9 +82,16 @@ interface IWallet {
         uint256 gasLimit;
     }
 
+<<<<<<< HEAD
     struct OperationAndDigest {
         Operation operation;
         uint256 operationDigest;
+=======
+    struct OperationResult {
+        bool opSuccess;
+        bool[] callSuccesses;
+        bytes[] callResults;
+>>>>>>> eaab15c (feat(contracts): emit OperationProcessed event and test in wallet tests)
     }
 
     struct Action {
@@ -102,7 +109,7 @@ interface IWallet {
 
     function processBundle(
         Bundle calldata bundle
-    ) external returns (bool[] memory successes, bytes[][] memory results);
+    ) external returns (IWallet.OperationResult[] memory opResults);
 
     function batchDepositFunds(
         Deposit[] calldata deposits,
