@@ -38,6 +38,7 @@ export class SubtreeUpdateServer {
           resolve(undefined);
           return;
         }
+        
         try {
           const batchFilled = await this.updater.pollInsertions();
           if (!batchFilled) {
