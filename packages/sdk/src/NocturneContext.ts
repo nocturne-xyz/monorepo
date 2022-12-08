@@ -1,13 +1,11 @@
 import {
   JoinSplitRequest,
-  UnwrapRequest,
-  Address,
   Asset,
   AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
 } from "./commonTypes";
-import { Action, SpendAndRefundTokens } from "./contract/types";
+import { SpendAndRefundTokens } from "./contract/types";
 import {
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
