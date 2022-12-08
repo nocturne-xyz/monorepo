@@ -141,7 +141,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token,
         uint256 reserveAmount,
         uint256 depositAmount
-    ) public {
+    ) internal {
         token.reserveTokens(recipient, reserveAmount);
 
         vm.prank(recipient);
@@ -210,6 +210,81 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         wallet.applySubtreeUpdate(root, dummyProof());
     }
 
+    function formatTransferOperation(
+        SimpleERC20Token token,
+        address recipient,
+        uint256 amount
+    ) internal returns (IWallet.Operation memory op) {
+        IWallet.Action memory transferAction = IWallet.Action({
+            contractAddress: address(token),
+            encodedFunction: abi.encodeWithSelector(
+                token.transfer.selector,
+                recipient,
+                amount
+            )
+        });
+
+        uint256 root = wallet.root();
+        IWallet.NoteTransmission memory newNoteATransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
+        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
+            .NoteTransmission({
+                owner: IWallet.NocturneAddress({
+                    h1X: uint256(123),
+                    h1Y: uint256(123),
+                    h2X: uint256(123),
+                    h2Y: uint256(123)
+                }),
+                encappedKey: uint256(111),
+                encryptedNonce: uint256(111),
+                encryptedValue: uint256(111)
+            });
+        IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
+            .JoinSplitTransaction({
+                commitmentTreeRoot: root,
+                nullifierA: uint256(182),
+                nullifierB: uint256(183),
+                newNoteACommitment: uint256(1038),
+                newNoteATransmission: newNoteATransmission,
+                newNoteBCommitment: uint256(1032),
+                newNoteBTransmission: newNoteBTransmission,
+                proof: dummyProof(),
+                asset: address(token),
+                id: ERC20_ID,
+                publicSpend: uint256(50)
+            });
+
+        IWallet.Tokens memory tokens = IWallet.Tokens({
+            spendTokens: new address[](1),
+            refundTokens: new address[](1)
+        });
+        tokens.spendTokens[0] = address(token);
+        tokens.refundTokens[0] = address(token);
+
+        IWallet.JoinSplitTransaction[]
+            memory joinSplitTxs = new IWallet.JoinSplitTransaction[](1);
+        joinSplitTxs[0] = joinSplitTx;
+        IWallet.Action[] memory actions = new IWallet.Action[](1);
+        actions[0] = transferAction;
+        op = IWallet.Operation({
+            joinSplitTxs: joinSplitTxs,
+            refundAddr: defaultNocturneAddress(),
+            tokens: tokens,
+            actions: actions,
+            gasLimit: DEFAULT_GAS_LIMIT
+        });
+    }
+
     function testPoseidon() public {
         console.log(
             new PoseidonHasherT3(poseidonT3).hash([uint256(0), uint256(1)])
@@ -235,76 +310,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 1000, 800);
 
-        // Create transaction to withdraw 100 token from vault and transfer
-        // 50 to bob
-        IWallet.Action memory transferAction = IWallet.Action({
-            contractAddress: address(token),
-            encodedFunction: abi.encodeWithSelector(
-                token.transfer.selector,
-                BOB,
-                50
-            )
-        });
-
-        uint256 root = wallet.root();
-        IWallet.NoteTransmission memory newNoteATransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
-            .JoinSplitTransaction({
-                commitmentTreeRoot: root,
-                nullifierA: uint256(182),
-                nullifierB: uint256(183),
-                newNoteACommitment: uint256(1038),
-                newNoteATransmission: newNoteATransmission,
-                newNoteBCommitment: uint256(1032),
-                newNoteBTransmission: newNoteBTransmission,
-                proof: dummyProof(),
-                asset: address(token),
-                id: ERC20_ID,
-                publicSpend: uint256(50)
-            });
-
-        IWallet.Tokens memory tokens = IWallet.Tokens({
-            spendTokens: new address[](1),
-            refundTokens: new address[](1)
-        });
-        tokens.spendTokens[0] = address(token);
-        tokens.refundTokens[0] = address(token);
-
-        IWallet.JoinSplitTransaction[]
-            memory joinSplitTxs = new IWallet.JoinSplitTransaction[](1);
-        joinSplitTxs[0] = joinSplitTx;
-        IWallet.Action[] memory actions = new IWallet.Action[](1);
-        actions[0] = transferAction;
-        IWallet.Operation memory op = IWallet.Operation({
-            joinSplitTxs: joinSplitTxs,
-            refundAddr: defaultNocturneAddress(),
-            tokens: tokens,
-            actions: actions,
-            gasLimit: DEFAULT_GAS_LIMIT
-        });
+        // Create operation to transfer 50 tokens to bob
+        IWallet.Operation memory op = formatTransferOperation(token, BOB, 50);
         IWallet.Operation[] memory ops = new IWallet.Operation[](1);
         ops[0] = op;
         IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
@@ -318,11 +325,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // check all values
         vm.expectEmit(true, true, false, true);
         emit JoinSplit(
-            joinSplitTx.nullifierA,
-            joinSplitTx.nullifierB,
+            op.joinSplitTxs[0].nullifierA,
+            op.joinSplitTxs[0].nullifierB,
             16, // newNoteAIndex
             17, // newNoteBIndex
-            joinSplitTx
+            op.joinSplitTxs[0]
         );
 
         (bool[] memory successes, bytes[][] memory results) = wallet
@@ -345,74 +352,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Create transaction to withdraw 1500 tokens and send to Bob (more than
         // alice has)
-        IWallet.Action memory transferAction = IWallet.Action({
-            contractAddress: address(token),
-            encodedFunction: abi.encodeWithSelector(
-                token.transfer.selector,
-                BOB,
-                1500
-            )
-        });
-
-        uint256 root = wallet.root();
-        IWallet.NoteTransmission memory newNoteATransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
-            .JoinSplitTransaction({
-                commitmentTreeRoot: root,
-                nullifierA: uint256(182),
-                nullifierB: uint256(183),
-                newNoteACommitment: uint256(1038),
-                newNoteATransmission: newNoteATransmission,
-                newNoteBCommitment: uint256(1032),
-                newNoteBTransmission: newNoteBTransmission,
-                proof: dummyProof(),
-                asset: address(token),
-                id: ERC20_ID,
-                publicSpend: uint256(50)
-            });
-
-        IWallet.Tokens memory tokens = IWallet.Tokens({
-            spendTokens: new address[](1),
-            refundTokens: new address[](1)
-        });
-        tokens.spendTokens[0] = address(token);
-        tokens.refundTokens[0] = address(token);
-
-        IWallet.JoinSplitTransaction[]
-            memory joinSplitTxs = new IWallet.JoinSplitTransaction[](1);
-        joinSplitTxs[0] = joinSplitTx;
-        IWallet.Action[] memory actions = new IWallet.Action[](1);
-        actions[0] = transferAction;
-        IWallet.Operation memory op = IWallet.Operation({
-            joinSplitTxs: joinSplitTxs,
-            refundAddr: defaultNocturneAddress(),
-            tokens: tokens,
-            actions: actions,
-            gasLimit: DEFAULT_GAS_LIMIT
-        });
+        IWallet.Operation memory op = formatTransferOperation(token, BOB, 1500);
         IWallet.Operation[] memory ops = new IWallet.Operation[](1);
         ops[0] = op;
         IWallet.Bundle memory bundle = IWallet.Bundle({operations: ops});
