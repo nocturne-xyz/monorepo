@@ -171,7 +171,7 @@ export class NocturneContext {
    * Ensure user has balances to fullfill all asset requests in
    * `operationRequest`. Throws error if any asset request exceeds owned balance.
    *
-   * @param unwrapAndPayRequests requests
+   * @param joinSplitRequests requests
    */
   async ensureMinimumForOperationRequest({
     joinSplitRequests,
@@ -441,22 +441,22 @@ export class NocturneContext {
   }
 
   /**
-   * Ensure user has balances to fullfill `unwrapAndPayRequest`. Throws error if
+   * Ensure user has balances to fullfill `joinSplitRequest`. Throws error if
    * attempted request exceeds owned balance.
    *
-   * @param unwrapAndPayRequest request
+   * @param joinSplitRequest request
    */
   async ensureMinimumForAssetRequest(
-    unwrapAndPayRequest: JoinSplitRequest
+    joinSplitRequest: JoinSplitRequest
   ): Promise<void> {
-    let totalVal = unwrapAndPayRequest.value;
-    if (unwrapAndPayRequest.paymentIntent !== undefined) {
-      totalVal += unwrapAndPayRequest.paymentIntent.value;
+    let totalVal = joinSplitRequest.value;
+    if (joinSplitRequest.paymentIntent !== undefined) {
+      totalVal += joinSplitRequest.paymentIntent.value;
     }
-    const balance = await this.getAssetBalance(unwrapAndPayRequest.asset);
+    const balance = await this.getAssetBalance(joinSplitRequest.asset);
     if (balance < totalVal) {
       throw new Error(
-        `Attempted to spend more funds than owned. Address: ${unwrapAndPayRequest.asset.address}. Attempted: ${unwrapAndPayRequest.value}. Owned: ${balance}.`
+        `Attempted to spend more funds than owned. Address: ${joinSplitRequest.asset.address}. Attempted: ${joinSplitRequest.value}. Owned: ${balance}.`
       );
     }
   }
@@ -466,19 +466,19 @@ export class NocturneContext {
    * list is sorted from smallest to largest. The total value of returned notes
    * could exceed the requested amount.
    *
-   * @param unwrapAndPayRequest Asset request
+   * @param joinSplitRequest request
    * @return a list of included notes to spend the total value.
    */
   async gatherMinimumNotes(
-    unwrapAndPayRequest: JoinSplitRequest
+    joinSplitRequest: JoinSplitRequest
   ): Promise<IncludedNote[]> {
-    this.ensureMinimumForAssetRequest(unwrapAndPayRequest);
-    let totalVal = unwrapAndPayRequest.value;
-    if (unwrapAndPayRequest.paymentIntent !== undefined) {
-      totalVal += unwrapAndPayRequest.paymentIntent.value;
+    this.ensureMinimumForAssetRequest(joinSplitRequest);
+    let totalVal = joinSplitRequest.value;
+    if (joinSplitRequest.paymentIntent !== undefined) {
+      totalVal += joinSplitRequest.paymentIntent.value;
     }
 
-    const notes = await this.db.getNotesFor(unwrapAndPayRequest.asset);
+    const notes = await this.db.getNotesFor(joinSplitRequest.asset);
     const sortedNotes = [...notes].sort((a, b) => {
       return Number(a.value - b.value);
     });

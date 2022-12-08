@@ -134,7 +134,7 @@ describe("Wallet", async () => {
     console.log(
       "Create asset request to public spend 20 tokens and send 30 to Bob privately."
     );
-    const unwrapAndPayRequest: JoinSplitRequest = {
+    const joinSplitRequest: JoinSplitRequest = {
       asset,
       value: ALICE_UNWRAP_VAL,
       paymentIntent: {
@@ -155,7 +155,7 @@ describe("Wallet", async () => {
       encodedFunction: encodedFunction,
     };
     const operationRequest: OperationRequest = {
-      unwrapAndPayRequests: [unwrapAndPayRequest],
+      joinSplitRequests: [joinSplitRequest],
       refundTokens,
       actions: [action],
     };

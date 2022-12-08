@@ -48,9 +48,9 @@ export class NocturneFrontendSDK {
         }
       );
 
-    const { unwrapAndPayRequests, refundTokens, actions } = operationRequest;
+    const { joinSplitRequests, refundTokens, actions } = operationRequest;
     const tokens: SpendAndRefundTokens = {
-      spendTokens: unwrapAndPayRequests.map((a) => a.asset.address),
+      spendTokens: joinSplitRequests.map((a) => a.asset.address),
       refundTokens,
     };
 
