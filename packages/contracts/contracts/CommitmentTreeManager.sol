@@ -47,6 +47,32 @@ contract CommitmentTreeManager {
         pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
+    function fillBatchWithZeros() external {
+        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+        uint256[] memory zeros = new uint256[](numToInsert);
+        _insertNoteCommitments(zeros);
+    }
+
+    function applySubtreeUpdate(
+        uint256 newRoot,
+        uint256[8] calldata proof
+    ) external {
+        merkle.applySubtreeUpdate(newRoot, proof);
+        pastRoots[newRoot] = true;
+    }
+
+    function root() public view returns (uint256) {
+        return merkle.getRoot();
+    }
+
+    function count() public view returns (uint256) {
+        return merkle.getCount();
+    }
+
+    function totalCount() public view returns (uint256) {
+        return merkle.getTotalCount();
+    }
+
     function _handleJoinSplit(
         IWallet.JoinSplitTransaction calldata joinSplitTx,
         uint256 operationDigest
@@ -94,7 +120,7 @@ contract CommitmentTreeManager {
         uint256[] memory noteCommitments = new uint256[](2);
         noteCommitments[0] = joinSplitTx.newNoteACommitment;
         noteCommitments[1] = joinSplitTx.newNoteBCommitment;
-        insertNoteCommitments(noteCommitments);
+        _insertNoteCommitments(noteCommitments);
 
         nullifierSet[joinSplitTx.nullifierA] = true;
         nullifierSet[joinSplitTx.nullifierB] = true;
@@ -108,52 +134,26 @@ contract CommitmentTreeManager {
         );
     }
 
-    function root() public view returns (uint256) {
-        return merkle.getRoot();
-    }
-
-    function count() public view returns (uint256) {
-        return merkle.getCount();
-    }
-
-    function totalCount() public view returns (uint256) {
-        return merkle.getTotalCount();
-    }
-
-    function insertNoteCommitment(uint256 nc) internal {
+    function _insertNoteCommitment(uint256 nc) internal {
         uint256[] memory ncs = new uint256[](1);
         ncs[0] = nc;
-        insertNoteCommitments(ncs);
+        _insertNoteCommitments(ncs);
     }
 
-    function insertNoteCommitments(uint256[] memory ncs) internal {
+    function _insertNoteCommitments(uint256[] memory ncs) internal {
         merkle.insertNoteCommitments(ncs);
         emit InsertNoteCommitments(ncs);
     }
 
-    function insertNote(IWallet.Note memory note) internal {
+    function _insertNote(IWallet.Note memory note) internal {
         IWallet.Note[] memory notes = new IWallet.Note[](1);
         notes[0] = note;
-        insertNotes(notes);
+        _insertNotes(notes);
     }
 
-    function insertNotes(IWallet.Note[] memory notes) internal {
+    function _insertNotes(IWallet.Note[] memory notes) internal {
         merkle.insertNotes(notes);
         emit InsertNotes(notes);
-    }
-
-    function fillBatchWithZeros() external {
-        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
-        uint256[] memory zeros = new uint256[](numToInsert);
-        insertNoteCommitments(zeros);
-    }
-
-    function applySubtreeUpdate(
-        uint256 newRoot,
-        uint256[8] calldata proof
-    ) external {
-        merkle.applySubtreeUpdate(newRoot, proof);
-        pastRoots[newRoot] = true;
     }
 
     function _handleRefund(
@@ -170,7 +170,7 @@ contract CommitmentTreeManager {
         note.id = id;
         note.value = value;
 
-        insertNote(note);
+        _insertNote(note);
 
         uint256 _nonce = nonce;
         nonce++;
