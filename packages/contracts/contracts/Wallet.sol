@@ -74,18 +74,18 @@ contract Wallet is IWallet, BalanceManager {
 
     function performOperation(
         Operation calldata op
-    ) external onlyThis returns (bool opSuccess, bytes[] memory results) {
+    ) external onlyThis returns (bool opSuccess, bytes[] memory callResults) {
         bytes32 operationHash = _hashOperation(op);
         _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
         opSuccess = true; // default to true, set false if any call fails
-        results = new bytes[](numActions);
+        callResults = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
             (bool success, bytes memory res) = _makeExternalCall(actions[i]);
 
-            results[i] = res;
+            callResults[i] = res;
             if (success == false) {
                 opSuccess = false;
             }
