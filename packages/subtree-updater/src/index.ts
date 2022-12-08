@@ -62,7 +62,17 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
 
   async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
-    await this.walletContract.applySubtreeUpdate(newRoot, solidityProof);
+    try {
+      const tx = await this.walletContract.applySubtreeUpdate(newRoot, solidityProof); 
+      await tx.wait();
+    } catch (err: any) {
+
+      // ignore errors that are due to duplicate submissions
+      // this can happen if there are multiple instances of subtree updaters running
+      if (!err.toString().includes("newRoot already a past root")) {
+        throw err;
+      }
+    }
   }
 
   async dropDB(): Promise<void> {}
@@ -155,16 +165,12 @@ export class SubtreeUpdater {
     await this.db.drop();
   }
 
-  private async subtreeIsCommitted(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-    const isCommitted = await this.db.get(commitKey(subtreeIndex));
-    if (isCommitted === "true") {
-      return true;
-    }
-
-    return await this.walletContract.pastRoots(newRoot);
+  private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
+    return await this.db.get(commitKey(subtreeIndex)) === "true";
   }
 
-  private tryMakeBatches() {
+  private tryMakeBatches(): boolean {
+    let madeBatch = false;
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
       this.applyBatch(batch);
@@ -178,7 +184,10 @@ export class SubtreeUpdater {
       });
 
       this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+      madeBatch = true;
     }
+
+    return madeBatch;
   }
 
   private async getNextBlockToIndex(): Promise<number> {
@@ -199,7 +208,13 @@ export class SubtreeUpdater {
   }
 
   private async shouldGenProof(subtreeIndex: number, newRoot: bigint): Promise<boolean> {
-      return !(await this.subtreeIsCommitted(subtreeIndex, newRoot));
+    const isCommittedLocally = await this.subtreeIsCommitted(subtreeIndex);
+
+    if (isCommittedLocally) {
+      return false;
+    }
+
+    return !(await this.walletContract.pastRoots(newRoot));
   }
 
   private applyBatch(batch: (Note | bigint)[]): void {
@@ -244,6 +259,12 @@ export class SubtreeUpdater {
       const insertion = SubtreeUpdater.parseInsertion(value);
       this.insertions.push(insertion);
       this.tryMakeBatches();
+
+      for (const { subtreeIndex } of this.batches) {
+        if (await this.subtreeIsCommitted(subtreeIndex)) {
+          this.batches.shift();
+        }
+      }
     }
   }
 }
