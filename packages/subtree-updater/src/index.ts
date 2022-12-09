@@ -75,7 +75,7 @@ export class SubtreeUpdater {
   }
 
   // return true if at least one batch was filled 
-  public async update(): Promise<boolean> {
+  public async pollInsertionsAndTryMakeBatch(): Promise<boolean> {
     const currentBlockNumber = await this.walletContract.provider.getBlockNumber();
     const nextBlockToIndex = await this.getNextBlockToIndex();
     if (nextBlockToIndex > currentBlockNumber) {
@@ -98,18 +98,17 @@ export class SubtreeUpdater {
           keyIndex += 1;
         }
 
-        if (lastCommit) {
+        if (lastCommit !== undefined) {
           this.db.put(LAST_COMMITTED_INDEX_KEY, lastCommit.subtreeIndex.toString());
         }
 
         this.db.put(NEXT_INSERTION_INDEX_KEY, (index + newInsertions.length).toString());
         this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
-
       }
     );
 
     this.insertions.push(...newInsertions);
-    if (lastCommit) {
+    if (lastCommit !== undefined) {
       this.pruneBatchesUpTo(lastCommit.subtreeIndex);
     }
 
@@ -207,11 +206,12 @@ export class SubtreeUpdater {
 
   private async recoverPersisedState(): Promise<void> {
     const nextInsertionIndex = await this.getNextInsertionIndex();
+    const lastCommitedIndex = await this.getLastCommittedIndex() ?? 0;
     if (nextInsertionIndex === 0) {
       return;
     }
 
-    const start = insertionKey(0);
+    const start = insertionKey(lastCommitedIndex);
     const end = insertionKey(nextInsertionIndex);
 
     for (const { key, value } of this.db.getRange({ start, end })) {
@@ -221,7 +221,8 @@ export class SubtreeUpdater {
 
       const insertion = SubtreeUpdater.parseInsertion(value);
       this.insertions.push(insertion);
-      await this.tryMakeBatches();
     }
+
+    await this.tryMakeBatches();
   }
 }

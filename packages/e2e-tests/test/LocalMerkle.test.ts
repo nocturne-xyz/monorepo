@@ -55,7 +55,7 @@ describe("LocalMerkle", async () => {
 
   async function applySubtreeUpdate() {
     await wallet.fillBatchWithZeros();
-    await updater.update();
+    await updater.pollInsertionsAndTryMakeBatch();
     await updater.tryGenAndSubmitProofs();
   }
 
