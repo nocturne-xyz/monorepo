@@ -58,12 +58,12 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                20895331361626691126383210576463289017004763505784994045648518310227048276839,
-                3360925106233175013558377300491845254186221044723334652859224064513155860756
+                11058274375939673914135651655973148518292938769896078273490559643684699521295,
+                20756119478359134777427669301054003966528457459501729206791797430347569979368
             ],
             [
-                11881497998498121446772515101586336634133781725055336933543277593587021904096,
-                14031388759444375835273255277991804267619553491072551689422617278107422479252
+                15359251180066783873261974948214906211946355314268171330918342415682583965671,
+                7857149754711395033794971646937494251878049406928919646595222852330490103495
             ]
         );
         vk.IC = new Pairing.G1Point[](5);
@@ -95,15 +95,15 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     }
 
     function verify(
-        uint256[] memory input,
+        uint[] memory input,
         Proof memory proof
-    ) internal view returns (uint256) {
+    ) internal view returns (uint) {
         uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
         VerifyingKey memory vk = verifyingKey();
         require(input.length + 1 == vk.IC.length, "verifier-bad-input");
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-        for (uint256 i = 0; i < input.length; i++) {
+        for (uint i = 0; i < input.length; i++) {
             require(
                 input[i] < snark_scalar_field,
                 "verifier-gte-snark-scalar-field"
@@ -131,17 +131,17 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
 
     /// @return r  bool true if proof is valid
     function verifyProof(
-        uint256[2] memory a,
-        uint256[2][2] memory b,
-        uint256[2] memory c,
-        uint256[4] memory input
+        uint[2] memory a,
+        uint[2][2] memory b,
+        uint[2] memory c,
+        uint[4] memory input
     ) public view override returns (bool r) {
         Proof memory proof;
         proof.A = Pairing.G1Point(a[0], a[1]);
         proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
         proof.C = Pairing.G1Point(c[0], c[1]);
-        uint256[] memory inputValues = new uint256[](input.length);
-        for (uint256 i = 0; i < input.length; i++) {
+        uint[] memory inputValues = new uint[](input.length);
+        for (uint i = 0; i < input.length; i++) {
             inputValues[i] = input[i];
         }
         if (verify(inputValues, proof) == 0) {

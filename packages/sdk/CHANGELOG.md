@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Add query function for `SubtreeUpdate` events
+- Pull out note / tree insertion fetching logic into `indexing` module
+- Add `indexing` module for code that fetches data from chain
+- Add interfaces for subtree update prover
 - Remove unnessary normalization of circuit values
 - Add context methods for ensuring min asset balance and reading all balances
 - Proving no longer takes files as function args (moved to local-prover class instantiation)

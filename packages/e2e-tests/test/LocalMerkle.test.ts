@@ -1,15 +1,18 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
+import { open } from "lmdb";
 import {
   SimpleERC20Token__factory,
   Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
+import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   BinaryPoseidonTree,
   NocturneContext,
   LocalMerkleProver,
   LocalObjectDB,
+  MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
@@ -24,6 +27,7 @@ describe("LocalMerkle", async () => {
   let localMerkle: LocalMerkleProver;
   let token: SimpleERC20Token;
   let nocturneContext: NocturneContext;
+  let updater: SubtreeUpdater;
 
   beforeEach(async () => {
     db = new LocalObjectDB({ localMerkle: true });
@@ -41,16 +45,23 @@ describe("LocalMerkle", async () => {
     db = nocturneSetup.db;
     nocturneContext = nocturneSetup.nocturneContext;
 
+    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
+    const prover = new MockSubtreeUpdateProver();
+    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    await updater.init();
+
     localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
   });
 
   async function applySubtreeUpdate() {
-    const root = localMerkle.root();
-    await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+    await wallet.fillBatchWithZeros();
+    await updater.pollInsertionsAndTryMakeBatch();
+    await updater.tryGenAndSubmitProofs();
   }
 
   afterEach(async () => {
-    db.clear();
+    await db.clear();
+    await updater.dropDB();
   });
 
   after(async () => {
@@ -76,15 +87,11 @@ describe("LocalMerkle", async () => {
     expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
     expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);
 
-    console.log("filling subtree");
-    await wallet.fillBatchWithZeros();
+    console.log("applying subtree update");
+    await applySubtreeUpdate();
 
     console.log("local merkle prover picks up the zeros");
     await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
-
-    console.log("Local merkle doesn't care when subtree update is applied");
-    await applySubtreeUpdate();
     expect(localMerkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
     expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
     expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);

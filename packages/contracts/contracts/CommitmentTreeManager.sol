@@ -41,6 +41,8 @@ contract CommitmentTreeManager {
 
     event InsertNotes(IWallet.Note[] notes);
 
+    event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
+
     constructor(address _joinSplitVerifier, address _subtreeUpdateVerifier) {
         merkle.initialize(_subtreeUpdateVerifier);
         joinSplitVerifier = IJoinSplitVerifier(_joinSplitVerifier);
@@ -155,8 +157,13 @@ contract CommitmentTreeManager {
         uint256 newRoot,
         uint256[8] calldata proof
     ) external {
+        require(!pastRoots[newRoot], "newRoot already a past root");
+
+        uint256 subtreeIndex = merkle.getCount();
         merkle.applySubtreeUpdate(newRoot, proof);
         pastRoots[newRoot] = true;
+
+        emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
     function _handleRefund(

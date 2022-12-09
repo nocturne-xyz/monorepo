@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
+import { open } from "lmdb";
 import {
   SimpleERC20Token__factory,
   Vault,
@@ -17,9 +18,11 @@ import {
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
+  MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
+import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const PER_SPEND_AMOUNT = 100n;
@@ -33,11 +36,7 @@ describe("Wallet", async () => {
   let token: SimpleERC20Token;
   let nocturneContext: NocturneContext;
   let db: LocalObjectDB;
-
-  async function applySubtreeUpdate() {
-    const root = (nocturneContext.merkleProver as LocalMerkleProver).root();
-    await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
-  }
+  let updater: SubtreeUpdater;
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
@@ -53,10 +52,22 @@ describe("Wallet", async () => {
     token = token;
     nocturneContext = nocturneSetup.nocturneContext;
     db = nocturneSetup.db;
+
+    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
+    const prover = new MockSubtreeUpdateProver();
+    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    await updater.init();
   });
 
+  async function applySubtreeUpdate() {
+    await wallet.fillBatchWithZeros();
+    await updater.pollInsertionsAndTryMakeBatch();
+    await updater.tryGenAndSubmitProofs();
+  }
+
   afterEach(async () => {
-    db.clear();
+    await db.clear();
+    await updater.dropDB();
   });
 
   after(async () => {
@@ -76,25 +87,19 @@ describe("Wallet", async () => {
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
-    console.log("fill the subtree with zeros");
-    await wallet.fillBatchWithZeros();
-
     console.log("apply subtree update");
-    await (
-      nocturneContext.merkleProver as LocalMerkleProver
-    ).fetchLeavesAndUpdate();
     await applySubtreeUpdate();
-
-    console.log("Sync SDK notes manager");
-    await nocturneContext.syncNotes();
-    const notesForAsset = await nocturneContext.db.getNotesFor(asset);
-    expect(notesForAsset.length).to.equal(2);
 
     console.log("Sync SDK merkle prover");
     await nocturneContext.syncLeaves();
     expect((nocturneContext.merkleProver as LocalMerkleProver).root()).to.equal(
       (await wallet.root()).toBigInt()
     );
+
+    console.log("Sync SDK notes manager");
+    await nocturneContext.syncNotes();
+    const notesForAsset = await nocturneContext.db.getNotesFor(asset);
+    expect(notesForAsset.length).to.equal(2);
 
     console.log("Create asset request to spend 50 units of token");
     const assetRequest: AssetRequest = {
