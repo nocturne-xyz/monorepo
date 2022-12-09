@@ -11,7 +11,7 @@ import {
   BinaryPoseidonTree,
   NocturneContext,
   LocalMerkleProver,
-  LocalObjectDB,
+  MerkleDB,
   MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
@@ -23,15 +23,13 @@ describe("LocalMerkle", async () => {
   let alice: ethers.Signer;
   let wallet: Wallet;
   let vault: Vault;
-  let db: LocalObjectDB;
-  let localMerkle: LocalMerkleProver;
   let token: SimpleERC20Token;
+  let merkleDB: MerkleDB;
+  let localMerkle: LocalMerkleProver;
   let nocturneContext: NocturneContext;
   let updater: SubtreeUpdater;
 
   beforeEach(async () => {
-    db = new LocalObjectDB({ localMerkle: true });
-
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);
     token = await tokenFactory.deploy();
@@ -42,7 +40,7 @@ describe("LocalMerkle", async () => {
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
     token = token;
-    db = nocturneSetup.dbAlice;
+    merkleDB = nocturneSetup.merkleDBAlice;
     nocturneContext = nocturneSetup.nocturneContextAlice;
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
@@ -50,7 +48,11 @@ describe("LocalMerkle", async () => {
     updater = new SubtreeUpdater(wallet, serverDB, prover);
     await updater.init();
 
-    localMerkle = new LocalMerkleProver(wallet.address, ethers.provider, db);
+    localMerkle = new LocalMerkleProver(
+      wallet.address,
+      ethers.provider,
+      merkleDB
+    );
   });
 
   async function applySubtreeUpdate() {
@@ -60,7 +62,7 @@ describe("LocalMerkle", async () => {
   }
 
   afterEach(async () => {
-    await db.clear();
+    await merkleDB.kv.clear();
     await updater.dropDB();
   });
 

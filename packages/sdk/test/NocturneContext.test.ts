@@ -1,5 +1,4 @@
 import "mocha";
-import * as fs from "fs";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
 import { JoinSplitRequest, Asset } from "../src/commonTypes";
@@ -8,15 +7,17 @@ import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { MockJoinSplitProver } from "../src/proof/mock";
 import {
-  DEFAULT_DB_PATH,
-  LocalObjectDB,
+  NotesDB,
+  InMemoryKVStore,
   MockMerkleProver,
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
 describe("NocturneContext", () => {
-  let db = new LocalObjectDB({ localMerkle: true });
+  const kv = new InMemoryKVStore();
+  const notesDB = new NotesDB(kv);
+
   let nocturneContext: NocturneContext;
   const asset: Asset = { address: "0x1234", id: 11111n };
 
@@ -60,7 +61,7 @@ describe("NocturneContext", () => {
       merkleIndex: 3,
     };
 
-    await db.storeNotes([
+    await notesDB.storeNotes([
       firstOldNote,
       secondOldNote,
       thirdOldNote,
@@ -71,13 +72,19 @@ describe("NocturneContext", () => {
     const merkleProver = new MockMerkleProver();
 
     const notesManager = new LocalNotesManager(
-      db,
+      notesDB,
       signer,
       "0xaaaa",
       getDefaultProvider()
     );
 
-    return new NocturneContext(signer, prover, merkleProver, notesManager, db);
+    return new NocturneContext(
+      signer,
+      prover,
+      merkleProver,
+      notesManager,
+      notesDB
+    );
   }
 
   beforeEach(async () => {
@@ -85,12 +92,11 @@ describe("NocturneContext", () => {
   });
 
   afterEach(async () => {
-    await db.clear();
+    await kv.clear();
   });
 
   after(async () => {
-    await db.close();
-    fs.rmSync(DEFAULT_DB_PATH, { recursive: true, force: true });
+    await kv.close();
   });
 
   it("Gets total balance for an asset", async () => {
@@ -108,7 +114,7 @@ describe("NocturneContext", () => {
       merkleIndex: 4,
     };
 
-    await db.storeNote(diffNote);
+    await notesDB.storeNote(diffNote);
 
     const allBalances = await nocturneContext.getAllAssetBalances();
     allBalances.sort((a, b) => {
