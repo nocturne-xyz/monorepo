@@ -51,7 +51,7 @@ library Groth16 {
 
     function accumulate(
         Proof[] memory proofs,
-        uint256[] memory pisFlat
+        uint256[][] memory pis
     )
         internal
         view
@@ -60,7 +60,10 @@ library Groth16 {
             uint256[] memory publicInputAccumulators
         )
     {
-        uint256 numPublicInputs = pisFlat.length / proofs.length;
+        uint256 numPublicInputs = pis[0].length;
+        for (uint256 i = 1; i < pis.length; i++) {
+          require(numPublicInputs == pis[i].length, "Public input mismatch during batch verification.");
+        }
         uint256[] memory entropy = new uint256[](proofs.length);
         publicInputAccumulators = new uint256[](numPublicInputs + 1);
 
@@ -87,7 +90,7 @@ library Groth16 {
             );
             for (uint256 i = 0; i < numPublicInputs; i++) {
                 require(
-                    pisFlat[proofIndex * numPublicInputs + i] <
+                    pis[proofIndex][i] <
                         Utils.SNARK_SCALAR_FIELD,
                     "Malformed public input"
                 );
@@ -96,7 +99,7 @@ library Groth16 {
                     publicInputAccumulators[i + 1],
                     mulmod(
                         entropy[proofIndex],
-                        pisFlat[proofIndex * numPublicInputs + i],
+                        pis[proofIndex][i],
                         Utils.SNARK_SCALAR_FIELD
                     ),
                     Utils.SNARK_SCALAR_FIELD
@@ -167,13 +170,12 @@ library Groth16 {
     function batchVerifyProofs(
         VerifyingKey memory vk,
         Proof[] memory proofs,
-        uint256[] memory pisFlat
+        uint256[][] memory pis
     ) internal view returns (bool success) {
         require(
-            pisFlat.length % proofs.length == 0,
+            pis.length == proofs.length,
             "Invalid inputs length for a batch"
         );
-        require(vk.IC.length == (pisFlat.length / proofs.length) + 1);
 
         // strategy is to accumulate entropy separately for some proof elements
         // (accumulate only for G1, can't in G2) of the pairing equation, as well as input verification key,
@@ -184,7 +186,8 @@ library Groth16 {
         (
             Pairing.G1Point[] memory proofAsandAggegateC,
             uint256[] memory publicInputAccumulators
-        ) = accumulate(proofs, pisFlat);
+        ) = accumulate(proofs, pis);
+
         Pairing.G1Point[2] memory finalVKAlphaAndX = prepareBatch(
             vk,
             publicInputAccumulators

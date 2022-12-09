@@ -50,20 +50,13 @@ contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
 
     function batchVerifyFixture(string memory path) public {
         Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
-        uint256[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
+        uint256[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
-            (
-                Groth16.Proof memory proof,
-                uint256[] memory pis
-            ) = loadJoinSplitProof(path);
-            proofs[i] = proof;
-            for (uint256 j = 0; j < NUM_PIS; j++) {
-                pisFlat[i * NUM_PIS + j] = pis[j];
-            }
+            (proofs[i], pis[i]) = loadJoinSplitProof(path);
         }
 
         require(
-            joinSplitVerifier.batchVerifyProofs(proofs, pisFlat),
+            joinSplitVerifier.batchVerifyProofs(proofs, pis),
             "Invalid proof"
         );
     }

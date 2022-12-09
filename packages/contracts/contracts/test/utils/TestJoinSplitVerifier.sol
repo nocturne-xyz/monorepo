@@ -15,7 +15,7 @@ contract TestJoinSplitVerifier is IJoinSplitVerifier {
 
     function batchVerifyProofs(
         Groth16.Proof[] memory proofs,
-        uint256[] memory pisFlat
+        uint256[][] memory pis
     ) external view override returns (bool) {
         return true;
     }

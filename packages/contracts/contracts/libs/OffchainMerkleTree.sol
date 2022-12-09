@@ -116,7 +116,6 @@ library OffchainMerkleTree {
             hi
         );
 
-        Groth16.Proof memory proof = Utils.proof8ToStruct(proof);
         uint256[] memory pis = new uint256[](4);
         pis[0] = self.root;
         pis[1] = newRoot;
@@ -124,7 +123,7 @@ library OffchainMerkleTree {
         pis[3] = lo;
 
         require(
-            self.subtreeUpdateVerifier.verifyProof(proof, pis),
+            self.subtreeUpdateVerifier.verifyProof(Utils.proof8ToStruct(proof), pis),
             "subtree update proof invalid"
         );
 

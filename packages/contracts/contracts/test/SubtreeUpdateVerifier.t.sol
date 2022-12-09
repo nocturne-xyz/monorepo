@@ -52,20 +52,18 @@ contract TestSubtreeUpdateVerifier is Test, TestUtils, JsonDecodings {
 
     function batchVerifyFixture(string memory path) public {
         Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
-        uint[] memory pisFlat = new uint256[](NUM_PROOFS * NUM_PIS);
+        uint[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
             (
                 Groth16.Proof memory proof,
-                uint[] memory pis
+                uint[] memory _pis
             ) = loadSubtreeUpdateProof(path);
             proofs[i] = proof;
-            for (uint256 j = 0; j < NUM_PIS; j++) {
-                pisFlat[i * NUM_PIS + j] = pis[j];
-            }
+            pis[i] = _pis;
         }
 
         require(
-            subtreeUpdateVerifier.batchVerifyProofs(proofs, pisFlat),
+            subtreeUpdateVerifier.batchVerifyProofs(proofs, pis),
             "Invalid proof"
         );
     }

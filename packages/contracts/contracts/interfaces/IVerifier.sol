@@ -13,9 +13,9 @@ interface IVerifier {
     ) external view returns (bool);
 
     /// @param proofs: an array containing the proofs to verify
-    /// @param pisFlat: an array of length `NUM_PIS * numProofs` containing the PIs for each proof concatenated together
+    /// @param pis: an array of length `NUM_PIS * numProofs` containing the PIs for each proof concatenated together
     function batchVerifyProofs(
         Groth16.Proof[] memory proofs,
-        uint256[] memory pisFlat
+        uint256[][] memory pis
     ) external view returns (bool);
 }

@@ -30,7 +30,7 @@ contract Wallet is IWallet, BalanceManager {
 
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyBundle(Bundle calldata bundle) internal returns (bool) {
+    function _verifyBundle(Bundle calldata bundle) internal view returns (bool) {
         uint256 numOps = bundle.operations.length;
 
         // compute number of joinsplits in the bundle
@@ -39,8 +39,8 @@ contract Wallet is IWallet, BalanceManager {
             Operation calldata op = bundle.operations[i];
             numJoinSplits += op.joinSplitTxs.length;
         }
-        Groth16.Proof[] memory proofs;
-        uint256[] memory pis = new uint256[](numJoinSplits * 9);
+        Groth16.Proof[] memory proofs = new Groth16.Proof[](numJoinSplits);
+        uint256[][] memory pis = new uint256[][](numJoinSplits);
 
         // current index into proofs and pis
         uint256 index = 0;
@@ -51,26 +51,23 @@ contract Wallet is IWallet, BalanceManager {
             uint256 operationDigest = uint256(_hashOperation(op)) %
                 Utils.SNARK_SCALAR_FIELD;
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
-                Groth16.Proof memory proof = Utils.proof8ToStruct(
+                proofs[index] = Utils.proof8ToStruct(
                     op.joinSplitTxs[j].proof
                 );
-                pis[9 * index] = op.joinSplitTxs[j].newNoteACommitment;
-                pis[9 * index + 1] = op.joinSplitTxs[j].newNoteBCommitment;
-                pis[9 * index + 2] = op.joinSplitTxs[j].commitmentTreeRoot;
-                pis[9 * index + 3] = op.joinSplitTxs[j].publicSpend;
-                pis[9 * index + 4] = op.joinSplitTxs[j].nullifierA;
-                pis[9 * index + 5] = op.joinSplitTxs[j].nullifierB;
-                pis[9 * index + 6] = operationDigest;
-                pis[9 * index + 7] = uint256(uint160(op.joinSplitTxs[j].asset));
-                pis[9 * index + 8] = op.joinSplitTxs[j].id;
+                pis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
+                pis[index][1] = op.joinSplitTxs[j].newNoteBCommitment;
+                pis[index][2] = op.joinSplitTxs[j].commitmentTreeRoot;
+                pis[index][3] = op.joinSplitTxs[j].publicSpend;
+                pis[index][4] = op.joinSplitTxs[j].nullifierA;
+                pis[index][5] = op.joinSplitTxs[j].nullifierB;
+                pis[index][6] = operationDigest;
+                pis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
+                pis[index][8] = op.joinSplitTxs[j].id;
                 index++;
             }
         }
 
-        require(
-            joinSplitVerifier.batchVerifyProofs(proofs, pis),
-            "Batched JoinSplit proof verification failed."
-        );
+        return joinSplitVerifier.batchVerifyProofs(proofs, pis);
     }
 
     // TODO: do we want to return successes/results?
@@ -81,6 +78,11 @@ contract Wallet is IWallet, BalanceManager {
         override
         returns (bool[] memory successes, bytes[][] memory results)
     {
+        require(
+            _verifyBundle(bundle),
+            "Batched JoinSplit proof verification failed."
+        );
+
         uint256 numOps = bundle.operations.length;
 
         successes = new bool[](numOps);

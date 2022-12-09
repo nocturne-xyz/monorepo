@@ -110,7 +110,7 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
     /// @return r bool true if proofs are valid
     function batchVerifyProofs(
         Groth16.Proof[] memory proofs,
-        uint256[] memory pis
+        uint256[][] memory pis
     ) public view override returns (bool) {
         return Groth16.batchVerifyProofs(verifyingKey(), proofs, pis);
     }
