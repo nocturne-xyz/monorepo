@@ -18,6 +18,7 @@ import {
   OperationRequest,
   LocalObjectDB,
   LocalMerkleProver,
+  MockSubtreeUpdateProver,
   query,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
