@@ -1,7 +1,7 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
-import { NocturneDB } from "../db";
+import { NotesDB } from "../db";
 import { NotesManager, JoinSplitEvent } from ".";
 import { NocturneSigner } from "../signer";
 import { IncludedNote } from "../note";
@@ -20,7 +20,7 @@ export class LocalNotesManager extends NotesManager {
   provider: ethers.providers.Provider;
 
   constructor(
-    db: NocturneDB,
+    db: NotesDB,
     signer: NocturneSigner,
     walletAddress: Address,
     provider: ethers.providers.Provider
@@ -33,7 +33,7 @@ export class LocalNotesManager extends NotesManager {
   async fetchNotesFromRefunds(): Promise<IncludedNote[]> {
     // TODO: load default from network-specific config
     const lastSeen =
-      (await this.db.getNumberKv(REFUNDS_LAST_INDEXED_BLOCK)) ??
+      (await this.db.kv.getNumber(REFUNDS_LAST_INDEXED_BLOCK)) ??
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
@@ -43,15 +43,15 @@ export class LocalNotesManager extends NotesManager {
       latestBlock
     );
 
-    await this.db.putKv(
+    await this.db.kv.putNumber(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK,
-      latestBlock.toString()
+      latestBlock
     );
     return newRefunds;
   }
 
   async postStoreNotesFromRefunds(): Promise<void> {
-    const tentativeLastSeen = await this.db.getKv(
+    const tentativeLastSeen = await this.db.kv.getNumber(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK
     );
 
@@ -61,13 +61,13 @@ export class LocalNotesManager extends NotesManager {
       );
     }
 
-    await this.db.putKv(REFUNDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
+    await this.db.kv.putNumber(REFUNDS_LAST_INDEXED_BLOCK, tentativeLastSeen);
   }
 
   async fetchJoinSplits(): Promise<JoinSplitEvent[]> {
     // TODO: load default from network-specific config
     const lastSeen =
-      (await this.db.getNumberKv(JOINSPLITS_LAST_INDEXED_BLOCK)) ??
+      (await this.db.kv.getNumber(JOINSPLITS_LAST_INDEXED_BLOCK)) ??
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
@@ -77,15 +77,15 @@ export class LocalNotesManager extends NotesManager {
       latestBlock
     );
 
-    await this.db.putKv(
+    await this.db.kv.putNumber(
       JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK,
-      latestBlock.toString()
+      latestBlock
     );
     return newJoinSplits;
   }
 
   async postApplyJoinSplits(): Promise<void> {
-    const tentativeLastSeen = await this.db.getKv(
+    const tentativeLastSeen = await this.db.kv.getNumber(
       JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK
     );
 
@@ -95,6 +95,9 @@ export class LocalNotesManager extends NotesManager {
       );
     }
 
-    await this.db.putKv(JOINSPLITS_LAST_INDEXED_BLOCK, tentativeLastSeen);
+    await this.db.kv.putNumber(
+      JOINSPLITS_LAST_INDEXED_BLOCK,
+      tentativeLastSeen
+    );
   }
 }

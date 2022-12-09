@@ -13,7 +13,9 @@ import {
   NocturnePrivKey,
   NocturneSigner,
   NocturneContext,
-  LocalObjectDB,
+  InMemoryKVStore,
+  NotesDB,
+  MerkleDB,
   LocalMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
@@ -38,16 +40,19 @@ export interface NocturneSetup {
   bob: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
-  dbAlice: LocalObjectDB;
+  notesDBAlice: NotesDB;
+  merkleDBAlice: MerkleDB;
   nocturneContextAlice: NocturneContext;
-  dbBob: LocalObjectDB;
+  notesDBBob: NotesDB;
+  merkleDBBob: MerkleDB;
   nocturneContextBob: NocturneContext;
 }
 
 function setupNocturneContext(
   sk: bigint,
-  db: LocalObjectDB,
-  wallet: any
+  wallet: any,
+  notesDB: NotesDB,
+  merkleDB: MerkleDB
 ): NocturneContext {
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
@@ -56,10 +61,11 @@ function setupNocturneContext(
   const merkleProver = new LocalMerkleProver(
     wallet.address,
     ethers.provider,
-    db
+    merkleDB
   );
+
   const notesManager = new LocalNotesManager(
-    db,
+    notesDB,
     nocturneSigner,
     wallet.address,
     ethers.provider
@@ -69,7 +75,7 @@ function setupNocturneContext(
     prover,
     merkleProver,
     notesManager,
-    db
+    notesDB
   );
 }
 
@@ -81,21 +87,27 @@ export async function setup(): Promise<NocturneSetup> {
   const [_, alice, bob] = await ethers.getSigners();
 
   console.log("Create NocturneContextAlice");
-  const dbAlice = new LocalObjectDB({ localMerkle: true });
-  const nocturneContextAlice = setupNocturneContext(3n, dbAlice, wallet);
+  const aliceKV = new InMemoryKVStore();
+  const notesDBAlice = new NotesDB(aliceKV);
+  const merkleDBAlice = new MerkleDB(aliceKV);
+  const nocturneContextAlice = setupNocturneContext(3n, wallet, notesDBAlice, merkleDBAlice);
 
   console.log("Create NocturneContextBob");
-  const dbBob = new LocalObjectDB({ localMerkle: true });
-  const nocturneContextBob = setupNocturneContext(5n, dbBob, wallet);
+  const bobKV = new InMemoryKVStore();
+  const notesDBBob = new NotesDB(bobKV);
+  const merkleDBBob = new MerkleDB(bobKV);
+  const nocturneContextBob = setupNocturneContext(5n, wallet, notesDBBob, merkleDBBob);
 
   return {
     alice,
     bob,
     vault,
     wallet,
-    dbAlice,
+    notesDBAlice,
+    merkleDBAlice,
     nocturneContextAlice,
-    dbBob,
+    notesDBBob,
+    merkleDBBob,
     nocturneContextBob,
   };
 }

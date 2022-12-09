@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- Refactor DB interfaces
+  - separate underlying `KVStore` from "DB"s by defining `KVStore` abstract class
+  - implement `KVStore` with a new class `InMemoryKVStore` using a B+ Tree lib
+  - split `NocturneDB` into `NotesDB` and `MerkleDB`
+  - add tests
+  - integrate new DB interfaces into `LocalMerkleProver`, `LocalNotesManager`, and `NocturneContext`
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes
 - Add interfaces for generating and receiving confidential payments
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`

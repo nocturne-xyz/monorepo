@@ -28,7 +28,7 @@ import {
   joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
-import { NocturneDB } from "./sdk/db";
+import { NotesDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
@@ -46,14 +46,14 @@ export class NocturneContext {
   protected prover: JoinSplitProver;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
-  readonly db: NocturneDB;
+  readonly db: NotesDB;
 
   constructor(
     signer: NocturneSigner,
     prover: JoinSplitProver,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
-    db: NocturneDB
+    db: NotesDB
   ) {
     this.signer = signer;
     this.prover = prover;
@@ -575,8 +575,8 @@ export class NocturneContext {
   async getAllAssetBalances(): Promise<AssetWithBalance[]> {
     const notes = await this.db.getAllNotes();
     return Array.from(notes.entries()).map(([assetString, notes]) => {
-      const asset = NocturneDB.parseNotesKey(assetString);
-      const balance = BigInt(notes.reduce((a, b) => a + Number(b.value), 0));
+      const asset = NotesDB.parseAssetFromNoteAssetKey(assetString);
+      const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,
         balance,
@@ -595,7 +595,7 @@ export class NocturneContext {
     if (!notes) {
       return 0n;
     } else {
-      return BigInt(notes.reduce((a, b) => a + Number(b.value), 0));
+      return notes.reduce((a, b) => a + b.value, 0n);
     }
   }
 }

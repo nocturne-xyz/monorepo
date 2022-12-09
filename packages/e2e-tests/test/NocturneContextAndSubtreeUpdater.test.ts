@@ -9,7 +9,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 
 import {
   NocturneContext,
-  LocalObjectDB,
+  NotesDB,
   MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
@@ -27,8 +27,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let nocturneContext: NocturneContext;
-  let db: LocalObjectDB;
   let server: SubtreeUpdateServer;
+  let notesDB: NotesDB;
 
   beforeEach(async () => {
     const signers = await ethers.getSigners();
@@ -45,7 +45,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     wallet = nocturneSetup.wallet;
     token = token;
     nocturneContext = nocturneSetup.nocturneContextAlice;
-    db = nocturneSetup.dbAlice;
+    notesDB = nocturneSetup.notesDBAlice;
 
     server = newServer();
     await server.init();
@@ -68,7 +68,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   }
 
   afterEach(async () => {
-    await db.clear();
+    await notesDB.kv.clear();
     await server.stop();
     await server.dropDB();
   });

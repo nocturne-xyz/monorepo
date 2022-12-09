@@ -16,11 +16,10 @@ import {
   Asset,
   JoinSplitRequest,
   OperationRequest,
-  LocalObjectDB,
+  NotesDB,
   LocalMerkleProver,
   MockSubtreeUpdateProver,
   query,
-  PaymentIntent,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds } from "./utils";
@@ -44,9 +43,9 @@ describe("Wallet", async () => {
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let updater: SubtreeUpdater;
-  let dbAlice: LocalObjectDB;
+  let notesDBAlice: NotesDB;
   let nocturneContextAlice: NocturneContext;
-  let dbBob: LocalObjectDB;
+  let notesDBBob: NotesDB;
   let nocturneContextBob: NocturneContext;
 
   beforeEach(async () => {
@@ -60,9 +59,9 @@ describe("Wallet", async () => {
       bob,
       vault,
       wallet,
-      dbAlice,
+      notesDBAlice,
       nocturneContextAlice,
-      dbBob,
+      notesDBBob,
       nocturneContextBob,
     } = await setup());
 
@@ -79,8 +78,8 @@ describe("Wallet", async () => {
   }
 
   afterEach(async () => {
-    await dbAlice.clear();
-    await dbBob.clear();
+    await notesDBAlice.clear();
+    await notesDBBob.clear();
     await updater.dropDB();
   });
 
@@ -125,7 +124,7 @@ describe("Wallet", async () => {
     ).to.equal((await wallet.root()).toBigInt());
 
     console.log(
-      "Create asset request to public spend 20 tokens and send 30 to Bob privately."
+      "Alice: Create asset request to send tokens to Bob - 20 publicly and 30 privately."
     );
     const joinSplitRequest: JoinSplitRequest = {
       asset,
@@ -136,7 +135,7 @@ describe("Wallet", async () => {
       },
     };
 
-    console.log("Encode operation request");
+    console.log("Alice: Encode public ERC20 transfer to send 20 tokens Bob");
     const refundTokens = [token.address];
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
@@ -189,26 +188,27 @@ describe("Wallet", async () => {
 
     console.log("Alice: Sync SDK notes manager post-operation");
     await nocturneContextAlice.syncNotes();
-    const updatedNotesAlice = await dbAlice.getNotesFor(asset)!;
-    const foundNoteAlice = updatedNotesAlice.filter((n) => n.value > 0);
+    const updatedNotesAlice = await notesDBAlice.getNotesFor(asset)!;
+    const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
+    // alcie should have two nonzero notes total
+    expect(nonZeroNotesAlice.length).to.equal(2);
+
+    // alice should have a note with refund value from public spendk
+    let foundNotesAlice = nonZeroNotesAlice.filter((n) => n.value === ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL);
+    expect(foundNotesAlice.length).to.equal(1);
+
+    // alice should have another note with refund value from private payment to bob
+    foundNotesAlice = nonZeroNotesAlice.filter((n) => n.value === 2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL);
+    expect(foundNotesAlice.length).to.equal(1);
 
     console.log("Bob: Sync SDK notes manager post-operation");
     await nocturneContextBob.syncNotes();
-    const updatedNotesBob = await dbBob.getNotesFor(asset)!;
-    const foundNoteBob = updatedNotesBob.filter((n) => n.value > 0);
+    const updatedNotesBob = await notesDBBob.getNotesFor(asset)!;
+    const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
+    // bob should have one nonzero note total
+    expect(nonZeroNotesBob.length).to.equal(1);
 
-    expect(foundNoteAlice.length).to.equal(2);
-    // Refund for leftover value in public spend
-    expect(foundNoteAlice[0].value).to.equal(
-      ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
-    );
-    // Refund from joinsplit
-    expect(foundNoteAlice[1].value).to.equal(
-      2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
-    );
-
-    // There should be one new note containing payment
-    expect(foundNoteBob.length).to.equal(1);
-    expect(foundNoteBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
+    // That one note should contain the tokens sent privately from alice
+    expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
   });
 });

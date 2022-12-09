@@ -11,7 +11,8 @@ export const SNARK_SCALAR_FIELD =
 export const ERC20_ID = SNARK_SCALAR_FIELD - 1n; // TODO: fix
 
 export type Address = string;
-export type NotesKey = string; // Takes form of NOTES_<address>_<id>
+export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
+export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
 export function hashAsset(asset: Asset): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
