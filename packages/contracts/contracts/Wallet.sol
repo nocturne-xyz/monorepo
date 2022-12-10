@@ -49,11 +49,7 @@ contract Wallet is IWallet, BalanceManager {
     // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata bundle
-    )
-        external
-        override
-        returns (bool[] memory successes, bytes[][] memory results)
-    {
+    ) external override returns (IWallet.OperationResult[] memory) {
         uint256[] memory _opsAndDigests = WalletUtils.extractOperationsAndDigestsFromBundle(bundle);
 
         require(
@@ -63,11 +59,14 @@ contract Wallet is IWallet, BalanceManager {
 
         uint256 numOps = bundle.operations.length;
 
-        opResults = new IWallet.OperationResult[](numOps);
+        IWallet.OperationResult[]
+            memory opResults = new IWallet.OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             Operation calldata op = bundle.operations[i];
             opResults[i] = this.performOperation{gas: op.gasLimit}(op);
         }
+
+        return opResults;
     }
 
     // TODO: refactor batch deposit

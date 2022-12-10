@@ -221,7 +221,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token,
         address recipient,
         uint256 amount
-    ) internal returns (IWallet.Operation memory op) {
+    ) internal returns (IWallet.Operation memory) {
         IWallet.Action memory transferAction = IWallet.Action({
             contractAddress: address(token),
             encodedFunction: abi.encodeWithSelector(
@@ -283,13 +283,15 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         joinSplitTxs[0] = joinSplitTx;
         IWallet.Action[] memory actions = new IWallet.Action[](1);
         actions[0] = transferAction;
-        op = IWallet.Operation({
+        IWallet.Operation memory op = IWallet.Operation({
             joinSplitTxs: joinSplitTxs,
             refundAddr: defaultNocturneAddress(),
             tokens: tokens,
             actions: actions,
             gasLimit: DEFAULT_GAS_LIMIT
         });
+
+        return op;
     }
 
     function testPoseidon() public {
