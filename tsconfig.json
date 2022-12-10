@@ -29,6 +29,9 @@
 
   "references": [
     {
+      "path": "./packages/bundler"
+    },
+    {
       "path": "./packages/contracts"
     },
     {
