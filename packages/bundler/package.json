@@ -18,6 +18,7 @@
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
+    "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",
     "@types/express": "^4.17.14",
     "bullmq": "^3.4.1",
