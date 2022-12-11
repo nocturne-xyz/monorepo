@@ -14,35 +14,6 @@ export class NullifierSetManager {
     return NULLIFIER_PREFIX + nullifier.toString();
   }
 
-  async extractNullifierConflictError(
-    operation: ProvenOperation
-  ): Promise<string | undefined> {
-    const opNfSet = new Set<bigint>();
-
-    // Ensure no overlap in given operation
-    operation.joinSplitTxs.forEach(({ nullifierA, nullifierB }) => {
-      if (opNfSet.has(nullifierA)) {
-        return `Conflicting nullifier in operation: ${nullifierA}`;
-      }
-      opNfSet.add(nullifierA);
-
-      if (opNfSet.has(nullifierB)) {
-        return `Conflicting nullifier in operation: ${nullifierB}`;
-      }
-      opNfSet.add(nullifierB);
-    });
-
-    // Ensure no overlap with other nfs already in queue
-    for (const nf of opNfSet) {
-      const conflict = await this.hasNullifierConflict(nf);
-      if (conflict) {
-        return `Nullifier already in other operation in queue: ${nf}`;
-      }
-    }
-
-    return undefined;
-  }
-
   async addNullifiers(
     operation: ProvenOperation,
     jobId: string
@@ -59,12 +30,15 @@ export class NullifierSetManager {
     await Promise.all(addNfPromises);
   }
 
-  private async addNullifier(nullifier: bigint, jobId: string): Promise<void> {
+  protected async addNullifier(
+    nullifier: bigint,
+    jobId: string
+  ): Promise<void> {
     const key = NullifierSetManager.nullifierKey(nullifier);
     await this.redis.set(key, jobId);
   }
 
-  private async hasNullifierConflict(nullifier: bigint): Promise<boolean> {
+  protected async hasNullifierConflict(nullifier: bigint): Promise<boolean> {
     const key = NullifierSetManager.nullifierKey(nullifier);
     return (await this.redis.get(key)) != undefined;
   }

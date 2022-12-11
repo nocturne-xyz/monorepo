@@ -18,7 +18,7 @@ import { assert } from "console";
 
 const RELAY_JOB_TYPE = "RELAY";
 
-export class BundlerRouter {
+export class RequestRouter {
   queue: Queue<RelayJobData>;
   validator: OperationValidator;
 
