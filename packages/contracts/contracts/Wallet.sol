@@ -30,7 +30,7 @@ contract Wallet is IWallet, BalanceManager {
 
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyBundle(
+    function _verifyAllProofsInBundle(
         Bundle calldata bundle
     ) internal view returns (bool) {
         uint256 numOps = bundle.operations.length;
@@ -80,7 +80,7 @@ contract Wallet is IWallet, BalanceManager {
         returns (bool[] memory successes, bytes[][] memory results)
     {
         require(
-            _verifyBundle(bundle),
+            _verifyAllProofsInBundle(bundle),
             "Batched JoinSplit proof verification failed."
         );
 

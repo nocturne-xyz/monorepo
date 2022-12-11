@@ -2,7 +2,8 @@
 
 ### Unreleased
 
-- change verifier interfaces to take structs instead of `uint256` arrays
+- Use the batch verifier to batch verify all joinsplit proofs in a bundle
+- Change verifier interfaces to take structs instead of `uint256` arrays
 - Add a `SubtreeUpdate` event to `CommitmentTreeManager` for when a subtree update is committed
 - Add `test:gas-report` command
 - Add batch proof verification
