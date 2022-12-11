@@ -123,7 +123,10 @@ library OffchainMerkleTree {
         pis[3] = lo;
 
         require(
-            self.subtreeUpdateVerifier.verifyProof(Utils.proof8ToStruct(proof), pis),
+            self.subtreeUpdateVerifier.verifyProof(
+                Utils.proof8ToStruct(proof),
+                pis
+            ),
             "subtree update proof invalid"
         );
 

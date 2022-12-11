@@ -62,7 +62,10 @@ library Groth16 {
     {
         uint256 numPublicInputs = pis[0].length;
         for (uint256 i = 1; i < pis.length; i++) {
-          require(numPublicInputs == pis[i].length, "Public input mismatch during batch verification.");
+            require(
+                numPublicInputs == pis[i].length,
+                "Public input mismatch during batch verification."
+            );
         }
         uint256[] memory entropy = new uint256[](proofs.length);
         publicInputAccumulators = new uint256[](numPublicInputs + 1);
@@ -90,8 +93,7 @@ library Groth16 {
             );
             for (uint256 i = 0; i < numPublicInputs; i++) {
                 require(
-                    pis[proofIndex][i] <
-                        Utils.SNARK_SCALAR_FIELD,
+                    pis[proofIndex][i] < Utils.SNARK_SCALAR_FIELD,
                     "Malformed public input"
                 );
                 // accumulate the exponent with extra entropy mod Utils.SNARK_SCALAR_FIELD
