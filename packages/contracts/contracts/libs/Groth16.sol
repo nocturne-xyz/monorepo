@@ -51,7 +51,7 @@ library Groth16 {
 
     function accumulate(
         Proof[] memory proofs,
-        uint256[][] memory pis
+        uint256[][] memory allPis
     )
         internal
         view
@@ -60,10 +60,10 @@ library Groth16 {
             uint256[] memory publicInputAccumulators
         )
     {
-        uint256 numPublicInputs = pis[0].length;
-        for (uint256 i = 1; i < pis.length; i++) {
+        uint256 numPublicInputs = allPis[0].length;
+        for (uint256 i = 1; i < allPis.length; i++) {
             require(
-                numPublicInputs == pis[i].length,
+                numPublicInputs == allPis[i].length,
                 "Public input mismatch during batch verification."
             );
         }
@@ -93,7 +93,7 @@ library Groth16 {
             );
             for (uint256 i = 0; i < numPublicInputs; i++) {
                 require(
-                    pis[proofIndex][i] < Utils.SNARK_SCALAR_FIELD,
+                    allPis[proofIndex][i] < Utils.SNARK_SCALAR_FIELD,
                     "Malformed public input"
                 );
                 // accumulate the exponent with extra entropy mod Utils.SNARK_SCALAR_FIELD
@@ -101,7 +101,7 @@ library Groth16 {
                     publicInputAccumulators[i + 1],
                     mulmod(
                         entropy[proofIndex],
-                        pis[proofIndex][i],
+                        allPis[proofIndex][i],
                         Utils.SNARK_SCALAR_FIELD
                     ),
                     Utils.SNARK_SCALAR_FIELD
@@ -172,10 +172,10 @@ library Groth16 {
     function batchVerifyProofs(
         VerifyingKey memory vk,
         Proof[] memory proofs,
-        uint256[][] memory pis
+        uint256[][] memory allPis
     ) internal view returns (bool success) {
         require(
-            pis.length == proofs.length,
+            allPis.length == proofs.length,
             "Invalid inputs length for a batch"
         );
 
@@ -188,7 +188,7 @@ library Groth16 {
         (
             Pairing.G1Point[] memory proofAsandAggegateC,
             uint256[] memory publicInputAccumulators
-        ) = accumulate(proofs, pis);
+        ) = accumulate(proofs, allPis);
 
         Pairing.G1Point[2] memory finalVKAlphaAndX = prepareBatch(
             vk,

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# USGGE: ./fixSolidityVerifier.sh [path to solidity verifier]
+# USGGE: ./gen_solidity_verifier.sh [path to solidity verifier]
 # Apply various changes the default circom solidity verifier
 
 
@@ -32,7 +32,11 @@ import {Groth16} from "./libs/Groth16.sol";
 import {I'"$VERIFIERNAME"'} from "./interfaces/I'"$VERIFIERNAME"'.sol";
 
 contract '"$VERIFIERNAME"' is I'"$VERIFIERNAME"' {
-    function verifyingKey() internal pure returns (Groth16.VerifyingKey memory vk) {' > "$FILE"
+    function verifyingKey()
+        internal
+        pure
+        returns (Groth16.VerifyingKey memory vk)
+    {' > "$FILE"
 
 # write vkey
 echo "$VKEY" >> "$FILE"
@@ -46,25 +50,15 @@ echo '
         Groth16.Proof memory proof,
         uint256[] memory pi
     ) public view override returns (bool r) {
-        return
-            Groth16.verifyProof(
-                verifyingKey(),
-                proof,
-                pi
-            );
+        return Groth16.verifyProof(verifyingKey(), proof, pi);
     }
 
     /// @return r bool true if proofs are valid
     function batchVerifyProofs(
         Groth16.Proof[] memory proofs,
-        uint256[][] memory pis
+        uint256[][] memory allPis
     ) public view override returns (bool) {
-        return
-            Groth16.batchVerifyProofs(
-                verifyingKey(),
-                proofs,
-                pis
-            );
+        return Groth16.batchVerifyProofs(verifyingKey(), proofs, allPis);
     }
 }
 ' >> "$FILE"

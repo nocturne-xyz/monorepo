@@ -42,7 +42,7 @@ contract Wallet is IWallet, BalanceManager {
             numJoinSplits += op.joinSplitTxs.length;
         }
         Groth16.Proof[] memory proofs = new Groth16.Proof[](numJoinSplits);
-        uint256[][] memory pis = new uint256[][](numJoinSplits);
+        uint256[][] memory allPis = new uint256[][](numJoinSplits);
 
         // current index into proofs and pis
         uint256 index = 0;
@@ -54,21 +54,21 @@ contract Wallet is IWallet, BalanceManager {
                 Utils.SNARK_SCALAR_FIELD;
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
-                pis[index] = new uint256[](9);
-                pis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
-                pis[index][1] = op.joinSplitTxs[j].newNoteBCommitment;
-                pis[index][2] = op.joinSplitTxs[j].commitmentTreeRoot;
-                pis[index][3] = op.joinSplitTxs[j].publicSpend;
-                pis[index][4] = op.joinSplitTxs[j].nullifierA;
-                pis[index][5] = op.joinSplitTxs[j].nullifierB;
-                pis[index][6] = operationDigest;
-                pis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
-                pis[index][8] = op.joinSplitTxs[j].id;
+                allPis[index] = new uint256[](9);
+                allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
+                allPis[index][1] = op.joinSplitTxs[j].newNoteBCommitment;
+                allPis[index][2] = op.joinSplitTxs[j].commitmentTreeRoot;
+                allPis[index][3] = op.joinSplitTxs[j].publicSpend;
+                allPis[index][4] = op.joinSplitTxs[j].nullifierA;
+                allPis[index][5] = op.joinSplitTxs[j].nullifierB;
+                allPis[index][6] = operationDigest;
+                allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
+                allPis[index][8] = op.joinSplitTxs[j].id;
                 index++;
             }
         }
 
-        return joinSplitVerifier.batchVerifyProofs(proofs, pis);
+        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
     // TODO: do we want to return successes/results?

@@ -98,8 +98,8 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     /// @return r bool true if proofs are valid
     function batchVerifyProofs(
         Groth16.Proof[] memory proofs,
-        uint256[][] memory pis
+        uint256[][] memory allPis
     ) public view override returns (bool) {
-        return Groth16.batchVerifyProofs(verifyingKey(), proofs, pis);
+        return Groth16.batchVerifyProofs(verifyingKey(), proofs, allPis);
     }
 }
