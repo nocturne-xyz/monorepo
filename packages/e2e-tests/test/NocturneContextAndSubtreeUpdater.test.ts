@@ -44,8 +44,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
     token = token;
-    nocturneContext = nocturneSetup.nocturneContext;
-    db = nocturneSetup.db;
+    nocturneContext = nocturneSetup.nocturneContextAlice;
+    db = nocturneSetup.dbAlice;
 
     server = newServer();
     await server.init();

@@ -33,7 +33,10 @@ export abstract class NotesManager {
 
   async fetchAndStoreNewNotesFromRefunds(): Promise<void> {
     const newNotes = await this.fetchNotesFromRefunds();
-    await this.storeNewNotesFromRefunds(newNotes);
+    const ownedNotes = newNotes.filter((refund) => {
+      return this.signer.testOwn(refund.owner);
+    });
+    await this.storeNewNotesFromRefunds(ownedNotes);
     await this.postStoreNotesFromRefunds();
   }
 

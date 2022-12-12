@@ -49,13 +49,6 @@ describe("Wallet", async () => {
   let dbBob: LocalObjectDB;
   let nocturneContextBob: NocturneContext;
 
-  // async function applySubtreeUpdate() {
-  //   const root = (
-  //     nocturneContextAlice.merkleProver as LocalMerkleProver
-  //   ).root();
-  //   await wallet.applySubtreeUpdate(root, [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
-  // }
-
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);

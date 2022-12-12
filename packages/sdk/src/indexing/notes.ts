@@ -67,8 +67,14 @@ export async function fetchJoinSplits(
       id,
       publicSpend,
     } = joinSplitTx;
-    let { owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteATransmission;
+    let {
+      owner,
+      encappedKey,
+      encryptedNonce,
+      encryptedValue,
+      encryptedCounterParty,
+      encryptedMemo,
+    } = newNoteATransmission;
     let { h1X, h1Y, h2X, h2Y } = owner;
     const newNoteAOwner = {
       h1X: h1X.toBigInt(),
@@ -79,8 +85,16 @@ export async function fetchJoinSplits(
     const encappedKeyA = encappedKey.toBigInt();
     const encryptedNonceA = encryptedNonce.toBigInt();
     const encryptedValueA = encryptedValue.toBigInt();
-    ({ owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteBTransmission);
+    const encryptedCounterPartyA = encryptedCounterParty.toBigInt();
+    const encryptedMemoA = encryptedMemo.toBigInt();
+    ({
+      owner,
+      encappedKey,
+      encryptedNonce,
+      encryptedValue,
+      encryptedCounterParty,
+      encryptedMemo,
+    } = newNoteBTransmission);
     ({ h1X, h1Y, h2X, h2Y } = owner);
     const newNoteBOwner = {
       h1X: h1X.toBigInt(),
@@ -91,6 +105,8 @@ export async function fetchJoinSplits(
     const encappedKeyB = encappedKey.toBigInt();
     const encryptedNonceB = encryptedNonce.toBigInt();
     const encryptedValueB = encryptedValue.toBigInt();
+    const encryptedCounterPartyB = encryptedCounterParty.toBigInt();
+    const encryptedMemoB = encryptedMemo.toBigInt();
     return {
       oldNoteANullifier: oldNoteANullifier.toBigInt(),
       oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
@@ -106,6 +122,8 @@ export async function fetchJoinSplits(
           encappedKey: encappedKeyA,
           encryptedNonce: encryptedNonceA,
           encryptedValue: encryptedValueA,
+          encryptedCounterParty: encryptedCounterPartyA,
+          encryptedMemo: encryptedMemoA,
         },
         newNoteBCommitment: newNoteBCommitment.toBigInt(),
         newNoteBTransmission: {
@@ -113,6 +131,8 @@ export async function fetchJoinSplits(
           encappedKey: encappedKeyB,
           encryptedNonce: encryptedNonceB,
           encryptedValue: encryptedValueB,
+          encryptedCounterParty: encryptedCounterPartyB,
+          encryptedMemo: encryptedMemoB,
         },
         asset,
         id: id.toBigInt(),
