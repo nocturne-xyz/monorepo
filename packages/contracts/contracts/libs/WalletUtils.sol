@@ -6,7 +6,7 @@ import {Utils} from "../libs/Utils.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
-    function extractJoinSplitProofsAndPis(
+    function extractJoinSplitProofsAndPisFromBundle(
         IWallet.Bundle calldata bundle
     )
         internal

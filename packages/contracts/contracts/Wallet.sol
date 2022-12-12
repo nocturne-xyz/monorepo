@@ -35,7 +35,7 @@ contract Wallet is IWallet, BalanceManager {
         Bundle calldata bundle
     ) internal view returns (bool) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPis(bundle);
+            .extractJoinSplitProofsAndPisFromBundle(bundle);
         return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
