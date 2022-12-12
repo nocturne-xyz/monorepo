@@ -84,4 +84,4 @@ echo "DONE ($((end-start))s)"
 
 cp "$OUTPUT_DIR/JoinSplitVerifier.sol" "$CONTRACTS_DIR/JoinSplitVerifier.sol"
 
-"$ROOT_SCRIPT_DIR/fixSolidityVerifier.sh" "$CONTRACTS_DIR/JoinSplitVerifier.sol"
+"$ROOT_SCRIPT_DIR/gen_solidity_verifier.sh" "$CONTRACTS_DIR/JoinSplitVerifier.sol"

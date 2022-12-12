@@ -36,7 +36,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****GENERATING ZKEY 0****"
 start=`date +%s`
-npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1_PATH" "$OUTPUT_DIR"/"$CIRCUIT_NAME"_0.zkey --verbose
+npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1_PATH" "$OUTPUT_DIR"/"$CIRCUIT_NAME"_0.zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -77,8 +77,6 @@ echo "DONE ($((end-start))s)"
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
-\cp "$ROOT_DIR/fixtures/subtreeupdateProof.json"
-
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`
 npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR/SubtreeUpdateVerifier.sol""
@@ -87,4 +85,4 @@ echo "DONE ($((end-start))s)"
 
 \cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
 
-"$SCRIPT_DIR/../fixSolidityVerifier.sh" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
+"$SCRIPT_DIR/../gen_solidity_verifier.sh" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"

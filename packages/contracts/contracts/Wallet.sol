@@ -28,6 +28,49 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
+    // Verifies the joinsplit proofs of a bundle of transactions
+    // DOES NOT check if nullifiers in each transaction has not been used
+    function _verifyAllProofsInBundle(
+        Bundle calldata bundle
+    ) internal view returns (bool) {
+        uint256 numOps = bundle.operations.length;
+
+        // compute number of joinsplits in the bundle
+        uint256 numJoinSplits = 0;
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+            numJoinSplits += op.joinSplitTxs.length;
+        }
+        Groth16.Proof[] memory proofs = new Groth16.Proof[](numJoinSplits);
+        uint256[][] memory allPis = new uint256[][](numJoinSplits);
+
+        // current index into proofs and pis
+        uint256 index = 0;
+
+        // Batch verify all the joinsplit proofs
+        for (uint256 i = 0; i < numOps; i++) {
+            Operation calldata op = bundle.operations[i];
+            uint256 operationDigest = uint256(_hashOperation(op)) %
+                Utils.SNARK_SCALAR_FIELD;
+            for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
+                proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
+                allPis[index] = new uint256[](9);
+                allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
+                allPis[index][1] = op.joinSplitTxs[j].newNoteBCommitment;
+                allPis[index][2] = op.joinSplitTxs[j].commitmentTreeRoot;
+                allPis[index][3] = op.joinSplitTxs[j].publicSpend;
+                allPis[index][4] = op.joinSplitTxs[j].nullifierA;
+                allPis[index][5] = op.joinSplitTxs[j].nullifierB;
+                allPis[index][6] = operationDigest;
+                allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
+                allPis[index][8] = op.joinSplitTxs[j].id;
+                index++;
+            }
+        }
+
+        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+    }
+
     // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata bundle
@@ -36,6 +79,11 @@ contract Wallet is IWallet, BalanceManager {
         override
         returns (bool[] memory successes, bytes[][] memory results)
     {
+        require(
+            _verifyAllProofsInBundle(bundle),
+            "Batched JoinSplit proof verification failed."
+        );
+
         uint256 numOps = bundle.operations.length;
 
         successes = new bool[](numOps);
@@ -72,8 +120,7 @@ contract Wallet is IWallet, BalanceManager {
     function performOperation(
         Operation calldata op
     ) external onlyThis returns (bool success, bytes[] memory results) {
-        bytes32 operationHash = _hashOperation(op);
-        _handleAllSpends(op.joinSplitTxs, op.tokens, operationHash);
+        _handleAllSpends(op.joinSplitTxs, op.tokens);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;

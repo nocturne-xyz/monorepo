@@ -3,6 +3,8 @@ pragma solidity ^0.8.5;
 
 import "./interfaces/IJoinSplitVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+import {Groth16} from "./libs/Groth16.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
@@ -49,10 +51,11 @@ contract CommitmentTreeManager {
         pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
+    // Process a joinsplit transaction, assuming that the encoded proof is valid
     function _handleJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplitTx,
-        bytes32 operationHash
+        IWallet.JoinSplitTransaction calldata joinSplitTx
     ) internal {
+        // Check validity of nullifiers
         require(
             pastRoots[joinSplitTx.commitmentTreeRoot],
             "Given tree root not a past root"
@@ -65,31 +68,9 @@ contract CommitmentTreeManager {
             !nullifierSet[joinSplitTx.nullifierB],
             "Nullifier B already used"
         );
-
-        uint256 operationDigest = uint256(operationHash) %
-            Utils.SNARK_SCALAR_FIELD;
-
         require(
-            joinSplitVerifier.verifyProof(
-                [joinSplitTx.proof[0], joinSplitTx.proof[1]],
-                [
-                    [joinSplitTx.proof[2], joinSplitTx.proof[3]],
-                    [joinSplitTx.proof[4], joinSplitTx.proof[5]]
-                ],
-                [joinSplitTx.proof[6], joinSplitTx.proof[7]],
-                [
-                    joinSplitTx.newNoteACommitment,
-                    joinSplitTx.newNoteBCommitment,
-                    joinSplitTx.commitmentTreeRoot,
-                    joinSplitTx.publicSpend,
-                    joinSplitTx.nullifierA,
-                    joinSplitTx.nullifierB,
-                    operationDigest,
-                    uint256(uint160(joinSplitTx.asset)),
-                    joinSplitTx.id
-                ]
-            ),
-            "JoinSplit proof invalid"
+            joinSplitTx.nullifierA != joinSplitTx.nullifierB,
+            "Two nullifiers in the joinsplit cannot be equal."
         );
 
         // Compute newNote indices in the merkle tree

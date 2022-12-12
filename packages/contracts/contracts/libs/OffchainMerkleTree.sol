@@ -2,7 +2,9 @@
 pragma solidity ^0.8.5;
 
 import "../interfaces/ISubtreeUpdateVerifier.sol";
+import {Groth16} from "../libs/Groth16.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Utils} from "./Utils.sol";
 import {TreeUtils} from "./TreeUtils.sol";
 import {QueueLib} from "./Queue.sol";
@@ -114,12 +116,16 @@ library OffchainMerkleTree {
             hi
         );
 
+        uint256[] memory pis = new uint256[](4);
+        pis[0] = self.root;
+        pis[1] = newRoot;
+        pis[2] = encodedPathAndHash;
+        pis[3] = lo;
+
         require(
             self.subtreeUpdateVerifier.verifyProof(
-                [proof[0], proof[1]],
-                [[proof[2], proof[3]], [proof[4], proof[5]]],
-                [proof[6], proof[7]],
-                [self.root, newRoot, encodedPathAndHash, lo]
+                Utils.proof8ToStruct(proof),
+                pis
             ),
             "subtree update proof invalid"
         );

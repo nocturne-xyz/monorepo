@@ -18,7 +18,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
     OffchainMerkleTreeData merkle;
-    ISubtreeUpdateVerifier verifier;
+    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
     TreeTest treeTest;
@@ -30,11 +30,13 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
-        verifier = ISubtreeUpdateVerifier(new TestSubtreeUpdateVerifier());
+        subtreeUpdateVerifier = ISubtreeUpdateVerifier(
+            new TestSubtreeUpdateVerifier()
+        );
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
         treeTest.initialize(hasherT3, hasherT6);
-        merkle.initialize(address(verifier));
+        merkle.initialize(address(subtreeUpdateVerifier));
     }
 
     function testTreeTest() public {

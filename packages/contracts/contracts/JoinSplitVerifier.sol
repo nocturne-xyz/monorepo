@@ -1,37 +1,17 @@
-//
-// Copyright 2017 Christian Reitwiessner
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-// 2019 OKIMS
-//      ported to solidity 0.6
-//      fixed linter warnings
-//      added requiere error messages
-//
-//
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.5;
-import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
+
 import {Pairing} from "./libs/Pairing.sol";
+import {Groth16} from "./libs/Groth16.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 
 contract JoinSplitVerifier is IJoinSplitVerifier {
-    using Pairing for *;
-    struct VerifyingKey {
-        Pairing.G1Point alfa1;
-        Pairing.G2Point beta2;
-        Pairing.G2Point gamma2;
-        Pairing.G2Point delta2;
-        Pairing.G1Point[] IC;
-    }
-    struct Proof {
-        Pairing.G1Point A;
-        Pairing.G2Point B;
-        Pairing.G1Point C;
-    }
-
-    function verifyingKey() internal pure returns (VerifyingKey memory vk) {
-        vk.alfa1 = Pairing.G1Point(
+    function verifyingKey()
+        internal
+        pure
+        returns (Groth16.VerifyingKey memory vk)
+    {
+        vk.alpha1 = Pairing.G1Point(
             20491192805390485299153009773594534940189261866228447918068658471970481763042,
             9383485363053290200918347156157836566562967994039712273449902621266178545958
         );
@@ -58,12 +38,12 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                892100084181594739092153383930145054722006615728965445968585405739429889240,
-                15100490548420672308402728607054994269904700357717542673260030346945373510074
+                20009706926278718523284914601149737439221085907247643761596452820649852927030,
+                14617117937626605134523256198414972512105232372166274050529305072119104348042
             ],
             [
-                13680598552664081317268931690572846886074461539608668571276293080859680274581,
-                16892268370747543244728217670769592027828958855630360501847565873511693296096
+                6785930645883069649361882449666510927207212045593945530883247795320394486430,
+                15661821700387498541527397350862241291986279135384723549846019487620134081738
             ]
         );
         vk.IC = new Pairing.G1Point[](10);
@@ -119,60 +99,19 @@ contract JoinSplitVerifier is IJoinSplitVerifier {
         );
     }
 
-    function verify(
-        uint[] memory input,
-        Proof memory proof
-    ) internal view returns (uint) {
-        uint256 snark_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-        VerifyingKey memory vk = verifyingKey();
-        require(input.length + 1 == vk.IC.length, "verifier-bad-input");
-        // Compute the linear combination vk_x
-        Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
-        for (uint i = 0; i < input.length; i++) {
-            require(
-                input[i] < snark_scalar_field,
-                "verifier-gte-snark-scalar-field"
-            );
-            vk_x = Pairing.addition(
-                vk_x,
-                Pairing.scalar_mul(vk.IC[i + 1], input[i])
-            );
-        }
-        vk_x = Pairing.addition(vk_x, vk.IC[0]);
-        if (
-            !Pairing.pairingProd4(
-                Pairing.negate(proof.A),
-                proof.B,
-                vk.alfa1,
-                vk.beta2,
-                vk_x,
-                vk.gamma2,
-                proof.C,
-                vk.delta2
-            )
-        ) return 1;
-        return 0;
-    }
-
     /// @return r  bool true if proof is valid
     function verifyProof(
-        uint[2] memory a,
-        uint[2][2] memory b,
-        uint[2] memory c,
-        uint[9] memory input
+        Groth16.Proof memory proof,
+        uint256[] memory pi
     ) public view override returns (bool r) {
-        Proof memory proof;
-        proof.A = Pairing.G1Point(a[0], a[1]);
-        proof.B = Pairing.G2Point([b[0][0], b[0][1]], [b[1][0], b[1][1]]);
-        proof.C = Pairing.G1Point(c[0], c[1]);
-        uint[] memory inputValues = new uint[](input.length);
-        for (uint i = 0; i < input.length; i++) {
-            inputValues[i] = input[i];
-        }
-        if (verify(inputValues, proof) == 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return Groth16.verifyProof(verifyingKey(), proof, pi);
+    }
+
+    /// @return r bool true if proofs are valid
+    function batchVerifyProofs(
+        Groth16.Proof[] memory proofs,
+        uint256[][] memory allPis
+    ) public view override returns (bool) {
+        return Groth16.batchVerifyProofs(verifyingKey(), proofs, allPis);
     }
 }
