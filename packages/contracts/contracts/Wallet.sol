@@ -36,25 +36,11 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
-    // Verifies the joinsplit proofs of a bundle of transactions
-    // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofs(
-        Operation[] calldata _ops,
-        uint256[] memory _opDigests
-    ) internal view returns (bool) {
-        (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPis(_ops, _opDigests);
-        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
-    }
-
-    // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata _bundle
     ) external override returns (IWallet.OperationResult[] memory) {
         Operation[] calldata _ops = _bundle.operations;
-        uint256[] memory _opDigests = WalletUtils.extractOperationsDigests(
-            _ops
-        );
+        uint256[] memory _opDigests = WalletUtils.extractOperationDigests(_ops);
 
         require(
             _verifyAllProofs(_ops, _opDigests),
@@ -131,6 +117,19 @@ contract Wallet is IWallet, BalanceManager {
             opResult.callSuccesses,
             opResult.callResults
         );
+    }
+
+    // Verifies the joinsplit proofs of a bundle of transactions
+    // DOES NOT check if nullifiers in each transaction has not been used
+    function _verifyAllProofs(
+        Operation[] calldata _ops,
+        uint256[] memory _opDigests
+    ) internal view returns (bool) {
+        (
+            Groth16.Proof[] memory _proofs,
+            uint256[][] memory _allPis
+        ) = WalletUtils.extractJoinSplitProofsAndPis(_ops, _opDigests);
+        return joinSplitVerifier.batchVerifyProofs(_proofs, _allPis);
     }
 
     function _makeExternalCall(

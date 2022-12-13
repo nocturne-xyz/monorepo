@@ -6,7 +6,7 @@ import {Utils} from "../libs/Utils.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
-    function extractOperationsDigests(
+    function extractOperationDigests(
         IWallet.Operation[] calldata _ops
     ) internal pure returns (uint256[] memory) {
         uint256 _numOps = _ops.length;
