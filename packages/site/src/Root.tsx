@@ -30,7 +30,3 @@ export const Root: FunctionComponent<RootProps> = ({ children }) => {
     </ToggleThemeContext.Provider>
   );
 };
-
-(BigInt.prototype as any).toJSON = function () {
-  return this.toString();
-};

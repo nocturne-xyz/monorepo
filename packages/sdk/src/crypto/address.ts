@@ -18,18 +18,6 @@ export interface AddressPoints {
 }
 
 export class NocturneAddressTrait {
-  static fromJSON(jsonOrString: string | any): NocturneAddress {
-    const json: any =
-      typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
-    const { h1X, h1Y, h2X, h2Y } = json;
-    return {
-      h1X: BigInt(h1X),
-      h1Y: BigInt(h1Y),
-      h2X: BigInt(h2X),
-      h2Y: BigInt(h2Y),
-    };
-  }
-
   static toPoints(flattened: NocturneAddress): AddressPoints {
     return {
       h1: [flattened.h1X, flattened.h1Y],
