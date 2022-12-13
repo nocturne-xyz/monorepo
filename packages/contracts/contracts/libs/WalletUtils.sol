@@ -17,7 +17,7 @@ library WalletUtils {
 
         return _opDigests;
     }
-    
+
     function extractJoinSplitProofsAndPis(
         IWallet.Operation[] calldata _ops,
         uint256[] memory _digests

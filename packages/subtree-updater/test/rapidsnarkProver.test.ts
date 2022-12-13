@@ -2,7 +2,13 @@ import "mocha";
 
 import { expect } from "chai";
 import * as path from "path";
-import { Note, NocturnePrivKey, NocturneSigner, BinaryPoseidonTree, NoteTrait } from "@nocturne-xyz/sdk";
+import {
+  Note,
+  NocturnePrivKey,
+  NocturneSigner,
+  BinaryPoseidonTree,
+  NoteTrait,
+} from "@nocturne-xyz/sdk";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -17,10 +23,9 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdat
 const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
-
-describe('rapidsnark subtree update prover', async () =>  {
+describe("rapidsnark subtree update prover", async () => {
   const sk = BigInt(
-  "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
+    "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
   );
   const flaxPrivKey = new NocturnePrivKey(sk);
   const flaxSigner = new NocturneSigner(flaxPrivKey);
@@ -41,9 +46,8 @@ describe('rapidsnark subtree update prover', async () =>  {
     return NoteTrait.toCommitment(dummyNote());
   }
 
-
   function dummyBatch(): (Note | bigint)[] {
-    return [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(i => {
+    return [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map((i) => {
       if (i % 2 == 0) {
         return dummyNote();
       } else {
@@ -56,10 +60,16 @@ describe('rapidsnark subtree update prover', async () =>  {
     console.log("skipping rapidsnark tests...");
   } else {
     it("generates proofs for valid input", async () => {
-      const prover = new RapidsnarkSubtreeUpdateProver(EXECUTABLE_CMD, WITNESS_GEN_EXECUTABLE_PATH, ZKEY_PATH, VKEY_PATH, TMP_PATH);
+      const prover = new RapidsnarkSubtreeUpdateProver(
+        EXECUTABLE_CMD,
+        WITNESS_GEN_EXECUTABLE_PATH,
+        ZKEY_PATH,
+        VKEY_PATH,
+        TMP_PATH
+      );
       const tree = new BinaryPoseidonTree();
       const batch = dummyBatch();
-      
+
       for (let i = 0; i < batch.length; i++) {
         const item = batch[i];
         if (typeof item === "bigint") {

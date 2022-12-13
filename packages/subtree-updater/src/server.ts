@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { open } from 'lmdb';
+import { open } from "lmdb";
 import { SubtreeUpdater } from ".";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
 import { clearTimeout } from "timers";
@@ -14,8 +14,17 @@ export class SubtreeUpdateServer {
   private prom?: Promise<void>;
   private timer?: NodeJS.Timeout;
 
-  constructor(prover: SubtreeUpdateProver, walletContractAddress: string, dbPath: string, signer: ethers.Signer, interval: number = TWELVE_SECONDS) {
-    const walletContract = Wallet__factory.connect(walletContractAddress, signer);
+  constructor(
+    prover: SubtreeUpdateProver,
+    walletContractAddress: string,
+    dbPath: string,
+    signer: ethers.Signer,
+    interval: number = TWELVE_SECONDS
+  ) {
+    const walletContract = Wallet__factory.connect(
+      walletContractAddress,
+      signer
+    );
     const rootDB = open({ path: dbPath });
 
     this.interval = interval;
@@ -37,7 +46,8 @@ export class SubtreeUpdateServer {
         }
 
         try {
-          const filledBatch = await this.updater.pollInsertionsAndTryMakeBatch();
+          const filledBatch =
+            await this.updater.pollInsertionsAndTryMakeBatch();
           if (filledBatch) {
             await this.updater.tryGenAndSubmitProofs();
           }
@@ -45,12 +55,11 @@ export class SubtreeUpdateServer {
           console.error("subtree update server received an error:", err);
           reject(err);
         }
-
       }, this.interval);
     });
 
     this.prom = prom.finally(() => clearTimeout(this.timer));
-  } 
+  }
 
   public async stop(): Promise<void> {
     this.stopped = true;
