@@ -2922,6 +2922,7 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    bigint-json: ^1.1.5
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2943,6 +2944,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-conversion: ^2.3.0
+    bigint-json: ^1.1.5
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2969,6 +2971,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.20.0
     "@zk-kit/incremental-merkle-tree": ^1.0.0
     big-integer: ^1.6.42
+    bigint-json: ^1.1.5
     chai: ^4.3.6
     circomlibjs: 0.0.8
     eslint: ^7.32.0
@@ -3047,6 +3050,7 @@ __metadata:
     "@types/node": ^18.11.9
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
+    bigint-json: ^1.1.5
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
@@ -7247,6 +7251,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bigint-json@npm:^1.1.5":
+  version: 1.1.5
+  resolution: "bigint-json@npm:1.1.5"
+  dependencies:
+    lodash.clonedeep: ^4.5.0
+  checksum: cadb545d46045f278f61cf8d9ed526295e8170116628ffbe47e15d2dc8f8e7f8e09183425a50c3312456ab94e7e212ca5791c7cd339841c3998e366cb4091c7a
+  languageName: node
+  linkType: hard
+
 "bigint-mod-arith@npm:^3.1.0":
   version: 3.1.2
   resolution: "bigint-mod-arith@npm:3.1.2"
@@ -11095,7 +11108,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
@@ -15921,7 +15934,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash.clonedeep@npm:4.5.0":
+"lodash.clonedeep@npm:4.5.0, lodash.clonedeep@npm:^4.5.0":
   version: 4.5.0
   resolution: "lodash.clonedeep@npm:4.5.0"
   checksum: 92c46f094b064e876a23c97f57f81fbffd5d760bf2d8a1c61d85db6d1e488c66b0384c943abee4f6af7debf5ad4e4282e74ff83177c9e63d8ff081a4837c3489

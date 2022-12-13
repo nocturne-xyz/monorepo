@@ -10,9 +10,9 @@ import {
   JoinSplitInputs,
   MerkleProofInput,
   NoteInput,
-  toJSON,
   NocturneAddressTrait,
 } from "@nocturne-xyz/sdk";
+import JSON from "bigint-json";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
@@ -161,7 +161,7 @@ console.log(joinsplitInputs);
   if (!(await prover.verifyJoinSplitProof(proof))) {
     throw new Error("Proof invalid!");
   }
-  const json = toJSON(proof);
+  const json = JSON.stringify(proof);
   console.log(json);
 
   if (writeToFixture) {

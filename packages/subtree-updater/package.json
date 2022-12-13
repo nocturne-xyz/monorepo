@@ -34,6 +34,7 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",
+    "bigint-json": "^1.1.5",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",

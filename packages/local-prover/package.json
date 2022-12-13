@@ -23,6 +23,7 @@
   "dependencies": {
     "@nocturne-xyz/sdk": "workspace:^",
     "bigint-conversion": "^2.3.0",
+    "bigint-json": "^1.1.5",
     "snarkjs": "^0.5.0"
   },
   "devDependencies": {

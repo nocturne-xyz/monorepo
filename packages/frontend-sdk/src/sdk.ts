@@ -3,18 +3,14 @@ import {
   packToSolidityProof,
   ProvenOperation,
   ProvenJoinSplitTx,
-  toJSON,
   PreProofOperation,
   SpendAndRefundTokens,
-  preProofOperationFromJSON,
   NocturneAddress,
-  NocturneAddressTrait,
   AssetWithBalance,
-  assetWithBalanceFromJSON,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
-import JSON from "json-bigint";
+import JSON from "bigint-json";
 
 const WASM_PATH = "./joinsplit.wasm";
 const ZKEY_PATH = "./joinsplit.zkey";
@@ -83,7 +79,7 @@ export class NocturneFrontendSDK {
       ],
     })) as string;
 
-    return JSON.parse(json).map(assetWithBalanceFromJSON);
+    return JSON.parse(json) as AssetWithBalance[];
   }
 
   /**
@@ -125,25 +121,25 @@ export class NocturneFrontendSDK {
   protected async getJoinSplitInputsFromSnap(
     operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
-    const json = await window.ethereum.request({
+    const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
         DEFAULT_SNAP_ORIGIN,
         {
           method: "nocturne_getJoinSplitInputs",
-          params: { operationRequest: toJSON(operationRequest) },
+          params: { operationRequest: JSON.stringify(operationRequest) },
         },
       ],
-    });
+    })) as string;
 
-    return preProofOperationFromJSON(json);
+    return JSON.parse(json) as PreProofOperation;
   }
 
   /**
    * Retrieve a freshly randomized address from the snap.
    */
   protected async getRandomizedAddr(): Promise<NocturneAddress> {
-    const json = await window.ethereum.request({
+    const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
         DEFAULT_SNAP_ORIGIN,
@@ -151,9 +147,9 @@ export class NocturneFrontendSDK {
           method: "nocturne_getRandomizedAddr",
         },
       ],
-    });
+    })) as string;
 
-    return NocturneAddressTrait.fromJSON(json);
+    return JSON.parse(json) as NocturneAddress;
   }
 }
 
