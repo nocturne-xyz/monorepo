@@ -58,7 +58,7 @@ contract CommitmentTreeManager {
         // Check validity of nullifiers
         require(
             pastRoots[joinSplitTx.commitmentTreeRoot],
-            "Given tree root not a past root"
+            "Tree root not past root"
         );
         require(
             !nullifierSet[joinSplitTx.nullifierA],
@@ -70,7 +70,7 @@ contract CommitmentTreeManager {
         );
         require(
             joinSplitTx.nullifierA != joinSplitTx.nullifierB,
-            "Two nullifiers in the joinsplit cannot be equal."
+            "2 nfs should !equal."
         );
 
         // Compute newNote indices in the merkle tree

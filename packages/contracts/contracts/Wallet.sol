@@ -39,31 +39,36 @@ contract Wallet is IWallet, BalanceManager {
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
     function _verifyAllProofs(
-        OperationAndDigest[] memory _opsAndDigests
+        Operation[] calldata _ops,
+        uint256[] memory _opDigests
     ) internal view returns (bool) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPisFromBundle(_opsAndDigests);
+            .extractJoinSplitProofsAndPis(_ops, _opDigests);
         return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
     // TODO: do we want to return successes/results?
     function processBundle(
-        Bundle calldata bundle
+        Bundle calldata _bundle
     ) external override returns (IWallet.OperationResult[] memory) {
-        uint256[] memory _opsAndDigests = WalletUtils.extractOperationsAndDigestsFromBundle(bundle);
-
-        require(
-            _verifyAllProofsInBundle(_opsAndDigests),
-            "Batched JoinSplit proof verification failed."
+        Operation[] calldata _ops = _bundle.operations;
+        uint256[] memory _opDigests = WalletUtils.extractOperationsDigests(
+            _ops
         );
 
-        uint256 numOps = bundle.operations.length;
+        require(
+            _verifyAllProofs(_ops, _opDigests),
+            "Batched JoinSplit verify failed."
+        );
 
+        uint256 numOps = _ops.length;
         IWallet.OperationResult[]
             memory opResults = new IWallet.OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            Operation calldata op = bundle.operations[i];
-            opResults[i] = this.performOperation{gas: op.gasLimit}(op);
+            opResults[i] = this.performOperation{gas: _ops[i].gasLimit}(
+                _ops[i],
+                _opDigests[i]
+            );
         }
 
         return opResults;
@@ -93,12 +98,12 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function performOperation(
-        OperationAndDigest calldata _opAndDigest
-    ) external onlyThis returns (bool success, bytes[] memory results) {
-        Operation memory op = _opAndDigest.operation;
-        _handleAllSpends(op.joinSplitTxs, op.tokens);
+        Operation calldata _op,
+        uint256 _opDigest
+    ) external onlyThis returns (IWallet.OperationResult memory opResult) {
+        _handleAllSpends(_op.joinSplitTxs, _op.tokens);
 
-        Action[] calldata actions = op.actions;
+        Action[] calldata actions = _op.actions;
         uint256 numActions = actions.length;
         opResult.opSuccess = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
@@ -115,9 +120,9 @@ contract Wallet is IWallet, BalanceManager {
 
         // handles refunds and resets balances
         _handleAllRefunds(
-            op.tokens.spendTokens,
-            op.tokens.refundTokens,
-            op.refundAddr
+            _op.tokens.spendTokens,
+            _op.tokens.refundTokens,
+            _op.refundAddr
         );
 
         emit OperationProcessed(

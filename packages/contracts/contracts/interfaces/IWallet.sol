@@ -82,16 +82,10 @@ interface IWallet {
         uint256 gasLimit;
     }
 
-<<<<<<< HEAD
-    struct OperationAndDigest {
-        Operation operation;
-        uint256 operationDigest;
-=======
     struct OperationResult {
         bool opSuccess;
         bool[] callSuccesses;
         bytes[] callResults;
->>>>>>> eaab15c (feat(contracts): emit OperationProcessed event and test in wallet tests)
     }
 
     struct Action {

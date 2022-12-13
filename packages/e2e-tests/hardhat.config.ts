@@ -18,6 +18,9 @@ const config: HardhatUserConfig = {
     timeout: 1_000_000, // 1M ms --> 1000 sec
   },
   networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
     localhost: {
       live: false,
       saveDeployments: false,
