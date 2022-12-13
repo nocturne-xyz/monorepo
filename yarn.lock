@@ -2922,7 +2922,7 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
-    bigint-json-serialization: ^1.0.13-alpha
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2944,7 +2944,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-conversion: ^2.3.0
-    bigint-json-serialization: ^1.0.13-alpha
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2970,7 +2970,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.20.0
     "@zk-kit/incremental-merkle-tree": ^1.0.0
     big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.13-alpha
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     circomlibjs: 0.0.8
     eslint: ^7.32.0
@@ -3048,7 +3048,7 @@ __metadata:
     "@types/node": ^18.11.9
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
-    bigint-json-serialization: ^1.0.13-alpha
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
@@ -7249,13 +7249,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bigint-json-serialization@npm:^1.0.13-alpha":
-  version: 1.0.13-alpha
-  resolution: "bigint-json-serialization@npm:1.0.13-alpha"
+"bigint-json-serialization@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "bigint-json-serialization@npm:1.0.1"
   dependencies:
     "@types/node": ^18.11.14
     typescript: ^4.9.4
-  checksum: ad7b8a2f0976b7c809d0bfaeacbcbf54907adbee89ae25931ea1004b8c6c46730d488cbf0662f40811189ba946eb0ec7a5662694b3c9d2630761d25a74f2b5b2
+  checksum: 582c7876e6b1a9b7632a08b281caff6034f3ef87bb2490f5b901121ba1642be468630d001f3d29b8b8bce81a13ea7c72d1969c5ba68283a98bb88db856662f47
   languageName: node
   linkType: hard
 

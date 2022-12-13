@@ -21,7 +21,7 @@
     "@nocturne-xyz/contracts": "workspace:^",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
-    "bigint-json-serialization": "^1.0.13-alpha",
+    "bigint-json-serialization": "^1.0.1",
     "circomlibjs": "0.0.8",
     "ethers": "^5.0.0",
     "ffjavascript": "0.2.57",
