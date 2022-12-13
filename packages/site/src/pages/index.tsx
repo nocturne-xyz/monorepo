@@ -23,7 +23,6 @@ import {
   AssetRequest,
   ERC20_ID,
   OperationRequest,
-  toJSON,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
@@ -162,7 +161,7 @@ const Index = () => {
   const handleGetAllBalancesClick = async () => {
     try {
       const balances = await nocturneFrontendSDK!.getAllBalances();
-      console.log(toJSON(balances));
+      console.log(balances);
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
