@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - Add query function for `SubtreeUpdate` events
 - Pull out note / tree insertion fetching logic into `indexing` module
 - Add `indexing` module for code that fetches data from chain

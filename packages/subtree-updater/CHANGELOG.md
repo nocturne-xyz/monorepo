@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - modify `SubtreeUpdater` to index `SubtreeUpdate` events and use those to determine when insertions are committed
 - spit `tryGenAndSubmitProofs` into separate method
 - separately enqueue batches to be committed
