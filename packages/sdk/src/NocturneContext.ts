@@ -14,7 +14,13 @@ import {
   PreProofOperation,
   ProvenOperation,
 } from "./commonTypes";
-import { Note, IncludedNote, NoteTrait, encodeAsset, encodeID } from "./sdk/note";
+import {
+  Note,
+  IncludedNote,
+  NoteTrait,
+  encodeAsset,
+  encodeID,
+} from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
@@ -195,7 +201,8 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      encodeAsset(baseJoinSplitTx.asset, baseJoinSplitTx.id) != publicSignals.asset ||
+      encodeAsset(baseJoinSplitTx.asset, baseJoinSplitTx.id) !=
+        publicSignals.asset ||
       encodeID(baseJoinSplitTx.id) != publicSignals.id ||
       opDigest != publicSignals.opDigest
     ) {
