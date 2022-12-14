@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Change note commitment to use encoded `asset` and `ID`
+- Add `fromEncoded` and `toEncoded` methods to `NoteTrait`
+- Change `NoteInput` to `EncodedNote`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - Add query function for `SubtreeUpdate` events
 - Pull out note / tree insertion fetching logic into `indexing` module
