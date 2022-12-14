@@ -12,9 +12,9 @@ contract PoseidonHasherT3 is IHasherT3 {
     }
 
     function hash(
-        uint256[2] memory _elems
+        uint256[2] memory elems
     ) external view override returns (uint256) {
-        return poseidonT3.poseidon(_elems);
+        return poseidonT3.poseidon(elems);
     }
 }
 
@@ -26,9 +26,9 @@ contract PoseidonHasherT4 is IHasherT4 {
     }
 
     function hash(
-        uint256[3] memory _elems
+        uint256[3] memory elems
     ) external view override returns (uint256) {
-        return poseidonT4.poseidon(_elems);
+        return poseidonT4.poseidon(elems);
     }
 }
 
@@ -40,9 +40,9 @@ contract PoseidonHasherT5 is IHasherT5 {
     }
 
     function hash(
-        uint256[4] memory _elems
+        uint256[4] memory elems
     ) external view override returns (uint256) {
-        return poseidonT5.poseidon(_elems);
+        return poseidonT5.poseidon(elems);
     }
 }
 
@@ -54,9 +54,9 @@ contract PoseidonHasherT6 is IHasherT6 {
     }
 
     function hash(
-        uint256[5] memory _elems
+        uint256[5] memory elems
     ) external view override returns (uint256) {
-        return poseidonT6.poseidon(_elems);
+        return poseidonT6.poseidon(elems);
     }
 }
 
@@ -68,8 +68,8 @@ contract PoseidonHasherT7 is IHasherT7 {
     }
 
     function hash(
-        uint256[6] memory _elems
+        uint256[6] memory elems
     ) external view override returns (uint256) {
-        return poseidonT7.poseidon(_elems);
+        return poseidonT7.poseidon(elems);
     }
 }

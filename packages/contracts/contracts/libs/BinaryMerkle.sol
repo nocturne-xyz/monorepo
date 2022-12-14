@@ -33,7 +33,7 @@ library BinaryMerkle {
         IncrementalTreeData storage self,
         uint8 depth,
         uint256 zero,
-        IHasherT3 _hasherT3
+        IHasherT3 hasherT3
     ) internal {
         require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
@@ -42,7 +42,7 @@ library BinaryMerkle {
         );
 
         self.depth = depth;
-        self.hasherT3 = _hasherT3;
+        self.hasherT3 = hasherT3;
 
         for (uint8 i = 0; i < depth; i++) {
             self.zeroes[i] = zero;

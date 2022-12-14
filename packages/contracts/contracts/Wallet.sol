@@ -19,10 +19,10 @@ import "hardhat/console.sol";
 // TODO: make sure all values given to proofs < SNARK_SCALAR_FIELD
 contract Wallet is IWallet, BalanceManager {
     constructor(
-        address _vault,
-        address _joinSplitVerifier,
-        address _subtreeUpdateVerifier
-    ) BalanceManager(_vault, _joinSplitVerifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+        address vault,
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -37,23 +37,23 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function processBundle(
-        Bundle calldata _bundle
+        Bundle calldata bundle
     ) external override returns (IWallet.OperationResult[] memory) {
-        Operation[] calldata _ops = _bundle.operations;
-        uint256[] memory _opDigests = WalletUtils.extractOperationDigests(_ops);
+        Operation[] calldata ops = bundle.operations;
+        uint256[] memory opDigests = WalletUtils.extractOperationDigests(ops);
 
         require(
-            _verifyAllProofs(_ops, _opDigests),
+            _verifyAllProofs(ops, opDigests),
             "Batched JoinSplit verify failed."
         );
 
-        uint256 numOps = _ops.length;
+        uint256 numOps = ops.length;
         IWallet.OperationResult[]
             memory opResults = new IWallet.OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            opResults[i] = this.performOperation{gas: _ops[i].gasLimit}(
-                _ops[i],
-                _opDigests[i]
+            opResults[i] = this.performOperation{gas: ops[i].gasLimit}(
+                ops[i],
+                opDigests[i]
             );
         }
 
@@ -84,12 +84,12 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function performOperation(
-        Operation calldata _op,
-        uint256 _opDigest
+        Operation calldata op,
+        uint256 opDigest
     ) external onlyThis returns (IWallet.OperationResult memory opResult) {
-        _handleAllSpends(_op.joinSplitTxs, _op.tokens);
+        _handleAllSpends(op.joinSplitTxs, op.tokens);
 
-        Action[] calldata actions = _op.actions;
+        Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
         opResult.opSuccess = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
@@ -106,13 +106,13 @@ contract Wallet is IWallet, BalanceManager {
 
         // handles refunds and resets balances
         _handleAllRefunds(
-            _op.tokens.spendTokens,
-            _op.tokens.refundTokens,
-            _op.refundAddr
+            op.tokens.spendTokens,
+            op.tokens.refundTokens,
+            op.refundAddr
         );
 
         emit OperationProcessed(
-            _opDigest,
+            opDigest,
             opResult.opSuccess,
             opResult.callSuccesses,
             opResult.callResults
@@ -122,21 +122,19 @@ contract Wallet is IWallet, BalanceManager {
     // Verifies the joinsplit proofs of a bundle of transactions
     // DOES NOT check if nullifiers in each transaction has not been used
     function _verifyAllProofs(
-        Operation[] calldata _ops,
-        uint256[] memory _opDigests
+        Operation[] calldata ops,
+        uint256[] memory opDigests
     ) internal view returns (bool) {
-        (
-            Groth16.Proof[] memory _proofs,
-            uint256[][] memory _allPis
-        ) = WalletUtils.extractJoinSplitProofsAndPis(_ops, _opDigests);
-        return joinSplitVerifier.batchVerifyProofs(_proofs, _allPis);
+        (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
+            .extractJoinSplitProofsAndPis(ops, opDigests);
+        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
     function _makeExternalCall(
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
         require(
-            action.contractAddress != address(vault),
+            action.contractAddress != address(_vault),
             "Cannot call the Nocturne vault"
         );
 

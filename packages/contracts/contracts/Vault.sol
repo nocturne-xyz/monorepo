@@ -17,17 +17,17 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
-    address public wallet;
+    address public _wallet;
 
     modifier onlyTeller() {
-        require(msg.sender == wallet, "Not called from Teller");
+        require(msg.sender == _wallet, "Not called from Teller");
         _;
     }
 
     // TODO: deployment can be front run
-    function initialize(address _teller) external {
-        require(wallet == address(0), "Vault already initialized");
-        wallet = _teller;
+    function initialize(address teller) external {
+        require(_wallet == address(0), "Vault already initialized");
+        _wallet = teller;
     }
 
     function requestERC20s(
@@ -41,7 +41,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         for (uint256 i = 0; i < values.length; i++) {
             if (values[i] != 0) {
                 require(
-                    IERC20(assetAddresses[i]).transfer(wallet, values[i]),
+                    IERC20(assetAddresses[i]).transfer(_wallet, values[i]),
                     "Transfer failed"
                 );
             }
@@ -52,7 +52,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         address assetAddress,
         uint256 id
     ) external override onlyTeller {
-        IERC721(assetAddress).safeTransferFrom(address(this), wallet, id);
+        IERC721(assetAddress).safeTransferFrom(address(this), _wallet, id);
     }
 
     function requestERC1155(
@@ -62,7 +62,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
     ) external override onlyTeller {
         IERC1155(assetAddress).safeTransferFrom(
             address(this),
-            wallet,
+            _wallet,
             id,
             value,
             ""
@@ -79,7 +79,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         );
         for (uint256 i = 0; i < values.length; i++) {
             require(
-                IERC20(assets[i]).approve(wallet, values[i]),
+                IERC20(assets[i]).approve(_wallet, values[i]),
                 "Approval failed"
             );
         }

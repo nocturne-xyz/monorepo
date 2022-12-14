@@ -7,31 +7,31 @@ import {Utils} from "../libs/Utils.sol";
 // Helpers for Wallet.sol
 library WalletUtils {
     function extractOperationDigests(
-        IWallet.Operation[] calldata _ops
+        IWallet.Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
-        uint256 _numOps = _ops.length;
-        uint256[] memory _opDigests = new uint256[](_numOps);
-        for (uint256 i = 0; i < _numOps; i++) {
-            _opDigests[i] = calculateOperationDigest(_ops[i]);
+        uint256 numOps = ops.length;
+        uint256[] memory opDigests = new uint256[](numOps);
+        for (uint256 i = 0; i < numOps; i++) {
+            opDigests[i] = calculateOperationDigest(ops[i]);
         }
 
-        return _opDigests;
+        return opDigests;
     }
 
     function extractJoinSplitProofsAndPis(
-        IWallet.Operation[] calldata _ops,
-        uint256[] memory _digests
+        IWallet.Operation[] calldata ops,
+        uint256[] memory digests
     )
         internal
         pure
         returns (Groth16.Proof[] memory proofs, uint256[][] memory allPis)
     {
-        uint256 numOps = _ops.length;
+        uint256 numOps = ops.length;
 
         // compute number of joinsplits in the bundle
         uint256 numJoinSplits = 0;
         for (uint256 i = 0; i < numOps; i++) {
-            numJoinSplits += _ops[i].joinSplitTxs.length;
+            numJoinSplits += ops[i].joinSplitTxs.length;
         }
 
         proofs = new Groth16.Proof[](numJoinSplits);
@@ -42,7 +42,7 @@ library WalletUtils {
 
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
-            IWallet.Operation memory op = _ops[i];
+            IWallet.Operation memory op = ops[i];
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
@@ -52,7 +52,7 @@ library WalletUtils {
                 allPis[index][3] = op.joinSplitTxs[j].publicSpend;
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
-                allPis[index][6] = _digests[i];
+                allPis[index][6] = digests[i];
                 allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
                 allPis[index][8] = op.joinSplitTxs[j].id;
                 index++;
@@ -63,9 +63,9 @@ library WalletUtils {
     }
 
     function calculateOperationDigest(
-        IWallet.Operation calldata _op
+        IWallet.Operation calldata op
     ) internal pure returns (uint256) {
-        return uint256(_hashOperation(_op)) % Utils.SNARK_SCALAR_FIELD;
+        return uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
     }
 
     // TODO: do we need a domain in the payload?
