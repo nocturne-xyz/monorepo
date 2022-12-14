@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@nocturne-xyz/local-prover": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": "workspace:^",
+    "bigint-json-serialization": "^1.0.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

@@ -1,6 +1,7 @@
 import { NocturneDB, LocalMerkleDBExtension } from ".";
-import { Asset, toJSON } from "../../commonTypes";
-import { IncludedNote, includedNoteFromJSON } from "../note";
+import { Asset } from "../../commonTypes";
+import { IncludedNote } from "../note";
+import * as JSON from "bigint-json-serialization";
 
 export const DEFAULT_SERIALIZABLE_STATE: SerializableState = {
   kv: {},
@@ -29,7 +30,7 @@ export function serializableToStructuredState(
   const notes = new Map(
     Object.entries(state.notes).map(([key, val]) => [
       key,
-      val.map((v) => includedNoteFromJSON(v)),
+      val.map((v) => JSON.parse(v) as IncludedNote),
     ])
   );
   const leaves = state.leaves
@@ -51,7 +52,10 @@ export function structuredToSerializableState(
   const kv = Object.fromEntries(state.kv);
 
   const notesMap = new Map(
-    Array.from(state.notes).map(([key, value]) => [key, value.map(toJSON)])
+    Array.from(state.notes).map(([key, value]) => [
+      key,
+      value.map((v) => JSON.stringify(v)),
+    ])
   );
   const notes = Object.fromEntries(notesMap);
 
@@ -139,7 +143,9 @@ export abstract class ObjectDB extends NocturneDB {
     const key = NocturneDB.formatNotesKey({ address: note.asset, id: note.id });
     state.notes.set(
       key,
-      (state.notes.get(key) ?? []).filter((n) => toJSON(n) != toJSON(note))
+      (state.notes.get(key) ?? []).filter(
+        (n) => JSON.stringify(n) != JSON.stringify(note)
+      )
     );
 
     await this.storeState(state);
@@ -150,8 +156,7 @@ export abstract class ObjectDB extends NocturneDB {
     const state = await this.getStructuredState();
 
     const notesMap: Map<string, IncludedNote[]> = new Map();
-    for (const [assetString, jsonNotes] of state.notes.entries()) {
-      const notes = [...jsonNotes].map(includedNoteFromJSON);
+    for (const [assetString, notes] of state.notes.entries()) {
       notesMap.set(assetString, notes);
     }
 
@@ -160,9 +165,7 @@ export abstract class ObjectDB extends NocturneDB {
 
   async getNotesFor(asset: Asset): Promise<IncludedNote[]> {
     const state = await this.getStructuredState();
-    const jsonNotesFor =
-      state.notes.get(NocturneDB.formatNotesKey(asset)) ?? [];
-    return jsonNotesFor.map(includedNoteFromJSON);
+    return state.notes.get(NocturneDB.formatNotesKey(asset)) ?? [];
   }
 
   async clear(): Promise<void> {

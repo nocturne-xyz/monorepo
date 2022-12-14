@@ -1,2 +1,4 @@
 .cache
 public
+static/*.zkey
+static/*.wasm

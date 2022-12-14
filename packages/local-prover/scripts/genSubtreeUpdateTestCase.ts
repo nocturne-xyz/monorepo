@@ -14,7 +14,6 @@ import {
   NocturneSigner,
   Note,
   NoteTrait,
-  toJSON,
 } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -215,7 +214,7 @@ console.log(inputs);
 
 async function prove() {
   const proof = await snarkjs.groth16.fullProve(inputs, WASM_PATH, ZKEY_PATH);
-  const json = toJSON(proof);
+  const json = JSON.stringify(proof);
   console.log(json);
 
   if (writeToFixture) {

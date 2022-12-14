@@ -2,8 +2,8 @@ import {
   SubtreeUpdateProver,
   SubtreeUpdateInputs,
   SubtreeUpdateProofWithPublicSignals,
-  toJSON,
 } from "@nocturne-xyz/sdk";
+import * as JSON from "bigint-json-serialization";
 
 //@ts-ignore
 import * as snarkjs from "snarkjs";
@@ -39,7 +39,7 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const proofJsonPath = `${this.tmpDir}/_proof.json`;
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
-    await fs.promises.writeFile(inputJsonPath, toJSON(inputs));
+    await fs.promises.writeFile(inputJsonPath, JSON.stringify(inputs));
     await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );

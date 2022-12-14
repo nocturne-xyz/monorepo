@@ -4,7 +4,6 @@ import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
 import { NoteInput } from "../proof";
-import JSON from "json-bigint";
 
 export interface Note {
   owner: NocturneAddress;
@@ -15,19 +14,6 @@ export interface Note {
 }
 
 export class NoteTrait {
-  static fromJSON(jsonOrString: string | any): Note {
-    const json: any =
-      typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
-    const { owner, nonce, asset, id, value } = json;
-    return {
-      owner: NocturneAddressTrait.fromJSON(owner),
-      nonce: BigInt(nonce),
-      asset: asset.toString(),
-      id: BigInt(id),
-      value: BigInt(value),
-    };
-  }
-
   static toCommitment({ owner, nonce, asset, id, value }: Note): bigint {
     return BigInt(
       poseidon([
@@ -80,18 +66,4 @@ export class NoteTrait {
 
 export interface IncludedNote extends Note {
   merkleIndex: number;
-}
-
-export function includedNoteFromJSON(jsonOrString: string | any): IncludedNote {
-  const json: any =
-    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
-  const { owner, nonce, asset, id, value, merkleIndex } = json;
-  return {
-    owner: NocturneAddressTrait.fromJSON(owner),
-    nonce: BigInt(nonce),
-    asset: asset.toString(),
-    id: BigInt(id),
-    value: BigInt(value),
-    merkleIndex,
-  };
 }

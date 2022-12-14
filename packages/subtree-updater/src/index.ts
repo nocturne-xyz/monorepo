@@ -2,7 +2,6 @@ import {
   BaseProof,
   BinaryPoseidonTree,
   SubtreeUpdateProver,
-  toJSON,
   fetchInsertions,
   fetchSubtreeUpdateCommits,
   Note,
@@ -13,6 +12,7 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
 export { SubtreeUpdateServer } from "./server";
+import * as JSON from "bigint-json-serialization";
 
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";
@@ -108,7 +108,7 @@ export class SubtreeUpdater {
     await this.db.transaction(() => {
       let keyIndex = index;
       for (const insertion of newInsertions) {
-        this.db.put(insertionKey(keyIndex), toJSON(insertion));
+        this.db.put(insertionKey(keyIndex), JSON.stringify(insertion));
         keyIndex += 1;
       }
 
@@ -217,12 +217,12 @@ export class SubtreeUpdater {
 
   private static parseInsertion(value: string): Note | bigint {
     const insertion = JSON.parse(value);
-    if (typeof insertion === "string") {
-      // it's a commitment - turn into a bigint
-      return BigInt(insertion);
+    if (typeof insertion === "bigint") {
+      // it's a commitment
+      return insertion;
     } else if (typeof insertion === "object") {
       // it's a note - push the object as-is
-      return NoteTrait.fromJSON(insertion);
+      return insertion as Note;
     } else {
       // TODO: can remove this once DB wrapper is added
       throw new Error("invalid insertion type read from DB");
