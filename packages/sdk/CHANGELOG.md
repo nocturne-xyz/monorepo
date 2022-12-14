@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Change note commitment to use encoded `asset` and `ID`
+- Add `fromEncoded` and `toEncoded` methods to `NoteTrait`
+- Change `NoteInput` to `EncodedNote`
 - Add query function for `SubtreeUpdate` events
 - Pull out note / tree insertion fetching logic into `indexing` module
 - Add `indexing` module for code that fetches data from chain
