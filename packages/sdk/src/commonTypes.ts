@@ -2,11 +2,7 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddress } from "./crypto/address";
-import {
-  CanonAddress,
-  NocturneAddress,
-} from "./crypto/address";
+import { CanonAddress, NocturneAddress } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 
