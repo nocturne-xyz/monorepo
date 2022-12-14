@@ -20,11 +20,11 @@ contract CommitmentTreeManager {
     uint256 public _nonce;
 
     OffchainMerkleTreeData internal _merkle;
-    IJoinSplitVerifier public joinSplitVerifier;
+    IJoinSplitVerifier public _joinSplitVerifier;
 
     event Refund(
         IWallet.NocturneAddress refundAddr,
-        uint256 indexed _nonce,
+        uint256 indexed nonce,
         address indexed asset,
         uint256 indexed id,
         uint256 value,
@@ -45,9 +45,9 @@ contract CommitmentTreeManager {
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
-    constructor(address _joinSplitVerifier, address subtreeUpdateVerifier) {
+    constructor(address joinSplitVerifier, address subtreeUpdateVerifier) {
         _merkle.initialize(subtreeUpdateVerifier);
-        joinSplitVerifier = IJoinSplitVerifier(_joinSplitVerifier);
+        _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 

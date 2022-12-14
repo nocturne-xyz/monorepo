@@ -40,7 +40,7 @@ contract Wallet is IWallet, BalanceManager {
         Bundle calldata bundle
     ) external override returns (IWallet.OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
-        uint256[] memory opDigests = WalletUtils.extractOperationDigests(ops);
+        uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
         require(
             _verifyAllProofs(ops, opDigests),
@@ -127,7 +127,7 @@ contract Wallet is IWallet, BalanceManager {
     ) internal view returns (bool) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
-        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+        return _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
     function _makeExternalCall(

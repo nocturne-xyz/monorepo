@@ -6,13 +6,13 @@ import {Utils} from "../libs/Utils.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
-    function extractOperationDigests(
+    function computeOperationDigests(
         IWallet.Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
         uint256 numOps = ops.length;
         uint256[] memory opDigests = new uint256[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            opDigests[i] = calculateOperationDigest(ops[i]);
+            opDigests[i] = computeOperationDigest(ops[i]);
         }
 
         return opDigests;
@@ -62,17 +62,11 @@ library WalletUtils {
         return (proofs, allPis);
     }
 
-    function calculateOperationDigest(
-        IWallet.Operation calldata op
-    ) internal pure returns (uint256) {
-        return uint256(_hashOperation(op)) % Utils.SNARK_SCALAR_FIELD;
-    }
-
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
-    function _hashOperation(
+    function computeOperationDigest(
         IWallet.Operation calldata op
-    ) private pure returns (bytes32) {
+    ) internal pure returns (uint256) {
         bytes memory payload;
 
         IWallet.Action memory action;
@@ -112,7 +106,7 @@ library WalletUtils {
             op.gasLimit
         );
 
-        return keccak256(payload);
+        return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
     }
 
     function _hashJoinSplit(
