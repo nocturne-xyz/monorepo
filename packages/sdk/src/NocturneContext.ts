@@ -14,7 +14,7 @@ import {
   PreProofOperation,
   ProvenOperation,
 } from "./commonTypes";
-import { Note, IncludedNote, NoteTrait } from "./sdk/note";
+import { Note, IncludedNote, NoteTrait, encodeAsset, encodeID } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
@@ -195,8 +195,8 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      BigInt(baseJoinSplitTx.asset) != publicSignals.asset ||
-      baseJoinSplitTx.id != publicSignals.id ||
+      encodeAsset(baseJoinSplitTx.asset, baseJoinSplitTx.id) != publicSignals.asset ||
+      encodeID(baseJoinSplitTx.id) != publicSignals.id ||
       opDigest != publicSignals.opDigest
     ) {
       throw new Error(
@@ -393,12 +393,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: NoteTrait.toNoteInput(oldNoteA),
-      oldNoteB: NoteTrait.toNoteInput(oldNoteB),
+      oldNoteA: NoteTrait.toEncoded(oldNoteA),
+      oldNoteB: NoteTrait.toEncoded(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: NoteTrait.toNoteInput(newNoteA),
-      newNoteB: NoteTrait.toNoteInput(newNoteB),
+      newNoteA: NoteTrait.toEncoded(newNoteA),
+      newNoteB: NoteTrait.toEncoded(newNoteB),
     };
 
     return {
