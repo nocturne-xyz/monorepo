@@ -9,7 +9,7 @@ import {
   NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
-  NoteInput,
+  EncodedNote,
   toJSON,
   NocturneAddressTrait,
 } from "@nocturne-xyz/sdk";
@@ -40,7 +40,7 @@ const nocturneAddrB = nocturneSigner.address;
 const spendPk = nocturneSigner.privkey.spendPk();
 
 // Two old notes: 100 + 50 = 150
-const oldNoteA: NoteInput = {
+const oldNoteA: EncodedNote = {
   owner: nocturneAddrA,
   nonce: 1n,
   asset: 10n,
@@ -59,7 +59,7 @@ const oldNoteACommitment = poseidon([
 ]);
 console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
 
-const oldNoteB: NoteInput = {
+const oldNoteB: EncodedNote = {
   owner: nocturneAddrB,
   nonce: 2n,
   asset: 10n,
@@ -99,7 +99,7 @@ const merkleProofBInput: MerkleProofInput = {
 };
 
 // New notes where 75 + 75 = 150
-const newNoteA: NoteInput = {
+const newNoteA: EncodedNote = {
   owner: nocturneAddrB,
   nonce: 3n,
   asset: 10n,
@@ -108,7 +108,7 @@ const newNoteA: NoteInput = {
 };
 console.log("NEW NOTE A: ", newNoteA);
 
-const newNoteB: NoteInput = {
+const newNoteB: EncodedNote = {
   owner: nocturneAddrA,
   nonce: 4n,
   asset: 10n,

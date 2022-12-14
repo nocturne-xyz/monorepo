@@ -3,7 +3,6 @@ import { Address } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
-import { NoteInput } from "../proof";
 import JSON from "json-bigint";
 
 export interface Note {
@@ -13,6 +12,17 @@ export interface Note {
   id: bigint;
   value: bigint;
 }
+
+export interface EncodedNote {
+  owner: NocturneAddress;
+  nonce: bigint;
+  asset: EncodedAsset;
+  id: EncodedID;
+  value: bigint;
+}
+
+export type EncodedAsset = bigint;
+export type EncodedID = bigint;
 
 export class NoteTrait {
   static fromJSON(jsonOrString: string | any): Note {
@@ -28,30 +38,21 @@ export class NoteTrait {
     };
   }
 
-  static toCommitment({ owner, nonce, asset, id, value }: Note): bigint {
+  static toCommitment(note: Note): bigint {
+    const { owner, nonce, asset, id, value }= NoteTrait.toEncoded(note);
     return BigInt(
       poseidon([
         NocturneAddressTrait.hash(owner),
         nonce,
-        BigInt(asset),
+        asset,
         id,
         value,
       ])
     );
   }
 
-  static toNoteInput({ owner, nonce, asset, id, value }: Note): NoteInput {
-    return {
-      owner: owner,
-      nonce: nonce,
-      asset: BigInt(asset),
-      id: id,
-      value: value,
-    };
-  }
-
   static sha256(note: Note): number[] {
-    const noteInput = NoteTrait.toNoteInput(note);
+    const noteInput = NoteTrait.toEncoded(note);
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
@@ -76,6 +77,20 @@ export class NoteTrait {
   ): IncludedNote {
     return { owner, nonce, asset, id, value, merkleIndex };
   }
+
+  static toEncoded(note: Note): EncodedNote {
+    const { owner, nonce, value } = note;
+    const asset = encodeAsset(note.asset, note.id);
+    const id = encodeID(note.id);
+
+    return {
+      owner,
+      nonce,
+      asset,
+      id,
+      value,
+    };
+  }
 }
 
 export interface IncludedNote extends Note {
@@ -94,4 +109,36 @@ export function includedNoteFromJSON(jsonOrString: string | any): IncludedNote {
     value: BigInt(value),
     merkleIndex,
   };
+}
+
+export function encodeAsset(asset: string, id: bigint): EncodedAsset {
+  const eightyEightZeros = "".padStart(88, "0");
+  const assetBits = BigInt(asset).toString(2).padStart(160, "0");
+  if (assetBits.length > 160) {
+    throw new Error("number repr of `asset` is too large");
+  }
+
+  const idBits = id.toString(2).padStart(256, "0");
+  const idTop3 = idBits.slice(0, 3);
+
+
+  return BigInt(`0b000${idTop3}${eightyEightZeros}00${assetBits}`);
+}
+
+export function decodeAsset(encodedAsset: EncodedAsset): string {
+  const encodedAssetBits = encodedAsset.toString(2).padStart(256, "0");
+  const assetBits = encodedAssetBits.slice(96);
+  return BigInt(`0b${assetBits}`).toString(16);
+}
+
+export function encodeID(id: bigint): EncodedID {
+  const idBits = id.toString(2).padStart(256, "0");
+  return BigInt(`0b000${idBits.slice(3)}`);
+}
+
+export function decodeID(encodedID: EncodedID, encodedAsset: EncodedAsset): bigint {
+  const encodedAssetBits = encodedAsset.toString(2).padStart(256, "0");
+  const idTop3 = encodedAssetBits.slice(3, 6);
+  const encodedIDBits = encodedID.toString(2).padStart(256, "0").slice(3);
+  return BigInt(`0b${idTop3}${encodedIDBits}`);
 }
