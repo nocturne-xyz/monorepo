@@ -14,13 +14,13 @@ contract CommitmentTreeManager {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
     // past roots of the merkle tree
-    mapping(uint256 => bool) public pastRoots;
+    mapping(uint256 => bool) public _pastRoots;
 
-    mapping(uint256 => bool) public nullifierSet;
-    uint256 public nonce;
+    mapping(uint256 => bool) public _nullifierSet;
+    uint256 public _nonce;
 
-    OffchainMerkleTreeData internal merkle;
-    IJoinSplitVerifier public joinSplitVerifier;
+    OffchainMerkleTreeData internal _merkle;
+    IJoinSplitVerifier public _joinSplitVerifier;
 
     event Refund(
         IWallet.NocturneAddress refundAddr,
@@ -45,10 +45,10 @@ contract CommitmentTreeManager {
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
-    constructor(address _joinSplitVerifier, address _subtreeUpdateVerifier) {
-        merkle.initialize(_subtreeUpdateVerifier);
-        joinSplitVerifier = IJoinSplitVerifier(_joinSplitVerifier);
-        pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
+    constructor(address joinSplitVerifier, address subtreeUpdateVerifier) {
+        _merkle.initialize(subtreeUpdateVerifier);
+        _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
+        _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
     // Process a joinsplit transaction, assuming that the encoded proof is valid
@@ -57,24 +57,24 @@ contract CommitmentTreeManager {
     ) internal {
         // Check validity of nullifiers
         require(
-            pastRoots[joinSplitTx.commitmentTreeRoot],
-            "Given tree root not a past root"
+            _pastRoots[joinSplitTx.commitmentTreeRoot],
+            "Tree root not past root"
         );
         require(
-            !nullifierSet[joinSplitTx.nullifierA],
+            !_nullifierSet[joinSplitTx.nullifierA],
             "Nullifier A already used"
         );
         require(
-            !nullifierSet[joinSplitTx.nullifierB],
+            !_nullifierSet[joinSplitTx.nullifierB],
             "Nullifier B already used"
         );
         require(
             joinSplitTx.nullifierA != joinSplitTx.nullifierB,
-            "Two nullifiers in the joinsplit cannot be equal."
+            "2 nfs should !equal."
         );
 
         // Compute newNote indices in the merkle tree
-        uint128 newNoteIndexA = merkle.getTotalCount();
+        uint128 newNoteIndexA = _merkle.getTotalCount();
         uint128 newNoteIndexB = newNoteIndexA + 1;
 
         uint256[] memory noteCommitments = new uint256[](2);
@@ -82,8 +82,8 @@ contract CommitmentTreeManager {
         noteCommitments[1] = joinSplitTx.newNoteBCommitment;
         insertNoteCommitments(noteCommitments);
 
-        nullifierSet[joinSplitTx.nullifierA] = true;
-        nullifierSet[joinSplitTx.nullifierB] = true;
+        _nullifierSet[joinSplitTx.nullifierA] = true;
+        _nullifierSet[joinSplitTx.nullifierB] = true;
 
         emit JoinSplit(
             joinSplitTx.nullifierA,
@@ -95,15 +95,15 @@ contract CommitmentTreeManager {
     }
 
     function root() public view returns (uint256) {
-        return merkle.getRoot();
+        return _merkle.getRoot();
     }
 
     function count() public view returns (uint256) {
-        return merkle.getCount();
+        return _merkle.getCount();
     }
 
     function totalCount() public view returns (uint256) {
-        return merkle.getTotalCount();
+        return _merkle.getTotalCount();
     }
 
     function insertNoteCommitment(uint256 nc) internal {
@@ -113,7 +113,7 @@ contract CommitmentTreeManager {
     }
 
     function insertNoteCommitments(uint256[] memory ncs) internal {
-        merkle.insertNoteCommitments(ncs);
+        _merkle.insertNoteCommitments(ncs);
         emit InsertNoteCommitments(ncs);
     }
 
@@ -124,12 +124,12 @@ contract CommitmentTreeManager {
     }
 
     function insertNotes(IWallet.Note[] memory notes) internal {
-        merkle.insertNotes(notes);
+        _merkle.insertNotes(notes);
         emit InsertNotes(notes);
     }
 
     function fillBatchWithZeros() external {
-        uint256 numToInsert = TreeUtils.BATCH_SIZE - merkle.batchLen;
+        uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
         uint256[] memory zeros = new uint256[](numToInsert);
         insertNoteCommitments(zeros);
     }
@@ -138,11 +138,11 @@ contract CommitmentTreeManager {
         uint256 newRoot,
         uint256[8] calldata proof
     ) external {
-        require(!pastRoots[newRoot], "newRoot already a past root");
+        require(!_pastRoots[newRoot], "newRoot already a past root");
 
-        uint256 subtreeIndex = merkle.getCount();
-        merkle.applySubtreeUpdate(newRoot, proof);
-        pastRoots[newRoot] = true;
+        uint256 subtreeIndex = _merkle.getCount();
+        _merkle.applySubtreeUpdate(newRoot, proof);
+        _pastRoots[newRoot] = true;
 
         emit SubtreeUpdate(newRoot, subtreeIndex);
     }
@@ -156,23 +156,23 @@ contract CommitmentTreeManager {
         IWallet.Note memory note;
         note.ownerH1 = refundAddr.h1X;
         note.ownerH2 = refundAddr.h2X;
-        note.nonce = nonce;
+        note.nonce = _nonce;
         note.asset = uint256(uint160(asset));
         note.id = id;
         note.value = value;
 
         insertNote(note);
 
-        uint256 _nonce = nonce;
-        nonce++;
+        uint256 nonce = _nonce;
+        _nonce++;
 
         emit Refund(
             refundAddr,
-            _nonce,
+            nonce,
             asset,
             id,
             value,
-            merkle.getTotalCount() - 1
+            _merkle.getTotalCount() - 1
         );
     }
 }

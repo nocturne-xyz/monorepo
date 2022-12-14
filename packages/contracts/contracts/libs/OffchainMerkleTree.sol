@@ -36,14 +36,14 @@ library OffchainMerkleTree {
 
     function initialize(
         OffchainMerkleTreeData storage self,
-        address _subtreeUpdateVerifier
+        address subtreeUpdateVerifier
     ) internal {
         // root starts as the root of the empty depth-32 tree.
         self.root = TreeUtils.EMPTY_TREE_ROOT;
         self.count = 0;
         self.batchLen = 0;
         self.subtreeUpdateVerifier = ISubtreeUpdateVerifier(
-            _subtreeUpdateVerifier
+            subtreeUpdateVerifier
         );
         self.accumulatorQueue.initialize();
     }
@@ -81,12 +81,12 @@ library OffchainMerkleTree {
             "batchLen != TreeUtils.BATCH_SIZE"
         );
 
-        uint256[] memory _batch = new uint256[](TreeUtils.BATCH_SIZE);
+        uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
-            _batch[i] = self.batch[i];
+            batch[i] = self.batch[i];
         }
 
-        return uint256(Utils.sha256FieldElems(_batch));
+        return uint256(Utils.sha256FieldElems(batch));
     }
 
     function accumulate(OffchainMerkleTreeData storage self) internal {

@@ -8,7 +8,7 @@ import {
   Note,
   NoteTrait,
 } from "@nocturne-xyz/sdk";
-import { RootDatabase, Database } from 'lmdb';
+import { RootDatabase, Database } from "lmdb";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
@@ -51,7 +51,12 @@ export class SubtreeUpdater {
   private batches: SubtreeUpdateBatch[];
   private tree: BinaryPoseidonTree;
 
-  constructor(walletContract: Wallet, rootDB: RootDatabase, prover: SubtreeUpdateProver, submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)) {
+  constructor(
+    walletContract: Wallet,
+    rootDB: RootDatabase,
+    prover: SubtreeUpdateProver,
+    submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)
+  ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
     this.prover = prover;
@@ -66,7 +71,7 @@ export class SubtreeUpdater {
   public async init(): Promise<void> {
     await this.recoverPersisedState();
   }
-  
+
   public async tryGenAndSubmitProofs(): Promise<void> {
     for (const { batch, newRoot, subtreeIndex } of this.batches) {
       const proof = await this.genProof(batch, subtreeIndex);
@@ -74,38 +79,52 @@ export class SubtreeUpdater {
     }
   }
 
-  // return true if at least one batch was filled 
+  // return true if at least one batch was filled
   public async pollInsertionsAndTryMakeBatch(): Promise<boolean> {
-    const currentBlockNumber = await this.walletContract.provider.getBlockNumber();
+    const currentBlockNumber =
+      await this.walletContract.provider.getBlockNumber();
     const nextBlockToIndex = await this.getNextBlockToIndex();
     if (nextBlockToIndex > currentBlockNumber) {
       return false;
     }
 
     const [newInsertions, newCommits] = await Promise.all([
-      fetchInsertions(this.walletContract, nextBlockToIndex, currentBlockNumber),
-      fetchSubtreeUpdateCommits(this.walletContract, nextBlockToIndex, currentBlockNumber),
+      fetchInsertions(
+        this.walletContract,
+        nextBlockToIndex,
+        currentBlockNumber
+      ),
+      fetchSubtreeUpdateCommits(
+        this.walletContract,
+        nextBlockToIndex,
+        currentBlockNumber
+      ),
     ]);
 
-    const lastCommit = newCommits.length > 0 ? newCommits[newCommits.length - 1] : undefined;
+    const lastCommit =
+      newCommits.length > 0 ? newCommits[newCommits.length - 1] : undefined;
 
     const index = await this.getNextInsertionIndex();
-    await this.db.transaction(
-      () => {
-        let keyIndex = index;
-        for (const insertion of newInsertions) {
-          this.db.put(insertionKey(keyIndex), toJSON(insertion));
-          keyIndex += 1;
-        }
-
-        if (lastCommit !== undefined) {
-          this.db.put(LAST_COMMITTED_INDEX_KEY, lastCommit.subtreeIndex.toString());
-        }
-
-        this.db.put(NEXT_INSERTION_INDEX_KEY, (index + newInsertions.length).toString());
-        this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
+    await this.db.transaction(() => {
+      let keyIndex = index;
+      for (const insertion of newInsertions) {
+        this.db.put(insertionKey(keyIndex), toJSON(insertion));
+        keyIndex += 1;
       }
-    );
+
+      if (lastCommit !== undefined) {
+        this.db.put(
+          LAST_COMMITTED_INDEX_KEY,
+          lastCommit.subtreeIndex.toString()
+        );
+      }
+
+      this.db.put(
+        NEXT_INSERTION_INDEX_KEY,
+        (index + newInsertions.length).toString()
+      );
+      this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
+    });
 
     this.insertions.push(...newInsertions);
     if (lastCommit !== undefined) {
@@ -150,7 +169,8 @@ export class SubtreeUpdater {
   }
 
   private async getNextBlockToIndex(): Promise<number> {
-    const nextBlockToIndexStr = (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
+    const nextBlockToIndexStr =
+      (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
     return parseInt(nextBlockToIndexStr);
   }
 
@@ -160,7 +180,7 @@ export class SubtreeUpdater {
   }
 
   private async getLastCommittedIndex(): Promise<number | undefined> {
-    const lastCommittedIndexStr = (await this.db.get(LAST_COMMITTED_INDEX_KEY));
+    const lastCommittedIndexStr = await this.db.get(LAST_COMMITTED_INDEX_KEY);
     if (lastCommittedIndexStr === undefined) {
       return undefined;
     }
@@ -168,7 +188,10 @@ export class SubtreeUpdater {
     return parseInt(lastCommittedIndexStr);
   }
 
-  private async genProof(batch: (Note | bigint)[], subtreeIndex: number): Promise<BaseProof> {
+  private async genProof(
+    batch: (Note | bigint)[],
+    subtreeIndex: number
+  ): Promise<BaseProof> {
     const merkleProof = this.tree.getProof(subtreeIndex);
     const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
     const { proof } = await this.prover.proveSubtreeUpdate(inputs);
@@ -187,26 +210,28 @@ export class SubtreeUpdater {
   }
 
   private pruneBatchesUpTo(upToSubtreeIndex: number) {
-    this.batches = this.batches.filter(({ subtreeIndex }) => subtreeIndex > upToSubtreeIndex);
+    this.batches = this.batches.filter(
+      ({ subtreeIndex }) => subtreeIndex > upToSubtreeIndex
+    );
   }
 
   private static parseInsertion(value: string): Note | bigint {
-      const insertion = JSON.parse(value);
-      if (typeof insertion === "string") {
-        // it's a commitment - turn into a bigint
-        return BigInt(insertion);
-      } else if (typeof insertion === "object") {
-        // it's a note - push the object as-is
-        return NoteTrait.fromJSON(insertion);
-      } else {
-        // TODO: can remove this once DB wrapper is added
-        throw new Error("invalid insertion type read from DB");
-      }
+    const insertion = JSON.parse(value);
+    if (typeof insertion === "string") {
+      // it's a commitment - turn into a bigint
+      return BigInt(insertion);
+    } else if (typeof insertion === "object") {
+      // it's a note - push the object as-is
+      return NoteTrait.fromJSON(insertion);
+    } else {
+      // TODO: can remove this once DB wrapper is added
+      throw new Error("invalid insertion type read from DB");
+    }
   }
 
   private async recoverPersisedState(): Promise<void> {
     const nextInsertionIndex = await this.getNextInsertionIndex();
-    const lastCommitedIndex = await this.getLastCommittedIndex() ?? 0;
+    const lastCommitedIndex = (await this.getLastCommittedIndex()) ?? 0;
     if (nextInsertionIndex === 0) {
       return;
     }

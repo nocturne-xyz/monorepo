@@ -19,48 +19,45 @@ import "hardhat/console.sol";
 // TODO: make sure all values given to proofs < SNARK_SCALAR_FIELD
 contract Wallet is IWallet, BalanceManager {
     constructor(
-        address _vault,
-        address _joinSplitVerifier,
-        address _subtreeUpdateVerifier
-    ) BalanceManager(_vault, _joinSplitVerifier, _subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+        address vault,
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+
+    event OperationProcessed(
+        uint256 indexed operationDigest,
+        bool indexed opSuccess,
+        bool[] callSuccesses,
+        bytes[] callResults
+    );
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Teller can call this");
         _;
     }
 
-    // Verifies the joinsplit proofs of a bundle of transactions
-    // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofsInBundle(
-        Bundle calldata bundle
-    ) internal view returns (bool) {
-        (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPisFromBundle(bundle);
-        return joinSplitVerifier.batchVerifyProofs(proofs, allPis);
-    }
-
-    // TODO: do we want to return successes/results?
     function processBundle(
         Bundle calldata bundle
-    )
-        external
-        override
-        returns (bool[] memory successes, bytes[][] memory results)
-    {
+    ) external override returns (IWallet.OperationResult[] memory) {
+        Operation[] calldata ops = bundle.operations;
+        uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
+
         require(
-            _verifyAllProofsInBundle(bundle),
-            "Batched JoinSplit proof verification failed."
+            _verifyAllProofs(ops, opDigests),
+            "Batched JoinSplit verify failed."
         );
 
-        uint256 numOps = bundle.operations.length;
-
-        successes = new bool[](numOps);
-        results = new bytes[][](numOps);
-
+        uint256 numOps = ops.length;
+        IWallet.OperationResult[]
+            memory opResults = new IWallet.OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            Operation calldata op = bundle.operations[i];
-            this.performOperation{gas: op.gasLimit}(op);
+            opResults[i] = this.performOperation{gas: ops[i].gasLimit}(
+                ops[i],
+                opDigests[i]
+            );
         }
+
+        return opResults;
     }
 
     // TODO: refactor batch deposit
@@ -87,15 +84,24 @@ contract Wallet is IWallet, BalanceManager {
     }
 
     function performOperation(
-        Operation calldata op
-    ) external onlyThis returns (bool success, bytes[] memory results) {
+        Operation calldata op,
+        uint256 opDigest
+    ) external onlyThis returns (IWallet.OperationResult memory opResult) {
         _handleAllSpends(op.joinSplitTxs, op.tokens);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
-        results = new bytes[](numActions);
+        opResult.opSuccess = true; // default to true
+        opResult.callSuccesses = new bool[](numActions);
+        opResult.callResults = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
-            results[i] = _makeExternalCall(actions[i]);
+            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
+
+            opResult.callSuccesses[i] = success;
+            opResult.callResults[i] = result;
+            if (success == false) {
+                opResult.opSuccess = false; // set opSuccess to false if any call fails
+            }
         }
 
         // handles refunds and resets balances
@@ -104,21 +110,34 @@ contract Wallet is IWallet, BalanceManager {
             op.tokens.refundTokens,
             op.refundAddr
         );
+
+        emit OperationProcessed(
+            opDigest,
+            opResult.opSuccess,
+            opResult.callSuccesses,
+            opResult.callResults
+        );
+    }
+
+    // Verifies the joinsplit proofs of a bundle of transactions
+    // DOES NOT check if nullifiers in each transaction has not been used
+    function _verifyAllProofs(
+        Operation[] calldata ops,
+        uint256[] memory opDigests
+    ) internal view returns (bool) {
+        (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
+            .extractJoinSplitProofsAndPis(ops, opDigests);
+        return _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
     }
 
     function _makeExternalCall(
         Action calldata action
-    ) internal returns (bytes memory) {
+    ) internal returns (bool success, bytes memory result) {
         require(
-            action.contractAddress != address(vault),
+            action.contractAddress != address(_vault),
             "Cannot call the Nocturne vault"
         );
 
-        (bool success, bytes memory result) = action.contractAddress.call(
-            action.encodedFunction
-        );
-
-        require(success, "Function call failed");
-        return result;
+        (success, result) = action.contractAddress.call(action.encodedFunction);
     }
 }

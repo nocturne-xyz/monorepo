@@ -17,15 +17,15 @@ contract BalanceManager is
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    IWallet.WalletBalanceInfo balanceInfo; // solhint-disable-line state-visibility
-    IVault public vault;
+    IWallet.WalletBalanceInfo _balanceInfo; // solhint-disable-line state-visibility
+    IVault public _vault;
 
     constructor(
-        address _vault,
-        address _joinSplitVerifier,
+        address vault,
+        address joinSplitVerifier,
         address _subtreeUpdateVerifier
-    ) CommitmentTreeManager(_joinSplitVerifier, _subtreeUpdateVerifier) {
-        vault = IVault(_vault);
+    ) CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier) {
+        _vault = IVault(vault);
     }
 
     function onERC721Received(
@@ -34,10 +34,10 @@ contract BalanceManager is
         uint256 tokenId,
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (balanceInfo.erc721Ids[msg.sender].length == 0) {
-            balanceInfo.erc721Addresses.push(msg.sender);
+        if (_balanceInfo.erc721Ids[msg.sender].length == 0) {
+            _balanceInfo.erc721Addresses.push(msg.sender);
         }
-        balanceInfo.erc721Ids[msg.sender].push(tokenId);
+        _balanceInfo.erc721Ids[msg.sender].push(tokenId);
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -48,10 +48,10 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
-            balanceInfo.erc1155Addresses.push(msg.sender);
+        if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
+            _balanceInfo.erc1155Addresses.push(msg.sender);
         }
-        balanceInfo.erc1155Ids[msg.sender].push(id);
+        _balanceInfo.erc1155Ids[msg.sender].push(id);
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -63,10 +63,10 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         for (uint256 i = 0; i < ids.length; i++) {
-            if (balanceInfo.erc1155Ids[msg.sender].length == 0) {
-                balanceInfo.erc1155Addresses.push(msg.sender);
+            if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
+                _balanceInfo.erc1155Addresses.push(msg.sender);
             }
-            balanceInfo.erc1155Ids[msg.sender].push(ids[i]);
+            _balanceInfo.erc1155Ids[msg.sender].push(ids[i]);
         }
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
@@ -85,7 +85,7 @@ contract BalanceManager is
         (
             uint256[] memory successfulTransfers,
             uint256 numSuccessfulTransfer
-        ) = vault.makeBatchDeposit(approvedDeposits, numApprovedDeposits);
+        ) = _vault.makeBatchDeposit(approvedDeposits, numApprovedDeposits);
 
         for (uint256 i = 0; i < numSuccessfulTransfer; i++) {
             uint256 index = successfulTransfers[i];
@@ -106,7 +106,7 @@ contract BalanceManager is
 
         _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
 
-        require(vault.makeDeposit(deposit), "Deposit failed");
+        require(_vault.makeDeposit(deposit), "Deposit failed");
     }
 
     // TODO: Fix below according to design doc
@@ -119,7 +119,7 @@ contract BalanceManager is
         for (uint256 i = 0; i < numSpendTxs; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
             if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
-                balanceInfo.erc20Balances[
+                _balanceInfo.erc20Balances[
                     joinSplitTxs[i].asset
                 ] += joinSplitTxs[i].publicSpend;
             } else if (joinSplitTxs[i].publicSpend == 0) {
@@ -137,7 +137,7 @@ contract BalanceManager is
 
         // reset ERC20 balances
         for (uint256 i = 0; i < numSpendTxs; i++) {
-            balanceInfo.erc20Balances[joinSplitTxs[i].asset] = 0;
+            _balanceInfo.erc20Balances[joinSplitTxs[i].asset] = 0;
         }
     }
 
@@ -169,7 +169,7 @@ contract BalanceManager is
                     newBal
                 );
                 require(
-                    IERC20(spendTokens[i]).transfer(address(vault), newBal),
+                    IERC20(spendTokens[i]).transfer(address(_vault), newBal),
                     "Error sending funds to vault"
                 );
             }
@@ -186,7 +186,7 @@ contract BalanceManager is
                     bal
                 );
                 require(
-                    IERC20(refundTokens[i]).transfer(address(vault), bal),
+                    IERC20(refundTokens[i]).transfer(address(_vault), bal),
                     "Error sending funds to vault"
                 );
             }
@@ -196,30 +196,30 @@ contract BalanceManager is
     function _handleERC721Refunds(
         IWallet.NocturneAddress calldata refundAddr
     ) internal {
-        for (uint256 i = 0; i < balanceInfo.erc721Addresses.length; i++) {
-            address tokenAddress = balanceInfo.erc721Addresses[i];
-            uint256[] memory ids = balanceInfo.erc721Ids[tokenAddress];
+        for (uint256 i = 0; i < _balanceInfo.erc721Addresses.length; i++) {
+            address tokenAddress = _balanceInfo.erc721Addresses[i];
+            uint256[] memory ids = _balanceInfo.erc721Ids[tokenAddress];
             for (uint256 k = 0; k < ids.length; k++) {
                 if (IERC721(tokenAddress).ownerOf(ids[k]) == address(this)) {
                     _handleRefund(refundAddr, tokenAddress, ids[k], 0);
                     IERC721(tokenAddress).transferFrom(
                         address(this),
-                        address(vault),
+                        address(_vault),
                         ids[k]
                     );
                 }
             }
-            delete balanceInfo.erc721Ids[balanceInfo.erc721Addresses[i]];
+            delete _balanceInfo.erc721Ids[_balanceInfo.erc721Addresses[i]];
         }
-        delete balanceInfo.erc721Addresses;
+        delete _balanceInfo.erc721Addresses;
     }
 
     function _handleERC1155Refunds(
         IWallet.NocturneAddress calldata refundAddr
     ) internal {
-        for (uint256 i = 0; i < balanceInfo.erc1155Addresses.length; i++) {
-            address tokenAddress = balanceInfo.erc1155Addresses[i];
-            uint256[] memory ids = balanceInfo.erc1155Ids[tokenAddress];
+        for (uint256 i = 0; i < _balanceInfo.erc1155Addresses.length; i++) {
+            address tokenAddress = _balanceInfo.erc1155Addresses[i];
+            uint256[] memory ids = _balanceInfo.erc1155Ids[tokenAddress];
             for (uint256 k = 0; k < ids.length; k++) {
                 uint256 currBal = IERC1155(tokenAddress).balanceOf(
                     address(this),
@@ -229,29 +229,29 @@ contract BalanceManager is
                     _handleRefund(refundAddr, tokenAddress, ids[k], currBal);
                     IERC1155(tokenAddress).safeTransferFrom(
                         address(this),
-                        address(vault),
+                        address(_vault),
                         ids[k],
                         currBal,
                         ""
                     );
                 }
             }
-            delete balanceInfo.erc1155Ids[balanceInfo.erc1155Addresses[i]];
+            delete _balanceInfo.erc1155Ids[_balanceInfo.erc1155Addresses[i]];
         }
-        delete balanceInfo.erc1155Addresses;
+        delete _balanceInfo.erc1155Addresses;
     }
 
     function _gatherERC20s(address[] calldata tokens) internal {
         uint256[] memory amts = new uint256[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
-            amts[i] = balanceInfo.erc20Balances[tokens[i]];
+            amts[i] = _balanceInfo.erc20Balances[tokens[i]];
         }
 
-        vault.requestERC20s(tokens, amts);
+        _vault.requestERC20s(tokens, amts);
     }
 
     function _gatherERC721(address tokenAddress, uint256 id) internal {
-        vault.requestERC721(tokenAddress, id);
+        _vault.requestERC721(tokenAddress, id);
     }
 
     function _gatherERC1155(
@@ -259,6 +259,6 @@ contract BalanceManager is
         uint256 id,
         uint256 value
     ) internal {
-        vault.requestERC1155(tokenAddress, id, value);
+        _vault.requestERC1155(tokenAddress, id, value);
     }
 }

@@ -2,11 +2,16 @@
 
 ### Unreleased
 
+- Make solidity var underscore style consistent
+- Add `ProcessOperation` event to wallet to emit details about processed ops
+- `Wallet._makeExternalCall` no longer reverts on reverting contract call (enables us to process calls even if they revert)
+- Calculate `operationDigest` in wallet instead of pushing `uint256` conversion and mod to `CommitmentTreeManager`
 - Use the batch verifier to batch verify all joinsplit proofs in a bundle
 - Change verifier interfaces to take structs instead of `uint256` arrays
 - Add a `SubtreeUpdate` event to `CommitmentTreeManager` for when a subtree update is committed
 - Add `test:gas-report` command
 - Add batch proof verification
+- Add a `SubtreeUpdate` event to `CommitmentTreeManager` for when a subtree update is committed
 - Add `test:gas-report` command
 - Migrate for joinsplit
   - Compute operationDigest once for the entire operation
