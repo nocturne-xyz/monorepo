@@ -1,15 +1,18 @@
 import IORedis from "ioredis";
 import { Job } from "./types";
-import { jobDataToJob } from "./utils";
+import { getRedis, jobDataToJob } from "./utils";
 import * as JSON from "bigint-json-serialization";
 
+/* Persistent job queue. Implemented using Redis list that pushes to right side
+ * and pops from left side.
+ */
 export class PersistentJobQueue<T> {
   readonly QUEUE_NAME: string;
   readonly redis: IORedis;
 
-  constructor(queueName: string, redis: IORedis) {
+  constructor(queueName: string, redis?: IORedis) {
     this.QUEUE_NAME = queueName;
-    this.redis = redis;
+    this.redis = getRedis(redis);
   }
 
   async addSingle(jobData: T): Promise<string> {
@@ -27,22 +30,21 @@ export class PersistentJobQueue<T> {
     });
   }
 
-  getAddMultipleTransactions(jobDatas: T[]): string[][] {
+  getAddMultipleTransaction(jobDatas: T[]): string[][] {
     const stringifiedJobs = jobDatas.map(jobDataToJob).map(JSON.stringify);
     return stringifiedJobs.map((job) => {
       return ["rpush", this.QUEUE_NAME, job];
     });
   }
 
+  getRemoveTransaction(count: number): string[][] {
+    return [["lpop", this.QUEUE_NAME, count.toString()]];
+  }
+
   async pop(count: number): Promise<Job<T>[]> {
-    let stringifiedJobs = await this.redis.lpop(this.QUEUE_NAME, count);
+    const stringifiedJobs = await this.redis.lpop(this.QUEUE_NAME, count);
     if (!stringifiedJobs) {
       return [];
-    }
-
-    // TODO: bug in ioredis?
-    if (!Array.isArray(stringifiedJobs)) {
-      stringifiedJobs = [stringifiedJobs];
     }
 
     const jobs: Job<T>[] = stringifiedJobs.map(JSON.parse);

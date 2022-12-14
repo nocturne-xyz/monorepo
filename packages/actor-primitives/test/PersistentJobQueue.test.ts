@@ -75,9 +75,9 @@ describe("PersistentJobQueue", async () => {
 
   it("Creates and executes addMultiple transaction", async () => {
     const jobDatas = [{ counter: 1 }, { counter: 2 }, { counter: 3 }];
-    const transaction = queue.getAddMultipleTransactions(jobDatas);
+    const transaction = queue.getAddMultipleTransaction(jobDatas);
 
-    await redis.multi(transaction).exec((err, _) => {
+    await queue.redis.multi(transaction).exec((err) => {
       if (err) {
         throw Error("Transaction failed");
       }
@@ -89,5 +89,22 @@ describe("PersistentJobQueue", async () => {
       return job.data;
     });
     expect(peekedJobDatas).to.deep.equal(jobDatas);
+  });
+
+  it("Creates and executes removeMultiple transaction", async () => {
+    const jobDatas = [{ counter: 1 }, { counter: 2 }, { counter: 3 }];
+    await queue.addMultiple(jobDatas);
+
+    const transaction = queue.getRemoveTransaction(2);
+    await queue.redis.multi(transaction).exec((err) => {
+      if (err) {
+        throw Error("Transaction failed");
+      }
+    });
+    expect(await queue.length()).to.equal(1);
+
+    const peekedFinal = await queue.peek(1);
+    const peekedFinalJobDatas = peekedFinal[0].data;
+    expect(peekedFinalJobDatas).to.deep.equal({ counter: 3 });
   });
 });
