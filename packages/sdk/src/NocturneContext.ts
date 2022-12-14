@@ -400,12 +400,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: NoteTrait.toEncoded(oldNoteA),
-      oldNoteB: NoteTrait.toEncoded(oldNoteB),
+      oldNoteA: NoteTrait.encode(oldNoteA),
+      oldNoteB: NoteTrait.encode(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: NoteTrait.toEncoded(newNoteA),
-      newNoteB: NoteTrait.toEncoded(newNoteB),
+      newNoteA: NoteTrait.encode(newNoteA),
+      newNoteB: NoteTrait.encode(newNoteB),
     };
 
     return {

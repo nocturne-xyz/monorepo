@@ -30,14 +30,14 @@ export type EncodedID = bigint;
 export class NoteTrait {
 
   static toCommitment(note: Note): bigint {
-    const { owner, nonce, asset, id, value } = NoteTrait.toEncoded(note);
+    const { owner, nonce, asset, id, value } = NoteTrait.encode(note);
     return BigInt(
       poseidon([NocturneAddressTrait.hash(owner), nonce, asset, id, value])
     );
   }
 
   static sha256(note: Note): number[] {
-    const noteInput = NoteTrait.toEncoded(note);
+    const noteInput = NoteTrait.encode(note);
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
@@ -63,10 +63,24 @@ export class NoteTrait {
     return { owner, nonce, asset, id, value, merkleIndex };
   }
 
-  static toEncoded(note: Note): EncodedNote {
+  static encode(note: Note): EncodedNote {
     const { owner, nonce, value } = note;
     const asset = encodeAsset(note.asset, note.id);
     const id = encodeID(note.id);
+
+    return {
+      owner,
+      nonce,
+      asset,
+      id,
+      value,
+    };
+  }
+
+  static decode(encodedNote: EncodedNote): Note {
+    const { owner, nonce, value } = encodedNote;
+    const asset = decodeAsset(encodedNote.asset);
+    const id = decodeID(encodedNote.id, encodedNote.asset);
 
     return {
       owner,
