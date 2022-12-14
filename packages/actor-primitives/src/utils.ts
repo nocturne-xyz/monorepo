@@ -8,9 +8,3 @@ export function jobDataToJob<T>(jobData: T): Job<T> {
     data: jobData,
   };
 }
-
-export function toJSON(object: any): string {
-  return JSON.stringify(object, (_, value) =>
-    typeof value === "bigint" ? value.toString() : value
-  );
-}

@@ -2452,13 +2452,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ioredis/as-callback@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "@ioredis/as-callback@npm:3.0.0"
-  checksum: 2835e39631497fe4f8b07d95576abea165c9f7efef81e9e55c733588051ff4edcb31eeb59f36127923dae0cb1a8e21b4e27ee3ab79a065a0baeecf861c3bc0b1
-  languageName: node
-  linkType: hard
-
 "@ioredis/commands@npm:^1.1.1":
   version: 1.2.0
   resolution: "@ioredis/commands@npm:1.2.0"
@@ -2870,13 +2863,14 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ioredis: ^5.2.4
-    ioredis-mock: ^8.2.2
     mocha: ^10.1.0
     prettier: ^2.8.0
+    redis-memory-server: ^0.6.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -2959,6 +2953,7 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2980,6 +2975,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-conversion: ^2.3.0
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2999,13 +2995,13 @@ __metadata:
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
-    "@types/json-bigint": ^1.0.1
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
     "@zk-kit/incremental-merkle-tree": ^1.0.0
     big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     circomlibjs: 0.0.8
     eslint: ^7.32.0
@@ -3013,7 +3009,6 @@ __metadata:
     ethers: ^5.0.0
     ffjavascript: 0.2.57
     js-sha256: ^0.9.0
-    json-bigint: ^1.0.0
     mocha: ^10.1.0
     prettier: ^2.8.0
     ts-node: ^10.9.1
@@ -3084,6 +3079,7 @@ __metadata:
     "@types/node": ^18.11.9
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
+    bigint-json-serialization: ^1.0.1
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
@@ -3093,6 +3089,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     lmdb: ^2.7.0
     mocha: ^10.1.0
+    prettier: ^2.8.0
     snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.9.3
@@ -4743,13 +4740,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-bigint@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@types/json-bigint@npm:1.0.1"
-  checksum: b39e55a811f554bd25f1d991bc4fc70655216dff466f21f97160097573a4bc7b478c1907aa5194c79022c115f509f8e4712083c51f57665e7a2de7412ff7801f
-  languageName: node
-  linkType: hard
-
 "@types/json-schema@npm:*, @types/json-schema@npm:^7.0.4, @types/json-schema@npm:^7.0.5, @types/json-schema@npm:^7.0.7, @types/json-schema@npm:^7.0.8, @types/json-schema@npm:^7.0.9":
   version: 7.0.11
   resolution: "@types/json-schema@npm:7.0.11"
@@ -4845,6 +4835,13 @@ __metadata:
   version: 17.0.45
   resolution: "@types/node@npm:17.0.45"
   checksum: aa04366b9103b7d6cfd6b2ef64182e0eaa7d4462c3f817618486ea0422984c51fc69fd0d436eae6c9e696ddfdbec9ccaa27a917f7c2e8c75c5d57827fe3d95e8
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.14":
+  version: 18.11.15
+  resolution: "@types/node@npm:18.11.15"
+  checksum: cae8692a5cee0316f93ee0342237eb921f70c51afb37c661c711a925a4642654ae7e404c5a80899d481c0cfaff3a6891ef04bacd330a2e72734192bfc91dc2d8
   languageName: node
   linkType: hard
 
@@ -5039,6 +5036,15 @@ __metadata:
     "@types/bn.js": "*"
     "@types/underscore": "*"
   checksum: 25a78e80052cca8abe5edf15c0ae92854d00d1bec15283486a2535ab673345b0be090e39cc9a86822be17ddd812fa76cbfd869be21bb944d2faaf2922e2a836a
+  languageName: node
+  linkType: hard
+
+"@types/yauzl@npm:^2.9.1":
+  version: 2.10.0
+  resolution: "@types/yauzl@npm:2.10.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 55d27ae5d346ea260e40121675c24e112ef0247649073848e5d4e03182713ae4ec8142b98f61a1c6cbe7d3b72fa99bbadb65d8b01873e5e605cdc30f1ff70ef2
   languageName: node
   linkType: hard
 
@@ -7293,6 +7299,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bigint-json-serialization@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "bigint-json-serialization@npm:1.0.1"
+  dependencies:
+    "@types/node": ^18.11.14
+    typescript: ^4.9.4
+  checksum: 582c7876e6b1a9b7632a08b281caff6034f3ef87bb2490f5b901121ba1642be468630d001f3d29b8b8bce81a13ea7c72d1969c5ba68283a98bb88db856662f47
+  languageName: node
+  linkType: hard
+
 "bigint-mod-arith@npm:^3.1.0":
   version: 3.1.2
   resolution: "bigint-mod-arith@npm:3.1.2"
@@ -7652,6 +7668,13 @@ __metadata:
   dependencies:
     node-int64: ^0.4.0
   checksum: 9ba4dc58ce86300c862bffc3ae91f00b2a03b01ee07f3564beeeaf82aa243b8b03ba53f123b0b842c190d4399b94697970c8e7cf7b1ea44b61aa28c3526a4449
+  languageName: node
+  linkType: hard
+
+"buffer-crc32@npm:~0.2.3":
+  version: 0.2.13
+  resolution: "buffer-crc32@npm:0.2.13"
+  checksum: 06252347ae6daca3453b94e4b2f1d3754a3b146a111d81c68924c22d91889a40623264e95e67955b1cb4a68cbedf317abeabb5140a9766ed248973096db5ce1c
   languageName: node
   linkType: hard
 
@@ -9317,7 +9340,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:~4.3.1":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.0.1, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.2.0, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4, debug@npm:~4.3.1":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -11707,6 +11730,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"extract-zip@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "extract-zip@npm:2.0.1"
+  dependencies:
+    "@types/yauzl": ^2.9.1
+    debug: ^4.1.1
+    get-stream: ^5.1.0
+    yauzl: ^2.10.0
+  dependenciesMeta:
+    "@types/yauzl":
+      optional: true
+  bin:
+    extract-zip: cli.js
+  checksum: 8cbda9debdd6d6980819cc69734d874ddd71051c9fe5bde1ef307ebcedfe949ba57b004894b585f758b7c9eeeea0e3d87f2dda89b7d25320459c2c9643ebb635
+  languageName: node
+  linkType: hard
+
 "extsprintf@npm:1.3.0":
   version: 1.3.0
   resolution: "extsprintf@npm:1.3.0"
@@ -11839,30 +11879,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fd-slicer@npm:~1.1.0":
+  version: 1.1.0
+  resolution: "fd-slicer@npm:1.1.0"
+  dependencies:
+    pend: ~1.2.0
+  checksum: c8585fd5713f4476eb8261150900d2cb7f6ff2d87f8feb306ccc8a1122efd152f1783bdb2b8dc891395744583436bfd8081d8e63ece0ec8687eeefea394d4ff2
+  languageName: node
+  linkType: hard
+
 "fd@npm:~0.0.2":
   version: 0.0.3
   resolution: "fd@npm:0.0.3"
   checksum: 86cfeaa823995c094b5f3786a0457fb907c338e44850844a64d84cb92417a762c79274267382060b8f130ead397f4b00e24666342e81db389c69ca9a852e7d2e
-  languageName: node
-  linkType: hard
-
-"fengari-interop@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "fengari-interop@npm:0.1.3"
-  peerDependencies:
-    fengari: ^0.1.0
-  checksum: f483e0aedec3a0b49911ffd3207a55f73c861f95ef84fb7582deb45bc65afa2e7bf8f9fc3734563f6c106a438909f94059b5d08f5a7872ffcc3d45d260a3ee15
-  languageName: node
-  linkType: hard
-
-"fengari@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "fengari@npm:0.1.4"
-  dependencies:
-    readline-sync: ^1.4.9
-    sprintf-js: ^1.1.1
-    tmp: ^0.0.33
-  checksum: bd6b04f9738f9cbb58e3c80684a72bf6f7e74c902d26e4e812b1cfbd69c06da5ffb2a8a67a62ecd75603fc565b6b183c1b72be60f2e60c18aa487aad65b62196
   languageName: node
   linkType: hard
 
@@ -12023,6 +12052,13 @@ __metadata:
     make-dir: ^3.0.2
     pkg-dir: ^4.1.0
   checksum: 1e61c2e64f5c0b1c535bd85939ae73b0e5773142713273818cc0b393ee3555fb0fd44e1a5b161b8b6c3e03e98c2fcc9c227d784850a13a90a8ab576869576817
+  languageName: node
+  linkType: hard
+
+"find-package-json@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "find-package-json@npm:1.2.0"
+  checksum: ea3fc597c3b3bbdb93f91d62debe7b58f388d55e71c2879e3bd77472c78ce8f7ac2c38f5a2d314176f05cb54808554203c72518b27689efa76e46284094a4370
   languageName: node
   linkType: hard
 
@@ -13132,6 +13168,13 @@ __metadata:
   version: 3.2.0
   resolution: "get-port@npm:3.2.0"
   checksum: 31f530326569683ac4b7452eb7573c40e9dbe52aec14d80745c35475261e6389160da153d5b8ae911150b4ce99003472b30c69ba5be0cedeaa7865b95542d168
+  languageName: node
+  linkType: hard
+
+"get-port@npm:^5.1.1":
+  version: 5.1.1
+  resolution: "get-port@npm:5.1.1"
+  checksum: 0162663ffe5c09e748cd79d97b74cd70e5a5c84b760a475ce5767b357fb2a57cb821cee412d646aa8a156ed39b78aab88974eddaa9e5ee926173c036c0713787
   languageName: node
   linkType: hard
 
@@ -14304,20 +14347,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis-mock@npm:^8.2.2":
-  version: 8.2.2
-  resolution: "ioredis-mock@npm:8.2.2"
-  dependencies:
-    "@ioredis/as-callback": ^3.0.0
-    "@ioredis/commands": ^1.1.1
-    fengari: ^0.1.4
-    fengari-interop: ^0.1.3
-  peerDependencies:
-    ioredis: 5.x
-  checksum: b233d9762ff99468340e0bd8bac83cdf281df2e7243fdc2557587c7ff5762920c09a53cc21de894af5235132299b2be567d8891a2f3f27aa0b10952002a7bda1
-  languageName: node
-  linkType: hard
-
 "ioredis@npm:*, ioredis@npm:^5.2.4":
   version: 5.2.4
   resolution: "ioredis@npm:5.2.4"
@@ -15222,15 +15251,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-bigint@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "json-bigint@npm:1.0.0"
-  dependencies:
-    bignumber.js: ^9.0.0
-  checksum: c67bb93ccb3c291e60eb4b62931403e378906aab113ec1c2a8dd0f9a7f065ad6fd9713d627b732abefae2e244ac9ce1721c7a3142b2979532f12b258634ce6f6
-  languageName: node
-  linkType: hard
-
 "json-buffer@npm:3.0.0":
   version: 3.0.0
   resolution: "json-buffer@npm:3.0.0"
@@ -16025,6 +16045,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lockfile@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "lockfile@npm:1.0.4"
+  dependencies:
+    signal-exit: ^3.0.2
+  checksum: 8de35aace8acbe883cbca3cc3959e88904d57c79dccd4afffc64aea8f9cf7b4c63598d08b8add66fbf381f8fb3ce4fd4c518cd231c797c266b6c790eb7b33abc
+  languageName: node
+  linkType: hard
+
 "lodash.assign@npm:^4.0.3, lodash.assign@npm:^4.0.6":
   version: 4.2.0
   resolution: "lodash.assign@npm:4.2.0"
@@ -16057,6 +16086,13 @@ __metadata:
   version: 4.2.0
   resolution: "lodash.defaults@npm:4.2.0"
   checksum: 84923258235592c8886e29de5491946ff8c2ae5c82a7ac5cddd2e3cb697e6fbdfbbb6efcca015795c86eec2bb953a5a2ee4016e3735a3f02720428a40efbb8f1
+  languageName: node
+  linkType: hard
+
+"lodash.defaultsdeep@npm:^4.6.1":
+  version: 4.6.1
+  resolution: "lodash.defaultsdeep@npm:4.6.1"
+  checksum: 1f346f16158b760545ca99553cb13e907a28b281425751af6bfe681387b9e5685438a7ddbfd36a8d5cc8bda066867a134aa31416f17e318db8c461c377810a76
   languageName: node
   linkType: hard
 
@@ -18450,6 +18486,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pend@npm:~1.2.0":
+  version: 1.2.0
+  resolution: "pend@npm:1.2.0"
+  checksum: 6c72f5243303d9c60bd98e6446ba7d30ae29e3d56fdb6fae8767e8ba6386f33ee284c97efe3230a0d0217e2b1723b8ab490b1bbf34fcbb2180dbc8a9de47850d
+  languageName: node
+  linkType: hard
+
 "performance-now@npm:^2.1.0":
   version: 2.1.0
   resolution: "performance-now@npm:2.1.0"
@@ -19665,13 +19708,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readline-sync@npm:^1.4.9":
-  version: 1.4.10
-  resolution: "readline-sync@npm:1.4.10"
-  checksum: 4dbd8925af028dc4cb1bb813f51ca3479035199aa5224886b560eec8e768ab27d7ebf11d69a67ed93d5a130b7c994f0bdb77796326e563cf928bbfd560e3747e
-  languageName: node
-  linkType: hard
-
 "recursive-readdir@npm:^2.2.2":
   version: 2.2.3
   resolution: "recursive-readdir@npm:2.2.3"
@@ -19685,6 +19721,30 @@ __metadata:
   version: 1.2.0
   resolution: "redis-errors@npm:1.2.0"
   checksum: f28ac2692113f6f9c222670735aa58aeae413464fd58ccf3fce3f700cae7262606300840c802c64f2b53f19f65993da24dc918afc277e9e33ac1ff09edb394f4
+  languageName: node
+  linkType: hard
+
+"redis-memory-server@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "redis-memory-server@npm:0.6.0"
+  dependencies:
+    camelcase: ^6.0.0
+    cross-spawn: ^7.0.3
+    debug: ^4.2.0
+    extract-zip: ^2.0.1
+    find-cache-dir: ^3.3.1
+    find-package-json: ^1.2.0
+    get-port: ^5.1.1
+    https-proxy-agent: ^5.0.0
+    lockfile: ^1.0.4
+    lodash.defaultsdeep: ^4.6.1
+    mkdirp: ^1.0.4
+    rimraf: ^3.0.2
+    semver: ^7.3.2
+    tar: ^6.1.0
+    tmp: ^0.2.1
+    uuid: 8.3.0
+  checksum: 8fc2c9c6a580979c7a80228b1062508593d8fd921e787cc9f1c952df350fabf6b96b62c9c2555e61c6e215944d1ce1cd36a6b16c95850686d1adcf2640e183cc
   languageName: node
   linkType: hard
 
@@ -21260,13 +21320,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sprintf-js@npm:^1.1.1":
-  version: 1.1.2
-  resolution: "sprintf-js@npm:1.1.2"
-  checksum: d4bb46464632b335e5faed381bd331157e0af64915a98ede833452663bc672823db49d7531c32d58798e85236581fb7342fd0270531ffc8f914e186187bf1c90
-  languageName: node
-  linkType: hard
-
 "sprintf-js@npm:~1.0.2":
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
@@ -21937,7 +21990,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.1.11, tar@npm:^6.1.2":
+"tar@npm:^6.1.0, tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.1.13
   resolution: "tar@npm:6.1.13"
   dependencies:
@@ -22623,7 +22676,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.5.5, typescript@npm:^4.8.4, typescript@npm:^4.9.3":
+"typescript@npm:^4.5.5, typescript@npm:^4.8.4, typescript@npm:^4.9.3, typescript@npm:^4.9.4":
   version: 4.9.4
   resolution: "typescript@npm:4.9.4"
   bin:
@@ -22633,7 +22686,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>, typescript@patch:typescript@^4.9.3#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>, typescript@patch:typescript@^4.8.4#~builtin<compat/typescript>, typescript@patch:typescript@^4.9.3#~builtin<compat/typescript>, typescript@patch:typescript@^4.9.4#~builtin<compat/typescript>":
   version: 4.9.4
   resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=bda367"
   bin:
@@ -23043,6 +23096,15 @@ __metadata:
   bin:
     uuid: ./bin/uuid
   checksum: 8793629d2799f500aeea9fcd0aec6c4e9fbcc4d62ed42159ad96be345c3fffac1bbf61a23e18e2782600884fee05e6d4012ce4b70d0037c8e987533ae6a77870
+  languageName: node
+  linkType: hard
+
+"uuid@npm:8.3.0":
+  version: 8.3.0
+  resolution: "uuid@npm:8.3.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: b539886e6a532ba1efdcc7cee02fd561effef820e1c7b27dd3a13e55b893c6615f38dcf1e6909362c9b5af2a2f2ee8f73868ba284481d49feb820a0e17c8017b
   languageName: node
   linkType: hard
 
@@ -24497,6 +24559,16 @@ __metadata:
     y18n: ^3.2.1
     yargs-parser: ^2.4.1
   checksum: 5d0a45dceaf8cff1c6a7164b2c944755a09cced3cb1d585bbc79ffed758ef9f9b54ead0879e3dacfc696ccd15fec9e6e29183c24517d7f578b47cd0614a3851d
+  languageName: node
+  linkType: hard
+
+"yauzl@npm:^2.10.0":
+  version: 2.10.0
+  resolution: "yauzl@npm:2.10.0"
+  dependencies:
+    buffer-crc32: ~0.2.3
+    fd-slicer: ~1.1.0
+  checksum: 7f21fe0bbad6e2cb130044a5d1d0d5a0e5bf3d8d4f8c4e6ee12163ce798fee3de7388d22a7a0907f563ac5f9d40f8699a223d3d5c1718da90b0156da6904022b
   languageName: node
   linkType: hard
 
