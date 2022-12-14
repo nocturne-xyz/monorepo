@@ -28,7 +28,6 @@ export type EncodedAsset = bigint;
 export type EncodedID = bigint;
 
 export class NoteTrait {
-
   static toCommitment(note: Note): bigint {
     const { owner, nonce, asset, id, value } = NoteTrait.encode(note);
     return BigInt(
