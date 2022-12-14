@@ -30,15 +30,9 @@ export type EncodedID = bigint;
 export class NoteTrait {
 
   static toCommitment(note: Note): bigint {
-    const { owner, nonce, asset, id, value }= NoteTrait.toEncoded(note);
+    const { owner, nonce, asset, id, value } = NoteTrait.toEncoded(note);
     return BigInt(
-      poseidon([
-        NocturneAddressTrait.hash(owner),
-        nonce,
-        asset,
-        id,
-        value,
-      ])
+      poseidon([NocturneAddressTrait.hash(owner), nonce, asset, id, value])
     );
   }
 
@@ -94,7 +88,6 @@ export function encodeAsset(asset: string, id: bigint): EncodedAsset {
   const idBits = id.toString(2).padStart(256, "0");
   const idTop3 = idBits.slice(0, 3);
 
-
   return BigInt(`0b000${idTop3}${eightyEightZeros}00${assetBits}`);
 }
 
@@ -109,7 +102,10 @@ export function encodeID(id: bigint): EncodedID {
   return BigInt(`0b000${idBits.slice(3)}`);
 }
 
-export function decodeID(encodedID: EncodedID, encodedAsset: EncodedAsset): bigint {
+export function decodeID(
+  encodedID: EncodedID,
+  encodedAsset: EncodedAsset
+): bigint {
   const encodedAssetBits = encodedAsset.toString(2).padStart(256, "0");
   const idTop3 = encodedAssetBits.slice(3, 6);
   const encodedIDBits = encodedID.toString(2).padStart(256, "0").slice(3);

@@ -72,7 +72,9 @@ describe("NocturneSigner", () => {
     // small id
     const asset = "0x123";
     const id = 1n;
-    const encodedAssetBits = encodeAsset(asset, id).toString(2).padStart(256, "0");
+    const encodedAssetBits = encodeAsset(asset, id)
+      .toString(2)
+      .padStart(256, "0");
     const encodedIDBits = encodeID(id).toString(2).padStart(256, "0");
 
     // bit length should be 256 after padding. if it's not, then the encoding is too long
@@ -98,7 +100,9 @@ describe("NocturneSigner", () => {
     const asset = "0x123";
     const id = 2n ** 256n - 1n;
     const idBits = id.toString(2).padStart(256, "0");
-    const encodedAssetBits = encodeAsset(asset, id).toString(2).padStart(256, "0");
+    const encodedAssetBits = encodeAsset(asset, id)
+      .toString(2)
+      .padStart(256, "0");
     const encodedIDBits = encodeID(id).toString(2).padStart(256, "0");
 
     // bit length should be 256 after padding. if it's not, then the encoding is too long
@@ -114,6 +118,8 @@ describe("NocturneSigner", () => {
     // first 3 bits should be 0
     expect(encodedIDBits.slice(0, 3)).to.deep.equal("000");
     // last 253 bits should be last 253 bits of id
-    expect(BigInt(`0b${encodedIDBits.slice(3)}`)).to.equal(BigInt(`0b${idBits.slice(3)}`));
+    expect(BigInt(`0b${encodedIDBits.slice(3)}`)).to.equal(
+      BigInt(`0b${idBits.slice(3)}`)
+    );
   });
 });
