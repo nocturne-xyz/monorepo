@@ -67,5 +67,27 @@ describe("PersistentJobQueue", async () => {
     expect(popped.length).to.equal(2);
     expect(await queue.length()).to.equal(1);
     expect(poppedJobDatas).to.deep.equal(jobDatas.slice(0, 2));
+
+    const peekedFinal = await queue.peek(1);
+    const peekedFinalJobDatas = peekedFinal[0].data;
+    expect(peekedFinalJobDatas).to.deep.equal({ counter: 3 });
+  });
+
+  it("Creates and executes addMultiple transaction", async () => {
+    const jobDatas = [{ counter: 1 }, { counter: 2 }, { counter: 3 }];
+    const transaction = queue.getAddMultipleTransactions(jobDatas);
+
+    await redis.multi(transaction).exec((err, _) => {
+      if (err) {
+        throw Error("Transaction failed");
+      }
+    });
+    expect(await queue.length()).to.equal(3);
+
+    const peeked = await queue.peek(3);
+    const peekedJobDatas = peeked.map((job) => {
+      return job.data;
+    });
+    expect(peekedJobDatas).to.deep.equal(jobDatas);
   });
 });

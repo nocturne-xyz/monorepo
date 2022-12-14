@@ -27,7 +27,7 @@ export class PersistentJobQueue<T> {
     });
   }
 
-  async getAddMultipleTransactions(jobDatas: T[]): Promise<string[][]> {
+  getAddMultipleTransactions(jobDatas: T[]): string[][] {
     const stringifiedJobs = jobDatas.map(jobDataToJob).map(JSON.stringify);
     return stringifiedJobs.map((job) => {
       return ["rpush", this.QUEUE_NAME, job];
