@@ -1,9 +1,8 @@
 import { PersistentJobQueue } from "./queue";
 import IORedis from "ioredis";
-import { Job } from "./types";
 import { getRedis } from "./utils";
 
-export type TransformFunction<I, O> = (inputJobs: Job<I>[]) => Job<O>[];
+export type TransformFunction<I, O> = (inputDatas: I[]) => O[];
 
 export class SingleConsumerJobPipeline<I, O> {
   redis: IORedis;
@@ -31,12 +30,14 @@ export class SingleConsumerJobPipeline<I, O> {
 
   async processJobs(): Promise<void> {
     const inputJobs = await this.inputQueue.peek(this.batchSize);
-    const outputItems = this.transformFn(inputJobs).map((job) => {
+    const inputDatas = inputJobs.map((job) => {
       return job.data;
     });
+    const outputDatas = this.transformFn(inputDatas);
 
     const inputTx = this.inputQueue.getRemoveTransaction(this.batchSize);
-    const outputTx = this.outputQueue.getAddMultipleTransaction(outputItems);
+    const outputTx = this.outputQueue.getAddMultipleTransaction(outputDatas);
+
     const bothTxs = inputTx.concat(outputTx);
     await this.redis.multi(bothTxs).exec((err) => {
       if (err) {
