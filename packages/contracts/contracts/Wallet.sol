@@ -60,23 +60,6 @@ contract Wallet is IWallet, BalanceManager {
         return opResults;
     }
 
-    // TODO: refactor batch deposit
-    function batchDepositFunds(
-        Deposit[] calldata deposits,
-        Signature[] calldata sigs
-    ) external override {
-        Deposit[] memory approvedDeposits = new Deposit[](deposits.length);
-        uint256 numApprovedDeposits;
-        for (uint256 i = 0; i < deposits.length; i++) {
-            if (WalletUtils.verifyApprovalSig(deposits[i], sigs[i])) {
-                approvedDeposits[numApprovedDeposits] = deposits[i];
-                numApprovedDeposits++;
-            }
-        }
-
-        _makeBatchDeposit(approvedDeposits, numApprovedDeposits);
-    }
-
     function depositFunds(Deposit calldata deposit) external override {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
