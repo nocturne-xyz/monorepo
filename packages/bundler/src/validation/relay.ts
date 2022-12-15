@@ -1,17 +1,14 @@
 import Ajv from "ajv";
 
-const bigintPattern = "^d+n$";
+const bigintPattern = "^[0-9]+n$";
 const addressPattern = "^0x[a-fA-F0-9]{40}$";
 const bigintType = { type: "string", pattern: bigintPattern };
 const addressType = { type: "string", pattern: addressPattern };
 const solidityProofType = {
   type: "array",
-  items: {
-    type: "string",
-    pattern: bigintPattern,
-    minItems: 8,
-    maxItems: 8,
-  },
+  items: bigintType,
+  minItems: 8,
+  maxItems: 8,
 };
 const nocturneAddressType = {
   type: "object",

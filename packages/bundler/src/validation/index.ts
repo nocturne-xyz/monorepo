@@ -8,7 +8,7 @@ function extractInputError<T>(
   validator(data);
   if (validator.errors) {
     const error = validator.errors[0];
-    return `${error.schema} ${error.message}`;
+    return JSON.stringify(error);
   }
   return undefined;
 }

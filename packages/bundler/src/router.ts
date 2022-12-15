@@ -6,9 +6,9 @@ import {
   RelayJobData,
 } from "./common";
 import { Request, Response } from "express";
-import { extractRelayError } from "./validation";
 import { ProvenOperation } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
+import { extractRelayError } from "./validation";
 import { randomUUID } from "crypto";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
