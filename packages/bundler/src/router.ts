@@ -6,15 +6,12 @@ import {
   RelayJobData,
 } from "./common";
 import { Request, Response } from "express";
-import { extractRequestError } from "./utils";
-import {
-  ProvenOperation,
-  provenOperationFromJSON,
-  toJSON,
-} from "@nocturne-xyz/sdk";
+// import { extractRequestError } from "./utils";
+import { ProvenOperation } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
 import { randomUUID } from "crypto";
 import { assert } from "console";
+import * as JSON from "bigint-json-serialization";
 
 const RELAY_JOB_TYPE = "RELAY";
 
@@ -37,16 +34,16 @@ export class RequestRouter {
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {
-    const maybeRequestError = extractRequestError(
-      req.body,
-      provenOperationFromJSON
-    );
-    if (maybeRequestError) {
-      res.status(400).json({ error: maybeRequestError });
-      return;
-    }
+    // const maybeRequestError = extractRequestError(
+    //   req.body,
+    //   provenOperationFromJSON
+    // );
+    // if (maybeRequestError) {
+    //   res.status(400).json({ error: maybeRequestError });
+    //   return;
+    // }
 
-    const operation = provenOperationFromJSON(req.body);
+    const operation = JSON.parse(req.body) as ProvenOperation;
     const nfConflictErr = await this.validator.extractNullifierConflictError(
       operation
     );
@@ -77,7 +74,7 @@ export class RequestRouter {
 
   private async postJob(operation: ProvenOperation): Promise<string> {
     const jobId = randomUUID();
-    const operationJson = toJSON(operation);
+    const operationJson = JSON.stringify(operation);
     const jobData: RelayJobData = {
       status: OperationStatus.QUEUED,
       operationJson,

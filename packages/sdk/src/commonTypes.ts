@@ -92,25 +92,6 @@ export interface BaseJoinSplitTx {
   newNoteBTransmission: NoteTransmission;
 }
 
-export function baseJoinSplitTxFromJSON(
-  jsonOrString: any | string
-): BaseJoinSplitTx {
-  const json: any =
-    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
-  return {
-    commitmentTreeRoot: BigInt(json.commitmentTreeRoot),
-    nullifierA: BigInt(json.nullifierA),
-    nullifierB: BigInt(json.nullifierB),
-    newNoteACommitment: BigInt(json.newNoteACommitment),
-    newNoteBCommitment: BigInt(json.newNoteBCommitment),
-    asset: json.asset,
-    id: BigInt(json.id),
-    publicSpend: BigInt(json.publicSpend),
-    newNoteATransmission: noteTransmissionFromJSON(json.newNoteATransmission),
-    newNoteBTransmission: noteTransmissionFromJSON(json.newNoteBTransmission),
-  };
-}
-
 export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
@@ -127,19 +108,6 @@ export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
   proof: SolidityProof;
-}
-
-export function provenJoinSplitTxFromJSON(
-  jsonOrString: any | string
-): ProvenJoinSplitTx {
-  const json: any =
-    typeof jsonOrString == "string" ? JSON.parse(jsonOrString) : jsonOrString;
-  const base = baseJoinSplitTxFromJSON(json);
-
-  return {
-    proof: json.proof,
-    ...base,
-  };
 }
 
 export interface PreSignOperation {

@@ -1,5 +1,5 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { Address, Bundle, provenOperationFromJSON } from "@nocturne-xyz/sdk";
+import { Address, Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { providers, Wallet as EthersWallet } from "ethers";
@@ -80,7 +80,7 @@ export class BundlerWorker {
     // TODO: Format batch proofs and PIs?
     const bundle: Bundle = {
       operations: this.currentBatch.map((job) => {
-        return provenOperationFromJSON(job.data.operationJson);
+        return JSON.parse(job.data.operationJson) as ProvenOperation;
       }),
     };
 
