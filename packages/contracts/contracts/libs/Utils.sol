@@ -40,8 +40,8 @@ library Utils {
         elems[0] = note.ownerH1;
         elems[1] = note.ownerH2;
         elems[2] = note.nonce;
-        elems[3] = note.asset;
-        elems[4] = note.id;
+        elems[3] = uint256(uint160(note.asset.assetAddress));
+        elems[4] = note.asset.id;
         elems[5] = note.value;
         return uint256(sha256FieldElems(elems));
     }

@@ -1,5 +1,5 @@
 import { NocturneAddressTrait, NocturneAddress } from "../crypto/address";
-import { Address } from "../commonTypes";
+import { Asset, AssetType } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
@@ -7,8 +7,7 @@ import { bigintToBEPadded } from "./utils";
 export interface Note {
   owner: NocturneAddress;
   nonce: bigint;
-  asset: Address;
-  id: bigint;
+  asset: Asset;
   value: bigint;
 }
 
@@ -56,16 +55,15 @@ export class NoteTrait {
   }
 
   static toIncludedNote(
-    { owner, nonce, asset, id, value }: Note,
+    { owner, nonce, asset, value }: Note,
     merkleIndex: number
   ): IncludedNote {
-    return { owner, nonce, asset, id, value, merkleIndex };
+    return { owner, nonce, asset, value, merkleIndex };
   }
 
   static encode(note: Note): EncodedNote {
     const { owner, nonce, value } = note;
-    const asset = encodeAsset(note.asset, note.id);
-    const id = encodeID(note.id);
+    const [asset, id] = encodeAsset(note.asset);
 
     return {
       owner,
@@ -78,49 +76,59 @@ export class NoteTrait {
 
   static decode(encodedNote: EncodedNote): Note {
     const { owner, nonce, value } = encodedNote;
-    const asset = decodeAsset(encodedNote.asset);
-    const id = decodeID(encodedNote.id, encodedNote.asset);
+    const asset = decodeAsset(encodedNote.asset, encodedNote.id);
 
     return {
       owner,
       nonce,
       asset,
-      id,
       value,
     };
   }
 }
 
-export function encodeAsset(asset: string, id: bigint): EncodedAsset {
+export function encodeAsset({ address , id }: Asset): [EncodedAsset, EncodedID] {
   const eightyEightZeros = "".padStart(88, "0");
-  const assetBits = BigInt(asset).toString(2).padStart(160, "0");
-  if (assetBits.length > 160) {
+  const addrBits = BigInt(address).toString(2).padStart(160, "0");
+  if (addrBits.length > 160) {
     throw new Error("number repr of `asset` is too large");
   }
 
   const idBits = id.toString(2).padStart(256, "0");
   const idTop3 = idBits.slice(0, 3);
-
-  return BigInt(`0b000${idTop3}${eightyEightZeros}00${assetBits}`);
+  const encodedID = BigInt(`0b000${idBits.slice(3)}`);
+  const encodedAsset = BigInt(`0b000${idTop3}${eightyEightZeros}00${addrBits}`);
+  return [encodedAsset, encodedID];
 }
 
-export function decodeAsset(encodedAsset: EncodedAsset): string {
+export function decodeAsset(encodedAsset: EncodedAsset, encodedID: EncodedID): Asset {
   const encodedAssetBits = encodedAsset.toString(2).padStart(256, "0");
   const assetBits = encodedAssetBits.slice(96);
-  return BigInt(`0b${assetBits}`).toString(16);
-}
+  const assetAddress = BigInt(`0b${assetBits}`).toString(16);
 
-export function encodeID(id: bigint): EncodedID {
-  const idBits = id.toString(2).padStart(256, "0");
-  return BigInt(`0b000${idBits.slice(3)}`);
-}
-
-export function decodeID(
-  encodedID: EncodedID,
-  encodedAsset: EncodedAsset
-): bigint {
-  const encodedAssetBits = encodedAsset.toString(2).padStart(256, "0");
+  const assetTypeBits = encodedAssetBits.slice(94, 96);
+  let assetType: AssetType; 
+  switch (assetTypeBits) {
+    case "00":
+      assetType = AssetType.ERC20;
+      break;
+    case "01":
+      assetType = AssetType.ERC721;
+      break;
+    case "10":
+      assetType = AssetType.ERC1155;
+      break;
+    default:
+      throw new Error("invalid asset type bits");
+  }
+  
   const idTop3 = encodedAssetBits.slice(3, 6);
   const encodedIDBits = encodedID.toString(2).padStart(256, "0").slice(3);
-  return BigInt(`0b${idTop3}${encodedIDBits}`);
+  const id = BigInt(`0b${idTop3}${encodedIDBits}`);
+
+  return {
+    address: assetAddress,
+    type: assetType,
+    id,
+  };
 }

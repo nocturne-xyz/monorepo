@@ -19,7 +19,6 @@ import {
   IncludedNote,
   NoteTrait,
   encodeAsset,
-  encodeID,
 } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
@@ -201,9 +200,8 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      encodeAsset(baseJoinSplitTx.asset, baseJoinSplitTx.id) !=
-        publicSignals.asset ||
-      encodeID(baseJoinSplitTx.id) != publicSignals.id ||
+      encodeAsset(baseJoinSplitTx.asset)[0] != publicSignals.asset ||
+      encodeAsset(baseJoinSplitTx.asset)[1] != publicSignals.id ||
       opDigest != publicSignals.opDigest
     ) {
       throw new Error(
@@ -231,7 +229,7 @@ export class NocturneContext {
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
     refundValue: bigint,
-    outGoingValue = 0n // TODO: add back receiverAddr for confidential payments
+    outGoingValue = 0n, // TODO: add back receiverAddr for confidential payments
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
@@ -242,15 +240,14 @@ export class NocturneContext {
     const newNoteA: Note = {
       owner: newNoteAOwner,
       nonce: this.signer.generateNewNonce(nullifierA),
+
       asset: oldNoteA.asset,
-      id: oldNoteA.id,
       value: refundValue,
     };
     const newNoteB: Note = {
       owner: newNoteBOwner,
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
-      id: oldNoteA.id,
       value: 0n,
     };
 
@@ -303,7 +300,6 @@ export class NocturneContext {
       newNoteBCommitment,
       newNoteBTransmission,
       asset: oldNoteA.asset,
-      id: oldNoteA.id,
       publicSpend,
       oldNoteA,
       oldNoteB,
@@ -345,7 +341,6 @@ export class NocturneContext {
           owner: newAddr,
           nonce: 0n,
           asset: notesToUse[0].asset,
-          id: notesToUse[0].id,
           value: 0n,
           merkleIndex: 0,
         });

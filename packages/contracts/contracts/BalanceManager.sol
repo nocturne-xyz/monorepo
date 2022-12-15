@@ -118,16 +118,16 @@ contract BalanceManager is
 
         for (uint256 i = 0; i < numSpendTxs; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
-            if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
+            if (joinSplitTxs[i].asset.assetType == IWallet.AssetType.ERC20) {
                 _balanceInfo.erc20Balances[
-                    joinSplitTxs[i].asset
+                    joinSplitTxs[i].asset.assetAddress
                 ] += joinSplitTxs[i].publicSpend;
             } else if (joinSplitTxs[i].publicSpend == 0) {
-                _gatherERC721(joinSplitTxs[i].asset, joinSplitTxs[i].id);
+                _gatherERC721(joinSplitTxs[i].asset.assetAddress, joinSplitTxs[i].asset.id);
             } else {
                 _gatherERC1155(
-                    joinSplitTxs[i].asset,
-                    joinSplitTxs[i].id,
+                    joinSplitTxs[i].asset.assetAddress,
+                    joinSplitTxs[i].asset.id,
                     joinSplitTxs[i].publicSpend
                 );
             }

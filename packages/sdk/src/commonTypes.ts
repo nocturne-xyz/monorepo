@@ -17,9 +17,29 @@ export function hashAsset(asset: Asset): string {
   return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
 }
 
+export enum AssetType {
+  ERC20,
+  ERC721,
+  ERC1155
+}
+
+export function parseAssetType(type: string): AssetType {
+  switch (parseInt(type)) {
+    case 0:
+      return AssetType.ERC20;
+    case 1:
+      return AssetType.ERC721;
+    case 2:
+      return AssetType.ERC1155;
+    default:
+      throw new Error(`Invalid asset type: ${type}`);
+  }
+}
+
 export interface Asset {
   address: Address;
   id: bigint;
+  type: AssetType;
 }
 
 export interface AssetWithBalance {
@@ -75,8 +95,7 @@ export interface BaseJoinSplitTx {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  asset: Address;
-  id: bigint;
+  asset: Asset;
   publicSpend: bigint;
   newNoteATransmission: NoteTransmission;
   newNoteBTransmission: NoteTransmission;

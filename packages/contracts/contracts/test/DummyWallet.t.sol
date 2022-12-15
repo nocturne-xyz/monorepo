@@ -127,9 +127,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     function depositFunds(
         Wallet _wallet,
         address _spender,
-        address _asset,
+        IWallet.Asset memory _asset,
         uint256 _value,
-        uint256 _id,
         IWallet.NocturneAddress memory _depositAddr
     ) public {
         wallet.depositFunds(
@@ -137,7 +136,6 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 spender: _spender,
                 asset: _asset,
                 value: _value,
-                id: _id,
                 depositAddr: _depositAddr
             })
         );
@@ -162,14 +160,19 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             : depositAmount / PER_DEPOSIT_AMOUNT + 1;
 
         // Deposit funds to vault
+        IWallet.Asset memory asset = IWallet.Asset({
+            assetAddress: address(token),
+            id: ERC20_ID,
+            assetType: IWallet.AssetType.ERC20
+        });
+
         for (uint256 i = 0; i < depositIterations; i++) {
             IWallet.NocturneAddress memory addr = defaultNocturneAddress();
             vm.expectEmit(true, true, true, true);
             emit Refund(
                 addr,
                 i,
-                address(token),
-                ERC20_ID,
+                asset,
                 PER_DEPOSIT_AMOUNT,
                 uint128(i)
             );
@@ -179,18 +182,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 depositFunds(
                     wallet,
                     recipient,
-                    address(token),
+                    asset,
                     remainder,
-                    ERC20_ID,
                     addr
                 );
             } else {
                 depositFunds(
                     wallet,
                     recipient,
-                    address(token),
+                    asset,
                     PER_DEPOSIT_AMOUNT,
-                    ERC20_ID,
                     addr
                 );
             }
@@ -199,8 +200,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 addr.h1X,
                 addr.h2X,
                 i,
-                uint256(uint160(address(token))),
-                ERC20_ID,
+                asset,
                 100
             );
             uint256 noteCommitment = treeTest.computeNoteCommitment(note);
@@ -230,6 +230,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 amount
             )
         });
+
+        IWallet.Asset memory asset = IWallet.Asset({
+            assetAddress: address(token),
+            id: ERC20_ID,
+            assetType: IWallet.AssetType.ERC20
+        }); 
 
         uint256 root = wallet.root();
         IWallet.NoteTransmission memory newNoteATransmission = IWallet
@@ -266,8 +272,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 newNoteBCommitment: uint256(1032),
                 newNoteBTransmission: newNoteBTransmission,
                 proof: dummyProof(),
-                asset: address(token),
-                id: ERC20_ID,
+                asset: asset, 
                 publicSpend: uint256(50)
             });
 

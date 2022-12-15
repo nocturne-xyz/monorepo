@@ -1,7 +1,6 @@
 import { NocturneDB, LocalMerkleDBExtension } from ".";
 import { Asset } from "../../commonTypes";
 import { IncludedNote } from "../note";
-import * as JSON from "bigint-json-serialization";
 
 export const DEFAULT_SERIALIZABLE_STATE: SerializableState = {
   kv: {},
@@ -125,7 +124,7 @@ export abstract class ObjectDB extends NocturneDB {
   async storeNote(note: IncludedNote): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = NocturneDB.formatNotesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.formatNotesKey(note.asset);
     const existingNotesFor = state.notes.get(key) ?? [];
 
     if (existingNotesFor.includes(note)) {
@@ -140,7 +139,7 @@ export abstract class ObjectDB extends NocturneDB {
   async removeNote(note: IncludedNote): Promise<boolean> {
     const state = await this.getStructuredState();
 
-    const key = NocturneDB.formatNotesKey({ address: note.asset, id: note.id });
+    const key = NocturneDB.formatNotesKey(note.asset);
     state.notes.set(
       key,
       (state.notes.get(key) ?? []).filter(

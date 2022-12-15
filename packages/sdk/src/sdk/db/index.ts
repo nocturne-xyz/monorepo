@@ -1,4 +1,4 @@
-import { NotesKey, Asset } from "../../commonTypes";
+import { NotesKey, Asset, parseAssetType } from "../../commonTypes";
 import { IncludedNote } from "../note";
 
 export const DEFAULT_DB_PATH = "db";
@@ -56,16 +56,16 @@ export abstract class NocturneDB {
 
   /**
    * Format an `Asset` into a key for the notes db using the form
-   * NOTES_<address>_<id>.
+   * NOTES_<type>_<address>_<id>.
    *
    * @param asset asset
    */
   static formatNotesKey(asset: Asset): string {
-    return NOTES_PREFIX + asset.address + "_" + asset.id;
+    return NOTES_PREFIX + asset.type + asset.address + "_" + asset.id;
   }
 
   /**
-   * Parse a notes key into an `Asset`. Parses key of form NOTES_<address>_<id>
+   * Parse a notes key into an `Asset`. Parses key of form NOTES_<type>_<address>_<id>
    * into address with asset and id fields.
    *
    * @param asset asset
@@ -73,8 +73,9 @@ export abstract class NocturneDB {
   static parseNotesKey(key: string): Asset {
     const arr = key.split("_");
     return {
-      address: arr[1],
-      id: BigInt(arr[2]),
+      type: parseAssetType(arr[1]),
+      address: arr[2],
+      id: BigInt(arr[3]),
     };
   }
 

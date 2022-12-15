@@ -9,7 +9,7 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { Address, NoteTransmission } from "../commonTypes";
+import { Address, Asset, NoteTransmission } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;
@@ -85,8 +85,7 @@ export class NocturneSigner {
   getNoteFromNoteTransmission(
     noteTransmission: NoteTransmission,
     merkleIndex: number,
-    asset: Address,
-    id: bigint
+    asset: Asset,
   ): IncludedNote {
     if (!this.testOwn(noteTransmission.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
@@ -107,7 +106,6 @@ export class NocturneSigner {
       owner: this.privkey.toCanonAddressStruct(),
       nonce,
       asset,
-      id,
       value,
       merkleIndex,
     };

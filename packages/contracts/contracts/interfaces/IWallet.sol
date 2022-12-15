@@ -35,8 +35,7 @@ interface IWallet {
         uint256 newNoteACommitment;
         uint256 newNoteBCommitment;
         uint256[8] proof;
-        address asset;
-        uint256 id; // SNARK_SCALAR_FIELD - 1 for ERC20
+        Asset asset;
         uint256 publicSpend;
         NoteTransmission newNoteATransmission;
         NoteTransmission newNoteBTransmission;
@@ -46,9 +45,28 @@ interface IWallet {
         uint256 ownerH1;
         uint256 ownerH2;
         uint256 nonce;
-        uint256 asset;
-        uint256 id;
         uint256 value;
+        Asset asset;
+    }
+
+    struct EncodedNote {
+        uint256 ownerH1;
+        uint256 ownerH2;
+        uint256 nonce;
+        uint256 value;
+        Asset asset;
+    }
+
+    struct Asset {
+        address assetAddress;
+        uint256 id;
+        AssetType assetType;    
+    }
+
+    enum AssetType {
+        ERC20,
+        ERC721,
+        ERC1155
     }
 
     struct SubtreeUpdateArgs {
