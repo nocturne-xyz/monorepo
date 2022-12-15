@@ -14,7 +14,8 @@
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn local-prover:gen-test-cases",
     "test": "yarn turbo run test --filter=!@nocturne-xyz/circuits...",
     "test:e2e": "yarn turbo run test:e2e --filter=@nocturne-xyz/e2e-tests",
-    "test:unit": "yarn turbo run test:unit --filter=!@nocturne-xyz/circuits..."
+    "test:unit": "yarn turbo run test:unit --filter=!@nocturne-xyz/circuits...",
+    "dev:site": "./scripts/run-site-dev.sh"
   },
   "devDependencies": {
     "turbo": "1.6.3"
