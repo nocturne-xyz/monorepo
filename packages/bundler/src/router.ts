@@ -6,7 +6,7 @@ import {
   RelayJobData,
 } from "./common";
 import { Request, Response } from "express";
-// import { extractRequestError } from "./utils";
+import { extractRelayError } from "./validation";
 import { ProvenOperation } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
 import { randomUUID } from "crypto";
@@ -34,14 +34,11 @@ export class RequestRouter {
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {
-    // const maybeRequestError = extractRequestError(
-    //   req.body,
-    //   provenOperationFromJSON
-    // );
-    // if (maybeRequestError) {
-    //   res.status(400).json({ error: maybeRequestError });
-    //   return;
-    // }
+    const maybeRequestError = extractRelayError(req.body);
+    if (maybeRequestError) {
+      res.status(400).json({ error: maybeRequestError });
+      return;
+    }
 
     const operation = JSON.parse(req.body) as ProvenOperation;
     const nfConflictErr = await this.validator.extractNullifierConflictError(
