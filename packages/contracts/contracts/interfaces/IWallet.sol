@@ -105,10 +105,5 @@ interface IWallet {
         Bundle calldata bundle
     ) external returns (IWallet.OperationResult[] memory opResults);
 
-    function batchDepositFunds(
-        Deposit[] calldata deposits,
-        Signature[] calldata sigs
-    ) external;
-
     function depositFunds(Deposit calldata deposit) external;
 }

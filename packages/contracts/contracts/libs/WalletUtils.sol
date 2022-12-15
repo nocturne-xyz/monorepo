@@ -125,38 +125,4 @@ library WalletUtils {
 
         return keccak256(payload);
     }
-
-    // TODO: refactor batch deposit
-    function verifyApprovalSig(
-        IWallet.Deposit calldata deposit,
-        IWallet.Signature calldata sig
-    ) internal pure returns (bool valid) {
-        bytes32 payloadHash = keccak256(
-            abi.encodePacked(
-                deposit.asset,
-                deposit.value,
-                deposit.spender,
-                deposit.id,
-                deposit.depositAddr.h1X,
-                deposit.depositAddr.h1Y,
-                deposit.depositAddr.h2X,
-                deposit.depositAddr.h2Y
-            )
-        );
-
-        bytes32 msgHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", payloadHash)
-        );
-
-        address recoveredAddress = ecrecover(msgHash, sig.v, sig.r, sig.s);
-
-        if (
-            recoveredAddress != address(0) &&
-            recoveredAddress == deposit.spender
-        ) {
-            valid = true;
-        } else {
-            valid = false;
-        }
-    }
 }
