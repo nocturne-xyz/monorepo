@@ -14,3 +14,4 @@
 [submodule "snap"]
 	path = snap
 	url = git@github.com:nocturne-xyz/snap.git
+	ignore = dirty
