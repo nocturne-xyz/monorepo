@@ -2,6 +2,7 @@
 
 SCRIPT_DIR=$(dirname "$0")
 
+yarn build
 git submodule update
 
 # kill all child processes when this script exits
