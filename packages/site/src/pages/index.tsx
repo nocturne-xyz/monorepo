@@ -20,7 +20,7 @@ import {
 } from "../components";
 import {
   Action,
-  AssetRequest,
+  JoinSplitRequest,
   ERC20_ID,
   OperationRequest,
 } from "@nocturne-xyz/sdk";
@@ -170,7 +170,7 @@ const Index = () => {
 
   const handleGetJoinSplitInputs = async () => {
     const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
-    const assetRequest: AssetRequest = {
+    const joinSplitRequest: JoinSplitRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
       value: 25n,
     };
@@ -186,7 +186,7 @@ const Index = () => {
       encodedFunction: encodedFunction,
     };
     const operationRequest: OperationRequest = {
-      assetRequests: [assetRequest],
+      joinSplitRequests: [joinSplitRequest],
       refundTokens,
       actions: [action],
     };

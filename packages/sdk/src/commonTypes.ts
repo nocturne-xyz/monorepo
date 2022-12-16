@@ -2,7 +2,7 @@ import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
 import { Action, SpendAndRefundTokens } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { NocturneAddress } from "./crypto/address";
+import { CanonAddress, NocturneAddress } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 
@@ -27,13 +27,23 @@ export interface AssetWithBalance {
   balance: bigint;
 }
 
-export interface AssetRequest {
+export interface UnwrapRequest {
   asset: Asset;
+  unwrapValue: bigint;
+}
+
+export interface PaymentIntent {
+  receiver: CanonAddress;
   value: bigint;
 }
 
+// A joinsplit request is an unwrapRequest plus an optional payment
+export interface JoinSplitRequest extends UnwrapRequest {
+  paymentIntent?: PaymentIntent;
+}
+
 export interface OperationRequest {
-  assetRequests: AssetRequest[];
+  joinSplitRequests: JoinSplitRequest[];
   refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
   actions: Action[];
 }

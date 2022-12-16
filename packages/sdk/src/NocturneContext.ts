@@ -1,5 +1,5 @@
 import {
-  AssetRequest,
+  JoinSplitRequest,
   Asset,
   AssetWithBalance,
   OperationRequest,
@@ -16,7 +16,11 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { NocturneAddress, NocturneAddressTrait } from "./crypto/address";
+import {
+  CanonAddress,
+  NocturneAddress,
+  NocturneAddressTrait,
+} from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -28,6 +32,7 @@ import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
+import { getJoinSplitRequestTotalValue } from "./sdk/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -110,7 +115,7 @@ export class NocturneContext {
   /**
    *
    * Given `operationRequest`, gather the necessary notes and proof inputs to
-   * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
+   * fulfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
    *
    * @param operationRequest Operation request
@@ -123,7 +128,7 @@ export class NocturneContext {
     refundAddr?: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreProofOperation> {
-    const { assetRequests, refundTokens } = operationRequest;
+    const { joinSplitRequests, refundTokens } = operationRequest;
 
     // Generate refund addr if needed
     const realRefundAddr = refundAddr
@@ -132,7 +137,7 @@ export class NocturneContext {
 
     // Create preProofOperation to use in per-note proving
     const tokens: SpendAndRefundTokens = {
-      spendTokens: assetRequests.map((a) => a.asset.address),
+      spendTokens: joinSplitRequests.map((a) => a.asset.address),
       refundTokens,
     };
 
@@ -166,13 +171,13 @@ export class NocturneContext {
    * Ensure user has balances to fullfill all asset requests in
    * `operationRequest`. Throws error if any asset request exceeds owned balance.
    *
-   * @param assetRequests Asset requests
+   * @param joinSplitRequests requests
    */
   async ensureMinimumForOperationRequest({
-    assetRequests,
+    joinSplitRequests,
   }: OperationRequest): Promise<void> {
-    for (const assetRequest of assetRequests) {
-      await this.ensureMinimumForAssetRequest(assetRequest);
+    for (const joinSplitRequest of joinSplitRequests) {
+      await this.ensureMinimumForAssetRequest(joinSplitRequest);
     }
   }
 
@@ -212,39 +217,117 @@ export class NocturneContext {
   }
 
   /**
-   * Generate a PreSignJoinSplitTx.
+   * Generate a sequence of joinSplitTx for a given joinSplitRequest.
+   */
+  async genPreSignJoinSplitTxs(
+    joinSplitRequest: JoinSplitRequest
+  ): Promise<PreSignJoinSplitTx[]> {
+    let notesToUse = await this.gatherMinimumNotes(joinSplitRequest);
+
+    const unwrapVal = joinSplitRequest.unwrapValue;
+    const paymentVal = joinSplitRequest.paymentIntent
+      ? joinSplitRequest.paymentIntent.value
+      : 0n;
+    const receiver = joinSplitRequest.paymentIntent
+      ? joinSplitRequest.paymentIntent.receiver
+      : undefined;
+
+    // Total value of notes in notesToUse
+    const totalUsedValue = notesToUse.reduce((s, note) => {
+      return s + note.value;
+    }, 0n);
+    // Compute return value
+    const returnVal = totalUsedValue - unwrapVal - paymentVal;
+
+    // Insert a dummy note if length of notes to use is odd
+    if (notesToUse.length % 2 == 1) {
+      const newAddr = this.signer.privkey.toCanonAddressStruct();
+      notesToUse.push({
+        owner: newAddr,
+        nonce: 0n,
+        asset: notesToUse[0].asset,
+        id: notesToUse[0].id,
+        value: 0n,
+        merkleIndex: 0,
+      });
+    }
+
+    const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
+
+    let noteA, noteB;
+    let remainingPaymentVal = paymentVal;
+    let remainingReturnVal = returnVal;
+    // Loop through every two notes to use to format a joinsplit
+    while (notesToUse.length > 0) {
+      [noteA, noteB, ...notesToUse] = notesToUse;
+
+      // First try to make a return note of maximm value
+      const totalPairValue = noteA.value + noteB.value;
+      const currentReturnVal =
+        totalPairValue >= remainingReturnVal
+          ? remainingReturnVal
+          : totalPairValue;
+      remainingReturnVal -= currentReturnVal;
+
+      // Then fit in as much paymentVal as we can
+      const remainingJoinSplitVal =
+        noteA.value + noteB.value - currentReturnVal;
+      const currentPaymentVal =
+        remainingJoinSplitVal >= remainingPaymentVal
+          ? remainingPaymentVal
+          : remainingJoinSplitVal;
+      remainingPaymentVal -= currentPaymentVal;
+
+      preSignJoinSplitTxs.push(
+        this.genPreSignJoinSplitTx(
+          noteA,
+          noteB,
+          currentReturnVal,
+          currentPaymentVal,
+          receiver
+        )
+      );
+    }
+    return Promise.all(preSignJoinSplitTxs);
+  }
+
+  /**
+   * Generate a single PreSignJoinSplitTx.
    *
    * @param oldNoteA, oldNoteB old notes to spend
-   * @param refundValue value to be given back to the spender
-   * @param outGoingValue value of confidential payment
-   * @param receiverAddr recipient of confidential payment
+   * @param returnVal value to be given back to the spender
+   * @param paymentVal value of the confidential payment
+   * @param receiver recipient of the confidential payment
    * @return a PreSignJoinSplitTx
    */
   protected async genPreSignJoinSplitTx(
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
-    refundValue: bigint,
-    outGoingValue = 0n // TODO: add back receiverAddr for confidential payments
+    returnVal: bigint,
+    paymentVal = 0n,
+    receiver?: CanonAddress
   ): Promise<PreSignJoinSplitTx> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
 
-    const newNoteAOwner = this.signer.privkey.toCanonAddressStruct();
-    const newNoteBOwner = newNoteAOwner;
+    const canonOwner = this.signer.privkey.toCanonAddress();
+    if (receiver == undefined || paymentVal == 0n) {
+      receiver = canonOwner;
+    }
 
     const newNoteA: Note = {
-      owner: newNoteAOwner,
+      owner: NocturneAddressTrait.fromCanonAddress(canonOwner),
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
-      value: refundValue,
+      value: returnVal,
     };
     const newNoteB: Note = {
-      owner: newNoteBOwner,
+      owner: NocturneAddressTrait.fromCanonAddress(receiver),
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       id: oldNoteA.id,
-      value: 0n,
+      value: paymentVal,
     };
 
     const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
@@ -254,12 +337,9 @@ export class NocturneContext {
       this.signer.privkey.toCanonAddress(),
       newNoteA
     );
-    const newNoteBTransmission = genNoteTransmission(
-      this.signer.privkey.toCanonAddress(),
-      newNoteB
-    );
+    const newNoteBTransmission = genNoteTransmission(receiver, newNoteB);
     const publicSpend =
-      oldNoteA.value + oldNoteB.value - refundValue - outGoingValue;
+      oldNoteA.value + oldNoteB.value - returnVal - paymentVal;
 
     const merkleProofA = await this.merkleProver.getProof(oldNoteA.merkleIndex);
     const merkleInputA: MerkleProofInput = {
@@ -318,45 +398,19 @@ export class NocturneContext {
    * @param gasLimit:Gas limit
    */
   protected async getPreSignOperation(
-    { assetRequests, actions }: OperationRequest,
+    { joinSplitRequests, actions }: OperationRequest,
     tokens: SpendAndRefundTokens,
     refundAddr: NocturneAddress,
     gasLimit = 1_000_000n
   ): Promise<PreSignOperation> {
-    // For each asset request, gather necessary notes
-    const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
-    for (const assetRequest of assetRequests) {
-      let notesToUse = await this.gatherMinimumNotes(assetRequest);
-      const totalVal = notesToUse.reduce((s, note) => {
-        return s + note.value;
-      }, 0n);
-      let refundVal = totalVal - assetRequest.value;
-      // Insert a dummy note if length of notes to use is odd
-      if (notesToUse.length % 2 == 1) {
-        const newAddr = this.signer.privkey.toCanonAddressStruct();
-        notesToUse.push({
-          owner: newAddr,
-          nonce: 0n,
-          asset: notesToUse[0].asset,
-          id: notesToUse[0].id,
-          value: 0n,
-          merkleIndex: 0,
-        });
-      }
-      let noteA, noteB;
-      while (notesToUse.length > 0) {
-        [noteA, noteB, ...notesToUse] = notesToUse;
-        let val = 0n;
-        // add in the refund value if noteA and noteB spend enough
-        if (noteA.value + noteB.value > refundVal) {
-          val = refundVal;
-          refundVal = 0n;
-        }
-        preSignJoinSplitTxs.push(this.genPreSignJoinSplitTx(noteA, noteB, val));
-      }
+    const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
+    for (const joinSplitRequest of joinSplitRequests) {
+      preSignJoinSplitTxs.push(
+        ...(await this.genPreSignJoinSplitTxs(joinSplitRequest))
+      );
     }
     return {
-      joinSplitTxs: await Promise.all(preSignJoinSplitTxs),
+      joinSplitTxs: preSignJoinSplitTxs,
       refundAddr,
       tokens,
       actions,
@@ -409,18 +463,19 @@ export class NocturneContext {
   }
 
   /**
-   * Ensure user has balances to fullfill `assetRequest`. Throws error if
+   * Ensure user has balances to fullfill `joinSplitRequest`. Throws error if
    * attempted request exceeds owned balance.
    *
-   * @param assetRequest Asset request
+   * @param joinSplitRequest request
    */
   async ensureMinimumForAssetRequest(
-    assetRequest: AssetRequest
+    joinSplitRequest: JoinSplitRequest
   ): Promise<void> {
-    const balance = await this.getAssetBalance(assetRequest.asset);
-    if (balance < assetRequest.value) {
+    const totalVal = getJoinSplitRequestTotalValue(joinSplitRequest);
+    const balance = await this.getAssetBalance(joinSplitRequest.asset);
+    if (balance < totalVal) {
       throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
+        `Attempted to spend more funds than owned. Address: ${joinSplitRequest.asset.address}. Attempted: ${joinSplitRequest.unwrapValue}. Owned: ${balance}.`
       );
     }
   }
@@ -430,33 +485,85 @@ export class NocturneContext {
    * list is sorted from smallest to largest. The total value of returned notes
    * could exceed the requested amount.
    *
-   * @param assetRequest Asset request
-   * @return a list of included notes to spend the total value.
+   * @param joinSplitRequest request
+   * @return a list of included notes to spend.
    */
   async gatherMinimumNotes(
-    assetRequest: AssetRequest
+    joinSplitRequest: JoinSplitRequest,
+    largestFirst = false
   ): Promise<IncludedNote[]> {
-    const balance = await this.getAssetBalance(assetRequest.asset);
-    if (balance < assetRequest.value) {
-      throw new Error(
-        `Attempted to spend more funds than owned. Address: ${assetRequest.asset.address}. Attempted: ${assetRequest.value}. Owned: ${balance}.`
-      );
-    }
+    this.ensureMinimumForAssetRequest(joinSplitRequest);
+    const totalVal = getJoinSplitRequestTotalValue(joinSplitRequest);
 
-    const notes = await this.db.getNotesFor(assetRequest.asset);
+    const notes = await this.db.getNotesFor(joinSplitRequest.asset);
+    // Sort from small to large
     const sortedNotes = [...notes].sort((a, b) => {
       return Number(a.value - b.value);
     });
 
+    // For value to gather, the *required note* is defined as the largest note
+    // of the shortest subsequence of notes starting from the smallest whose
+    // sum is greater than the value to gather.
+
+    // Compute running sum of each subsequence of notes starting from smallest
+    const subTotal: bigint[] = [];
+    for (const note of sortedNotes) {
+      subTotal.push(
+        note.value + (subTotal.length > 0 ? subTotal[subTotal.length - 1] : 0n)
+      );
+    }
+
+    // Construct a helper function that compute the index of the required note
+    // for each value to gather.
+    // Possible optimzation: change this to O(log(notes.length)) complexity
+    const getRequiredNoteIndexForValue = (valueToGather: bigint) => {
+      let index = 0;
+      while (subTotal[index] < valueToGather) {
+        index++;
+      }
+      return index;
+    };
+
+    // Construct the set of notes to use. Iteractively adding in required notes
+    // for the remaining value to gather.
     const notesToUse: IncludedNote[] = [];
-    let totalSpend = 0n;
-    while (totalSpend < assetRequest.value) {
-      const oldNote = sortedNotes.shift()!;
+    let remainingVal = totalVal;
+    while (remainingVal > 0n) {
+      const index = getRequiredNoteIndexForValue(remainingVal);
+      const oldNote = sortedNotes[index];
+      remainingVal -= oldNote.value;
       notesToUse.push(oldNote);
-      totalSpend += oldNote.value;
+    }
+
+    if (!largestFirst) {
+      notesToUse.reverse();
     }
 
     return notesToUse;
+  }
+
+  /**
+   * Generate an operation request for a payment.
+   */
+  genPaymentRequest(
+    asset: Asset,
+    receiver: CanonAddress,
+    value: bigint
+  ): OperationRequest {
+    return {
+      joinSplitRequests: [
+        {
+          asset,
+          unwrapValue: 0n,
+          paymentIntent: {
+            receiver,
+            value,
+          },
+        },
+      ],
+      refundTokens: [],
+      actions: [],
+    };
   }
 
   /**

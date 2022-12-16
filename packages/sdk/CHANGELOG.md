@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Update `gatherMinimumNotes` logic to actually gather minimum number of notes
+- Add interfaces for generating and receiving confidential payments
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - Add query function for `SubtreeUpdate` events
 - Pull out note / tree insertion fetching logic into `indexing` module
