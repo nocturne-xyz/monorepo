@@ -3,6 +3,7 @@
 SCRIPT_DIR=$(dirname "$0")
 
 yarn build
+git submodule init
 git submodule update
 
 # kill all child processes when this script exits

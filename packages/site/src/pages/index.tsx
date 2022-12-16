@@ -172,7 +172,7 @@ const Index = () => {
     const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
     const joinSplitRequest: JoinSplitRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
-      value: 25n,
+      unwrapValue: 25n,
     };
 
     const refundTokens = [tokenAddress];
