@@ -1,6 +1,7 @@
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, EventFilter } from "ethers";
 import { Result } from "ethers/lib/utils";
+import { JoinSplitRequest } from "../commonTypes";
 
 const CHUNK_SIZE = 2000;
 
@@ -75,4 +76,14 @@ export function bigintToBuf(bn: bigint): Uint8Array {
   }
 
   return u8;
+}
+
+export function getJoinSplitRequestTotalValue(
+  joinSplitRequest: JoinSplitRequest
+): bigint {
+  let totalVal = joinSplitRequest.unwrapValue;
+  if (joinSplitRequest.paymentIntent !== undefined) {
+    totalVal += joinSplitRequest.paymentIntent.value;
+  }
+  return totalVal;
 }

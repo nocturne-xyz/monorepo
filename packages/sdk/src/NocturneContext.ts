@@ -32,6 +32,7 @@ import { NocturneDB } from "./sdk/db";
 import { NotesManager } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
+import { getJoinSplitRequestTotalValue } from "./sdk/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -114,8 +115,7 @@ export class NocturneContext {
   /**
    *
    * Given `operationRequest`, gather the necessary notes and proof inputs to
-   *
-   * fullfill the operation's asset requests. Return the PreProofJoinSplitTx and
+   * fulfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
    *
    * @param operationRequest Operation request
@@ -471,10 +471,7 @@ export class NocturneContext {
   async ensureMinimumForAssetRequest(
     joinSplitRequest: JoinSplitRequest
   ): Promise<void> {
-    let totalVal = joinSplitRequest.unwrapValue;
-    if (joinSplitRequest.paymentIntent !== undefined) {
-      totalVal += joinSplitRequest.paymentIntent.value;
-    }
+    const totalVal = getJoinSplitRequestTotalValue(joinSplitRequest);
     const balance = await this.getAssetBalance(joinSplitRequest.asset);
     if (balance < totalVal) {
       throw new Error(
@@ -496,10 +493,7 @@ export class NocturneContext {
     largestFirst = false
   ): Promise<IncludedNote[]> {
     this.ensureMinimumForAssetRequest(joinSplitRequest);
-    let totalVal = joinSplitRequest.unwrapValue;
-    if (joinSplitRequest.paymentIntent !== undefined) {
-      totalVal += joinSplitRequest.paymentIntent.value;
-    }
+    const totalVal = getJoinSplitRequestTotalValue(joinSplitRequest);
 
     const notes = await this.db.getNotesFor(joinSplitRequest.asset);
     // Sort from small to large
