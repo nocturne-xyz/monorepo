@@ -4,6 +4,7 @@ import {
   OperationStatus,
   PROVEN_OPERATIONS_QUEUE,
   RelayJobData,
+  RELAY_JOB_TYPE,
 } from "./common";
 import { Request, Response } from "express";
 import { ProvenOperation } from "@nocturne-xyz/sdk";
@@ -13,22 +14,19 @@ import { randomUUID } from "crypto";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./statusdb";
-
-const RELAY_JOB_TYPE = "RELAY";
+import { getRedis } from "./utils";
 
 export class RequestRouter {
   queue: Queue<RelayJobData>;
   validator: OperationValidator;
   statusDB: StatusDB;
 
-  constructor() {
-    const redisUrl = process.env.REDIS_URL ?? "redis://redis:6379";
+  constructor(redis?: IORedis) {
+    const connection = getRedis(redis);
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
       throw new Error("Missing RPC_URL");
     }
-
-    const connection = new IORedis(redisUrl);
     this.queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection });
     this.statusDB = new StatusDB(connection);
     this.validator = new OperationValidator(rpcUrl, connection);

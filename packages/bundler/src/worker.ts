@@ -8,7 +8,7 @@ import {
   PROVEN_OPERATIONS_QUEUE,
   RelayJobData,
 } from "./common";
-import { sleep } from "./utils";
+import { getRedis, sleep } from "./utils";
 import { StatusDB } from "./statusdb";
 
 export class BundlerWorker {
@@ -21,10 +21,10 @@ export class BundlerWorker {
   currentBatch: Job<RelayJobData>[]; // keep job handles to set failed/completed
   statusDB: StatusDB;
 
-  constructor(workerName: string, walletAddress: Address) {
+  constructor(workerName: string, walletAddress: Address, redis?: IORedis) {
     this.token = workerName;
-    const redisUrl = process.env.REDIS_URL ?? "redis://redis:6379";
-    const connection = new IORedis(redisUrl);
+
+    const connection = getRedis(redis);
     this.worker = new Worker(PROVEN_OPERATIONS_QUEUE, undefined, {
       connection,
       autorun: false,
