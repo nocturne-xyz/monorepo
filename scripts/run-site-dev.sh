@@ -23,7 +23,7 @@ SNAP_PID=$!
 popd
 
 
-sleep 1s
+sleep 1
 
 # start the hardhat node
 pushd packages/e2e-tests
@@ -32,7 +32,7 @@ mkdir -p $LOG_DIR
 yarn hh-node &> "$LOG_DIR/hh-node" &
 HH_NODE_PID=$!
 
-sleep 3s
+sleep 3
 
 # deposit
 yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit"
