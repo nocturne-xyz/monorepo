@@ -12,12 +12,14 @@ import { extractRelayError } from "./validation";
 import { randomUUID } from "crypto";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
+import { StatusDB } from "./statusdb";
 
 const RELAY_JOB_TYPE = "RELAY";
 
 export class RequestRouter {
   queue: Queue<RelayJobData>;
   validator: OperationValidator;
+  statusDB: StatusDB;
 
   constructor() {
     const redisUrl = process.env.REDIS_URL ?? "redis://redis:6379";
@@ -28,8 +30,7 @@ export class RequestRouter {
 
     const connection = new IORedis(redisUrl);
     this.queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection });
-
-    // TODO: separate DB than queue?
+    this.statusDB = new StatusDB(connection);
     this.validator = new OperationValidator(rpcUrl, connection);
   }
 
@@ -61,7 +62,7 @@ export class RequestRouter {
   }
 
   async handleGetOperationStatus(req: Request, res: Response): Promise<void> {
-    const status = await this.getOperationStatus(req.params.id);
+    const status = await this.statusDB.getJobStatus(req.params.id);
     if (status) {
       res.json(status);
     } else {
@@ -73,7 +74,6 @@ export class RequestRouter {
     const jobId = randomUUID();
     const operationJson = JSON.stringify(operation);
     const jobData: RelayJobData = {
-      status: OperationStatus.QUEUED,
       operationJson,
     };
 
@@ -82,18 +82,8 @@ export class RequestRouter {
     });
     assert(job.id == jobId); // TODO: can remove?
 
+    await this.statusDB.setJobStatus(jobId, OperationStatus.QUEUED);
     await this.validator.addNullifiers(operation, jobId);
     return jobId;
-  }
-
-  private async getOperationStatus(
-    id: string
-  ): Promise<OperationStatus | undefined> {
-    const job = await this.queue.getJob(id);
-    if (!job) {
-      return undefined;
-    }
-
-    return job.data.status;
   }
 }

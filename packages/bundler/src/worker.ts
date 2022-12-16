@@ -8,7 +8,8 @@ import {
   PROVEN_OPERATIONS_QUEUE,
   RelayJobData,
 } from "./common";
-import { updateOperationStatus } from "./utils";
+import { sleep } from "./utils";
+import { StatusDB } from "./statusdb";
 
 export class BundlerWorker {
   readonly batchSize: number = 8;
@@ -18,6 +19,7 @@ export class BundlerWorker {
   worker: Worker;
   wallet: Wallet; // TODO: replace with tx manager
   currentBatch: Job<RelayJobData>[]; // keep job handles to set failed/completed
+  statusDB: StatusDB;
 
   constructor(workerName: string, walletAddress: Address) {
     this.token = workerName;
@@ -27,6 +29,7 @@ export class BundlerWorker {
       connection,
       autorun: false,
     }); // TODO: pass in undefined processor function?
+    this.statusDB = new StatusDB(connection);
 
     const privateKey = process.env.TX_SIGNER_KEY!;
     if (!privateKey) {
@@ -61,7 +64,7 @@ export class BundlerWorker {
         await this.pullJobsFromQueue();
       }
 
-      // await sleep(950); // sleep ~1 sec, increment counter (approx)
+      await sleep(950); // sleep ~1 sec, increment counter (approx)
       counterSeconds += 1;
     }
   }
@@ -70,7 +73,7 @@ export class BundlerWorker {
     let job = (await this.worker.getNextJob(this.token)) as Job<RelayJobData>;
     while (job && this.currentBatch.length < this.batchSize) {
       // NOTE: Job status (not op status) is ACTIVE once pulled off here
-      await updateOperationStatus(job, OperationStatus.ACCEPTED);
+      await this.statusDB.setJobStatus(job.id!, OperationStatus.ACCEPTED);
       this.currentBatch.push(job);
       job = (await this.worker.getNextJob(this.token)) as Job<RelayJobData>;
     }
@@ -85,8 +88,8 @@ export class BundlerWorker {
     };
 
     // Loop through current batch and set each job status to IN_FLIGHT
-    this.currentBatch.forEach((job) => {
-      updateOperationStatus(job, OperationStatus.IN_FLIGHT);
+    this.currentBatch.forEach(async ({ id }) => {
+      await this.statusDB.setJobStatus(id!, OperationStatus.IN_FLIGHT);
     });
 
     await this.wallet.processBundle(bundle);
