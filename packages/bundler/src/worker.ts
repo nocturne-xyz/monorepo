@@ -1,4 +1,5 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { Address, Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
@@ -94,7 +95,13 @@ export class BundlerWorker {
       await this.statusDB.setJobStatus(id!, OperationStatus.IN_FLIGHT);
     });
 
-    await this.wallet.processBundle(bundle);
+    const tx = await this.wallet.processBundle(bundle);
+    const receipt = await tx.wait();
+
+    // const processedSignature = ethers.utils
+    // const processedEvents = receipt.events!.filter((event) => {
+    //   return event.eventSignature! == Operaton
+    // });
 
     // TODO: index for OperationProcessed event
     // TODO: Loop through array of results and statuses and set jobs statuses
