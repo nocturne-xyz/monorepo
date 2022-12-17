@@ -10,6 +10,7 @@ import {
   RELAY_JOB_TYPE,
 } from "../src/common";
 import { VALID_RELAY_OBJECT } from "./utils";
+import { sleep } from "../src/utils";
 
 describe("BundlerWorker", async () => {
   let server: RedisMemoryServer;
@@ -30,7 +31,9 @@ describe("BundlerWorker", async () => {
       "0x1111111111111111111111111111111111111111111111111111111111111111";
     worker = new BundlerWorker("BundlerWorker", "0x1234", redis);
     worker.submitBatch = async () => {
+      console.log("Batch submitted.");
       submittedBatch = true;
+      throw new Error("Finished");
     };
   });
 
@@ -47,10 +50,9 @@ describe("BundlerWorker", async () => {
 
   it("Runs", async () => {
     const queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection: redis });
-    // const prom = worker.run();
     const fillBatch = async () => {
       for (let i = 0; i < 8; i++) {
-        const jobId = (i + 1).toString();
+        const jobId = (i + 1).toString() + "a";
         const operationJson = JSON.stringify(VALID_RELAY_OBJECT);
         const jobData: RelayJobData = {
           operationJson,
@@ -60,12 +62,16 @@ describe("BundlerWorker", async () => {
           jobId,
         });
         expect(jobId).to.equal(job.id!);
-        console.log(job);
       }
     };
 
-    await fillBatch();
-    submittedBatch = true;
-    submittedBatch;
+    try {
+      fillBatch();
+      worker.run();
+      await sleep(3000);
+      throw new Error("Worker run should have thrown error");
+    } catch {
+      expect(submittedBatch).to.equal(true);
+    }
   });
 });

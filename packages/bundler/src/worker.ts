@@ -55,11 +55,13 @@ export class BundlerWorker {
     while (true) {
       if (this.currentBatch.length == this.batchSize) {
         await this.submitBatch();
+        this.currentBatch = [];
       } else if (
         counterSeconds == this.intervalSeconds &&
         this.currentBatch.length > 0
       ) {
         await this.submitBatch();
+        this.currentBatch = [];
       } else {
         await this.pullJobsFromQueue();
       }
