@@ -93,7 +93,9 @@ function hashJoinSplit(joinsplit: BaseJoinSplitTx): string {
   return ethers.utils.keccak256(payload);
 }
 
-export function calculateOperationDigest(operation: PreSignOperation): bigint {
+export function calculateOperationDigest(
+  operation: PreSignOperation | PreProofOperation | ProvenOperation
+): bigint {
   const operationHash = hashOperation(operation);
   return BigInt(operationHash) % SNARK_SCALAR_FIELD;
 }

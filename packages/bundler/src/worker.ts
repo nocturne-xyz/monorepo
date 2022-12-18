@@ -1,6 +1,7 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { Address, Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
+import { parseEventsFromContractReceipt } from "@nocturne-xyz/sdk/dist/src/sdk/utils/ethers";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { providers, Wallet as EthersWallet } from "ethers";
@@ -95,16 +96,22 @@ export class BundlerWorker {
       await this.statusDB.setJobStatus(id!, OperationStatus.IN_FLIGHT);
     });
 
-    const tx = await this.wallet.processBundle(bundle);
+    // Hardcode gas limit to skip eth_estimateGas
+    const tx = await this.wallet.processBundle(bundle, { gasLimit: 1_000_000 });
     const receipt = await tx.wait();
 
-    // const processedSignature = ethers.utils
-    // const processedEvents = receipt.events!.filter((event) => {
-    //   return event.eventSignature! == Operaton
-    // });
+    const matchingEvents = parseEventsFromContractReceipt(
+      receipt,
+      "OperationProcessed"
+    ) as OperationProcessedEvent[];
 
-    // TODO: index for OperationProcessed event
-    // TODO: Loop through array of results and statuses and set jobs statuses
-    // appropriately based on results
+    for (const { args } of matchingEvents) {
+      const eventDigest = args.operationDigest.toBigInt();
+      const status = args.opSuccess
+        ? OperationStatus.EXECUTED_SUCCESS
+        : OperationStatus.EXECUTED_FAILED;
+
+      await this.statusDB.setJobStatus(eventDigest.toString(), status);
+    }
   }
 }

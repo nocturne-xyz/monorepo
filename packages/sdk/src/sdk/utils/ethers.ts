@@ -30,11 +30,11 @@ export async function query<T extends Result, C extends BaseContract>(
   return largeQueryInChunks(contract, filter, from, to);
 }
 
-export function parseEventsFromContractReceipt<T extends Event>(
+export function parseEventsFromContractReceipt(
   receipt: ContractReceipt,
   eventName: string
-): T[] {
+): Event[] {
   return receipt.events!.filter((event) => {
     event.event == eventName;
-  }) as T[];
+  });
 }
