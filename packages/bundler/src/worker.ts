@@ -7,11 +7,11 @@ import IORedis from "ioredis";
 import { providers, Wallet as EthersWallet } from "ethers";
 import {
   OperationStatus,
-  PROVEN_OPERATIONS_QUEUE,
-  RelayJobData,
+  PROVEN_OPERATION_QUEUE,
+  ProvenOperationJobData,
 } from "./common";
 import { getRedis, sleep } from "./utils";
-import { StatusDB } from "./statusdb";
+import { StatusDB } from "./db";
 
 export class BundlerWorker {
   readonly batchSize: number = 8;
@@ -20,14 +20,14 @@ export class BundlerWorker {
   token: string;
   worker: Worker;
   wallet: Wallet; // TODO: replace with tx manager
-  currentBatch: Job<RelayJobData>[]; // keep job handles to set failed/completed
+  currentBatch: Job<ProvenOperationJobData>[]; // keep job handles to set failed/completed
   statusDB: StatusDB;
 
   constructor(workerName: string, walletAddress: Address, redis?: IORedis) {
     this.token = workerName;
 
     const connection = getRedis(redis);
-    this.worker = new Worker(PROVEN_OPERATIONS_QUEUE, undefined, {
+    this.worker = new Worker(PROVEN_OPERATION_QUEUE, undefined, {
       connection,
       autorun: false,
     }); // TODO: pass in undefined processor function?
@@ -74,12 +74,16 @@ export class BundlerWorker {
   }
 
   private async pullJobsFromQueue(): Promise<void> {
-    let job = (await this.worker.getNextJob(this.token)) as Job<RelayJobData>;
+    let job = (await this.worker.getNextJob(
+      this.token
+    )) as Job<ProvenOperationJobData>;
     while (job && this.currentBatch.length < this.batchSize) {
       // NOTE: Job status (not op status) is ACTIVE once pulled off here
       await this.statusDB.setJobStatus(job.id!, OperationStatus.ACCEPTED);
       this.currentBatch.push(job);
-      job = (await this.worker.getNextJob(this.token)) as Job<RelayJobData>;
+      job = (await this.worker.getNextJob(
+        this.token
+      )) as Job<ProvenOperationJobData>;
     }
   }
 

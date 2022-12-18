@@ -2,9 +2,9 @@ import { Queue } from "bullmq";
 import IORedis from "ioredis";
 import {
   OperationStatus,
-  PROVEN_OPERATIONS_QUEUE,
-  RelayJobData,
-  RELAY_JOB_TYPE,
+  ProvenOperationJobData,
+  PROVEN_OPERATION_QUEUE,
+  PROVEN_OPERATION_JOB_TAG,
 } from "./common";
 import { Request, Response } from "express";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
@@ -12,11 +12,11 @@ import { OperationValidator } from "./validator";
 import { extractRelayError } from "./validation";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
-import { StatusDB } from "./statusdb";
+import { StatusDB } from "./db";
 import { getRedis } from "./utils";
 
 export class RequestRouter {
-  queue: Queue<RelayJobData>;
+  queue: Queue<ProvenOperationJobData>;
   validator: OperationValidator;
   statusDB: StatusDB;
 
@@ -26,7 +26,7 @@ export class RequestRouter {
     if (!rpcUrl) {
       throw new Error("Missing RPC_URL");
     }
-    this.queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection });
+    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection });
     this.statusDB = new StatusDB(connection);
     this.validator = new OperationValidator(rpcUrl, connection);
   }
@@ -70,11 +70,11 @@ export class RequestRouter {
   private async postJob(operation: ProvenOperation): Promise<string> {
     const jobId = calculateOperationDigest(operation).toString();
     const operationJson = JSON.stringify(operation);
-    const jobData: RelayJobData = {
+    const jobData: ProvenOperationJobData = {
       operationJson,
     };
 
-    const job = await this.queue.add(RELAY_JOB_TYPE, jobData, {
+    const job = await this.queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
       jobId,
     });
     assert(job.id == jobId); // TODO: can remove?

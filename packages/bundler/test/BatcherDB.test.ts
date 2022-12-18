@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
-import { BatcherDB } from "../src/batcherdb";
+import { BatcherDB } from "../src/db";
 
 describe("BatcherDB", async () => {
   let server: RedisMemoryServer;

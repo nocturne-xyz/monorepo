@@ -5,9 +5,9 @@ import { RedisMemoryServer } from "redis-memory-server";
 import { BundlerWorker } from "../src/worker";
 import { Queue } from "bullmq";
 import {
-  PROVEN_OPERATIONS_QUEUE,
-  RelayJobData,
-  RELAY_JOB_TYPE,
+  PROVEN_OPERATION_QUEUE,
+  ProvenOperationJobData,
+  PROVEN_OPERATION_JOB_TAG,
 } from "../src/common";
 import { VALID_RELAY_OBJECT } from "./utils";
 import { sleep } from "../src/utils";
@@ -48,16 +48,16 @@ describe("BundlerWorker", async () => {
   });
 
   it("Picks up jobs off of queue", async () => {
-    const queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection: redis });
+    const queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: redis });
     const fillBatch = async () => {
       for (let i = 0; i < 8; i++) {
         const jobId = (i + 1).toString() + "a";
         const operationJson = JSON.stringify(VALID_RELAY_OBJECT);
-        const jobData: RelayJobData = {
+        const jobData: ProvenOperationJobData = {
           operationJson,
         };
 
-        const job = await queue.add(RELAY_JOB_TYPE, jobData, {
+        const job = await queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
           jobId,
         });
         expect(jobId).to.equal(job.id!);

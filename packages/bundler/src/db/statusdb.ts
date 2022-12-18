@@ -1,5 +1,5 @@
 import IORedis from "ioredis";
-import { OperationStatus } from "./common";
+import { OperationStatus } from "../common";
 
 const JOB_STATUS_PREFIX = "JOB_STATUS_";
 
