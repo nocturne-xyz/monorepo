@@ -5,6 +5,7 @@ dist/
 cache/
 lib/
 /db
+hh-logs/
 
 .DS_Store
 **/.DS_Store"
