@@ -29,6 +29,7 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
 } from "@nocturne-xyz/frontend-sdk";
+import { ABIForm } from "../components/ABiForm";
 
 const Container = styled.div`
   display: flex;
@@ -358,6 +359,9 @@ const Index = () => {
             !shouldDisplayReconnectButton(state.installedSnap)
           }
         />
+        <div>
+          <ABIForm/>
+        </div>
         <Notice>
           <p>
             Please note that the <b>snap.manifest.json</b> and{" "}
