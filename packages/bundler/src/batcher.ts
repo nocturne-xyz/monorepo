@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
-import { BatcherDB, StatusDB } from "./db";
+import { BundlerBatcherDB, StatusDB } from "./db";
 import { getRedis, sleep } from "./utils";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import {
@@ -14,10 +14,10 @@ import {
 import { sha256 } from "js-sha256";
 import * as JSON from "bigint-json-serialization";
 
-export class Batcher {
+export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BatcherDB<ProvenOperation>;
+  batcherDB: BundlerBatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
   readonly MAX_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -34,13 +34,15 @@ export class Batcher {
     const connection = getRedis(redis);
     this.redis = connection;
     this.statusDB = new StatusDB(connection);
-    this.batcherDB = new BatcherDB(connection, batchSize);
+    this.batcherDB = new BundlerBatcherDB(connection, batchSize);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, { connection });
   }
 
   async run(): Promise<void> {
     const queuerPromise = this.runInboundQueuer();
-    const batcherPromise = this.runOutboundBatcher();
+    const batcherPromise = this.runOutboundBundlerBatcher();
+
+    console.log("Batcher running...");
     await Promise.all([queuerPromise, batcherPromise]);
   }
 
@@ -64,7 +66,7 @@ export class Batcher {
     await worker.run();
   }
 
-  async runOutboundBatcher(): Promise<void> {
+  async runOutboundBundlerBatcher(): Promise<void> {
     let counterSeconds = 0;
     while (true) {
       const batch = await this.batcherDB.getCurrentBatch();

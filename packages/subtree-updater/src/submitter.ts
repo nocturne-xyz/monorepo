@@ -1,7 +1,7 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
 
-export interface SubtreeUpdateSubmitter {
+export interface SubtreeUpdateBundlerSubmitter {
   submitProof(
     proof: BaseProof,
     newRoot: bigint,
@@ -10,9 +10,11 @@ export interface SubtreeUpdateSubmitter {
   dropDB(): Promise<void>;
 }
 
-// Default implementation of `SubtreeUpdateSubmitter` that just sits there and waits
+// Default implementation of `SubtreeUpdateBundlerSubmitter` that just sits there and waits
 // for the TX to confirm.
-export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
+export class SyncSubtreeBundlerSubmitter
+  implements SubtreeUpdateBundlerSubmitter
+{
   walletContract: Wallet;
 
   constructor(walletContract: Wallet) {

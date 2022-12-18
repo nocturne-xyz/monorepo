@@ -35,7 +35,8 @@
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/subtree-updater#build",
-        "@nocturne-xyz/local-prover#build"
+        "@nocturne-xyz/local-prover#build",
+        "@nocturne-xyz/bundler#build"
       ]
     },
     "@nocturne-xyz/subtree-updater#build": {

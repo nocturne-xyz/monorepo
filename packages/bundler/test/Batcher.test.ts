@@ -3,7 +3,7 @@ import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { Queue } from "bullmq";
-import { Batcher } from "../src/batcher";
+import { BundlerBatcher } from "../src/batcher";
 import {
   PROVEN_OPERATION_QUEUE,
   ProvenOperationJobData,
@@ -12,16 +12,16 @@ import {
 } from "../src/common";
 import { VALID_PROVEN_OPERATION_JSON } from "./utils";
 import { sleep } from "../src/utils";
-import { BatcherDB, StatusDB } from "../src/db";
+import { BundlerBatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 
-describe("BundlerWorker", async () => {
+describe("BundlerBatcher", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
   let statusDB: StatusDB;
-  let batcherDB: BatcherDB<ProvenOperationJobData>;
-  let batcher: Batcher;
+  let batcherDB: BundlerBatcherDB<ProvenOperationJobData>;
+  let batcher: BundlerBatcher;
 
   before(async () => {
     server = await RedisMemoryServer.create();
@@ -31,8 +31,8 @@ describe("BundlerWorker", async () => {
     redis = new IORedis(port, host);
 
     statusDB = new StatusDB(redis);
-    batcherDB = new BatcherDB(redis, 8);
-    batcher = new Batcher(5, 8, redis); // 6 second wait time
+    batcherDB = new BundlerBatcherDB(redis, 8);
+    batcher = new BundlerBatcher(5, 8, redis); // 6 second wait time
   });
 
   beforeEach(async () => {

@@ -2,12 +2,12 @@ import "mocha";
 import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
-import { BatcherDB } from "../src/db";
+import { BundlerBatcherDB } from "../src/db";
 
-describe("BatcherDB", async () => {
+describe("BundlerBatcherDB", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
-  let batcherDB: BatcherDB<string>;
+  let batcherDB: BundlerBatcherDB<string>;
 
   before(async () => {
     server = await RedisMemoryServer.create();
@@ -16,7 +16,7 @@ describe("BatcherDB", async () => {
     const port = await server.getPort();
     redis = new IORedis(port, host);
 
-    batcherDB = new BatcherDB<string>(redis, 8);
+    batcherDB = new BundlerBatcherDB<string>(redis, 8);
   });
 
   beforeEach(async () => {

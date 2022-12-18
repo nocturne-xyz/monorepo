@@ -1,14 +1,33 @@
 import { NullifierSetManager } from "./nullifierSetManager";
 import { providers } from "ethers";
 import IORedis from "ioredis";
-import { ProvenOperation } from "@nocturne-xyz/sdk";
+import { Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
+import { Wallet as EthersWallet } from "ethers";
+import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
 
 export class OperationValidator extends NullifierSetManager {
-  provider: providers.JsonRpcProvider;
+  signingProvider: EthersWallet;
+  walletContract: Wallet;
 
-  constructor(rpcUrl: string, redis: IORedis) {
+  constructor(walletAddress: string, redis: IORedis) {
     super(redis);
-    this.provider = new providers.JsonRpcProvider(rpcUrl);
+
+    const privateKey = process.env.TX_SIGNER_KEY!;
+    if (!privateKey) {
+      throw new Error("Missing TX_SIGNER_KEY");
+    }
+
+    const rpcUrl = process.env.RPC_URL!;
+    if (!rpcUrl) {
+      throw new Error("Missing RPC_URL");
+    }
+
+    const provider = new providers.JsonRpcProvider(rpcUrl);
+    this.signingProvider = new EthersWallet(privateKey, provider);
+    this.walletContract = Wallet__factory.connect(
+      walletAddress,
+      this.signingProvider
+    );
   }
 
   async extractNullifierConflictError(
@@ -43,16 +62,19 @@ export class OperationValidator extends NullifierSetManager {
   async extractRevertError(
     operation: ProvenOperation
   ): Promise<string | undefined> {
-    for (const action of operation.actions) {
-      try {
-        await this.provider.estimateGas({
-          to: action.contractAddress,
-          data: action.encodedFunction,
-        });
-        return undefined;
-      } catch (e) {
-        return `Action has reverting call: ${e}`;
-      }
+    const bundle: Bundle = { operations: [operation] };
+    const data = this.walletContract.interface.encodeFunctionData(
+      "processBundle",
+      [bundle]
+    );
+    try {
+      await this.signingProvider.estimateGas({
+        to: this.walletContract.address,
+        data,
+      });
+      return undefined;
+    } catch (e) {
+      return `Action has reverting call: ${e}`;
     }
   }
 }

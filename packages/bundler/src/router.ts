@@ -15,20 +15,16 @@ import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
 import { getRedis } from "./utils";
 
-export class RequestRouter {
+export class BundlerRouter {
   queue: Queue<ProvenOperationJobData>;
   validator: OperationValidator;
   statusDB: StatusDB;
 
-  constructor(redis?: IORedis) {
+  constructor(walletAddress: string, redis?: IORedis) {
     const connection = getRedis(redis);
-    const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("Missing RPC_URL");
-    }
     this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection });
     this.statusDB = new StatusDB(connection);
-    this.validator = new OperationValidator(rpcUrl, connection);
+    this.validator = new OperationValidator(walletAddress, connection);
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {

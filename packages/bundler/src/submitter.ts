@@ -17,7 +17,7 @@ import {
 import { getRedis } from "./utils";
 import { StatusDB } from "./db";
 
-export class Submitter {
+export class BundlerSubmitter {
   redis: IORedis;
   walletContract: Wallet; // TODO: replace with tx manager
   statusDB: StatusDB;
@@ -60,6 +60,7 @@ export class Submitter {
       { connection: this.redis, autorun: false }
     );
 
+    console.log("Submitter running...");
     await worker.run();
   }
 

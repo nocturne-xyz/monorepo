@@ -3,7 +3,7 @@ import * as JSON from "bigint-json-serialization";
 
 const BATCH_DB_NAME = "BATCH_DB";
 
-export class BatcherDB<T> {
+export class BundlerBatcherDB<T> {
   redis: IORedis;
   readonly BATCH_SIZE: number = 8;
 

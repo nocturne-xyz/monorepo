@@ -14,6 +14,9 @@
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
     "test:unit": "mocha --require ts-node/register test/** --timeout 100000 --exit",
+    "run:server": "npx ts-node ./scripts/runServer --walletAddress ",
+    "run:batcher": "npx ts-node ./scripts/runBatcher",
+    "run:submitter": "npx ts-node ./scripts/runSubmitter --walletAddress ",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test"
   },
@@ -36,6 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "chai": "^4.3.6",
+    "dotenv": "^16.0.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "js-sha256": "^0.9.0",
