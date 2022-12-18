@@ -23,7 +23,6 @@ describe("BundlerWorker", async () => {
 
     const host = await server.getHost();
     const port = await server.getPort();
-    console.log(`Host: ${host}. Port: ${port}`);
     redis = new IORedis(port, host);
 
     process.env.RPC_URL = "https://localhost:8080";
@@ -48,7 +47,7 @@ describe("BundlerWorker", async () => {
     await server.stop();
   });
 
-  it("Runs", async () => {
+  it("Picks up jobs off of queue", async () => {
     const queue = new Queue(PROVEN_OPERATIONS_QUEUE, { connection: redis });
     const fillBatch = async () => {
       for (let i = 0; i < 8; i++) {
