@@ -1,19 +1,21 @@
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
-import { BatcherDB } from "./db";
+import { BatcherDB, StatusDB } from "./db";
 import { getRedis, sleep } from "./utils";
-import { ProvenOperation } from "@nocturne-xyz/sdk";
+import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,
   OPERATION_BATCH_JOB_TAG,
   ProvenOperationJobData,
   PROVEN_OPERATION_QUEUE,
+  OperationStatus,
 } from "./common";
 import { keccak256 } from "ethers/lib/utils";
 
 export class BatcherWorker {
   redis: IORedis;
+  statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
   readonly INTERVAL_SECONDS: number = 60;
@@ -30,11 +32,12 @@ export class BatcherWorker {
 
     const connection = getRedis(redis);
     this.redis = connection;
+    this.statusDB = new StatusDB(connection);
     this.batcherDB = new BatcherDB(connection, batchSize);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, { connection });
   }
 
-  async runInboundQueuer(): Promise<any[]> {
+  async runInboundQueuer(): Promise<void> {
     const worker = new Worker(
       PROVEN_OPERATION_QUEUE,
       async (job: Job<ProvenOperationJobData>) => {
@@ -50,7 +53,7 @@ export class BatcherWorker {
       }
     );
 
-    return worker.run();
+    await worker.run();
   }
 
   async runOutboundBatcher(): Promise<void> {
@@ -78,6 +81,11 @@ export class BatcherWorker {
           { jobId }
         );
         await this.batcherDB.pop(batch.length);
+
+        batch.forEach(async (op) => {
+          const jobId = calculateOperationDigest(op).toString();
+          await this.statusDB.setJobStatus(jobId, OperationStatus.ACCEPTED);
+        });
       }
 
       await sleep(950); // sleep ~1 sec, increment counter (approx)
