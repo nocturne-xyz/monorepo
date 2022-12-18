@@ -14,21 +14,21 @@ import {
 import { sha256 } from "js-sha256";
 import * as JSON from "bigint-json-serialization";
 
-export class BundlerBatcher {
+export class Batcher {
   redis: IORedis;
   statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
-  readonly INTERVAL_SECONDS: number = 60;
+  readonly MAX_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
-  constructor(intervalSeconds?: number, batchSize?: number, redis?: IORedis) {
+  constructor(maxSeconds?: number, batchSize?: number, redis?: IORedis) {
     if (batchSize) {
       this.BATCH_SIZE = batchSize;
     }
 
-    if (intervalSeconds) {
-      this.INTERVAL_SECONDS = intervalSeconds;
+    if (maxSeconds) {
+      this.MAX_SECONDS = maxSeconds;
     }
 
     const connection = getRedis(redis);
@@ -72,7 +72,7 @@ export class BundlerBatcher {
         continue;
       } else if (
         batch.length >= this.BATCH_SIZE ||
-        (counterSeconds >= this.INTERVAL_SECONDS && batch.length > 0)
+        (counterSeconds >= this.MAX_SECONDS && batch.length > 0)
       ) {
         const operationBatchJson = JSON.stringify(batch);
         const operationBatchData: OperationBatchJobData = {
