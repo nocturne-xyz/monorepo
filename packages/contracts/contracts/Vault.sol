@@ -1,9 +1,8 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "./interfaces/IVault.sol";
-import "./interfaces/IWallet.sol";
+import {IVault} from "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -11,68 +10,53 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
+import {Utils} from "./libs/Utils.sol";
+import "./libs/types.sol";
+
 import "hardhat/console.sol";
 
 contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
-    uint256 public constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     address public _wallet;
 
-    modifier onlyTeller() {
+    modifier onlyWallet() {
         require(msg.sender == _wallet, "Not called from Teller");
         _;
     }
 
     // TODO: deployment can be front run
-    function initialize(address teller) external {
+    function initialize(address wallet) external {
         require(_wallet == address(0), "Vault already initialized");
-        _wallet = teller;
+        _wallet = wallet;
     }
 
-    function requestERC20s(
-        address[] calldata assetAddresses,
-        uint256[] calldata values
-    ) external override onlyTeller {
-        require(
-            values.length == assetAddresses.length,
-            "Non matching input array lengths"
-        );
-        for (uint256 i = 0; i < values.length; i++) {
-            if (values[i] != 0) {
-                require(
-                    IERC20(assetAddresses[i]).transfer(_wallet, values[i]),
-                    "Transfer failed"
-                );
-            }
-        }
-    }
-
-    function requestERC721(
-        address assetAddress,
-        uint256 id
-    ) external override onlyTeller {
-        IERC721(assetAddress).safeTransferFrom(address(this), _wallet, id);
-    }
-
-    function requestERC1155(
-        address assetAddress,
-        uint256 id,
+    function requestAsset(
+        EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external override onlyTeller {
-        IERC1155(assetAddress).safeTransferFrom(
-            address(this),
-            _wallet,
-            id,
-            value,
-            ""
-        );
+    ) external override onlyWallet {
+        (AssetType assetType, address assetAddr, uint256 id) = Utils
+            ._decodeAsset(encodedAsset);
+        if (assetType == AssetType.ERC20) {
+            require(
+                IERC20(assetAddr).transfer(_wallet, value),
+                "Transfer failed"
+            );
+        } else if (assetType == AssetType.ERC721) {
+            IERC721(assetAddr).safeTransferFrom(address(this), _wallet, id);
+        } else if (assetType == AssetType.ERC1155) {
+            IERC1155(assetAddr).safeTransferFrom(
+                address(this),
+                _wallet,
+                id,
+                value,
+                ""
+            );
+        }
     }
 
     function approveFunds(
         uint256[] calldata values,
         address[] calldata assets
-    ) external override onlyTeller {
+    ) external override onlyWallet {
         require(
             values.length == assets.length,
             "Non matching input array lengths"
@@ -85,53 +69,36 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         }
     }
 
-    // TODO: alter array length in memory, so that we don't have to return the array length
-    function makeBatchDeposit(
-        IWallet.Deposit[] calldata deposits,
-        uint256 numApprovedDeposits
-    ) external override onlyTeller returns (uint256[] memory, uint256) {
-        uint256[] memory successfulTransfers = new uint256[](
-            numApprovedDeposits
-        );
-        uint256 numSuccessfulTransfers = 0;
-        for (uint256 i = 0; i < numApprovedDeposits; i++) {
-            if (makeDeposit(deposits[i])) {
-                successfulTransfers[numSuccessfulTransfers] = i;
-                numSuccessfulTransfers++;
-            }
-        }
-
-        return (successfulTransfers, numSuccessfulTransfers);
-    }
-
     function makeDeposit(
-        IWallet.Deposit calldata deposit
-    ) public override onlyTeller returns (bool) {
-        if (deposit.id == SNARK_SCALAR_FIELD - 1) {
+        Deposit calldata deposit
+    ) public override onlyWallet returns (bool) {
+        (AssetType assetType, address assetAddr, uint256 id) = Utils
+            ._decodeAsset(deposit.encodedAddr, deposit.encodedId);
+        if (assetType == AssetType.ERC20) {
             return
-                IERC20(deposit.asset).transferFrom(
+                IERC20(assetAddr).transferFrom(
                     deposit.spender,
                     address(this),
                     deposit.value
                 );
-        } else if (deposit.value == 0) {
+        } else if (assetType == AssetType.ERC721) {
             try
-                IERC721(deposit.asset).transferFrom(
+                IERC721(assetAddr).transferFrom(
                     deposit.spender,
                     address(this),
-                    deposit.id
+                    id
                 )
             {
                 return true;
             } catch {
                 return false;
             }
-        } else {
+        } else if (assetType == AssetType.ERC1155) {
             try
-                IERC1155(deposit.asset).safeTransferFrom(
+                IERC1155(assetAddr).safeTransferFrom(
                     deposit.spender,
                     address(this),
-                    deposit.id,
+                    id,
                     deposit.value,
                     ""
                 )
@@ -141,6 +108,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
                 return false;
             }
         }
+        return false;
     }
 
     function onERC721Received(
@@ -148,7 +116,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         address, // from
         uint256, // tokenId
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -158,7 +126,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         uint256, // id
         uint256, // value
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -168,14 +136,14 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         uint256[] calldata, // ids
         uint256[] calldata, // values
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external pure override returns (bytes4) {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
     // TODO: fix this
     function supportsInterface(
         bytes4 // interfaceId
-    ) external view override returns (bool) {
+    ) external pure override returns (bool) {
         return false;
     }
 }

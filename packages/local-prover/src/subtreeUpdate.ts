@@ -7,6 +7,7 @@ import {
   SubtreeUpdateProofWithPublicSignals,
   NoteTrait,
   bigintToBEPadded,
+  encodeAsset,
 } from "@nocturne-xyz/sdk";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
@@ -74,8 +75,8 @@ export function subtreeUpdateInputsFromBatch(
   const ownerH1s: bigint[] = [];
   const ownerH2s: bigint[] = [];
   const nonces: bigint[] = [];
-  const assets: bigint[] = [];
-  const ids: bigint[] = [];
+  const encodedAddrs: bigint[] = [];
+  const encodedIds: bigint[] = [];
   const values: bigint[] = [];
 
   const accumulatorPreimage = [];
@@ -93,20 +94,20 @@ export function subtreeUpdateInputsFromBatch(
       ownerH1s.push(0n);
       ownerH2s.push(0n);
       nonces.push(0n);
-      assets.push(0n);
-      ids.push(0n);
+      encodedAddrs.push(0n);
+      encodedIds.push(0n);
       values.push(0n);
     } else {
       const note = noteOrCommitment;
       accumulatorPreimage.push(...NoteTrait.sha256(note));
       leaves.push(NoteTrait.toCommitment(note));
       bitmap.push(1n);
-
       ownerH1s.push(note.owner.h1X);
       ownerH2s.push(note.owner.h2X);
+      const { encodedAddr, encodedId } = encodeAsset(note.asset);
       nonces.push(note.nonce);
-      assets.push(BigInt(note.asset));
-      ids.push(note.id);
+      encodedAddrs.push(encodedAddr);
+      encodedIds.push(encodedId);
       values.push(note.value);
     }
   }
@@ -135,8 +136,8 @@ export function subtreeUpdateInputsFromBatch(
     ownerH1s,
     ownerH2s,
     nonces,
-    assets,
-    ids,
+    encodedAddrs,
+    encodedIds,
     values,
     leaves,
     bitmap,

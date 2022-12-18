@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
 contract TestUtils {
     // Convert an hexadecimal character to their value

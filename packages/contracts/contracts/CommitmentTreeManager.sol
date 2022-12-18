@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
-import "./interfaces/IJoinSplitVerifier.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "./libs/Groth16.sol";
@@ -10,6 +9,8 @@ import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 
+import "./libs/types.sol";
+
 contract CommitmentTreeManager {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
@@ -17,16 +18,15 @@ contract CommitmentTreeManager {
     mapping(uint256 => bool) public _pastRoots;
 
     mapping(uint256 => bool) public _nullifierSet;
-    uint256 public _nonce;
 
     OffchainMerkleTreeData internal _merkle;
-    IJoinSplitVerifier public _joinSplitVerifier;
+    IJoinSplitVerifier public immutable _joinSplitVerifier;
 
     event Refund(
-        IWallet.NocturneAddress refundAddr,
-        uint256 indexed nonce,
-        address indexed asset,
-        uint256 indexed id,
+        NocturneAddress refundAddr,
+        uint256 nonce,
+        uint256 encodedAddr,
+        uint256 encodedId,
         uint256 value,
         uint128 merkleIndex
     );
@@ -36,12 +36,12 @@ contract CommitmentTreeManager {
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        IWallet.JoinSplitTransaction joinSplitTx
+        JoinSplitTransaction joinSplitTx
     );
 
     event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(IWallet.Note[] notes);
+    event InsertNotes(EncodedNote[] notes);
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
@@ -53,7 +53,7 @@ contract CommitmentTreeManager {
 
     // Process a joinsplit transaction, assuming that the encoded proof is valid
     function _handleJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplitTx
+        JoinSplitTransaction calldata joinSplitTx
     ) internal {
         // Check validity of nullifiers
         require(
@@ -117,13 +117,13 @@ contract CommitmentTreeManager {
         emit InsertNoteCommitments(ncs);
     }
 
-    function insertNote(IWallet.Note memory note) internal {
-        IWallet.Note[] memory notes = new IWallet.Note[](1);
+    function insertNote(EncodedNote memory note) internal {
+        EncodedNote[] memory notes = new EncodedNote[](1);
         notes[0] = note;
         insertNotes(notes);
     }
 
-    function insertNotes(IWallet.Note[] memory notes) internal {
+    function insertNotes(EncodedNote[] memory notes) internal {
         _merkle.insertNotes(notes);
         emit InsertNotes(notes);
     }
@@ -148,31 +148,23 @@ contract CommitmentTreeManager {
     }
 
     function _handleRefund(
-        IWallet.NocturneAddress memory refundAddr,
-        address asset,
-        uint256 id,
+        NocturneAddress memory refundAddr,
+        uint256 encodedAddr,
+        uint256 encodedId,
         uint256 value
     ) internal {
-        IWallet.Note memory note;
-        note.ownerH1 = refundAddr.h1X;
-        note.ownerH2 = refundAddr.h2X;
-        note.nonce = _nonce;
-        note.asset = uint256(uint160(asset));
-        note.id = id;
-        note.value = value;
+        uint128 index = _merkle.getTotalCount();
+        EncodedNote memory note = EncodedNote({
+            ownerH1: refundAddr.h1X,
+            ownerH2: refundAddr.h2X,
+            nonce: index,
+            encodedAddr: encodedAddr,
+            encodedId: encodedId,
+            value: value
+        });
 
         insertNote(note);
 
-        uint256 nonce = _nonce;
-        _nonce++;
-
-        emit Refund(
-            refundAddr,
-            nonce,
-            asset,
-            id,
-            value,
-            _merkle.getTotalCount() - 1
-        );
+        emit Refund(refundAddr, index, encodedAddr, encodedId, value, index);
     }
 }

@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "./interfaces/IWallet.sol";
+import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
+import "./libs/types.sol";
 import "./BalanceManager.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -13,11 +14,12 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "hardhat/console.sol";
 
 // TODO: use SafeERC20 library
-// TODO: separate note commitment tree and nullifier set into its own contract to allow for upgradeability? Wallet should be upgradeable, but vault shouldn't
-// TODO: add events
-// TODO: add gas handling
-// TODO: make sure all values given to proofs < SNARK_SCALAR_FIELD
+// TODO: make wallet and vault upgradable
 contract Wallet is IWallet, BalanceManager {
+    uint256 constant GAS_PER_JOINSPLIT = 200000;
+    // TODO: add subtree updater fee mechanism
+    uint256 constant GAS_PER_REFUND = 0;
+
     constructor(
         address vault,
         address joinSplitVerifier,
@@ -26,7 +28,8 @@ contract Wallet is IWallet, BalanceManager {
 
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opSuccess,
+        bool indexed opProcessed,
+        bytes failureReason,
         bool[] callSuccesses,
         bytes[] callResults
     );
@@ -38,25 +41,59 @@ contract Wallet is IWallet, BalanceManager {
 
     function processBundle(
         Bundle calldata bundle
-    ) external override returns (IWallet.OperationResult[] memory) {
+    ) external override returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        require(
-            _verifyAllProofs(ops, opDigests),
-            "Batched JoinSplit verify failed."
-        );
+        (bool success, ) = _verifyAllProofs(ops, opDigests);
+
+        require(success, "Batched JoinSplit verify failed.");
 
         uint256 numOps = ops.length;
-        IWallet.OperationResult[]
-            memory opResults = new IWallet.OperationResult[](numOps);
+        OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            opResults[i] = this.performOperation{gas: ops[i].gasLimit}(
-                ops[i],
-                opDigests[i]
+            // First compute execution gas for this operation
+            uint256 verificationGas = ops[i].joinSplitTxs.length *
+                GAS_PER_JOINSPLIT;
+            uint256 maxRefundGas = ops[i].maxNumRefunds * GAS_PER_REFUND;
+            uint256 gasToReserve = verificationGas + maxRefundGas;
+            // Not enough executionGas, operation fails
+            if (gasToReserve >= ops[i].gasLimit) {
+                opResults[i] = OperationResult({
+                    opProcessed: false,
+                    failureReason: bytes("Not enough execution gas."),
+                    callSuccesses: new bool[](0),
+                    callResults: new bytes[](0),
+                    executionGasUsed: 0,
+                    verificationGasUsed: 0,
+                    refundGasUsed: 0
+                });
+            } else {
+                uint256 executionGas = ops[i].gasLimit - gasToReserve;
+                try
+                    this.performOperation{gas: executionGas}(ops[i], msg.sender)
+                returns (OperationResult memory result) {
+                    opResults[i] = result;
+                } catch (bytes memory reason) {
+                    opResults[i] = OperationResult({
+                        opProcessed: false,
+                        failureReason: reason,
+                        callSuccesses: new bool[](0),
+                        callResults: new bytes[](0),
+                        executionGasUsed: 0,
+                        verificationGasUsed: 0,
+                        refundGasUsed: 0
+                    });
+                }
+            }
+            emit OperationProcessed(
+                opDigests[i],
+                opResults[i].opProcessed,
+                opResults[i].failureReason,
+                opResults[i].callSuccesses,
+                opResults[i].callResults
             );
         }
-
         return opResults;
     }
 
@@ -66,15 +103,22 @@ contract Wallet is IWallet, BalanceManager {
         _makeDeposit(deposit);
     }
 
+    /**
+     * This function will only be message-called from the wallet contract. The
+     * call gas given is the execution gas of the operation.
+     */
     function performOperation(
         Operation calldata op,
-        uint256 opDigest
-    ) external onlyThis returns (IWallet.OperationResult memory opResult) {
-        _handleAllSpends(op.joinSplitTxs, op.tokens);
+        address bundler
+    ) external onlyThis returns (OperationResult memory opResult) {
+        uint256 gasLeftInitial = gasleft();
+
+        uint256 maxGasFee = op.gasLimit * op.gasPrice;
+        _handleAllSpends(op.joinSplitTxs, maxGasFee);
 
         Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
-        opResult.opSuccess = true; // default to true
+        opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
         opResult.callResults = new bytes[](numActions);
         for (uint256 i = 0; i < numActions; i++) {
@@ -82,24 +126,37 @@ contract Wallet is IWallet, BalanceManager {
 
             opResult.callSuccesses[i] = success;
             opResult.callResults[i] = result;
-            if (success == false) {
-                opResult.opSuccess = false; // set opSuccess to false if any call fails
-            }
         }
 
-        // handles refunds and resets balances
-        _handleAllRefunds(
-            op.tokens.spendTokens,
-            op.tokens.refundTokens,
-            op.refundAddr
+        EncodedAsset memory gasAsset = EncodedAsset({
+            encodedAddr: op.joinSplitTxs[0].encodedAddr,
+            encodedId: op.joinSplitTxs[0].encodedId
+        });
+
+        // Request reserved maxGasFee minus subtree updater fee from vault
+        _vault.requestAsset(
+            gasAsset,
+            maxGasFee - opResult.refundGasUsed * op.gasPrice
         );
 
-        emit OperationProcessed(
-            opDigest,
-            opResult.opSuccess,
-            opResult.callSuccesses,
-            opResult.callResults
-        );
+        // Compute executionGasUsed
+        opResult.executionGasUsed = gasLeftInitial - gasleft();
+
+        // Transfer used verification and execution gas to the bundler
+        uint256 bundlerPayout = op.gasPrice *
+            (opResult.executionGasUsed +
+                GAS_PER_JOINSPLIT *
+                op.joinSplitTxs.length);
+        _transferAssetTo(gasAsset, bundler, bundlerPayout);
+
+        // Process refunds
+        // Only process upto op.maxNumRefunds number of refunds
+        // TODO: properly log that this happened
+        uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
+        uint256 numRefundsToProcess = (numRefunds >= op.maxNumRefunds)
+            ? op.maxNumRefunds
+            : numRefunds;
+        _handleAllRefunds(op.joinSplitTxs[:numRefundsToProcess], op.refundAddr);
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions
@@ -107,10 +164,11 @@ contract Wallet is IWallet, BalanceManager {
     function _verifyAllProofs(
         Operation[] calldata ops,
         uint256[] memory opDigests
-    ) internal view returns (bool) {
+    ) internal view returns (bool success, uint256 numJoinSplits) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
-        return _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+        success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+        return (success, proofs.length);
     }
 
     function _makeExternalCall(

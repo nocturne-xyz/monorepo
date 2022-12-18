@@ -30,19 +30,17 @@ const noteTransmissionType = {
     encryptedValue: bigintType,
   },
 };
-const spendAndRefundTokensType = {
+const encodedAssetType = {
   type: "object",
-  required: ["spendTokens", "refundTokens"],
+  required: ["encodedAddr", "encodedId"],
   properties: {
-    spendTokens: {
-      type: "array",
-      items: addressType,
-    },
-    refundTokens: {
-      type: "array",
-      items: addressType,
-    },
+    encodedAddr: bigintType,
+    encodedId: bigintType,
   },
+};
+const encodedRefundAssetsType = {
+  type: "array",
+  items: encodedAssetType,
 };
 const actionType = {
   type: "object",
@@ -67,8 +65,8 @@ const joinSplitTxType = {
     "nullifierB",
     "newNoteACommitment",
     "newNoteBCommitment",
-    "asset",
-    "id",
+    "encodedAddr",
+    "encodedId",
     "publicSpend",
     "newNoteATransmission",
     "newNoteBTransmission",
@@ -80,8 +78,8 @@ const joinSplitTxType = {
     nullifierB: bigintType,
     newNoteACommitment: bigintType,
     newNoteBCommitment: bigintType,
-    asset: addressType,
-    id: bigintType,
+    encodedAddr: bigintType,
+    encodedId: bigintType,
     publicSpend: bigintType,
     newNoteATransmission: noteTransmissionType,
     newNoteBTransmission: noteTransmissionType,
@@ -94,13 +92,23 @@ const joinSplitTxsType = {
 
 export const relaySchema = {
   type: "object",
-  required: ["joinSplitTxs", "refundAddr", "tokens", "actions", "gasLimit"],
+  required: [
+    "joinSplitTxs",
+    "refundAddr",
+    "encodedRefundAssets",
+    "actions",
+    "gasLimit",
+    "gasPrice",
+    "maxNumRefunds",
+  ],
   properties: {
     joinSplitTxs: joinSplitTxsType,
     refundAddr: nocturneAddressType,
-    tokens: spendAndRefundTokensType,
+    encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,
     gasLimit: bigintType,
+    gasPrice: bigintType,
+    maxNumRefunds: bigintType,
   },
 };
 

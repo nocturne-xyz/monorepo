@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Change note commitment to use encoded `asset` and `ID`
+- Add and `encode` and `decode` methods to `NoteTrait`
+- Change `NoteInput` to `EncodedNote`
 - Refactor DB interfaces
   - separate underlying `KVStore` from "DB"s by defining `KVStore` abstract class
   - implement `KVStore` with a new class `InMemoryKVStore` using a B+ Tree lib

@@ -7,8 +7,8 @@ export const VALID_PROVEN_OPERATION_OBJ = {
       nullifierB: "0n",
       newNoteACommitment: "0n",
       newNoteBCommitment: "0n",
-      asset: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-      id: "0n",
+      encodedAddr: "1n",
+      encodedId: "0n",
       publicSpend: "0n",
       newNoteATransmission: {
         owner: {
@@ -40,16 +40,12 @@ export const VALID_PROVEN_OPERATION_OBJ = {
     h2X: "0n",
     h2Y: "0n",
   },
-  tokens: {
-    spendTokens: [
-      "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-      "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-    ],
-    refundTokens: [
-      "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-      "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-    ],
-  },
+  encodedRefundAssets: [
+    {
+      encodedAddr: "2n",
+      encodedId: "3n",
+    },
+  ],
   actions: [
     {
       contractAddress: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
@@ -57,4 +53,6 @@ export const VALID_PROVEN_OPERATION_OBJ = {
     },
   ],
   gasLimit: "10000000n",
+  gasPrice: "10n",
+  maxNumRefunds: "2n",
 };

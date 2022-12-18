@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
@@ -37,8 +37,7 @@ contract JsonDecodings is Test, TestUtils {
         string memory path
     ) public returns (string memory) {
         string memory root = vm.projectRoot();
-        bytes memory path = abi.encodePacked(bytes(root), bytes(path));
-        return vm.readFile(string(path));
+        return vm.readFile(string(abi.encodePacked(bytes(root), bytes(path))));
     }
 
     function loadSpend2ProofFromFixture(
@@ -97,7 +96,7 @@ contract JsonDecodings is Test, TestUtils {
 
     function baseProofTo8(
         BaseProof memory proof
-    ) public returns (uint256[8] memory) {
+    ) public pure returns (uint256[8] memory) {
         return [
             parseInt(proof.pi_a[0]),
             parseInt(proof.pi_a[1]),
@@ -139,7 +138,7 @@ contract JsonDecodings is Test, TestUtils {
 
     function joinsplitBaseProofToProof8(
         BaseProof memory proof
-    ) public returns (uint256[8] memory) {
+    ) public pure returns (uint256[8] memory) {
         return [
             parseInt(proof.pi_a[0]),
             parseInt(proof.pi_a[1]),

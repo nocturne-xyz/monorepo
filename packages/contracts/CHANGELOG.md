@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Remove `opSuccess` and add `opProcessed`, which indicate internal error during processing
+- Fix asset/id encoding according to design doc
+- Overhaul BalanceManager logic to use less storage
+- Implement gas fee mechanism
 - add test for subtree update PI calculation
 - separate subtree update PI calculation into separate function
 - Make solidity var underscore style consistent

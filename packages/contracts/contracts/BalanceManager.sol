@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
-import "./interfaces/IVault.sol";
-import "./interfaces/IWallet.sol";
+import {IVault} from "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
+import "./libs/types.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    IWallet.WalletBalanceInfo _balanceInfo; // solhint-disable-line state-visibility
-    IVault public _vault;
+    EncodedAsset[] _receivedTokens;
+    IVault public immutable _vault;
 
     constructor(
         address vault,
@@ -34,10 +34,9 @@ contract BalanceManager is
         uint256 tokenId,
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (_balanceInfo.erc721Ids[msg.sender].length == 0) {
-            _balanceInfo.erc721Addresses.push(msg.sender);
-        }
-        _balanceInfo.erc721Ids[msg.sender].push(tokenId);
+        _receivedTokens.push(
+            Utils._encodeAsset(AssetType.ERC721, msg.sender, tokenId)
+        );
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -48,10 +47,9 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
-            _balanceInfo.erc1155Addresses.push(msg.sender);
-        }
-        _balanceInfo.erc1155Ids[msg.sender].push(id);
+        _receivedTokens.push(
+            Utils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+        );
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -63,10 +61,9 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         for (uint256 i = 0; i < ids.length; i++) {
-            if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
-                _balanceInfo.erc1155Addresses.push(msg.sender);
-            }
-            _balanceInfo.erc1155Ids[msg.sender].push(ids[i]);
+            _receivedTokens.push(
+                Utils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
+            );
         }
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
@@ -74,191 +71,138 @@ contract BalanceManager is
     // TODO: fix this
     function supportsInterface(
         bytes4 // interfaceId
-    ) external view override returns (bool) {
+    ) external pure override returns (bool) {
         return false;
     }
 
-    function _makeBatchDeposit(
-        IWallet.Deposit[] memory approvedDeposits,
-        uint256 numApprovedDeposits
-    ) internal {
-        (
-            uint256[] memory successfulTransfers,
-            uint256 numSuccessfulTransfer
-        ) = _vault.makeBatchDeposit(approvedDeposits, numApprovedDeposits);
+    function _makeDeposit(Deposit calldata deposit) internal {
+        NocturneAddress calldata depositAddr = deposit.depositAddr;
 
-        for (uint256 i = 0; i < numSuccessfulTransfer; i++) {
-            uint256 index = successfulTransfers[i];
-            IWallet.NocturneAddress memory depositAddr = approvedDeposits[index]
-                .depositAddr;
-
-            _handleRefund(
-                depositAddr,
-                approvedDeposits[index].asset,
-                approvedDeposits[index].id,
-                approvedDeposits[index].value
-            );
-        }
-    }
-
-    function _makeDeposit(IWallet.Deposit calldata deposit) internal {
-        IWallet.NocturneAddress calldata depositAddr = deposit.depositAddr;
-
-        _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
+        _handleRefund(
+            depositAddr,
+            deposit.encodedAddr,
+            deposit.encodedId,
+            deposit.value
+        );
 
         require(_vault.makeDeposit(deposit), "Deposit failed");
     }
 
-    // TODO: Fix below according to design doc
     function _handleAllSpends(
-        IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
-        IWallet.Tokens calldata tokens
+        JoinSplitTransaction[] calldata joinSplitTxs,
+        uint256 maxGasFee
     ) internal {
-        uint256 numSpendTxs = joinSplitTxs.length;
-
-        for (uint256 i = 0; i < numSpendTxs; i++) {
+        uint256 gasToReserve = maxGasFee;
+        uint256 gasAssetAddr = joinSplitTxs[0].encodedAddr;
+        uint256 gasAssetId = joinSplitTxs[0].encodedId;
+        for (uint256 i = 0; i < joinSplitTxs.length; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
-            if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
-                _balanceInfo.erc20Balances[
-                    joinSplitTxs[i].asset
-                ] += joinSplitTxs[i].publicSpend;
-            } else if (joinSplitTxs[i].publicSpend == 0) {
-                _gatherERC721(joinSplitTxs[i].asset, joinSplitTxs[i].id);
-            } else {
-                _gatherERC1155(
-                    joinSplitTxs[i].asset,
-                    joinSplitTxs[i].id,
-                    joinSplitTxs[i].publicSpend
+            uint256 valueToTransfer = joinSplitTxs[i].publicSpend;
+            if (
+                gasAssetAddr == joinSplitTxs[i].encodedAddr &&
+                gasAssetId == joinSplitTxs[i].encodedId
+            ) {
+                uint256 gasPayment = (joinSplitTxs[i].publicSpend >
+                    gasToReserve)
+                    ? gasToReserve
+                    : joinSplitTxs[i].publicSpend;
+                valueToTransfer = joinSplitTxs[i].publicSpend - gasPayment;
+                gasToReserve -= gasPayment;
+            }
+            if (valueToTransfer > 0) {
+                _vault.requestAsset(
+                    EncodedAsset({
+                        encodedAddr: joinSplitTxs[i].encodedAddr,
+                        encodedId: joinSplitTxs[i].encodedId
+                    }),
+                    valueToTransfer
                 );
             }
         }
+        require(gasToReserve == 0, "Not enough gas tokens unwrapped.");
+    }
 
-        _gatherERC20s(tokens.spendTokens);
-
-        // reset ERC20 balances
-        for (uint256 i = 0; i < numSpendTxs; i++) {
-            _balanceInfo.erc20Balances[joinSplitTxs[i].asset] = 0;
+    function _transferAssetTo(
+        EncodedAsset memory encodedAsset,
+        address receiver,
+        uint256 value
+    ) internal {
+        (AssetType assetType, address assetAddr, uint256 id) = Utils
+            ._decodeAsset(encodedAsset);
+        if (assetType == AssetType.ERC20) {
+            IERC20(assetAddr).transfer(receiver, value);
+        } else if (assetType == AssetType.ERC721) {
+            IERC721(assetAddr).transferFrom(address(this), receiver, id);
+        } else if (assetType == AssetType.ERC1155) {
+            IERC1155(assetAddr).safeTransferFrom(
+                address(this),
+                receiver,
+                id,
+                value,
+                ""
+            );
         }
     }
 
     function _handleAllRefunds(
-        address[] calldata spendTokens,
-        address[] calldata refundTokens,
-        IWallet.NocturneAddress calldata refundAddr
+        JoinSplitTransaction[] calldata joinSplitTxs,
+        NocturneAddress calldata refundAddr
     ) internal {
-        _handleERC20Refunds(spendTokens, refundTokens, refundAddr);
+        uint256 numRefunds = joinSplitTxs.length + _receivedTokens.length;
 
-        _handleERC721Refunds(refundAddr);
-
-        _handleERC1155Refunds(refundAddr);
-    }
-
-    function _handleERC20Refunds(
-        address[] calldata spendTokens,
-        address[] calldata refundTokens,
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < spendTokens.length; i++) {
-            uint256 newBal = IERC20(spendTokens[i]).balanceOf(address(this));
-
-            if (newBal != 0) {
-                _handleRefund(
-                    refundAddr,
-                    spendTokens[i],
-                    Utils.SNARK_SCALAR_FIELD - 1,
-                    newBal
-                );
-                require(
-                    IERC20(spendTokens[i]).transfer(address(_vault), newBal),
-                    "Error sending funds to vault"
-                );
-            }
+        EncodedAsset[] memory tokensToProcess = new EncodedAsset[](numRefunds);
+        for (uint256 i = 0; i < joinSplitTxs.length; i++) {
+            tokensToProcess[i] = EncodedAsset({
+                encodedAddr: joinSplitTxs[i].encodedAddr,
+                encodedId: joinSplitTxs[i].encodedId
+            });
         }
-
-        for (uint256 i = 0; i < refundTokens.length; i++) {
-            // should be 0 if already refunded as left over spend tokens
-            uint256 bal = IERC20(refundTokens[i]).balanceOf(address(this));
-            if (bal != 0) {
-                _handleRefund(
-                    refundAddr,
-                    refundTokens[i],
-                    Utils.SNARK_SCALAR_FIELD - 1,
-                    bal
-                );
-                require(
-                    IERC20(refundTokens[i]).transfer(address(_vault), bal),
-                    "Error sending funds to vault"
-                );
-            }
+        for (uint256 i = 0; i < _receivedTokens.length; i++) {
+            tokensToProcess[joinSplitTxs.length + i] = _receivedTokens[i];
         }
-    }
+        delete _receivedTokens;
 
-    function _handleERC721Refunds(
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < _balanceInfo.erc721Addresses.length; i++) {
-            address tokenAddress = _balanceInfo.erc721Addresses[i];
-            uint256[] memory ids = _balanceInfo.erc721Ids[tokenAddress];
-            for (uint256 k = 0; k < ids.length; k++) {
-                if (IERC721(tokenAddress).ownerOf(ids[k]) == address(this)) {
-                    _handleRefund(refundAddr, tokenAddress, ids[k], 0);
-                    IERC721(tokenAddress).transferFrom(
-                        address(this),
-                        address(_vault),
-                        ids[k]
+        for (uint256 i = 0; i < tokensToProcess.length; i++) {
+            (AssetType assetType, address assetAddr, uint256 id) = Utils
+                ._decodeAsset(tokensToProcess[i]);
+            uint256 value;
+            if (assetType == AssetType.ERC20) {
+                value = IERC20(assetAddr).balanceOf(address(this));
+                if (value != 0) {
+                    require(
+                        IERC20(assetAddr).transfer(address(_vault), value),
+                        "Error sending funds to vault"
                     );
                 }
-            }
-            delete _balanceInfo.erc721Ids[_balanceInfo.erc721Addresses[i]];
-        }
-        delete _balanceInfo.erc721Addresses;
-    }
-
-    function _handleERC1155Refunds(
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < _balanceInfo.erc1155Addresses.length; i++) {
-            address tokenAddress = _balanceInfo.erc1155Addresses[i];
-            uint256[] memory ids = _balanceInfo.erc1155Ids[tokenAddress];
-            for (uint256 k = 0; k < ids.length; k++) {
-                uint256 currBal = IERC1155(tokenAddress).balanceOf(
-                    address(this),
-                    ids[k]
-                );
-                if (currBal != 0) {
-                    _handleRefund(refundAddr, tokenAddress, ids[k], currBal);
-                    IERC1155(tokenAddress).safeTransferFrom(
+            } else if (assetType == AssetType.ERC721) {
+                if (IERC721(assetAddr).ownerOf(id) == address(this)) {
+                    value = 1;
+                    IERC721(assetAddr).transferFrom(
                         address(this),
                         address(_vault),
-                        ids[k],
-                        currBal,
+                        id
+                    );
+                }
+            } else if (assetType == AssetType.ERC1155) {
+                value = IERC1155(assetAddr).balanceOf(address(this), id);
+                if (value != 0) {
+                    IERC1155(assetAddr).safeTransferFrom(
+                        address(this),
+                        address(_vault),
+                        id,
+                        value,
                         ""
                     );
                 }
             }
-            delete _balanceInfo.erc1155Ids[_balanceInfo.erc1155Addresses[i]];
+            if (value != 0) {
+                _handleRefund(
+                    refundAddr,
+                    tokensToProcess[i].encodedAddr,
+                    tokensToProcess[i].encodedId,
+                    value
+                );
+            }
         }
-        delete _balanceInfo.erc1155Addresses;
-    }
-
-    function _gatherERC20s(address[] calldata tokens) internal {
-        uint256[] memory amts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            amts[i] = _balanceInfo.erc20Balances[tokens[i]];
-        }
-
-        _vault.requestERC20s(tokens, amts);
-    }
-
-    function _gatherERC721(address tokenAddress, uint256 id) internal {
-        _vault.requestERC721(tokenAddress, id);
-    }
-
-    function _gatherERC1155(
-        address tokenAddress,
-        uint256 id,
-        uint256 value
-    ) internal {
-        _vault.requestERC1155(tokenAddress, id, value);
     }
 }

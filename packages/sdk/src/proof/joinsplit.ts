@@ -1,4 +1,5 @@
-import { BaseProof, MerkleProofInput, NoteInput } from "./types";
+import { EncodedNote } from "../sdk";
+import { BaseProof, MerkleProofInput } from "./types";
 
 export interface JoinSplitProver {
   proveJoinSplit(
@@ -34,8 +35,8 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  asset: bigint;
-  id: bigint;
+  encodedAddr: bigint;
+  encodedId: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -44,12 +45,12 @@ export interface JoinSplitInputs {
   operationDigest: bigint;
   c: bigint;
   z: bigint;
-  oldNoteA: NoteInput;
-  oldNoteB: NoteInput;
+  oldNoteA: EncodedNote;
+  oldNoteB: EncodedNote;
   merkleProofA: MerkleProofInput;
   merkleProofB: MerkleProofInput;
-  newNoteA: NoteInput;
-  newNoteB: NoteInput;
+  newNoteA: EncodedNote;
+  newNoteB: EncodedNote;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -63,7 +64,7 @@ export function joinSplitPublicSignalsFromArray(
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
     opDigest: publicSignals[6],
-    asset: publicSignals[7],
-    id: publicSignals[8],
+    encodedAddr: publicSignals[7],
+    encodedId: publicSignals[8],
   };
 }

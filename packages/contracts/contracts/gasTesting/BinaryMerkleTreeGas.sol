@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
 import "../libs/BinaryMerkle.sol";
 import {IHasherT3} from "../interfaces/IHasher.sol";

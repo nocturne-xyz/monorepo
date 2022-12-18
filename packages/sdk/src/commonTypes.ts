@@ -1,6 +1,6 @@
 import { keccak256 } from "ethers/lib/utils";
 import { toUtf8Bytes } from "ethers/lib/utils";
-import { Action, SpendAndRefundTokens } from "./contract";
+import { Action } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
 import { CanonAddress, NocturneAddress } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
@@ -15,12 +15,37 @@ export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
 export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
 export function hashAsset(asset: Asset): string {
-  return keccak256(toUtf8Bytes(`${asset.address}:${asset.id.toString()}`));
+  return keccak256(toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`));
+}
+
+export enum AssetType {
+  ERC20,
+  ERC721,
+  ERC1155,
+}
+
+export function parseAssetType(type: string): AssetType {
+  switch (parseInt(type)) {
+    case 0:
+      return AssetType.ERC20;
+    case 1:
+      return AssetType.ERC721;
+    case 2:
+      return AssetType.ERC1155;
+    default:
+      throw new Error(`Invalid asset type: ${type}`);
+  }
 }
 
 export interface Asset {
-  address: Address;
+  assetType: AssetType;
+  assetAddr: Address;
   id: bigint;
+}
+
+export interface EncodedAsset {
+  encodedAddr: bigint;
+  encodedId: bigint;
 }
 
 export interface AssetWithBalance {
@@ -45,8 +70,12 @@ export interface JoinSplitRequest extends UnwrapRequest {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundTokens: Address[]; // TODO: ensure hardcoded address for no refund tokens
+  refundAddr?: NocturneAddress;
+  refundAssets: Asset[];
   actions: Action[];
+  gasLimit?: bigint;
+  gasPrice?: bigint;
+  maxNumRefunds?: bigint;
 }
 
 export type SolidityProof = [
@@ -86,8 +115,8 @@ export interface BaseJoinSplitTx {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  asset: Address;
-  id: bigint;
+  encodedAddr: bigint;
+  encodedId: bigint;
   publicSpend: bigint;
   newNoteATransmission: NoteTransmission;
   newNoteBTransmission: NoteTransmission;
@@ -111,26 +140,23 @@ export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
   proof: SolidityProof;
 }
 
-export interface PreSignOperation {
+export interface BaseOperation {
+  refundAddr: NocturneAddress;
+  encodedRefundAssets: EncodedAsset[];
+  actions: Action[];
+  gasLimit: bigint;
+  gasPrice: bigint;
+  maxNumRefunds: bigint;
+}
+
+export interface PreSignOperation extends BaseOperation {
   joinSplitTxs: PreSignJoinSplitTx[];
-  refundAddr: NocturneAddress;
-  tokens: SpendAndRefundTokens;
-  actions: Action[];
-  gasLimit: bigint;
 }
 
-export interface PreProofOperation {
+export interface PreProofOperation extends BaseOperation {
   joinSplitTxs: PreProofJoinSplitTx[];
-  refundAddr: NocturneAddress;
-  tokens: SpendAndRefundTokens;
-  actions: Action[];
-  gasLimit: bigint;
 }
 
-export interface ProvenOperation {
+export interface ProvenOperation extends BaseOperation {
   joinSplitTxs: ProvenJoinSplitTx[];
-  refundAddr: NocturneAddress;
-  tokens: SpendAndRefundTokens;
-  actions: Action[];
-  gasLimit: bigint;
 }

@@ -1,7 +1,7 @@
 import "mocha";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { JoinSplitRequest, Asset } from "../src/commonTypes";
+import { JoinSplitRequest, Asset, AssetType } from "../src/commonTypes";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
@@ -19,7 +19,11 @@ describe("NocturneContext", () => {
   const notesDB = new NotesDB(kv);
 
   let nocturneContext: NocturneContext;
-  const asset: Asset = { address: "0x1234", id: 11111n };
+  const asset: Asset = {
+    assetType: AssetType.ERC20,
+    assetAddr: "0x1234",
+    id: 11111n,
+  };
 
   async function setupNocturneContextWithFourNotes(
     asset: Asset
@@ -31,32 +35,28 @@ describe("NocturneContext", () => {
     const firstOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 0n,
-      asset: asset.address,
-      id: asset.id,
+      asset: asset,
       value: 100n,
       merkleIndex: 0,
     };
     const secondOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 1n,
-      asset: asset.address,
-      id: asset.id,
+      asset: asset,
       value: 50n,
       merkleIndex: 1,
     };
     const thirdOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 2n,
-      asset: asset.address,
-      id: asset.id,
+      asset: asset,
       value: 25n,
       merkleIndex: 2,
     };
     const fourthOldNote: IncludedNote = {
       owner: signer.address,
       nonce: 3n,
-      asset: asset.address,
-      id: asset.id,
+      asset: asset,
       value: 10n,
       merkleIndex: 3,
     };
@@ -105,13 +105,17 @@ describe("NocturneContext", () => {
   });
 
   it("Gets balances for all notes", async () => {
+    const diffAsset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x5555",
+      id: 5555n,
+    };
     const diffNote: IncludedNote = {
       owner: nocturneContext.signer.address,
       nonce: 5555n,
-      asset: "0x5555",
-      id: 5555n,
       value: 5555n,
       merkleIndex: 4,
+      asset: diffAsset,
     };
 
     await notesDB.storeNote(diffNote);
@@ -185,7 +189,9 @@ describe("NocturneContext", () => {
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
       joinSplitRequests: [assetRequest],
-      refundTokens: ["0x1245"],
+      refundAssets: [
+        { assetType: AssetType.ERC20, assetAddr: "0x1245", id: 0n },
+      ],
       actions: [
         {
           contractAddress: "0x1111",
@@ -247,7 +253,9 @@ describe("NocturneContext", () => {
     };
     const preProofOp = await nocturneContext.tryGetPreProofOperation({
       joinSplitRequests: [assetRequest],
-      refundTokens: ["0x1245"],
+      refundAssets: [
+        { assetType: AssetType.ERC20, assetAddr: "0x1245", id: 0n },
+      ],
       actions: [
         {
           contractAddress: "0x1111",

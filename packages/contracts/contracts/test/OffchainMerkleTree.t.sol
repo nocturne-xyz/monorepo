@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
@@ -8,10 +8,10 @@ import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {IWallet} from "../interfaces/IWallet.sol";
 import {PoseidonHasherT3, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import "../libs/types.sol";
 
 contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
@@ -25,7 +25,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
 
     event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(IWallet.Note[] notes);
+    event InsertNotes(EncodedNote[] notes);
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
@@ -78,7 +78,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     function testInsertSingle() public {
         uint256[] memory batch = new uint256[](2);
         // insert 1 note and 1 commitment
-        IWallet.Note[] memory notes = new IWallet.Note[](1);
+        EncodedNote[] memory notes = new EncodedNote[](1);
         notes[0] = dummyNote();
         batch[0] = treeTest.computeNoteCommitment(notes[0]);
 
@@ -119,7 +119,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     function testInsertMultiple() public {
         // insert 5 notes and 11 commitments
         uint256[] memory batch = new uint256[](16);
-        IWallet.Note[] memory notes = new IWallet.Note[](5);
+        EncodedNote[] memory notes = new EncodedNote[](5);
         for (uint256 i = 0; i < 5; i++) {
             notes[i] = dummyNote();
             batch[i] = treeTest.computeNoteCommitment(notes[i]);
@@ -153,6 +153,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         assertEq(merkle.getRoot(), newRoot);
     }
 
+<<<<<<< HEAD
     function testCalculatePublicInputs() public {
         IWallet.Note memory note = dummyNote();
         uint256 nc = treeTest.computeNoteCommitment(note);
@@ -200,10 +201,14 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
     }
 
     function dummyProof() internal returns (uint256[8] memory) {
+=======
+    function dummyProof() internal pure returns (uint256[8] memory) {
+>>>>>>> 3e1eb9b (Gas fees and asset encoding)
         uint256[8] memory res;
         return res;
     }
 
+<<<<<<< HEAD
     function dummyNote() internal returns (IWallet.Note memory) {
         IWallet.Note memory note = IWallet.Note({
             ownerH1: 16114171923265390730037465875328827721281782660087141077700479736598096658937,
@@ -213,6 +218,12 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
             id: 5,
             value: 100
         });
+=======
+    function dummyNote(
+        uint256 value
+    ) internal pure returns (EncodedNote memory) {
+        EncodedNote memory note = EncodedNote(0, 0, 0, 0, 0, value);
+>>>>>>> 3e1eb9b (Gas fees and asset encoding)
 
         return note;
     }

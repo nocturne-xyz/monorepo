@@ -25,7 +25,7 @@ VKEY="$(cat "$FILE" | $CMD \
 
 # write header
 echo '// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";

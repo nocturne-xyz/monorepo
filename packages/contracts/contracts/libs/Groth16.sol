@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 import {Pairing} from "./Pairing.sol";
 import {Utils} from "./Utils.sol";
 

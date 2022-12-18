@@ -5,7 +5,7 @@ import {
   SubtreeUpdateEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
-import { Note } from "../sdk/note";
+import { decodeAsset, Note } from "../sdk/note";
 
 interface OrderedInsertion {
   insertion: bigint | Note;
@@ -64,11 +64,15 @@ export async function fetchInsertions(
         h2Y: 0n,
       };
 
+      const asset = decodeAsset(
+        noteValues.encodedAddr.toBigInt(),
+        noteValues.encodedId.toBigInt()
+      );
+
       const note: Note = {
         owner,
         nonce: noteValues.nonce.toBigInt(),
-        asset: noteValues.asset.toHexString(),
-        id: noteValues.id.toBigInt(),
+        asset,
         value: noteValues.value.toBigInt(),
       };
 

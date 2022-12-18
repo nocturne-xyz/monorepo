@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 
 import {
+  AssetType,
   BinaryPoseidonTree,
   NocturnePrivKey,
   NocturneSigner,
@@ -43,8 +44,11 @@ const batch: (Note | bigint)[] = [
   return {
     owner: nocturneAddr,
     nonce: 1n,
-    asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    id: 5n,
+    asset: {
+      assetType: AssetType.ERC20,
+      assetAddr: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      id: 5n,
+    },
     value: 100n,
   };
 });

@@ -9,10 +9,9 @@ import {
   NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
-  NoteInput,
+  EncodedNote,
   NocturneAddressTrait,
 } from "@nocturne-xyz/sdk";
-import * as JSON from "bigint-json-serialization";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
@@ -40,12 +39,12 @@ const nocturneAddrB = nocturneSigner.address;
 const spendPk = nocturneSigner.privkey.spendPk();
 
 // Two old notes: 100 + 50 = 150
-const oldNoteA: NoteInput = {
+const oldNoteA: EncodedNote = {
   owner: nocturneAddrA,
   nonce: 1n,
-  asset: 10n,
+  encodedAddr: 10n,
+  encodedId: 5n,
   value: 100n,
-  id: 5n,
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
@@ -53,18 +52,18 @@ const oldNoteAOwnerHash = NocturneAddressTrait.hash(nocturneAddrA);
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
-  oldNoteA.asset,
-  oldNoteA.id,
+  oldNoteA.encodedAddr,
+  oldNoteA.encodedId,
   oldNoteA.value,
 ]);
 console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
 
-const oldNoteB: NoteInput = {
+const oldNoteB: EncodedNote = {
   owner: nocturneAddrB,
   nonce: 2n,
-  asset: 10n,
+  encodedAddr: 10n,
+  encodedId: 5n,
   value: 50n,
-  id: 5n,
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
@@ -72,8 +71,8 @@ const oldNoteBOwnerHash = NocturneAddressTrait.hash(nocturneAddrB);
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,
-  oldNoteB.asset,
-  oldNoteB.id,
+  oldNoteB.encodedAddr,
+  oldNoteB.encodedId,
   oldNoteB.value,
 ]);
 console.log("OLD NOTE COMMITMENT B: ", oldNoteBCommitment);
@@ -99,29 +98,29 @@ const merkleProofBInput: MerkleProofInput = {
 };
 
 // New notes where 75 + 75 = 150
-const newNoteA: NoteInput = {
+const newNoteA: EncodedNote = {
   owner: nocturneAddrB,
   nonce: 3n,
-  asset: 10n,
+  encodedAddr: 10n,
+  encodedId: 5n,
   value: 75n,
-  id: 5n,
 };
 console.log("NEW NOTE A: ", newNoteA);
 
-const newNoteB: NoteInput = {
+const newNoteB: EncodedNote = {
   owner: nocturneAddrA,
   nonce: 4n,
-  asset: 10n,
+  encodedAddr: 10n,
+  encodedId: 5n,
   value: 75n,
-  id: 5n,
 };
 console.log("NEW NOTE B: ", newNoteB);
 
 const newNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   newNoteA.nonce,
-  newNoteA.asset,
-  newNoteA.id,
+  newNoteA.encodedAddr,
+  newNoteA.encodedId,
   newNoteA.value,
 ]);
 console.log("NEW NOTE COMMITMENT A: ", newNoteACommitment);
@@ -129,8 +128,8 @@ console.log("NEW NOTE COMMITMENT A: ", newNoteACommitment);
 const newNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   newNoteB.nonce,
-  newNoteB.asset,
-  newNoteB.id,
+  newNoteB.encodedAddr,
+  newNoteB.encodedId,
   newNoteB.value,
 ]);
 console.log("NEW NOTE COMMITMENT B: ", newNoteBCommitment);

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity ^0.8.5;
-import {IWallet} from "../interfaces/IWallet.sol";
+pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
+import "../libs/types.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
     function computeOperationDigests(
-        IWallet.Operation[] calldata ops
+        Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
         uint256 numOps = ops.length;
         uint256[] memory opDigests = new uint256[](numOps);
@@ -19,7 +19,7 @@ library WalletUtils {
     }
 
     function extractJoinSplitProofsAndPis(
-        IWallet.Operation[] calldata ops,
+        Operation[] calldata ops,
         uint256[] memory digests
     )
         internal
@@ -42,7 +42,7 @@ library WalletUtils {
 
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
-            IWallet.Operation memory op = ops[i];
+            Operation memory op = ops[i];
             for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
@@ -53,8 +53,8 @@ library WalletUtils {
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
                 allPis[index][6] = digests[i];
-                allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
-                allPis[index][8] = op.joinSplitTxs[j].id;
+                allPis[index][7] = op.joinSplitTxs[j].encodedAddr;
+                allPis[index][8] = op.joinSplitTxs[j].encodedId;
                 index++;
             }
         }
@@ -65,64 +65,65 @@ library WalletUtils {
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
     function computeOperationDigest(
-        IWallet.Operation calldata op
+        Operation calldata op
     ) internal pure returns (uint256) {
-        bytes memory payload;
+        bytes memory actionPayload;
 
-        IWallet.Action memory action;
+        Action memory action;
         for (uint256 i = 0; i < op.actions.length; i++) {
             action = op.actions[i];
-            payload = abi.encodePacked(
-                payload,
+            actionPayload = abi.encodePacked(
+                actionPayload,
                 action.contractAddress,
                 keccak256(action.encodedFunction)
             );
         }
 
-        bytes memory joinSplitTxsHash;
+        bytes memory joinSplitTxsPayload;
         for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
-            joinSplitTxsHash = abi.encodePacked(
-                joinSplitTxsHash,
-                _hashJoinSplit(op.joinSplitTxs[i])
+            joinSplitTxsPayload = abi.encodePacked(
+                joinSplitTxsPayload,
+                keccak256(
+                    abi.encodePacked(
+                        op.joinSplitTxs[i].commitmentTreeRoot,
+                        op.joinSplitTxs[i].nullifierA,
+                        op.joinSplitTxs[i].nullifierB,
+                        op.joinSplitTxs[i].newNoteACommitment,
+                        op.joinSplitTxs[i].newNoteBCommitment,
+                        op.joinSplitTxs[i].publicSpend,
+                        op.joinSplitTxs[i].encodedAddr,
+                        op.joinSplitTxs[i].encodedId
+                    )
+                )
             );
         }
 
-        bytes32 spendTokensHash = keccak256(
-            abi.encodePacked(op.tokens.spendTokens)
-        );
-        bytes32 refundTokensHash = keccak256(
-            abi.encodePacked(op.tokens.refundTokens)
-        );
+        bytes memory refundAssetsPayload;
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+            refundAssetsPayload = abi.encodePacked(
+                refundAssetsPayload,
+                op.encodedRefundAssets[i].encodedAddr,
+                op.encodedRefundAssets[i].encodedId
+            );
+        }
 
-        payload = abi.encodePacked(
-            payload,
-            joinSplitTxsHash,
+        bytes memory refundAddrPayload = abi.encodePacked(
             op.refundAddr.h1X,
             op.refundAddr.h1Y,
             op.refundAddr.h2X,
-            op.refundAddr.h2Y,
-            spendTokensHash,
-            refundTokensHash,
-            op.gasLimit
+            op.refundAddr.h2Y
+        );
+
+        bytes memory payload = abi.encodePacked(
+            actionPayload,
+            joinSplitTxsPayload,
+            refundAssetsPayload,
+            refundAddrPayload,
+            op.gasLimit,
+            op.gasPrice,
+            op.maxNumRefunds
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
-    }
-
-    function _hashJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplit
-    ) private pure returns (bytes32) {
-        bytes memory payload = abi.encodePacked(
-            joinSplit.commitmentTreeRoot,
-            joinSplit.nullifierA,
-            joinSplit.nullifierB,
-            joinSplit.newNoteACommitment,
-            joinSplit.newNoteBCommitment,
-            joinSplit.publicSpend,
-            joinSplit.asset,
-            joinSplit.id
-        );
-
-        return keccak256(payload);
     }
 }

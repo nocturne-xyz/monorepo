@@ -1,4 +1,4 @@
-import { IncludedNote } from "../sdk";
+import { decodeAsset, IncludedNote } from "../sdk";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { query } from "../sdk/utils";
 import { JoinSplitEvent } from "../sdk/notesManager";
@@ -18,7 +18,8 @@ export async function fetchNotesFromRefunds(
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
   return events.map((event) => {
-    const { refundAddr, nonce, asset, id, value, merkleIndex } = event.args;
+    const { refundAddr, nonce, encodedAddr, encodedId, value, merkleIndex } =
+      event.args;
     const { h1X, h1Y, h2X, h2Y } = refundAddr;
     return {
       owner: {
@@ -28,8 +29,7 @@ export async function fetchNotesFromRefunds(
         h2Y: h2Y.toBigInt(),
       },
       nonce: nonce.toBigInt(),
-      asset,
-      id: id.toBigInt(),
+      asset: decodeAsset(encodedAddr.toBigInt(), encodedId.toBigInt()),
       value: value.toBigInt(),
       merkleIndex: merkleIndex.toNumber(),
     };
@@ -63,8 +63,8 @@ export async function fetchJoinSplits(
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      asset,
-      id,
+      encodedAddr,
+      encodedId,
       publicSpend,
     } = joinSplitTx;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
@@ -114,8 +114,8 @@ export async function fetchJoinSplits(
           encryptedNonce: encryptedNonceB,
           encryptedValue: encryptedValueB,
         },
-        asset,
-        id: id.toBigInt(),
+        encodedAddr: encodedAddr.toBigInt(),
+        encodedId: encodedId.toBigInt(),
         publicSpend: publicSpend.toBigInt(),
       },
     };

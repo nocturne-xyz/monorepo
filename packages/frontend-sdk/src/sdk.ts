@@ -4,9 +4,9 @@ import {
   ProvenOperation,
   ProvenJoinSplitTx,
   PreProofOperation,
-  SpendAndRefundTokens,
   NocturneAddress,
   AssetWithBalance,
+  encodeAsset,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -29,8 +29,7 @@ export class NocturneFrontendSDK {
    * @param operationRequest Operation request
    */
   async generateProvenOperation(
-    operationRequest: OperationRequest,
-    gasLimit = 1_000_000n
+    operationRequest: OperationRequest
   ): Promise<ProvenOperation> {
     const joinSplitInputs = await this.getJoinSplitInputsFromSnap(
       operationRequest
@@ -48,20 +47,25 @@ export class NocturneFrontendSDK {
         }
       );
 
-    const { joinSplitRequests, refundTokens, actions } = operationRequest;
-    const tokens: SpendAndRefundTokens = {
-      spendTokens: joinSplitRequests.map((a) => a.asset.address),
-      refundTokens,
-    };
+    const {
+      joinSplitRequests, refundAssets, actions,
+      gasLimit = 1_000_000n,
+      gasPrice = 0n,
+      maxNumRefunds = BigInt(refundAssets.length + joinSplitRequests.length),
+    } = operationRequest;
+
+    const encodedRefundAssets = refundAssets.map(encodeAsset);
 
     const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
     const refundAddr = await this.getRandomizedAddr();
     return {
       joinSplitTxs,
       refundAddr,
-      tokens,
+      encodedRefundAssets,
       actions,
       gasLimit,
+      gasPrice,
+      maxNumRefunds,
     };
   }
 

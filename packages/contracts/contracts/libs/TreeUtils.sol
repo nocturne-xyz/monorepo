@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 import {IWallet} from "../interfaces/IWallet.sol";
 
 // helpers for converting to/from field elems, uint256s, and/or bytes, and hashing them

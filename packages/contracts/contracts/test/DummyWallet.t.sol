@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {IWallet} from "../interfaces/IWallet.sol";
 import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
@@ -24,6 +23,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
+import "../libs/types.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
@@ -33,12 +33,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using stdJson for string;
     using TreeTestLib for TreeTest;
 
-    uint256 constant DEFAULT_GAS_LIMIT = 10000000;
-    uint256 constant ERC20_ID = SNARK_SCALAR_FIELD - 1;
+    uint256 constant DEFAULT_GAS_LIMIT = 1000000;
+    uint256 constant ERC20_ID = 1;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
-    uint256 constant PER_DEPOSIT_AMOUNT = uint256(100);
+    uint256 constant PER_DEPOSIT_AMOUNT = uint256(1000000);
 
     Wallet wallet;
     Vault vault;
@@ -51,10 +51,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     IHasherT6 hasherT6;
 
     event Refund(
-        IWallet.NocturneAddress refundAddr,
-        uint256 indexed nonce,
-        address indexed asset,
-        uint256 indexed id,
+        NocturneAddress refundAddr,
+        uint256 nonce,
+        uint256 encodedAddr,
+        uint256 encodedId,
         uint256 value,
         uint128 merkleIndex
     );
@@ -64,12 +64,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        IWallet.JoinSplitTransaction joinSplitTx
+        JoinSplitTransaction joinSplitTx
     );
 
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opSuccess,
+        bool indexed opProcessed,
+        bytes failureReason,
         bool[] callSuccesses,
         bytes[] callResults
     );
@@ -107,10 +108,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     function defaultNocturneAddress()
         internal
         pure
-        returns (IWallet.NocturneAddress memory)
+        returns (NocturneAddress memory)
     {
         return
-            IWallet.NocturneAddress({
+            NocturneAddress({
                 h1X: 1938477,
                 h1Y: 9104058,
                 h2X: 1032988,
@@ -130,14 +131,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address _asset,
         uint256 _value,
         uint256 _id,
-        IWallet.NocturneAddress memory _depositAddr
+        NocturneAddress memory _depositAddr
     ) public {
-        wallet.depositFunds(
-            IWallet.Deposit({
+        _wallet.depositFunds(
+            Deposit({
                 spender: _spender,
-                asset: _asset,
+                encodedAddr: uint256(uint160(_asset)),
+                encodedId: _id,
                 value: _value,
-                id: _id,
                 depositAddr: _depositAddr
             })
         );
@@ -163,12 +164,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
-            IWallet.NocturneAddress memory addr = defaultNocturneAddress();
+            NocturneAddress memory addr = defaultNocturneAddress();
             vm.expectEmit(true, true, true, true);
             emit Refund(
                 addr,
                 i,
-                address(token),
+                uint256(uint160(address(token))),
                 ERC20_ID,
                 PER_DEPOSIT_AMOUNT,
                 uint128(i)
@@ -195,7 +196,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 );
             }
 
-            IWallet.Note memory note = IWallet.Note(
+            EncodedNote memory note = EncodedNote(
                 addr.h1X,
                 addr.h2X,
                 i,
@@ -220,9 +221,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     function formatTransferOperation(
         SimpleERC20Token token,
         address recipient,
-        uint256 amount
-    ) internal returns (IWallet.Operation memory) {
-        IWallet.Action memory transferAction = IWallet.Action({
+        uint256 amount,
+        uint256 publicSpend,
+        uint256 gasLimit,
+        uint256 gasPrice
+    ) internal view returns (Operation memory) {
+        Action memory transferAction = Action({
             contractAddress: address(token),
             encodedFunction: abi.encodeWithSelector(
                 token.transfer.selector,
@@ -232,63 +236,64 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         uint256 root = wallet.root();
-        IWallet.NoteTransmission memory newNoteATransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.NoteTransmission memory newNoteBTransmission = IWallet
-            .NoteTransmission({
-                owner: IWallet.NocturneAddress({
-                    h1X: uint256(123),
-                    h1Y: uint256(123),
-                    h2X: uint256(123),
-                    h2Y: uint256(123)
-                }),
-                encappedKey: uint256(111),
-                encryptedNonce: uint256(111),
-                encryptedValue: uint256(111)
-            });
-        IWallet.JoinSplitTransaction memory joinSplitTx = IWallet
-            .JoinSplitTransaction({
-                commitmentTreeRoot: root,
-                nullifierA: uint256(182),
-                nullifierB: uint256(183),
-                newNoteACommitment: uint256(1038),
-                newNoteATransmission: newNoteATransmission,
-                newNoteBCommitment: uint256(1032),
-                newNoteBTransmission: newNoteBTransmission,
-                proof: dummyProof(),
-                asset: address(token),
-                id: ERC20_ID,
-                publicSpend: uint256(50)
-            });
-
-        IWallet.Tokens memory tokens = IWallet.Tokens({
-            spendTokens: new address[](1),
-            refundTokens: new address[](1)
+        NoteTransmission memory newNoteATransmission = NoteTransmission({
+            owner: NocturneAddress({
+                h1X: uint256(123),
+                h1Y: uint256(123),
+                h2X: uint256(123),
+                h2Y: uint256(123)
+            }),
+            encappedKey: uint256(111),
+            encryptedNonce: uint256(111),
+            encryptedValue: uint256(111)
         });
-        tokens.spendTokens[0] = address(token);
-        tokens.refundTokens[0] = address(token);
+        NoteTransmission memory newNoteBTransmission = NoteTransmission({
+            owner: NocturneAddress({
+                h1X: uint256(123),
+                h1Y: uint256(123),
+                h2X: uint256(123),
+                h2Y: uint256(123)
+            }),
+            encappedKey: uint256(111),
+            encryptedNonce: uint256(111),
+            encryptedValue: uint256(111)
+        });
 
-        IWallet.JoinSplitTransaction[]
-            memory joinSplitTxs = new IWallet.JoinSplitTransaction[](1);
+        EncodedAsset memory encodedAsset = EncodedAsset({
+            encodedAddr: uint256(uint160(address(token))),
+            encodedId: uint256(0)
+        });
+        JoinSplitTransaction memory joinSplitTx = JoinSplitTransaction({
+            commitmentTreeRoot: root,
+            nullifierA: uint256(182),
+            nullifierB: uint256(183),
+            newNoteACommitment: uint256(1038),
+            newNoteATransmission: newNoteATransmission,
+            newNoteBCommitment: uint256(1032),
+            newNoteBTransmission: newNoteBTransmission,
+            proof: dummyProof(),
+            encodedAddr: encodedAsset.encodedAddr,
+            encodedId: encodedAsset.encodedId,
+            publicSpend: publicSpend
+        });
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = encodedAsset;
+
+        JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
+            1
+        );
         joinSplitTxs[0] = joinSplitTx;
-        IWallet.Action[] memory actions = new IWallet.Action[](1);
+        Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
-        IWallet.Operation memory op = IWallet.Operation({
+        Operation memory op = Operation({
             joinSplitTxs: joinSplitTxs,
             refundAddr: defaultNocturneAddress(),
-            tokens: tokens,
+            encodedRefundAssets: encodedRefundAssets,
             actions: actions,
-            gasLimit: DEFAULT_GAS_LIMIT
+            gasLimit: gasLimit,
+            gasPrice: gasPrice,
+            maxNumRefunds: 1
         });
 
         return op;
@@ -315,20 +320,24 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         );
     }
 
-    function testDummyTransferNoRefund() public {
+    function testDummyTransfer() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 1000, 800);
+        reserveAndDepositFunds(ALICE, token, 10 * 1000000, 8 * 1000000);
 
         // Create operation to transfer 50 tokens to bob
-        IWallet.Bundle memory bundle = IWallet.Bundle({
-            operations: new IWallet.Operation[](1)
-        });
-        bundle.operations[0] = formatTransferOperation(token, BOB, 50);
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = formatTransferOperation(
+            token,
+            BOB,
+            1 * 1000000,
+            2 * 1000000,
+            1000000,
+            0
+        );
 
-        // Ensure 50 tokens have changed hands
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(800));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
+        assertEq(token.balanceOf(address(vault)), uint256(8 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check joinsplit event
@@ -346,42 +355,100 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bool[] memory callSuccesses = new bool[](1);
         callSuccesses[0] = true;
         bytes[] memory callResults = new bytes[](1);
-        emit OperationProcessed(uint256(0), true, callSuccesses, callResults);
-
-        IWallet.OperationResult[] memory opResults = wallet.processBundle(
-            bundle
+        bytes memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true,
+            failureReason,
+            callSuccesses,
+            callResults
         );
 
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opSuccess, true);
+        assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(750));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
-        assertEq(token.balanceOf(address(BOB)), uint256(50));
+        assertLe(token.balanceOf(address(vault)), uint256(7 * 1000000));
+        assertGe(token.balanceOf(address(vault)), uint256(6 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
+        assertEq(token.balanceOf(address(BOB)), uint256(1 * 1000000));
     }
 
-    // NOTE: in practice, a user could not actually create a passing proof to
-    // spend more than they own. This test is just to ensure wallet processes
-    // failing operation
+    // Ill-formatted operation should not be processed
     function testProcessesFailingOperation() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 1000, 800);
+        reserveAndDepositFunds(ALICE, token, 10 * 1000000, 8 * 1000000);
 
         // Create transaction to withdraw 1500 tokens and send to Bob (more than
         // alice has)
-        IWallet.Bundle memory bundle = IWallet.Bundle({
-            operations: new IWallet.Operation[](1)
-        });
-        bundle.operations[0] = formatTransferOperation(token, BOB, 1500);
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = formatTransferOperation(
+            token,
+            BOB,
+            1 * 1000000,
+            2 * 1000000,
+            10000, // low gas limit
+            1
+        );
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(8 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](0);
+        bytes[] memory callResults = new bytes[](0);
+        bytes memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+
+        // Balances should not have changed
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(8 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+    }
+
+    // Test failing calls
+    function testProcessesFailingAction() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 10 * 1000000, 8 * 1000000);
+
+        // Create transaction to withdraw 1500 tokens and send to Bob (more than
+        // alice has)
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = formatTransferOperation(
+            token,
+            BOB,
+            15 * 1000000,
+            2 * 1000000,
+            1000000,
+            1
+        );
 
         // Ensure balance remain same after call
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(800));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
+        assertEq(token.balanceOf(address(vault)), uint256(8 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
@@ -389,21 +456,27 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bool[] memory callSuccesses = new bool[](1);
         callSuccesses[0] = false;
         bytes[] memory callResults = new bytes[](1);
-        emit OperationProcessed(uint256(0), false, callSuccesses, callResults);
-
-        IWallet.OperationResult[] memory opResults = wallet.processBundle(
-            bundle
+        bytes memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true,
+            failureReason,
+            callSuccesses,
+            callResults
         );
 
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opSuccess, false);
+        assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(800));
-        assertEq(token.balanceOf(address(ALICE)), uint256(200));
+        assertLe(token.balanceOf(address(vault)), uint256(8 * 1000000));
+        assertGe(token.balanceOf(address(vault)), uint256(7 * 1000000));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 * 1000000));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 }
