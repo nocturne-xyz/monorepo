@@ -11,7 +11,7 @@ export class StatusDB {
   }
 
   async setJobStatus(id: string, status: OperationStatus): Promise<void> {
-    await this.redis.set(JOB_STATUS_PREFIX + id, status);
+    await this.redis.set(JOB_STATUS_PREFIX + id, status.toString());
   }
 
   async getJobStatus(id: string): Promise<OperationStatus | undefined> {

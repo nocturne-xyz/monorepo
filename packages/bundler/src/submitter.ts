@@ -17,7 +17,7 @@ import {
 import { getRedis } from "./utils";
 import { StatusDB } from "./db";
 
-export class SubmitterWorker {
+export class BundlerSubmitter {
   redis: IORedis;
   walletContract: Wallet; // TODO: replace with tx manager
   statusDB: StatusDB;

@@ -11,9 +11,10 @@ import {
   PROVEN_OPERATION_QUEUE,
   OperationStatus,
 } from "./common";
-import { keccak256 } from "ethers/lib/utils";
+import { sha256 } from "js-sha256";
+import * as JSON from "bigint-json-serialization";
 
-export class BatcherWorker {
+export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
@@ -37,6 +38,12 @@ export class BatcherWorker {
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, { connection });
   }
 
+  async run(): Promise<void> {
+    const queuerPromise = this.runInboundQueuer();
+    const batcherPromise = this.runOutboundBatcher();
+    await Promise.all([queuerPromise, batcherPromise]);
+  }
+
   async runInboundQueuer(): Promise<void> {
     const worker = new Worker(
       PROVEN_OPERATION_QUEUE,
@@ -46,6 +53,7 @@ export class BatcherWorker {
         ) as ProvenOperation;
 
         await this.batcherDB.add(provenOperation);
+        await this.statusDB.setJobStatus(job.id!, OperationStatus.PRE_BATCH);
       },
       {
         connection: this.redis,
@@ -60,11 +68,10 @@ export class BatcherWorker {
     let counterSeconds = 0;
     while (true) {
       const batch = await this.batcherDB.getCurrentBatch();
-
       if (!batch) {
         continue;
       } else if (
-        batch.length == this.BATCH_SIZE ||
+        batch.length >= this.BATCH_SIZE ||
         (counterSeconds >= this.INTERVAL_SECONDS && batch.length > 0)
       ) {
         const operationBatchJson = JSON.stringify(batch);
@@ -74,7 +81,7 @@ export class BatcherWorker {
 
         // TODO: race condition where crash occurs between queue.add and
         // batcherDB.pop
-        const jobId = keccak256(operationBatchJson);
+        const jobId = sha256(operationBatchJson);
         await this.outboundQueue.add(
           OPERATION_BATCH_JOB_TAG,
           operationBatchData,
@@ -84,18 +91,14 @@ export class BatcherWorker {
 
         batch.forEach(async (op) => {
           const jobId = calculateOperationDigest(op).toString();
-          await this.statusDB.setJobStatus(jobId, OperationStatus.ACCEPTED);
+          await this.statusDB.setJobStatus(jobId, OperationStatus.IN_BATCH);
         });
+
+        counterSeconds = 0;
       }
 
       await sleep(950); // sleep ~1 sec, increment counter (approx)
       counterSeconds += 1;
     }
-  }
-
-  async run(): Promise<void> {
-    const queuerPromise = this.runInboundQueuer();
-    const batcherPromise = this.runOutboundBatcher();
-    await Promise.all([queuerPromise, batcherPromise]);
   }
 }

@@ -23,11 +23,6 @@ describe("BatcherDB", async () => {
     await redis.flushall();
   });
 
-  after(async () => {
-    redis.disconnect();
-    await server.stop();
-  });
-
   async function fillBatch(): Promise<void> {
     for (let i = 0; i < 8; i++) {
       await batcherDB.add("ITEM_" + i.toString());
@@ -39,7 +34,7 @@ describe("BatcherDB", async () => {
     expect(await batcherDB.pop(8)).to.be.undefined;
 
     await fillBatch();
-
+    expect((await batcherDB.getCurrentBatch())!.length).to.equal(8);
     expect(await batcherDB.hasFullBatch()).to.equal(true);
 
     const batch = await batcherDB.pop(8);

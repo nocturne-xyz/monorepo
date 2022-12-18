@@ -1,4 +1,4 @@
-export const VALID_RELAY_OBJECT = {
+export const VALID_PROVEN_OPERATION_JSON = {
   joinSplitTxs: [
     {
       proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],

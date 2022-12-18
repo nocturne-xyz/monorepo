@@ -13,7 +13,8 @@ export type OperationBatchJobData = {
 
 export enum OperationStatus {
   QUEUED = "QUEUED",
-  ACCEPTED = "ACCEPTED",
+  PRE_BATCH = "PRE_BATCH",
+  IN_BATCH = "IN_BATCH",
   IN_FLIGHT = "IN_FLIGHT",
   FAILED_TO_EXECUTE = "FAILED_TO_EXECUTE",
   EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
