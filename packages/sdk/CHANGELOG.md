@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Bug fix, `packToSolidityProof` casts numbers to bigints
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes
 - Add interfaces for generating and receiving confidential payments
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`

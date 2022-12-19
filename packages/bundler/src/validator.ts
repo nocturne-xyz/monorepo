@@ -12,12 +12,12 @@ export class OperationValidator extends NullifierSetManager {
   constructor(walletAddress: string, redis: IORedis) {
     super(redis);
 
-    const privateKey = process.env.TX_SIGNER_KEY!;
+    const privateKey = process.env.TX_SIGNER_KEY;
     if (!privateKey) {
       throw new Error("Missing TX_SIGNER_KEY");
     }
 
-    const rpcUrl = process.env.RPC_URL!;
+    const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
       throw new Error("Missing RPC_URL");
     }
@@ -33,8 +33,10 @@ export class OperationValidator extends NullifierSetManager {
   async extractNullifierConflictError(
     operation: ProvenOperation
   ): Promise<string | undefined> {
+    console.log("Creating set...");
     const opNfSet = new Set<bigint>();
 
+    console.log("Checking in-op conflicts");
     // Ensure no overlap in given operation
     operation.joinSplitTxs.forEach(({ nullifierA, nullifierB }) => {
       if (opNfSet.has(nullifierA)) {
@@ -48,6 +50,7 @@ export class OperationValidator extends NullifierSetManager {
       opNfSet.add(nullifierB);
     });
 
+    console.log("Checking in-queue conflicts");
     // Ensure no overlap with other nfs already in queue
     for (const nf of opNfSet) {
       const conflict = await this.hasNullifierConflict(nf);

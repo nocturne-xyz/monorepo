@@ -43,3 +43,13 @@ export async function depositFunds(
 
   return commitments;
 }
+
+export function pipeEnvVars(
+  rpcUrl: string,
+  txSignerKey: string,
+  redisUrl: string
+): void {
+  process.env.RPC_URL = rpcUrl;
+  process.env.TX_SIGNER_KEY = txSignerKey;
+  process.env.REDIS_URL = redisUrl;
+}

@@ -28,24 +28,32 @@ export class BundlerRouter {
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {
+    console.log("Validating request");
     const maybeRequestError = extractRelayError(req.body);
     if (maybeRequestError) {
-      res.status(400).json({ error: maybeRequestError });
+      res.statusMessage = maybeRequestError;
+      res.status(400).json(maybeRequestError);
       return;
     }
 
-    const operation = JSON.parse(req.body) as ProvenOperation;
+    console.log("Validating nullifiers");
+    const operation = JSON.parse(JSON.stringify(req.body)) as ProvenOperation;
+    console.log(
+      "Extracting nf conflict error from: ",
+      JSON.stringify(operation)
+    );
     const nfConflictErr = await this.validator.extractNullifierConflictError(
       operation
     );
     if (nfConflictErr) {
-      res.status(400).json({ error: nfConflictErr });
+      res.status(400).json(nfConflictErr);
       return;
     }
 
+    console.log("Validating reverts");
     const revertErr = await this.validator.extractRevertError(operation);
     if (revertErr) {
-      res.status(400).json({ error: revertErr });
+      res.status(400).json(revertErr);
       return;
     }
 

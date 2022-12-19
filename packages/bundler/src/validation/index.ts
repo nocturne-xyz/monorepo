@@ -5,9 +5,9 @@ function extractInputError<T>(
   validator: ValidateFunction<T>,
   data: any
 ): string | undefined {
-  validator(data);
-  if (validator.errors) {
-    const error = validator.errors[0];
+  const valid = validator(data);
+  if (!valid) {
+    const error = validator.errors![0];
     return JSON.stringify(error);
   }
   return undefined;
