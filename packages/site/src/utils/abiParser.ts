@@ -67,13 +67,17 @@ const validate = ajv.compile(abiSchema);
 export function tryParseABI(jsonStr: string): ABIItem[] | undefined {
   try {
     // Parse the text into a JSON object
-    const data = JSON.parse(jsonStr);
+    let data = JSON.parse(jsonStr);
+    console.log(data);
 
+    //@ts-ignore
+    data = data.filter((item) => item.type === 'function');
     // Validate the data against the schema
     if (validate(data)) {
       // If the data is valid, return it as an array of ABIMethods
       return data as ABIItem[];
     } else {
+      console.log(validate.errors);
       // If the data is invalid, return null
       return undefined;
     }

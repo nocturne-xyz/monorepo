@@ -40,7 +40,7 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({ abi }) =
       <div key={method.name}>
         <h3>{method.name}</h3>
         {
-          method.inputs.map((input) => <ABIMethodParamInput param={input} formData={formData} handleChange={handleChange} />)
+          method.inputs.map((input, i) => <ABIMethodParamInput key={i} param={input} formData={formData} handleChange={handleChange} />)
         }
         
         <button type="submit" onClick={(event: any) => handleSubmit(event, method.name)}>
@@ -86,9 +86,9 @@ const ABIMethodParamInput = ({ param, formData, handleChange, path }: ABIMethodP
         throw new Error("Tuple type must have object value");
       }
 
-      const tupleInputs = param.components.map(component => <ABIMethodParamInput param={component} formData={formData[param.name] as ABIInteractionFormData} handleChange={_handleChange} />);
+      const tupleInputs = param.components.map((component, i) => <ABIMethodParamInput key={i} param={component} formData={formData[param.name] as ABIInteractionFormData} handleChange={_handleChange} />);
       return (
-        <div key={param.name}>
+        <div key={pathStr}>
           <label htmlFor={pathStr}>{param.name}</label>
           {tupleInputs}
         </div>
@@ -109,7 +109,7 @@ const ABIMethodParamInput = ({ param, formData, handleChange, path }: ABIMethodP
       }
 
       return (
-        <div key={param.name}>
+        <div key={pathStr}>
           <label htmlFor={pathStr}>{param.name}</label>
           <input
             type="text"
