@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ABIInteractionForm } from "./ABIInteractionForm";
 import { ABIItem, tryParseABI } from '../utils/abiParser';
+import { Button } from './Buttons';
 
-type ABIFormProps = {
+export type ABIFormProps = {
   children: React.ReactNode;
 };
 
@@ -13,19 +14,18 @@ export const ABIForm = () => {
   const handleSubmit = (event: any) => {
     event.preventDefault();
     const data = tryParseABI(text);
+    console.log(data);
     setABI(data);
   };
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Text:
-          <input type="text" value={text} onChange={(event) => setText(event.target.value)} />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
-      {abi && <ABIInteractionForm abi={abi} />}
+      <label>
+        ABI:
+        <textarea value={text} onChange={(event) => setText(event.target.value)} />
+      </label>
+      <Button onClick={handleSubmit}>Set ABI</Button> 
+      {abi ? <ABIInteractionForm abi={abi}/> : <></>}
     </>
   );
 };

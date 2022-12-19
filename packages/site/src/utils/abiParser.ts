@@ -16,6 +16,7 @@ export interface ABIValue {
 const ajv = new Ajv();
 
 const valueSchema = {
+  $id: 'value',
   type: 'object',
   required: ['name', 'type'],
   properties: {
@@ -23,15 +24,15 @@ const valueSchema = {
     type: { type: 'string' },
     components: {
       type: 'array',
-      items: { $ref: '#/definitions/value' },
+      items: { $ref: '#' },
     },
-  },
-  definitions: {
-    value: { $ref: '#/definitions/value' },
   },
 };
 
+ajv.addSchema(valueSchema);
+
 const itemSchema = {
+  $id: 'item',
   type: 'object',
   required: ['name', 'type', 'inputs', 'outputs'],
   properties: {
@@ -50,6 +51,8 @@ const itemSchema = {
     value: valueSchema,
   },
 };
+
+ajv.addSchema(itemSchema);
 
 const abiSchema = {
   type: 'array',
