@@ -4,7 +4,7 @@ SCRIPT_DIR=$(dirname "$0")
 
 yarn build
 git submodule init
-git submodule update
+git submodule update --remote --force
 
 # kill all child processes when this script exits
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
