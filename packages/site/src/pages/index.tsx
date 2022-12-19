@@ -17,6 +17,7 @@ import {
   ClearDbButton,
   GetJoinSplitInputsButton,
   GetAllBalancesButton,
+  ABIForm,
 } from "../components";
 import {
   Action,
@@ -29,7 +30,6 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
 } from "@nocturne-xyz/frontend-sdk";
-import { ABIForm } from "../components/ABiForm";
 
 const Container = styled.div`
   display: flex;
@@ -232,10 +232,11 @@ const Index = () => {
               title: "Install",
               description:
                 "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
-              button: <InstallFlaskButton />,
             }}
             fullWidth
-          />
+          >
+            <InstallFlaskButton />
+          </Card>
         )}
         {!state.installedSnap && (
           <Card
@@ -243,15 +244,14 @@ const Index = () => {
               title: "Connect",
               description:
                 "Get started by connecting to and installing the example snap.",
-              button: (
-                <ConnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.isFlask}
-                />
-              ),
             }}
             disabled={!state.isFlask}
-          />
+          >
+            <ConnectButton
+              onClick={handleConnectClick}
+              disabled={!state.isFlask}
+            />
+          </Card>
         )}
         {shouldDisplayReconnectButton(state.installedSnap) && (
           <Card
@@ -259,26 +259,19 @@ const Index = () => {
               title: "Reconnect",
               description:
                 "While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.",
-              button: (
-                <ReconnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.installedSnap}
-                />
-              ),
             }}
             disabled={!state.installedSnap}
-          />
+          >
+            <ReconnectButton
+              onClick={handleConnectClick}
+              disabled={!state.installedSnap}
+            />
+          </Card>
         )}
         <Card
           content={{
             title: "Sync Notes",
             description: "Sync notes.",
-            button: (
-              <SyncNotesButton
-                onClick={handleSyncNotesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -286,17 +279,16 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
+        >
+          <SyncNotesButton
+            onClick={handleSyncNotesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
         <Card
           content={{
             title: "Sync Leaves",
             description: "Sync leaves.",
-            button: (
-              <SyncLeavesButton
-                onClick={handleSyncLeavesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -304,17 +296,16 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
+        >
+          <SyncLeavesButton
+            onClick={handleSyncLeavesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
         <Card
           content={{
             title: "Get All Balances",
             description: "Get all balances",
-            button: (
-              <GetAllBalancesButton
-                onClick={handleGetAllBalancesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -322,17 +313,16 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
+        >
+          <GetAllBalancesButton
+            onClick={handleGetAllBalancesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
         <Card
           content={{
             title: "Generate proof",
             description: "Generate joinsplit proof",
-            button: (
-              <GetJoinSplitInputsButton
-                onClick={handleGetJoinSplitInputs}
-                disabled={!state.installedSnap}
-              />
-            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -340,17 +330,16 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
+        >
+          <GetJoinSplitInputsButton
+            onClick={handleGetJoinSplitInputs}
+            disabled={!state.installedSnap}
+          />
+        </Card>
         <Card
           content={{
             title: "Clear DB",
             description: "Clear DB.",
-            button: (
-              <ClearDbButton
-                onClick={handleClearDb}
-                disabled={!state.installedSnap}
-              />
-            ),
           }}
           disabled={!state.installedSnap}
           fullWidth={
@@ -358,10 +347,12 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
-        />
-        <div>
-          <ABIForm/>
-        </div>
+        >
+          <ClearDbButton
+            onClick={handleClearDb}
+            disabled={!state.installedSnap}
+          />
+        </Card>
         <Notice>
           <p>
             Please note that the <b>snap.manifest.json</b> and{" "}
