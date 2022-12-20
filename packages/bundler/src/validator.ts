@@ -1,12 +1,11 @@
 import { NullifierSetManager } from "./nullifierSetManager";
-import { providers } from "ethers";
+import { ethers, providers } from "ethers";
 import IORedis from "ioredis";
 import { Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
-import { Wallet as EthersWallet } from "ethers";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
 
 export class OperationValidator extends NullifierSetManager {
-  signingProvider: EthersWallet;
+  signingProvider: ethers.Signer;
   walletContract: Wallet;
 
   constructor(walletAddress: string, redis: IORedis) {
@@ -23,7 +22,7 @@ export class OperationValidator extends NullifierSetManager {
     }
 
     const provider = new providers.JsonRpcProvider(rpcUrl);
-    this.signingProvider = new EthersWallet(privateKey, provider);
+    this.signingProvider = new ethers.Wallet(privateKey, provider);
     this.walletContract = Wallet__factory.connect(
       walletAddress,
       this.signingProvider
@@ -33,11 +32,10 @@ export class OperationValidator extends NullifierSetManager {
   async extractNullifierConflictError(
     operation: ProvenOperation
   ): Promise<string | undefined> {
-    console.log("Creating set...");
     const opNfSet = new Set<bigint>();
 
-    console.log("Checking in-op conflicts");
     // Ensure no overlap in given operation
+    console.log("Checking in-op conflicts");
     operation.joinSplitTxs.forEach(({ nullifierA, nullifierB }) => {
       if (opNfSet.has(nullifierA)) {
         return `Conflicting nullifier in operation: ${nullifierA}`;
@@ -50,8 +48,8 @@ export class OperationValidator extends NullifierSetManager {
       opNfSet.add(nullifierB);
     });
 
-    console.log("Checking in-queue conflicts");
     // Ensure no overlap with other nfs already in queue
+    console.log("Checking in-queue conflicts");
     for (const nf of opNfSet) {
       const conflict = await this.hasNullifierConflict(nf);
       if (conflict) {
@@ -71,13 +69,14 @@ export class OperationValidator extends NullifierSetManager {
       [bundle]
     );
     try {
-      await this.signingProvider.estimateGas({
+      const est = await this.signingProvider.estimateGas({
         to: this.walletContract.address,
         data,
       });
+      console.log("Operation gas estimate: ", est);
       return undefined;
     } catch (e) {
-      return `Action has reverting call: ${e}`;
+      return `Operation reverts with: ${e}`;
     }
   }
 }

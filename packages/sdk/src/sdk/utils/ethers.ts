@@ -35,6 +35,6 @@ export function parseEventsFromContractReceipt(
   eventName: string
 ): Event[] {
   return receipt.events!.filter((event) => {
-    event.event == eventName;
+    return event.event == eventName;
   });
 }

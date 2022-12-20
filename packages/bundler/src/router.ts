@@ -38,10 +38,6 @@ export class BundlerRouter {
 
     console.log("Validating nullifiers");
     const operation = JSON.parse(JSON.stringify(req.body)) as ProvenOperation;
-    console.log(
-      "Extracting nf conflict error from: ",
-      JSON.stringify(operation)
-    );
     const nfConflictErr = await this.validator.extractNullifierConflictError(
       operation
     );

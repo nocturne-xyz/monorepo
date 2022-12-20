@@ -8,7 +8,7 @@ import {
 import { parseEventsFromContractReceipt } from "@nocturne-xyz/sdk/dist/src/sdk/utils/ethers";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
-import { providers, Wallet as EthersWallet } from "ethers";
+import { ethers, providers } from "ethers";
 import {
   OperationStatus,
   OPERATION_BATCH_QUEUE,
@@ -16,9 +16,11 @@ import {
 } from "./common";
 import { getRedis } from "./utils";
 import { StatusDB } from "./db";
+import * as JSON from "bigint-json-serialization";
 
 export class BundlerSubmitter {
   redis: IORedis;
+  signingProvider: ethers.Signer;
   walletContract: Wallet; // TODO: replace with tx manager
   statusDB: StatusDB;
 
@@ -39,12 +41,12 @@ export class BundlerSubmitter {
     if (!rpcUrl) {
       throw new Error("Missing RPC_URL");
     }
-
     const provider = new providers.JsonRpcProvider(rpcUrl);
-    const signingProvider = new EthersWallet(privateKey, provider);
+    this.signingProvider = new ethers.Wallet(privateKey, provider);
+
     this.walletContract = Wallet__factory.connect(
       walletAddress,
-      signingProvider
+      this.signingProvider!
     );
   }
 
@@ -55,7 +57,11 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations);
+        await this.submitBatch(operations)
+          .then(console.log)
+          .catch((e) => {
+            throw new Error(e);
+          });
       },
       { connection: this.redis, autorun: false }
     );
@@ -66,24 +72,29 @@ export class BundlerSubmitter {
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
-    operations.forEach(async (op) => {
-      const jobId = calculateOperationDigest(op).toString();
-      await this.statusDB.setJobStatus(jobId, OperationStatus.IN_FLIGHT);
-    });
+    await Promise.all(
+      operations.map(async (op) => {
+        const jobId = calculateOperationDigest(op).toString();
+        await this.statusDB.setJobStatus(jobId, OperationStatus.IN_FLIGHT);
+      })
+    );
 
     // Hardcode gas limit to skip eth_estimateGas
+    console.log(`Submitting batch to chain: ${JSON.stringify(operations)}`);
     const tx = await this.walletContract.processBundle(
       { operations },
       {
         gasLimit: 1_000_000,
       }
     );
-    const receipt = await tx.wait();
+    const receipt = await tx.wait(3);
 
+    console.log("Tx receipt: ", receipt);
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       "OperationProcessed"
     ) as OperationProcessedEvent[];
+    console.log("Matching events: ", matchingEvents);
 
     for (const { args } of matchingEvents) {
       const eventDigest = args.operationDigest.toBigInt();

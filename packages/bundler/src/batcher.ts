@@ -54,6 +54,9 @@ export class BundlerBatcher {
           job.data.operationJson
         ) as ProvenOperation;
 
+        console.log(
+          `Adding proven operation to BatcherDB: ${job.data.operationJson}`
+        );
         await this.batcherDB.add(provenOperation);
         await this.statusDB.setJobStatus(job.id!, OperationStatus.PRE_BATCH);
       },
@@ -83,6 +86,9 @@ export class BundlerBatcher {
 
         // TODO: race condition where crash occurs between queue.add and
         // batcherDB.pop
+        console.log(
+          `Adding batch to OperationBatchQueue: ${operationBatchJson}`
+        );
         const jobId = sha256(operationBatchJson);
         await this.outboundQueue.add(
           OPERATION_BATCH_JOB_TAG,
