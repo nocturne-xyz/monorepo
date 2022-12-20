@@ -27,26 +27,34 @@ export class BundlerSubmitter {
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
-  constructor(walletAddress: Address, redis?: IORedis) {
+  constructor(
+    walletAddress: Address,
+    redis?: IORedis,
+    signingProvider?: ethers.Signer
+  ) {
     const connection = getRedis(redis);
     this.redis = connection;
     this.statusDB = new StatusDB(connection);
 
-    const privateKey = process.env.TX_SIGNER_KEY!;
-    if (!privateKey) {
-      throw new Error("Missing TX_SIGNER_KEY");
-    }
+    if (signingProvider) {
+      this.signingProvider = signingProvider;
+    } else {
+      const privateKey = process.env.TX_SIGNER_KEY;
+      if (!privateKey) {
+        throw new Error("Missing TX_SIGNER_KEY");
+      }
 
-    const rpcUrl = process.env.RPC_URL!;
-    if (!rpcUrl) {
-      throw new Error("Missing RPC_URL");
+      const rpcUrl = process.env.RPC_URL;
+      if (!rpcUrl) {
+        throw new Error("Missing RPC_URL");
+      }
+      const provider = new providers.JsonRpcProvider(rpcUrl);
+      this.signingProvider = new ethers.Wallet(privateKey, provider);
     }
-    const provider = new providers.JsonRpcProvider(rpcUrl);
-    this.signingProvider = new ethers.Wallet(privateKey, provider);
 
     this.walletContract = Wallet__factory.connect(
       walletAddress,
-      this.signingProvider!
+      this.signingProvider
     );
   }
 
@@ -57,11 +65,9 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations)
-          .then(console.log)
-          .catch((e) => {
-            throw new Error(e);
-          });
+        await this.submitBatch(operations).catch((e) => {
+          throw new Error(e);
+        });
       },
       { connection: this.redis, autorun: false }
     );
@@ -87,22 +93,24 @@ export class BundlerSubmitter {
         gasLimit: 1_000_000,
       }
     );
-    const receipt = await tx.wait(3);
+    const receipt = await tx.wait(1);
 
     console.log("Tx receipt: ", receipt);
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
-      "OperationProcessed"
+      this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
-    console.log("Matching events: ", matchingEvents);
 
     for (const { args } of matchingEvents) {
-      const eventDigest = args.operationDigest.toBigInt();
+      const digest = args.operationDigest.toBigInt();
       const status = args.opSuccess
         ? OperationStatus.EXECUTED_SUCCESS
         : OperationStatus.EXECUTED_FAILED;
 
-      await this.statusDB.setJobStatus(eventDigest.toString(), status);
+      console.log(
+        `Setting operation with digest ${digest} to status ${status}`
+      );
+      await this.statusDB.setJobStatus(digest.toString(), status);
     }
   }
 }

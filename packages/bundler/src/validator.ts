@@ -5,28 +5,27 @@ import { Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
 
 export class OperationValidator extends NullifierSetManager {
-  signingProvider: ethers.Signer;
+  provider: ethers.providers.Provider;
   walletContract: Wallet;
 
-  constructor(walletAddress: string, redis: IORedis) {
+  constructor(
+    walletAddress: string,
+    redis: IORedis,
+    provider?: ethers.providers.Provider
+  ) {
     super(redis);
 
-    const privateKey = process.env.TX_SIGNER_KEY;
-    if (!privateKey) {
-      throw new Error("Missing TX_SIGNER_KEY");
+    if (provider) {
+      this.provider = provider;
+    } else {
+      const rpcUrl = process.env.RPC_URL;
+      if (!rpcUrl) {
+        throw new Error("Missing RPC_URL");
+      }
+      this.provider = new providers.JsonRpcProvider(rpcUrl);
     }
 
-    const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("Missing RPC_URL");
-    }
-
-    const provider = new providers.JsonRpcProvider(rpcUrl);
-    this.signingProvider = new ethers.Wallet(privateKey, provider);
-    this.walletContract = Wallet__factory.connect(
-      walletAddress,
-      this.signingProvider
-    );
+    this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
   }
 
   async extractNullifierConflictError(
@@ -69,7 +68,7 @@ export class OperationValidator extends NullifierSetManager {
       [bundle]
     );
     try {
-      const est = await this.signingProvider.estimateGas({
+      const est = await this.provider.estimateGas({
         to: this.walletContract.address,
         data,
       });

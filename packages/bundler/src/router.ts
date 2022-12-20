@@ -14,17 +14,26 @@ import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
 import { getRedis } from "./utils";
+import { ethers } from "ethers";
 
 export class BundlerRouter {
   queue: Queue<ProvenOperationJobData>;
   validator: OperationValidator;
   statusDB: StatusDB;
 
-  constructor(walletAddress: string, redis?: IORedis) {
+  constructor(
+    walletAddress: string,
+    redis?: IORedis,
+    provider?: ethers.providers.Provider
+  ) {
     const connection = getRedis(redis);
     this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection });
     this.statusDB = new StatusDB(connection);
-    this.validator = new OperationValidator(walletAddress, connection);
+    this.validator = new OperationValidator(
+      walletAddress,
+      connection,
+      provider
+    );
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {

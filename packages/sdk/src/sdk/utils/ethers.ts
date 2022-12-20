@@ -1,6 +1,6 @@
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
-import { Result } from "ethers/lib/utils";
+import { EventFragment, Result } from "ethers/lib/utils";
 
 const CHUNK_SIZE = 2000;
 
@@ -32,9 +32,9 @@ export async function query<T extends Result, C extends BaseContract>(
 
 export function parseEventsFromContractReceipt(
   receipt: ContractReceipt,
-  eventName: string
+  eventFragment: EventFragment
 ): Event[] {
-  return receipt.events!.filter((event) => {
-    return event.event == eventName;
+  return receipt.events!.filter((e) => {
+    return e.eventSignature == eventFragment.format();
   });
 }

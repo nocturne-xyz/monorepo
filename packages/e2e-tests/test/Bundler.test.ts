@@ -19,6 +19,7 @@ import {
   LocalMerkleProver,
   MockSubtreeUpdateProver,
   query,
+  calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import {
   BundlerServer,
@@ -34,19 +35,21 @@ import { RedisMemoryServer } from "redis-memory-server";
 import fetch from "node-fetch";
 import * as JSON from "bigint-json-serialization";
 
+const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
+const PER_SPEND_AMOUNT = 100n;
+
+const HH_NODE_URL = "http://localhost:8545";
+const REDIS_URL = "http://localhost:6379";
+
 const BUNDLER_SERVER_PORT = 3000;
 const BUNDLER_BATCHER_MAX_SECONDS = 5;
 const BUNDLER_BATCH_SIZE = 2;
 
-const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
-const PER_SPEND_AMOUNT = 100n;
-
 const accounts = config.networks.hardhat.accounts;
 const BUNDLER_PRIVKEY = ethers.Wallet.fromMnemonic(
   accounts.mnemonic,
-  accounts.path + `/${2}`
+  accounts.path + `/${1}`
 ).privateKey;
-console.log("BUNDLER_PRIVKEY: ", BUNDLER_PRIVKEY);
 
 // NOTE: expects hardhat node to be running in background
 describe("Bundler", async () => {
@@ -65,11 +68,7 @@ describe("Bundler", async () => {
   let bundlerSubmitter: BundlerSubmitter;
 
   beforeEach(async () => {
-    pipeBundlerEnvVars(
-      "http://localhost:8545",
-      BUNDLER_PRIVKEY,
-      "http://localhost:6379"
-    );
+    pipeBundlerEnvVars(HH_NODE_URL, BUNDLER_PRIVKEY, REDIS_URL);
 
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);
@@ -94,13 +93,19 @@ describe("Bundler", async () => {
     const port = await redisServer.getPort();
     const redis = new IORedis(port, host);
 
-    bundlerServer = new BundlerServer(wallet.address, redis);
+    bundlerServer = new BundlerServer(wallet.address, redis, ethers.provider);
     bundlerBatcher = new BundlerBatcher(
       BUNDLER_BATCHER_MAX_SECONDS,
       BUNDLER_BATCH_SIZE,
       redis
     );
-    bundlerSubmitter = new BundlerSubmitter(wallet.address, redis);
+
+    const signingProvider = new ethers.Wallet(BUNDLER_PRIVKEY, ethers.provider);
+    bundlerSubmitter = new BundlerSubmitter(
+      wallet.address,
+      redis,
+      signingProvider
+    );
 
     await updater.init();
   });
@@ -121,18 +126,9 @@ describe("Bundler", async () => {
   });
 
   it("Alice deposits two 100 token notes, spends one and transfers 50 tokens to Bob", async () => {
-    const bundlerServerProm = bundlerServer
-      .run(BUNDLER_SERVER_PORT)
-      .then(console.log)
-      .catch(console.error);
-    const bundlerBatcherProm = bundlerBatcher
-      .run()
-      .then(console.log)
-      .catch(console.error);
-    const bundlerSubmitterProm = bundlerSubmitter
-      .run()
-      .then(console.log)
-      .catch(console.error);
+    bundlerServer.run(BUNDLER_SERVER_PORT).catch(console.error);
+    const bundlerBatcherProm = bundlerBatcher.run().catch(console.error);
+    const bundlerSubmitterProm = bundlerSubmitter.run().catch(console.error);
 
     const asset: Asset = { address: token.address, id: ERC20_ID };
 
@@ -196,10 +192,24 @@ describe("Bundler", async () => {
       },
       body: JSON.stringify(operation),
     });
-    console.log("RES: ", await res.json());
+    console.log("Bundler server response: ", await res.json());
 
-    console.log("Sleeping for 50s while bundler submits...");
-    await Promise.race([sleep(20000), bundlerSubmitterProm]);
+    console.log("Sleeping for 15s while bundler submits...");
+    await Promise.race([
+      sleep(15000),
+      bundlerBatcherProm,
+      bundlerSubmitterProm,
+    ]);
+
+    console.log("Ensure bundler marked operation EXECUTED_SUCCESS");
+    const operationDigest = calculateOperationDigest(operation);
+    var res = await fetch(
+      `http://localhost:${BUNDLER_SERVER_PORT}/operations/${operationDigest}`,
+      {
+        method: "GET",
+      }
+    );
+    expect(await res.json()).to.equal("EXECUTED_SUCCESS");
 
     console.log("Check for OperationProcessed event");
     const latestBlock = await ethers.provider.getBlockNumber();

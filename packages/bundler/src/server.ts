@@ -2,12 +2,17 @@ import { BundlerRouter } from "./router";
 import IORedis from "ioredis";
 import express, { Request, Response } from "express";
 import * as os from "os";
+import { ethers } from "ethers";
 
 export class BundlerServer {
   router: BundlerRouter;
 
-  constructor(walletAddress: string, redis?: IORedis) {
-    this.router = new BundlerRouter(walletAddress, redis);
+  constructor(
+    walletAddress: string,
+    redis?: IORedis,
+    provider?: ethers.providers.Provider
+  ) {
+    this.router = new BundlerRouter(walletAddress, redis, provider);
   }
 
   async run(port: number): Promise<void> {
