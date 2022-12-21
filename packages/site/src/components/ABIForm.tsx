@@ -10,10 +10,10 @@ import { ABIRefundTokensForm } from "./ABIRefundTokensForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
 
 export type ABIFormProps = {
-  children: React.ReactNode;
+  sdk: NocturneFrontendSDK;
 };
 
-export const ABIForm = (sdk: NocturneFrontendSDK) => {
+export const ABIForm = ({ sdk }: ABIFormProps) => {
   const [abiText, setABIText] = useState("");
   const [contractAddressText, setContractAddressText] = useState("");
   const [abi, setABI] = useState<ABIItem[] | undefined>(undefined);
