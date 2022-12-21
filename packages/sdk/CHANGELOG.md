@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add util method for parsing events from tx receipt and break utils into `bits.ts` and `ethers.ts`
 - Bug fix, `packToSolidityProof` casts numbers to bigints
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes
 - Add interfaces for generating and receiving confidential payments
