@@ -45,7 +45,12 @@ const Description = styled.p`
   margin-bottom: 2.4rem;
 `;
 
-export const Card = ({ content, disabled = false, fullWidth, children }: CardProps) => {
+export const Card = ({
+  content,
+  disabled = false,
+  fullWidth,
+  children,
+}: CardProps) => {
   const { title, description } = content;
   return (
     <CardWrapper fullWidth={fullWidth} disabled={disabled}>

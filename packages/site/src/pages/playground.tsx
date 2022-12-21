@@ -1,11 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import {
-  connectSnap,
-  getSnap,
-  shouldDisplayReconnectButton,
-} from "../utils";
+import { connectSnap, getSnap, shouldDisplayReconnectButton } from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
@@ -249,11 +245,9 @@ const Playground = () => {
           </Card>
         )}
         {shouldDisplayReconnectButton(state.installedSnap) && (
-            <Notice>
-              <p>
-                Please connect using MetaMask Flask to continue.
-              </p>
-            </Notice>
+          <Notice>
+            <p>Please connect using MetaMask Flask to continue.</p>
+          </Notice>
         )}
       </CardContainer>
       {shouldDisplayReconnectButton(state.installedSnap) && (
@@ -261,11 +255,12 @@ const Playground = () => {
           <Card
             content={{
               title: "Contract Interaction",
-              description: "Interact with the contract by pasting its ABI below",
+              description:
+                "Interact with the contract by pasting its ABI below",
             }}
             fullWidth
           >
-            <ABIForm/>
+            <ABIForm />
           </Card>
         </CardContainer>
       )}

@@ -1,11 +1,11 @@
-import Ajv from 'ajv';
+import Ajv from "ajv";
 
 export interface ABIItem {
   name: string;
   type: string;
   inputs: ABIValue[];
   outputs: ABIValue[];
-};
+}
 
 export interface ABIValue {
   name: string;
@@ -16,15 +16,15 @@ export interface ABIValue {
 const ajv = new Ajv();
 
 const valueSchema = {
-  $id: 'value',
-  type: 'object',
-  required: ['name', 'type'],
+  $id: "value",
+  type: "object",
+  required: ["name", "type"],
   properties: {
-    name: { type: 'string' },
-    type: { type: 'string' },
+    name: { type: "string" },
+    type: { type: "string" },
     components: {
-      type: 'array',
-      items: { $ref: '#' },
+      type: "array",
+      items: { $ref: "#" },
     },
   },
 };
@@ -32,19 +32,19 @@ const valueSchema = {
 ajv.addSchema(valueSchema);
 
 const itemSchema = {
-  $id: 'item',
-  type: 'object',
-  required: ['name', 'type', 'inputs', 'outputs'],
+  $id: "item",
+  type: "object",
+  required: ["name", "type", "inputs", "outputs"],
   properties: {
-    name: { type: 'string' },
-    type: { type: 'string' },
+    name: { type: "string" },
+    type: { type: "string" },
     inputs: {
-      type: 'array',
-      items: { $ref: '#/definitions/value' },
+      type: "array",
+      items: { $ref: "#/definitions/value" },
     },
     outputs: {
-      type: 'array',
-      items: { $ref: '#/definitions/value' },
+      type: "array",
+      items: { $ref: "#/definitions/value" },
     },
   },
   definitions: {
@@ -55,8 +55,8 @@ const itemSchema = {
 ajv.addSchema(itemSchema);
 
 const abiSchema = {
-  type: 'array',
-  items: { $ref: '#/definitions/item' },
+  type: "array",
+  items: { $ref: "#/definitions/item" },
   definitions: {
     item: itemSchema,
   },
@@ -68,10 +68,10 @@ export function tryParseABI(jsonStr: string): ABIItem[] | undefined {
   try {
     // Parse the text into a JSON object
     let data = JSON.parse(jsonStr);
-    console.log(data);
 
     //@ts-ignore
-    data = data.filter((item) => item.type === 'function');
+    data = data.filter((item) => item.type === "function");
+
     // Validate the data against the schema
     if (validate(data)) {
       // If the data is valid, return it as an array of ABIMethods
