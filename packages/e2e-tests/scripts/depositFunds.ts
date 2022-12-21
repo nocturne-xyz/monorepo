@@ -4,9 +4,9 @@ import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import { ERC20_ID } from "@nocturne-xyz/sdk";
 
 (async () => {
-  const { wallet, vault, nocturneContext } = await setup();
-  const nocturneAddress = nocturneContext.signer.address;
-  console.log("Test Nocturne signer privkey: ", nocturneContext.signer.privkey);
+  const { wallet, vault, nocturneContextAlice } = await setup();
+  const nocturneAddress = nocturneContextAlice.signer.address;
+  console.log("Test Nocturne signer privkey: ", nocturneContextAlice.signer.privkey);
 
   const [eoa] = await hre.ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(eoa);
