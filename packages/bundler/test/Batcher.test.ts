@@ -12,15 +12,18 @@ import {
 } from "../src/common";
 import { VALID_PROVEN_OPERATION_JSON } from "./utils";
 import { sleep } from "../src/utils";
-import { BundlerBatcherDB, StatusDB } from "../src/db";
+import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+
+const BATCH_SIZE = 8;
+const MAX_SECONDS = 5;
 
 describe("BundlerBatcher", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
   let statusDB: StatusDB;
-  let batcherDB: BundlerBatcherDB<ProvenOperationJobData>;
+  let batcherDB: BatcherDB<ProvenOperationJobData>;
   let batcher: BundlerBatcher;
 
   before(async () => {
@@ -31,8 +34,8 @@ describe("BundlerBatcher", async () => {
     redis = new IORedis(port, host);
 
     statusDB = new StatusDB(redis);
-    batcherDB = new BundlerBatcherDB(redis, 8);
-    batcher = new BundlerBatcher(5, 8, redis); // 6 second wait time
+    batcherDB = new BatcherDB(redis);
+    batcher = new BundlerBatcher(MAX_SECONDS, BATCH_SIZE, redis); // 6 second wait time
   });
 
   beforeEach(async () => {
@@ -84,7 +87,7 @@ describe("BundlerBatcher", async () => {
       const status = await statusDB.getJobStatus(id);
       expect(status).to.equal(OperationStatus.PRE_BATCH);
     }
-    expect((await batcherDB.getCurrentBatch())!.length).to.equal(6);
+    expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(6);
 
     for (let i = 6; i < 8; i++) {
       const jobId = await enqueueOperation(inboundQueue, i);
@@ -94,7 +97,7 @@ describe("BundlerBatcher", async () => {
     await Promise.race([sleep(1500), batcherPromise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
-    expect(await batcherDB.hasFullBatch()).to.equal(false);
+    expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
     for (const id of jobIds) {
       const status = await statusDB.getJobStatus(id);
       expect(status).to.equal(OperationStatus.IN_BATCH);
@@ -122,7 +125,7 @@ describe("BundlerBatcher", async () => {
     await Promise.race([sleep(6000), batcherPromise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
-    expect(await batcherDB.hasFullBatch()).to.equal(false);
+    expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
     for (const id of jobIds) {
       const status = await statusDB.getJobStatus(id);
       expect(status).to.equal(OperationStatus.IN_BATCH);

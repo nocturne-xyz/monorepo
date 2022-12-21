@@ -1,6 +1,6 @@
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
-import { BundlerBatcherDB, StatusDB } from "./db";
+import { BatcherDB, StatusDB } from "./db";
 import { getRedis, sleep } from "./utils";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import {
@@ -11,13 +11,12 @@ import {
   PROVEN_OPERATION_QUEUE,
   OperationStatus,
 } from "./common";
-import { sha256 } from "js-sha256";
 import * as JSON from "bigint-json-serialization";
 
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
-  batcherDB: BundlerBatcherDB<ProvenOperation>;
+  batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
   readonly MAX_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -34,7 +33,7 @@ export class BundlerBatcher {
     const connection = getRedis(redis);
     this.redis = connection;
     this.statusDB = new StatusDB(connection);
-    this.batcherDB = new BundlerBatcherDB(connection, batchSize);
+    this.batcherDB = new BatcherDB(connection);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, { connection });
   }
 
@@ -54,9 +53,6 @@ export class BundlerBatcher {
           job.data.operationJson
         ) as ProvenOperation;
 
-        console.log(
-          `Adding proven operation to BatcherDB: ${job.data.operationJson}`
-        );
         await this.batcherDB.add(provenOperation);
         await this.statusDB.setJobStatus(job.id!, OperationStatus.PRE_BATCH);
       },
@@ -72,7 +68,7 @@ export class BundlerBatcher {
   async runOutboundBundlerBatcher(): Promise<void> {
     let counterSeconds = 0;
     while (true) {
-      const batch = await this.batcherDB.getCurrentBatch();
+      const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
       if (!batch) {
         continue;
       } else if (
@@ -86,26 +82,23 @@ export class BundlerBatcher {
 
         // TODO: race condition where crash occurs between queue.add and
         // batcherDB.pop
-        console.log(
-          `Adding batch to OperationBatchQueue: ${operationBatchJson}`
-        );
-        const jobId = sha256(operationBatchJson);
         await this.outboundQueue.add(
           OPERATION_BATCH_JOB_TAG,
-          operationBatchData,
-          { jobId }
+          operationBatchData
         );
         await this.batcherDB.pop(batch.length);
 
-        batch.forEach(async (op) => {
-          const jobId = calculateOperationDigest(op).toString();
-          await this.statusDB.setJobStatus(jobId, OperationStatus.IN_BATCH);
-        });
+        await Promise.all(
+          batch.map(async (op) => {
+            const jobId = calculateOperationDigest(op).toString();
+            await this.statusDB.setJobStatus(jobId, OperationStatus.IN_BATCH);
+          })
+        );
 
         counterSeconds = 0;
       }
 
-      await sleep(950); // sleep ~1 sec, increment counter (approx)
+      await sleep(980); // sleep ~1 sec, increment counter (approx)
       counterSeconds += 1;
     }
   }

@@ -2,12 +2,14 @@ import "mocha";
 import { expect } from "chai";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
-import { BundlerBatcherDB } from "../src/db";
+import { BatcherDB } from "../src/db";
 
-describe("BundlerBatcherDB", async () => {
+const BATCH_SIZE = 8;
+
+describe("BatcherDB", async () => {
   let server: RedisMemoryServer;
   let redis: IORedis;
-  let batcherDB: BundlerBatcherDB<string>;
+  let batcherDB: BatcherDB<string>;
 
   before(async () => {
     server = await RedisMemoryServer.create();
@@ -16,7 +18,7 @@ describe("BundlerBatcherDB", async () => {
     const port = await server.getPort();
     redis = new IORedis(port, host);
 
-    batcherDB = new BundlerBatcherDB<string>(redis, 8);
+    batcherDB = new BatcherDB<string>(redis);
   });
 
   beforeEach(async () => {
@@ -24,23 +26,21 @@ describe("BundlerBatcherDB", async () => {
   });
 
   async function fillBatch(): Promise<void> {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < BATCH_SIZE; i++) {
       await batcherDB.add("ITEM_" + i.toString());
     }
   }
 
   it("Fills, detects, and pops batch", async () => {
-    expect(await batcherDB.hasFullBatch()).to.equal(false);
-    expect(await batcherDB.pop(8)).to.be.undefined;
+    expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
+    expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
 
     await fillBatch();
-    expect((await batcherDB.getCurrentBatch())!.length).to.equal(8);
-    expect(await batcherDB.hasFullBatch()).to.equal(true);
+    expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
 
-    const batch = await batcherDB.pop(8);
-    expect(batch!.length).to.equal(8);
-    expect(await batcherDB.getCurrentBatch()).to.be.undefined;
-    expect(await batcherDB.pop(8)).to.be.undefined;
-    expect(await batcherDB.hasFullBatch()).to.equal(false);
+    const batch = await batcherDB.pop(BATCH_SIZE);
+    expect(batch!.length).to.equal(BATCH_SIZE);
+    expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
+    expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
   });
 });

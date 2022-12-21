@@ -86,7 +86,6 @@ export class BundlerSubmitter {
     );
 
     // Hardcode gas limit to skip eth_estimateGas
-    console.log(`Submitting batch to chain: ${JSON.stringify(operations)}`);
     const tx = await this.walletContract.processBundle(
       { operations },
       {
@@ -95,7 +94,6 @@ export class BundlerSubmitter {
     );
     const receipt = await tx.wait(1);
 
-    console.log("Tx receipt: ", receipt);
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
