@@ -1,4 +1,4 @@
-import { ProvenOperation } from "@nocturne-xyz/sdk";
+import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 
 const NULLIFIER_PREFIX = "NULLIFIER_";
@@ -14,15 +14,13 @@ export class NullifierSetManager {
     return NULLIFIER_PREFIX + nullifier.toString();
   }
 
-  async addNullifiers(
-    operation: ProvenOperation,
-    jobId: string
-  ): Promise<void> {
+  async addNullifiers(operation: ProvenOperation): Promise<void> {
+    const digest = calculateOperationDigest(operation).toString();
     const addNfPromises = operation.joinSplitTxs.flatMap(
       ({ nullifierA, nullifierB }) => {
         return [
-          this.addNullifier(nullifierA, jobId),
-          this.addNullifier(nullifierB, jobId),
+          this.addNullifier(nullifierA, digest),
+          this.addNullifier(nullifierB, digest),
         ];
       }
     );

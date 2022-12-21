@@ -13,7 +13,7 @@ import { extractRelayError } from "./validation";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
-import { getRedis } from "./utils";
+import { getRedis, parseRequestBody } from "./utils";
 import { ethers } from "ethers";
 
 export class BundlerRouter {
@@ -46,7 +46,7 @@ export class BundlerRouter {
     }
 
     console.log("Validating nullifiers");
-    const operation = JSON.parse(JSON.stringify(req.body)) as ProvenOperation;
+    const operation = parseRequestBody(req.body) as ProvenOperation;
     const nfConflictErr = await this.validator.extractNullifierConflictError(
       operation
     );
@@ -89,7 +89,7 @@ export class BundlerRouter {
     assert(job.id == jobId); // TODO: can remove?
 
     await this.statusDB.setJobStatus(jobId, OperationStatus.QUEUED);
-    await this.validator.addNullifiers(operation, jobId);
+    await this.validator.addNullifiers(operation);
     return jobId;
   }
 }
