@@ -68,7 +68,7 @@ export function packToSolidityProof(proof: BaseProof): SolidityProof {
     BigInt(proof.pi_b[1][1]),
     BigInt(proof.pi_b[1][0]),
     BigInt(proof.pi_c[0]),
-    BigInt(proof.pi_c[1])
+    BigInt(proof.pi_c[1]),
   ];
 }
 

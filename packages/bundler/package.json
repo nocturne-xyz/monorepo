@@ -13,7 +13,7 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 100000 --exit",
+    "test:unit": "mocha --require ts-node/register test/** --timeout 500000 --exit",
     "run:server": "npx ts-node ./scripts/runServer --walletAddress ",
     "run:batcher": "npx ts-node ./scripts/runBatcher",
     "run:submitter": "npx ts-node ./scripts/runSubmitter --walletAddress ",
