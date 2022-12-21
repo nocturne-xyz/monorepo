@@ -1,4 +1,4 @@
-export const VALID_PROVEN_OPERATION_JSON = {
+export const VALID_PROVEN_OPERATION_OBJ = {
   joinSplitTxs: [
     {
       proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],

@@ -22,7 +22,7 @@ import {
   calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds, pipeBundlerEnvVars, sleep } from "./utils";
+import { depositFunds, sleep } from "./utils";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import RedisMemoryServer from "redis-memory-server";
@@ -36,9 +36,6 @@ import * as JSON from "bigint-json-serialization";
 import fetch from "node-fetch";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
-
-const HH_NODE_URL = "http://localhost:8545";
-const REDIS_URL = "http://localhost:6379";
 
 const BUNDLER_SERVER_PORT = 3000;
 const BUNDLER_BATCHER_MAX_SECONDS = 5;
@@ -57,7 +54,7 @@ const ALICE_UNWRAP_VAL = 120n;
 const ALICE_TO_BOB_PUB_VAL = 100n;
 const ALICE_TO_BOB_PRIV_VAL = 30n;
 
-describe("Wallet", async () => {
+describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let bob: ethers.Signer;
@@ -75,8 +72,6 @@ describe("Wallet", async () => {
   let bundlerSubmitter: BundlerSubmitter;
 
   beforeEach(async () => {
-    pipeBundlerEnvVars(HH_NODE_URL, BUNDLER_PRIVKEY, REDIS_URL);
-
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);
     token = await tokenFactory.deploy();
@@ -109,6 +104,7 @@ describe("Wallet", async () => {
       redis
     );
 
+    process.env.TX_SIGNER_KEY = BUNDLER_PRIVKEY;
     const signingProvider = new ethers.Wallet(BUNDLER_PRIVKEY, ethers.provider);
     bundlerSubmitter = new BundlerSubmitter(
       wallet.address,
@@ -220,9 +216,9 @@ describe("Wallet", async () => {
     });
     console.log("Bundler server response: ", await res.json());
 
-    console.log("Sleeping for 15s while bundler submits...");
+    console.log("Sleeping for 10s while bundler submits...");
     await Promise.race([
-      sleep(15000),
+      sleep(10000),
       bundlerBatcherProm,
       bundlerSubmitterProm,
     ]);

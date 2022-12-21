@@ -44,16 +44,6 @@ export async function depositFunds(
   return commitments;
 }
 
-export function pipeBundlerEnvVars(
-  rpcUrl: string,
-  txSignerKey: string,
-  redisUrl: string
-): void {
-  process.env.RPC_URL = rpcUrl;
-  process.env.TX_SIGNER_KEY = txSignerKey;
-  process.env.REDIS_URL = redisUrl;
-}
-
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

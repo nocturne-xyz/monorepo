@@ -1,7 +1,11 @@
 import { NullifierSetManager } from "./nullifierSetManager";
 import { ethers, providers } from "ethers";
 import IORedis from "ioredis";
-import { Bundle, ProvenOperation } from "@nocturne-xyz/sdk";
+import {
+  Bundle,
+  calculateOperationDigest,
+  ProvenOperation,
+} from "@nocturne-xyz/sdk";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
 
 export class OperationValidator extends NullifierSetManager {
@@ -62,6 +66,7 @@ export class OperationValidator extends NullifierSetManager {
   async extractRevertError(
     operation: ProvenOperation
   ): Promise<string | undefined> {
+    const id = calculateOperationDigest(operation).toString();
     const bundle: Bundle = { operations: [operation] };
     const data = this.walletContract.interface.encodeFunctionData(
       "processBundle",
@@ -75,7 +80,7 @@ export class OperationValidator extends NullifierSetManager {
       console.log("Operation gas estimate: ", est);
       return undefined;
     } catch (e) {
-      return `Operation reverts with: ${e}`;
+      return `Operation with digest ${id} reverts with: ${e}`;
     }
   }
 }

@@ -10,11 +10,11 @@ import {
   PROVEN_OPERATION_JOB_TAG,
   OperationStatus,
 } from "../src/common";
-import { VALID_PROVEN_OPERATION_JSON } from "./utils";
+import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
-import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import { calculateOperationDigest } from "@nocturne-xyz/sdk";
 
 const BATCH_SIZE = 8;
 const MAX_SECONDS = 5;
@@ -46,14 +46,13 @@ describe("BundlerBatcher", async () => {
     queue: Queue<ProvenOperationJobData>,
     num: number
   ): Promise<string> {
-    let operationJson = VALID_PROVEN_OPERATION_JSON;
-    operationJson.gasLimit = num.toString() + "n";
-    const operation = JSON.parse(
-      JSON.stringify(operationJson)
-    ) as ProvenOperation;
+    let operationObj = VALID_PROVEN_OPERATION_OBJ;
+    operationObj.gasLimit = num.toString() + "n";
+    const operationJson = JSON.stringify(operationObj);
+    const operation = JSON.parse(operationJson);
 
     const jobData: ProvenOperationJobData = {
-      operationJson: JSON.stringify(VALID_PROVEN_OPERATION_JSON),
+      operationJson,
     };
 
     const jobId = calculateOperationDigest(operation).toString();

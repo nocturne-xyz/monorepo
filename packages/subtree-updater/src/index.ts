@@ -10,10 +10,7 @@ import {
 import { RootDatabase, Database } from "lmdb";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
-import {
-  SubtreeUpdateBundlerSubmitter,
-  SyncSubtreeBundlerSubmitter,
-} from "./submitter";
+import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
 export { SubtreeUpdateServer } from "./server";
 import * as JSON from "bigint-json-serialization";
 
@@ -48,7 +45,7 @@ export class SubtreeUpdater {
   private walletContract: Wallet;
   private db: Database<string, string>;
   private prover: SubtreeUpdateProver;
-  private submitter: SubtreeUpdateBundlerSubmitter;
+  private submitter: SubtreeUpdateSubmitter;
 
   private insertions: (Note | bigint)[];
   private batches: SubtreeUpdateBatch[];
@@ -58,9 +55,7 @@ export class SubtreeUpdater {
     walletContract: Wallet,
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
-    submitter: SubtreeUpdateBundlerSubmitter = new SyncSubtreeBundlerSubmitter(
-      walletContract
-    )
+    submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)
   ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
