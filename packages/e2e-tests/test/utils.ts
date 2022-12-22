@@ -3,11 +3,30 @@ import {
   SNARK_SCALAR_FIELD,
   NocturneAddress,
   NoteTrait,
+  SubtreeUpdateProver,
+  MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
+import {
+  RapidsnarkSubtreeUpdateProver
+} from "@nocturne-xyz/subtree-updater";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { ethers } from "hardhat";
+import * as fs from "fs";
+import * as path from "path";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
+const MOCK_SUBTREE_UPDATER_DELAY = 2100;
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
+const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
+const WASM_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_js/subtreeupdate.wasm`;
+const WITNESS_GEN_EXECUTABLE_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate`;
+const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`;
+const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
+const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 export async function depositFunds(
   wallet: Wallet,
@@ -46,4 +65,37 @@ export async function depositFunds(
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function getSubtreeUpdateProver(): SubtreeUpdateProver {
+  switch ([process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true",  process.env.USE_RAPIDSNARK === "true"]) {
+    case [true, true]:
+      return new RapidsnarkSubtreeUpdateProver(
+        EXECUTABLE_CMD,
+        WITNESS_GEN_EXECUTABLE_PATH,
+        ZKEY_PATH,
+        VKEY_PATH,
+        TMP_PATH
+      );
+    case [true, false]:
+      const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+      return new LocalSubtreeUpdateProver(
+        WASM_PATH,
+        ZKEY_PATH,
+        VKEY
+      )
+    default:
+      return new MockSubtreeUpdateProver();
+  }
+}
+
+export function getSubtreeUpdaterDelay(): number {
+  switch ([process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true",  process.env.USE_RAPIDSNARK === "true"]) {
+    case [true, true]:
+      return MOCK_SUBTREE_UPDATER_DELAY + 8000;
+    case [true, false]:
+      return MOCK_SUBTREE_UPDATER_DELAY + 60000;
+    default:
+      return MOCK_SUBTREE_UPDATER_DELAY;
+  }
 }

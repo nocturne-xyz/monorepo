@@ -6,6 +6,7 @@ import {
   JoinSplitVerifier__factory,
   Vault,
   Wallet,
+  SubtreeUpdateVerifier__factory,
   TestSubtreeUpdateVerifier__factory,
 } from "@nocturne-xyz/contracts";
 
@@ -149,11 +150,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deterministicDeployment: true,
   });
 
+  const subtreeUpdateVerifierFactory = getSubtreeUpdateContractFactory();
   const subtreeUpdateVerifier = await deploy("SubtreeUpdateVerifier", {
     from: owner,
     contract: {
-      abi: TestSubtreeUpdateVerifier__factory.abi,
-      bytecode: TestSubtreeUpdateVerifier__factory.bytecode,
+      abi: subtreeUpdateVerifierFactory.abi,
+      bytecode: subtreeUpdateVerifierFactory.bytecode,
     },
     log: true,
     deterministicDeployment: true,
@@ -174,6 +176,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deterministicDeployment: true,
   });
 };
+
+function getSubtreeUpdateContractFactory(): ethers.ContractFactory {
+  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
+    return SubtreeUpdateVerifier__factory
+  }
+
+  return TestSubtreeUpdateVerifier__factory;
+}
 
 export default func;
 func.tags = ["NocturneContracts"];

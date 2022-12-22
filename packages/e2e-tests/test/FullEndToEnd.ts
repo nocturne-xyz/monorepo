@@ -22,7 +22,7 @@ import {
   calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds, sleep } from "./utils";
+import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import RedisMemoryServer from "redis-memory-server";
@@ -89,7 +89,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     } = await setup());
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
-    const prover = new MockSubtreeUpdateProver();
+    const prover = getSubtreeUpdateProver();
     updater = new SubtreeUpdater(wallet, serverDB, prover);
 
     redisServer = await RedisMemoryServer.create();

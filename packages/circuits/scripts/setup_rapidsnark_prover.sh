@@ -7,7 +7,7 @@ CIRCUIT_CPP_DIR="$CIRCUIT_ARTIFACTS_DIR/subtreeupdate/subtreeupdate_cpp"
 
 RAPIDSNARK_PATH="$ROOT_DIR/rapidsnark/build/prover"
 
-if [[ "${RUN_RAPIDSNARK_TESTS}" != "true" ]]; then
+if [[ "${USE_RAPIDSNARK}" != "true" ]]; then
 	echo "skipping rapidsnark setup..."
 else
 	echo "checking circuit has been built..."

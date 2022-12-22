@@ -13,7 +13,7 @@ import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
-const SKIP = process.env.RUN_RAPIDSNARK_TESTS === "true" ? false : true;
+const SKIP = process.env.USE_RAPIDSNARK === "true" ? false : true;
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;

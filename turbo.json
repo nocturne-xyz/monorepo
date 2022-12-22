@@ -61,7 +61,7 @@
     },
     "@nocturne-xyz/subtree-updater#test:unit": {
       "dependsOn": ["build"],
-      "env": ["RUN_RAPIDSNARK_TESTS"]
+      "env": ["USE_RAPIDSNARK"]
     },
     "test:e2e": {
       "dependsOn": ["build"],
