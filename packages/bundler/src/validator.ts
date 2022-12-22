@@ -7,6 +7,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
+import { ErrString } from "./common";
 
 export class OperationValidator {
   nullifierDB: NullifierDB;
@@ -43,7 +44,7 @@ export class OperationValidator {
 
   async extractNullifierConflictError(
     operation: ProvenOperation
-  ): Promise<string | undefined> {
+  ): Promise<ErrString | undefined> {
     const opNfSet = new Set<bigint>();
 
     // Ensure no overlap in given operation
@@ -74,7 +75,7 @@ export class OperationValidator {
 
   async extractRevertError(
     operation: ProvenOperation
-  ): Promise<string | undefined> {
+  ): Promise<ErrString | undefined> {
     const id = calculateOperationDigest(operation).toString();
     const bundle: Bundle = { operations: [operation] };
     const data = this.walletContract.interface.encodeFunctionData(

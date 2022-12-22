@@ -53,8 +53,23 @@ export class BundlerBatcher {
           job.data.operationJson
         ) as ProvenOperation;
 
-        await this.batcherDB.add(provenOperation);
-        await this.statusDB.setJobStatus(job.id!, OperationStatus.PRE_BATCH);
+        const batcherAddTransaction =
+          this.batcherDB.getAddTransaction(provenOperation);
+        const setJobStatusTransaction =
+          this.statusDB.getSetJobStatusTransaction(
+            job.id!,
+            OperationStatus.PRE_BATCH
+          );
+        const allTransactions = [batcherAddTransaction].concat([
+          setJobStatusTransaction,
+        ]);
+        await this.redis.multi(allTransactions).exec((maybeErr) => {
+          if (maybeErr) {
+            throw new Error(
+              `Failed to execute batcher add and set job status transaction: ${maybeErr}`
+            );
+          }
+        });
       },
       {
         connection: this.redis,

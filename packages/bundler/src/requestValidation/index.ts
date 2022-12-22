@@ -1,13 +1,10 @@
 import { ProvenOperation } from "@nocturne-xyz/sdk";
 import { ValidateFunction } from "ajv";
+import { ErrString } from "../common";
 import { parseRequestBody } from "../utils";
 import validateRelay from "./relay";
 
-export type RequestErrString = string;
-
-export function tryParseRelayRequest(
-  body: any
-): RequestErrString | ProvenOperation {
+export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
   const maybeErr = extractRelayError(body);
   if (maybeErr) {
     return maybeErr;
@@ -16,14 +13,14 @@ export function tryParseRelayRequest(
   }
 }
 
-function extractRelayError(data: any): RequestErrString | undefined {
+function extractRelayError(data: any): ErrString | undefined {
   return extractInputError(validateRelay, data);
 }
 
 function extractInputError<T>(
   validator: ValidateFunction<T>,
   data: any
-): RequestErrString | undefined {
+): ErrString | undefined {
   const valid = validator(data);
   if (!valid) {
     const error = validator.errors![0];
