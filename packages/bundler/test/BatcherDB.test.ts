@@ -43,4 +43,21 @@ describe("BatcherDB", async () => {
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
   });
+
+  it("Produces add and pop transactions", async () => {
+    await fillBatch();
+    expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
+
+    const addTransaction = batcherDB.getAddTransaction(
+      `ITEM_${BATCH_SIZE + 1}`
+    );
+    const popTransaction = batcherDB.getPopTransaction(BATCH_SIZE + 1);
+
+    const res = await redis
+      .multi([addTransaction].concat([popTransaction]))
+      .exec();
+
+    expect((res![1][1] as Array<string>).length).to.equal(9);
+    expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
+  });
 });

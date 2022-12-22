@@ -34,4 +34,12 @@ export class BatcherDB<T> {
 
     return stringifiedItems.map(JSON.parse) as T[];
   }
+
+  getAddTransaction(elem: T): string[] {
+    return ["rpush", BATCH_DB_NAME, JSON.stringify(elem)];
+  }
+
+  getPopTransaction(count: number): string[] {
+    return ["lpop", BATCH_DB_NAME, count.toString()];
+  }
 }

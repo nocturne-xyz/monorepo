@@ -17,7 +17,7 @@ import * as JSON from "bigint-json-serialization";
 import { calculateOperationDigest } from "@nocturne-xyz/sdk";
 
 const BATCH_SIZE = 8;
-const MAX_SECONDS = 5;
+const MAX_BATCH_LATENCY_SECS = 5;
 
 describe("BundlerBatcher", async () => {
   let server: RedisMemoryServer;
@@ -35,7 +35,7 @@ describe("BundlerBatcher", async () => {
 
     statusDB = new StatusDB(redis);
     batcherDB = new BatcherDB(redis);
-    batcher = new BundlerBatcher(MAX_SECONDS, BATCH_SIZE, redis); // 6 second wait time
+    batcher = new BundlerBatcher(MAX_BATCH_LATENCY_SECS, BATCH_SIZE, redis); // 6 second wait time
   });
 
   beforeEach(async () => {

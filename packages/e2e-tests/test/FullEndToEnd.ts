@@ -38,7 +38,7 @@ import fetch from "node-fetch";
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 
 const BUNDLER_SERVER_PORT = 3000;
-const BUNDLER_BATCHER_MAX_SECONDS = 5;
+const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
 const BUNDLER_BATCH_SIZE = 2;
 
 const accounts = config.networks.hardhat.accounts;
@@ -99,7 +99,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     bundlerServer = new BundlerServer(wallet.address, redis, ethers.provider);
     bundlerBatcher = new BundlerBatcher(
-      BUNDLER_BATCHER_MAX_SECONDS,
+      BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS,
       BUNDLER_BATCH_SIZE,
       redis
     );

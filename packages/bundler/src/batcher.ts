@@ -18,7 +18,7 @@ export class BundlerBatcher {
   statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
-  readonly MAX_SECONDS: number = 60;
+  readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
   constructor(maxSeconds?: number, batchSize?: number, redis?: IORedis) {
@@ -27,7 +27,7 @@ export class BundlerBatcher {
     }
 
     if (maxSeconds) {
-      this.MAX_SECONDS = maxSeconds;
+      this.MAX_BATCH_LATENCY_SECS = maxSeconds;
     }
 
     const connection = getRedis(redis);
@@ -73,7 +73,7 @@ export class BundlerBatcher {
         continue;
       } else if (
         batch.length >= this.BATCH_SIZE ||
-        (counterSeconds >= this.MAX_SECONDS && batch.length > 0)
+        (counterSeconds >= this.MAX_BATCH_LATENCY_SECS && batch.length > 0)
       ) {
         const operationBatchJson = JSON.stringify(batch);
         const operationBatchData: OperationBatchJobData = {
@@ -86,14 +86,23 @@ export class BundlerBatcher {
           OPERATION_BATCH_JOB_TAG,
           operationBatchData
         );
-        await this.batcherDB.pop(batch.length);
 
-        await Promise.all(
-          batch.map(async (op) => {
-            const jobId = calculateOperationDigest(op).toString();
-            await this.statusDB.setJobStatus(jobId, OperationStatus.IN_BATCH);
-          })
-        );
+        const popTransaction = this.batcherDB.getPopTransaction(batch.length);
+        const setJobStatusTransactions = batch.map((op) => {
+          const jobId = calculateOperationDigest(op).toString();
+          return this.statusDB.getSetJobStatusTransaction(
+            jobId,
+            OperationStatus.IN_BATCH
+          );
+        });
+        const allTransactions = setJobStatusTransactions.concat([
+          popTransaction,
+        ]);
+        await this.redis.multi(allTransactions).exec((err) => {
+          if (err) {
+            throw Error(`BatcherDB job status + pop txs failed: ${err}`);
+          }
+        });
 
         counterSeconds = 0;
       }
