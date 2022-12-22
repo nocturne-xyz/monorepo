@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc --build",
-    "setup-rapidsnark": "../circuits/scripts/build_subtree_updater.sh",
+    "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 10000 --require ts-node/register --exit test/**",
     "check": "tsc --noEmit",
     "clean": "rm -rf dist",
