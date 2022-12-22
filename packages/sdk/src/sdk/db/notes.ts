@@ -20,15 +20,8 @@ export class NotesDB {
    * @returns key the corresponding key for the note
    */
   static formatNoteKey(note: IncludedNote): string {
-    return (
-      NOTES_PREFIX +
-      "_" +
-      note.asset +
-      "_" +
-      note.id +
-      "_" +
-      NoteTrait.sha256(note)
-    );
+    const asset: Asset = { address: note.asset, id: note.id };
+    return NotesDB.formatNoteAssetKey(asset) + "_" + NoteTrait.sha256(note);
   }
 
   /**
