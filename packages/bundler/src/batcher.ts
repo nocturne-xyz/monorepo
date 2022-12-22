@@ -1,7 +1,7 @@
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
 import { BatcherDB, StatusDB } from "./db";
-import { getRedis, sleep } from "./utils";
+import { getRedis } from "./utils";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
@@ -82,48 +82,57 @@ export class BundlerBatcher {
 
   async runOutboundBundlerBatcher(): Promise<void> {
     let counterSeconds = 0;
-    while (true) {
-      const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
-      if (!batch) {
-        continue;
-      } else if (
-        batch.length >= this.BATCH_SIZE ||
-        (counterSeconds >= this.MAX_BATCH_LATENCY_SECS && batch.length > 0)
-      ) {
-        const operationBatchJson = JSON.stringify(batch);
-        const operationBatchData: OperationBatchJobData = {
-          operationBatchJson,
-        };
+    let intervalId: NodeJS.Timer;
 
-        // TODO: race condition where crash occurs between queue.add and
-        // batcherDB.pop
-        await this.outboundQueue.add(
-          OPERATION_BATCH_JOB_TAG,
-          operationBatchData
-        );
+    const prom = new Promise<void>(() => {
+      intervalId = setInterval(async () => {
+        const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
+        if (batch) {
+          if (
+            (batch && batch.length >= this.BATCH_SIZE) ||
+            (counterSeconds >= this.MAX_BATCH_LATENCY_SECS && batch.length > 0)
+          ) {
+            const operationBatchJson = JSON.stringify(batch);
+            const operationBatchData: OperationBatchJobData = {
+              operationBatchJson,
+            };
 
-        const popTransaction = this.batcherDB.getPopTransaction(batch.length);
-        const setJobStatusTransactions = batch.map((op) => {
-          const jobId = calculateOperationDigest(op).toString();
-          return this.statusDB.getSetJobStatusTransaction(
-            jobId,
-            OperationStatus.IN_BATCH
-          );
-        });
-        const allTransactions = setJobStatusTransactions.concat([
-          popTransaction,
-        ]);
-        await this.redis.multi(allTransactions).exec((maybeErr) => {
-          if (maybeErr) {
-            throw Error(`BatcherDB job status + pop txs failed: ${maybeErr}`);
+            // TODO: race condition where crash occurs between queue.add and
+            // batcherDB.pop
+            await this.outboundQueue.add(
+              OPERATION_BATCH_JOB_TAG,
+              operationBatchData
+            );
+
+            const popTransaction = this.batcherDB.getPopTransaction(
+              batch.length
+            );
+            const setJobStatusTransactions = batch.map((op) => {
+              const jobId = calculateOperationDigest(op).toString();
+              return this.statusDB.getSetJobStatusTransaction(
+                jobId,
+                OperationStatus.IN_BATCH
+              );
+            });
+            const allTransactions = setJobStatusTransactions.concat([
+              popTransaction,
+            ]);
+            await this.redis.multi(allTransactions).exec((maybeErr) => {
+              if (maybeErr) {
+                throw Error(
+                  `BatcherDB job status + pop txs failed: ${maybeErr}`
+                );
+              }
+            });
+
+            counterSeconds = 0;
           }
-        });
 
-        counterSeconds = 0;
-      }
+          counterSeconds += 1;
+        }
+      }, 1000);
+    });
 
-      await sleep(980); // sleep ~1 sec, increment counter (approx)
-      counterSeconds += 1;
-    }
+    prom.finally(() => clearTimeout(intervalId));
   }
 }
