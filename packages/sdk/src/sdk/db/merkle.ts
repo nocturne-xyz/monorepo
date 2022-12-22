@@ -41,4 +41,14 @@ export class MerkleDB {
   async getLeaf(index: number): Promise<bigint | undefined> {
     return this.kv.getBigInt(MerkleDB.leafKey(index));
   }
+
+  private async *getLeavesIterator(): AsyncIterable<bigint> {
+    for await (const [_key, value] of this.kv.iterPrefix(LEAVES_PREFIX)) {
+      yield BigInt(value);
+    }
+  }
+
+  iterLeaves(): AsyncIterable<bigint> {
+    return this.getLeavesIterator();
+  }
 }

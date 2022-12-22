@@ -40,17 +40,11 @@ export class LocalMerkleProver extends MerkleProver {
   ): Promise<LocalMerkleProver> {
     const self = new LocalMerkleProver(merkleAddress, provider, db);
 
-    let index = 0;
-    // eslint-disable-next-line
-    while (true) {
-      const leaf = await db.getLeaf(index);
-      if (leaf == undefined) {
-        return self;
-      } else {
-        self.localTree.insert(leaf);
-        index += 1;
-      }
+    for await (const leaf of db.iterLeaves()) {
+      self.localTree.insert(leaf);
     }
+
+    return self;
   }
 
   root(): bigint {
