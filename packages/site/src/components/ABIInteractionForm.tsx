@@ -3,7 +3,6 @@ import { ABIItem, ABIValue } from "../utils/abiParser";
 import { ethers } from "ethers";
 import { Action } from "@nocturne-xyz/sdk";
 import * as _ from "lodash";
-import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
 
 type ABIInteractionFormProps = {
   abi: ABIItem[];
