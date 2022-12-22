@@ -43,11 +43,10 @@ describe("BundlerBatcher", async () => {
   });
 
   async function enqueueOperation(
-    queue: Queue<ProvenOperationJobData>,
-    num: number
+    queue: Queue<ProvenOperationJobData>
   ): Promise<string> {
     let operationObj = VALID_PROVEN_OPERATION_OBJ;
-    operationObj.gasLimit = num.toString() + "n";
+    operationObj.gasLimit = Math.floor(Math.random() * 100).toString() + "n";
     const operationJson = JSON.stringify(operationObj);
     const operation = JSON.parse(operationJson);
 
@@ -76,7 +75,7 @@ describe("BundlerBatcher", async () => {
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
-      const jobId = await enqueueOperation(inboundQueue, i);
+      const jobId = await enqueueOperation(inboundQueue);
       jobIds.push(jobId);
     }
 
@@ -89,7 +88,7 @@ describe("BundlerBatcher", async () => {
     expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(6);
 
     for (let i = 6; i < 8; i++) {
-      const jobId = await enqueueOperation(inboundQueue, i);
+      const jobId = await enqueueOperation(inboundQueue);
       jobIds.push(jobId);
     }
 
@@ -116,7 +115,7 @@ describe("BundlerBatcher", async () => {
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
-      const jobId = await enqueueOperation(inboundQueue, i);
+      const jobId = await enqueueOperation(inboundQueue);
       jobIds.push(jobId);
     }
 

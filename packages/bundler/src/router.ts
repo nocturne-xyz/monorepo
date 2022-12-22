@@ -9,11 +9,11 @@ import {
 import { Request, Response } from "express";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
-import { extractRelayError } from "./requestValidation";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
-import { getRedis, parseRequestBody } from "./utils";
+import { getRedis } from "./utils";
 import { ethers } from "ethers";
+import { tryParseRelayRequest } from "./requestValidation";
 
 export class BundlerRouter {
   redis: IORedis;
@@ -38,15 +38,15 @@ export class BundlerRouter {
 
   async handleRelay(req: Request, res: Response): Promise<void> {
     console.log("Validating request");
-    const maybeRequestError = extractRelayError(req.body);
-    if (maybeRequestError) {
-      res.statusMessage = maybeRequestError;
-      res.status(400).json(maybeRequestError);
+    const errorOrOperation = tryParseRelayRequest(req.body);
+    if (typeof errorOrOperation == "string") {
+      res.statusMessage = errorOrOperation;
+      res.status(400).json(errorOrOperation);
       return;
     }
 
     console.log("Validating nullifiers");
-    const operation = parseRequestBody(req.body) as ProvenOperation;
+    const operation = errorOrOperation;
     const nfConflictErr = await this.validator.extractNullifierConflictError(
       operation
     );
