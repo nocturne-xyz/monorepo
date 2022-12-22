@@ -15,10 +15,16 @@ export class BatcherDB<T> {
     return true;
   }
 
-  async getBatch(count: number): Promise<T[] | undefined> {
+  async getBatch(
+    count: number,
+    exact: boolean = false
+  ): Promise<T[] | undefined> {
     const stringifiedItems = await this.redis.lrange(BATCH_DB_NAME, 0, count);
 
     if (stringifiedItems.length == 0) {
+      return undefined;
+    }
+    if (exact && stringifiedItems.length != count) {
       return undefined;
     }
 
