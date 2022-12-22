@@ -12,7 +12,6 @@ import {
   NocturneContext,
   LocalMerkleProver,
   MerkleDB,
-  MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds, getSubtreeUpdateProver } from "./utils";
