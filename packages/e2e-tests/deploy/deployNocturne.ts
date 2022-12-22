@@ -90,13 +90,23 @@ export async function setup(): Promise<NocturneSetup> {
   const aliceKV = new InMemoryKVStore();
   const notesDBAlice = new NotesDB(aliceKV);
   const merkleDBAlice = new MerkleDB(aliceKV);
-  const nocturneContextAlice = setupNocturneContext(3n, wallet, notesDBAlice, merkleDBAlice);
+  const nocturneContextAlice = setupNocturneContext(
+    3n,
+    wallet,
+    notesDBAlice,
+    merkleDBAlice
+  );
 
   console.log("Create NocturneContextBob");
   const bobKV = new InMemoryKVStore();
   const notesDBBob = new NotesDB(bobKV);
   const merkleDBBob = new MerkleDB(bobKV);
-  const nocturneContextBob = setupNocturneContext(5n, wallet, notesDBBob, merkleDBBob);
+  const nocturneContextBob = setupNocturneContext(
+    5n,
+    wallet,
+    notesDBBob,
+    merkleDBBob
+  );
 
   return {
     alice,

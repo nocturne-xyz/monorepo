@@ -263,11 +263,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     expect(nonZeroNotesAlice.length).to.equal(2);
 
     // alice should have a note with refund value from public spendk
-    let foundNotesAlice = nonZeroNotesAlice.filter((n) => n.value === ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL);
+    let foundNotesAlice = nonZeroNotesAlice.filter(
+      (n) => n.value === ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
+    );
     expect(foundNotesAlice.length).to.equal(1);
 
     // alice should have another note with refund value from private payment to bob
-    foundNotesAlice = nonZeroNotesAlice.filter((n) => n.value === 2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL);
+    foundNotesAlice = nonZeroNotesAlice.filter(
+      (n) =>
+        n.value ===
+        2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
+    );
     expect(foundNotesAlice.length).to.equal(1);
 
     console.log("Bob: Sync SDK notes manager post-operation");
