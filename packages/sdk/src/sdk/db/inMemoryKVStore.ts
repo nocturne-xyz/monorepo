@@ -74,12 +74,12 @@ export class InMemoryKVStore implements DumpableKVStore {
     }
   }
 
-  getRange(startKey: string, endKey: string): AsyncIterable<KV> {
+  iterRange(startKey: string, endKey: string): AsyncIterable<KV> {
     const cond = ([key, _value]: KV) => this.tree._compare(key, endKey) >= 0;
     return this.iterRangeUntil(startKey, cond);
   }
 
-  getPrefix(prefix: string): AsyncIterable<KV> {
+  iterPrefix(prefix: string): AsyncIterable<KV> {
     const startKey = prefix;
     const cond = ([key, _value]: KV) => !key.startsWith(prefix);
     return this.iterRangeUntil(startKey, cond);

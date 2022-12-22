@@ -70,7 +70,7 @@ export abstract class KVStore {
   abstract putBigInt(key: string, value: bigint): Promise<boolean>;
 
   /**
-   * get all of the values in the KV store whose keys fall "lexicographically" from `startKey` to `endKey` (exclusive);
+   * return an iterator over all of the values in the KV store whose keys fall "lexicographically" from `startKey` to `endKey` (exclusive);
    *
    * note: this may be very slow depending on the underlying implementation.
    * note: the exact ordering key ordering is implementation-defined, but guaranteed to be consistent with JS's `>` for strings containing only printable characters
@@ -79,10 +79,10 @@ export abstract class KVStore {
    * @param endKey end key
    * @return an async iterator over existent key-value pairs in the range, sorted by key
    */
-  abstract getRange(startKey: string, endKey: string): AsyncIterable<KV>;
+  abstract iterRange(startKey: string, endKey: string): AsyncIterable<KV>;
 
   /**
-   * get all of the values in the KV store whose keys start with `prefix`;
+   * return an iterator over all of the values in the KV store whose keys start with `prefix`;
    *
    * note: this may be very slow depending on the underlying implementation.
    * note: the exact ordering key ordering is implementation-defined, but guaranteed to be consistent with JS's `>` for strings containing only printable characters
@@ -90,7 +90,7 @@ export abstract class KVStore {
    * @param prefix prefix
    * @return an async iterator over existent key-value pairs in the range, sorted by key
    */
-  abstract getPrefix(prefix: string): AsyncIterable<KV>;
+  abstract iterPrefix(prefix: string): AsyncIterable<KV>;
 
   /**
    * atomically put a batch of key-value pairs into the KV store

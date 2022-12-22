@@ -43,7 +43,7 @@ describe("InMemoryKVStore", async () => {
     await kv.putMany(rangeVals);
 
     let i = 0;
-    for await (const [key, value] of await kv.getRange("a", "e")) {
+    for await (const [key, value] of await kv.iterRange("a", "e")) {
       expect(key).to.eql(rangeVals[i][0]);
       expect(value).to.eql(rangeVals[i][1]);
       i++;
@@ -65,7 +65,7 @@ describe("InMemoryKVStore", async () => {
     await kv.putMany(prefixVals);
 
     let i = 0;
-    for await (const [key, value] of await kv.getPrefix("a")) {
+    for await (const [key, value] of await kv.iterPrefix("a")) {
       expect(key).to.eql(prefixVals[i][0]);
       expect(value).to.eql(prefixVals[i][1]);
       i++;
@@ -109,7 +109,7 @@ describe("InMemoryKVStore", async () => {
     const newKV = new InMemoryKVStore();
     await newKV.loadFromDump(dump);
 
-    for await (const [key, value] of await newKV.getRange("a", "f")) {
+    for await (const [key, value] of await newKV.iterRange("a", "f")) {
       expect(dump[key]).to.not.be.undefined;
       expect(value).to.eql(dump[key]);
     }
