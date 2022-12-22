@@ -122,8 +122,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   }
 
   afterEach(async () => {
-    await notesDBAlice.clear();
-    await notesDBBob.clear();
+    await notesDBAlice.kv.clear();
+    await notesDBBob.kv.clear();
     await updater.dropDB();
   });
 
