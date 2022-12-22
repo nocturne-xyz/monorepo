@@ -106,7 +106,7 @@ export class NotesDB {
   async getAllNotes(): Promise<AllNotes> {
     const allNotes = new Map<NoteAssetKey, IncludedNote[]>();
 
-    for await (const [, value] of this.kv.getPrefix(NOTES_PREFIX)) {
+    for await (const [, value] of this.kv.iterPrefix(NOTES_PREFIX)) {
       const note = JSON.parse(value);
       const asset = { address: note.asset, id: note.id };
       const noteAssetKey = NotesDB.formatNoteAssetKey(asset);
@@ -130,7 +130,7 @@ export class NotesDB {
     const noteAssetKey = NotesDB.formatNoteAssetKey(asset);
 
     const notes = [];
-    for await (const [, value] of this.kv.getPrefix(noteAssetKey)) {
+    for await (const [, value] of this.kv.iterPrefix(noteAssetKey)) {
       const note = JSON.parse(value);
       notes.push(note);
     }
