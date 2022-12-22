@@ -1,7 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import { connectSnap, getSnap, shouldDisplayReconnectButton } from "../utils";
+import {
+  clearDb,
+  connectSnap,
+  getSnap,
+  shouldDisplayReconnectButton,
+} from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
@@ -12,7 +17,6 @@ import {
   ClearDbButton,
   GetJoinSplitInputsButton,
   GetAllBalancesButton,
-  ABIForm,
 } from "../components";
 import {
   Action,
@@ -110,7 +114,7 @@ const ErrorMessage = styled.div`
   }
 `;
 
-const Playground = () => {
+const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
@@ -136,7 +140,7 @@ const Playground = () => {
     }
   };
 
-  const syncNotes = async () => {
+  const handleSyncNotesClick = async () => {
     try {
       await nocturneFrontendSDK!.syncNotes();
     } catch (e) {
@@ -145,7 +149,7 @@ const Playground = () => {
     }
   };
 
-  const syncLeaves = async () => {
+  const handleSyncLeavesClick = async () => {
     try {
       await nocturneFrontendSDK!.syncLeaves();
     } catch (e) {
@@ -154,7 +158,17 @@ const Playground = () => {
     }
   };
 
-  const proveJoinSplit = async () => {
+  const handleGetAllBalancesClick = async () => {
+    try {
+      const balances = await nocturneFrontendSDK!.getAllBalances();
+      console.log(balances);
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleGetJoinSplitInputs = async () => {
     const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
     const joinSplitRequest: JoinSplitRequest = {
       asset: { address: tokenAddress, id: ERC20_ID },
@@ -184,6 +198,15 @@ const Playground = () => {
       console.log(provenOperation);
     } catch (e) {
       console.error("error: ", e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleClearDb = async () => {
+    try {
+      await clearDb();
+    } catch (e) {
+      console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
@@ -244,28 +267,102 @@ const Playground = () => {
             />
           </Card>
         )}
-        {shouldDisplayReconnectButton(state.installedSnap) && (
-          <Notice>
-            <p>Please connect using MetaMask Flask to continue.</p>
-          </Notice>
-        )}
+        <Card
+          content={{
+            title: "Sync Notes",
+            description: "Sync notes.",
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        >
+          <SyncNotesButton
+            onClick={handleSyncNotesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
+        <Card
+          content={{
+            title: "Sync Leaves",
+            description: "Sync leaves.",
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        >
+          <SyncLeavesButton
+            onClick={handleSyncLeavesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
+        <Card
+          content={{
+            title: "Get All Balances",
+            description: "Get all balances",
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        >
+          <GetAllBalancesButton
+            onClick={handleGetAllBalancesClick}
+            disabled={!state.installedSnap}
+          />
+        </Card>
+        <Card
+          content={{
+            title: "Generate proof",
+            description: "Generate joinsplit proof",
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        >
+          <GetJoinSplitInputsButton
+            onClick={handleGetJoinSplitInputs}
+            disabled={!state.installedSnap}
+          />
+        </Card>
+        <Card
+          content={{
+            title: "Clear DB",
+            description: "Clear DB.",
+          }}
+          disabled={!state.installedSnap}
+          fullWidth={
+            state.isFlask &&
+            Boolean(state.installedSnap) &&
+            !shouldDisplayReconnectButton(state.installedSnap)
+          }
+        >
+          <ClearDbButton
+            onClick={handleClearDb}
+            disabled={!state.installedSnap}
+          />
+        </Card>
+        <Notice>
+          <p>
+            Please note that the <b>snap.manifest.json</b> and{" "}
+            <b>package.json</b> must be located in the server root directory and
+            the bundle must be hosted at the location specified by the location
+            field.
+          </p>
+        </Notice>
       </CardContainer>
-      {shouldDisplayReconnectButton(state.installedSnap) && (
-        <CardContainer>
-          <Card
-            content={{
-              title: "Contract Interaction",
-              description:
-                "Interact with the contract by pasting its ABI below",
-            }}
-            fullWidth
-          >
-            {nocturneFrontendSDK && <ABIForm sdk={nocturneFrontendSDK} />}
-          </Card>
-        </CardContainer>
-      )}
     </Container>
   );
 };
 
-export default Playground;
+export default Index;

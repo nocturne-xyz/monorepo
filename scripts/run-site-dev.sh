@@ -47,9 +47,13 @@ echo "Wallet contract address: $WALLET_CONTRACT_ADDR"
 echo "Token contract address: $TOKEN_CONTRACT_ADDR"
 
 SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
-SITE_INDEX_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
+SITE_OLD_INDEX_PAGE="$SCRIPT_DIR/../packages/site/src/pages/old-index.tsx"
+SITE_UTILS="$SCRIPT_DIR/../packages/site/src/utils/metamask.ts"
 sed -i '' -r -e "s/const WALLET_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$WALLET_CONTRACT_ADDR\";/g" $SNAP_INDEX_TS
-sed -i '' -r -e "s/const tokenAddress = \"0x[0-9a-faA-F]+\";/const tokenAddress = \"$TOKEN_CONTRACT_ADDR\";/g" $SITE_INDEX_PAGE
+sed -i '' -r -e "s/const tokenAddress = \"0x[0-9a-faA-F]+\";/const tokenAddress = \"$TOKEN_CONTRACT_ADDR\";/g" $SITE_OLD_INDEX_PAGE
+sed -i '' -r -e "s/const WALLET_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$WALLET_CONTRACT_ADDR\";/g" $SITE_UTILS
+
+
 
 wait $SITE_PID
 wait $SNAP_PID

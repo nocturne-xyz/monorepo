@@ -11,9 +11,10 @@ import { MetaMaskContext, MetamaskActions } from "../hooks";
 
 export type ABIFormProps = {
   sdk: NocturneFrontendSDK;
+  walletContract: Wallet,
 };
 
-export const ABIForm = ({ sdk }: ABIFormProps) => {
+export const ABIForm = ({ sdk, walletContract }: ABIFormProps) => {
   const [abiText, setABIText] = useState("");
   const [contractAddressText, setContractAddressText] = useState("");
   const [abi, setABI] = useState<ABIItem[] | undefined>(undefined);
@@ -72,6 +73,9 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
         operationRequest
       );
       console.log("Proven operation:", provenOperation);
+      const bundle = {
+        operations: [provenOperation],
+      };
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
