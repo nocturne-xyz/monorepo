@@ -36,7 +36,7 @@ export class NotesDB {
   }
 
   /**
-   * Parse a note key into an `Asset`. Parses note key of form NOTES_<address>_<id>_<nonce>
+   * Parse a note asset key into an `Asset`. Expects a key of form NOTES_<address>_<id>
    * into the `Asset` the note is for
    *
    * @returns asset a
