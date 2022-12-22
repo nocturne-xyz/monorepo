@@ -98,9 +98,9 @@ export class BundlerBatcher {
         const allTransactions = setJobStatusTransactions.concat([
           popTransaction,
         ]);
-        await this.redis.multi(allTransactions).exec((err) => {
-          if (err) {
-            throw Error(`BatcherDB job status + pop txs failed: ${err}`);
+        await this.redis.multi(allTransactions).exec((maybeErr) => {
+          if (maybeErr) {
+            throw Error(`BatcherDB job status + pop txs failed: ${maybeErr}`);
           }
         });
 

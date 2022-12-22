@@ -29,6 +29,7 @@ export class StatusDB {
   }
 
   getSetJobStatusTransaction(id: string, status: OperationStatus): string[] {
-    return ["set", StatusDB.jobStatusKey(id), status.toString()];
+    const key = StatusDB.jobStatusKey(id);
+    return ["set", key, status.toString()];
   }
 }

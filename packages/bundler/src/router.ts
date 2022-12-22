@@ -9,14 +9,14 @@ import {
 import { Request, Response } from "express";
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
-import { extractRelayError } from "./validation";
-import { assert } from "console";
+import { extractRelayError } from "./requestValidation";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
 import { getRedis, parseRequestBody } from "./utils";
 import { ethers } from "ethers";
 
 export class BundlerRouter {
+  redis: IORedis;
   queue: Queue<ProvenOperationJobData>;
   validator: OperationValidator;
   statusDB: StatusDB;
@@ -26,12 +26,12 @@ export class BundlerRouter {
     redis?: IORedis,
     provider?: ethers.providers.Provider
   ) {
-    const connection = getRedis(redis);
-    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection });
-    this.statusDB = new StatusDB(connection);
+    this.redis = getRedis(redis);
+    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: this.redis });
+    this.statusDB = new StatusDB(this.redis);
     this.validator = new OperationValidator(
       walletAddress,
-      connection,
+      this.redis,
       provider
     );
   }
@@ -83,13 +83,25 @@ export class BundlerRouter {
       operationJson,
     };
 
-    const job = await this.queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
+    // TODO: race condition between queue.add and redis transaction
+    await this.queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
       jobId,
     });
-    assert(job.id == jobId); // TODO: can remove?
 
-    await this.statusDB.setJobStatus(jobId, OperationStatus.QUEUED);
-    await this.validator.addNullifiers(operation);
+    const setJobStatusTransaction = this.statusDB.getSetJobStatusTransaction(
+      jobId,
+      OperationStatus.QUEUED
+    );
+    const addNfsTransaction =
+      this.validator.nullifierDB.getAddNullifierTransactions(operation);
+    const allTransactions = addNfsTransaction.concat([setJobStatusTransaction]);
+    await this.redis.multi(allTransactions).exec((maybeErr) => {
+      if (maybeErr) {
+        throw new Error(
+          `Failed to execute set jobs status + add nfs transaction: ${maybeErr}`
+        );
+      }
+    });
     return jobId;
   }
 }

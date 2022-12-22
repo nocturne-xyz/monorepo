@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { extractRelayError } from "../src/validation";
+import { extractRelayError } from "../src/requestValidation";
 import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
 
 describe("JSON Request Validation", async () => {
