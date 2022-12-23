@@ -125,7 +125,7 @@ export async function setup(): Promise<NocturneSetup> {
 
 function getSubtreeUpdateContractFactory(): ethers.ContractFactory {
   if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
-    return SubtreeUpdateVerifier__factory
+    return SubtreeUpdateVerifier__factory;
   }
 
   return TestSubtreeUpdateVerifier__factory;

@@ -12,7 +12,11 @@ import {
   NotesDB,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds, getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "./utils";
+import {
+  depositFunds,
+  getSubtreeUpdateProver,
+  getSubtreeUpdaterDelay,
+} from "./utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 
 const PER_SPEND_AMOUNT = 100n;

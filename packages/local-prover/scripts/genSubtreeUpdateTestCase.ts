@@ -9,7 +9,10 @@ import {
   Note,
   NoteTrait,
 } from "@nocturne-xyz/sdk";
-import { LocalSubtreeUpdateProver, subtreeUpdateInputsFromBatch } from "../src/subtreeUpdate";
+import {
+  LocalSubtreeUpdateProver,
+  subtreeUpdateInputsFromBatch,
+} from "../src/subtreeUpdate";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
@@ -34,17 +37,17 @@ const nocturneAddr = nocturneSigner.address;
 const tree = new BinaryPoseidonTree();
 
 // dummy notes
-const batch: (Note | bigint)[] = [...Array(BinaryPoseidonTree.BATCH_SIZE).keys()].map(
-  (_) => {
-    return {
-      owner: nocturneAddr,
-      nonce: 1n,
-      asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      id: 5n,
-      value: 100n,
-    };
-  }
-);
+const batch: (Note | bigint)[] = [
+  ...Array(BinaryPoseidonTree.BATCH_SIZE).keys(),
+].map((_) => {
+  return {
+    owner: nocturneAddr,
+    nonce: 1n,
+    asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    id: 5n,
+    value: 100n,
+  };
+});
 
 const noteCommitmentIndices = [1, 7, 9];
 for (const i of noteCommitmentIndices) {

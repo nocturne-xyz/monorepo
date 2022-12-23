@@ -6,9 +6,7 @@ import {
   SubtreeUpdateProver,
   MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
-import {
-  RapidsnarkSubtreeUpdateProver
-} from "@nocturne-xyz/subtree-updater";
+import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import { ethers } from "hardhat";
@@ -68,7 +66,10 @@ export function sleep(ms: number) {
 }
 
 export function getSubtreeUpdateProver(): SubtreeUpdateProver {
-  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" && process.env.USE_RAPIDSNARK === "true") {
+  if (
+    process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" &&
+    process.env.USE_RAPIDSNARK === "true"
+  ) {
     return new RapidsnarkSubtreeUpdateProver(
       EXECUTABLE_CMD,
       WITNESS_GEN_EXECUTABLE_PATH,
@@ -78,18 +79,17 @@ export function getSubtreeUpdateProver(): SubtreeUpdateProver {
     );
   } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
     const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-    return new LocalSubtreeUpdateProver(
-      WASM_PATH,
-      ZKEY_PATH,
-      VKEY
-    )
+    return new LocalSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
   }
 
   return new MockSubtreeUpdateProver();
 }
 
 export function getSubtreeUpdaterDelay(): number {
-  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" && process.env.USE_RAPIDSNARK === "true") {
+  if (
+    process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" &&
+    process.env.USE_RAPIDSNARK === "true"
+  ) {
     return MOCK_SUBTREE_UPDATER_DELAY + 8000;
   } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
     return MOCK_SUBTREE_UPDATER_DELAY + 60000;
