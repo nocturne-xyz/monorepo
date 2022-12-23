@@ -51,17 +51,14 @@ for (const i of noteCommitmentIndices) {
   batch[i] = NoteTrait.toCommitment(batch[i] as Note);
 }
 
-for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-  tree.insert(0n);
-}
-const merkleProof = tree.getProof(0);
-for (let i = 0; i < BinaryPoseidonTree.BATCH_SIZE; i++) {
-  if (typeof batch[i] === "bigint") {
-    tree.update(i, batch[i]);
+for (const noteOrCommitment of batch) {
+  if (typeof noteOrCommitment === "bigint") {
+    tree.insert(noteOrCommitment);
   } else {
-    tree.update(i, NoteTrait.toCommitment(batch[i] as Note));
+    tree.insert(NoteTrait.toCommitment(noteOrCommitment));
   }
 }
+const merkleProof = tree.getProof(0);
 
 const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
 console.log(inputs);
