@@ -197,8 +197,6 @@ export class SubtreeUpdater {
     const merkleProof = this.tree.getProof(subtreeIndex);
     const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
     const { proof } = await this.prover.proveSubtreeUpdate(inputs);
-    console.log("inputs:", inputs);
-    console.log("proof:", proof);
     return proof;
   }
 

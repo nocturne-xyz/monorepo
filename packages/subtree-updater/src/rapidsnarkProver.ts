@@ -2,6 +2,7 @@ import {
   SubtreeUpdateProver,
   SubtreeUpdateInputs,
   SubtreeUpdateProofWithPublicSignals,
+  BaseProof,
 } from "@nocturne-xyz/sdk";
 
 //@ts-ignore
@@ -38,7 +39,7 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const proofJsonPath = `${this.tmpDir}/_proof.json`;
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
-    await fs.promises.writeFile(inputJsonPath, serializeJSONWithBigintsNoSuffix(inputs));
+    await fs.promises.writeFile(inputJsonPath, serializeRapidsnarkInputs(inputs));
     await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
@@ -51,8 +52,8 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
       fs.promises.readFile(publicSignalsPath, "utf-8"),
     ]);
 
-    const proof = JSON.parse(proofStr);
-    const publicSignals = JSON.parse(publicSignalsStr);
+    const proof = deserializeRapidsnarkProof(proofStr);
+    const publicSignals = deserializeRapidsnarkPublicSignals(publicSignalsStr);
 
     return {
       proof,
@@ -86,9 +87,20 @@ async function runCommand(cmd: string): Promise<[string, string]> {
   });
 }
 
+function deserializeRapidsnarkProof(proofStr: string): BaseProof {
+  const proof = JSON.parse(proofStr);
+  proof.pi_a = proof.pi_a.map((x: string) => BigInt(x));
+  proof.pi_b = proof.pi_b.map((point: string[]) => point.map((x: string) => BigInt(x)));
+  proof.pi_c = proof.pi_c.map((x: string) => BigInt(x));
+  return proof;
+}
 
-function serializeJSONWithBigintsNoSuffix(obj: any): string {
-  return JSON.stringify(obj, (_key, value) =>
+function deserializeRapidsnarkPublicSignals(publicSignalsStr: string): [bigint, bigint, bigint, bigint] {
+  return JSON.parse(publicSignalsStr).map((x: string) => BigInt(x));
+}
+
+function serializeRapidsnarkInputs(inputs: SubtreeUpdateInputs): string {
+  return JSON.stringify(inputs, (_key, value) =>
     typeof value === 'bigint'
         ? value.toString()
         : value

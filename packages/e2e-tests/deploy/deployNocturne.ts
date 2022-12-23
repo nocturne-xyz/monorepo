@@ -123,6 +123,14 @@ export async function setup(): Promise<NocturneSetup> {
   };
 }
 
+function getSubtreeUpdateContractFactory(): ethers.ContractFactory {
+  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
+    return SubtreeUpdateVerifier__factory
+  }
+
+  return TestSubtreeUpdateVerifier__factory;
+}
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // @ts-ignore
   const { deployments, getNamedAccounts } = hre;
@@ -176,14 +184,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deterministicDeployment: true,
   });
 };
-
-function getSubtreeUpdateContractFactory(): ethers.ContractFactory {
-  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
-    return SubtreeUpdateVerifier__factory
-  }
-
-  return TestSubtreeUpdateVerifier__factory;
-}
 
 export default func;
 func.tags = ["NocturneContracts"];
