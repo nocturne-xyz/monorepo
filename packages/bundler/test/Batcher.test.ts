@@ -92,7 +92,7 @@ describe("BundlerBatcher", async () => {
       jobIds.push(jobId);
     }
 
-    await Promise.race([sleep(1500), batcherPromise]);
+    await Promise.race([sleep(3000), batcherPromise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
