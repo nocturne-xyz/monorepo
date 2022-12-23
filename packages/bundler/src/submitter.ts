@@ -78,12 +78,20 @@ export class BundlerSubmitter {
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
-    await Promise.all(
-      operations.map(async (op) => {
-        const jobId = calculateOperationDigest(op).toString();
-        await this.statusDB.setJobStatus(jobId, OperationStatus.IN_FLIGHT);
-      })
-    );
+    const inflightStatusTransactions = operations.map((op) => {
+      const jobId = calculateOperationDigest(op).toString();
+      return this.statusDB.getSetJobStatusTransaction(
+        jobId,
+        OperationStatus.IN_FLIGHT
+      );
+    });
+    await this.redis.multi(inflightStatusTransactions).exec((maybeErr) => {
+      if (maybeErr) {
+        throw new Error(
+          `Failed to set job status transactions to inflight: ${maybeErr}`
+        );
+      }
+    });
 
     // Hardcode gas limit to skip eth_estimateGas
     const tx = await this.walletContract.processBundle(
@@ -99,7 +107,7 @@ export class BundlerSubmitter {
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    for (const { args } of matchingEvents) {
+    const executedStatusTransactions = matchingEvents.map(({ args }) => {
       const digest = args.operationDigest.toBigInt();
       const status = args.opSuccess
         ? OperationStatus.EXECUTED_SUCCESS
@@ -108,7 +116,18 @@ export class BundlerSubmitter {
       console.log(
         `Setting operation with digest ${digest} to status ${status}`
       );
-      await this.statusDB.setJobStatus(digest.toString(), status);
-    }
+      return this.statusDB.getSetJobStatusTransaction(
+        digest.toString(),
+        status
+      );
+    });
+
+    await this.redis.multi(executedStatusTransactions).exec((maybeErr) => {
+      if (maybeErr) {
+        throw new Error(
+          `Failed to set job status transactions post-op: ${maybeErr}`
+        );
+      }
+    });
   }
 }

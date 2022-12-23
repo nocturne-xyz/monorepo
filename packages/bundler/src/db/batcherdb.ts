@@ -1,5 +1,6 @@
 import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
+import { RedisTransaction } from ".";
 
 const BATCH_DB_NAME = "BATCH_DB";
 
@@ -38,11 +39,11 @@ export class BatcherDB<T> {
     return stringifiedItems.map(JSON.parse) as T[];
   }
 
-  getAddTransaction(elem: T): string[] {
+  getAddTransaction(elem: T): RedisTransaction {
     return ["rpush", BATCH_DB_NAME, JSON.stringify(elem)];
   }
 
-  getPopTransaction(count: number): string[] {
+  getPopTransaction(count: number): RedisTransaction {
     return ["lpop", BATCH_DB_NAME, count.toString()];
   }
 }

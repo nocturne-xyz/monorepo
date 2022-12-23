@@ -47,7 +47,7 @@ export class BundlerRouter {
 
     console.log("Validating nullifiers");
     const operation = errorOrOperation;
-    const nfConflictErr = await this.validator.extractNullifierConflictError(
+    const nfConflictErr = await this.validator.checkNullifierConflictError(
       operation
     );
     if (nfConflictErr) {
@@ -56,7 +56,7 @@ export class BundlerRouter {
     }
 
     console.log("Validating reverts");
-    const revertErr = await this.validator.extractRevertError(operation);
+    const revertErr = await this.validator.checkRevertError(operation);
     if (revertErr) {
       res.status(400).json(revertErr);
       return;

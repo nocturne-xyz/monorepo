@@ -1,5 +1,6 @@
 import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
+import { RedisTransaction } from ".";
 
 const NULLIFIER_PREFIX = "NULLIFIER_";
 
@@ -35,7 +36,7 @@ export class NullifierDB {
     return (await this.redis.get(key)) != undefined;
   }
 
-  getAddNullifierTransactions(operation: ProvenOperation): string[][] {
+  getAddNullifierTransactions(operation: ProvenOperation): RedisTransaction[] {
     const digest = calculateOperationDigest(operation).toString();
     return operation.joinSplitTxs.flatMap(({ nullifierA, nullifierB }) => {
       return [
@@ -45,7 +46,10 @@ export class NullifierDB {
     });
   }
 
-  getAddNullifierTransaction(nullifier: bigint, jobId: string): string[] {
+  getAddNullifierTransaction(
+    nullifier: bigint,
+    jobId: string
+  ): RedisTransaction {
     const key = NullifierDB.nullifierKey(nullifier);
     return ["set", key, jobId];
   }

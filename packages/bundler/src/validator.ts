@@ -6,7 +6,7 @@ import {
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
-import { NullifierDB } from "./db";
+import { NullifierDB, RedisTransaction } from "./db";
 import { ErrString } from "./common";
 
 export class OperationValidator {
@@ -38,11 +38,11 @@ export class OperationValidator {
     return await this.nullifierDB.addNullifiers(operation);
   }
 
-  getAddNullifiersTransaction(operation: ProvenOperation): string[][] {
+  getAddNullifiersTransaction(operation: ProvenOperation): RedisTransaction[] {
     return this.nullifierDB.getAddNullifierTransactions(operation);
   }
 
-  async extractNullifierConflictError(
+  async checkNullifierConflictError(
     operation: ProvenOperation
   ): Promise<ErrString | undefined> {
     const opNfSet = new Set<bigint>();
@@ -73,7 +73,7 @@ export class OperationValidator {
     return undefined;
   }
 
-  async extractRevertError(
+  async checkRevertError(
     operation: ProvenOperation
   ): Promise<ErrString | undefined> {
     const id = calculateOperationDigest(operation).toString();

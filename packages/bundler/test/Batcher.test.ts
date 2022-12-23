@@ -46,7 +46,7 @@ describe("BundlerBatcher", async () => {
     queue: Queue<ProvenOperationJobData>
   ): Promise<string> {
     let operationObj = VALID_PROVEN_OPERATION_OBJ;
-    operationObj.gasLimit = Math.floor(Math.random() * 100).toString() + "n";
+    operationObj.gasLimit = Math.floor(Math.random() * 100000).toString() + "n";
     const operationJson = JSON.stringify(operationObj);
     const operation = JSON.parse(operationJson);
 

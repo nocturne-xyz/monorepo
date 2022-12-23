@@ -5,7 +5,7 @@ import { parseRequestBody } from "../utils";
 import validateRelay from "./relay";
 
 export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
-  const maybeErr = extractRelayError(body);
+  const maybeErr = checkRelayError(body);
   if (maybeErr) {
     return maybeErr;
   } else {
@@ -13,11 +13,11 @@ export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
   }
 }
 
-function extractRelayError(data: any): ErrString | undefined {
-  return extractInputError(validateRelay, data);
+function checkRelayError(data: any): ErrString | undefined {
+  return checkInputError(validateRelay, data);
 }
 
-function extractInputError<T>(
+function checkInputError<T>(
   validator: ValidateFunction<T>,
   data: any
 ): ErrString | undefined {

@@ -1,4 +1,5 @@
 import IORedis from "ioredis";
+import { RedisTransaction } from ".";
 import { OperationStatus } from "../common";
 
 const JOB_STATUS_PREFIX = "JOB_STATUS_";
@@ -28,7 +29,10 @@ export class StatusDB {
     return OperationStatus[statusString as keyof typeof OperationStatus];
   }
 
-  getSetJobStatusTransaction(id: string, status: OperationStatus): string[] {
+  getSetJobStatusTransaction(
+    id: string,
+    status: OperationStatus
+  ): RedisTransaction {
     const key = StatusDB.jobStatusKey(id);
     return ["set", key, status.toString()];
   }
