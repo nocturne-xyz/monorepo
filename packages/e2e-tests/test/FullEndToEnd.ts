@@ -17,7 +17,6 @@ import {
   OperationRequest,
   NotesDB,
   LocalMerkleProver,
-  MockSubtreeUpdateProver,
   query,
   calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
