@@ -65,7 +65,8 @@
     },
     "test:e2e": {
       "dependsOn": ["build"],
-      "outputs": []
+      "outputs": [],
+      "env": ["USE_RAPIDSNARK", "ACTUALLY_PROVE_SUBTREE_UPDATE"]
     }
   }
 }

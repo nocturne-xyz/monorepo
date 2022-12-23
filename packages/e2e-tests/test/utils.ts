@@ -10,11 +10,11 @@ import {
   RapidsnarkSubtreeUpdateProver
 } from "@nocturne-xyz/subtree-updater";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
+import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import { ethers } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 import findWorkspaceRoot from "find-yarn-workspace-root";
-import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 
 const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const MOCK_SUBTREE_UPDATER_DELAY = 2100;
@@ -68,34 +68,32 @@ export function sleep(ms: number) {
 }
 
 export function getSubtreeUpdateProver(): SubtreeUpdateProver {
-  switch ([process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true",  process.env.USE_RAPIDSNARK === "true"]) {
-    case [true, true]:
-      return new RapidsnarkSubtreeUpdateProver(
-        EXECUTABLE_CMD,
-        WITNESS_GEN_EXECUTABLE_PATH,
-        ZKEY_PATH,
-        VKEY_PATH,
-        TMP_PATH
-      );
-    case [true, false]:
-      const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-      return new LocalSubtreeUpdateProver(
-        WASM_PATH,
-        ZKEY_PATH,
-        VKEY
-      )
-    default:
-      return new MockSubtreeUpdateProver();
+  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" && process.env.USE_RAPIDSNARK === "true") {
+    return new RapidsnarkSubtreeUpdateProver(
+      EXECUTABLE_CMD,
+      WITNESS_GEN_EXECUTABLE_PATH,
+      ZKEY_PATH,
+      VKEY_PATH,
+      TMP_PATH
+    );
+  } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
+    const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+    return new LocalSubtreeUpdateProver(
+      WASM_PATH,
+      ZKEY_PATH,
+      VKEY
+    )
   }
+
+  return new MockSubtreeUpdateProver();
 }
 
 export function getSubtreeUpdaterDelay(): number {
-  switch ([process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true",  process.env.USE_RAPIDSNARK === "true"]) {
-    case [true, true]:
-      return MOCK_SUBTREE_UPDATER_DELAY + 8000;
-    case [true, false]:
-      return MOCK_SUBTREE_UPDATER_DELAY + 60000;
-    default:
-      return MOCK_SUBTREE_UPDATER_DELAY;
+  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" && process.env.USE_RAPIDSNARK === "true") {
+    return MOCK_SUBTREE_UPDATER_DELAY + 8000;
+  } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
+    return MOCK_SUBTREE_UPDATER_DELAY + 60000;
   }
+
+  return MOCK_SUBTREE_UPDATER_DELAY;
 }
