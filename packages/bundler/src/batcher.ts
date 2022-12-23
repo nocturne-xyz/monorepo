@@ -21,13 +21,13 @@ export class BundlerBatcher {
   readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
-  constructor(maxSeconds?: number, batchSize?: number, redis?: IORedis) {
+  constructor(maxLatencySeconds?: number, batchSize?: number, redis?: IORedis) {
     if (batchSize) {
       this.BATCH_SIZE = batchSize;
     }
 
-    if (maxSeconds) {
-      this.MAX_BATCH_LATENCY_SECS = maxSeconds;
+    if (maxLatencySeconds) {
+      this.MAX_BATCH_LATENCY_SECS = maxLatencySeconds;
     }
 
     const connection = getRedis(redis);
