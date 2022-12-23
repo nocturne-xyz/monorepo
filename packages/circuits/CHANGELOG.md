@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add rapidsnark setup script for subtree updater
 - Add batch verifier method to auto-generated solidity verifiers
 - New `joinsplit` and `joinsplit_compliance` circuit
   - Removed Spend2 and old circuits
