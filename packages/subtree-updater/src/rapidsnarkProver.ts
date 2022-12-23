@@ -3,7 +3,6 @@ import {
   SubtreeUpdateInputs,
   SubtreeUpdateProofWithPublicSignals,
 } from "@nocturne-xyz/sdk";
-import * as JSON from "bigint-json-serialization";
 
 //@ts-ignore
 import * as snarkjs from "snarkjs";
@@ -39,10 +38,14 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const proofJsonPath = `${this.tmpDir}/_proof.json`;
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
-    await fs.promises.writeFile(inputJsonPath, JSON.stringify(inputs));
-    await runCommand(
+    await fs.promises.writeFile(inputJsonPath, serializeJSONWithBigintsNoSuffix(inputs));
+    const [stdout, stderr] = await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
+    console.log("stdout:", stdout);
+    if (stderr) {
+      console.error("stderr:", stderr);
+    }
     await runCommand(
       `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`
     );
@@ -54,6 +57,9 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
 
     const proof = JSON.parse(proofStr);
     const publicSignals = JSON.parse(publicSignalsStr);
+
+    console.log("proof:", proof);
+    console.log("publicSignals:", publicSignals);
 
     return {
       proof,
@@ -82,7 +88,16 @@ async function runCommand(cmd: string): Promise<[string, string]> {
       const output = data.toString();
       stderr += output;
     });
-    child.on("error", reject);
+    child.on("error", () => reject(stderr));
     child.on("exit", () => resolve([stdout, stderr]));
   });
+}
+
+
+function serializeJSONWithBigintsNoSuffix(obj: any): string {
+  return JSON.stringify(obj, (_key, value) =>
+    typeof value === 'bigint'
+        ? value.toString()
+        : value
+  );
 }
