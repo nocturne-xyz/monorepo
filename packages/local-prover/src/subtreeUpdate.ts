@@ -6,9 +6,9 @@ import {
   SubtreeUpdateInputs,
   SubtreeUpdateProofWithPublicSignals,
   NoteTrait,
+  bigintToBEPadded,
 } from "@nocturne-xyz/sdk";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-import { bigintToBuf, hexToBigint } from "bigint-conversion";
 import { sha256 } from "js-sha256";
 
 //@ts-ignore
@@ -86,7 +86,7 @@ export function subtreeUpdateInputsFromBatch(
   for (const noteOrCommitment of batch) {
     if (typeof noteOrCommitment === "bigint") {
       const nc = noteOrCommitment;
-      accumulatorPreimage.push(...[...new Uint8Array(bigintToBuf(nc, true))]);
+      accumulatorPreimage.push(...bigintToBEPadded(nc, 32));
       leaves.push(nc);
       bitmap.push(0n);
 
@@ -112,7 +112,7 @@ export function subtreeUpdateInputsFromBatch(
   }
 
   // accumulatorHash
-  const accumulatorHashU256 = hexToBigint(sha256.hex(accumulatorPreimage));
+  const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));
   const [accumulatorHashHi, accumulatorHash] =
     bigInt256ToFieldElems(accumulatorHashU256);
 
