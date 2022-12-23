@@ -2,7 +2,7 @@ import { program } from "commander";
 import run from "./commands/run";
 import * as dotenv from "dotenv";
 
-export async function main() {
+export default async function main(): Promise<void> {
   dotenv.config();
 
   program
