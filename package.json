@@ -15,6 +15,7 @@
     "test": "yarn turbo run test --filter=!@nocturne-xyz/circuits...",
     "test:e2e": "yarn turbo run test:e2e --filter=@nocturne-xyz/e2e-tests",
     "test:unit": "yarn turbo run test:unit --filter=!@nocturne-xyz/circuits...",
+    "test:ci": "yarn turbo run test:ci --filter=!@nocturne-xyz/circuits...",
     "dev:site": "./scripts/run-site-dev.sh"
   },
   "devDependencies": {
