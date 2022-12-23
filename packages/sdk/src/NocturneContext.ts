@@ -29,10 +29,9 @@ import {
 } from "./proof/joinsplit";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NocturneDB } from "./sdk/db";
-import { NotesManager } from "./sdk";
+import { NotesManager, getJoinSplitRequestTotalValue } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
-import { getJoinSplitRequestTotalValue } from "./sdk/utils";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;

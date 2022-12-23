@@ -2,10 +2,14 @@ import { ethers } from "ethers";
 import {
   SNARK_SCALAR_FIELD,
   PreSignOperation,
-  PreSignJoinSplitTx,
+  BaseJoinSplitTx,
+  PreProofOperation,
+  ProvenOperation,
 } from "../commonTypes";
 
-function hashOperation(op: PreSignOperation): string {
+function hashOperation(
+  op: PreSignOperation | PreProofOperation | ProvenOperation
+): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let payload = [] as any;
   for (const action of op.actions) {
@@ -62,7 +66,7 @@ function hashOperation(op: PreSignOperation): string {
   return ethers.utils.keccak256(payload);
 }
 
-function hashJoinSplit(joinsplit: PreSignJoinSplitTx): string {
+function hashJoinSplit(joinsplit: BaseJoinSplitTx): string {
   const payload = ethers.utils.solidityPack(
     [
       "uint256",
@@ -89,7 +93,9 @@ function hashJoinSplit(joinsplit: PreSignJoinSplitTx): string {
   return ethers.utils.keccak256(payload);
 }
 
-export function calculateOperationDigest(operation: PreSignOperation): bigint {
+export function calculateOperationDigest(
+  operation: PreSignOperation | PreProofOperation | ProvenOperation
+): bigint {
   const operationHash = hashOperation(operation);
   return BigInt(operationHash) % SNARK_SCALAR_FIELD;
 }

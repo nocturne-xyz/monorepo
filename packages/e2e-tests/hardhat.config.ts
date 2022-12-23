@@ -22,9 +22,8 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     localhost: {
-      live: false,
+      url: "http://localhost:8545",
       saveDeployments: false,
-      tags: ["local"],
     },
   },
 };
