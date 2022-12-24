@@ -43,7 +43,8 @@ export class MerkleDB {
   }
 
   private async *getLeavesIterator(): AsyncIterable<bigint> {
-    for await (const [_key, value] of this.kv.iterPrefix(LEAVES_PREFIX)) {
+    const iterPrefix = await this.kv.iterPrefix(LEAVES_PREFIX);
+    for await (const [_key, value] of iterPrefix) {
       yield BigInt(value);
     }
   }

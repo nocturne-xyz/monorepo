@@ -79,7 +79,10 @@ export abstract class KVStore {
    * @param endKey end key
    * @return an async iterator over existent key-value pairs in the range, sorted by key
    */
-  abstract iterRange(startKey: string, endKey: string): AsyncIterable<KV>;
+  abstract iterRange(
+    startKey: string,
+    endKey: string
+  ): Promise<AsyncIterable<KV>>;
 
   /**
    * return an iterator over all of the values in the KV store whose keys start with `prefix`;
@@ -90,7 +93,7 @@ export abstract class KVStore {
    * @param prefix prefix
    * @return an async iterator over existent key-value pairs in the range, sorted by key
    */
-  abstract iterPrefix(prefix: string): AsyncIterable<KV>;
+  abstract iterPrefix(prefix: string): Promise<AsyncIterable<KV>>;
 
   /**
    * atomically put a batch of key-value pairs into the KV store
