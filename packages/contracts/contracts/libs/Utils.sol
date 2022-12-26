@@ -10,6 +10,11 @@ library Utils {
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
+    // return the minimum of the two values
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return (a >= b) ? b : a;
+    }
+
     // hash array of field elements / uint256s as big-endian bytes with sha256
     function sha256FieldElems(
         uint256[] memory elems

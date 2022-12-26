@@ -31,11 +31,11 @@ contract BalanceManager is
     function onERC721Received(
         address, // operator
         address, // from
-        uint256 tokenId,
+        uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
         _receivedTokens.push(
-            Utils._encodeAsset(AssetType.ERC721, msg.sender, tokenId)
+            Utils._encodeAsset(AssetType.ERC721, msg.sender, id)
         );
         return IERC721Receiver.onERC721Received.selector;
     }
@@ -102,11 +102,8 @@ contract BalanceManager is
                 gasAssetAddr == joinSplitTxs[i].encodedAddr &&
                 gasAssetId == joinSplitTxs[i].encodedId
             ) {
-                uint256 gasPayment = (joinSplitTxs[i].publicSpend >
-                    gasToReserve)
-                    ? gasToReserve
-                    : joinSplitTxs[i].publicSpend;
-                valueToTransfer = joinSplitTxs[i].publicSpend - gasPayment;
+                uint256 gasPayment = Utils.min(joinSplitTxs[i].publicSpend, gasToReserve);
+                valueToTransfer -= gasPayment;
                 gasToReserve -= gasPayment;
             }
             if (valueToTransfer > 0) {
