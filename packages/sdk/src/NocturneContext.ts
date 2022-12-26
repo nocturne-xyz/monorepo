@@ -76,11 +76,7 @@ export class NocturneContext {
    * operation request's asset requests. It will then generate joinsplit proofs
    * for each and include that in the final `ProvenOperation`.
    *
-   * @param OperationRequest Asset requested to spend
-   * @param joinSplit{Wasm,Zkey}Path paths to circuit runtime and prooving key
-   * @param refundAddr Optional refund address. Context will generate
-   * rerandomized address if left empty
-   * @param gasLimit Gas limit
+   * @param OperationRequest
    */
   async tryCreateProvenOperation(
     operationRequest: OperationRequest
@@ -111,10 +107,7 @@ export class NocturneContext {
    * fulfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
    *
-   * @param operationRequest Operation request
-   * @param refundAddr Optional refund address. Context will generate
-   * rerandomized address if left empty
-   * @param gasLimit Gas limit
+   * @param operationRequest
    */
   async tryGetPreProofOperation(
     operationRequest: OperationRequest
@@ -467,7 +460,7 @@ export class NocturneContext {
    * could exceed the requested amount.
    *
    * @param joinSplitRequest request
-   * @return a list of included notes to spend.
+   * @param largestFirst indicate large to small ordering, defaults to false
    */
   async gatherMinimumNotes(
     joinSplitRequest: JoinSplitRequest,
@@ -525,6 +518,10 @@ export class NocturneContext {
 
   /**
    * Generate an operation request for a payment.
+   *
+   * @param asset Payment asset
+   * @param receiver Payment receiver
+   * @param value Payment value
    */
   genPaymentRequest(
     asset: Asset,
