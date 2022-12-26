@@ -78,7 +78,7 @@ contract BalanceManager is
     function _makeDeposit(Deposit calldata deposit) internal {
         NocturneAddress calldata depositAddr = deposit.depositAddr;
 
-        _handleRefund(
+        _handleRefundNote(
             depositAddr,
             deposit.encodedAddr,
             deposit.encodedId,
@@ -88,24 +88,34 @@ contract BalanceManager is
         require(_vault.makeDeposit(deposit), "Deposit failed");
     }
 
+    // Process all joinSplitTxs and request all declared publicSpend from
+    // the vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
     function _handleAllSpends(
         JoinSplitTransaction[] calldata joinSplitTxs,
         uint256 maxGasFee
     ) internal {
-        uint256 gasToReserve = maxGasFee;
+        uint256 gasLeftToReserve = maxGasFee;
         uint256 gasAssetAddr = joinSplitTxs[0].encodedAddr;
         uint256 gasAssetId = joinSplitTxs[0].encodedId;
         for (uint256 i = 0; i < joinSplitTxs.length; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
             uint256 valueToTransfer = joinSplitTxs[i].publicSpend;
+            // Try to reserve gas fee if there's more to reserve and this
+            // joinSplitTx is spending the gasAsset
             if (
+                gasLeftToReserve > 0 &&
                 gasAssetAddr == joinSplitTxs[i].encodedAddr &&
                 gasAssetId == joinSplitTxs[i].encodedId
             ) {
-                uint256 gasPayment = Utils.min(joinSplitTxs[i].publicSpend, gasToReserve);
-                valueToTransfer -= gasPayment;
-                gasToReserve -= gasPayment;
+                // We will reserve as much as we can, upto the public spend
+                // amount or the maximum amount to be reserved
+                uint256 gasPaymentThisJoinSplit = Utils.min(joinSplitTxs[i].publicSpend, gasLeftToReserve);
+                // Deduct gas payment from value to transfer to wallet
+                valueToTransfer -= gasPaymentThisJoinSplit;
+                // Deduct gas payment from the amoung to be reserved
+                gasLeftToReserve -= gasPaymentThisJoinSplit;
             }
+            // No need to process the transfer of "0" value
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
                     EncodedAsset({
@@ -116,7 +126,7 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasToReserve == 0, "Not enough gas tokens unwrapped.");
+        require(gasLeftToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
     function _transferAssetTo(
@@ -160,40 +170,10 @@ contract BalanceManager is
         delete _receivedTokens;
 
         for (uint256 i = 0; i < tokensToProcess.length; i++) {
-            (AssetType assetType, address assetAddr, uint256 id) = Utils
-                ._decodeAsset(tokensToProcess[i]);
-            uint256 value;
-            if (assetType == AssetType.ERC20) {
-                value = IERC20(assetAddr).balanceOf(address(this));
-                if (value != 0) {
-                    require(
-                        IERC20(assetAddr).transfer(address(_vault), value),
-                        "Error sending funds to vault"
-                    );
-                }
-            } else if (assetType == AssetType.ERC721) {
-                if (IERC721(assetAddr).ownerOf(id) == address(this)) {
-                    value = 1;
-                    IERC721(assetAddr).transferFrom(
-                        address(this),
-                        address(_vault),
-                        id
-                    );
-                }
-            } else if (assetType == AssetType.ERC1155) {
-                value = IERC1155(assetAddr).balanceOf(address(this), id);
-                if (value != 0) {
-                    IERC1155(assetAddr).safeTransferFrom(
-                        address(this),
-                        address(_vault),
-                        id,
-                        value,
-                        ""
-                    );
-                }
-            }
+            uint256 value = _balanceOf(tokensToProcess[i]);
             if (value != 0) {
-                _handleRefund(
+                _transferAssetTo(tokensToProcess[i], address(_vault), value);
+                _handleRefundNote(
                     refundAddr,
                     tokensToProcess[i].encodedAddr,
                     tokensToProcess[i].encodedId,
@@ -201,5 +181,20 @@ contract BalanceManager is
                 );
             }
         }
+    }
+
+    function _balanceOf(EncodedAsset memory encodedAsset) internal view returns (uint256) {
+        (AssetType assetType, address assetAddr, uint256 id) = Utils._decodeAsset(encodedAsset);
+        uint256 value;
+        if (assetType == AssetType.ERC20) {
+            value = IERC20(assetAddr).balanceOf(address(this));
+        } else if (assetType == AssetType.ERC721) {
+            if (IERC721(assetAddr).ownerOf(id) == address(this)) {
+                value = 1;
+            }
+        } else if (assetType == AssetType.ERC1155) {
+            value = IERC1155(assetAddr).balanceOf(address(this), id);
+        }
+        return value;
     }
 }

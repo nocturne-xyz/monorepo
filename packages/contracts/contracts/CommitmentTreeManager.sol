@@ -147,7 +147,7 @@ contract CommitmentTreeManager {
         emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
-    function _handleRefund(
+    function _handleRefundNote(
         NocturneAddress memory refundAddr,
         uint256 encodedAddr,
         uint256 encodedId,
