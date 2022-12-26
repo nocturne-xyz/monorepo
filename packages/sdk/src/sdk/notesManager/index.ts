@@ -1,4 +1,4 @@
-import { NocturneDB } from "../db";
+import { NotesDB } from "../db";
 import { IncludedNote, NoteTrait } from "../note";
 import { NocturneSigner } from "../signer";
 import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
@@ -12,10 +12,10 @@ export interface JoinSplitEvent {
 }
 
 export abstract class NotesManager {
-  protected db: NocturneDB;
+  protected db: NotesDB;
   protected signer: NocturneSigner;
 
-  constructor(db: NocturneDB, signer: NocturneSigner) {
+  constructor(db: NotesDB, signer: NocturneSigner) {
     this.db = db;
     this.signer = signer;
   }

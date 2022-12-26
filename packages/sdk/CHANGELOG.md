@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- Refactor DB interfaces
+  - separate underlying `KVStore` from "DB"s by defining `KVStore` abstract class
+  - implement `KVStore` with a new class `InMemoryKVStore` using a B+ Tree lib
+  - split `NocturneDB` into `NotesDB` and `MerkleDB`
+  - add tests
+  - integrate new DB interfaces into `LocalMerkleProver`, `LocalNotesManager`, and `NocturneContext`
 - Add util method for parsing events from tx receipt and break utils into `bits.ts` and `ethers.ts`
 - Bug fix, `packToSolidityProof` casts numbers to bigints
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes

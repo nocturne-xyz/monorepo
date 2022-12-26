@@ -2,7 +2,7 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
-import { LocalMerkleDBExtension } from "../db";
+import { MerkleDB } from "../db";
 import { MerkleProver } from ".";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { NoteTrait } from "../note";
@@ -15,12 +15,12 @@ export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
   protected contract: Wallet;
   protected provider: ethers.providers.Provider;
-  protected db: LocalMerkleDBExtension;
+  protected db: MerkleDB;
 
   constructor(
     walletContractAddress: Address,
     provider: ethers.providers.Provider,
-    db: LocalMerkleDBExtension
+    db: MerkleDB
   ) {
     super();
 
@@ -36,21 +36,15 @@ export class LocalMerkleProver extends MerkleProver {
   static async fromDb(
     merkleAddress: Address,
     provider: ethers.providers.Provider,
-    db: LocalMerkleDBExtension
+    db: MerkleDB
   ): Promise<LocalMerkleProver> {
     const self = new LocalMerkleProver(merkleAddress, provider, db);
 
-    let index = 0;
-    // eslint-disable-next-line
-    while (true) {
-      const leaf = await db.getLeaf(index);
-      if (leaf == undefined) {
-        return self;
-      } else {
-        self.localTree.insert(leaf);
-        index += 1;
-      }
+    for await (const leaf of db.iterLeaves()) {
+      self.localTree.insert(leaf);
     }
+
+    return self;
   }
 
   root(): bigint {
@@ -68,7 +62,7 @@ export class LocalMerkleProver extends MerkleProver {
   async fetchLeavesAndUpdate(): Promise<void> {
     // TODO: load default from network-specific config
     const nextBlockToIndex =
-      (await this.db.getNumberKv(MERKLE_NEXT_BLOCK_TO_INDEX)) ??
+      (await this.db.kv.getNumber(MERKLE_NEXT_BLOCK_TO_INDEX)) ??
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
@@ -79,10 +73,7 @@ export class LocalMerkleProver extends MerkleProver {
       this.localTree.insert(leaf);
     }
 
-    await this.db.putKv(
-      MERKLE_NEXT_BLOCK_TO_INDEX,
-      (latestBlock + 1).toString()
-    );
+    await this.db.kv.putNumber(MERKLE_NEXT_BLOCK_TO_INDEX, latestBlock + 1);
   }
 
   async fetchNewLeaves(from: number, to: number): Promise<bigint[]> {
