@@ -173,7 +173,7 @@ contract BalanceManager is
         delete _receivedTokens;
 
         for (uint256 i = 0; i < tokensToProcess.length; i++) {
-            uint256 value = _balanceOf(tokensToProcess[i]);
+            uint256 value = _balanceOfAsset(tokensToProcess[i]);
             if (value != 0) {
                 _transferAssetTo(tokensToProcess[i], address(_vault), value);
                 _handleRefundNote(
@@ -186,7 +186,7 @@ contract BalanceManager is
         }
     }
 
-    function _balanceOf(
+    function _balanceOfAsset(
         EncodedAsset memory encodedAsset
     ) internal view returns (uint256) {
         (AssetType assetType, address assetAddr, uint256 id) = Utils
