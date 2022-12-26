@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-import {Utils} from "./libs/Utils.sol";
+import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
 import "hardhat/console.sol";
@@ -33,82 +33,21 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         EncodedAsset calldata encodedAsset,
         uint256 value
     ) external override onlyWallet {
-        (AssetType assetType, address assetAddr, uint256 id) = Utils
-            ._decodeAsset(encodedAsset);
-        if (assetType == AssetType.ERC20) {
-            require(
-                IERC20(assetAddr).transfer(_wallet, value),
-                "Transfer failed"
-            );
-        } else if (assetType == AssetType.ERC721) {
-            IERC721(assetAddr).safeTransferFrom(address(this), _wallet, id);
-        } else if (assetType == AssetType.ERC1155) {
-            IERC1155(assetAddr).safeTransferFrom(
-                address(this),
-                _wallet,
-                id,
-                value,
-                ""
-            );
-        }
-    }
-
-    function approveFunds(
-        uint256[] calldata values,
-        address[] calldata assets
-    ) external override onlyWallet {
-        require(
-            values.length == assets.length,
-            "Non matching input array lengths"
-        );
-        for (uint256 i = 0; i < values.length; i++) {
-            require(
-                IERC20(assets[i]).approve(_wallet, values[i]),
-                "Approval failed"
-            );
-        }
+        AssetUtils._transferAssetTo(encodedAsset, _wallet, value);
     }
 
     function makeDeposit(
         Deposit calldata deposit
     ) public override onlyWallet returns (bool) {
-        (AssetType assetType, address assetAddr, uint256 id) = Utils
-            ._decodeAsset(deposit.encodedAddr, deposit.encodedId);
-        if (assetType == AssetType.ERC20) {
-            return
-                IERC20(assetAddr).transferFrom(
-                    deposit.spender,
-                    address(this),
-                    deposit.value
-                );
-        } else if (assetType == AssetType.ERC721) {
-            try
-                IERC721(assetAddr).transferFrom(
-                    deposit.spender,
-                    address(this),
-                    id
-                )
-            {
-                return true;
-            } catch {
-                return false;
-            }
-        } else if (assetType == AssetType.ERC1155) {
-            try
-                IERC1155(assetAddr).safeTransferFrom(
-                    deposit.spender,
-                    address(this),
-                    id,
-                    deposit.value,
-                    ""
-                )
-            {
-                return true;
-            } catch {
-                return false;
-            }
-        }
-        return false;
+        return
+            AssetUtils._transferAssetFrom(
+                EncodedAsset({
+                    encodedAddr: deposit.encodedAddr,
+                    encodedId: deposit.encodedId
+                }),
+                deposit.spender,
+                deposit.value
+            );
     }
 
     function onERC721Received(

@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
+import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
 contract BalanceManager is
@@ -35,7 +36,7 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         _receivedTokens.push(
-            Utils._encodeAsset(AssetType.ERC721, msg.sender, id)
+            AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
         );
         return IERC721Receiver.onERC721Received.selector;
     }
@@ -48,7 +49,7 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         _receivedTokens.push(
-            Utils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+            AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
         );
         return IERC1155Receiver.onERC1155Received.selector;
     }
@@ -62,7 +63,7 @@ contract BalanceManager is
     ) external override returns (bytes4) {
         for (uint256 i = 0; i < ids.length; i++) {
             _receivedTokens.push(
-                Utils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
+                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
             );
         }
         return IERC1155Receiver.onERC1155BatchReceived.selector;
@@ -132,28 +133,6 @@ contract BalanceManager is
         require(gasLeftToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
-    function _transferAssetTo(
-        EncodedAsset memory encodedAsset,
-        address receiver,
-        uint256 value
-    ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = Utils
-            ._decodeAsset(encodedAsset);
-        if (assetType == AssetType.ERC20) {
-            IERC20(assetAddr).transfer(receiver, value);
-        } else if (assetType == AssetType.ERC721) {
-            IERC721(assetAddr).transferFrom(address(this), receiver, id);
-        } else if (assetType == AssetType.ERC1155) {
-            IERC1155(assetAddr).safeTransferFrom(
-                address(this),
-                receiver,
-                id,
-                value,
-                ""
-            );
-        }
-    }
-
     function _handleAllRefunds(
         JoinSplitTransaction[] calldata joinSplitTxs,
         NocturneAddress calldata refundAddr
@@ -173,9 +152,13 @@ contract BalanceManager is
         delete _receivedTokens;
 
         for (uint256 i = 0; i < tokensToProcess.length; i++) {
-            uint256 value = _balanceOfAsset(tokensToProcess[i]);
+            uint256 value = AssetUtils._balanceOfAsset(tokensToProcess[i]);
             if (value != 0) {
-                _transferAssetTo(tokensToProcess[i], address(_vault), value);
+                AssetUtils._transferAssetTo(
+                    tokensToProcess[i],
+                    address(_vault),
+                    value
+                );
                 _handleRefundNote(
                     refundAddr,
                     tokensToProcess[i].encodedAddr,
@@ -184,23 +167,5 @@ contract BalanceManager is
                 );
             }
         }
-    }
-
-    function _balanceOfAsset(
-        EncodedAsset memory encodedAsset
-    ) internal view returns (uint256) {
-        (AssetType assetType, address assetAddr, uint256 id) = Utils
-            ._decodeAsset(encodedAsset);
-        uint256 value;
-        if (assetType == AssetType.ERC20) {
-            value = IERC20(assetAddr).balanceOf(address(this));
-        } else if (assetType == AssetType.ERC721) {
-            if (IERC721(assetAddr).ownerOf(id) == address(this)) {
-                value = 1;
-            }
-        } else if (assetType == AssetType.ERC1155) {
-            value = IERC1155(assetAddr).balanceOf(address(this), id);
-        }
-        return value;
     }
 }

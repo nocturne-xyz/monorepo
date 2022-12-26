@@ -145,7 +145,7 @@ contract Wallet is IWallet, BalanceManager {
             (opResult.executionGasUsed +
                 GAS_PER_JOINSPLIT *
                 op.joinSplitTxs.length);
-        _transferAssetTo(gasAsset, bundler, bundlerPayout);
+        AssetUtils._transferAssetTo(gasAsset, bundler, bundlerPayout);
 
         // Revert if number of refunds is too large
         uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
