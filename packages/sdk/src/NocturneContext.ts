@@ -366,30 +366,19 @@ export class NocturneContext {
    * requests and format the data into PreSignOpeartion (all data needed to
    * compute opeartionDigest).
    *
-   * @param OperationRequest
-   * @param tokens spend and refund token addresses
-   * @param refundAddr refund address
-   * @param gasLimit
+   * @param operationRequest
    */
   protected async getPreSignOperation({
     joinSplitRequests,
-    refundAddr,
+    // Generate refund addr if needed
+    refundAddr = NocturneAddressTrait.randomize(this.signer.address),
     refundAssets,
     actions,
     gasLimit = 1_000_000n,
     gasPrice = 0n,
-    maxNumRefunds,
-  }: OperationRequest): Promise<PreSignOperation> {
-    // Generate refund addr if needed
-    refundAddr = refundAddr
-      ? refundAddr
-      : NocturneAddressTrait.randomize(this.signer.address);
-
     // Default max number of refunds does not support minting
-    maxNumRefunds = maxNumRefunds
-      ? maxNumRefunds
-      : BigInt(joinSplitRequests.length + refundAssets.length);
-
+    maxNumRefunds = BigInt(joinSplitRequests.length + refundAssets.length),
+  }: OperationRequest): Promise<PreSignOperation> {
     const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
       preSignJoinSplitTxs.push(
