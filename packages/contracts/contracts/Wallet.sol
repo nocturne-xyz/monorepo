@@ -35,7 +35,7 @@ contract Wallet is IWallet, BalanceManager {
     );
 
     modifier onlyThis() {
-        require(msg.sender == address(this), "Only the Teller can call this");
+        require(msg.sender == address(this), "Only the Wallet can call this");
         _;
     }
 
@@ -103,10 +103,8 @@ contract Wallet is IWallet, BalanceManager {
         _makeDeposit(deposit);
     }
 
-    /**
-     * This function will only be message-called from the wallet contract. The
-     * call gas given is the execution gas of the operation.
-     */
+    // This function will only be message-called from the wallet contract. The
+    // call gas given is the execution gas of the operation.
     function performOperation(
         Operation calldata op,
         address bundler
@@ -149,14 +147,12 @@ contract Wallet is IWallet, BalanceManager {
                 op.joinSplitTxs.length);
         _transferAssetTo(gasAsset, bundler, bundlerPayout);
 
-        // Process refunds
-        // Only process upto op.maxNumRefunds number of refunds
-        // TODO: properly log that this happened
+        // Revert if number of refunds is too large
         uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
-        uint256 numRefundsToProcess = (numRefunds >= op.maxNumRefunds)
-            ? op.maxNumRefunds
-            : numRefunds;
-        _handleAllRefunds(op.joinSplitTxs[:numRefundsToProcess], op.refundAddr);
+        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
+
+        // Process refunds
+        _handleAllRefunds(op.joinSplitTxs, op.refundAddr);
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

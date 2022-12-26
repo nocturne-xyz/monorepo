@@ -109,7 +109,10 @@ contract BalanceManager is
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
-                uint256 gasPaymentThisJoinSplit = Utils.min(joinSplitTxs[i].publicSpend, gasLeftToReserve);
+                uint256 gasPaymentThisJoinSplit = Utils.min(
+                    joinSplitTxs[i].publicSpend,
+                    gasLeftToReserve
+                );
                 // Deduct gas payment from value to transfer to wallet
                 valueToTransfer -= gasPaymentThisJoinSplit;
                 // Deduct gas payment from the amoung to be reserved
@@ -183,8 +186,11 @@ contract BalanceManager is
         }
     }
 
-    function _balanceOf(EncodedAsset memory encodedAsset) internal view returns (uint256) {
-        (AssetType assetType, address assetAddr, uint256 id) = Utils._decodeAsset(encodedAsset);
+    function _balanceOf(
+        EncodedAsset memory encodedAsset
+    ) internal view returns (uint256) {
+        (AssetType assetType, address assetAddr, uint256 id) = Utils
+            ._decodeAsset(encodedAsset);
         uint256 value;
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
