@@ -48,6 +48,70 @@ export interface EncodedAsset {
   encodedId: bigint;
 }
 
+export function encodeAsset({ assetType, assetAddr, id }: Asset): EncodedAsset {
+  const eightyEightZeros = "".padStart(88, "0");
+  const addrBits = BigInt(assetAddr).toString(2).padStart(160, "0");
+  if (addrBits.length > 160) {
+    throw new Error("number repr of `asset` is too large");
+  }
+
+  let assetTypeBits: string;
+  switch (assetType) {
+    case AssetType.ERC20: {
+      assetTypeBits = "00";
+      break;
+    }
+    case AssetType.ERC721: {
+      assetTypeBits = "01";
+      break;
+    }
+    case AssetType.ERC1155: {
+      assetTypeBits = "10";
+      break;
+    }
+  }
+
+  const idBits = id.toString(2).padStart(256, "0");
+  const idTop3 = idBits.slice(0, 3);
+  const encodedId = BigInt(`0b000${idBits.slice(3)}`);
+  const encodedAddr = BigInt(
+    `0b000${idTop3}${eightyEightZeros}${assetTypeBits}${addrBits}`
+  );
+  return { encodedAddr, encodedId };
+}
+
+export function decodeAsset(encodedAddr: bigint, encodedId: bigint): Asset {
+  const encodedAssetBits = encodedAddr.toString(2).padStart(256, "0");
+  const assetBits = encodedAssetBits.slice(96);
+  const assetAddr = "0x" + BigInt(`0b${assetBits}`).toString(16);
+
+  const assetTypeBits = encodedAssetBits.slice(94, 96);
+  let assetType: AssetType;
+  switch (assetTypeBits) {
+    case "00":
+      assetType = AssetType.ERC20;
+      break;
+    case "01":
+      assetType = AssetType.ERC721;
+      break;
+    case "10":
+      assetType = AssetType.ERC1155;
+      break;
+    default:
+      throw new Error("invalid asset type bits");
+  }
+
+  const idTop3 = encodedAssetBits.slice(3, 6);
+  const encodedIDBits = encodedId.toString(2).padStart(256, "0").slice(3);
+  const id = BigInt(`0b${idTop3}${encodedIDBits}`);
+
+  return {
+    assetType,
+    assetAddr,
+    id,
+  };
+}
+
 export interface AssetWithBalance {
   asset: Asset;
   balance: bigint;

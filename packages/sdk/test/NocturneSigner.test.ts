@@ -4,8 +4,7 @@ import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { NocturneAddressTrait } from "../src/crypto/address";
 import { genNoteTransmission } from "../src/crypto/utils";
-import { encodeAsset } from "../src/sdk";
-import { AssetType } from "../src/commonTypes";
+import { encodeAsset, AssetType } from "../src/commonTypes";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {

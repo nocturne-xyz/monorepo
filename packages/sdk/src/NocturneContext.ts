@@ -5,16 +5,15 @@ import {
   OperationRequest,
   packToSolidityProof,
   EncodedAsset,
-} from "./commonTypes";
-import {
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
   ProvenJoinSplitTx,
   PreSignOperation,
   PreProofOperation,
   ProvenOperation,
+  encodeAsset,
 } from "./commonTypes";
-import { Note, IncludedNote, NoteTrait, encodeAsset } from "./sdk/note";
+import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { CanonAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
