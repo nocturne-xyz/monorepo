@@ -227,7 +227,7 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && walletContract && <ABIForm sdk={nocturneFrontendSDK} walletContract={walletContract} />}
+            {nocturneFrontendSDK && walletContract && <ABIForm sdk={nocturneFrontendSDK} />}
           </Card>
         </CardContainer>
       )}

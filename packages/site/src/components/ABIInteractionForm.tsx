@@ -10,9 +10,43 @@ type ABIInteractionFormProps = {
   handleAction: (action: Action) => void;
 };
 
-interface ABIInteractionFormData {
-  [key: string]: ABIInteractionParamFormData[];
-}
+export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
+  abi,
+  contractAddress,
+  handleAction,
+}) => {
+  const iface = new ethers.utils.Interface(abi);
+
+  const handleEnqueueAction = (
+    encodedFunction: string 
+  ) => {
+    const action = {
+      contractAddress,
+      encodedFunction,
+    };
+
+    handleAction(action);
+  };
+
+  const formFields = abi
+    .filter(({ type }) => type === "function")
+    .map((method, i) => (
+      <ABIMethod
+        key={i}
+        iface={iface}
+        method={method}
+        handleEnqueueAction={handleEnqueueAction}
+      />
+    ));
+
+  return <div>{formFields}</div>;
+};
+
+type ABIMethodProps = {
+  iface: ethers.utils.Interface;
+  method: ABIItem;
+  handleEnqueueAction: (encodedFunction: string) => void;
+};
 
 type ABIInteractionParamFormData =
   | string
@@ -36,83 +70,59 @@ function getInitialFormDataForInput(
   }
 }
 
-export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
-  abi,
-  contractAddress,
-  handleAction,
-}) => {
-  const initialFormData: ABIInteractionFormData = {};
-  for (const method of abi.filter(({ type }) => type === "function")) {
-    initialFormData[method.name] = method.inputs.map((input) =>
-      getInitialFormDataForInput(input)
-    );
-  }
-
-  const [formData, setFormData] =
-    useState<ABIInteractionFormData>(initialFormData);
-  const iface = new ethers.utils.Interface(abi);
-
-  const handleEnqueueAction = (
-    event: React.FormEvent<HTMLFormElement>,
-    methodName: string
+const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
+  const initialFormData: ABIInteractionParamFormData[] = method.inputs.map(
+    input => getInitialFormDataForInput(input)
+  );
+  const [inputs, setInputs] = useState<ABIInteractionParamFormData[]>(initialFormData);
+  const handleChangeAtIndex = (
+    paramIndex: number,
+    value: any,
+    path: string[]
   ) => {
-    event.preventDefault();
+    const newInputs = _.cloneDeep(inputs);
 
-    const inputs = formData[methodName];
-    const encodedFunction = iface.encodeFunctionData(methodName, inputs);
-    const action = {
-      contractAddress,
-      encodedFunction,
-    };
+    const pathString = path.join(".");
+    const fullPath = `[${paramIndex}]` + (pathString.length > 0 ? `.${pathString}` : "");
+    _.set(newInputs, fullPath, value);
 
-    handleAction(action);
+    console.log(newInputs);
+
+    setInputs(newInputs);
   };
 
-  const formFields = abi
-    .filter(({ type }) => type === "function")
-    .map((method) => {
-      // handles a change in the input form data for `method` for `paramIndex`th parameter
-      const handleChangeAtIndex = (
-        paramIndex: number,
-        event: any,
-        path: string[]
-      ) => {
-        const newFormData = _.cloneDeep(formData);
+  return (
+    <div key={method.name}>
+      <h3>{method.name}</h3>
 
-        const pathString = path.join(".");
-        const fullPath =
-          `${method.name}[${paramIndex}]` +
-          (pathString.length > 0 ? `.${pathString}` : "");
-        _.set(newFormData, fullPath, event.target.value);
+      {method.inputs.map((input, i) => (
+        <ABIMethodParamInput
+          key={i}
+          param={input}
+          value={inputs[i]}
+          handleChange={(param, path) =>
+            handleChangeAtIndex(i, param, path)
+          }
+        />
+      ))}
 
-        setFormData(newFormData);
-      };
+      <button
+        type="submit"
+        onClick={(event: any) => {
+          event.preventDefault();
+          const encodedFunction = iface.encodeFunctionData(
+            method.name,
+            inputs
+          );
 
-      return (
-        <div key={method.name}>
-          <h3>{method.name}</h3>
-          {method.inputs.map((input, i) => (
-            <ABIMethodParamInput
-              key={i}
-              param={input}
-              value={formData[method.name][i]}
-              handleChange={(param, path) =>
-                handleChangeAtIndex(i, param, path)
-              }
-            />
-          ))}
+          handleEnqueueAction(encodedFunction);
+        }}
+      >
+        Enqueue Action
+      </button>
+    </div>
+  );
 
-          <button
-            type="submit"
-            onClick={(event: any) => handleEnqueueAction(event, method.name)}
-          >
-            Enqueue Action
-          </button>
-        </div>
-      );
-    });
-
-  return <div>{formFields}</div>;
 };
 
 type ABIMethodParamInput = {
@@ -134,7 +144,7 @@ const ABIMethodParamInput = ({
   const path = _path ?? [];
   const pathStr = path.join(".");
   const curriedHandleChange = (event: any) => {
-    handleChange(event, path);
+    handleChange(event.target.value, path);
   };
 
   switch (param.type) {
@@ -171,6 +181,7 @@ const ABIMethodParamInput = ({
         throw new Error("Non-tuple type must not have components");
       }
 
+      console.log("value", value);
       if (typeof value !== "string") {
         throw new Error("Non-tuple type must have string value");
       }
