@@ -55,6 +55,10 @@
       "dependsOn": ["build"],
       "outputs": []
     },
+    "test:ci": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
     "@nocturne-xyz/subtree-updater#test:unit": {
       "dependsOn": ["build"],
       "env": ["RUN_RAPIDSNARK_TESTS"]
