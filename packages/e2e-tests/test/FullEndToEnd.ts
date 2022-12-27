@@ -196,7 +196,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       joinSplitRequests: [joinSplitRequest],
       refundAssets: [],
       actions: [action],
-      gasLimit: 1_000_000n,
+      executionGasLimit: 1_000_000n,
       gasPrice: 0n,
       maxNumRefunds: 1n,
     };

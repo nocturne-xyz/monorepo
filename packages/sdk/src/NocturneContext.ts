@@ -94,7 +94,7 @@ export class NocturneContext {
       refundAddr: preProofOp.refundAddr,
       encodedRefundAssets: preProofOp.encodedRefundAssets,
       actions: preProofOp.actions,
-      gasLimit: preProofOp.gasLimit,
+      executionGasLimit: preProofOp.executionGasLimit,
       gasPrice: preProofOp.gasPrice,
       maxNumRefunds: preProofOp.maxNumRefunds,
     };
@@ -129,7 +129,7 @@ export class NocturneContext {
       refundAddr: preSignOperation.refundAddr,
       encodedRefundAssets: preSignOperation.encodedRefundAssets,
       actions: preSignOperation.actions,
-      gasLimit: preSignOperation.gasLimit,
+      executionGasLimit: preSignOperation.executionGasLimit,
       gasPrice: preSignOperation.gasPrice,
       maxNumRefunds: preSignOperation.maxNumRefunds,
     };
@@ -366,7 +366,7 @@ export class NocturneContext {
     refundAddr = NocturneAddressTrait.randomize(this.signer.address),
     refundAssets,
     actions,
-    gasLimit = 1_000_000n,
+    executionGasLimit = 1_000_000n,
     gasPrice = 0n,
     // Default max number of refunds does not support minting
     maxNumRefunds = BigInt(joinSplitRequests.length + refundAssets.length),
@@ -385,7 +385,7 @@ export class NocturneContext {
       refundAddr,
       encodedRefundAssets,
       actions,
-      gasLimit,
+      executionGasLimit,
       gasPrice,
       maxNumRefunds,
     };

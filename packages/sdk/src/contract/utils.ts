@@ -78,7 +78,7 @@ function hashOperation(
       joinSplitTxsPayload,
       refundAddrPayload,
       refundAssetsPayload,
-      op.gasLimit,
+      op.executionGasLimit,
       op.gasPrice,
       op.maxNumRefunds,
     ]

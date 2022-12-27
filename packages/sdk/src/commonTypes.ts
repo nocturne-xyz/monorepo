@@ -137,7 +137,7 @@ export interface OperationRequest {
   refundAddr?: NocturneAddress;
   refundAssets: Asset[];
   actions: Action[];
-  gasLimit?: bigint;
+  executionGasLimit?: bigint;
   gasPrice?: bigint;
   maxNumRefunds?: bigint;
 }
@@ -208,7 +208,7 @@ export interface BaseOperation {
   refundAddr: NocturneAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
-  gasLimit: bigint;
+  executionGasLimit: bigint;
   gasPrice: bigint;
   maxNumRefunds: bigint;
 }
