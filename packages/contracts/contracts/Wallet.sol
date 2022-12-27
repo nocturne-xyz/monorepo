@@ -47,6 +47,16 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         _makeDeposit(deposit);
     }
 
+    /**
+      Process a bundle of operations.
+
+      @dev The maximum gas cost of a call can be estimated without eth_estimateGas
+      1. gas cost of `WalletUtils.computeOperationDigests` and
+      `_verifyAllProofs` can be estimated based on length of op.joinSPlitTxs
+      and overall size of op
+      2. maxmimum gas cost of each performOpeartion can be estimated using op
+      (refer to inline docs for `performOpeartion`)
+    */
     function processBundle(
         Bundle calldata bundle
     ) external override returns (OperationResult[] memory) {
@@ -80,9 +90,24 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     }
 
     /**
-      @dev This function will only be message-called from `processBundle`. It
-      will message-call `proformOpeartion`. Outside of the call to
-      `performOperation`, the gas call of this function is bounded.
+      @dev This function will only be message-called from `processBundle` and
+      can only be entered once inside an Evm transaction. It will message-call
+      `executeActions`.
+
+      @param op an Opeartion
+      @param bundler address of the bundler that provided the bundle
+      @return opResult the result of the operation
+
+      @dev This function can throw due to internal erros or being out-of-gas.
+      It is expected of `processBundle` to catch this error.
+
+      @dev The gas cost of the call can be estimated in constant time given op:
+      1. The gas cost before `executeActions` can be bounded as a function of
+      op.joinSplitTxs.length
+      2. `executeActions` uses at most op.executionGasLimit
+      3. The gas cost after `executeActions` can be bounded as a function of
+      op.maxNumRefunds
+      The bundler should estimate the gas cost functions in 1 and 3 offchain.
     */
     function performOperation(
         Operation calldata op,
@@ -132,9 +157,8 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     }
 
     /**
-      @dev This function will only be message-called from
-      `performOperationOutter`. The call gas given is the execution gas of the
-      operation.
+      @dev This function will only be message-called from `performOperation`.
+      The call gas given is the execution gas specified by the operation.
     */
     function executeActions(
         Action[] calldata actions
