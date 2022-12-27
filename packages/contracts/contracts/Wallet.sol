@@ -39,6 +39,12 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
+    function depositFunds(Deposit calldata deposit) external override {
+        require(deposit.spender == msg.sender, "Spender must be the sender");
+
+        _makeDeposit(deposit);
+    }
+
     function processBundle(
         Bundle calldata bundle
     ) external override returns (OperationResult[] memory) {
@@ -46,45 +52,25 @@ contract Wallet is IWallet, BalanceManager {
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
         (bool success, ) = _verifyAllProofs(ops, opDigests);
-
         require(success, "Batched JoinSplit verify failed.");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            // First compute execution gas for this operation
-            uint256 verificationGas = ops[i].joinSplitTxs.length *
-                GAS_PER_JOINSPLIT;
-            uint256 maxRefundGas = ops[i].maxNumRefunds * GAS_PER_REFUND;
-            uint256 gasToReserve = verificationGas + maxRefundGas;
-            // Not enough executionGas, operation fails
-            if (gasToReserve >= ops[i].gasLimit) {
+            try this.performOperationOutter(ops[i], msg.sender) returns (
+                OperationResult memory result
+            ) {
+                opResults[i] = result;
+            } catch (bytes memory reason) {
                 opResults[i] = OperationResult({
                     opProcessed: false,
-                    failureReason: bytes("Not enough execution gas."),
+                    failureReason: reason,
                     callSuccesses: new bool[](0),
                     callResults: new bytes[](0),
                     executionGasUsed: 0,
                     verificationGasUsed: 0,
                     refundGasUsed: 0
                 });
-            } else {
-                uint256 executionGas = ops[i].gasLimit - gasToReserve;
-                try
-                    this.performOperation{gas: executionGas}(ops[i], msg.sender)
-                returns (OperationResult memory result) {
-                    opResults[i] = result;
-                } catch (bytes memory reason) {
-                    opResults[i] = OperationResult({
-                        opProcessed: false,
-                        failureReason: reason,
-                        callSuccesses: new bool[](0),
-                        callResults: new bytes[](0),
-                        executionGasUsed: 0,
-                        verificationGasUsed: 0,
-                        refundGasUsed: 0
-                    });
-                }
             }
             emit OperationProcessed(
                 opDigests[i],
@@ -97,33 +83,49 @@ contract Wallet is IWallet, BalanceManager {
         return opResults;
     }
 
-    function depositFunds(Deposit calldata deposit) external override {
-        require(deposit.spender == msg.sender, "Spender must be the sender");
-
-        _makeDeposit(deposit);
-    }
-
-    // This function will only be message-called from the wallet contract. The
-    // call gas given is the execution gas of the operation.
-    function performOperation(
+    /**
+      @dev This function will only be message-called from `processBundle`. It
+      will message-call `proformOpeartion`. Outside of the call to
+      `performOperation` call, the gas call of this function is bounded.
+    */
+    function performOperationOutter(
         Operation calldata op,
         address bundler
     ) external onlyThis returns (OperationResult memory opResult) {
-        uint256 gasLeftInitial = gasleft();
-
         uint256 maxGasFee = op.gasLimit * op.gasPrice;
         _handleAllSpends(op.joinSplitTxs, maxGasFee);
-
-        Action[] calldata actions = op.actions;
-        uint256 numActions = actions.length;
-        opResult.opProcessed = true; // default to true
-        opResult.callSuccesses = new bool[](numActions);
-        opResult.callResults = new bytes[](numActions);
-        for (uint256 i = 0; i < numActions; i++) {
-            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
-
-            opResult.callSuccesses[i] = success;
-            opResult.callResults[i] = result;
+        // First compute execution gas for this operation
+        uint256 verificationGas = op.joinSplitTxs.length * GAS_PER_JOINSPLIT;
+        uint256 maxRefundGas = op.maxNumRefunds * GAS_PER_REFUND;
+        uint256 gasToReserve = verificationGas + maxRefundGas;
+        // Not enough executionGas, operation fails
+        if (gasToReserve >= op.gasLimit) {
+            opResult = OperationResult({
+                opProcessed: false,
+                failureReason: bytes("Not enough execution gas."),
+                callSuccesses: new bool[](0),
+                callResults: new bytes[](0),
+                executionGasUsed: 0,
+                verificationGasUsed: 0,
+                refundGasUsed: 0
+            });
+        } else {
+            uint256 executionGas = op.gasLimit - gasToReserve;
+            try this.performOperation{gas: executionGas}(op) returns (
+                OperationResult memory result
+            ) {
+                opResult = result;
+            } catch (bytes memory reason) {
+                opResult = OperationResult({
+                    opProcessed: false,
+                    failureReason: reason,
+                    callSuccesses: new bool[](0),
+                    callResults: new bytes[](0),
+                    executionGasUsed: 0,
+                    verificationGasUsed: 0,
+                    refundGasUsed: 0
+                });
+            }
         }
 
         EncodedAsset memory gasAsset = EncodedAsset({
@@ -136,9 +138,6 @@ contract Wallet is IWallet, BalanceManager {
             gasAsset,
             maxGasFee - opResult.refundGasUsed * op.gasPrice
         );
-
-        // Compute executionGasUsed
-        opResult.executionGasUsed = gasLeftInitial - gasleft();
 
         // Transfer used verification and execution gas to the bundler
         uint256 bundlerPayout = op.gasPrice *
@@ -153,6 +152,32 @@ contract Wallet is IWallet, BalanceManager {
 
         // Process refunds
         _handleAllRefunds(op.joinSplitTxs, op.refundAddr);
+    }
+
+    /**
+      @dev This function will only be message-called from
+      `performOperationOutter`. The call gas given is the execution gas of the
+      operation.
+    */
+    function performOperation(
+        Operation calldata op
+    ) external onlyThis returns (OperationResult memory opResult) {
+        uint256 gasLeftInitial = gasleft();
+
+        Action[] calldata actions = op.actions;
+        uint256 numActions = actions.length;
+        opResult.opProcessed = true; // default to true
+        opResult.callSuccesses = new bool[](numActions);
+        opResult.callResults = new bytes[](numActions);
+        for (uint256 i = 0; i < numActions; i++) {
+            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
+
+            opResult.callSuccesses[i] = success;
+            opResult.callResults[i] = result;
+        }
+
+        // Compute executionGasUsed
+        opResult.executionGasUsed = gasLeftInitial - gasleft();
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

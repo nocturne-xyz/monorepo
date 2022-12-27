@@ -421,9 +421,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(0));
         assertEq(opResults[0].callResults.length, uint256(0));
 
-        // Balances should not have changed
+        // Balances should not have changed, besides gas being paid
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -433,7 +434,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
 
-        // Create transaction to withdraw 1500 tokens and send to Bob (more than
+        // Create transaction to withdraw 15 gwei tokens and send to Bob (more than
         // alice has)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
