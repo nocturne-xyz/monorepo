@@ -7,10 +7,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
-import {
-  NocturneContext,
-  NotesDB,
-} from "@nocturne-xyz/sdk";
+import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import {
   depositFunds,
