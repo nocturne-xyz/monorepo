@@ -51,11 +51,16 @@ contract CommitmentTreeManager {
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
-    // Process a joinsplit transaction, assuming that the encoded proof is valid
+    /**
+      Process a joinsplit transaction, assuming that the encoded proof is valid
+
+      @dev This function should be re-entry safe. Nullifiers must be marked
+      used as soon as they are checked to be valid.
+    */
     function _handleJoinSplit(
         JoinSplitTransaction calldata joinSplitTx
     ) internal {
-        // Check validity of nullifiers
+        // Check validity of both nullifiers
         require(
             _pastRoots[joinSplitTx.commitmentTreeRoot],
             "Tree root not past root"
@@ -73,6 +78,10 @@ contract CommitmentTreeManager {
             "2 nfs should !equal."
         );
 
+        // Mark nullifiers as used
+        _nullifierSet[joinSplitTx.nullifierA] = true;
+        _nullifierSet[joinSplitTx.nullifierB] = true;
+
         // Compute newNote indices in the merkle tree
         uint128 newNoteIndexA = _merkle.getTotalCount();
         uint128 newNoteIndexB = newNoteIndexA + 1;
@@ -81,9 +90,6 @@ contract CommitmentTreeManager {
         noteCommitments[0] = joinSplitTx.newNoteACommitment;
         noteCommitments[1] = joinSplitTx.newNoteBCommitment;
         insertNoteCommitments(noteCommitments);
-
-        _nullifierSet[joinSplitTx.nullifierA] = true;
-        _nullifierSet[joinSplitTx.nullifierB] = true;
 
         emit JoinSplit(
             joinSplitTx.nullifierA,

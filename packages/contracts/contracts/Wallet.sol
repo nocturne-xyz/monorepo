@@ -2,20 +2,22 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "hardhat/console.sol";
 
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
-contract Wallet is IWallet, BalanceManager {
+contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     uint256 constant GAS_PER_JOINSPLIT = 200000;
     // TODO: add subtree updater fee mechanism
     uint256 constant GAS_PER_REFUND = 0;
@@ -80,20 +82,17 @@ contract Wallet is IWallet, BalanceManager {
     /**
       @dev This function will only be message-called from `processBundle`. It
       will message-call `proformOpeartion`. Outside of the call to
-      `performOperation` call, the gas call of this function is bounded.
+      `performOperation`, the gas call of this function is bounded.
     */
     function performOperation(
         Operation calldata op,
         address bundler
-    ) external onlyThis returns (OperationResult memory opResult) {
+    ) external onlyThis nonReentrant returns (OperationResult memory opResult) {
         uint256 maxGasFee = WalletUtils.maxGasFee(op);
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in joinSplitTxs are not fresh
-        _handleAllSpends(op.joinSplitTxs, maxGasFee);
+        _processJoinSplitTxsReservingFee(op.joinSplitTxs, maxGasFee);
 
-        // Execute the encoded actions in a new call context so that reverts
-        // are caught explicitly without affecting the call context of this
-        // function.
         uint256 gasLeftInitial = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op.actions) returns (
             OperationResult memory result
@@ -116,9 +115,9 @@ contract Wallet is IWallet, BalanceManager {
             encodedAssetId: op.joinSplitTxs[0].encodedAssetId
         });
 
-        // Request reserved maxGasFee from vault
-        // (We can't use _transferAssetFrom because Vault should never allow
-        // the Wallet to spend direclty)
+        // Request reserved maxGasFee from vault.
+        /// @dev This is safe because _processJoinSplitTxsReservingFee is
+        /// guaranteed to have reserved maxGasFee since it didn't throw.
         _vault.requestAsset(gasAsset, maxGasFee);
 
         // Transfer used verification and execution gas to the bundler

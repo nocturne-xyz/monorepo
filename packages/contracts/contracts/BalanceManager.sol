@@ -90,9 +90,15 @@ contract BalanceManager is
         _vault.makeDeposit(deposit);
     }
 
-    // Process all joinSplitTxs and request all declared publicSpend from
-    // the vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
-    function _handleAllSpends(
+    /**
+      Process all joinSplitTxs and request all declared publicSpend from the
+      vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
+
+      @dev If this function returns normally without reverting, then it is safe
+      to request maxGasFee from vault with the same encodedAsset as
+      joinSplitTxs[0].
+    */
+    function _processJoinSplitTxsReservingFee(
         JoinSplitTransaction[] calldata joinSplitTxs,
         uint256 maxGasFee
     ) internal {
@@ -101,7 +107,9 @@ contract BalanceManager is
         uint256 gasAssetId = joinSplitTxs[0].encodedAssetId;
         uint256 numJoinSplits = joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
+            /// @dev This will either mark the nullifiers of joinSplitTx as used or throw
             _handleJoinSplit(joinSplitTxs[i]);
+            // Defaults to requesting all publicSpend from vault
             uint256 valueToTransfer = joinSplitTxs[i].publicSpend;
             // Try to reserve gas fee if there's more to reserve and this
             // joinSplitTx is spending the gasAsset
