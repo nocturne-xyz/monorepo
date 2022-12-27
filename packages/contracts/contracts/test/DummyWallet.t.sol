@@ -223,7 +223,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address recipient,
         uint256 amount,
         uint256 publicSpend,
-        uint256 gasLimit,
+        uint256 executionGasLimit,
         uint256 gasPrice
     ) internal view returns (Operation memory) {
         Action memory transferAction = Action({
@@ -291,7 +291,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             refundAddr: defaultNocturneAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
-            gasLimit: gasLimit,
+            executionGasLimit: executionGasLimit,
             gasPrice: gasPrice,
             maxNumRefunds: 1
         });

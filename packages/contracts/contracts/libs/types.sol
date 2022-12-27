@@ -82,7 +82,7 @@ struct Operation {
     NocturneAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
-    uint256 gasLimit;
+    uint256 executionGasLimit;
     uint256 gasPrice;
     uint256 maxNumRefunds;
 }

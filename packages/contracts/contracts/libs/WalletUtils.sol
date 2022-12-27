@@ -6,6 +6,10 @@ import "../libs/types.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
+    uint256 constant GAS_PER_JOINSPLIT = 200000;
+    // TODO: add subtree updater fee mechanism
+    uint256 constant GAS_PER_REFUND = 0;
+
     function computeOperationDigests(
         Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
@@ -119,7 +123,7 @@ library WalletUtils {
             joinSplitTxsPayload,
             refundAssetsPayload,
             refundAddrPayload,
-            op.gasLimit,
+            op.executionGasLimit,
             op.gasPrice,
             op.maxNumRefunds
         );
@@ -128,9 +132,11 @@ library WalletUtils {
     }
 
     // From https://ethereum.stackexchange.com/questions/83528
-    function _getRevertMsg(bytes memory reason) internal pure returns (string memory) {
+    function _getRevertMsg(
+        bytes memory reason
+    ) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-        if (reason.length < 68) return 'Transaction reverted silently';
+        if (reason.length < 68) return "Transaction reverted silently";
 
         assembly {
             // Slice the sighash.
@@ -139,16 +145,36 @@ library WalletUtils {
         return abi.decode(reason, (string)); // All that remains is the revert string
     }
 
-    function _failOperationWithReason(string memory reason) internal pure returns
-    (OperationResult memory result) {
-        return OperationResult({
-            opProcessed: false,
-            failureReason: reason,
-            callSuccesses: new bool[](0),
-            callResults: new bytes[](0),
-            executionGasUsed: 0,
-            verificationGasUsed: 0,
-            refundGasUsed: 0
-        });
+    function _failOperationWithReason(
+        string memory reason
+    ) internal pure returns (OperationResult memory result) {
+        return
+            OperationResult({
+                opProcessed: false,
+                failureReason: reason,
+                callSuccesses: new bool[](0),
+                callResults: new bytes[](0),
+                executionGasUsed: 0,
+                verificationGasUsed: 0,
+                refundGasUsed: 0
+            });
+    }
+
+    function maxGasFee(
+        Operation calldata op
+    ) internal pure returns (uint256) {
+        return op.executionGasLimit + verificationGas(op) + maxRefundGas(op);
+    }
+
+    function verificationGas(
+        Operation calldata op
+    ) internal pure returns (uint256) {
+        return op.joinSplitTxs.length * GAS_PER_JOINSPLIT;
+    }
+
+    function maxRefundGas(
+        Operation calldata op
+    ) internal pure returns (uint256) {
+        return op.maxNumRefunds * GAS_PER_REFUND;
     }
 }

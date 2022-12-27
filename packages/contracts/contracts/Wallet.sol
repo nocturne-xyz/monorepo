@@ -57,12 +57,14 @@ contract Wallet is IWallet, BalanceManager {
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            try this.performOperationOutter(ops[i], msg.sender) returns (
+            try this.performOperation(ops[i], msg.sender) returns (
                 OperationResult memory result
             ) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = WalletUtils._failOperationWithReason(WalletUtils._getRevertMsg(reason));
+                opResults[i] = WalletUtils._failOperationWithReason(
+                    WalletUtils._getRevertMsg(reason)
+                );
             }
             emit OperationProcessed(
                 opDigests[i],
@@ -80,51 +82,45 @@ contract Wallet is IWallet, BalanceManager {
       will message-call `proformOpeartion`. Outside of the call to
       `performOperation` call, the gas call of this function is bounded.
     */
-    function performOperationOutter(
+    function performOperation(
         Operation calldata op,
         address bundler
     ) external onlyThis returns (OperationResult memory opResult) {
-        uint256 maxGasFee = op.gasLimit * op.gasPrice;
+        uint256 maxGasFee = WalletUtils.maxGasFee(op);
         _handleAllSpends(op.joinSplitTxs, maxGasFee);
-        // First compute execution gas for this operation
-        uint256 verificationGas = op.joinSplitTxs.length * GAS_PER_JOINSPLIT;
-        uint256 maxRefundGas = op.maxNumRefunds * GAS_PER_REFUND;
-        uint256 gasToReserve = verificationGas + maxRefundGas;
-        // Not enough executionGas, operation fails
-        if (gasToReserve >= op.gasLimit) {
-            opResult = WalletUtils._failOperationWithReason("Not enough execution gas.");
-        } else {
-            uint256 executionGas = op.gasLimit - gasToReserve;
-            try this.performOperation{gas: executionGas}(op) returns (
-                OperationResult memory result
-            ) {
-                opResult = result;
-            } catch (bytes memory reason) {
-                opResult = WalletUtils._failOperationWithReason(WalletUtils._getRevertMsg(reason));
-            }
+
+        // Execute the encoded actions in a new call context so that reverts
+        // are caught explicitly without affecting the call context of this
+        // function.
+        try
+            this.executeActionsInOperation{gas: op.executionGasLimit}(op)
+        returns (OperationResult memory result) {
+            opResult = result;
+        } catch (bytes memory reason) {
+            opResult = WalletUtils._failOperationWithReason(
+                WalletUtils._getRevertMsg(reason)
+            );
         }
 
+        // Revert if number of refunds is too large
+        uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
+        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
+
+        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset memory gasAsset = EncodedAsset({
             encodedAddr: op.joinSplitTxs[0].encodedAddr,
             encodedId: op.joinSplitTxs[0].encodedId
         });
 
-        // Request reserved maxGasFee minus subtree updater fee from vault
-        _vault.requestAsset(
-            gasAsset,
-            maxGasFee - opResult.refundGasUsed * op.gasPrice
-        );
+        // Request reserved maxGasFee from vault
+        // (We can't use _transferAssetFrom because Vault should never allow
+        // the Wallet to spend direclty)
+        _vault.requestAsset(gasAsset, maxGasFee);
 
         // Transfer used verification and execution gas to the bundler
         uint256 bundlerPayout = op.gasPrice *
-            (opResult.executionGasUsed +
-                GAS_PER_JOINSPLIT *
-                op.joinSplitTxs.length);
+            (opResult.executionGasUsed + WalletUtils.verificationGas(op));
         AssetUtils._transferAssetTo(gasAsset, bundler, bundlerPayout);
-
-        // Revert if number of refunds is too large
-        uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
-        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
 
         // Process refunds
         _handleAllRefunds(op.joinSplitTxs, op.refundAddr);
@@ -135,7 +131,7 @@ contract Wallet is IWallet, BalanceManager {
       `performOperationOutter`. The call gas given is the execution gas of the
       operation.
     */
-    function performOperation(
+    function executeActionsInOperation(
         Operation calldata op
     ) external onlyThis returns (OperationResult memory opResult) {
         uint256 gasLeftInitial = gasleft();
