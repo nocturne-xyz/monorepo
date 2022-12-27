@@ -47,7 +47,7 @@ jobs:
             ${{ runner.os }}-build-and-test-${{ env.cache-name }}-
       - name: install rapidsnark
         if: steps.cache-rapidsnark.outputs.cache-hit != 'true'
-        run: packages/cricuits/scripts/install_rapidsnark.sh
+        run: packages/circuits/scripts/install_rapidsnark.sh
 
       - name: cache subtree update artifacts
         id: cache-subtree-update
