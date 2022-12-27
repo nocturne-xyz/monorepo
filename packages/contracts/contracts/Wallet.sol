@@ -94,16 +94,17 @@ contract Wallet is IWallet, BalanceManager {
         // Execute the encoded actions in a new call context so that reverts
         // are caught explicitly without affecting the call context of this
         // function.
+        uint256 gasLeftInitial = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op.actions) returns (
             OperationResult memory result
         ) {
             opResult = result;
-        } catch (bytes memory reason) {
-            return
-                WalletUtils._failOperationWithReason(
-                    WalletUtils._getRevertMsg(reason)
-                );
+        } catch (bytes memory result) {
+            // TODO: properly process this failure case
+            opResult = WalletUtils._unsuccessfulOperation(result);
         }
+        // Compute executionGasUsed
+        opResult.executionGasUsed = gasLeftInitial - gasleft();
 
         // @dev Revert if number of refund requested is too large
         uint256 numRefunds = op.joinSplitTxs.length + _receivedAssets.length;
@@ -139,21 +140,17 @@ contract Wallet is IWallet, BalanceManager {
     function executeActions(
         Action[] calldata actions
     ) external onlyThis returns (OperationResult memory opResult) {
-        uint256 gasLeftInitial = gasleft();
-
         uint256 numActions = actions.length;
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
         opResult.callResults = new bytes[](numActions);
+        // Sequentially
         for (uint256 i = 0; i < numActions; i++) {
             (bool success, bytes memory result) = _makeExternalCall(actions[i]);
 
             opResult.callSuccesses[i] = success;
             opResult.callResults[i] = result;
         }
-
-        // Compute executionGasUsed
-        opResult.executionGasUsed = gasLeftInitial - gasleft();
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

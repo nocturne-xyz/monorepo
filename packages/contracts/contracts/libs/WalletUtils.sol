@@ -139,7 +139,9 @@ library WalletUtils {
         bytes memory reason
     ) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-        if (reason.length < 68) return "Transaction reverted silently";
+        if (reason.length < 68) {
+            return "Transaction reverted silently";
+        }
 
         assembly {
             // Slice the sighash.
@@ -157,6 +159,26 @@ library WalletUtils {
                 failureReason: reason,
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),
+                executionGasUsed: 0,
+                verificationGasUsed: 0,
+                refundGasUsed: 0
+            });
+    }
+
+    // TODO: properly process this failure case
+    function _unsuccessfulOperation(
+        bytes memory result
+    ) internal pure returns (OperationResult memory) {
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = false;
+        bytes[] memory callResults = new bytes[](1);
+        callResults[0] = result;
+        return
+            OperationResult({
+                opProcessed: true,
+                failureReason: "",
+                callSuccesses: callSuccesses,
+                callResults: callResults,
                 executionGasUsed: 0,
                 verificationGasUsed: 0,
                 refundGasUsed: 0

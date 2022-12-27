@@ -33,7 +33,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using stdJson for string;
     using TreeTestLib for TreeTest;
 
-    uint256 constant DEFAULT_GAS_LIMIT = 1000000;
+    uint256 constant DEFAULT_GAS_LIMIT = 800000;
     uint256 constant ERC20_ID = 1;
 
     address constant ALICE = address(1);
@@ -331,7 +331,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             BOB,
             1 gwei,
             2 gwei,
-            1000000,
+            DEFAULT_GAS_LIMIT,
             0
         );
 
@@ -391,8 +391,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             token,
             BOB,
             1 gwei,
-            2 gwei,
-            10000, // low gas limit
+            15 gwei, // this will overdraw the vault
+            DEFAULT_GAS_LIMIT,
             1000
         );
 
@@ -442,7 +442,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             BOB,
             15 gwei,
             2 gwei,
-            1000000,
+            DEFAULT_GAS_LIMIT,
             1000
         );
 
