@@ -49,7 +49,7 @@ export class NocturneFrontendSDK {
 
     const {
       joinSplitRequests, refundAssets, actions,
-      gasLimit = 1_000_000n,
+      executionGasLimit = 1_000_000n,
       gasPrice = 0n,
       maxNumRefunds = BigInt(refundAssets.length + joinSplitRequests.length),
     } = operationRequest;
@@ -63,7 +63,7 @@ export class NocturneFrontendSDK {
       refundAddr,
       encodedRefundAssets,
       actions,
-      gasLimit,
+      executionGasLimit,
       gasPrice,
       maxNumRefunds,
     };
