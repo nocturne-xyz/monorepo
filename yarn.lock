@@ -2863,6 +2863,7 @@ __metadata:
     "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
+    "@types/commander": ^2.12.2
     "@types/express": ^4.17.14
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
@@ -2872,11 +2873,13 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     bullmq: ^3.4.1
     chai: ^4.3.6
+    commander: ^9.4.1
     dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
     express: ^4.18.2
+    find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.2.4
     mocha: ^10.1.0
     prettier: ^2.8.0
@@ -4571,6 +4574,15 @@ __metadata:
     "@types/filesystem": "*"
     "@types/har-format": "*"
   checksum: af96fdc79fb019d827fdb6269f831921f8f36215ee05a2624436dd2ad4d84d7be12333cc6f54912fb8bae0ca49cbfde5a78de94723bfbd20d309d2e71e274a1b
+  languageName: node
+  linkType: hard
+
+"@types/commander@npm:^2.12.2":
+  version: 2.12.2
+  resolution: "@types/commander@npm:2.12.2"
+  dependencies:
+    commander: "*"
+  checksum: 8cfc1797b3a6cbff7d723590480c36f5569dc1a9f2810770178ce10de1ed65655ae2ef954c9051fa176760dcf87b1e5330be65ef2e77e58c904be0e299b8b08e
   languageName: node
   linkType: hard
 
@@ -8689,6 +8701,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:*, commander@npm:^9.4.1":
+  version: 9.4.1
+  resolution: "commander@npm:9.4.1"
+  checksum: bfb18e325a5bdf772763c2213d5c7d9e77144d944124e988bcd8e5e65fb6d45d5d4e86b09155d0f2556c9a59c31e428720e57968bcd050b2306e910a0bf3cf13
+  languageName: node
+  linkType: hard
+
 "commander@npm:2.18.0":
   version: 2.18.0
   resolution: "commander@npm:2.18.0"
@@ -8714,13 +8733,6 @@ __metadata:
   version: 7.2.0
   resolution: "commander@npm:7.2.0"
   checksum: 53501cbeee61d5157546c0bef0fedb6cdfc763a882136284bed9a07225f09a14b82d2a84e7637edfd1a679fb35ed9502fd58ef1d091e6287f60d790147f68ddc
-  languageName: node
-  linkType: hard
-
-"commander@npm:^9.4.1":
-  version: 9.4.1
-  resolution: "commander@npm:9.4.1"
-  checksum: bfb18e325a5bdf772763c2213d5c7d9e77144d944124e988bcd8e5e65fb6d45d5d4e86b09155d0f2556c9a59c31e428720e57968bcd050b2306e910a0bf3cf13
   languageName: node
   linkType: hard
 
