@@ -31,16 +31,19 @@ library AssetUtils {
         pure
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
-        id = (encodedAssetAddr & (7 << 250)) | encodedAssetId;
+        uint256 bitMask_111 = 7;
+        uint256 bitMask_11 = 3;
+        id = (encodedAssetAddr & (bitMask_111 << 250)) | encodedAssetId;
         assetAddr = address(uint160((encodedAssetAddr << 96) >> 96));
-        uint256 asset_type_bits = (encodedAssetAddr >> 160) & 3;
-        require(asset_type_bits <= 3, "Invalid encodedAssetAddr field.");
+        uint256 asset_type_bits = (encodedAssetAddr >> 160) & bitMask_11;
         if (asset_type_bits == 0) {
             assetType = AssetType.ERC20;
         } else if (asset_type_bits == 1) {
             assetType = AssetType.ERC721;
         } else if (asset_type_bits == 2) {
             assetType = AssetType.ERC1155;
+        } else {
+            revert("Invalid encodedAssetAddr");
         }
         return (assetType, assetAddr, id);
     }
@@ -58,6 +61,8 @@ library AssetUtils {
             asset_type_bits = uint256(1);
         } else if (assetType == AssetType.ERC1155) {
             asset_type_bits = uint256(2);
+        } else {
+            revert("Invalid assetType");
         }
         encodedAssetAddr =
             ((id >> 253) << 253) |
