@@ -18,54 +18,6 @@ jobs:
       - name: Install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
 
-      - name: Install circom
-        run: packages/circuits/scripts/install_deps.sh
-
-      - name: cache big ptau file
-        id: cache-big-ptau
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-big-ptau
-        with:
-          path: packages/circuits/data/
-          key: ${{ runner.os }}-build-and-test-${{ env.cache-name }}
-          restore-keys: |
-            ${{ runner.os }}-build-and-test-${{ env.cache-name }}
-      - name: download big ptau file
-        if: steps.cache-big-ptau.outputs.cache-hit != 'true'
-        run: packages/circuits/scripts/download_big_ptau.sh
-
-      - name: cache rapidsnark
-        id: cache-rapidsnark
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-rapidsnark
-        with:
-          path: rapidsnark
-          key: ${{ runner.os }}-build-and-test-${{ env.cache-name }}-hashFiles('.gitmodules')
-          restore-keys: |
-            ${{ runner.os }}-build-and-test-${{ env.cache-name }}-
-      - name: install rapidsnark
-        if: steps.cache-rapidsnark.outputs.cache-hit != 'true'
-        run: packages/circuits/scripts/install_rapidsnark.sh
-
-      - name: cache subtree update artifacts
-        id: cache-subtree-update
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-subtree-update
-        with:
-          path: circuit-artifacts/subtreeupdate
-          key: ${{ runner.os }}-build-and-test-${{ env.cache-name }}-${{ hashFiles('packages/circuits/subtreeupdate.circom', 'packages/circuits/scripts/subtreeupdate/build.sh', 'packages/circuits/scripts/subtreeupdate/gen_solidity_verifier.sh') }}
-          restore-keys: |
-            ${{ runner.os }}-build-and-test-${{ env.cache-name }}-
-      - name: build subtree update circuit
-        if: steps.cache-subtree-update-rapidnsark != 'true'
-        run: packages/circuits/scripts/subtreeupdate/build.sh
-      - name: compile subtree update witness generator
-        if: steps.cache-subtree-update-rapidnsark.outputs.cache-hit != 'true'
-        run: packages/circuits/scripts/build_witness_generator.sh
-      
       - run: |
           yarn install
       - run: |
@@ -74,14 +26,9 @@ jobs:
           yarn prettier:check
       - run: |
           yarn build
-      - name: run unit tests including rapidsnark
-        env:
-          USE_RAPIDSNARK: 'true'
-        run: yarn test:unit
+      - run: |
+          yarn test:unit
       - run: |
           yarn test:e2e
-      - name: run full e2e test
-        env:
-          ACTUALLY_PROVE_SUBTREE_UPDATE: 'true'
-          USE_RAPIDSNARK: 'true'
-        run: yarn test:ci
+      - run: |
+          yarn test:ci
