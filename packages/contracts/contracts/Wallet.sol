@@ -29,7 +29,7 @@ contract Wallet is IWallet, BalanceManager {
     event OperationProcessed(
         uint256 indexed operationDigest,
         bool indexed opProcessed,
-        bytes failureReason,
+        string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
     );
@@ -62,15 +62,7 @@ contract Wallet is IWallet, BalanceManager {
             ) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = OperationResult({
-                    opProcessed: false,
-                    failureReason: reason,
-                    callSuccesses: new bool[](0),
-                    callResults: new bytes[](0),
-                    executionGasUsed: 0,
-                    verificationGasUsed: 0,
-                    refundGasUsed: 0
-                });
+                opResults[i] = WalletUtils._failOperationWithReason(WalletUtils._getRevertMsg(reason));
             }
             emit OperationProcessed(
                 opDigests[i],
@@ -100,15 +92,7 @@ contract Wallet is IWallet, BalanceManager {
         uint256 gasToReserve = verificationGas + maxRefundGas;
         // Not enough executionGas, operation fails
         if (gasToReserve >= op.gasLimit) {
-            opResult = OperationResult({
-                opProcessed: false,
-                failureReason: bytes("Not enough execution gas."),
-                callSuccesses: new bool[](0),
-                callResults: new bytes[](0),
-                executionGasUsed: 0,
-                verificationGasUsed: 0,
-                refundGasUsed: 0
-            });
+            opResult = WalletUtils._failOperationWithReason("Not enough execution gas.");
         } else {
             uint256 executionGas = op.gasLimit - gasToReserve;
             try this.performOperation{gas: executionGas}(op) returns (
@@ -116,15 +100,7 @@ contract Wallet is IWallet, BalanceManager {
             ) {
                 opResult = result;
             } catch (bytes memory reason) {
-                opResult = OperationResult({
-                    opProcessed: false,
-                    failureReason: reason,
-                    callSuccesses: new bool[](0),
-                    callResults: new bytes[](0),
-                    executionGasUsed: 0,
-                    verificationGasUsed: 0,
-                    refundGasUsed: 0
-                });
+                opResult = WalletUtils._failOperationWithReason(WalletUtils._getRevertMsg(reason));
             }
         }
 

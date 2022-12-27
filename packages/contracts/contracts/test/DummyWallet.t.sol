@@ -70,7 +70,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     event OperationProcessed(
         uint256 indexed operationDigest,
         bool indexed opProcessed,
-        bytes failureReason,
+        string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
     );
@@ -355,7 +355,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bool[] memory callSuccesses = new bool[](1);
         callSuccesses[0] = true;
         bytes[] memory callResults = new bytes[](1);
-        bytes memory failureReason;
+        string memory failureReason;
         emit OperationProcessed(
             uint256(0),
             true,
@@ -405,7 +405,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         vm.expectEmit(false, true, false, false);
         bool[] memory callSuccesses = new bool[](0);
         bytes[] memory callResults = new bytes[](0);
-        bytes memory failureReason;
+        string memory failureReason;
         emit OperationProcessed(
             uint256(0),
             false,
@@ -456,7 +456,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bool[] memory callSuccesses = new bool[](1);
         callSuccesses[0] = false;
         bytes[] memory callResults = new bytes[](1);
-        bytes memory failureReason;
+        string memory failureReason;
         emit OperationProcessed(
             uint256(0),
             true,
