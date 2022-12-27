@@ -127,7 +127,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
 };
 
-type ABIMethodParamInput = {
+type ABIMethodParamInputProps = {
   param: ABIValue;
   value: ABIInteractionParamFormData;
   handleChange: (event: any, path: string[]) => void;
@@ -140,7 +140,7 @@ const ABIMethodParamInput = ({
   value,
   handleChange,
   path: _path,
-}: ABIMethodParamInput) => {
+}: ABIMethodParamInputProps) => {
   // "path" is the the path of the current field of the param (e.g. ["foo", "bar"] for the field "bar" of the struct param "foo")
   // this is needed to set the value of the field in the form data, which is one big objec
   const path = _path ?? [];
