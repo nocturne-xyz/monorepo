@@ -1,7 +1,12 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import { connectSnap, connectWalletContract, getSnap, shouldDisplayReconnectButton } from "../utils";
+import {
+  connectSnap,
+  connectWalletContract,
+  getSnap,
+  shouldDisplayReconnectButton,
+} from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
@@ -227,7 +232,9 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && walletContract && <ABIForm sdk={nocturneFrontendSDK} />}
+            {nocturneFrontendSDK && walletContract && (
+              <ABIForm sdk={nocturneFrontendSDK} />
+            )}
           </Card>
         </CardContainer>
       )}

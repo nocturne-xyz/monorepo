@@ -17,9 +17,7 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
 }) => {
   const iface = new ethers.utils.Interface(abi);
 
-  const handleEnqueueAction = (
-    encodedFunction: string 
-  ) => {
+  const handleEnqueueAction = (encodedFunction: string) => {
     const action = {
       contractAddress,
       encodedFunction,
@@ -72,9 +70,10 @@ function getInitialFormDataForInput(
 
 const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
   const initialFormData: ABIInteractionParamFormData[] = method.inputs.map(
-    input => getInitialFormDataForInput(input)
+    (input) => getInitialFormDataForInput(input)
   );
-  const [inputs, setInputs] = useState<ABIInteractionParamFormData[]>(initialFormData);
+  const [inputs, setInputs] =
+    useState<ABIInteractionParamFormData[]>(initialFormData);
   const handleChangeAtIndex = (
     paramIndex: number,
     value: any,
@@ -83,7 +82,8 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
     const newInputs = _.cloneDeep(inputs);
 
     const pathString = path.join(".");
-    const fullPath = `[${paramIndex}]` + (pathString.length > 0 ? `.${pathString}` : "");
+    const fullPath =
+      `[${paramIndex}]` + (pathString.length > 0 ? `.${pathString}` : "");
     _.set(newInputs, fullPath, value);
 
     console.log(newInputs);
@@ -93,10 +93,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
   const _handleEnqueueAction = (event: any) => {
     event.preventDefault();
-    const encodedFunction = iface.encodeFunctionData(
-      method.name,
-      inputs
-    );
+    const encodedFunction = iface.encodeFunctionData(method.name, inputs);
 
     handleEnqueueAction(encodedFunction);
   };
@@ -110,21 +107,15 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
           key={i}
           param={input}
           value={inputs[i]}
-          handleChange={(param, path) =>
-            handleChangeAtIndex(i, param, path)
-          }
+          handleChange={(param, path) => handleChangeAtIndex(i, param, path)}
         />
       ))}
 
-      <button
-        type="submit"
-        onClick={_handleEnqueueAction}
-      >
+      <button type="submit" onClick={_handleEnqueueAction}>
         Enqueue Action
       </button>
     </div>
   );
-
 };
 
 type ABIMethodParamInputProps = {
