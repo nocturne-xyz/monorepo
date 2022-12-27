@@ -18,8 +18,6 @@ type ABIInteractionParamFormData =
   | string
   | { [key: string]: ABIInteractionParamFormData };
 
-type ABIInteractionReturnValues = Record<string, string>;
-
 function getInitialFormDataForInput(
   input: ABIValue
 ): ABIInteractionParamFormData {
@@ -52,9 +50,6 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
 
   const [formData, setFormData] =
     useState<ABIInteractionFormData>(initialFormData);
-  const [returnValues, setReturnValues] = useState<ABIInteractionReturnValues>(
-    {}
-  );
   const iface = new ethers.utils.Interface(abi);
 
   const handleEnqueueAction = (
@@ -112,9 +107,6 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
           >
             Enqueue Action
           </button>
-          {returnValues[method.name] && (
-            <div>Return value: returnValues[method.name]</div>
-          )}
         </div>
       );
     });
