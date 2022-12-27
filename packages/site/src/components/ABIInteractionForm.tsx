@@ -71,6 +71,7 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
   const formFields = abi
     .filter(({ type }) => type === "function")
     .map((method) => {
+      // handles a change in the input form data for `method` for `paramIndex`th parameter
       const handleChangeAtIndex = (
         paramIndex: number,
         event: any,
@@ -121,12 +122,15 @@ type ABIMethodParamInput = {
   path?: string[];
 };
 
+// recursive compoment that renders a nested form for a single ABI method param, which may be a struct
 const ABIMethodParamInput = ({
   param,
   value,
   handleChange,
   path: _path,
 }: ABIMethodParamInput) => {
+  // "path" is the the path of the current field of the param (e.g. ["foo", "bar"] for the field "bar" of the struct param "foo")
+  // this is needed to set the value of the field in the form data, which is one big objec
   const path = _path ?? [];
   const pathStr = path.join(".");
   const curriedHandleChange = (event: any) => {
@@ -134,6 +138,7 @@ const ABIMethodParamInput = ({
   };
 
   switch (param.type) {
+    // it the param is a struct, recursively render each field
     case "tuple": {
       if (param.components === undefined) {
         throw new Error("Tuple type must have components");
@@ -160,6 +165,7 @@ const ABIMethodParamInput = ({
       );
     }
 
+    // otherwise, render a single input field
     default: {
       if (param.components !== undefined) {
         throw new Error("Non-tuple type must not have components");
