@@ -36,18 +36,15 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         AssetUtils._transferAssetTo(encodedAsset, _wallet, value);
     }
 
-    function makeDeposit(
-        Deposit calldata deposit
-    ) public override onlyWallet returns (bool) {
-        return
-            AssetUtils._transferAssetFrom(
-                EncodedAsset({
-                    encodedAddr: deposit.encodedAddr,
-                    encodedId: deposit.encodedId
-                }),
-                deposit.spender,
-                deposit.value
-            );
+    function makeDeposit(Deposit calldata deposit) public override onlyWallet {
+        AssetUtils._transferAssetFrom(
+            EncodedAsset({
+                encodedAddr: deposit.encodedAddr,
+                encodedId: deposit.encodedId
+            }),
+            deposit.spender,
+            deposit.value
+        );
     }
 
     function onERC721Received(

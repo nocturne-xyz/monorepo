@@ -18,7 +18,7 @@ contract BalanceManager is
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    EncodedAsset[] _receivedTokens;
+    EncodedAsset[] _receivedAssets;
     IVault public immutable _vault;
 
     constructor(
@@ -35,7 +35,7 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        _receivedTokens.push(
+        _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
         );
         return IERC721Receiver.onERC721Received.selector;
@@ -48,7 +48,7 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        _receivedTokens.push(
+        _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
         );
         return IERC1155Receiver.onERC1155Received.selector;
@@ -63,7 +63,7 @@ contract BalanceManager is
     ) external override returns (bytes4) {
         uint256 numIds = ids.length;
         for (uint256 i = 0; i < numIds; i++) {
-            _receivedTokens.push(
+            _receivedAssets.push(
                 AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
             );
         }
@@ -87,7 +87,7 @@ contract BalanceManager is
             deposit.value
         );
 
-        require(_vault.makeDeposit(deposit), "Deposit failed");
+        _vault.makeDeposit(deposit);
     }
 
     // Process all joinSplitTxs and request all declared publicSpend from
@@ -135,12 +135,17 @@ contract BalanceManager is
         require(gasLeftToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
+    /**
+      Refund all current wallet assets back to refundAddr. The list of assets
+      to refund is specified in joinSplitTxs and the state variable
+      _receivedAssets.
+    */
     function _handleAllRefunds(
         JoinSplitTransaction[] calldata joinSplitTxs,
         NocturneAddress calldata refundAddr
     ) internal {
         uint256 numJoinSplits = joinSplitTxs.length;
-        uint256 numReceived = _receivedTokens.length;
+        uint256 numReceived = _receivedAssets.length;
         uint256 numRefunds = numJoinSplits + numReceived;
 
         EncodedAsset[] memory tokensToProcess = new EncodedAsset[](numRefunds);
@@ -151,9 +156,9 @@ contract BalanceManager is
             });
         }
         for (uint256 i = 0; i < numReceived; i++) {
-            tokensToProcess[joinSplitTxs.length + i] = _receivedTokens[i];
+            tokensToProcess[joinSplitTxs.length + i] = _receivedAssets[i];
         }
-        delete _receivedTokens;
+        delete _receivedAssets;
 
         for (uint256 i = 0; i < numRefunds; i++) {
             uint256 value = AssetUtils._balanceOfAsset(tokensToProcess[i]);

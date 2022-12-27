@@ -87,23 +87,26 @@ contract Wallet is IWallet, BalanceManager {
         address bundler
     ) external onlyThis returns (OperationResult memory opResult) {
         uint256 maxGasFee = WalletUtils.maxGasFee(op);
+        // Handle all joinsplit transctions.
+        /// @dev This reverts if nullifiers in joinSplitTxs are not fresh
         _handleAllSpends(op.joinSplitTxs, maxGasFee);
 
         // Execute the encoded actions in a new call context so that reverts
         // are caught explicitly without affecting the call context of this
         // function.
-        try
-            this.executeActionsInOperation{gas: op.executionGasLimit}(op)
-        returns (OperationResult memory result) {
+        try this.executeActions{gas: op.executionGasLimit}(op.actions) returns (
+            OperationResult memory result
+        ) {
             opResult = result;
         } catch (bytes memory reason) {
-            opResult = WalletUtils._failOperationWithReason(
-                WalletUtils._getRevertMsg(reason)
-            );
+            return
+                WalletUtils._failOperationWithReason(
+                    WalletUtils._getRevertMsg(reason)
+                );
         }
 
-        // Revert if number of refunds is too large
-        uint256 numRefunds = op.joinSplitTxs.length + _receivedTokens.length;
+        // @dev Revert if number of refund requested is too large
+        uint256 numRefunds = op.joinSplitTxs.length + _receivedAssets.length;
         require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
 
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
@@ -124,6 +127,8 @@ contract Wallet is IWallet, BalanceManager {
 
         // Process refunds
         _handleAllRefunds(op.joinSplitTxs, op.refundAddr);
+
+        return opResult;
     }
 
     /**
@@ -131,12 +136,11 @@ contract Wallet is IWallet, BalanceManager {
       `performOperationOutter`. The call gas given is the execution gas of the
       operation.
     */
-    function executeActionsInOperation(
-        Operation calldata op
+    function executeActions(
+        Action[] calldata actions
     ) external onlyThis returns (OperationResult memory opResult) {
         uint256 gasLeftInitial = gasleft();
 
-        Action[] calldata actions = op.actions;
         uint256 numActions = actions.length;
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);

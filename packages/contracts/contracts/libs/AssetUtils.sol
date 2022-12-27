@@ -83,29 +83,6 @@ library AssetUtils {
             assetA.encodedId == assetB.encodedId);
     }
 
-    function _transferAssetTo(
-        EncodedAsset memory encodedAsset,
-        address receiver,
-        uint256 value
-    ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
-            encodedAsset
-        );
-        if (assetType == AssetType.ERC20) {
-            IERC20(assetAddr).transfer(receiver, value);
-        } else if (assetType == AssetType.ERC721) {
-            IERC721(assetAddr).transferFrom(address(this), receiver, id);
-        } else if (assetType == AssetType.ERC1155) {
-            IERC1155(assetAddr).safeTransferFrom(
-                address(this),
-                receiver,
-                id,
-                value,
-                ""
-            );
-        }
-    }
-
     function _balanceOfAsset(
         EncodedAsset memory encodedAsset
     ) internal view returns (uint256) {
@@ -124,38 +101,69 @@ library AssetUtils {
         return value;
     }
 
-    function _transferAssetFrom(
+    /**
+      @dev Transfer asset to receiver. Throws if unsuccssful.
+    */
+    function _transferAssetTo(
         EncodedAsset memory encodedAsset,
-        address spender,
+        address receiver,
         uint256 value
-    ) internal returns (bool) {
+    ) internal {
         (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
             encodedAsset
         );
         if (assetType == AssetType.ERC20) {
-            return
-                IERC20(assetAddr).transferFrom(spender, address(this), value);
+            require(
+                IERC20(assetAddr).transfer(receiver, value),
+                "ERC20 transfer failed"
+            );
         } else if (assetType == AssetType.ERC721) {
-            try IERC721(assetAddr).transferFrom(spender, address(this), id) {
-                return true;
-            } catch {
-                return false;
-            }
+            // uncaught revert will be propagated
+            IERC721(assetAddr).transferFrom(address(this), receiver, id);
         } else if (assetType == AssetType.ERC1155) {
-            try
-                IERC1155(assetAddr).safeTransferFrom(
-                    spender,
-                    address(this),
-                    id,
-                    value,
-                    ""
-                )
-            {
-                return true;
-            } catch {
-                return false;
-            }
+            // uncaught revert will be propagated
+            IERC1155(assetAddr).safeTransferFrom(
+                address(this),
+                receiver,
+                id,
+                value,
+                ""
+            );
+        } else {
+            revert("Invalid asset");
         }
-        return false;
+    }
+
+    /**
+      @dev Transfer asset from spender. Throws if unsuccssful.
+    */
+    function _transferAssetFrom(
+        EncodedAsset memory encodedAsset,
+        address spender,
+        uint256 value
+    ) internal {
+        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
+            encodedAsset
+        );
+        if (assetType == AssetType.ERC20) {
+            require(
+                IERC20(assetAddr).transferFrom(spender, address(this), value),
+                "ERC20 transferFrom failed"
+            );
+        } else if (assetType == AssetType.ERC721) {
+            // uncaught revert will be propagated
+            IERC721(assetAddr).transferFrom(spender, address(this), id);
+        } else if (assetType == AssetType.ERC1155) {
+            // uncaught revert will be propagated
+            IERC1155(assetAddr).safeTransferFrom(
+                spender,
+                address(this),
+                id,
+                value,
+                ""
+            );
+        } else {
+            revert("Invalid asset");
+        }
     }
 }
