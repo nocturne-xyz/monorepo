@@ -47,7 +47,7 @@ library WalletUtils {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
-            for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
+            for (uint256 j = 0; j < numJoinSplits; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
@@ -68,13 +68,15 @@ library WalletUtils {
 
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
+    // Careful about declaring local variables in this function. Stack depth is around the limit.
     function computeOperationDigest(
         Operation calldata op
     ) internal pure returns (uint256) {
         bytes memory actionPayload;
 
         Action memory action;
-        for (uint256 i = 0; i < op.actions.length; i++) {
+        uint256 numActions = op.actions.length;
+        for (uint256 i = 0; i < numActions; i++) {
             action = op.actions[i];
             actionPayload = abi.encodePacked(
                 actionPayload,
@@ -84,7 +86,8 @@ library WalletUtils {
         }
 
         bytes memory joinSplitTxsPayload;
-        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
             joinSplitTxsPayload = abi.encodePacked(
                 joinSplitTxsPayload,
                 keccak256(

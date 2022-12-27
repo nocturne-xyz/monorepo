@@ -61,7 +61,8 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        for (uint256 i = 0; i < ids.length; i++) {
+        uint256 numIds = ids.length;
+        for (uint256 i = 0; i < numIds; i++) {
             _receivedTokens.push(
                 AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
             );
@@ -98,7 +99,8 @@ contract BalanceManager is
         uint256 gasLeftToReserve = maxGasFee;
         uint256 gasAssetAddr = joinSplitTxs[0].encodedAddr;
         uint256 gasAssetId = joinSplitTxs[0].encodedId;
-        for (uint256 i = 0; i < joinSplitTxs.length; i++) {
+        uint256 numJoinSplits = joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
             uint256 valueToTransfer = joinSplitTxs[i].publicSpend;
             // Try to reserve gas fee if there's more to reserve and this
@@ -137,21 +139,23 @@ contract BalanceManager is
         JoinSplitTransaction[] calldata joinSplitTxs,
         NocturneAddress calldata refundAddr
     ) internal {
-        uint256 numRefunds = joinSplitTxs.length + _receivedTokens.length;
+        uint256 numJoinSplits = joinSplitTxs.length;
+        uint256 numReceived = _receivedTokens.length;
+        uint256 numRefunds = numJoinSplits + numReceived;
 
         EncodedAsset[] memory tokensToProcess = new EncodedAsset[](numRefunds);
-        for (uint256 i = 0; i < joinSplitTxs.length; i++) {
+        for (uint256 i = 0; i < numJoinSplits; i++) {
             tokensToProcess[i] = EncodedAsset({
                 encodedAddr: joinSplitTxs[i].encodedAddr,
                 encodedId: joinSplitTxs[i].encodedId
             });
         }
-        for (uint256 i = 0; i < _receivedTokens.length; i++) {
+        for (uint256 i = 0; i < numReceived; i++) {
             tokensToProcess[joinSplitTxs.length + i] = _receivedTokens[i];
         }
         delete _receivedTokens;
 
-        for (uint256 i = 0; i < tokensToProcess.length; i++) {
+        for (uint256 i = 0; i < numRefunds; i++) {
             uint256 value = AssetUtils._balanceOfAsset(tokensToProcess[i]);
             if (value != 0) {
                 AssetUtils._transferAssetTo(
