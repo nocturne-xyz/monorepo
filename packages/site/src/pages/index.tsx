@@ -150,7 +150,7 @@ const Playground = () => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK || !walletContract) return;
       await Promise.all([syncNotes(), syncLeaves()]);
-    }, 10000);
+    }, 7000);
 
     return () => clearTimeout(timeout);
   }, [nocturneFrontendSDK, walletContract]);

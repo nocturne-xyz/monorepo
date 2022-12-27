@@ -9,6 +9,13 @@ git submodule update --remote --force
 # kill all child processes when this script exits
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
+# start the hardhat node
+pushd packages/e2e-tests
+LOG_DIR="../../hh-logs"
+mkdir -p $LOG_DIR
+yarn hh-node &> "$LOG_DIR/hh-node" &
+HH_NODE_PID=$!
+
 # start the site
 pushd packages/site
 yarn build
@@ -27,12 +34,6 @@ popd
 
 sleep 1
 
-# start the hardhat node
-pushd packages/e2e-tests
-LOG_DIR="../../hh-logs"
-mkdir -p $LOG_DIR
-yarn hh-node &> "$LOG_DIR/hh-node" &
-HH_NODE_PID=$!
 
 sleep 3
 
