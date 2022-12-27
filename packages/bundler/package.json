@@ -8,6 +8,9 @@
     "dist/**/*",
     "src/**/*"
   ],
+  "bin": {
+    "bundler-cli": "dist/src/cli/index.js"
+  },
   "scripts": {
     "build": "tsc --build",
     "check": "tsc --noEmit",
