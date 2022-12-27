@@ -35,8 +35,8 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  encodedAddr: bigint;
-  encodedId: bigint;
+  encodedAssetAddr: bigint;
+  encodedAssetId: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -64,7 +64,7 @@ export function joinSplitPublicSignalsFromArray(
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
     opDigest: publicSignals[6],
-    encodedAddr: publicSignals[7],
-    encodedId: publicSignals[8],
+    encodedAssetAddr: publicSignals[7],
+    encodedAssetId: publicSignals[8],
   };
 }

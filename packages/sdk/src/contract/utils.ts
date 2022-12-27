@@ -27,7 +27,11 @@ function hashOperation(
     refundAssetsPayload = ethers.utils.keccak256(
       ethers.utils.solidityPack(
         ["bytes", "uint256", "uint256"],
-        [refundAssetsPayload, encodedAsset.encodedAddr, encodedAsset.encodedId]
+        [
+          refundAssetsPayload,
+          encodedAsset.encodedAssetAddr,
+          encodedAsset.encodedAssetId,
+        ]
       )
     );
   }
@@ -57,8 +61,8 @@ function hashOperation(
               joinsplit.newNoteACommitment,
               joinsplit.newNoteBCommitment,
               joinsplit.publicSpend,
-              joinsplit.encodedAddr,
-              joinsplit.encodedId,
+              joinsplit.encodedAssetAddr,
+              joinsplit.encodedAssetId,
             ]
           )
         ),

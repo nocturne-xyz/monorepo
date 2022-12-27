@@ -79,9 +79,9 @@ describe("NocturneSigner", () => {
       id: 1n,
     };
 
-    const { encodedAddr, encodedId } = encodeAsset(asset);
-    const encodedAssetBits = encodedAddr.toString(2).padStart(256, "0");
-    const encodedIDBits = encodedId.toString(2).padStart(256, "0");
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+    const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
+    const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0");
 
     // bit length should be 256 after padding. if it's not, then the encoding is too long
     expect(encodedAssetBits.length).to.equal(256);
@@ -112,10 +112,10 @@ describe("NocturneSigner", () => {
     };
     const idBits = asset.id.toString(2).padStart(256, "0");
 
-    const { encodedAddr, encodedId } = encodeAsset(asset);
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
 
-    const encodedAssetBits = encodedAddr.toString(2).padStart(256, "0");
-    const encodedIDBits = encodedId.toString(2).padStart(256, "0");
+    const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
+    const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0");
 
     // bit length should be 256 after padding. if it's not, then the encoding is too long
     expect(encodedAssetBits.length).to.equal(256);

@@ -9,7 +9,7 @@ include "tree.circom";
 
 // Update a subtree of depth 4, where overall tree is of depth r + 4
 template SubtreeUpdate4(r) {
-    var s = 4; 
+    var s = 4;
     // public inputs
     signal input encodedPathAndHash;
     signal input accumulatorHash;
@@ -30,8 +30,8 @@ template SubtreeUpdate4(r) {
     signal input ownerH1s[2**s];
     signal input ownerH2s[2**s];
     signal input nonces[2**s];
-    signal input assets[2**s];
-    signal input ids[2**s];
+    signal input encodedAssetAddrs[2**s];
+    signal input encodedAssetIds[2**s];
     signal input values[2**s];
 
     component inner = SubtreeUpdate(r, s);
@@ -49,8 +49,8 @@ template SubtreeUpdate4(r) {
         inner.ownerH1s[i] <== ownerH1s[i];
         inner.ownerH2s[i] <== ownerH2s[i];
         inner.nonces[i] <== nonces[i];
-        inner.assets[i] <== assets[i];
-        inner.ids[i] <== ids[i];
+        inner.encodedAssetAddrs[i] <== encodedAssetAddrs[i];
+        inner.encodedAssetIds[i] <== encodedAssetIds[i];
         inner.values[i] <== values[i];
     }
 
@@ -66,8 +66,8 @@ template NoteCommitmentHash() {
     signal input ownerH1;
     signal input ownerH2;
     signal input nonce;
-    signal input asset;
-    signal input id;
+    signal input encodedAssetAddr;
+    signal input encodedAssetId;
     signal input value;
 
     // bits are in big-endian order
@@ -90,10 +90,10 @@ template NoteCommitmentHash() {
     elemBits[2].in <== nonce;
 
     elemBits[3] = Num2BitsBE(254);
-    elemBits[3].in <== asset;
+    elemBits[3].in <== encodedAssetAddr;
 
     elemBits[4] = Num2BitsBE(254);
-    elemBits[4].in <== id;
+    elemBits[4].in <== encodedAssetId;
 
     elemBits[5] = Num2BitsBE(254);
     elemBits[5].in <== value;
@@ -109,18 +109,18 @@ template NoteCommitmentHash() {
     for (var i = 0; i < 256; i++) {
         sha256HashBits[i] <== sha256Hasher.out[i];
     }
-    
+
     // hash owner
     component hasher = Poseidon(2);
     hasher.inputs[0] <== ownerH1;
     hasher.inputs[1] <== ownerH2;
     ownerHash <== hasher.out;
 
-    component noteCommit = NoteCommit(); 
+    component noteCommit = NoteCommit();
     noteCommit.ownerHash <== ownerHash;
     noteCommit.nonce <== nonce;
-    noteCommit.encodedAsset <== asset;
-    noteCommit.encodedId <== id;
+    noteCommit.encodedAssetAddr <== encodedAssetAddr;
+    noteCommit.encodedAssetId <== encodedAssetId;
     noteCommit.value <== value;
 
     noteCommitment <== noteCommit.out;
@@ -158,8 +158,8 @@ template SubtreeUpdate(r, s) {
     signal input ownerH1s[2**s];
     signal input ownerH2s[2**s];
     signal input nonces[2**s];
-    signal input assets[2**s];
-    signal input ids[2**s];
+    signal input encodedAssetAddrs[2**s];
+    signal input encodedAssetIds[2**s];
     signal input values[2**s];
 
     // binary-check the bitmap
@@ -178,8 +178,8 @@ template SubtreeUpdate(r, s) {
         noteHashers[i].ownerH1 <== ownerH1s[i];
         noteHashers[i].ownerH2 <== ownerH2s[i];
         noteHashers[i].nonce <== nonces[i];
-        noteHashers[i].asset <== assets[i];
-        noteHashers[i].id <== ids[i];
+        noteHashers[i].encodedAssetAddr <== encodedAssetAddrs[i];
+        noteHashers[i].encodedAssetId <== encodedAssetIds[i];
         noteHashers[i].value <== values[i];
 
         bitmap[i] * (noteHashers[i].noteCommitment - leaves[i]) === 0;
@@ -199,7 +199,7 @@ template SubtreeUpdate(r, s) {
             accumulatorInnerHashes[i][j] <== tmp1[i][j] + tmp2[i][j];
         }
     }
-    
+
     // Opening up compressed path
     component path = Num2BitsBE(r+3);
     path.in <== encodedPathAndHash;
@@ -223,7 +223,7 @@ template SubtreeUpdate(r, s) {
             hasher.in[i*256 + j] <== accumulatorInnerHashes[i][j];
         }
     }
-    
+
     // Assert that the accumulatorHash is correct
     component hashBits = Num2BitsBE(253);
     hashBits.in <== accumulatorHash;

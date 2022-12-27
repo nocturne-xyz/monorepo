@@ -117,8 +117,8 @@ library TreeTestLib {
                 [
                     addrHash,
                     note.nonce,
-                    note.encodedAddr,
-                    note.encodedId,
+                    note.encodedAssetAddr,
+                    note.encodedAssetId,
                     note.value
                 ]
             );

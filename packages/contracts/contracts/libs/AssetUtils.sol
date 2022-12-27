@@ -16,21 +16,25 @@ library AssetUtils {
         pure
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
-        return _decodeAsset(encodedAsset.encodedAddr, encodedAsset.encodedId);
+        return
+            _decodeAsset(
+                encodedAsset.encodedAssetAddr,
+                encodedAsset.encodedAssetId
+            );
     }
 
     function _decodeAsset(
-        uint256 encodedAddr,
-        uint256 encodedId
+        uint256 encodedAssetAddr,
+        uint256 encodedAssetId
     )
         internal
         pure
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
-        id = (encodedAddr & (7 << 250)) | encodedId;
-        assetAddr = address(uint160((encodedAddr << 96) >> 96));
-        uint256 asset_type_bits = (encodedAddr >> 160) & 3;
-        require(asset_type_bits <= 3, "Invalid encodedAddr field.");
+        id = (encodedAssetAddr & (7 << 250)) | encodedAssetId;
+        assetAddr = address(uint160((encodedAssetAddr << 96) >> 96));
+        uint256 asset_type_bits = (encodedAssetAddr >> 160) & 3;
+        require(asset_type_bits <= 3, "Invalid encodedAssetAddr field.");
         if (asset_type_bits == 0) {
             assetType = AssetType.ERC20;
         } else if (asset_type_bits == 1) {
@@ -45,8 +49,8 @@ library AssetUtils {
         AssetType assetType,
         address assetAddr,
         uint256 id
-    ) internal pure returns (uint256 encodedAddr, uint256 encodedId) {
-        encodedId = (id << 3) >> 3;
+    ) internal pure returns (uint256 encodedAssetAddr, uint256 encodedAssetId) {
+        encodedAssetId = (id << 3) >> 3;
         uint256 asset_type_bits;
         if (assetType == AssetType.ERC20) {
             asset_type_bits = uint256(0);
@@ -55,11 +59,11 @@ library AssetUtils {
         } else if (assetType == AssetType.ERC1155) {
             asset_type_bits = uint256(2);
         }
-        encodedAddr =
+        encodedAssetAddr =
             ((id >> 253) << 253) |
             uint256(uint160(assetAddr)) |
             (asset_type_bits << 160);
-        return (encodedAddr, encodedId);
+        return (encodedAssetAddr, encodedAssetId);
     }
 
     function _encodeAsset(
@@ -67,20 +71,23 @@ library AssetUtils {
         address assetAddr,
         uint256 id
     ) internal pure returns (EncodedAsset memory encodedAsset) {
-        (uint256 encodedAddr, uint256 encodedId) = _encodeAssetToTuple(
-            assetType,
-            assetAddr,
-            id
-        );
-        return EncodedAsset({encodedAddr: encodedAddr, encodedId: encodedId});
+        (
+            uint256 encodedAssetAddr,
+            uint256 encodedAssetId
+        ) = _encodeAssetToTuple(assetType, assetAddr, id);
+        return
+            EncodedAsset({
+                encodedAssetAddr: encodedAssetAddr,
+                encodedAssetId: encodedAssetId
+            });
     }
 
     function _checkEqual(
         EncodedAsset memory assetA,
         EncodedAsset memory assetB
     ) internal pure returns (bool) {
-        return (assetA.encodedAddr == assetB.encodedAddr &&
-            assetA.encodedId == assetB.encodedId);
+        return (assetA.encodedAssetAddr == assetB.encodedAssetAddr &&
+            assetA.encodedAssetId == assetB.encodedAssetId);
     }
 
     function _balanceOfAsset(

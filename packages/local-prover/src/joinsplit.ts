@@ -40,8 +40,8 @@ export class LocalJoinSplitProver implements JoinSplitProver {
       spendPubKey: spendPk,
       userViewKeyNonce: BigInt(1),
 
-      encodedAddr: oldNoteA.encodedAddr,
-      encodedId: oldNoteA.encodedId,
+      encodedAssetAddr: oldNoteA.encodedAssetAddr,
+      encodedAssetId: oldNoteA.encodedAssetId,
       operationDigest,
 
       c,

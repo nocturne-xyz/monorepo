@@ -32,10 +32,10 @@ const noteTransmissionType = {
 };
 const encodedAssetType = {
   type: "object",
-  required: ["encodedAddr", "encodedId"],
+  required: ["encodedAssetAddr", "encodedAssetId"],
   properties: {
-    encodedAddr: bigintType,
-    encodedId: bigintType,
+    encodedAssetAddr: bigintType,
+    encodedAssetId: bigintType,
   },
 };
 const encodedRefundAssetsType = {
@@ -65,8 +65,8 @@ const joinSplitTxType = {
     "nullifierB",
     "newNoteACommitment",
     "newNoteBCommitment",
-    "encodedAddr",
-    "encodedId",
+    "encodedAssetAddr",
+    "encodedAssetId",
     "publicSpend",
     "newNoteATransmission",
     "newNoteBTransmission",
@@ -78,8 +78,8 @@ const joinSplitTxType = {
     nullifierB: bigintType,
     newNoteACommitment: bigintType,
     newNoteBCommitment: bigintType,
-    encodedAddr: bigintType,
-    encodedId: bigintType,
+    encodedAssetAddr: bigintType,
+    encodedAssetId: bigintType,
     publicSpend: bigintType,
     newNoteATransmission: noteTransmissionType,
     newNoteBTransmission: noteTransmissionType,

@@ -112,8 +112,8 @@ contract Wallet is IWallet, BalanceManager {
 
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset memory gasAsset = EncodedAsset({
-            encodedAddr: op.joinSplitTxs[0].encodedAddr,
-            encodedId: op.joinSplitTxs[0].encodedId
+            encodedAssetAddr: op.joinSplitTxs[0].encodedAssetAddr,
+            encodedAssetId: op.joinSplitTxs[0].encodedAssetId
         });
 
         // Request reserved maxGasFee from vault

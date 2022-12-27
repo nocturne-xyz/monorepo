@@ -19,8 +19,14 @@ export async function fetchNotesFromRefunds(
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
   return events.map((event) => {
-    const { refundAddr, nonce, encodedAddr, encodedId, value, merkleIndex } =
-      event.args;
+    const {
+      refundAddr,
+      nonce,
+      encodedAssetAddr,
+      encodedAssetId,
+      value,
+      merkleIndex,
+    } = event.args;
     const { h1X, h1Y, h2X, h2Y } = refundAddr;
     return {
       owner: {
@@ -30,7 +36,10 @@ export async function fetchNotesFromRefunds(
         h2Y: h2Y.toBigInt(),
       },
       nonce: nonce.toBigInt(),
-      asset: decodeAsset(encodedAddr.toBigInt(), encodedId.toBigInt()),
+      asset: decodeAsset(
+        encodedAssetAddr.toBigInt(),
+        encodedAssetId.toBigInt()
+      ),
       value: value.toBigInt(),
       merkleIndex: merkleIndex.toNumber(),
     };
@@ -64,8 +73,8 @@ export async function fetchJoinSplits(
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      encodedAddr,
-      encodedId,
+      encodedAssetAddr,
+      encodedAssetId,
       publicSpend,
     } = joinSplitTx;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
@@ -115,8 +124,8 @@ export async function fetchJoinSplits(
           encryptedNonce: encryptedNonceB,
           encryptedValue: encryptedValueB,
         },
-        encodedAddr: encodedAddr.toBigInt(),
-        encodedId: encodedId.toBigInt(),
+        encodedAssetAddr: encodedAssetAddr.toBigInt(),
+        encodedAssetId: encodedAssetId.toBigInt(),
         publicSpend: publicSpend.toBigInt(),
       },
     };

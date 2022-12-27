@@ -44,8 +44,8 @@ export interface Asset {
 }
 
 export interface EncodedAsset {
-  encodedAddr: bigint;
-  encodedId: bigint;
+  encodedAssetAddr: bigint;
+  encodedAssetId: bigint;
 }
 
 export function encodeAsset({ assetType, assetAddr, id }: Asset): EncodedAsset {
@@ -73,15 +73,18 @@ export function encodeAsset({ assetType, assetAddr, id }: Asset): EncodedAsset {
 
   const idBits = id.toString(2).padStart(256, "0");
   const idTop3 = idBits.slice(0, 3);
-  const encodedId = BigInt(`0b000${idBits.slice(3)}`);
-  const encodedAddr = BigInt(
+  const encodedAssetId = BigInt(`0b000${idBits.slice(3)}`);
+  const encodedAssetAddr = BigInt(
     `0b000${idTop3}${eightyEightZeros}${assetTypeBits}${addrBits}`
   );
-  return { encodedAddr, encodedId };
+  return { encodedAssetAddr, encodedAssetId };
 }
 
-export function decodeAsset(encodedAddr: bigint, encodedId: bigint): Asset {
-  const encodedAssetBits = encodedAddr.toString(2).padStart(256, "0");
+export function decodeAsset(
+  encodedAssetAddr: bigint,
+  encodedAssetId: bigint
+): Asset {
+  const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
   const assetBits = encodedAssetBits.slice(96);
   const assetAddr = "0x" + BigInt(`0b${assetBits}`).toString(16);
 
@@ -102,7 +105,7 @@ export function decodeAsset(encodedAddr: bigint, encodedId: bigint): Asset {
   }
 
   const idTop3 = encodedAssetBits.slice(3, 6);
-  const encodedIDBits = encodedId.toString(2).padStart(256, "0").slice(3);
+  const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0").slice(3);
   const id = BigInt(`0b${idTop3}${encodedIDBits}`);
 
   return {
@@ -179,8 +182,8 @@ export interface BaseJoinSplitTx {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  encodedAddr: bigint;
-  encodedId: bigint;
+  encodedAssetAddr: bigint;
+  encodedAssetId: bigint;
   publicSpend: bigint;
   newNoteATransmission: NoteTransmission;
   newNoteBTransmission: NoteTransmission;

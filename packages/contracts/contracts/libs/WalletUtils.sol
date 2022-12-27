@@ -57,8 +57,8 @@ library WalletUtils {
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
                 allPis[index][6] = digests[i];
-                allPis[index][7] = op.joinSplitTxs[j].encodedAddr;
-                allPis[index][8] = op.joinSplitTxs[j].encodedId;
+                allPis[index][7] = op.joinSplitTxs[j].encodedAssetAddr;
+                allPis[index][8] = op.joinSplitTxs[j].encodedAssetId;
                 index++;
             }
         }
@@ -98,8 +98,8 @@ library WalletUtils {
                         op.joinSplitTxs[i].newNoteACommitment,
                         op.joinSplitTxs[i].newNoteBCommitment,
                         op.joinSplitTxs[i].publicSpend,
-                        op.joinSplitTxs[i].encodedAddr,
-                        op.joinSplitTxs[i].encodedId
+                        op.joinSplitTxs[i].encodedAssetAddr,
+                        op.joinSplitTxs[i].encodedAssetId
                     )
                 )
             );
@@ -109,8 +109,8 @@ library WalletUtils {
         for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
             refundAssetsPayload = abi.encodePacked(
                 refundAssetsPayload,
-                op.encodedRefundAssets[i].encodedAddr,
-                op.encodedRefundAssets[i].encodedId
+                op.encodedRefundAssets[i].encodedAssetAddr,
+                op.encodedRefundAssets[i].encodedAssetId
             );
         }
 

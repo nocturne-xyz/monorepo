@@ -53,8 +53,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     event Refund(
         NocturneAddress refundAddr,
         uint256 nonce,
-        uint256 encodedAddr,
-        uint256 encodedId,
+        uint256 encodedAssetAddr,
+        uint256 encodedAssetId,
         uint256 value,
         uint128 merkleIndex
     );
@@ -136,8 +136,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         _wallet.depositFunds(
             Deposit({
                 spender: _spender,
-                encodedAddr: uint256(uint160(_asset)),
-                encodedId: _id,
+                encodedAssetAddr: uint256(uint160(_asset)),
+                encodedAssetId: _id,
                 value: _value,
                 depositAddr: _depositAddr
             })
@@ -260,8 +260,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         EncodedAsset memory encodedAsset = EncodedAsset({
-            encodedAddr: uint256(uint160(address(token))),
-            encodedId: uint256(0)
+            encodedAssetAddr: uint256(uint160(address(token))),
+            encodedAssetId: uint256(0)
         });
         JoinSplitTransaction memory joinSplitTx = JoinSplitTransaction({
             commitmentTreeRoot: root,
@@ -272,8 +272,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             newNoteBCommitment: uint256(1032),
             newNoteBTransmission: newNoteBTransmission,
             proof: dummyProof(),
-            encodedAddr: encodedAsset.encodedAddr,
-            encodedId: encodedAsset.encodedId,
+            encodedAssetAddr: encodedAsset.encodedAssetAddr,
+            encodedAssetId: encodedAsset.encodedAssetId,
             publicSpend: publicSpend
         });
 

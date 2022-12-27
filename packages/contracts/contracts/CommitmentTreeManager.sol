@@ -25,8 +25,8 @@ contract CommitmentTreeManager {
     event Refund(
         NocturneAddress refundAddr,
         uint256 nonce,
-        uint256 encodedAddr,
-        uint256 encodedId,
+        uint256 encodedAssetAddr,
+        uint256 encodedAssetId,
         uint256 value,
         uint128 merkleIndex
     );
@@ -149,8 +149,8 @@ contract CommitmentTreeManager {
 
     function _handleRefundNote(
         NocturneAddress memory refundAddr,
-        uint256 encodedAddr,
-        uint256 encodedId,
+        uint256 encodedAssetAddr,
+        uint256 encodedAssetId,
         uint256 value
     ) internal {
         uint128 index = _merkle.getTotalCount();
@@ -158,13 +158,20 @@ contract CommitmentTreeManager {
             ownerH1: refundAddr.h1X,
             ownerH2: refundAddr.h2X,
             nonce: index,
-            encodedAddr: encodedAddr,
-            encodedId: encodedId,
+            encodedAssetAddr: encodedAssetAddr,
+            encodedAssetId: encodedAssetId,
             value: value
         });
 
         insertNote(note);
 
-        emit Refund(refundAddr, index, encodedAddr, encodedId, value, index);
+        emit Refund(
+            refundAddr,
+            index,
+            encodedAssetAddr,
+            encodedAssetId,
+            value,
+            index
+        );
     }
 }

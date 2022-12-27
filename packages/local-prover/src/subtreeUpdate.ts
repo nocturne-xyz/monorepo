@@ -75,8 +75,8 @@ export function subtreeUpdateInputsFromBatch(
   const ownerH1s: bigint[] = [];
   const ownerH2s: bigint[] = [];
   const nonces: bigint[] = [];
-  const encodedAddrs: bigint[] = [];
-  const encodedIds: bigint[] = [];
+  const encodedAssetAddrs: bigint[] = [];
+  const encodedAssetIds: bigint[] = [];
   const values: bigint[] = [];
 
   const accumulatorPreimage = [];
@@ -94,8 +94,8 @@ export function subtreeUpdateInputsFromBatch(
       ownerH1s.push(0n);
       ownerH2s.push(0n);
       nonces.push(0n);
-      encodedAddrs.push(0n);
-      encodedIds.push(0n);
+      encodedAssetAddrs.push(0n);
+      encodedAssetIds.push(0n);
       values.push(0n);
     } else {
       const note = noteOrCommitment;
@@ -104,10 +104,10 @@ export function subtreeUpdateInputsFromBatch(
       bitmap.push(1n);
       ownerH1s.push(note.owner.h1X);
       ownerH2s.push(note.owner.h2X);
-      const { encodedAddr, encodedId } = encodeAsset(note.asset);
+      const { encodedAssetAddr, encodedAssetId } = encodeAsset(note.asset);
       nonces.push(note.nonce);
-      encodedAddrs.push(encodedAddr);
-      encodedIds.push(encodedId);
+      encodedAssetAddrs.push(encodedAssetAddr);
+      encodedAssetIds.push(encodedAssetId);
       values.push(note.value);
     }
   }
@@ -136,8 +136,8 @@ export function subtreeUpdateInputsFromBatch(
     ownerH1s,
     ownerH2s,
     nonces,
-    encodedAddrs,
-    encodedIds,
+    encodedAssetAddrs,
+    encodedAssetIds,
     values,
     leaves,
     bitmap,

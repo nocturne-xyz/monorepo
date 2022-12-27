@@ -7,8 +7,8 @@ export const VALID_PROVEN_OPERATION_OBJ = {
       nullifierB: "0n",
       newNoteACommitment: "0n",
       newNoteBCommitment: "0n",
-      encodedAddr: "1n",
-      encodedId: "0n",
+      encodedAssetAddr: "1n",
+      encodedAssetId: "0n",
       publicSpend: "0n",
       newNoteATransmission: {
         owner: {
@@ -42,8 +42,8 @@ export const VALID_PROVEN_OPERATION_OBJ = {
   },
   encodedRefundAssets: [
     {
-      encodedAddr: "2n",
-      encodedId: "3n",
+      encodedAssetAddr: "2n",
+      encodedAssetId: "3n",
     },
   ],
   actions: [

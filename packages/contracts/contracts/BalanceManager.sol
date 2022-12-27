@@ -82,8 +82,8 @@ contract BalanceManager is
 
         _handleRefundNote(
             depositAddr,
-            deposit.encodedAddr,
-            deposit.encodedId,
+            deposit.encodedAssetAddr,
+            deposit.encodedAssetId,
             deposit.value
         );
 
@@ -97,8 +97,8 @@ contract BalanceManager is
         uint256 maxGasFee
     ) internal {
         uint256 gasLeftToReserve = maxGasFee;
-        uint256 gasAssetAddr = joinSplitTxs[0].encodedAddr;
-        uint256 gasAssetId = joinSplitTxs[0].encodedId;
+        uint256 gasAssetAddr = joinSplitTxs[0].encodedAssetAddr;
+        uint256 gasAssetId = joinSplitTxs[0].encodedAssetId;
         uint256 numJoinSplits = joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
             _handleJoinSplit(joinSplitTxs[i]);
@@ -107,8 +107,8 @@ contract BalanceManager is
             // joinSplitTx is spending the gasAsset
             if (
                 gasLeftToReserve > 0 &&
-                gasAssetAddr == joinSplitTxs[i].encodedAddr &&
-                gasAssetId == joinSplitTxs[i].encodedId
+                gasAssetAddr == joinSplitTxs[i].encodedAssetAddr &&
+                gasAssetId == joinSplitTxs[i].encodedAssetId
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
@@ -125,8 +125,8 @@ contract BalanceManager is
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
                     EncodedAsset({
-                        encodedAddr: joinSplitTxs[i].encodedAddr,
-                        encodedId: joinSplitTxs[i].encodedId
+                        encodedAssetAddr: joinSplitTxs[i].encodedAssetAddr,
+                        encodedAssetId: joinSplitTxs[i].encodedAssetId
                     }),
                     valueToTransfer
                 );
@@ -151,8 +151,8 @@ contract BalanceManager is
         EncodedAsset[] memory tokensToProcess = new EncodedAsset[](numRefunds);
         for (uint256 i = 0; i < numJoinSplits; i++) {
             tokensToProcess[i] = EncodedAsset({
-                encodedAddr: joinSplitTxs[i].encodedAddr,
-                encodedId: joinSplitTxs[i].encodedId
+                encodedAssetAddr: joinSplitTxs[i].encodedAssetAddr,
+                encodedAssetId: joinSplitTxs[i].encodedAssetId
             });
         }
         for (uint256 i = 0; i < numReceived; i++) {
@@ -170,8 +170,8 @@ contract BalanceManager is
                 );
                 _handleRefundNote(
                     refundAddr,
-                    tokensToProcess[i].encodedAddr,
-                    tokensToProcess[i].encodedId,
+                    tokensToProcess[i].encodedAssetAddr,
+                    tokensToProcess[i].encodedAssetId,
                     value
                 );
             }

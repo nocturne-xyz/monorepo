@@ -8,8 +8,8 @@ enum AssetType {
 }
 
 struct EncodedAsset {
-    uint256 encodedAddr;
-    uint256 encodedId;
+    uint256 encodedAssetAddr;
+    uint256 encodedAssetId;
 }
 
 struct Signature {
@@ -44,8 +44,8 @@ struct JoinSplitTransaction {
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
     uint256[8] proof;
-    uint256 encodedAddr;
-    uint256 encodedId;
+    uint256 encodedAssetAddr;
+    uint256 encodedAssetId;
     uint256 publicSpend;
     NoteTransmission newNoteATransmission;
     NoteTransmission newNoteBTransmission;
@@ -55,8 +55,8 @@ struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;
     uint256 nonce;
-    uint256 encodedAddr;
-    uint256 encodedId;
+    uint256 encodedAssetAddr;
+    uint256 encodedAssetId;
     uint256 value;
 }
 
@@ -109,8 +109,8 @@ struct Action {
 
 struct Deposit {
     address spender;
-    uint256 encodedAddr;
-    uint256 encodedId;
+    uint256 encodedAssetAddr;
+    uint256 encodedAssetId;
     uint256 value;
     NocturneAddress depositAddr;
 }

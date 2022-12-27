@@ -18,25 +18,26 @@ export interface IncludedNote extends Note {
 export interface EncodedNote {
   owner: NocturneAddress;
   nonce: bigint;
-  encodedAddr: EncodedAddr;
-  encodedId: EncodedID;
+  encodedAssetAddr: EncodedAddr;
+  encodedAssetId: EncodedId;
   value: bigint;
 }
 
 export type EncodedAddr = bigint;
-export type EncodedID = bigint;
+export type EncodedId = bigint;
 
 export class NoteTrait {
   static toCommitment(note: Note): bigint {
-    const {
-      owner,
-      nonce,
-      encodedAddr: asset,
-      encodedId: id,
-      value,
-    } = NoteTrait.encode(note);
+    const { owner, nonce, encodedAssetAddr, encodedAssetId, value } =
+      NoteTrait.encode(note);
     return BigInt(
-      poseidon([NocturneAddressTrait.hash(owner), nonce, asset, id, value])
+      poseidon([
+        NocturneAddressTrait.hash(owner),
+        nonce,
+        encodedAssetAddr,
+        encodedAssetId,
+        value,
+      ])
     );
   }
 
@@ -45,8 +46,8 @@ export class NoteTrait {
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
-    const asset = bigintToBEPadded(noteInput.encodedAddr, 32);
-    const id = bigintToBEPadded(noteInput.encodedId, 32);
+    const asset = bigintToBEPadded(noteInput.encodedAssetAddr, 32);
+    const id = bigintToBEPadded(noteInput.encodedAssetId, 32);
     const value = bigintToBEPadded(noteInput.value, 32);
 
     const preimage = [
@@ -69,20 +70,23 @@ export class NoteTrait {
 
   static encode(note: Note): EncodedNote {
     const { owner, nonce, value } = note;
-    const { encodedAddr, encodedId } = encodeAsset(note.asset);
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset(note.asset);
 
     return {
       owner,
       nonce,
-      encodedAddr: encodedAddr,
-      encodedId: encodedId,
+      encodedAssetAddr: encodedAssetAddr,
+      encodedAssetId: encodedAssetId,
       value,
     };
   }
 
   static decode(encodedNote: EncodedNote): Note {
     const { owner, nonce, value } = encodedNote;
-    const asset = decodeAsset(encodedNote.encodedAddr, encodedNote.encodedId);
+    const asset = decodeAsset(
+      encodedNote.encodedAssetAddr,
+      encodedNote.encodedAssetId
+    );
 
     return {
       owner,
