@@ -91,6 +91,16 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
     setInputs(newInputs);
   };
 
+  const _handleEnqueueAction = (event: any) => {
+    event.preventDefault();
+    const encodedFunction = iface.encodeFunctionData(
+      method.name,
+      inputs
+    );
+
+    handleEnqueueAction(encodedFunction);
+  };
+
   return (
     <div key={method.name}>
       <h3>{method.name}</h3>
@@ -108,15 +118,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
       <button
         type="submit"
-        onClick={(event: any) => {
-          event.preventDefault();
-          const encodedFunction = iface.encodeFunctionData(
-            method.name,
-            inputs
-          );
-
-          handleEnqueueAction(encodedFunction);
-        }}
+        onClick={_handleEnqueueAction}
       >
         Enqueue Action
       </button>
