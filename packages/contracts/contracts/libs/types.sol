@@ -88,7 +88,7 @@ struct Operation {
 }
 
 // An operation is processed if its joinsplitTxs are processed.
-// If an opeartion is processed, the following is guaranteeed to happen:
+// If an operation is processed, the following is guaranteeed to happen:
 // 1. Encoded calls are attempted (not necessarily successfully)
 // 2. Bundlers is compensated verification and execution gas
 // Bundlers should only be submitting operations that can be processed.

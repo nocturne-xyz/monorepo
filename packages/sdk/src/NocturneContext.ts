@@ -354,9 +354,9 @@ export class NocturneContext {
   }
 
   /**
-   * Given an opeartion request, gather the necessary notes to fulfill the
-   * requests and format the data into PreSignOpeartion (all data needed to
-   * compute opeartionDigest).
+   * Given an operation request, gather the necessary notes to fulfill the
+   * requests and format the data into PreSignOperation (all data needed to
+   * compute operationDigest).
    *
    * @param operationRequest
    */

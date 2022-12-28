@@ -181,7 +181,7 @@ describe("NocturneContext", () => {
     expect(minimumFor80[0].value).to.equal(10n);
   });
 
-  it("Generates PreProofOpeartion", async () => {
+  it("Generates PreProofOperation", async () => {
     // Request 40 tokens, should generate two joinsplits
     const assetRequest: JoinSplitRequest = {
       asset,
@@ -237,7 +237,7 @@ describe("NocturneContext", () => {
     expect(preSignJoinSplitTxs3.length).to.equal(1);
   });
 
-  it("Generates PreProofOpeartion from a payment request", async () => {
+  it("Generates PreProofOperation from a payment request", async () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toCanonAddress();
     const request = nocturneContext.genPaymentRequest(asset, addr, 20n);
@@ -245,7 +245,7 @@ describe("NocturneContext", () => {
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
   });
 
-  it("Generates PreProofOpeartion with a opeartion request", async () => {
+  it("Generates PreProofOperation with a operation request", async () => {
     // Request to unwraps 15 tokens
     const assetRequest: JoinSplitRequest = {
       asset,

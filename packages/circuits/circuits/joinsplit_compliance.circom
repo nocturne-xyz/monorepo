@@ -16,7 +16,7 @@ template JoinSplit(levels) {
     signal input userViewKeyNonce;
 
     // Public inputs
-    // Opeartion digest
+    // Operation digest
     signal input operationDigest;
 
     // authSig

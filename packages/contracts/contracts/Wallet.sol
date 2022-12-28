@@ -52,10 +52,10 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
 
       @dev The maximum gas cost of a call can be estimated without eth_estimateGas
       1. gas cost of `WalletUtils.computeOperationDigests` and
-      `_verifyAllProofs` can be estimated based on length of op.joinSPlitTxs
+      `_verifyAllProofs` can be estimated based on length of op.joinSplitTxs
       and overall size of op
-      2. maxmimum gas cost of each performOpeartion can be estimated using op
-      (refer to inline docs for `performOpeartion`)
+      2. maxmimum gas cost of each performOperation can be estimated using op
+      (refer to inline docs for `performOperation`)
     */
     function processBundle(
         Bundle calldata bundle
@@ -94,7 +94,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
       can only be entered once inside an Evm transaction. It will message-call
       `executeActions`.
 
-      @param op an Opeartion
+      @param op an Operation
       @param bundler address of the bundler that provided the bundle
       @return opResult the result of the operation
 
