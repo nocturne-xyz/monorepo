@@ -186,7 +186,9 @@ library WalletUtils {
     }
 
     function maxGasFee(Operation calldata op) internal pure returns (uint256) {
-        return op.executionGasLimit + verificationGas(op) + maxRefundGas(op);
+        return
+            op.gasPrice *
+            (op.executionGasLimit + verificationGas(op) + maxRefundGas(op));
     }
 
     function verificationGas(
