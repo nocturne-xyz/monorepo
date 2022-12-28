@@ -12,10 +12,9 @@ import {
   NocturneContext,
   LocalMerkleProver,
   MerkleDB,
-  MockSubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds } from "./utils";
+import { depositFunds, getSubtreeUpdateProver } from "./utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 describe("LocalMerkle", async () => {
@@ -44,7 +43,7 @@ describe("LocalMerkle", async () => {
     nocturneContext = nocturneSetup.nocturneContextAlice;
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
-    const prover = new MockSubtreeUpdateProver();
+    const prover = getSubtreeUpdateProver();
     updater = new SubtreeUpdater(wallet, serverDB, prover);
     await updater.init();
 

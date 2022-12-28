@@ -11,8 +11,10 @@ import { RootDatabase, Database } from "lmdb";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
-export { SubtreeUpdateServer } from "./server";
 import * as JSON from "bigint-json-serialization";
+
+export { SubtreeUpdateServer } from "./server";
+export { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
 
 const NEXT_BLOCK_TO_INDEX_KEY = "NEXT_BLOCK_TO_INDEX";
 const NEXT_INSERTION_INDEX_KEY = "NEXT_INSERTION_INDEX";

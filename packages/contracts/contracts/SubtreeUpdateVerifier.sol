@@ -1,24 +1,11 @@
-//
-// Copyright 2017 Christian Reitwiessner
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-// 2019 OKIMS
-//      ported to solidity 0.6
-//      fixed linter warnings
-//      added requiere error messages
-//
-//
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.5;
+
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 
 contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
-    using Pairing for *;
-
     function verifyingKey()
         internal
         pure
@@ -51,12 +38,12 @@ contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
         );
         vk.delta2 = Pairing.G2Point(
             [
-                20982740898175791991495983987857085770426606771988608689973536200514960704278,
-                16230403929903199002213691148035795871020286437662046814473513458528330080854
+                10165026615740331631694008884583223257020733551819992135707633584699229320803,
+                15016005277266429156615351828859891655854859750344135296248688776693090661579
             ],
             [
-                10944084562148035678313884880730141058194572693711617446883569919384462138217,
-                16812161972733117025321508482363121699342797998240361248267230558679611286097
+                8883044066465995047917824686371953805091640863559996720779815770470454046143,
+                8617237535851734233527649486225895522895040815286271032219139697363893885004
             ]
         );
         vk.IC = new Pairing.G1Point[](5);

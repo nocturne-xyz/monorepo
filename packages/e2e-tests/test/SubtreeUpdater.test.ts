@@ -7,13 +7,13 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
-import {
-  NocturneContext,
-  NotesDB,
-  MockSubtreeUpdateProver,
-} from "@nocturne-xyz/sdk";
+import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds } from "./utils";
+import {
+  depositFunds,
+  getSubtreeUpdateProver,
+  getSubtreeUpdaterDelay,
+} from "./utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 
 const PER_SPEND_AMOUNT = 100n;
@@ -56,7 +56,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
   function newServer(): SubtreeUpdateServer {
     const serverDBPath = `${__dirname}/../db/standaloneServerTestDB`;
-    const prover = new MockSubtreeUpdateProver();
+    const prover = getSubtreeUpdateProver();
     const server = new SubtreeUpdateServer(
       prover,
       wallet.address,
@@ -89,7 +89,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
     await wallet.fillBatchWithZeros();
 
-    await sleep(2100);
+    await sleep(getSubtreeUpdaterDelay());
     await server.stop();
 
     const root = server.updater.tree.root();

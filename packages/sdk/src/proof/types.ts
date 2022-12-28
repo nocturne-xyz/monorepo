@@ -7,7 +7,7 @@ export interface BaseProof {
   pi_b: any;
   pi_c: any;
   protocol: string;
-  curve: any;
+  curve?: any;
 }
 
 export interface MerkleProofInput {

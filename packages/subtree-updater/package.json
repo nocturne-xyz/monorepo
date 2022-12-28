@@ -4,9 +4,9 @@
   "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
-    "setup-rapidsnark": "./scripts/setup_rapidsnark_prover.sh",
     "build": "tsc --build",
-    "test:unit": "yarn setup-rapidsnark && mocha --timeout 10000 --require ts-node/register --exit test/**",
+    "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
+    "test:unit": "yarn setup-rapidsnark && mocha --timeout 16000 --require ts-node/register --exit test/**",
     "check": "tsc --noEmit",
     "clean": "rm -rf dist",
     "lint": "eslint --fix src --ext .ts",
