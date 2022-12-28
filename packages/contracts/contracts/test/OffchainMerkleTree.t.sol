@@ -47,7 +47,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
             TreeTestLib.EMPTY_SUBTREE_ROOT
         );
 
-        // test that hashing empty batch total givens EMPTY_TREE_ROOT
+        // test that hashing empty batch total gives EMPTY_TREE_ROOT
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         assertEq(path[path.length - 1], TreeUtils.EMPTY_TREE_ROOT);
 
@@ -79,7 +79,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         uint256[] memory batch = new uint256[](2);
         // insert 1 note and 1 commitment
         IWallet.Note[] memory notes = new IWallet.Note[](1);
-        notes[0] = dummyNote(1);
+        notes[0] = dummyNote();
         batch[0] = treeTest.computeNoteCommitment(notes[0]);
 
         merkle.insertNote(notes[0]);
@@ -121,7 +121,7 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         uint256[] memory batch = new uint256[](16);
         IWallet.Note[] memory notes = new IWallet.Note[](5);
         for (uint256 i = 0; i < 5; i++) {
-            notes[i] = dummyNote(i);
+            notes[i] = dummyNote();
             batch[i] = treeTest.computeNoteCommitment(notes[i]);
         }
 
@@ -153,13 +153,58 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         assertEq(merkle.getRoot(), newRoot);
     }
 
+    function testCalculatePublicInputs() public {
+        IWallet.Note memory note = dummyNote();
+        uint256 nc = treeTest.computeNoteCommitment(note);
+        merkle.insertNote(note);
+        merkle.insertNoteCommitment(nc);
+
+        for (uint256 i = 2; i < 7; i++) {
+            merkle.insertNote(note);
+        }
+
+        merkle.insertNoteCommitment(nc);
+        merkle.insertNote(note);
+        merkle.insertNoteCommitment(nc);
+
+        for (uint256 i = 10; i < 16; i++) {
+            merkle.insertNote(note);
+        }
+
+        uint256[] memory batch = new uint256[](16);
+        for (uint256 i = 0; i < 16; i++) {
+            batch[i] = nc;
+        }
+
+
+        uint256[] memory path = treeTest.computeInitialRoot(batch);
+        uint256 _newRoot = path[path.length - 1];
+
+        uint256 newRoot = 2148530186383747530821653986434349341874407543492575165183948509644419849075;
+        
+        assertEq(newRoot, _newRoot);
+
+        uint256[] memory pis = merkle.calculatePublicInputs(newRoot);
+        assertEq(pis[0], 21443572485391568159800782191812935835534334817699172242223315142338162256601); 
+        assertEq(pis[1], 2148530186383747530821653986434349341874407543492575165183948509644419849075);
+        assertEq(pis[2], 805306368);
+        assertEq(pis[3], 14107635856823964757170274164259547430752493123869153100697144261772048072211);
+    }
+
     function dummyProof() internal returns (uint256[8] memory) {
         uint256[8] memory res;
         return res;
     }
 
-    function dummyNote(uint256 value) internal returns (IWallet.Note memory) {
-        IWallet.Note memory note = IWallet.Note(0, 0, 0, 0, 0, value);
+    function dummyNote() internal returns (IWallet.Note memory) {
+        IWallet.Note memory note = IWallet.Note({
+            ownerH1: 16114171923265390730037465875328827721281782660087141077700479736598096658937,
+            ownerH2: 10977258428915190383432832691667013955459124698254120657094471191004412212417,
+            nonce: 1,
+            asset: 917551056842671309452305380979543736893630245704,
+            id: 5,
+            value: 100
+        });
 
         return note;
     }

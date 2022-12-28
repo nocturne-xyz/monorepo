@@ -157,7 +157,6 @@ export function getSubtreeUpdateInputs(
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
-  console.log("encodedPathAndHash:", encodedPathAndHash.toString(2));
 
   return {
     encodedPathAndHash,
@@ -200,6 +199,7 @@ const noteCommitmentIndices = [1, 7, 9];
 const spendNoteCommitments = noteCommitmentIndices.map((i) =>
   NoteTrait.toCommitment(notes[i])
 );
+
 const fullyRevealedNotes = notes.filter(
   (_, i) => !noteCommitmentIndices.includes(i)
 );
