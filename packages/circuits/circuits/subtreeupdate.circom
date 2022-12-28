@@ -209,7 +209,7 @@ template SubtreeUpdate(r, s) {
     inclusionProof.leaf <== emptySubtreeRoot;
     for (var i = 0; i < r; i++) {
         inclusionProof.siblings[i] <== siblings[i];
-        inclusionProof.pathIndices[i] <== path.out[i];
+        inclusionProof.pathIndices[i] <== path.out[3 + r - i - 1];
     }
     oldRoot <== inclusionProof.root;
 
@@ -256,7 +256,7 @@ template SubtreeUpdate(r, s) {
     inclusionProof2.leaf <== nodes[0][0];
     for (var i = 0; i < r; i++) {
         inclusionProof2.siblings[i] <== siblings[i];
-        inclusionProof2.pathIndices[i] <== path.out[i];
+        inclusionProof2.pathIndices[i] <== path.out[3 + r - i - 1];
     }
     newRoot <== inclusionProof2.root;
 }

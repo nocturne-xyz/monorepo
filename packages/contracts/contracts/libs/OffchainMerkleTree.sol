@@ -100,13 +100,10 @@ library OffchainMerkleTree {
         self.batchLen = 0;
     }
 
-    function applySubtreeUpdate(
+    function calculatePublicInputs(
         OffchainMerkleTreeData storage self,
-        uint256 newRoot,
-        uint256[8] memory proof
-    ) internal {
-        require(!self.accumulatorQueue.isEmpty(), "accumulatorQueue is empty");
-
+        uint256 newRoot
+    ) internal view returns (uint256[] memory) {
         uint256 accumulatorHash = self.accumulatorQueue.peek();
         (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(
             accumulatorHash
@@ -121,6 +118,16 @@ library OffchainMerkleTree {
         pis[1] = newRoot;
         pis[2] = encodedPathAndHash;
         pis[3] = lo;
+
+        return pis;
+    }
+
+    function applySubtreeUpdate(
+        OffchainMerkleTreeData storage self,
+        uint256 newRoot,
+        uint256[8] memory proof
+    ) internal {
+        uint256[] memory pis = calculatePublicInputs(self, newRoot);
 
         require(
             self.subtreeUpdateVerifier.verifyProof(
