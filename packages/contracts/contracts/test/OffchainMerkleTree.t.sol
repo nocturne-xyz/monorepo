@@ -176,19 +176,27 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
             batch[i] = nc;
         }
 
-
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 _newRoot = path[path.length - 1];
 
         uint256 newRoot = 2148530186383747530821653986434349341874407543492575165183948509644419849075;
-        
+
         assertEq(newRoot, _newRoot);
 
         uint256[] memory pis = merkle.calculatePublicInputs(newRoot);
-        assertEq(pis[0], 21443572485391568159800782191812935835534334817699172242223315142338162256601); 
-        assertEq(pis[1], 2148530186383747530821653986434349341874407543492575165183948509644419849075);
+        assertEq(
+            pis[0],
+            21443572485391568159800782191812935835534334817699172242223315142338162256601
+        );
+        assertEq(
+            pis[1],
+            2148530186383747530821653986434349341874407543492575165183948509644419849075
+        );
         assertEq(pis[2], 805306368);
-        assertEq(pis[3], 14107635856823964757170274164259547430752493123869153100697144261772048072211);
+        assertEq(
+            pis[3],
+            14107635856823964757170274164259547430752493123869153100697144261772048072211
+        );
     }
 
     function dummyProof() internal returns (uint256[8] memory) {
