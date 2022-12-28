@@ -127,8 +127,6 @@ library OffchainMerkleTree {
         uint256 newRoot,
         uint256[8] memory proof
     ) internal {
-        require(!self.accumulatorQueue.isEmpty(), "accumulatorQueue is empty");
-
         uint256[] memory pis = calculatePublicInputs(self, newRoot);
 
         require(

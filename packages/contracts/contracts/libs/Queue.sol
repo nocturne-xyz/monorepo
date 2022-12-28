@@ -173,7 +173,7 @@ library QueueLib {
     /// @notice Returns element at front of queue without removing element
     /// @dev Reverts if queue is empty
     function peek(Queue storage self) internal view returns (uint256 item) {
-        require(!isEmpty(self), "Empty");
+        require(!isEmpty(self), "Queue is empty");
         item = self.queue[self.first];
     }
 
