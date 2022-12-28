@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add test for subtree update PI calculation
+- separate subtree update PI calculation into separate function
 - Make solidity var underscore style consistent
 - Add `ProcessOperation` event to wallet to emit details about processed ops
 - `Wallet._makeExternalCall` no longer reverts on reverting contract call (enables us to process calls even if they revert)
