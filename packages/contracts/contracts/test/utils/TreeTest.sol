@@ -73,7 +73,7 @@ library TreeTestLib {
         return path;
     }
 
-    // comput the new tree root after inserting a batch given thue path to the rightmost subtree
+    // compute the new tree root after inserting a batch given the path to the rightmost subtree
     // idx is the index of the leftmost leaf in the subtree
     function computeNewRoot(
         TreeTest storage self,
