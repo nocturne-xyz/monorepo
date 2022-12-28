@@ -133,7 +133,7 @@ const ABIMethodParamInput = ({
   path: _path,
 }: ABIMethodParamInputProps) => {
   // "path" is the the path of the current field of the param (e.g. ["foo", "bar"] for the field "bar" of the struct param "foo")
-  // this is needed to set the value of the field in the form data, which is one big objec
+  // this is needed to set the value of the field in the form data, which is one big object because we don't know at compile-time what the struct fields will be
   const path = _path ?? [];
   const pathStr = path.join(".");
   const curriedHandleChange = (event: any) => {
