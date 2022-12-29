@@ -185,19 +185,19 @@ library WalletUtils {
             });
     }
 
-    function maxGasFee(Operation calldata op) internal pure returns (uint256) {
+    function _maxGasFee(Operation calldata op) internal pure returns (uint256) {
         return
             op.gasPrice *
-            (op.executionGasLimit + verificationGas(op) + maxRefundGas(op));
+            (op.executionGasLimit + _verificationGas(op) + _maxRefundGas(op));
     }
 
-    function verificationGas(
+    function _verificationGas(
         Operation calldata op
     ) internal pure returns (uint256) {
         return op.joinSplitTxs.length * GAS_PER_JOINSPLIT;
     }
 
-    function maxRefundGas(
+    function _maxRefundGas(
         Operation calldata op
     ) internal pure returns (uint256) {
         return op.maxNumRefunds * GAS_PER_REFUND;

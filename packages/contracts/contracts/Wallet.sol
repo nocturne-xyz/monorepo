@@ -113,10 +113,9 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         Operation calldata op,
         address bundler
     ) external onlyThis nonReentrant returns (OperationResult memory opResult) {
-        uint256 maxGasFee = WalletUtils.maxGasFee(op);
         // Handle all joinsplit transctions.
-        /// @dev This reverts if nullifiers in joinSplitTxs are not fresh
-        _processJoinSplitTxsReservingFee(op.joinSplitTxs, maxGasFee);
+        /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
+        _processJoinSplitTxsReservingFee(op);
 
         uint256 gasLeftInitial = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op.actions) returns (
@@ -130,28 +129,11 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         // Compute executionGasUsed
         opResult.executionGasUsed = gasLeftInitial - gasleft();
 
-        // @dev Revert if number of refund requested is too large
-        uint256 numRefunds = op.joinSplitTxs.length + _receivedAssets.length;
-        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
-
-        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        EncodedAsset memory gasAsset = EncodedAsset({
-            encodedAssetAddr: op.joinSplitTxs[0].encodedAssetAddr,
-            encodedAssetId: op.joinSplitTxs[0].encodedAssetId
-        });
-
-        // Request reserved maxGasFee from vault.
-        /// @dev This is safe because _processJoinSplitTxsReservingFee is
-        /// guaranteed to have reserved maxGasFee since it didn't throw.
-        _vault.requestAsset(gasAsset, maxGasFee);
-
-        // Transfer used verification and execution gas to the bundler
-        uint256 bundlerPayout = op.gasPrice *
-            (opResult.executionGasUsed + WalletUtils.verificationGas(op));
-        AssetUtils._transferAssetTo(gasAsset, bundler, bundlerPayout);
+        // Process gas payment to bundler
+        _handleGasPayment(op, opResult.executionGasUsed, bundler);
 
         // Process refunds
-        _handleAllRefunds(op.joinSplitTxs, op.refundAddr);
+        _handleAllRefunds(op);
 
         return opResult;
     }

@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
+import {WalletUtils} from "./libs/WalletUtils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
@@ -98,30 +99,28 @@ contract BalanceManager is
       to request maxGasFee from vault with the same encodedAsset as
       joinSplitTxs[0].
     */
-    function _processJoinSplitTxsReservingFee(
-        JoinSplitTransaction[] calldata joinSplitTxs,
-        uint256 maxGasFee
-    ) internal {
-        uint256 gasLeftToReserve = maxGasFee;
-        uint256 gasAssetAddr = joinSplitTxs[0].encodedAssetAddr;
-        uint256 gasAssetId = joinSplitTxs[0].encodedAssetId;
-        uint256 numJoinSplits = joinSplitTxs.length;
+    function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
+        uint256 gasLeftToReserve = WalletUtils._maxGasFee(op);
+        uint256 gasAssetAddr = op.joinSplitTxs[0].encodedAssetAddr;
+        uint256 gasAssetId = op.joinSplitTxs[0].encodedAssetId;
+
+        uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
             /// @dev This will either mark the nullifiers of joinSplitTx as used or throw
-            _handleJoinSplit(joinSplitTxs[i]);
+            _handleJoinSplit(op.joinSplitTxs[i]);
             // Defaults to requesting all publicSpend from vault
-            uint256 valueToTransfer = joinSplitTxs[i].publicSpend;
+            uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
             // Try to reserve gas fee if there's more to reserve and this
             // joinSplitTx is spending the gasAsset
             if (
                 gasLeftToReserve > 0 &&
-                gasAssetAddr == joinSplitTxs[i].encodedAssetAddr &&
-                gasAssetId == joinSplitTxs[i].encodedAssetId
+                gasAssetAddr == op.joinSplitTxs[i].encodedAssetAddr &&
+                gasAssetId == op.joinSplitTxs[i].encodedAssetId
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
                 uint256 gasPaymentThisJoinSplit = Utils.min(
-                    joinSplitTxs[i].publicSpend,
+                    op.joinSplitTxs[i].publicSpend,
                     gasLeftToReserve
                 );
                 // Deduct gas payment from value to transfer to wallet
@@ -133,8 +132,8 @@ contract BalanceManager is
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
                     EncodedAsset({
-                        encodedAssetAddr: joinSplitTxs[i].encodedAssetAddr,
-                        encodedAssetId: joinSplitTxs[i].encodedAssetId
+                        encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
+                        encodedAssetId: op.joinSplitTxs[i].encodedAssetId
                     }),
                     valueToTransfer
                 );
@@ -143,43 +142,65 @@ contract BalanceManager is
         require(gasLeftToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
+    function _handleGasPayment(
+        Operation calldata op,
+        uint256 executionGasUsed,
+        address bundler
+    ) internal {
+        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
+        EncodedAsset memory gasAsset = EncodedAsset({
+            encodedAssetAddr: op.joinSplitTxs[0].encodedAssetAddr,
+            encodedAssetId: op.joinSplitTxs[0].encodedAssetId
+        });
+
+        // Request reserved maxGasFee from vault.
+        /// @dev This is safe because _processJoinSplitTxsReservingFee is
+        /// guaranteed to have reserved maxGasFee since it didn't throw.
+        _vault.requestAsset(gasAsset, WalletUtils._maxGasFee(op));
+
+        // Transfer used verification and execution gas to the bundler
+        uint256 bundlerPayout = op.gasPrice *
+            (executionGasUsed + WalletUtils._verificationGas(op));
+        AssetUtils._transferAssetTo(gasAsset, bundler, bundlerPayout);
+    }
+
     /**
       Refund all current wallet assets back to refundAddr. The list of assets
       to refund is specified in joinSplitTxs and the state variable
       _receivedAssets.
     */
-    function _handleAllRefunds(
-        JoinSplitTransaction[] calldata joinSplitTxs,
-        NocturneAddress calldata refundAddr
-    ) internal {
-        uint256 numJoinSplits = joinSplitTxs.length;
+    function _handleAllRefunds(Operation calldata op) internal {
+        uint256 numJoinSplits = op.joinSplitTxs.length;
         uint256 numReceived = _receivedAssets.length;
         uint256 numRefunds = numJoinSplits + numReceived;
 
-        EncodedAsset[] memory tokensToProcess = new EncodedAsset[](numRefunds);
+        // @dev Revert if number of refund requested is too large
+        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
+
+        EncodedAsset[] memory assetsToProcess = new EncodedAsset[](numRefunds);
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            tokensToProcess[i] = EncodedAsset({
-                encodedAssetAddr: joinSplitTxs[i].encodedAssetAddr,
-                encodedAssetId: joinSplitTxs[i].encodedAssetId
+            assetsToProcess[i] = EncodedAsset({
+                encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
+                encodedAssetId: op.joinSplitTxs[i].encodedAssetId
             });
         }
         for (uint256 i = 0; i < numReceived; i++) {
-            tokensToProcess[joinSplitTxs.length + i] = _receivedAssets[i];
+            assetsToProcess[numJoinSplits + i] = _receivedAssets[i];
         }
         delete _receivedAssets;
 
         for (uint256 i = 0; i < numRefunds; i++) {
-            uint256 value = AssetUtils._balanceOfAsset(tokensToProcess[i]);
+            uint256 value = AssetUtils._balanceOfAsset(assetsToProcess[i]);
             if (value != 0) {
                 AssetUtils._transferAssetTo(
-                    tokensToProcess[i],
+                    assetsToProcess[i],
                     address(_vault),
                     value
                 );
                 _handleRefundNote(
-                    refundAddr,
-                    tokensToProcess[i].encodedAssetAddr,
-                    tokensToProcess[i].encodedAssetId,
+                    op.refundAddr,
+                    assetsToProcess[i].encodedAssetAddr,
+                    assetsToProcess[i].encodedAssetId,
                     value
                 );
             }
