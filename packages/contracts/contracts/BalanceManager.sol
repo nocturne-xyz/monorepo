@@ -106,12 +106,15 @@ contract BalanceManager is
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            /// @dev This will either mark the nullifiers of joinSplitTx as used or throw
+            // Process nullifiers in the current joinSplitTx, will throw if
+            // they are not fresh
             _handleJoinSplit(op.joinSplitTxs[i]);
+
             // Defaults to requesting all publicSpend from vault
             uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
-            // Try to reserve gas fee if there's more to reserve and this
-            // joinSplitTx is spending the gasAsset
+            // If we still need to reserve more gas and the current
+            // `joinSplitTx` is spending the gasAsset, then reserve what we can
+            // from this `joinSplitTx`
             if (
                 gasLeftToReserve > 0 &&
                 gasAssetAddr == op.joinSplitTxs[i].encodedAssetAddr &&
@@ -128,7 +131,8 @@ contract BalanceManager is
                 // Deduct gas payment from the amoung to be reserved
                 gasLeftToReserve -= gasPaymentThisJoinSplit;
             }
-            // No need to process the transfer of "0" value
+
+            // If value to transfer is 0, skip the trasnfer
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
                     EncodedAsset({
