@@ -63,8 +63,10 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        (bool success, ) = _verifyAllProofs(ops, opDigests);
-        require(success, "Batched JoinSplit verify failed.");
+        require(
+            _verifyAllProofs(ops, opDigests),
+            "Batched JoinSplit verify failed."
+        );
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
@@ -163,11 +165,11 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     function _verifyAllProofs(
         Operation[] calldata ops,
         uint256[] memory opDigests
-    ) internal view returns (bool success, uint256 numJoinSplits) {
+    ) internal view returns (bool success) {
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
         success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
-        return (success, proofs.length);
+        return success;
     }
 
     function _makeExternalCall(
