@@ -3,7 +3,7 @@ set -u
 
 echo "checking if cargo is installed..."
 CARGO_VERSION=$(cargo --version | head -n 1)
-if ! type "$?" >/dev/null 2>&1; then
+if ! command "cargo --version" >/dev/null 2>&1; then
 	echo "cargo not found. installing via rustup..."
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 	source ~/.bashrc
