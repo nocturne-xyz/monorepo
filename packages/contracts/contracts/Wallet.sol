@@ -18,10 +18,6 @@ import "hardhat/console.sol";
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
 contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
-    uint256 constant GAS_PER_JOINSPLIT = 200000;
-    // TODO: add subtree updater fee mechanism
-    uint256 constant GAS_PER_REFUND = 0;
-
     constructor(
         address vault,
         address joinSplitVerifier,

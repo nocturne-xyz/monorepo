@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
+uint256 constant GAS_PER_JOINSPLIT = 200000;
+uint256 constant GAS_PER_REFUND = 0;
+
 enum AssetType {
     ERC20,
     ERC721,
@@ -87,6 +90,11 @@ struct Operation {
     uint256 maxNumRefunds;
 }
 
+struct GasPayment {
+    EncodedAsset encodedAsset;
+    uint256 amount;
+}
+
 // An operation is processed if its joinsplitTxs are processed.
 // If an operation is processed, the following is guaranteeed to happen:
 // 1. Encoded calls are attempted (not necessarily successfully)
@@ -113,4 +121,41 @@ struct Deposit {
     uint256 encodedAssetId;
     uint256 value;
     NocturneAddress depositAddr;
+}
+
+library OperationLib {
+    function gasToken(
+        Operation memory self
+    ) internal pure returns (EncodedAsset memory) {
+        return
+            EncodedAsset({
+                encodedAssetAddr: self.joinSplitTxs[0].encodedAssetAddr,
+                encodedAssetId: self.joinSplitTxs[0].encodedAssetId
+            });
+    }
+
+    function maxGasLimit(
+        Operation memory self
+    ) internal pure returns (uint256) {
+        return
+            self.executionGasLimit +
+            (GAS_PER_JOINSPLIT * self.joinSplitTxs.length) +
+            (GAS_PER_REFUND * self.encodedRefundAssets.length);
+    }
+
+    function maxGasTokenCost(
+        Operation memory self
+    ) internal pure returns (uint256) {
+        return self.gasPrice * maxGasLimit(self);
+    }
+
+    function maxGasTokenPayment(
+        Operation memory self
+    ) internal pure returns (GasPayment memory) {
+        return
+            GasPayment({
+                encodedAsset: gasToken(self),
+                amount: maxGasTokenCost(self)
+            });
+    }
 }

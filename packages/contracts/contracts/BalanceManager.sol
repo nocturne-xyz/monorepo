@@ -19,7 +19,9 @@ contract BalanceManager is
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    EncodedAsset[] _receivedAssets;
+    using OperationLib for Operation;
+
+    EncodedAsset[] public _receivedAssets;
     IVault public immutable _vault;
 
     constructor(
@@ -100,9 +102,8 @@ contract BalanceManager is
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
-        uint256 gasLeftToReserve = WalletUtils._maxGasFee(op);
-        uint256 gasAssetAddr = op.joinSplitTxs[0].encodedAssetAddr;
-        uint256 gasAssetId = op.joinSplitTxs[0].encodedAssetId;
+        EncodedAsset memory encodedGasToken = op.gasToken();
+        uint256 gasTokensToReserve = op.maxGasTokenCost();
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -116,20 +117,22 @@ contract BalanceManager is
             // `joinSplitTx` is spending the gasAsset, then reserve what we can
             // from this `joinSplitTx`
             if (
-                gasLeftToReserve > 0 &&
-                gasAssetAddr == op.joinSplitTxs[i].encodedAssetAddr &&
-                gasAssetId == op.joinSplitTxs[i].encodedAssetId
+                gasTokensToReserve > 0 &&
+                encodedGasToken.encodedAssetAddr ==
+                op.joinSplitTxs[i].encodedAssetAddr &&
+                encodedGasToken.encodedAssetId ==
+                op.joinSplitTxs[i].encodedAssetId
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
                 uint256 gasPaymentThisJoinSplit = Utils.min(
                     op.joinSplitTxs[i].publicSpend,
-                    gasLeftToReserve
+                    gasTokensToReserve
                 );
                 // Deduct gas payment from value to transfer to wallet
                 valueToTransfer -= gasPaymentThisJoinSplit;
                 // Deduct gas payment from the amoung to be reserved
-                gasLeftToReserve -= gasPaymentThisJoinSplit;
+                gasTokensToReserve -= gasPaymentThisJoinSplit;
             }
 
             // If value to transfer is 0, skip the trasnfer
@@ -143,7 +146,7 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasLeftToReserve == 0, "Not enough gas tokens unwrapped.");
+        require(gasTokensToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
     function _handleGasPayment(
@@ -152,20 +155,21 @@ contract BalanceManager is
         address bundler
     ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        EncodedAsset memory gasAsset = EncodedAsset({
-            encodedAssetAddr: op.joinSplitTxs[0].encodedAssetAddr,
-            encodedAssetId: op.joinSplitTxs[0].encodedAssetId
-        });
+        GasPayment memory maxGasPayment = op.maxGasTokenPayment();
 
         // Request reserved maxGasFee from vault.
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
         /// guaranteed to have reserved maxGasFee since it didn't throw.
-        _vault.requestAsset(gasAsset, WalletUtils._maxGasFee(op));
+        _vault.requestAsset(maxGasPayment.encodedAsset, maxGasPayment.amount);
 
         // Transfer used verification and execution gas to the bundler
         uint256 bundlerPayout = op.gasPrice *
             (executionGasUsed + WalletUtils._verificationGas(op));
-        AssetUtils._transferAssetTo(gasAsset, bundler, bundlerPayout);
+        AssetUtils._transferAssetTo(
+            maxGasPayment.encodedAsset,
+            bundler,
+            bundlerPayout
+        );
     }
 
     /**
