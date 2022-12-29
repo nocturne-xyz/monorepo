@@ -14,6 +14,9 @@
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test"
   },
+  "bin": {
+    "subtree-updater-cli": "dist/src/cli.js"
+  },
   "packageManager": "yarn@3.2.0",
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
@@ -33,10 +36,8 @@
     "wtfnode": "^0.9.1"
   },
   "dependencies": {
-    "@nocturne-xyz/circuits": "workspace:^",
-    "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/local-prover": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^",
+    "@nocturne-xyz/contracts": "1.0.3-alpha",
+    "@nocturne-xyz/sdk": "1.0.15-alpha",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",
