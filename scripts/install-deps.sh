@@ -4,16 +4,18 @@ set -e
 
 # Make sure that the working directory is always the directory of the script
 cd "$(dirname "$0")"
-echo "Installing forge deps.."
+echo "Installing forge deps..."
 if [ -d "../lib/forge-std" ]; then
   if [ "$(ls -A ../lib/forge-std)" ]; then
-    echo "Deps already installed"
+    echo "forge deps already installed"
     echo "Skipping.."
-    exit 0
   else
     echo "Dep directory found, but it's empty"
     echo "Cleaning up and installing deps.."
     rm -rf ../lib/forge-std
+    forge install foundry-rs/forge-std@be5c649 --no-git
   fi
 fi
-forge install foundry-rs/forge-std@be5c649 --no-git
+
+echo "Installing circuit deps..."
+../packages/circuits/scripts/install_deps.sh
