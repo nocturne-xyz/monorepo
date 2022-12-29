@@ -153,9 +153,8 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         assertEq(merkle.getRoot(), newRoot);
     }
 
-<<<<<<< HEAD
     function testCalculatePublicInputs() public {
-        IWallet.Note memory note = dummyNote();
+        EncodedNote memory note = dummyNote();
         uint256 nc = treeTest.computeNoteCommitment(note);
         merkle.insertNote(note);
         merkle.insertNoteCommitment(nc);
@@ -200,30 +199,20 @@ contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
         );
     }
 
-    function dummyProof() internal returns (uint256[8] memory) {
-=======
     function dummyProof() internal pure returns (uint256[8] memory) {
->>>>>>> 3e1eb9b (Gas fees and asset encoding)
         uint256[8] memory res;
         return res;
     }
 
-<<<<<<< HEAD
-    function dummyNote() internal returns (IWallet.Note memory) {
-        IWallet.Note memory note = IWallet.Note({
+    function dummyNote() internal pure returns (EncodedNote memory) {
+        EncodedNote memory note = EncodedNote({
             ownerH1: 16114171923265390730037465875328827721281782660087141077700479736598096658937,
             ownerH2: 10977258428915190383432832691667013955459124698254120657094471191004412212417,
             nonce: 1,
-            asset: 917551056842671309452305380979543736893630245704,
-            id: 5,
+            encodedAssetAddr: 917551056842671309452305380979543736893630245704,
+            encodedAssetId: 5,
             value: 100
         });
-=======
-    function dummyNote(
-        uint256 value
-    ) internal pure returns (EncodedNote memory) {
-        EncodedNote memory note = EncodedNote(0, 0, 0, 0, 0, value);
->>>>>>> 3e1eb9b (Gas fees and asset encoding)
 
         return note;
     }
