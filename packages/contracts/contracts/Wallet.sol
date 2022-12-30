@@ -177,7 +177,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         // If it did, executeOperation is reverts and all action state changes
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
-        require(op.maxNumRefunds >= numRefundsToHandle);
+        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
 
         opResult.numRefunds = numRefundsToHandle;
 

@@ -19,6 +19,7 @@ const nocturneAddressType = {
     h2X: bigintType,
     h2Y: bigintType,
   },
+  additionalProperties: false,
 };
 const noteTransmissionType = {
   type: "object",
@@ -29,6 +30,7 @@ const noteTransmissionType = {
     encryptedNonce: bigintType,
     encryptedValue: bigintType,
   },
+  additionalProperties: false,
 };
 const encodedAssetType = {
   type: "object",
@@ -37,6 +39,7 @@ const encodedAssetType = {
     encodedAssetAddr: bigintType,
     encodedAssetId: bigintType,
   },
+  additionalProperties: false,
 };
 const encodedRefundAssetsType = {
   type: "array",
@@ -51,6 +54,7 @@ const actionType = {
       type: "string",
     },
   },
+  additionalProperties: false,
 };
 const actionsType = {
   type: "array",
@@ -84,6 +88,7 @@ const joinSplitTxType = {
     newNoteATransmission: noteTransmissionType,
     newNoteBTransmission: noteTransmissionType,
   },
+  additionalProperties: false,
 };
 const joinSplitTxsType = {
   type: "array",
@@ -97,19 +102,22 @@ export const relaySchema = {
     "refundAddr",
     "encodedRefundAssets",
     "actions",
+    "verificationGasLimit",
     "executionGasLimit",
-    "gasPrice",
     "maxNumRefunds",
+    "gasPrice",
   ],
   properties: {
     joinSplitTxs: joinSplitTxsType,
     refundAddr: nocturneAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,
+    verificationGasLimit: bigintType,
     executionGasLimit: bigintType,
-    gasPrice: bigintType,
     maxNumRefunds: bigintType,
+    gasPrice: bigintType,
   },
+  additionalProperties: false,
 };
 
 const ajv = new Ajv();

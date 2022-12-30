@@ -140,9 +140,10 @@ export interface OperationRequest {
   refundAddr?: NocturneAddress;
   refundAssets: Asset[];
   actions: Action[];
+  verificationGasLimit?: bigint;
   executionGasLimit?: bigint;
-  gasPrice?: bigint;
   maxNumRefunds?: bigint;
+  gasPrice?: bigint;
 }
 
 export type SolidityProof = [
@@ -211,9 +212,10 @@ export interface BaseOperation {
   refundAddr: NocturneAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
+  verificationGasLimit: bigint;
   executionGasLimit: bigint;
-  gasPrice: bigint;
   maxNumRefunds: bigint;
+  gasPrice: bigint;
 }
 
 export interface PreSignOperation extends BaseOperation {

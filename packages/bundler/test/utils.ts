@@ -52,7 +52,8 @@ export const VALID_PROVEN_OPERATION_OBJ = {
       encodedFunction: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
     },
   ],
+  verificationGasLimit: "10000000n",
   executionGasLimit: "10000000n",
-  gasPrice: "10n",
   maxNumRefunds: "2n",
+  gasPrice: "10n",
 };
