@@ -193,7 +193,7 @@ library WalletUtils {
             bundle.operations[opIndex].joinSplitTxs.length;
     }
 
-    function _calculateBundlerGasAssetsPayout(
+    function _calculateBundlerGasAssetPayout(
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {

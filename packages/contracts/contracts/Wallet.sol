@@ -136,10 +136,10 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
             opResult = WalletUtils._unsuccessfulOperation(result);
         }
 
-        _gatherReservedGasAssets(op);
+        _gatherReservedGasAsset(op);
 
         // Process gas payment to bundler
-        _payBundlerGasAssets(op, opResult, bundler);
+        _payBundlerGasAsset(op, opResult, bundler);
 
         // Note: if too many refunds condition reverted in execute actions, the
         // actions creating the refunds were reverted too, so numRefunds would =
@@ -183,12 +183,12 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         opResult.executionGas = preExecutionGas - gasleft();
     }
 
-    function _payBundlerGasAssets(
+    function _payBundlerGasAsset(
         Operation calldata op,
         OperationResult memory opResult,
         address bundler
     ) internal {
-        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetsPayout(
+        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
             op,
             opResult
         );

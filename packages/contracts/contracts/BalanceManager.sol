@@ -102,7 +102,7 @@ contract BalanceManager is
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
         EncodedAsset memory encodedGasAsset = op.gasAsset();
-        uint256 gasAssetsToReserve = op.maxGasAssetCost();
+        uint256 gasAssetToReserve = op.maxGasAssetCost();
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -116,7 +116,7 @@ contract BalanceManager is
             // `joinSplitTx` is spending the gasAsset, then reserve what we can
             // from this `joinSplitTx`
             if (
-                gasAssetsToReserve > 0 &&
+                gasAssetToReserve > 0 &&
                 encodedGasAsset.encodedAssetAddr ==
                 op.joinSplitTxs[i].encodedAssetAddr &&
                 encodedGasAsset.encodedAssetId ==
@@ -126,12 +126,12 @@ contract BalanceManager is
                 // amount or the maximum amount to be reserved
                 uint256 gasPaymentThisJoinSplit = Utils.min(
                     op.joinSplitTxs[i].publicSpend,
-                    gasAssetsToReserve
+                    gasAssetToReserve
                 );
                 // Deduct gas payment from value to transfer to wallet
                 valueToTransfer -= gasPaymentThisJoinSplit;
                 // Deduct gas payment from the amoung to be reserved
-                gasAssetsToReserve -= gasPaymentThisJoinSplit;
+                gasAssetToReserve -= gasPaymentThisJoinSplit;
             }
 
             // If value to transfer is 0, skip the trasnfer
@@ -145,10 +145,10 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasAssetsToReserve == 0, "Too few gas tokens");
+        require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
-    function _gatherReservedGasAssets(Operation calldata op) internal {
+    function _gatherReservedGasAsset(Operation calldata op) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset memory encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
