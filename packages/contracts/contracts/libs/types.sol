@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
-uint256 constant GAS_PER_JOINSPLIT = 200000;
+uint256 constant GAS_PER_VERIFICATION = 200000;
 uint256 constant GAS_PER_REFUND_HANDLE = 0;
 uint256 constant GAS_PER_REFUND_TREE = 0;
 
@@ -153,7 +153,7 @@ library OperationLib {
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
-            (GAS_PER_JOINSPLIT * self.joinSplitTxs.length) +
+            (GAS_PER_VERIFICATION * self.joinSplitTxs.length) +
             (GAS_PER_REFUND_HANDLE * self.encodedRefundAssets.length) +
             (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
     }

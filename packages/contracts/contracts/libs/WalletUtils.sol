@@ -217,10 +217,4 @@ library WalletUtils {
     ) internal pure returns (uint256) {
         return numRefunds * GAS_PER_REFUND_TREE;
     }
-
-    function _totalGasFromNumRefunds(
-        uint256 numRefunds
-    ) internal pure returns (uint256) {
-        return _handleRefundGas(numRefunds) + _treeRefundGas(numRefunds);
-    }
 }

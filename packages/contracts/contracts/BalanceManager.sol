@@ -145,7 +145,7 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasTokensToReserve == 0, "Not enough gas tokens unwrapped.");
+        require(gasTokensToReserve == 0, "Too few gas tokens");
     }
 
     function _gatherReservedGasTokens(Operation calldata op) internal {
@@ -176,22 +176,20 @@ contract BalanceManager is
       _receivedAssets.
     */
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplitTxs.length;
-        uint256 numReceived = _receivedAssets.length;
-        uint256 numRefunds = numJoinSplits + numReceived;
+        uint256 numRefunds = _totalNumRefundsToHandle(op);
 
         // @dev Revert if number of refund requested is too large
         require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
 
         EncodedAsset[] memory assetsToProcess = new EncodedAsset[](numRefunds);
-        for (uint256 i = 0; i < numJoinSplits; i++) {
+        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
             assetsToProcess[i] = EncodedAsset({
                 encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
                 encodedAssetId: op.joinSplitTxs[i].encodedAssetId
             });
         }
-        for (uint256 i = 0; i < numReceived; i++) {
-            assetsToProcess[numJoinSplits + i] = _receivedAssets[i];
+        for (uint256 i = 0; i < _receivedAssets.length; i++) {
+            assetsToProcess[op.joinSplitTxs.length + i] = _receivedAssets[i];
         }
         delete _receivedAssets;
 
