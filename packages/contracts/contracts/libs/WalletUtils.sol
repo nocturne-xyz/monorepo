@@ -183,7 +183,7 @@ library WalletUtils {
             });
     }
 
-    function verificationGasForOp(
+    function _verificationGasForOp(
         Bundle calldata bundle,
         uint256 opIndex,
         uint256 batchVerificationGas
@@ -193,19 +193,34 @@ library WalletUtils {
             bundle.operations[opIndex].joinSplitTxs.length;
     }
 
-    function handleRefundGas(
+    function _calculateBundlerGasTokensPayout(
+        Operation calldata op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleRefundGas = _handleRefundGas(opResult.numRefunds);
+
+        return
+            op.gasPrice *
+            (opResult.executionGas +
+                opResult.verificationGas +
+                handleRefundGas);
+    }
+
+    function _handleRefundGas(
         uint256 numRefunds
     ) internal pure returns (uint256) {
         return numRefunds * GAS_PER_REFUND_HANDLE;
     }
 
-    function treeRefundGas(uint256 numRefunds) internal pure returns (uint256) {
+    function _treeRefundGas(
+        uint256 numRefunds
+    ) internal pure returns (uint256) {
         return numRefunds * GAS_PER_REFUND_TREE;
     }
 
-    function totalGasFromNumRefunds(
+    function _totalGasFromNumRefunds(
         uint256 numRefunds
     ) internal pure returns (uint256) {
-        return handleRefundGas(numRefunds) + treeRefundGas(numRefunds);
+        return _handleRefundGas(numRefunds) + _treeRefundGas(numRefunds);
     }
 }

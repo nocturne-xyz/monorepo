@@ -19,7 +19,6 @@ import "hardhat/console.sol";
 // TODO: make wallet and vault upgradable
 contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     using OperationLib for Operation;
-    using BundleLib for Bundle;
 
     constructor(
         address vault,
@@ -72,7 +71,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            uint256 verificationGasForOp = WalletUtils.verificationGasForOp(
+            uint256 verificationGasForOp = WalletUtils._verificationGasForOp(
                 bundle,
                 i,
                 totalVerificationGasUsed
@@ -189,15 +188,10 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         OperationResult memory opResult,
         address bundler
     ) internal {
-        uint256 handleRefundGas = WalletUtils.handleRefundGas(
-            opResult.numRefunds
+        uint256 bundlerPayout = WalletUtils._calculateBundlerGasTokensPayout(
+            op,
+            opResult
         );
-
-        // Transfer used verification and execution gas to the bundler
-        uint256 bundlerPayout = op.gasPrice *
-            (opResult.executionGas +
-                opResult.verificationGas +
-                handleRefundGas);
         AssetUtils._transferAssetTo(op.gasToken(), bundler, bundlerPayout);
     }
 
