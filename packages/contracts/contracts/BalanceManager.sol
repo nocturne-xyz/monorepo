@@ -101,8 +101,8 @@ contract BalanceManager is
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
-        EncodedAsset memory encodedGasToken = op.gasToken();
-        uint256 gasTokensToReserve = op.maxGasTokenCost();
+        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        uint256 gasAssetsToReserve = op.maxGasAssetCost();
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -116,22 +116,22 @@ contract BalanceManager is
             // `joinSplitTx` is spending the gasAsset, then reserve what we can
             // from this `joinSplitTx`
             if (
-                gasTokensToReserve > 0 &&
-                encodedGasToken.encodedAssetAddr ==
+                gasAssetsToReserve > 0 &&
+                encodedGasAsset.encodedAssetAddr ==
                 op.joinSplitTxs[i].encodedAssetAddr &&
-                encodedGasToken.encodedAssetId ==
+                encodedGasAsset.encodedAssetId ==
                 op.joinSplitTxs[i].encodedAssetId
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
                 uint256 gasPaymentThisJoinSplit = Utils.min(
                     op.joinSplitTxs[i].publicSpend,
-                    gasTokensToReserve
+                    gasAssetsToReserve
                 );
                 // Deduct gas payment from value to transfer to wallet
                 valueToTransfer -= gasPaymentThisJoinSplit;
                 // Deduct gas payment from the amoung to be reserved
-                gasTokensToReserve -= gasPaymentThisJoinSplit;
+                gasAssetsToReserve -= gasPaymentThisJoinSplit;
             }
 
             // If value to transfer is 0, skip the trasnfer
@@ -145,17 +145,18 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasTokensToReserve == 0, "Too few gas tokens");
+        require(gasAssetsToReserve == 0, "Too few gas tokens");
     }
 
-    function _gatherReservedGasTokens(Operation calldata op) internal {
+    function _gatherReservedGasAssets(Operation calldata op) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        GasPayment memory maxGasPayment = op.maxGasTokenPayment();
+        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        uint256 gasAssetAmount = op.maxGasAssetCost();
 
         // Request reserved maxGasFee from vault.
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
         /// guaranteed to have reserved maxGasFee since it didn't throw.
-        _vault.requestAsset(maxGasPayment.encodedAsset, maxGasPayment.amount);
+        _vault.requestAsset(encodedGasAsset, gasAssetAmount);
     }
 
     /**

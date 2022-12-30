@@ -92,11 +92,6 @@ struct Operation {
     uint256 gasPrice;
 }
 
-struct GasPayment {
-    EncodedAsset encodedAsset;
-    uint256 amount;
-}
-
 // An operation is processed if its joinsplitTxs are processed.
 // If an operation is processed, the following is guaranteeed to happen:
 // 1. Encoded calls are attempted (not necessarily successfully)
@@ -138,7 +133,7 @@ library BundleLib {
 }
 
 library OperationLib {
-    function gasToken(
+    function gasAsset(
         Operation calldata self
     ) internal pure returns (EncodedAsset memory) {
         return
@@ -158,19 +153,9 @@ library OperationLib {
             (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
     }
 
-    function maxGasTokenCost(
+    function maxGasAssetCost(
         Operation calldata self
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self);
-    }
-
-    function maxGasTokenPayment(
-        Operation calldata self
-    ) internal pure returns (GasPayment memory) {
-        return
-            GasPayment({
-                encodedAsset: gasToken(self),
-                amount: maxGasTokenCost(self)
-            });
     }
 }
