@@ -123,9 +123,21 @@ struct Deposit {
     NocturneAddress depositAddr;
 }
 
+library BundleLib {
+    function totalNumJoinSplits(
+        Bundle calldata self
+    ) internal pure returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < self.operations.length; i++) {
+            total += self.operations[i].joinSplitTxs.length;
+        }
+        return total;
+    }
+}
+
 library OperationLib {
     function gasToken(
-        Operation memory self
+        Operation calldata self
     ) internal pure returns (EncodedAsset memory) {
         return
             EncodedAsset({
@@ -135,7 +147,7 @@ library OperationLib {
     }
 
     function maxGasLimit(
-        Operation memory self
+        Operation calldata self
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
@@ -144,13 +156,13 @@ library OperationLib {
     }
 
     function maxGasTokenCost(
-        Operation memory self
+        Operation calldata self
     ) internal pure returns (uint256) {
         return self.gasPrice * maxGasLimit(self);
     }
 
     function maxGasTokenPayment(
-        Operation memory self
+        Operation calldata self
     ) internal pure returns (GasPayment memory) {
         return
             GasPayment({

@@ -18,6 +18,9 @@ import "hardhat/console.sol";
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
 contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
+    using OperationLib for Operation;
+    using BundleLib for Bundle;
+
     constructor(
         address vault,
         address joinSplitVerifier,
@@ -56,6 +59,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     function processBundle(
         Bundle calldata bundle
     ) external override returns (OperationResult[] memory) {
+        uint256 preVerificationGasLeft = gasleft();
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
@@ -63,13 +67,20 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
             _verifyAllProofs(ops, opDigests),
             "Batched JoinSplit verify failed."
         );
+        uint256 totalVerificationGasUsed = preVerificationGasLeft - gasleft();
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            try this.performOperation(ops[i], msg.sender) returns (
-                OperationResult memory result
-            ) {
+            uint256 verificationGasForOp = WalletUtils.verificationGasForOp(
+                bundle,
+                i,
+                totalVerificationGasUsed
+            );
+
+            try
+                this.performOperation(ops[i], verificationGasForOp, msg.sender)
+            returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
                 opResults[i] = WalletUtils._failOperationWithReason(
@@ -109,6 +120,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     */
     function performOperation(
         Operation calldata op,
+        uint256 verificationGasForOp,
         address bundler
     ) external onlyThis nonReentrant returns (OperationResult memory opResult) {
         // Handle all joinsplit transctions.
@@ -128,7 +140,12 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         opResult.executionGasUsed = gasLeftInitial - gasleft();
 
         // Process gas payment to bundler
-        _handleGasPayment(op, opResult.executionGasUsed, bundler);
+        _handleGasPayment(
+            op,
+            opResult.executionGasUsed,
+            verificationGasForOp,
+            bundler
+        );
 
         // Process refunds
         _handleAllRefunds(op);

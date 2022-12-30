@@ -151,6 +151,7 @@ contract BalanceManager is
 
     function _handleGasPayment(
         Operation calldata op,
+        uint256 verificationGasUsed,
         uint256 executionGasUsed,
         address bundler
     ) internal {
@@ -164,7 +165,7 @@ contract BalanceManager is
 
         // Transfer used verification and execution gas to the bundler
         uint256 bundlerPayout = op.gasPrice *
-            (executionGasUsed + WalletUtils._verificationGas(op));
+            (executionGasUsed + verificationGasUsed);
         AssetUtils._transferAssetTo(
             maxGasPayment.encodedAsset,
             bundler,
