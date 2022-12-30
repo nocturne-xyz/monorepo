@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
@@ -149,12 +148,7 @@ contract BalanceManager is
         require(gasTokensToReserve == 0, "Not enough gas tokens unwrapped.");
     }
 
-    function _handleGasPayment(
-        Operation calldata op,
-        uint256 verificationGasUsed,
-        uint256 executionGasUsed,
-        address bundler
-    ) internal {
+    function _gatherReservedGasTokens(Operation calldata op) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         GasPayment memory maxGasPayment = op.maxGasTokenPayment();
 
@@ -162,15 +156,18 @@ contract BalanceManager is
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
         /// guaranteed to have reserved maxGasFee since it didn't throw.
         _vault.requestAsset(maxGasPayment.encodedAsset, maxGasPayment.amount);
+    }
 
-        // Transfer used verification and execution gas to the bundler
-        uint256 bundlerPayout = op.gasPrice *
-            (executionGasUsed + verificationGasUsed);
-        AssetUtils._transferAssetTo(
-            maxGasPayment.encodedAsset,
-            bundler,
-            bundlerPayout
-        );
+    /**
+      Get the total number of refunds to handle after making external action calls.
+      @dev This should only be called AFTER external calls have been made during action execution.
+    */
+    function _totalNumRefundsToHandle(
+        Operation calldata op
+    ) internal view returns (uint256) {
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numReceived = _receivedAssets.length;
+        return numJoinSplits + numReceived;
     }
 
     /**

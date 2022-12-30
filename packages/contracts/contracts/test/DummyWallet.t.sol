@@ -223,6 +223,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address recipient,
         uint256 amount,
         uint256 publicSpend,
+        uint256 verificationGasLimit,
         uint256 executionGasLimit,
         uint256 gasPrice
     ) internal view returns (Operation memory) {
@@ -291,6 +292,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             refundAddr: defaultNocturneAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
+            verificationGasLimit: verificationGasLimit,
             executionGasLimit: executionGasLimit,
             gasPrice: gasPrice,
             maxNumRefunds: 1
@@ -331,6 +333,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             BOB,
             1 gwei,
             2 gwei,
+            DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
             0
         );
@@ -393,6 +396,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             1 gwei,
             15 gwei, // this will overdraw the vault
             DEFAULT_GAS_LIMIT,
+            DEFAULT_GAS_LIMIT,
             1000
         );
 
@@ -442,6 +446,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             BOB,
             15 gwei,
             2 gwei,
+            DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
             1000
         );

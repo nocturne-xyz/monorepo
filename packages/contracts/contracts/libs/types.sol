@@ -2,7 +2,8 @@
 pragma solidity ^0.8.17;
 
 uint256 constant GAS_PER_JOINSPLIT = 200000;
-uint256 constant GAS_PER_REFUND = 0;
+uint256 constant GAS_PER_REFUND_HANDLE = 0;
+uint256 constant GAS_PER_REFUND_TREE = 0;
 
 enum AssetType {
     ERC20,
@@ -85,9 +86,10 @@ struct Operation {
     NocturneAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
+    uint256 verificationGasLimit;
     uint256 executionGasLimit;
-    uint256 gasPrice;
     uint256 maxNumRefunds;
+    uint256 gasPrice;
 }
 
 struct GasPayment {
@@ -105,9 +107,9 @@ struct OperationResult {
     string failureReason;
     bool[] callSuccesses;
     bytes[] callResults;
-    uint256 executionGasUsed;
-    uint256 verificationGasUsed;
-    uint256 refundGasUsed;
+    uint256 verificationGas;
+    uint256 executionGas;
+    uint256 numRefunds;
 }
 
 struct Action {
@@ -152,7 +154,8 @@ library OperationLib {
         return
             self.executionGasLimit +
             (GAS_PER_JOINSPLIT * self.joinSplitTxs.length) +
-            (GAS_PER_REFUND * self.encodedRefundAssets.length);
+            (GAS_PER_REFUND_HANDLE * self.encodedRefundAssets.length) +
+            (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
     }
 
     function maxGasTokenCost(

@@ -53,8 +53,8 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
       1. gas cost of `WalletUtils.computeOperationDigests` and
       `_verifyAllProofs` can be estimated based on length of op.joinSplitTxs
       and overall size of op
-      2. maxmimum gas cost of each performOperation can be estimated using op
-      (refer to inline docs for `performOperation`)
+      2. maxmimum gas cost of each processOperation can be estimated using op
+      (refer to inline docs for `processOperation`)
     */
     function processBundle(
         Bundle calldata bundle
@@ -79,7 +79,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
             );
 
             try
-                this.performOperation(ops[i], verificationGasForOp, msg.sender)
+                this.processOperation(ops[i], verificationGasForOp, msg.sender)
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
@@ -101,7 +101,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     /**
       @dev This function will only be message-called from `processBundle` and
       can only be entered once inside an Evm transaction. It will message-call
-      `executeActions`.
+      `executeOperation`.
 
       @param op an Operation
       @param bundler address of the bundler that provided the bundle
@@ -111,14 +111,14 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
       It is expected of `processBundle` to catch this error.
 
       @dev The gas cost of the call can be estimated in constant time given op:
-      1. The gas cost before `executeActions` can be bounded as a function of
+      1. The gas cost before `executeOperation` can be bounded as a function of
       op.joinSplitTxs.length
-      2. `executeActions` uses at most op.executionGasLimit
-      3. The gas cost after `executeActions` can be bounded as a function of
+      2. `executeOperation` uses at most op.executionGasLimit
+      3. The gas cost after `executeOperation` can be bounded as a function of
       op.maxNumRefunds
       The bundler should estimate the gas cost functions in 1 and 3 offchain.
     */
-    function performOperation(
+    function processOperation(
         Operation calldata op,
         uint256 verificationGasForOp,
         address bundler
@@ -127,50 +127,78 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
         _processJoinSplitTxsReservingFee(op);
 
-        uint256 gasLeftInitial = gasleft();
-        try this.executeActions{gas: op.executionGasLimit}(op.actions) returns (
+        try this.executeOperation{gas: op.executionGasLimit}(op) returns (
             OperationResult memory result
         ) {
             opResult = result;
+            opResult.verificationGas = verificationGasForOp;
         } catch (bytes memory result) {
             // TODO: properly process this failure case
             opResult = WalletUtils._unsuccessfulOperation(result);
         }
-        // Compute executionGasUsed
-        opResult.executionGasUsed = gasLeftInitial - gasleft();
+
+        _gatherReservedGasTokens(op);
 
         // Process gas payment to bundler
-        _handleGasPayment(
-            op,
-            opResult.executionGasUsed,
-            verificationGasForOp,
-            bundler
-        );
+        _payBundlerGasTokens(op, opResult, bundler);
 
-        // Process refunds
+        // Note: if too many refunds condition reverted in execute actions, the
+        // actions creating the refunds were reverted too, so numRefunds would =
+        // joinsplits.length
         _handleAllRefunds(op);
 
         return opResult;
     }
 
     /**
-      @dev This function will only be message-called from `performOperation`.
+      @dev This function will only be message-called from `processOperation`.
       The call gas given is the execution gas specified by the operation.
     */
-    function executeActions(
-        Action[] calldata actions
+    function executeOperation(
+        Operation calldata op
     ) external onlyThis returns (OperationResult memory opResult) {
-        uint256 numActions = actions.length;
+        uint256 preExecutionGas = gasleft();
+
+        uint256 numActions = op.actions.length;
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
         opResult.callResults = new bytes[](numActions);
         // Sequentially
         for (uint256 i = 0; i < numActions; i++) {
-            (bool success, bytes memory result) = _makeExternalCall(actions[i]);
+            (bool success, bytes memory result) = _makeExternalCall(
+                op.actions[i]
+            );
 
             opResult.callSuccesses[i] = success;
             opResult.callResults[i] = result;
         }
+
+        // Ensure number of refunds didn't exceed max specified in op.
+        // If it did, executeOperation is reverts and all action state changes
+        // are rolled back.
+        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
+        require(op.maxNumRefunds >= numRefundsToHandle);
+
+        opResult.numRefunds = numRefundsToHandle;
+
+        opResult.executionGas = preExecutionGas - gasleft();
+    }
+
+    function _payBundlerGasTokens(
+        Operation calldata op,
+        OperationResult memory opResult,
+        address bundler
+    ) internal {
+        uint256 handleRefundGas = WalletUtils.handleRefundGas(
+            opResult.numRefunds
+        );
+
+        // Transfer used verification and execution gas to the bundler
+        uint256 bundlerPayout = op.gasPrice *
+            (opResult.executionGas +
+                opResult.verificationGas +
+                handleRefundGas);
+        AssetUtils._transferAssetTo(op.gasToken(), bundler, bundlerPayout);
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

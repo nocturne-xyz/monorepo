@@ -48,7 +48,9 @@ export class NocturneFrontendSDK {
       );
 
     const {
-      joinSplitRequests, refundAssets, actions,
+      joinSplitRequests,
+      refundAssets,
+      actions,
       executionGasLimit = 1_000_000n,
       gasPrice = 0n,
       maxNumRefunds = BigInt(refundAssets.length + joinSplitRequests.length),

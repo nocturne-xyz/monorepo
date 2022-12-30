@@ -157,9 +157,9 @@ library WalletUtils {
                 failureReason: reason,
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),
-                executionGasUsed: 0,
-                verificationGasUsed: 0,
-                refundGasUsed: 0
+                executionGas: 0,
+                verificationGas: 0,
+                numRefunds: 0
             });
     }
 
@@ -177,9 +177,9 @@ library WalletUtils {
                 failureReason: "",
                 callSuccesses: callSuccesses,
                 callResults: callResults,
-                executionGasUsed: 0,
-                verificationGasUsed: 0,
-                refundGasUsed: 0
+                executionGas: 0,
+                verificationGas: 0,
+                numRefunds: 0
             });
     }
 
@@ -191,5 +191,21 @@ library WalletUtils {
         return
             (batchVerificationGas / bundle.totalNumJoinSplits()) *
             bundle.operations[opIndex].joinSplitTxs.length;
+    }
+
+    function handleRefundGas(
+        uint256 numRefunds
+    ) internal pure returns (uint256) {
+        return numRefunds * GAS_PER_REFUND_HANDLE;
+    }
+
+    function treeRefundGas(uint256 numRefunds) internal pure returns (uint256) {
+        return numRefunds * GAS_PER_REFUND_TREE;
+    }
+
+    function totalGasFromNumRefunds(
+        uint256 numRefunds
+    ) internal pure returns (uint256) {
+        return handleRefundGas(numRefunds) + treeRefundGas(numRefunds);
     }
 }
