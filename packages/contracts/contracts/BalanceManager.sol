@@ -130,11 +130,11 @@ contract BalanceManager is
                 );
                 // Deduct gas payment from value to transfer to wallet
                 valueToTransfer -= gasPaymentThisJoinSplit;
-                // Deduct gas payment from the amoung to be reserved
+                // Deduct gas payment from the amount to be reserved
                 gasAssetToReserve -= gasPaymentThisJoinSplit;
             }
 
-            // If value to transfer is 0, skip the trasnfer
+            // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
                     EncodedAsset({

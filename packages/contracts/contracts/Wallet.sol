@@ -106,7 +106,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
       @param bundler address of the bundler that provided the bundle
       @return opResult the result of the operation
 
-      @dev This function can throw due to internal erros or being out-of-gas.
+      @dev This function can throw due to internal errors or being out-of-gas.
       It is expected of `processBundle` to catch this error.
 
       @dev The gas cost of the call can be estimated in constant time given op:
@@ -162,7 +162,9 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
         opResult.callResults = new bytes[](numActions);
-        // Sequentially
+
+        // Execute each external call
+        // TODO: Add sequential call semantic
         for (uint256 i = 0; i < numActions; i++) {
             (bool success, bytes memory result) = _makeExternalCall(
                 op.actions[i]
