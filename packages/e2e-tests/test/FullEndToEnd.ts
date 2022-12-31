@@ -19,6 +19,7 @@ import {
   query,
   calculateOperationDigest,
   AssetType,
+  simulateOperation,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
@@ -196,9 +197,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       joinSplitRequests: [joinSplitRequest],
       refundAssets: [],
       actions: [action],
-      executionGasLimit: 1_000_000n,
       gasPrice: 0n,
-      maxNumRefunds: 1n,
     };
 
     console.log("Create post-proof operation with NocturneContext");
