@@ -380,8 +380,8 @@ export class NocturneContext {
     verificationGasLimit = 1_000_000n,
     executionGasLimit,
     maxNumRefunds,
-    // Default max number of refunds does not support minting
-  }: OperationRequest): Promise<PreSignOperation> {
+  }: // Default max number of refunds does not support minting
+  OperationRequest): Promise<PreSignOperation> {
     const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
       preSignJoinSplitTxs.push(
@@ -396,9 +396,10 @@ export class NocturneContext {
     // Required field absent, need to estimate
     if (!executionGasLimit || !maxNumRefunds) {
       // Set some large number for both parameters
-      executionGasLimit = 30_000_000n,
-      maxNumRefunds = BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
-      simulationRequired = true
+      (executionGasLimit = 30_000_000n),
+        (maxNumRefunds =
+          BigInt(joinSplitRequests.length + refundAssets.length) + 5n),
+        (simulationRequired = true);
     }
 
     const op = {
