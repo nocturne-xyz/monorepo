@@ -12,9 +12,9 @@ import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 
-const WASM_PATH = "./joinsplit.wasm";
-const ZKEY_PATH = "./joinsplit.zkey";
-const VKEY_PATH = "./joinSplitVkey.json";
+const WASM_PATH = "/joinsplit.wasm";
+const ZKEY_PATH = "/joinsplit.zkey";
+const VKEY_PATH = "/joinSplitVkey.json";
 
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
