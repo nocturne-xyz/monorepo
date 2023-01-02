@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { NotesDB, InMemoryKVStore, MerkleDB, KV } from "../src/sdk/db";
 import { IncludedNote } from "../src/sdk/note";
-import { Asset } from "../src/commonTypes";
+import { Asset, AssetType } from "../src/commonTypes";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();
@@ -129,7 +129,11 @@ describe("NotesDB", async () => {
   });
 
   it("Stores, gets, and removes notes", async () => {
-    const asset: Asset = { address: "0x1234", id: 1234n };
+    const asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x1234",
+      id: 1234n,
+    };
     const note: IncludedNote = {
       owner: {
         h1X: 1n,
@@ -138,8 +142,7 @@ describe("NotesDB", async () => {
         h2Y: 4n,
       },
       nonce: 5n,
-      asset: asset.address,
-      id: asset.id,
+      asset,
       value: 100n,
       merkleIndex: 6,
     };
@@ -157,7 +160,11 @@ describe("NotesDB", async () => {
   });
 
   it("Stores, gets, and removes multiple notes for same asset", async () => {
-    const asset: Asset = { address: "0x1234", id: 1234n };
+    const asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x1234",
+      id: 1234n,
+    };
     const noteOne: IncludedNote = {
       owner: {
         h1X: 1n,
@@ -166,8 +173,7 @@ describe("NotesDB", async () => {
         h2Y: 4n,
       },
       nonce: 5n,
-      asset: asset.address,
-      id: asset.id,
+      asset,
       value: 100n,
       merkleIndex: 6,
     };
@@ -180,8 +186,7 @@ describe("NotesDB", async () => {
         h2Y: 4n,
       },
       nonce: 5n,
-      asset: asset.address,
-      id: asset.id,
+      asset,
       value: 150n,
       merkleIndex: 7,
     };

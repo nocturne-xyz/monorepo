@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Rename encodedAsset to encodedAssetAddr and encodedId to encodedAssetId
 - fix endianness bug in subtree update circuit's membership proofs
 - add rapidsnark setup script for subtree updater
 - Add batch verifier method to auto-generated solidity verifiers

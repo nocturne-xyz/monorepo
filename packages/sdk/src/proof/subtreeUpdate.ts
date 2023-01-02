@@ -20,8 +20,8 @@ export interface SubtreeUpdateInputs {
   ownerH1s: bigint[];
   ownerH2s: bigint[];
   nonces: bigint[];
-  assets: bigint[];
-  ids: bigint[];
+  encodedAssetAddrs: bigint[];
+  encodedAssetIds: bigint[];
   values: bigint[];
 }
 

@@ -8,6 +8,7 @@ import {
   NocturneSigner,
   BinaryPoseidonTree,
   NoteTrait,
+  AssetType,
 } from "@nocturne-xyz/sdk";
 import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
@@ -27,17 +28,20 @@ describe("rapidsnark subtree update prover", async () => {
   const sk = BigInt(
     "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
   );
-  const flaxPrivKey = new NocturnePrivKey(sk);
-  const flaxSigner = new NocturneSigner(flaxPrivKey);
-  const flaxAddr = flaxSigner.address;
+  const nocturnePrivKey = new NocturnePrivKey(sk);
+  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
+  const nocturneAddr = nocturneSigner.address;
 
   let nonce = 0n;
   function dummyNote(): Note {
     return {
-      owner: flaxAddr,
+      owner: nocturneAddr,
       nonce: nonce++,
-      asset: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      id: 5n,
+      asset: {
+        assetType: AssetType.ERC20,
+        assetAddr: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        id: 5n,
+      },
       value: 100n,
     };
   }

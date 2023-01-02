@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity ^0.8.5;
-import {IWallet} from "../interfaces/IWallet.sol";
+pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
+import "../libs/types.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {
+    using BundleLib for Bundle;
+
     function computeOperationDigests(
-        IWallet.Operation[] calldata ops
+        Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
         uint256 numOps = ops.length;
         uint256[] memory opDigests = new uint256[](numOps);
@@ -19,7 +21,7 @@ library WalletUtils {
     }
 
     function extractJoinSplitProofsAndPis(
-        IWallet.Operation[] calldata ops,
+        Operation[] calldata ops,
         uint256[] memory digests
     )
         internal
@@ -42,8 +44,8 @@ library WalletUtils {
 
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
-            IWallet.Operation memory op = ops[i];
-            for (uint256 j = 0; j < op.joinSplitTxs.length; j++) {
+            Operation memory op = ops[i];
+            for (uint256 j = 0; j < numJoinSplits; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
@@ -53,8 +55,8 @@ library WalletUtils {
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
                 allPis[index][6] = digests[i];
-                allPis[index][7] = uint256(uint160(op.joinSplitTxs[j].asset));
-                allPis[index][8] = op.joinSplitTxs[j].id;
+                allPis[index][7] = op.joinSplitTxs[j].encodedAssetAddr;
+                allPis[index][8] = op.joinSplitTxs[j].encodedAssetId;
                 index++;
             }
         }
@@ -64,65 +66,155 @@ library WalletUtils {
 
     // TODO: do we need a domain in the payload?
     // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
+    // Careful about declaring local variables in this function. Stack depth is around the limit.
     function computeOperationDigest(
-        IWallet.Operation calldata op
+        Operation calldata op
     ) internal pure returns (uint256) {
-        bytes memory payload;
+        bytes memory actionPayload;
 
-        IWallet.Action memory action;
-        for (uint256 i = 0; i < op.actions.length; i++) {
+        Action memory action;
+        uint256 numActions = op.actions.length;
+        for (uint256 i = 0; i < numActions; i++) {
             action = op.actions[i];
-            payload = abi.encodePacked(
-                payload,
+            actionPayload = abi.encodePacked(
+                actionPayload,
                 action.contractAddress,
                 keccak256(action.encodedFunction)
             );
         }
 
-        bytes memory joinSplitTxsHash;
-        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
-            joinSplitTxsHash = abi.encodePacked(
-                joinSplitTxsHash,
-                _hashJoinSplit(op.joinSplitTxs[i])
+        bytes memory joinSplitTxsPayload;
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplitTxsPayload = abi.encodePacked(
+                joinSplitTxsPayload,
+                keccak256(
+                    abi.encodePacked(
+                        op.joinSplitTxs[i].commitmentTreeRoot,
+                        op.joinSplitTxs[i].nullifierA,
+                        op.joinSplitTxs[i].nullifierB,
+                        op.joinSplitTxs[i].newNoteACommitment,
+                        op.joinSplitTxs[i].newNoteBCommitment,
+                        op.joinSplitTxs[i].publicSpend,
+                        op.joinSplitTxs[i].encodedAssetAddr,
+                        op.joinSplitTxs[i].encodedAssetId
+                    )
+                )
             );
         }
 
-        bytes32 spendTokensHash = keccak256(
-            abi.encodePacked(op.tokens.spendTokens)
-        );
-        bytes32 refundTokensHash = keccak256(
-            abi.encodePacked(op.tokens.refundTokens)
-        );
+        bytes memory refundAssetsPayload;
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+            refundAssetsPayload = abi.encodePacked(
+                refundAssetsPayload,
+                op.encodedRefundAssets[i].encodedAssetAddr,
+                op.encodedRefundAssets[i].encodedAssetId
+            );
+        }
 
-        payload = abi.encodePacked(
-            payload,
-            joinSplitTxsHash,
+        bytes memory refundAddrPayload = abi.encodePacked(
             op.refundAddr.h1X,
             op.refundAddr.h1Y,
             op.refundAddr.h2X,
-            op.refundAddr.h2Y,
-            spendTokensHash,
-            refundTokensHash,
-            op.gasLimit
+            op.refundAddr.h2Y
+        );
+
+        bytes memory payload = abi.encodePacked(
+            actionPayload,
+            joinSplitTxsPayload,
+            refundAssetsPayload,
+            refundAddrPayload,
+            op.executionGasLimit,
+            op.gasPrice,
+            op.maxNumRefunds
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
     }
 
-    function _hashJoinSplit(
-        IWallet.JoinSplitTransaction calldata joinSplit
-    ) private pure returns (bytes32) {
-        bytes memory payload = abi.encodePacked(
-            joinSplit.commitmentTreeRoot,
-            joinSplit.nullifierA,
-            joinSplit.nullifierB,
-            joinSplit.newNoteACommitment,
-            joinSplit.newNoteBCommitment,
-            joinSplit.publicSpend,
-            joinSplit.asset,
-            joinSplit.id
-        );
+    // From https://ethereum.stackexchange.com/questions/83528
+    function _getRevertMsg(
+        bytes memory reason
+    ) internal pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (reason.length < 68) {
+            return "Transaction reverted silently";
+        }
 
-        return keccak256(payload);
+        assembly {
+            // Slice the sighash.
+            reason := add(reason, 0x04)
+        }
+        return abi.decode(reason, (string)); // All that remains is the revert string
+    }
+
+    function _failOperationWithReason(
+        string memory reason
+    ) internal pure returns (OperationResult memory result) {
+        return
+            OperationResult({
+                opProcessed: false,
+                failureReason: reason,
+                callSuccesses: new bool[](0),
+                callResults: new bytes[](0),
+                executionGas: 0,
+                verificationGas: 0,
+                numRefunds: 0
+            });
+    }
+
+    // TODO: properly process this failure case
+    function _unsuccessfulOperation(
+        bytes memory result
+    ) internal pure returns (OperationResult memory) {
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = false;
+        bytes[] memory callResults = new bytes[](1);
+        callResults[0] = result;
+        return
+            OperationResult({
+                opProcessed: true,
+                failureReason: "",
+                callSuccesses: callSuccesses,
+                callResults: callResults,
+                executionGas: 0,
+                verificationGas: 0,
+                numRefunds: 0
+            });
+    }
+
+    function _verificationGasForOp(
+        Bundle calldata bundle,
+        uint256 opIndex,
+        uint256 batchVerificationGas
+    ) internal pure returns (uint256) {
+        return
+            (batchVerificationGas / bundle.totalNumJoinSplits()) *
+            bundle.operations[opIndex].joinSplitTxs.length;
+    }
+
+    function _calculateBundlerGasAssetPayout(
+        Operation calldata op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleRefundGas = _handleRefundGas(opResult.numRefunds);
+
+        return
+            op.gasPrice *
+            (opResult.executionGas +
+                opResult.verificationGas +
+                handleRefundGas);
+    }
+
+    function _handleRefundGas(
+        uint256 numRefunds
+    ) internal pure returns (uint256) {
+        return numRefunds * GAS_PER_REFUND_HANDLE;
+    }
+
+    function _treeRefundGas(
+        uint256 numRefunds
+    ) internal pure returns (uint256) {
+        return numRefunds * GAS_PER_REFUND_TREE;
     }
 }

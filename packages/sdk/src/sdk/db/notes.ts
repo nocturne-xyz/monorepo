@@ -1,4 +1,9 @@
-import { AllNotes, Asset, NoteAssetKey } from "../../commonTypes";
+import {
+  AllNotes,
+  Asset,
+  NoteAssetKey,
+  parseAssetType,
+} from "../../commonTypes";
 import { IncludedNote, NoteTrait } from "../note";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
@@ -20,8 +25,9 @@ export class NotesDB {
    * @returns key the corresponding key for the note
    */
   static formatNoteKey(note: IncludedNote): string {
-    const asset: Asset = { address: note.asset, id: note.id };
-    return NotesDB.formatNoteAssetKey(asset) + "_" + NoteTrait.sha256(note);
+    return (
+      NotesDB.formatNoteAssetKey(note.asset) + "_" + NoteTrait.sha256(note)
+    );
   }
 
   /**
@@ -32,7 +38,15 @@ export class NotesDB {
    * @returns keyPrefix the key prefix for the asset the note is for
    */
   static formatNoteAssetKey(asset: Asset): NoteAssetKey {
-    return NOTES_PREFIX + "_" + asset.address + "_" + asset.id;
+    return (
+      NOTES_PREFIX +
+      "_" +
+      asset.assetType +
+      "_" +
+      asset.assetAddr.toUpperCase() +
+      "_" +
+      asset.id
+    );
   }
 
   /**
@@ -44,13 +58,14 @@ export class NotesDB {
    */
   static parseAssetFromNoteAssetKey(key: NoteAssetKey): Asset {
     const arr = key.split("_");
-    if (arr.length !== 3 || arr[0] !== NOTES_PREFIX) {
+    if (arr.length !== 4 || arr[0] !== NOTES_PREFIX) {
       throw Error(`Invalid note asset key: "${key}"`);
     }
 
     return {
-      address: arr[1],
-      id: BigInt(arr[2]),
+      assetType: parseAssetType(arr[1]),
+      assetAddr: arr[2],
+      id: BigInt(arr[3]),
     };
   }
 
@@ -102,8 +117,7 @@ export class NotesDB {
     const iterPrefix = await this.kv.iterPrefix(NOTES_PREFIX);
     for await (const [, value] of iterPrefix) {
       const note = JSON.parse(value);
-      const asset = { address: note.asset, id: note.id };
-      const noteAssetKey = NotesDB.formatNoteAssetKey(asset);
+      const noteAssetKey = NotesDB.formatNoteAssetKey(note.asset);
 
       const notesForAsset = allNotes.get(noteAssetKey) ?? [];
       notesForAsset.push(note);

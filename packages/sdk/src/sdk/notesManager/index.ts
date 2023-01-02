@@ -1,7 +1,12 @@
 import { NotesDB } from "../db";
 import { IncludedNote, NoteTrait } from "../note";
 import { NocturneSigner } from "../signer";
-import { Address, BaseJoinSplitTx, NoteTransmission } from "../../commonTypes";
+import {
+  decodeAsset,
+  Asset,
+  BaseJoinSplitTx,
+  NoteTransmission,
+} from "../../commonTypes";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -57,20 +62,23 @@ export abstract class NotesManager {
         }
       }
 
+      const asset = decodeAsset(
+        e.joinSplitTx.encodedAssetAddr,
+        e.joinSplitTx.encodedAssetId
+      );
+
       this.processNoteTransmission(
         e.joinSplitTx.newNoteACommitment,
         e.joinSplitTx.newNoteATransmission,
         e.newNoteAIndex,
-        e.joinSplitTx.asset,
-        e.joinSplitTx.id
+        asset
       );
 
       this.processNoteTransmission(
         e.joinSplitTx.newNoteBCommitment,
         e.joinSplitTx.newNoteBTransmission,
         e.newNoteBIndex,
-        e.joinSplitTx.asset,
-        e.joinSplitTx.id
+        asset
       );
     }
   }
@@ -79,15 +87,13 @@ export abstract class NotesManager {
     newNoteCommitment: bigint,
     newNoteTransmission: NoteTransmission,
     newNoteIndex: number,
-    asset: Address,
-    id: bigint
+    asset: Asset
   ): Promise<void> {
     if (this.signer.testOwn(newNoteTransmission.owner)) {
       const newNote = this.signer.getNoteFromNoteTransmission(
         newNoteTransmission,
         newNoteIndex,
-        asset,
-        id
+        asset
       );
 
       // Check commitment against note, as malicious user could post incorrectly

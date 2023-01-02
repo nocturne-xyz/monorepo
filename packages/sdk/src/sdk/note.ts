@@ -1,48 +1,53 @@
 import { NocturneAddressTrait, NocturneAddress } from "../crypto/address";
-import { Address } from "../commonTypes";
+import { Asset, decodeAsset, encodeAsset } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
-import { NoteInput } from "../proof";
 
 export interface Note {
   owner: NocturneAddress;
   nonce: bigint;
-  asset: Address;
-  id: bigint;
+  asset: Asset;
   value: bigint;
 }
 
+export interface IncludedNote extends Note {
+  merkleIndex: number;
+}
+
+export interface EncodedNote {
+  owner: NocturneAddress;
+  nonce: bigint;
+  encodedAssetAddr: EncodedAddr;
+  encodedAssetId: EncodedId;
+  value: bigint;
+}
+
+export type EncodedAddr = bigint;
+export type EncodedId = bigint;
+
 export class NoteTrait {
-  static toCommitment({ owner, nonce, asset, id, value }: Note): bigint {
+  static toCommitment(note: Note): bigint {
+    const { owner, nonce, encodedAssetAddr, encodedAssetId, value } =
+      NoteTrait.encode(note);
     return BigInt(
       poseidon([
         NocturneAddressTrait.hash(owner),
         nonce,
-        BigInt(asset),
-        id,
+        encodedAssetAddr,
+        encodedAssetId,
         value,
       ])
     );
   }
 
-  static toNoteInput({ owner, nonce, asset, id, value }: Note): NoteInput {
-    return {
-      owner: owner,
-      nonce: nonce,
-      asset: BigInt(asset),
-      id: id,
-      value: value,
-    };
-  }
-
   static sha256(note: Note): number[] {
-    const noteInput = NoteTrait.toNoteInput(note);
+    const noteInput = NoteTrait.encode(note);
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
-    const asset = bigintToBEPadded(noteInput.asset, 32);
-    const id = bigintToBEPadded(noteInput.id, 32);
+    const asset = bigintToBEPadded(noteInput.encodedAssetAddr, 32);
+    const id = bigintToBEPadded(noteInput.encodedAssetId, 32);
     const value = bigintToBEPadded(noteInput.value, 32);
 
     const preimage = [
@@ -57,13 +62,37 @@ export class NoteTrait {
   }
 
   static toIncludedNote(
-    { owner, nonce, asset, id, value }: Note,
+    { owner, nonce, asset, value }: Note,
     merkleIndex: number
   ): IncludedNote {
-    return { owner, nonce, asset, id, value, merkleIndex };
+    return { owner, nonce, asset, value, merkleIndex };
   }
-}
 
-export interface IncludedNote extends Note {
-  merkleIndex: number;
+  static encode(note: Note): EncodedNote {
+    const { owner, nonce, value } = note;
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset(note.asset);
+
+    return {
+      owner,
+      nonce,
+      encodedAssetAddr: encodedAssetAddr,
+      encodedAssetId: encodedAssetId,
+      value,
+    };
+  }
+
+  static decode(encodedNote: EncodedNote): Note {
+    const { owner, nonce, value } = encodedNote;
+    const asset = decodeAsset(
+      encodedNote.encodedAssetAddr,
+      encodedNote.encodedAssetId
+    );
+
+    return {
+      owner,
+      nonce,
+      asset,
+      value,
+    };
+  }
 }

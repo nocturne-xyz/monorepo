@@ -109,7 +109,10 @@ export class BundlerSubmitter {
 
     const executedStatusTransactions = matchingEvents.map(({ args }) => {
       const digest = args.operationDigest.toBigInt();
-      const status = args.opSuccess
+      const callSuccesses = args.callSuccesses.reduce(
+        (acc, success) => acc && success
+      );
+      const status = callSuccesses
         ? OperationStatus.EXECUTED_SUCCESS
         : OperationStatus.EXECUTED_FAILED;
 

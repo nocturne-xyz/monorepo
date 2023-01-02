@@ -4,23 +4,18 @@ import {
   AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
-} from "./commonTypes";
-import { SpendAndRefundTokens } from "./contract/types";
-import {
+  EncodedAsset,
   PreSignJoinSplitTx,
   PreProofJoinSplitTx,
   ProvenJoinSplitTx,
   PreSignOperation,
   PreProofOperation,
   ProvenOperation,
+  encodeAsset,
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import {
-  CanonAddress,
-  NocturneAddress,
-  NocturneAddressTrait,
-} from "./crypto/address";
+import { CanonAddress, NocturneAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -80,21 +75,13 @@ export class NocturneContext {
    * operation request's asset requests. It will then generate joinsplit proofs
    * for each and include that in the final `ProvenOperation`.
    *
-   * @param OperationRequest Asset requested to spend
-   * @param joinSplit{Wasm,Zkey}Path paths to circuit runtime and prooving key
-   * @param refundAddr Optional refund address. Context will generate
-   * rerandomized address if left empty
-   * @param gasLimit Gas limit
+   * @param OperationRequest
    */
   async tryCreateProvenOperation(
-    operationRequest: OperationRequest,
-    refundAddr?: NocturneAddress,
-    gasLimit = 1_000_000n
+    operationRequest: OperationRequest
   ): Promise<ProvenOperation> {
     const preProofOp: PreProofOperation = await this.tryGetPreProofOperation(
-      operationRequest,
-      refundAddr,
-      gasLimit
+      operationRequest
     );
 
     const allProofPromises: Promise<ProvenJoinSplitTx>[] =
@@ -105,9 +92,12 @@ export class NocturneContext {
     return {
       joinSplitTxs: await Promise.all(allProofPromises),
       refundAddr: preProofOp.refundAddr,
-      tokens: preProofOp.tokens,
+      encodedRefundAssets: preProofOp.encodedRefundAssets,
       actions: preProofOp.actions,
-      gasLimit: preProofOp.gasLimit,
+      verificationGasLimit: preProofOp.verificationGasLimit,
+      executionGasLimit: preProofOp.executionGasLimit,
+      gasPrice: preProofOp.gasPrice,
+      maxNumRefunds: preProofOp.maxNumRefunds,
     };
   }
 
@@ -117,35 +107,13 @@ export class NocturneContext {
    * fulfill the operation's asset requests. Return the PreProofJoinSplitTx and
    * proof inputs.
    *
-   * @param operationRequest Operation request
-   * @param refundAddr Optional refund address. Context will generate
-   * rerandomized address if left empty
-   * @param gasLimit Gas limit
+   * @param operationRequest
    */
   async tryGetPreProofOperation(
-    operationRequest: OperationRequest,
-    refundAddr?: NocturneAddress,
-    gasLimit = 1_000_000n
+    operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
-    const { joinSplitRequests, refundTokens } = operationRequest;
-
-    // Generate refund addr if needed
-    const realRefundAddr = refundAddr
-      ? refundAddr
-      : NocturneAddressTrait.randomize(this.signer.address);
-
     // Create preProofOperation to use in per-note proving
-    const tokens: SpendAndRefundTokens = {
-      spendTokens: joinSplitRequests.map((a) => a.asset.address),
-      refundTokens,
-    };
-
-    const preSignOperation = await this.getPreSignOperation(
-      operationRequest,
-      tokens,
-      realRefundAddr,
-      gasLimit
-    );
+    const preSignOperation = await this.getPreSignOperation(operationRequest);
 
     // Sign the preSignOperation
     const opDigest = calculateOperationDigest(preSignOperation);
@@ -160,9 +128,12 @@ export class NocturneContext {
     return {
       joinSplitTxs: preProofJoinSplitTxs,
       refundAddr: preSignOperation.refundAddr,
-      tokens: preSignOperation.tokens,
+      encodedRefundAssets: preSignOperation.encodedRefundAssets,
       actions: preSignOperation.actions,
-      gasLimit: preSignOperation.gasLimit,
+      verificationGasLimit: preSignOperation.verificationGasLimit,
+      executionGasLimit: preSignOperation.executionGasLimit,
+      gasPrice: preSignOperation.gasPrice,
+      maxNumRefunds: preSignOperation.maxNumRefunds,
     };
   }
 
@@ -199,8 +170,8 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      BigInt(baseJoinSplitTx.asset) != publicSignals.asset ||
-      baseJoinSplitTx.id != publicSignals.id ||
+      baseJoinSplitTx.encodedAssetAddr != publicSignals.encodedAssetAddr ||
+      baseJoinSplitTx.encodedAssetId != publicSignals.encodedAssetId ||
       opDigest != publicSignals.opDigest
     ) {
       throw new Error(
@@ -245,7 +216,6 @@ export class NocturneContext {
         owner: newAddr,
         nonce: 0n,
         asset: notesToUse[0].asset,
-        id: notesToUse[0].id,
         value: 0n,
         merkleIndex: 0,
       });
@@ -318,14 +288,12 @@ export class NocturneContext {
       owner: NocturneAddressTrait.fromCanonAddress(canonOwner),
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
-      id: oldNoteA.id,
       value: returnVal,
     };
     const newNoteB: Note = {
       owner: NocturneAddressTrait.fromCanonAddress(receiver),
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
-      id: oldNoteA.id,
       value: paymentVal,
     };
 
@@ -365,6 +333,7 @@ export class NocturneContext {
       // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset(oldNoteA.asset);
 
     return {
       commitmentTreeRoot: merkleProofA.root,
@@ -374,8 +343,8 @@ export class NocturneContext {
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      asset: oldNoteA.asset,
-      id: oldNoteA.id,
+      encodedAssetAddr,
+      encodedAssetId,
       publicSpend,
       oldNoteA,
       oldNoteB,
@@ -387,33 +356,42 @@ export class NocturneContext {
   }
 
   /**
-   * Given an opeartion request, gather the necessary notes to fulfill the
-   * requests and format the data into PreSignOpeartion (all data needed to
-   * compute opeartionDigest).
+   * Given an operation request, gather the necessary notes to fulfill the
+   * requests and format the data into PreSignOperation (all data needed to
+   * compute operationDigest).
    *
-   * @param OperationRequest
-   * @param tokens spend and refund token addresses
-   * @param refundAddr refund address
-   * @param gasLimit:Gas limit
+   * @param operationRequest
    */
-  protected async getPreSignOperation(
-    { joinSplitRequests, actions }: OperationRequest,
-    tokens: SpendAndRefundTokens,
-    refundAddr: NocturneAddress,
-    gasLimit = 1_000_000n
-  ): Promise<PreSignOperation> {
+  protected async getPreSignOperation({
+    joinSplitRequests,
+    // Generate refund addr if needed
+    refundAddr = NocturneAddressTrait.randomize(this.signer.address),
+    refundAssets,
+    actions,
+    verificationGasLimit = 1_000_000n,
+    executionGasLimit = 1_000_000n,
+    gasPrice = 0n,
+    // Default max number of refunds does not support minting
+    maxNumRefunds = BigInt(joinSplitRequests.length + refundAssets.length),
+  }: OperationRequest): Promise<PreSignOperation> {
     const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
       preSignJoinSplitTxs.push(
         ...(await this.genPreSignJoinSplitTxs(joinSplitRequest))
       );
     }
+
+    const encodedRefundAssets: EncodedAsset[] = refundAssets.map(encodeAsset);
+
     return {
       joinSplitTxs: preSignJoinSplitTxs,
       refundAddr,
-      tokens,
+      encodedRefundAssets,
       actions,
-      gasLimit,
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
     };
   }
 
@@ -446,12 +424,12 @@ export class NocturneContext {
       operationDigest: opDigest,
       c: opSig.c,
       z: opSig.z,
-      oldNoteA: NoteTrait.toNoteInput(oldNoteA),
-      oldNoteB: NoteTrait.toNoteInput(oldNoteB),
+      oldNoteA: NoteTrait.encode(oldNoteA),
+      oldNoteB: NoteTrait.encode(oldNoteB),
       merkleProofA: merkleInputA,
       merkleProofB: merkleInputB,
-      newNoteA: NoteTrait.toNoteInput(newNoteA),
-      newNoteB: NoteTrait.toNoteInput(newNoteB),
+      newNoteA: NoteTrait.encode(newNoteA),
+      newNoteB: NoteTrait.encode(newNoteB),
     };
 
     return {
@@ -474,7 +452,7 @@ export class NocturneContext {
     const balance = await this.getAssetBalance(joinSplitRequest.asset);
     if (balance < totalVal) {
       throw new Error(
-        `Attempted to spend more funds than owned. Address: ${joinSplitRequest.asset.address}. Attempted: ${joinSplitRequest.unwrapValue}. Owned: ${balance}.`
+        `Attempted to spend more funds than owned. Address: ${joinSplitRequest.asset.assetAddr}. Attempted: ${joinSplitRequest.unwrapValue}. Owned: ${balance}.`
       );
     }
   }
@@ -485,7 +463,7 @@ export class NocturneContext {
    * could exceed the requested amount.
    *
    * @param joinSplitRequest request
-   * @return a list of included notes to spend.
+   * @param largestFirst indicate large to small ordering, defaults to false
    */
   async gatherMinimumNotes(
     joinSplitRequest: JoinSplitRequest,
@@ -543,6 +521,10 @@ export class NocturneContext {
 
   /**
    * Generate an operation request for a payment.
+   *
+   * @param asset Payment asset
+   * @param receiver Payment receiver
+   * @param value Payment value
    */
   genPaymentRequest(
     asset: Asset,
@@ -560,7 +542,7 @@ export class NocturneContext {
           },
         },
       ],
-      refundTokens: [],
+      refundAssets: [],
       actions: [],
     };
   }

@@ -10,7 +10,6 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 
 import {
   Action,
-  SNARK_SCALAR_FIELD,
   NocturneContext,
   Asset,
   JoinSplitRequest,
@@ -19,6 +18,7 @@ import {
   LocalMerkleProver,
   query,
   calculateOperationDigest,
+  AssetType,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
@@ -34,8 +34,6 @@ import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
 import fetch from "node-fetch";
 
-const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
-
 const BUNDLER_SERVER_PORT = 3000;
 const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
 const BUNDLER_BATCH_SIZE = 2;
@@ -48,10 +46,10 @@ const BUNDLER_PRIVKEY = ethers.Wallet.fromMnemonic(
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
-const PER_NOTE_AMOUNT = 100n;
-const ALICE_UNWRAP_VAL = 120n;
-const ALICE_TO_BOB_PUB_VAL = 100n;
-const ALICE_TO_BOB_PRIV_VAL = 30n;
+const PER_NOTE_AMOUNT = 100n * 1_000_000n;
+const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
+const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
+const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let deployer: ethers.Signer;
@@ -130,13 +128,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await network.provider.send("hardhat_reset");
   });
 
-  it(`Alice deposits two 100 token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
+  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
     console.log("Start bundler");
     bundlerServer.run(BUNDLER_SERVER_PORT).catch(console.error);
     const bundlerBatcherProm = bundlerBatcher.run().catch(console.error);
     const bundlerSubmitterProm = bundlerSubmitter.run().catch(console.error);
 
-    const asset: Asset = { address: token.address, id: ERC20_ID };
+    const asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: token.address,
+      id: 0n,
+    };
 
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
@@ -171,9 +173,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       (nocturneContextAlice.merkleProver as LocalMerkleProver).root()
     ).to.equal((await wallet.root()).toBigInt());
 
-    console.log(
-      "Alice: Create asset request to send tokens to Bob - 20 publicly and 30 privately."
-    );
     const joinSplitRequest: JoinSplitRequest = {
       asset,
       unwrapValue: ALICE_UNWRAP_VAL,
@@ -183,8 +182,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     };
 
-    console.log("Alice: Encode public ERC20 transfer to send 20 tokens Bob");
-    const refundTokens = [token.address];
+    console.log("Encode operation request");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
@@ -196,8 +194,11 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     };
     const operationRequest: OperationRequest = {
       joinSplitRequests: [joinSplitRequest],
-      refundTokens,
+      refundAssets: [],
       actions: [action],
+      executionGasLimit: 1_000_000n,
+      gasPrice: 0n,
+      maxNumRefunds: 1n,
     };
 
     console.log("Create post-proof operation with NocturneContext");
@@ -241,12 +242,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       latestBlock
     );
     expect(events.length).to.equal(1);
-    expect(events[0].args.opSuccess).to.equal(true);
+    expect(events[0].args.opProcessed).to.equal(true);
     expect(events[0].args.callSuccesses[0]).to.equal(true);
 
-    expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(
-      1000n - 2n * PER_NOTE_AMOUNT
-    );
+    expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(0n);
     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(
       ALICE_TO_BOB_PUB_VAL
     );

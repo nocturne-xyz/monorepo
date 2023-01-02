@@ -1,11 +1,6 @@
 import { Address, ProvenOperation } from "../commonTypes";
 import { NocturneAddress } from "../crypto/address";
 
-export interface SpendAndRefundTokens {
-  spendTokens: Address[];
-  refundTokens: Address[];
-}
-
 export interface Action {
   contractAddress: Address;
   encodedFunction: string;

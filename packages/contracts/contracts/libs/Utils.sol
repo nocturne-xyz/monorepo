@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 import {IWallet} from "../interfaces/IWallet.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {Pairing} from "../libs/Pairing.sol";
+import "../libs/types.sol";
 
 // helpers for converting to/from field elems, uint256s, and/or bytes, and hashing them
 library Utils {
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    // return the minimum of the two values
+    function min(uint256 a, uint256 b) internal pure returns (uint256) {
+        return (a >= b) ? b : a;
+    }
 
     // hash array of field elements / uint256s as big-endian bytes with sha256
     function sha256FieldElems(
@@ -34,14 +40,14 @@ library Utils {
     }
 
     function sha256Note(
-        IWallet.Note memory note
+        EncodedNote memory note
     ) internal pure returns (uint256) {
         uint256[] memory elems = new uint256[](6);
         elems[0] = note.ownerH1;
         elems[1] = note.ownerH2;
         elems[2] = note.nonce;
-        elems[3] = note.asset;
-        elems[4] = note.id;
+        elems[3] = note.encodedAssetAddr;
+        elems[4] = note.encodedAssetId;
         elems[5] = note.value;
         return uint256(sha256FieldElems(elems));
     }

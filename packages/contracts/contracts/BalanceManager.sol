@@ -1,24 +1,27 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
-import "./interfaces/IVault.sol";
-import "./interfaces/IWallet.sol";
+import {IVault} from "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
+import {AssetUtils} from "./libs/AssetUtils.sol";
+import "./libs/types.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
     CommitmentTreeManager
 {
-    IWallet.WalletBalanceInfo _balanceInfo; // solhint-disable-line state-visibility
-    IVault public _vault;
+    using OperationLib for Operation;
+
+    EncodedAsset[] public _receivedAssets;
+    IVault public immutable _vault;
 
     constructor(
         address vault,
@@ -31,13 +34,12 @@ contract BalanceManager is
     function onERC721Received(
         address, // operator
         address, // from
-        uint256 tokenId,
+        uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (_balanceInfo.erc721Ids[msg.sender].length == 0) {
-            _balanceInfo.erc721Addresses.push(msg.sender);
-        }
-        _balanceInfo.erc721Ids[msg.sender].push(tokenId);
+        _receivedAssets.push(
+            AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
+        );
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -48,10 +50,9 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
-            _balanceInfo.erc1155Addresses.push(msg.sender);
-        }
-        _balanceInfo.erc1155Ids[msg.sender].push(id);
+        _receivedAssets.push(
+            AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+        );
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -62,11 +63,11 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (_balanceInfo.erc1155Ids[msg.sender].length == 0) {
-                _balanceInfo.erc1155Addresses.push(msg.sender);
-            }
-            _balanceInfo.erc1155Ids[msg.sender].push(ids[i]);
+        uint256 numIds = ids.length;
+        for (uint256 i = 0; i < numIds; i++) {
+            _receivedAssets.push(
+                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
+            );
         }
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
@@ -74,191 +75,140 @@ contract BalanceManager is
     // TODO: fix this
     function supportsInterface(
         bytes4 // interfaceId
-    ) external view override returns (bool) {
+    ) external pure override returns (bool) {
         return false;
     }
 
-    function _makeBatchDeposit(
-        IWallet.Deposit[] memory approvedDeposits,
-        uint256 numApprovedDeposits
-    ) internal {
-        (
-            uint256[] memory successfulTransfers,
-            uint256 numSuccessfulTransfer
-        ) = _vault.makeBatchDeposit(approvedDeposits, numApprovedDeposits);
+    function _makeDeposit(Deposit calldata deposit) internal {
+        NocturneAddress calldata depositAddr = deposit.depositAddr;
 
-        for (uint256 i = 0; i < numSuccessfulTransfer; i++) {
-            uint256 index = successfulTransfers[i];
-            IWallet.NocturneAddress memory depositAddr = approvedDeposits[index]
-                .depositAddr;
+        _handleRefundNote(
+            depositAddr,
+            deposit.encodedAssetAddr,
+            deposit.encodedAssetId,
+            deposit.value
+        );
 
-            _handleRefund(
-                depositAddr,
-                approvedDeposits[index].asset,
-                approvedDeposits[index].id,
-                approvedDeposits[index].value
-            );
-        }
+        _vault.makeDeposit(deposit);
     }
 
-    function _makeDeposit(IWallet.Deposit calldata deposit) internal {
-        IWallet.NocturneAddress calldata depositAddr = deposit.depositAddr;
+    /**
+      Process all joinSplitTxs and request all declared publicSpend from the
+      vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
 
-        _handleRefund(depositAddr, deposit.asset, deposit.id, deposit.value);
+      @dev If this function returns normally without reverting, then it is safe
+      to request maxGasFee from vault with the same encodedAsset as
+      joinSplitTxs[0].
+    */
+    function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
+        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        uint256 gasAssetToReserve = op.maxGasAssetCost();
 
-        require(_vault.makeDeposit(deposit), "Deposit failed");
-    }
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            // Process nullifiers in the current joinSplitTx, will throw if
+            // they are not fresh
+            _handleJoinSplit(op.joinSplitTxs[i]);
 
-    // TODO: Fix below according to design doc
-    function _handleAllSpends(
-        IWallet.JoinSplitTransaction[] calldata joinSplitTxs,
-        IWallet.Tokens calldata tokens
-    ) internal {
-        uint256 numSpendTxs = joinSplitTxs.length;
+            // Defaults to requesting all publicSpend from vault
+            uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
+            // If we still need to reserve more gas and the current
+            // `joinSplitTx` is spending the gasAsset, then reserve what we can
+            // from this `joinSplitTx`
+            if (
+                gasAssetToReserve > 0 &&
+                encodedGasAsset.encodedAssetAddr ==
+                op.joinSplitTxs[i].encodedAssetAddr &&
+                encodedGasAsset.encodedAssetId ==
+                op.joinSplitTxs[i].encodedAssetId
+            ) {
+                // We will reserve as much as we can, upto the public spend
+                // amount or the maximum amount to be reserved
+                uint256 gasPaymentThisJoinSplit = Utils.min(
+                    op.joinSplitTxs[i].publicSpend,
+                    gasAssetToReserve
+                );
+                // Deduct gas payment from value to transfer to wallet
+                valueToTransfer -= gasPaymentThisJoinSplit;
+                // Deduct gas payment from the amount to be reserved
+                gasAssetToReserve -= gasPaymentThisJoinSplit;
+            }
 
-        for (uint256 i = 0; i < numSpendTxs; i++) {
-            _handleJoinSplit(joinSplitTxs[i]);
-            if (joinSplitTxs[i].id == Utils.SNARK_SCALAR_FIELD - 1) {
-                _balanceInfo.erc20Balances[
-                    joinSplitTxs[i].asset
-                ] += joinSplitTxs[i].publicSpend;
-            } else if (joinSplitTxs[i].publicSpend == 0) {
-                _gatherERC721(joinSplitTxs[i].asset, joinSplitTxs[i].id);
-            } else {
-                _gatherERC1155(
-                    joinSplitTxs[i].asset,
-                    joinSplitTxs[i].id,
-                    joinSplitTxs[i].publicSpend
+            // If value to transfer is 0, skip the transfer
+            if (valueToTransfer > 0) {
+                _vault.requestAsset(
+                    EncodedAsset({
+                        encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
+                        encodedAssetId: op.joinSplitTxs[i].encodedAssetId
+                    }),
+                    valueToTransfer
                 );
             }
         }
+        require(gasAssetToReserve == 0, "Too few gas tokens");
+    }
 
-        _gatherERC20s(tokens.spendTokens);
+    function _gatherReservedGasAsset(Operation calldata op) internal {
+        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
+        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        uint256 gasAssetAmount = op.maxGasAssetCost();
 
-        // reset ERC20 balances
-        for (uint256 i = 0; i < numSpendTxs; i++) {
-            _balanceInfo.erc20Balances[joinSplitTxs[i].asset] = 0;
+        // Request reserved maxGasFee from vault.
+        /// @dev This is safe because _processJoinSplitTxsReservingFee is
+        /// guaranteed to have reserved maxGasFee since it didn't throw.
+        _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+    }
+
+    /**
+      Get the total number of refunds to handle after making external action calls.
+      @dev This should only be called AFTER external calls have been made during action execution.
+    */
+    function _totalNumRefundsToHandle(
+        Operation calldata op
+    ) internal view returns (uint256) {
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numReceived = _receivedAssets.length;
+        return numJoinSplits + numReceived;
+    }
+
+    /**
+      Refund all current wallet assets back to refundAddr. The list of assets
+      to refund is specified in joinSplitTxs and the state variable
+      _receivedAssets.
+    */
+    function _handleAllRefunds(Operation calldata op) internal {
+        uint256 numRefunds = _totalNumRefundsToHandle(op);
+
+        // @dev Revert if number of refund requested is too large
+        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
+
+        EncodedAsset[] memory assetsToProcess = new EncodedAsset[](numRefunds);
+        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
+            assetsToProcess[i] = EncodedAsset({
+                encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
+                encodedAssetId: op.joinSplitTxs[i].encodedAssetId
+            });
         }
-    }
+        for (uint256 i = 0; i < _receivedAssets.length; i++) {
+            assetsToProcess[op.joinSplitTxs.length + i] = _receivedAssets[i];
+        }
+        delete _receivedAssets;
 
-    function _handleAllRefunds(
-        address[] calldata spendTokens,
-        address[] calldata refundTokens,
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        _handleERC20Refunds(spendTokens, refundTokens, refundAddr);
-
-        _handleERC721Refunds(refundAddr);
-
-        _handleERC1155Refunds(refundAddr);
-    }
-
-    function _handleERC20Refunds(
-        address[] calldata spendTokens,
-        address[] calldata refundTokens,
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < spendTokens.length; i++) {
-            uint256 newBal = IERC20(spendTokens[i]).balanceOf(address(this));
-
-            if (newBal != 0) {
-                _handleRefund(
-                    refundAddr,
-                    spendTokens[i],
-                    Utils.SNARK_SCALAR_FIELD - 1,
-                    newBal
+        for (uint256 i = 0; i < numRefunds; i++) {
+            uint256 value = AssetUtils._balanceOfAsset(assetsToProcess[i]);
+            if (value != 0) {
+                AssetUtils._transferAssetTo(
+                    assetsToProcess[i],
+                    address(_vault),
+                    value
                 );
-                require(
-                    IERC20(spendTokens[i]).transfer(address(_vault), newBal),
-                    "Error sending funds to vault"
+                _handleRefundNote(
+                    op.refundAddr,
+                    assetsToProcess[i].encodedAssetAddr,
+                    assetsToProcess[i].encodedAssetId,
+                    value
                 );
             }
         }
-
-        for (uint256 i = 0; i < refundTokens.length; i++) {
-            // should be 0 if already refunded as left over spend tokens
-            uint256 bal = IERC20(refundTokens[i]).balanceOf(address(this));
-            if (bal != 0) {
-                _handleRefund(
-                    refundAddr,
-                    refundTokens[i],
-                    Utils.SNARK_SCALAR_FIELD - 1,
-                    bal
-                );
-                require(
-                    IERC20(refundTokens[i]).transfer(address(_vault), bal),
-                    "Error sending funds to vault"
-                );
-            }
-        }
-    }
-
-    function _handleERC721Refunds(
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < _balanceInfo.erc721Addresses.length; i++) {
-            address tokenAddress = _balanceInfo.erc721Addresses[i];
-            uint256[] memory ids = _balanceInfo.erc721Ids[tokenAddress];
-            for (uint256 k = 0; k < ids.length; k++) {
-                if (IERC721(tokenAddress).ownerOf(ids[k]) == address(this)) {
-                    _handleRefund(refundAddr, tokenAddress, ids[k], 0);
-                    IERC721(tokenAddress).transferFrom(
-                        address(this),
-                        address(_vault),
-                        ids[k]
-                    );
-                }
-            }
-            delete _balanceInfo.erc721Ids[_balanceInfo.erc721Addresses[i]];
-        }
-        delete _balanceInfo.erc721Addresses;
-    }
-
-    function _handleERC1155Refunds(
-        IWallet.NocturneAddress calldata refundAddr
-    ) internal {
-        for (uint256 i = 0; i < _balanceInfo.erc1155Addresses.length; i++) {
-            address tokenAddress = _balanceInfo.erc1155Addresses[i];
-            uint256[] memory ids = _balanceInfo.erc1155Ids[tokenAddress];
-            for (uint256 k = 0; k < ids.length; k++) {
-                uint256 currBal = IERC1155(tokenAddress).balanceOf(
-                    address(this),
-                    ids[k]
-                );
-                if (currBal != 0) {
-                    _handleRefund(refundAddr, tokenAddress, ids[k], currBal);
-                    IERC1155(tokenAddress).safeTransferFrom(
-                        address(this),
-                        address(_vault),
-                        ids[k],
-                        currBal,
-                        ""
-                    );
-                }
-            }
-            delete _balanceInfo.erc1155Ids[_balanceInfo.erc1155Addresses[i]];
-        }
-        delete _balanceInfo.erc1155Addresses;
-    }
-
-    function _gatherERC20s(address[] calldata tokens) internal {
-        uint256[] memory amts = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
-            amts[i] = _balanceInfo.erc20Balances[tokens[i]];
-        }
-
-        _vault.requestERC20s(tokens, amts);
-    }
-
-    function _gatherERC721(address tokenAddress, uint256 id) internal {
-        _vault.requestERC721(tokenAddress, id);
-    }
-
-    function _gatherERC1155(
-        address tokenAddress,
-        uint256 id,
-        uint256 value
-    ) internal {
-        _vault.requestERC1155(tokenAddress, id, value);
     }
 }

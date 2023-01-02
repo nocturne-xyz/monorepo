@@ -19,6 +19,7 @@ const nocturneAddressType = {
     h2X: bigintType,
     h2Y: bigintType,
   },
+  additionalProperties: false,
 };
 const noteTransmissionType = {
   type: "object",
@@ -29,20 +30,20 @@ const noteTransmissionType = {
     encryptedNonce: bigintType,
     encryptedValue: bigintType,
   },
+  additionalProperties: false,
 };
-const spendAndRefundTokensType = {
+const encodedAssetType = {
   type: "object",
-  required: ["spendTokens", "refundTokens"],
+  required: ["encodedAssetAddr", "encodedAssetId"],
   properties: {
-    spendTokens: {
-      type: "array",
-      items: addressType,
-    },
-    refundTokens: {
-      type: "array",
-      items: addressType,
-    },
+    encodedAssetAddr: bigintType,
+    encodedAssetId: bigintType,
   },
+  additionalProperties: false,
+};
+const encodedRefundAssetsType = {
+  type: "array",
+  items: encodedAssetType,
 };
 const actionType = {
   type: "object",
@@ -53,6 +54,7 @@ const actionType = {
       type: "string",
     },
   },
+  additionalProperties: false,
 };
 const actionsType = {
   type: "array",
@@ -67,8 +69,8 @@ const joinSplitTxType = {
     "nullifierB",
     "newNoteACommitment",
     "newNoteBCommitment",
-    "asset",
-    "id",
+    "encodedAssetAddr",
+    "encodedAssetId",
     "publicSpend",
     "newNoteATransmission",
     "newNoteBTransmission",
@@ -80,12 +82,13 @@ const joinSplitTxType = {
     nullifierB: bigintType,
     newNoteACommitment: bigintType,
     newNoteBCommitment: bigintType,
-    asset: addressType,
-    id: bigintType,
+    encodedAssetAddr: bigintType,
+    encodedAssetId: bigintType,
     publicSpend: bigintType,
     newNoteATransmission: noteTransmissionType,
     newNoteBTransmission: noteTransmissionType,
   },
+  additionalProperties: false,
 };
 const joinSplitTxsType = {
   type: "array",
@@ -94,14 +97,27 @@ const joinSplitTxsType = {
 
 export const relaySchema = {
   type: "object",
-  required: ["joinSplitTxs", "refundAddr", "tokens", "actions", "gasLimit"],
+  required: [
+    "joinSplitTxs",
+    "refundAddr",
+    "encodedRefundAssets",
+    "actions",
+    "verificationGasLimit",
+    "executionGasLimit",
+    "maxNumRefunds",
+    "gasPrice",
+  ],
   properties: {
     joinSplitTxs: joinSplitTxsType,
     refundAddr: nocturneAddressType,
-    tokens: spendAndRefundTokensType,
+    encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,
-    gasLimit: bigintType,
+    verificationGasLimit: bigintType,
+    executionGasLimit: bigintType,
+    maxNumRefunds: bigintType,
+    gasPrice: bigintType,
   },
+  additionalProperties: false,
 };
 
 const ajv = new Ajv();

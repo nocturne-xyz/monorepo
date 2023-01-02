@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-pragma solidity ^0.8.5;
-import {IWallet} from "../../interfaces/IWallet.sol";
+pragma solidity ^0.8.17;
 import {IHasherT3, IHasherT6} from "../../interfaces/IHasher.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
+import "../../libs/types.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {
@@ -26,7 +26,7 @@ library TreeTestLib {
     function computeSubtreeRoot(
         TreeTest storage self,
         uint256[] memory batch
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         require(batch.length <= TreeUtils.BATCH_SIZE, "batch too large");
         uint256[] memory scratch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < batch.length; i++) {
@@ -53,7 +53,7 @@ library TreeTestLib {
     function computeInitialRoot(
         TreeTest storage self,
         uint256[] memory batch
-    ) internal returns (uint256[] memory) {
+    ) internal view returns (uint256[] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
@@ -80,7 +80,7 @@ library TreeTestLib {
         uint256[] memory batch,
         uint256[] memory path,
         uint256 idx
-    ) internal returns (uint256[] memory) {
+    ) internal view returns (uint256[] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 subtreeIdx = idx >> TreeUtils.BATCH_SUBTREE_DEPTH;
         uint256 zero = EMPTY_SUBTREE_ROOT;
@@ -109,12 +109,18 @@ library TreeTestLib {
 
     function computeNoteCommitment(
         TreeTest storage self,
-        IWallet.Note memory note
-    ) internal returns (uint256) {
+        EncodedNote memory note
+    ) internal view returns (uint256) {
         uint256 addrHash = self.hasherT3.hash([note.ownerH1, note.ownerH2]);
         return
             self.hasherT6.hash(
-                [addrHash, note.nonce, note.asset, note.id, note.value]
+                [
+                    addrHash,
+                    note.nonce,
+                    note.encodedAssetAddr,
+                    note.encodedAssetId,
+                    note.value
+                ]
             );
     }
 }

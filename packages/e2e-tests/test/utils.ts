@@ -1,10 +1,11 @@
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  SNARK_SCALAR_FIELD,
   NocturneAddress,
   NoteTrait,
   SubtreeUpdateProver,
   MockSubtreeUpdateProver,
+  encodeAsset,
+  AssetType,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
@@ -14,7 +15,6 @@ import * as fs from "fs";
 import * as path from "path";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
-const ERC20_ID = SNARK_SCALAR_FIELD - 1n;
 const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -35,24 +35,32 @@ export async function depositFunds(
   amounts: bigint[],
   startNonce = 0
 ): Promise<bigint[]> {
-  token.reserveTokens(eoa.address, 1000);
-  await token.connect(eoa).approve(vault.address, 200);
+  const total = amounts.reduce((sum, a) => sum + a);
+  token.reserveTokens(eoa.address, total);
+  await token.connect(eoa).approve(vault.address, total);
+
+  const asset = {
+    assetType: AssetType.ERC20,
+    assetAddr: token.address,
+    id: 0n,
+  };
+
+  const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
 
   const commitments = [];
   for (let i = 0; i < amounts.length; i++) {
     await wallet.connect(eoa).depositFunds({
       spender: eoa.address as string,
-      asset: token.address,
+      encodedAssetAddr,
+      encodedAssetId,
       value: amounts[i],
-      id: ERC20_ID,
       depositAddr: nocturneAddress,
     });
 
     const note = {
       owner: nocturneAddress,
       nonce: BigInt(i + startNonce),
-      asset: token.address,
-      id: ERC20_ID,
+      asset,
       value: amounts[i],
     };
     commitments.push(NoteTrait.toCommitment(note));

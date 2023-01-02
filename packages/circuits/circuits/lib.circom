@@ -4,13 +4,13 @@ include "include/poseidon.circom";
 include "include/escalarmulany.circom";
 
 // Note structure
-// owner, nonce, encodedAsset, encodedId, value
+// owner, nonce, encodedAsset, encodedAssetId, value
 
 template NoteCommit() {
     signal input ownerHash;
     signal input nonce;
     signal input encodedAsset;
-    signal input encodedId;
+    signal input encodedAssetId;
     signal input value;
 
     signal output out;
@@ -19,7 +19,7 @@ template NoteCommit() {
     noteHash.inputs[0] <== ownerHash;
     noteHash.inputs[1] <== nonce;
     noteHash.inputs[2] <== encodedAsset;
-    noteHash.inputs[3] <== encodedId;
+    noteHash.inputs[3] <== encodedAssetId;
     noteHash.inputs[4] <== value;
 
     out <== noteHash.out;

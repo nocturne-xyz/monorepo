@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 
 import "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
+import "../libs/types.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Utils} from "./Utils.sol";
@@ -158,7 +159,7 @@ library OffchainMerkleTree {
 
     function insertNotes(
         OffchainMerkleTreeData storage self,
-        IWallet.Note[] memory notes
+        EncodedNote[] memory notes
     ) internal {
         uint256[] memory hashes = new uint256[](notes.length);
         for (uint256 i = 0; i < notes.length; i++) {
@@ -170,9 +171,9 @@ library OffchainMerkleTree {
 
     function insertNote(
         OffchainMerkleTreeData storage self,
-        IWallet.Note memory note
+        EncodedNote memory note
     ) internal {
-        IWallet.Note[] memory notes = new IWallet.Note[](1);
+        EncodedNote[] memory notes = new EncodedNote[](1);
         notes[0] = note;
         insertNotes(self, notes);
     }

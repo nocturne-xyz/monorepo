@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.5;
+pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
 
 /// @title interface for verifiers that support batch verification.

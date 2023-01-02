@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import {
   SNARK_SCALAR_FIELD,
   PreSignOperation,
-  BaseJoinSplitTx,
   PreProofOperation,
   ProvenOperation,
 } from "../commonTypes";
@@ -11,82 +10,81 @@ function hashOperation(
   op: PreSignOperation | PreProofOperation | ProvenOperation
 ): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let payload = [] as any;
+  let actionPayload = [] as any;
   for (const action of op.actions) {
-    payload = ethers.utils.solidityPack(
+    actionPayload = ethers.utils.solidityPack(
       ["bytes", "address", "bytes32"],
       [
-        payload,
+        actionPayload,
         action.contractAddress,
         ethers.utils.keccak256(action.encodedFunction),
       ]
     );
   }
 
-  const spendTokensHash = ethers.utils.keccak256(
-    ethers.utils.solidityPack(["address[]"], [op.tokens.spendTokens])
-  );
-  const refundTokensHash = ethers.utils.keccak256(
-    ethers.utils.solidityPack(["address[]"], [op.tokens.refundTokens])
-  );
-
-  let joinSplitTxsHash = [] as any;
-  for (const tx of op.joinSplitTxs) {
-    joinSplitTxsHash = ethers.utils.solidityPack(
-      ["bytes", "bytes32"],
-      [joinSplitTxsHash, hashJoinSplit(tx)]
+  let refundAssetsPayload = [] as any;
+  for (const encodedAsset of op.encodedRefundAssets) {
+    refundAssetsPayload = ethers.utils.keccak256(
+      ethers.utils.solidityPack(
+        ["bytes", "uint256", "uint256"],
+        [
+          refundAssetsPayload,
+          encodedAsset.encodedAssetAddr,
+          encodedAsset.encodedAssetId,
+        ]
+      )
     );
   }
 
-  payload = ethers.utils.solidityPack(
-    [
-      "bytes",
-      "bytes",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "bytes32",
-      "bytes32",
-      "uint256",
-    ],
-    [
-      payload,
-      joinSplitTxsHash,
-      op.refundAddr.h1X,
-      op.refundAddr.h1Y,
-      op.refundAddr.h2X,
-      op.refundAddr.h2Y,
-      spendTokensHash,
-      refundTokensHash,
-      op.gasLimit,
-    ]
+  let joinSplitTxsPayload = [] as any;
+  for (const joinsplit of op.joinSplitTxs) {
+    joinSplitTxsPayload = ethers.utils.solidityPack(
+      ["bytes", "bytes32"],
+      [
+        joinSplitTxsPayload,
+        ethers.utils.keccak256(
+          ethers.utils.solidityPack(
+            [
+              "uint256",
+              "uint256",
+              "uint256",
+              "uint256",
+              "uint256",
+              "uint256",
+              "uint256",
+              "uint256",
+            ],
+            [
+              joinsplit.commitmentTreeRoot,
+              joinsplit.nullifierA,
+              joinsplit.nullifierB,
+              joinsplit.newNoteACommitment,
+              joinsplit.newNoteBCommitment,
+              joinsplit.publicSpend,
+              joinsplit.encodedAssetAddr,
+              joinsplit.encodedAssetId,
+            ]
+          )
+        ),
+      ]
+    );
+  }
+
+  const refundAddrPayload = ethers.utils.solidityPack(
+    ["uint256", "uint256", "uint256", "uint256"],
+    [op.refundAddr.h1X, op.refundAddr.h1Y, op.refundAddr.h2X, op.refundAddr.h2Y]
   );
 
-  return ethers.utils.keccak256(payload);
-}
-
-function hashJoinSplit(joinsplit: BaseJoinSplitTx): string {
   const payload = ethers.utils.solidityPack(
+    ["bytes", "bytes", "bytes", "bytes", "uint256", "uint256", "uint256"],
     [
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "uint256",
-      "address",
-      "uint256",
-    ],
-    [
-      joinsplit.commitmentTreeRoot,
-      joinsplit.nullifierA,
-      joinsplit.nullifierB,
-      joinsplit.newNoteACommitment,
-      joinsplit.newNoteBCommitment,
-      joinsplit.publicSpend,
-      joinsplit.asset,
-      joinsplit.id,
+      actionPayload,
+      joinSplitTxsPayload,
+      refundAddrPayload,
+      refundAssetsPayload,
+      op.executionGasLimit,
+      op.gasPrice,
+      op.maxNumRefunds,
     ]
   );
 
