@@ -61,8 +61,8 @@ function hashOperation(
               joinsplit.newNoteACommitment,
               joinsplit.newNoteBCommitment,
               joinsplit.publicSpend,
-              joinsplit.encodedAssetAddr,
-              joinsplit.encodedAssetId,
+              joinsplit.encodedAsset.encodedAssetAddr,
+              joinsplit.encodedAsset.encodedAssetId,
             ]
           )
         ),

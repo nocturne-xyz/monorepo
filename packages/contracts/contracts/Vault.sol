@@ -79,8 +79,9 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
-        return (interfaceId == type(IERC165).interfaceId) ||
-        (interfaceId == type(IERC721Receiver).interfaceId) ||
-        (interfaceId == type(IERC1155Receiver).interfaceId);
+        return
+            (interfaceId == type(IERC165).interfaceId) ||
+            (interfaceId == type(IERC721Receiver).interfaceId) ||
+            (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 }

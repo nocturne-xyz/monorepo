@@ -73,10 +73,10 @@ export async function fetchJoinSplits(
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset,
       publicSpend,
     } = joinSplitTx;
+    const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
       newNoteATransmission;
     let { h1X, h1Y, h2X, h2Y } = owner;
@@ -124,8 +124,10 @@ export async function fetchJoinSplits(
           encryptedNonce: encryptedNonceB,
           encryptedValue: encryptedValueB,
         },
-        encodedAssetAddr: encodedAssetAddr.toBigInt(),
-        encodedAssetId: encodedAssetId.toBigInt(),
+        encodedAsset: {
+          encodedAssetAddr: encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAssetId.toBigInt(),
+        },
         publicSpend: publicSpend.toBigInt(),
       },
     };
