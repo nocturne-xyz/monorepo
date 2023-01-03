@@ -273,8 +273,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             newNoteBCommitment: uint256(1032),
             newNoteBTransmission: newNoteBTransmission,
             proof: dummyProof(),
-            encodedAssetAddr: encodedAsset.encodedAssetAddr,
-            encodedAssetId: encodedAsset.encodedAssetId,
+            encodedAsset: encodedAsset,
             publicSpend: publicSpend
         });
 

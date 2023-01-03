@@ -178,4 +178,11 @@ library AssetUtils {
             revert("Invalid asset");
         }
     }
+
+    function _eq(
+      EncodedAsset calldata assetA,
+      EncodedAsset calldata assetB
+    ) internal pure returns (bool) {
+      return (assetA.encodedAssetAddr == assetB.encodedAssetAddr) && (assetA.encodedAssetId == assetB.encodedAssetId);
+    }
 }

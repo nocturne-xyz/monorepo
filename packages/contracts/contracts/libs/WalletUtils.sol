@@ -55,8 +55,8 @@ library WalletUtils {
                 allPis[index][4] = op.joinSplitTxs[j].nullifierA;
                 allPis[index][5] = op.joinSplitTxs[j].nullifierB;
                 allPis[index][6] = digests[i];
-                allPis[index][7] = op.joinSplitTxs[j].encodedAssetAddr;
-                allPis[index][8] = op.joinSplitTxs[j].encodedAssetId;
+                allPis[index][7] = op.joinSplitTxs[j].encodedAsset.encodedAssetAddr;
+                allPis[index][8] = op.joinSplitTxs[j].encodedAsset.encodedAssetId;
                 index++;
             }
         }
@@ -96,8 +96,8 @@ library WalletUtils {
                         op.joinSplitTxs[i].newNoteACommitment,
                         op.joinSplitTxs[i].newNoteBCommitment,
                         op.joinSplitTxs[i].publicSpend,
-                        op.joinSplitTxs[i].encodedAssetAddr,
-                        op.joinSplitTxs[i].encodedAssetId
+                        op.joinSplitTxs[i].encodedAsset.encodedAssetAddr,
+                        op.joinSplitTxs[i].encodedAsset.encodedAssetId
                     )
                 )
             );
