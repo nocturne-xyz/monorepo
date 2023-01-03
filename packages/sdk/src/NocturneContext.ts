@@ -12,6 +12,7 @@ import {
   PreProofOperation,
   ProvenOperation,
   encodeAsset,
+  BLOCK_GAS_LIMIT,
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
@@ -380,8 +381,7 @@ export class NocturneContext {
     verificationGasLimit = 1_000_000n,
     executionGasLimit,
     maxNumRefunds,
-  }: // Default max number of refunds does not support minting
-  OperationRequest): Promise<PreSignOperation> {
+  }: OperationRequest): Promise<PreSignOperation> {
     const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
       preSignJoinSplitTxs.push(
@@ -395,11 +395,14 @@ export class NocturneContext {
 
     // Required field absent, need to estimate
     if (!executionGasLimit || !maxNumRefunds) {
-      // Set some large number for both parameters
-      (executionGasLimit = 30_000_000n),
-        (maxNumRefunds =
-          BigInt(joinSplitRequests.length + refundAssets.length) + 5n),
-        (simulationRequired = true);
+      // Set some upper estimates here for executionGasLimit
+      executionGasLimit = BLOCK_GAS_LIMIT;
+      // TODO: if the default `maxNumRefunds` here is too small and yield an
+      // error during simulation, we should programmatically retry and increase
+      // it. This is important for large NFT mints.
+      maxNumRefunds =
+        BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
+      simulationRequired = true;
     }
 
     const op = {
@@ -413,10 +416,8 @@ export class NocturneContext {
       maxNumRefunds,
     };
 
-    // Estimate executionGasLimit and max
+    // Estimate executionGasLimit and maxNumRefunds
     if (simulationRequired) {
-      // Hardcode a max possible gas so simulation should succeed
-      op.executionGasLimit = 30_000_000n;
       const result = await simulateOperation(op, this.walletContract);
       if (!result.opProcessed) {
         throw Error("Cannot estimate gas with Error: " + result.failureReason);

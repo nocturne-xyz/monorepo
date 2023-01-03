@@ -2,7 +2,7 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
 import { EventFragment, Result } from "ethers/lib/utils";
-import { fakeProvenOp } from ".";
+import { fakeProvenOperation } from ".";
 import {
   PreProofOperation,
   PreSignOperation,
@@ -50,18 +50,21 @@ export function parseEventsFromContractReceipt(
 /**
  * Simulate an operation getting back OperationResult
  * @param op an operation-ish object
+ * @param wallet an ethers instance of the wallet contract
  */
 export async function simulateOperation(
   op: PreSignOperation | PreProofOperation | ProvenOperation,
   wallet: Wallet
 ): Promise<OperationResult> {
-  // We need to do staticCall, which fails if wallet is connected signer
+  // We need to do staticCall, which fails if wallet is connected a signer
+  // https://github.com/ethers-io/ethers.js/discussions/3327#discussioncomment-3539505
+  // Switching to a regular provider underlying the signer
   if (wallet.signer) {
     wallet = wallet.connect(wallet.provider);
   }
 
   // Fill-in the some fake proof
-  const provenOp = fakeProvenOp(op);
+  const provenOp = fakeProvenOperation(op);
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
