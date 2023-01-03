@@ -41,7 +41,7 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         if (!_reentrancyGuardEntered()) {
-          return 0;
+            return 0;
         }
         _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
@@ -57,7 +57,7 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         if (!_reentrancyGuardEntered()) {
-          return 0;
+            return 0;
         }
         _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
@@ -73,7 +73,7 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         if (!_reentrancyGuardEntered()) {
-          return 0;
+            return 0;
         }
         uint256 numIds = ids.length;
         for (uint256 i = 0; i < numIds; i++) {
@@ -87,9 +87,10 @@ contract BalanceManager is
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
-        return (interfaceId == type(IERC165).interfaceId) ||
-        (interfaceId == type(IERC721Receiver).interfaceId) ||
-        (interfaceId == type(IERC1155Receiver).interfaceId);
+        return
+            (interfaceId == type(IERC165).interfaceId) ||
+            (interfaceId == type(IERC721Receiver).interfaceId) ||
+            (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 
     function _makeDeposit(Deposit calldata deposit) internal {
@@ -155,7 +156,11 @@ contract BalanceManager is
         require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
-    function _gatherReservedGasAssetAndPayBundler(Operation calldata op, OperationResult memory opResult, address bundler) internal {
+    function _gatherReservedGasAssetAndPayBundler(
+        Operation calldata op,
+        OperationResult memory opResult,
+        address bundler
+    ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
@@ -193,7 +198,10 @@ contract BalanceManager is
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; ++i) {
-            _handleRefundForAsset(op.joinSplitTxs[i].encodedAsset, op.refundAddr);
+            _handleRefundForAsset(
+                op.joinSplitTxs[i].encodedAsset,
+                op.refundAddr
+            );
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
@@ -208,14 +216,13 @@ contract BalanceManager is
         delete _receivedAssets;
     }
 
-    function _handleRefundForAsset(EncodedAsset memory encodedAsset, NocturneAddress memory refundAddr) internal {
+    function _handleRefundForAsset(
+        EncodedAsset memory encodedAsset,
+        NocturneAddress memory refundAddr
+    ) internal {
         uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
         if (value != 0) {
-            AssetUtils._transferAssetTo(
-                encodedAsset,
-                address(_vault),
-                value
-            );
+            AssetUtils._transferAssetTo(encodedAsset, address(_vault), value);
             _handleRefundNote(
                 refundAddr,
                 encodedAsset.encodedAssetAddr,

@@ -183,8 +183,7 @@ export interface BaseJoinSplitTx {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  encodedAssetAddr: bigint;
-  encodedAssetId: bigint;
+  encodedAsset: EncodedAsset;
   publicSpend: bigint;
   newNoteATransmission: NoteTransmission;
   newNoteBTransmission: NoteTransmission;

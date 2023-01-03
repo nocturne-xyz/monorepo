@@ -61,18 +61,19 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        (bool success, uint256 perJoinSplitGas) = _verifyAllProofs(ops, opDigests);
-
-        require(
-            success,
-            "Batched JoinSplit verify failed."
+        (bool success, uint256 perJoinSplitGas) = _verifyAllProofs(
+            ops,
+            opDigests
         );
+
+        require(success, "Batched JoinSplit verify failed.");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             uint256 verificationGasForOp = WalletUtils._verificationGasForOp(
-                ops[i], perJoinSplitGas
+                ops[i],
+                perJoinSplitGas
             );
 
             try

@@ -63,8 +63,8 @@ export abstract class NotesManager {
       }
 
       const asset = decodeAsset(
-        e.joinSplitTx.encodedAssetAddr,
-        e.joinSplitTx.encodedAssetId
+        e.joinSplitTx.encodedAsset.encodedAssetAddr,
+        e.joinSplitTx.encodedAsset.encodedAssetId
       );
 
       this.processNoteTransmission(

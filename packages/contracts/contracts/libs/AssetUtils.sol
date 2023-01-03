@@ -180,9 +180,11 @@ library AssetUtils {
     }
 
     function _eq(
-      EncodedAsset calldata assetA,
-      EncodedAsset calldata assetB
+        EncodedAsset calldata assetA,
+        EncodedAsset calldata assetB
     ) internal pure returns (bool) {
-      return (assetA.encodedAssetAddr == assetB.encodedAssetAddr) && (assetA.encodedAssetId == assetB.encodedAssetId);
+        return
+            (assetA.encodedAssetAddr == assetB.encodedAssetAddr) &&
+            (assetA.encodedAssetId == assetB.encodedAssetId);
     }
 }

@@ -179,8 +179,10 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      baseJoinSplitTx.encodedAssetAddr != publicSignals.encodedAssetAddr ||
-      baseJoinSplitTx.encodedAssetId != publicSignals.encodedAssetId ||
+      baseJoinSplitTx.encodedAsset.encodedAssetAddr !=
+        publicSignals.encodedAssetAddr ||
+      baseJoinSplitTx.encodedAsset.encodedAssetId !=
+        publicSignals.encodedAssetId ||
       opDigest != publicSignals.opDigest
     ) {
       throw new Error(
@@ -342,7 +344,7 @@ export class NocturneContext {
       // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(oldNoteA.asset);
+    const encodedAsset = encodeAsset(oldNoteA.asset);
 
     return {
       commitmentTreeRoot: merkleProofA.root,
@@ -352,8 +354,7 @@ export class NocturneContext {
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset,
       publicSpend,
       oldNoteA,
       oldNoteB,

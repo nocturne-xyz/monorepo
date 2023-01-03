@@ -7,8 +7,10 @@ export const VALID_PROVEN_OPERATION_OBJ = {
       nullifierB: "0n",
       newNoteACommitment: "0n",
       newNoteBCommitment: "0n",
-      encodedAssetAddr: "1n",
-      encodedAssetId: "0n",
+      encodedAsset: {
+        encodedAssetAddr: "1n",
+        encodedAssetId: "0n",
+      },
       publicSpend: "0n",
       newNoteATransmission: {
         owner: {
