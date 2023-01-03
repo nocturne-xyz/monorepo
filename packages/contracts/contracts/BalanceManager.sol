@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
+import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/types.sol";
 import "./libs/ReentrancyGuard.sol";
 
@@ -106,10 +107,10 @@ contract BalanceManager is
 
     /**
       Process all joinSplitTxs and request all declared publicSpend from the
-      vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
+      vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasFee from vault with the same encodedAsset as
+      to request maxGasAssetCost from vault with the same encodedAsset as
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
@@ -160,15 +161,21 @@ contract BalanceManager is
         require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
-    function _gatherReservedGasAsset(Operation calldata op) internal {
+    function _gatherReservedGasAssetAndPayBundler(Operation calldata op, OperationResult memory opResult, address bundler) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset memory encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
 
-        // Request reserved maxGasFee from vault.
+        // Request reserved gasAssetAmount from vault.
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
-        /// guaranteed to have reserved maxGasFee since it didn't throw.
+        /// guaranteed to have reserved gasAssetAmount since it didn't throw.
         _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+
+        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
+        AssetUtils._transferAssetTo(op.gasAsset(), bundler, bundlerPayout);
     }
 
     /**
@@ -179,8 +186,9 @@ contract BalanceManager is
         Operation calldata op
     ) internal view returns (uint256) {
         uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
         uint256 numReceived = _receivedAssets.length;
-        return numJoinSplits + numReceived;
+        return numJoinSplits + numRefundAssets + numReceived;
     }
 
     /**
@@ -189,38 +197,40 @@ contract BalanceManager is
       _receivedAssets.
     */
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numRefunds = _totalNumRefundsToHandle(op);
-
-        // @dev Revert if number of refund requested is too large
-        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
-
-        EncodedAsset[] memory assetsToProcess = new EncodedAsset[](numRefunds);
-        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
-            assetsToProcess[i] = EncodedAsset({
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; ++i) {
+            _handleRefundForAsset(EncodedAsset({
                 encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
                 encodedAssetId: op.joinSplitTxs[i].encodedAssetId
-            });
+            }), op.refundAddr);
         }
-        for (uint256 i = 0; i < _receivedAssets.length; i++) {
-            assetsToProcess[op.joinSplitTxs.length + i] = _receivedAssets[i];
+
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; ++i) {
+            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
+        }
+
+        uint256 numReceived = _receivedAssets.length;
+        for (uint256 i = 0; i < numReceived; ++i) {
+            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
         }
         delete _receivedAssets;
+    }
 
-        for (uint256 i = 0; i < numRefunds; i++) {
-            uint256 value = AssetUtils._balanceOfAsset(assetsToProcess[i]);
-            if (value != 0) {
-                AssetUtils._transferAssetTo(
-                    assetsToProcess[i],
-                    address(_vault),
-                    value
-                );
-                _handleRefundNote(
-                    op.refundAddr,
-                    assetsToProcess[i].encodedAssetAddr,
-                    assetsToProcess[i].encodedAssetId,
-                    value
-                );
-            }
+    function _handleRefundForAsset(EncodedAsset memory encodedAsset, NocturneAddress memory refundAddr) internal {
+        uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
+        if (value != 0) {
+            AssetUtils._transferAssetTo(
+                encodedAsset,
+                address(_vault),
+                value
+            );
+            _handleRefundNote(
+                refundAddr,
+                encodedAsset.encodedAssetAddr,
+                encodedAsset.encodedAssetId,
+                value
+            );
         }
     }
 }

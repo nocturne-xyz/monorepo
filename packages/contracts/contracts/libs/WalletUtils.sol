@@ -165,6 +165,7 @@ library WalletUtils {
 
     // TODO: properly process this failure case
     function _unsuccessfulOperation(
+        Operation calldata op,
         bytes memory result
     ) internal pure returns (OperationResult memory) {
         bool[] memory callSuccesses = new bool[](1);
@@ -179,18 +180,15 @@ library WalletUtils {
                 callResults: callResults,
                 executionGas: 0,
                 verificationGas: 0,
-                numRefunds: 0
+                numRefunds: op.joinSplitTxs.length + op.encodedRefundAssets.length
             });
     }
 
     function _verificationGasForOp(
-        Bundle calldata bundle,
-        uint256 opIndex,
-        uint256 batchVerificationGas
+        Operation calldata op,
+        uint256 perJoinSplitGas
     ) internal pure returns (uint256) {
-        return
-            (batchVerificationGas / bundle.totalNumJoinSplits()) *
-            bundle.operations[opIndex].joinSplitTxs.length;
+        return perJoinSplitGas * op.joinSplitTxs.length;
     }
 
     function _calculateBundlerGasAssetPayout(
