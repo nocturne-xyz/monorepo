@@ -114,7 +114,7 @@ contract BalanceManager is
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
-        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetToReserve = op.maxGasAssetCost();
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
@@ -130,10 +130,7 @@ contract BalanceManager is
             // from this `joinSplitTx`
             if (
                 gasAssetToReserve > 0 &&
-                encodedGasAsset.encodedAssetAddr ==
-                op.joinSplitTxs[i].encodedAssetAddr &&
-                encodedGasAsset.encodedAssetId ==
-                op.joinSplitTxs[i].encodedAssetId
+                AssetUtils._eq(encodedGasAsset, op.joinSplitTxs[i].encodedAsset)
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
@@ -150,10 +147,7 @@ contract BalanceManager is
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
-                    EncodedAsset({
-                        encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
-                        encodedAssetId: op.joinSplitTxs[i].encodedAssetId
-                    }),
+                    op.joinSplitTxs[i].encodedAsset,
                     valueToTransfer
                 );
             }
@@ -163,7 +157,7 @@ contract BalanceManager is
 
     function _gatherReservedGasAssetAndPayBundler(Operation calldata op, OperationResult memory opResult, address bundler) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
 
         // Request reserved gasAssetAmount from vault.
@@ -175,7 +169,7 @@ contract BalanceManager is
             op,
             opResult
         );
-        AssetUtils._transferAssetTo(op.gasAsset(), bundler, bundlerPayout);
+        AssetUtils._transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
     }
 
     /**
@@ -199,10 +193,7 @@ contract BalanceManager is
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplitTxs.length;
         for (uint256 i = 0; i < numJoinSplits; ++i) {
-            _handleRefundForAsset(EncodedAsset({
-                encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
-                encodedAssetId: op.joinSplitTxs[i].encodedAssetId
-            }), op.refundAddr);
+            _handleRefundForAsset(op.joinSplitTxs[i].encodedAsset, op.refundAddr);
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
