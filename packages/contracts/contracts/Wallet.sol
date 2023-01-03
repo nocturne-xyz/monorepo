@@ -5,11 +5,11 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
+import "./libs/ReentrancyGuard.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
 

@@ -12,10 +12,12 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
+import "./libs/ReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
+    ReentrancyGuard,
     CommitmentTreeManager
 {
     using OperationLib for Operation;
@@ -37,6 +39,9 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
+        if (!_reentrancyGuardEntered()) {
+          return 0;
+        }
         _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
         );
@@ -50,6 +55,9 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
+        if (!_reentrancyGuardEntered()) {
+          return 0;
+        }
         _receivedAssets.push(
             AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
         );
@@ -63,6 +71,9 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
+        if (!_reentrancyGuardEntered()) {
+          return 0;
+        }
         uint256 numIds = ids.length;
         for (uint256 i = 0; i < numIds; i++) {
             _receivedAssets.push(
@@ -72,11 +83,12 @@ contract BalanceManager is
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    // TODO: fix this
     function supportsInterface(
-        bytes4 // interfaceId
+        bytes4 interfaceId
     ) external pure override returns (bool) {
-        return false;
+        return (interfaceId == type(IERC165).interfaceId) ||
+        (interfaceId == type(IERC721Receiver).interfaceId) ||
+        (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 
     function _makeDeposit(Deposit calldata deposit) internal {

@@ -76,10 +76,11 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    // TODO: fix this
     function supportsInterface(
-        bytes4 // interfaceId
+        bytes4 interfaceId
     ) external pure override returns (bool) {
-        return false;
+        return (interfaceId == type(IERC165).interfaceId) ||
+        (interfaceId == type(IERC721Receiver).interfaceId) ||
+        (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 }
