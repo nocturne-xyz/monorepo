@@ -23,7 +23,7 @@ contract Wallet is IWallet, BalanceManager {
         address vault,
         address joinSplitVerifier,
         address subtreeUpdateVerifier
-    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {}
+    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -38,6 +38,7 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
+    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
     modifier processOperationGuard() {
         require(
             _operation_stage == _NOT_ENTERED,
@@ -50,6 +51,7 @@ contract Wallet is IWallet, BalanceManager {
         _operation_stage = _NOT_ENTERED;
     }
 
+    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
     modifier executeOperationGuard() {
         require(
             _operation_stage == _ENTERED_PROCESS_OPERATION,
@@ -143,7 +145,12 @@ contract Wallet is IWallet, BalanceManager {
         Operation calldata op,
         uint256 verificationGasForOp,
         address bundler
-    ) external onlyThis processOperationGuard returns (OperationResult memory opResult) {
+    )
+        external
+        onlyThis
+        processOperationGuard
+        returns (OperationResult memory opResult)
+    {
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
         _processJoinSplitTxsReservingFee(op);
@@ -176,7 +183,12 @@ contract Wallet is IWallet, BalanceManager {
     */
     function executeOperation(
         Operation calldata op
-    ) external onlyThis executeOperationGuard returns (OperationResult memory opResult) {
+    )
+        external
+        onlyThis
+        executeOperationGuard
+        returns (OperationResult memory opResult)
+    {
         uint256 preExecutionGas = gasleft();
 
         uint256 numActions = op.actions.length;

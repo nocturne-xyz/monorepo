@@ -21,6 +21,8 @@ contract BalanceManager is
 {
     using OperationLib for Operation;
 
+    // Constants for operation status
+    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
     uint256 internal constant _NOT_ENTERED = 1;
     uint256 internal constant _ENTERED_PROCESS_OPERATION = 2;
     uint256 internal constant _ENTERED_EXECUTE_OPERATION = 3;
