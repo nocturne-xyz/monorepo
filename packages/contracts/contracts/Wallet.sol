@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
-import "./libs/ReentrancyGuard.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
 
@@ -17,14 +16,14 @@ import "hardhat/console.sol";
 
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
-contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
+contract Wallet is IWallet, BalanceManager {
     using OperationLib for Operation;
 
     constructor(
         address vault,
         address joinSplitVerifier,
         address subtreeUpdateVerifier
-    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {}
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -37,6 +36,30 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Wallet can call this");
         _;
+    }
+
+    modifier processOperationGuard() {
+        require(
+            _operation_stage == _NOT_ENTERED,
+            "Reentry into processOperation"
+        );
+        _operation_stage = _ENTERED_PROCESS_OPERATION;
+
+        _;
+
+        _operation_stage = _NOT_ENTERED;
+    }
+
+    modifier executeOperationGuard() {
+        require(
+            _operation_stage == _ENTERED_PROCESS_OPERATION,
+            "Reentry into executeOperation"
+        );
+        _operation_stage = _ENTERED_EXECUTE_OPERATION;
+
+        _;
+
+        _operation_stage = _ENTERED_PROCESS_OPERATION;
     }
 
     function depositFunds(Deposit calldata deposit) external override {
@@ -120,7 +143,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         Operation calldata op,
         uint256 verificationGasForOp,
         address bundler
-    ) external onlyThis nonReentrant returns (OperationResult memory opResult) {
+    ) external onlyThis processOperationGuard returns (OperationResult memory opResult) {
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
         _processJoinSplitTxsReservingFee(op);
@@ -153,7 +176,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     */
     function executeOperation(
         Operation calldata op
-    ) external onlyThis returns (OperationResult memory opResult) {
+    ) external onlyThis executeOperationGuard returns (OperationResult memory opResult) {
         uint256 preExecutionGas = gasleft();
 
         uint256 numActions = op.actions.length;

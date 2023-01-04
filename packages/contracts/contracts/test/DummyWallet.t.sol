@@ -277,8 +277,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             publicSpend: publicSpend
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = encodedAsset;
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
             1

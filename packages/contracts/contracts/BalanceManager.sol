@@ -13,17 +13,21 @@ import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/types.sol";
-import "./libs/ReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
-    ReentrancyGuard,
     CommitmentTreeManager
 {
     using OperationLib for Operation;
 
+    uint256 internal constant _NOT_ENTERED = 1;
+    uint256 internal constant _ENTERED_PROCESS_OPERATION = 2;
+    uint256 internal constant _ENTERED_EXECUTE_OPERATION = 3;
+
+    uint256 public _operation_stage;
     EncodedAsset[] public _receivedAssets;
+
     IVault public immutable _vault;
 
     constructor(
@@ -31,6 +35,7 @@ contract BalanceManager is
         address joinSplitVerifier,
         address _subtreeUpdateVerifier
     ) CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier) {
+        _operation_stage = _NOT_ENTERED;
         _vault = IVault(vault);
     }
 
@@ -40,12 +45,17 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (!_reentrancyGuardEntered()) {
+        // Must reject the NFT transfer outside of an operation
+        if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
-        _receivedAssets.push(
-            AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
-        );
+        // Record the transfer if it results from executed actions
+        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+            _receivedAssets.push(
+                AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
+            );
+        }
+        // Accept the transfer
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -56,12 +66,17 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (!_reentrancyGuardEntered()) {
+        // Must reject the NFT transfer outside of an operation
+        if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
-        _receivedAssets.push(
-            AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
-        );
+        // Record the transfer if it results from executed actions
+        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+            _receivedAssets.push(
+                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+            );
+        }
+        // Accept the transfer
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -72,15 +87,24 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        if (!_reentrancyGuardEntered()) {
+        // Must reject the NFT transfer outside of an operation
+        if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
-        uint256 numIds = ids.length;
-        for (uint256 i = 0; i < numIds; i++) {
-            _receivedAssets.push(
-                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
-            );
+        // Record the transfer if it results from executed actions
+        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+            uint256 numIds = ids.length;
+            for (uint256 i = 0; i < numIds; i++) {
+                _receivedAssets.push(
+                    AssetUtils._encodeAsset(
+                        AssetType.ERC1155,
+                        msg.sender,
+                        ids[i]
+                    )
+                );
+            }
         }
+        // Accept the transfer
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
