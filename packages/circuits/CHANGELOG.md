@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove `install_deps` script out of this package and into monorepo root
 - Rename encodedAsset to encodedAssetAddr and encodedId to encodedAssetId
 - fix endianness bug in subtree update circuit's membership proofs
 - add rapidsnark setup script for subtree updater
