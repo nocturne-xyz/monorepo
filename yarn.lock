@@ -3034,7 +3034,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/site@workspace:^, @nocturne-xyz/site@workspace:packages/site":
+"@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/site@workspace:packages/site"
   dependencies:
@@ -3071,6 +3071,7 @@ __metadata:
     gatsby-plugin-polyfill-io: ^1.1.0
     gatsby-plugin-styled-components: ^5.24.0
     gatsby-plugin-svgr: ^3.0.0-beta.0
+    lodash: ^4.17.21
     mocha: ^10.1.0
     prettier: ^2.8.0
     react: ^18.2.0
@@ -17212,8 +17213,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "monorepo@workspace:."
   dependencies:
-    "@nocturne-xyz/site": "workspace:^"
-    lodash: ^4.17.21
     turbo: 1.6.3
   languageName: unknown
   linkType: soft

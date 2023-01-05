@@ -21,9 +21,5 @@
   "devDependencies": {
     "turbo": "1.6.3"
   },
-  "packageManager": "yarn@3.2.0",
-  "dependencies": {
-    "@nocturne-xyz/site": "workspace:^",
-    "lodash": "^4.17.21"
-  }
+  "packageManager": "yarn@3.2.0"
 }
