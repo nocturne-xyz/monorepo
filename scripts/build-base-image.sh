@@ -15,6 +15,5 @@ if [[ $(uname -m) == 'arm64' ]]; then
 
     docker buildx build --platform linux/amd64 -t nocturne-base ..
 else
-nnoremap <leader>rh
 	docker build -t nocturne-base ..
 fi
