@@ -9,7 +9,7 @@
 	url = https://github.com/privacy-scaling-explorations/zk-kit
 [submodule "rapidsnark"]
 	path = rapidsnark
-	url = https://github.com/nocturne-xyz/rapidsnark.git
+	url = https://github.com/iden3/rapidsnark.git
 	ignore = dirty
 [submodule "snap"]
 	path = snap
