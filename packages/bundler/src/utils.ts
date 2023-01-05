@@ -14,6 +14,10 @@ export function getRedis(redis?: IORedis): IORedis {
     return redis;
   } else {
     const redisUrl = process.env.REDIS_URL ?? "localhost:6379";
-    return new IORedis(redisUrl);
+    const redisPassword = process.env.REDIS_PASSWORD;
+
+    return new IORedis(redisUrl, {
+      password: redisPassword,
+    });
   }
 }

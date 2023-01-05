@@ -13,4 +13,4 @@ WORKDIR /app/packages/bundler
 RUN yarn build
 RUN npm i -g
 
-CMD ["bundler-cli"]
+ENTRYPOINT ["bundler-cli"]
