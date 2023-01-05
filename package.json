@@ -17,8 +17,7 @@
     "test:e2e": "yarn turbo run test:e2e --filter=@nocturne-xyz/e2e-tests --filter=!@nocturne-xyz/site...",
     "test:unit": "yarn turbo run test:unit --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
     "test:ci": "yarn turbo run test:ci --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
-    "dev:site": "./scripts/run-site-dev.sh",
-    "subtree-updater:build:docker": "./scripts/build-subtree-updater-docker.sh"
+    "dev:site": "./scripts/run-site-dev.sh"
   },
   "devDependencies": {
     "turbo": "1.6.3"
