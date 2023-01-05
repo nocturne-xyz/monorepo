@@ -1,4 +1,4 @@
-# Nocturne Power User Frontend 
+# Nocturne Power User Frontend
 
 To use:
 1. run `yarn dev:site` in monorepo root
@@ -8,5 +8,5 @@ To use:
 5. press "set ABI" to set the contract. This will create a form containing that contract's methods
 6. Specify the tokens / amounts you will unwrap during this operation
 7. Specify the tokens you will receive refunds in during this operation
-8. enqueue actions by filling out the form for the methods you want to call and pressing "enqueue action" in sequence
-9. when you've enqueued all of your actions, pross "GO", which will prompt MM to ask to generate a proof
+8. queue up actions by filling out the form for the methods you want to call and pressing "enqueue action" in sequence
+9. when you've queued up all of your actions, press "GO", which will prompt MM to ask to generate a proof
