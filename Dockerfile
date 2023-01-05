@@ -1,5 +1,7 @@
 # Build the prover
 FROM node as builder
+RUN corepack enable
+RUN yarn set version latest
 
 WORKDIR /app
 
@@ -8,27 +10,40 @@ COPY scripts scripts
 RUN ./scripts/install-deps.sh
 
 # install rapidsnark
-# WORKDIR /rapidsnark
-# RUN apt update && apt install build-essential libgmp-dev libsodium-dev nasm
+RUN mkdir rapidsnark
+WORKDIR /app/rapidsnark
 
-# COPY ./rapidsnark/*.json .
-# COPY ./rapidsnark/tasksfile.js .
-# COPY ./rapidsnark/tools .
-# COPY ./rapidsnark/.git ./.git
-# COPY ./rapidsnark/depends ./depends
-# COPY ./rapidsnark/src ./src
+RUN apt update -y && apt install -y build-essential libgmp-dev libsodium-dev nasm
 
-# RUN npm install
-# RUN npx task createFieldSources
-# RUN npx task buildProver
+COPY ./rapidsnark/*.json .
+COPY ./rapidsnark/tasksfile.js .
+COPY ./rapidsnark/tools .
+COPY ./rapidsnark/.git ./.git
+COPY ./rapidsnark/depends ./depends
+COPY ./rapidsnark/src ./src
+
+RUN npm install
+RUN npx task createFieldSources
+RUN npx task buildProver
 
 # setup monorepo
-# COPY package.json .
-# COPY tsconfig.json .
-# COPY yarn.lock .
-# COPY packages/subtree-updater packages/subtree-updater
-# COPY packages/circuits packages/circuits
+WORKDIR /app
 
-# RUN yarn install
+COPY types types
+COPY .gitattributes .
+COPY .gitignore .
+COPY .gitmodules .
+COPY .yarnrc.yml .
+COPY .yarn .yarn
+COPY foundry.toml .
+COPY tsconfig.json .
+COPY turbo.json .
+COPY package.json .
+COPY yarn.lock .
+COPY packages packages
+COPY fixtures fixtures
+COPY circuit-artifacts circuit-artifacts
+
+RUN yarn install
 
 CMD ["bash"]
