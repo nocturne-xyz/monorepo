@@ -19,7 +19,6 @@ import {
   query,
   calculateOperationDigest,
   AssetType,
-  simulateOperation,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
 import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
