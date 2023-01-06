@@ -392,7 +392,6 @@ export class NocturneContext {
     const encodedRefundAssets: EncodedAsset[] = refundAssets.map(encodeAsset);
 
     let simulationRequired = false;
-
     // Required field absent, need to estimate
     if (!executionGasLimit || !maxNumRefunds) {
       // Set some upper estimates here for executionGasLimit
@@ -416,17 +415,31 @@ export class NocturneContext {
       maxNumRefunds,
     };
 
-    // Estimate executionGasLimit and maxNumRefunds
+    // Required field absent, need to estimate
     if (simulationRequired) {
-      const result = await simulateOperation(op, this.walletContract);
-      if (!result.opProcessed) {
-        throw Error("Cannot estimate gas with Error: " + result.failureReason);
-      }
-      // Give 10% over-estimate
-      op.executionGasLimit = (result.executionGas * 11n) / 10n;
-      // Force set the max number of refunds to the simulated number
-      op.maxNumRefunds = result.numRefunds;
+      return this.generateGasEstimatedOperation(op);
+    } else {
+      return op;
     }
+  }
+
+  /**
+   * Takes input a PreSignOperation and simulate it using connected RPC
+   * provider, the operation result is then used rewrite the values of
+   * `executionGasLimit` and `maxNumRefunds` for the operation. The rest of the
+   * fields for the input operation are unchanged.
+   */
+  async generateGasEstimatedOperation(
+    op: PreSignOperation
+  ): Promise<PreSignOperation> {
+    const result = await simulateOperation(op, this.walletContract);
+    if (!result.opProcessed) {
+      throw Error("Cannot estimate gas with Error: " + result.failureReason);
+    }
+    // Give 10% over-estimate
+    op.executionGasLimit = (result.executionGas * 11n) / 10n;
+    // Force set the max number of refunds to the simulated number
+    op.maxNumRefunds = result.numRefunds;
 
     return op;
   }
