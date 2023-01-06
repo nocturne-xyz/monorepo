@@ -3,10 +3,14 @@ import { ethers, network, config } from "hardhat";
 import { open } from "lmdb";
 import {
   SimpleERC20Token__factory,
+  SimpleERC721Token__factory,
+  SimpleERC1155Token__factory,
   Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
+import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 
 import {
   Action,
@@ -51,6 +55,10 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
+const ERC721_TOKEN_ID = 1n;
+const ERC1155_TOKEN_ID = 2n;
+const ERC1155_TOKEN_AMOUNT = 3n;
+
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
@@ -58,6 +66,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
+  let erc721Token: SimpleERC721Token;
+  let erc1155Token: SimpleERC1155Token;
   let updater: SubtreeUpdater;
   let notesDBAlice: NotesDB;
   let nocturneContextAlice: NocturneContext;
@@ -73,6 +83,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const tokenFactory = new SimpleERC20Token__factory(deployer);
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
+
+    const erc721TokenFactory = new SimpleERC721Token__factory(deployer);
+    erc721Token = await erc721TokenFactory.deploy();
+    console.log("ERC721 token deployed at: ", erc721Token.address);
+
+    const erc1155TokenFactory = new SimpleERC1155Token__factory(deployer);
+    erc1155Token = await erc1155TokenFactory.deploy();
+    console.log("ERC1155 token deployed at: ", erc1155Token.address);
 
     ({
       alice,
@@ -140,6 +158,18 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       id: 0n,
     };
 
+    const erc721Asset: Asset = {
+      assetType: AssetType.ERC721,
+      assetAddr: erc721Token.address,
+      id: ERC721_TOKEN_ID,
+    };
+
+    const erc1155Asset: Asset = {
+      assetType: AssetType.ERC1155,
+      assetAddr: erc1155Token.address,
+      id: ERC1155_TOKEN_ID,
+    };
+
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       wallet,
@@ -192,10 +222,33 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       contractAddress: token.address,
       encodedFunction: encodedFunction,
     };
+
+    const erc721EncodedFunction =
+      SimpleERC721Token__factory.createInterface().encodeFunctionData(
+        "reserveToken",
+        // mint NFT directly to the wallet contract
+        [wallet.address, ERC721_TOKEN_ID]
+      );
+    const erc721Action: Action = {
+      contractAddress: erc721Token.address,
+      encodedFunction: erc721EncodedFunction,
+    };
+
+    const erc1155EncodedFunction =
+      SimpleERC1155Token__factory.createInterface().encodeFunctionData(
+        "reserveTokens",
+        // mint NFT directly to the wallet contract
+        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+      );
+    const erc1155Action: Action = {
+      contractAddress: erc1155Token.address,
+      encodedFunction: erc1155EncodedFunction,
+    };
+
     const operationRequest: OperationRequest = {
       joinSplitRequests: [joinSplitRequest],
       refundAssets: [],
-      actions: [action],
+      actions: [action, erc721Action, erc1155Action],
       gasPrice: 0n,
     };
 
@@ -271,6 +324,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
     );
     expect(foundNotesAlice.length).to.equal(1);
+
+    // Alice should have a note for minted ERC721 token
+    const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
+    expect(erc721NotesAlice.length).to.equal(1);
+
+    // Alice should have a note for minted ERC1155 token
+    const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
+    foundNotesAlice = erc1155NotesAlice.filter(
+      (n) => n.value === ERC1155_TOKEN_AMOUNT
+    );
+    expect(erc1155NotesAlice.length).to.equal(1);
 
     console.log("Bob: Sync SDK notes manager post-operation");
     await nocturneContextBob.syncNotes();
