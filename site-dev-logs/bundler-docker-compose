@@ -1,0 +1,325 @@
+#1 [bundler-server internal] load build definition from Dockerfile
+#1 transferring dockerfile: 32B done
+#1 DONE 0.0s
+
+#2 [bundler-batcher internal] load build definition from Dockerfile
+#2 transferring dockerfile: 32B done
+#2 DONE 0.0s
+
+#3 [bundler-bundler internal] load build definition from Dockerfile
+#3 transferring dockerfile: 32B done
+#3 DONE 0.0s
+
+#4 [bundler-batcher internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [bundler-bundler internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [bundler-server internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [bundler-server internal] load metadata for docker.io/library/node:16
+#7 DONE 0.7s
+
+#8 [bundler-bundler  1/12] FROM docker.io/library/node:16@sha256:27fab5920246070cf13449cf44c25bc4f5adef18ca7482b2bda90b7cf9e64481
+#8 DONE 0.0s
+
+#9 [bundler-server internal] load build context
+#9 transferring context: 227.99kB 0.1s done
+#9 DONE 0.1s
+
+#10 [bundler-batcher internal] load build context
+#10 transferring context: 227.99kB 0.1s done
+#10 DONE 0.1s
+
+#11 [bundler-bundler internal] load build context
+#11 transferring context: 227.99kB 0.1s done
+#11 DONE 0.1s
+
+#12 [bundler-server  8/12] COPY packages/bundler packages/bundler
+#12 CACHED
+
+#13 [bundler-server  3/12] COPY package.json .
+#13 CACHED
+
+#14 [bundler-server  2/12] WORKDIR /app
+#14 CACHED
+
+#15 [bundler-server 11/12] RUN yarn build
+#15 CACHED
+
+#16 [bundler-server  6/12] COPY .yarn .yarn
+#16 CACHED
+
+#17 [bundler-server  7/12] COPY .yarnrc.yml .
+#17 CACHED
+
+#18 [bundler-server 10/12] WORKDIR /app/packages/bundler
+#18 CACHED
+
+#19 [bundler-server  9/12] RUN yarn install
+#19 CACHED
+
+#20 [bundler-server  5/12] COPY yarn.lock .
+#20 CACHED
+
+#21 [bundler-server  4/12] COPY tsconfig.json .
+#21 CACHED
+
+#22 [bundler-server 12/12] RUN npm i -g
+#22 CACHED
+
+#23 [bundler-server] exporting to image
+#23 exporting layers done
+#23 writing image sha256:2486ce4fdfdc3e693ea4466c5bdc8135c6a1d9cba3e297ce9dde7adfde78aa53 done
+#23 writing image sha256:b140cd69e62d46b109a34827f89e0e0355829a79cfd57f354380fa0038c2ab36 done
+#23 naming to docker.io/library/bundler-batcher done
+#23 naming to docker.io/library/bundler-bundler done
+#23 writing image sha256:fa54d256ba27e4c3a36e1bc7e22720f86baf5d530aeb897114cdc983c0bdde16 done
+#23 naming to docker.io/library/bundler-server done
+#23 DONE 0.0s
+
+Use 'docker scan' to run Snyk tests against images to find vulnerabilities and learn how to fix them
+Container bundler-server-1  Created
+Container bundler-bundler-1  Created
+Container bundler-batcher-1  Created
+Container bundler-redis-1  Created
+Attaching to bundler-batcher-1, bundler-bundler-1, bundler-redis-1, bundler-server-1
+bundler-redis-1    | 1:C 19 Jan 2023 21:30:15.798 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+bundler-redis-1    | 1:C 19 Jan 2023 21:30:15.798 # Redis version=7.0.8, bits=64, commit=00000000, modified=0, pid=1, just started
+bundler-redis-1    | 1:C 19 Jan 2023 21:30:15.798 # Configuration loaded
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.799 * monotonic clock: POSIX clock_gettime
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.800 * Running mode=standalone, port=6379.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.800 # Server initialized
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.802 . The AOF directory appendonlydir doesn't exist
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * Loading RDB produced by version 7.0.8
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * RDB age 67247 seconds
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * RDB memory usage when created 1.34 Mb
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * Done loading RDB, keys loaded: 2, keys expired: 2.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * DB loaded from disk: 0.001 seconds
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 * Ready to accept connections
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 - DB 0: 2 keys (0 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:15.803 . 0 clients connected (0 replicas), 916032 bytes in use
+bundler-bundler-1  | private key: 0x8166f546bab6da521a8369cab06c5d2b9e46670292d85c875ee9ec20e84ffb61
+bundler-bundler-1  | BullMQ: DEPRECATION WARNING! Your redis options maxRetriesPerRequest must be null. On the next versions having this settings will throw an exception
+bundler-bundler-1  | BullMQ: DEPRECATION WARNING! Your redis options maxRetriesPerRequest must be null. On the next versions having this settings will throw an exception
+bundler-bundler-1  | Submitter running...
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:16.202 - Accepted 172.18.0.2:45014
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:16.202 - Accepted 172.18.0.2:45016
+bundler-batcher-1  | BullMQ: DEPRECATION WARNING! Your redis options maxRetriesPerRequest must be null. On the next versions having this settings will throw an exception
+bundler-batcher-1  | BullMQ: DEPRECATION WARNING! Your redis options maxRetriesPerRequest must be null. On the next versions having this settings will throw an exception
+bundler-batcher-1  | Batcher running...
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:16.236 - Accepted 172.18.0.3:52470
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:16.240 - Accepted 172.18.0.3:52484
+bundler-server-1   | RPC_URL:  http://host.docker.internal:8545
+bundler-server-1   | Bundler server listening at 5aadc9231ea5:3000
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:16.357 - Accepted 172.18.0.5:49912
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:20.912 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:20.912 . 5 clients connected (0 replicas), 1323320 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:26.062 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:26.062 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:31.201 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:31.201 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:36.339 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:36.339 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:41.491 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:41.491 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:46.630 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:46.630 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:51.759 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:51.759 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:56.894 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:30:56.894 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:02.027 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:02.027 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:07.149 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:07.149 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:12.276 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:12.276 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:17.423 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:17.423 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:22.540 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:22.540 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:27.660 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:27.660 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:32.781 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:32.781 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:37.910 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:37.910 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:43.055 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:43.056 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:48.189 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:48.189 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:53.332 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:53.332 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:58.462 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:31:58.462 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:03.604 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:03.604 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:08.733 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:08.733 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:13.888 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:13.888 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:18.997 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:18.997 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:24.103 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:24.104 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:29.216 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:29.217 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:34.379 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:34.379 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:39.512 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:39.512 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:44.639 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:44.639 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:49.764 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:49.764 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:54.889 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:32:54.889 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:00.007 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:00.007 . 5 clients connected (0 replicas), 1360288 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:05.119 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:05.119 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:10.247 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:10.247 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:15.370 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:15.370 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:20.501 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:20.501 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:25.649 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:25.649 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:30.805 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:30.805 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:35.927 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:35.927 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:41.039 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:41.039 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:46.154 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:46.154 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:51.259 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:51.259 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:56.376 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:33:56.376 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:01.485 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:01.485 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:06.607 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:06.607 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:11.738 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:11.738 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:16.868 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:16.869 . 5 clients connected (0 replicas), 1360232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:22.010 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:22.010 . 5 clients connected (0 replicas), 1339816 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:27.149 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:27.149 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:32.274 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:32.275 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:37.424 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:37.424 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:42.570 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:42.570 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:47.691 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:47.691 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:52.826 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:52.827 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:57.963 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:34:57.963 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:03.074 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:03.074 . 5 clients connected (0 replicas), 1380760 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:08.197 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:08.197 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:13.301 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:13.301 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:18.462 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:18.462 . 5 clients connected (0 replicas), 1401232 bytes in use
+bundler-server-1   | Validating request
+bundler-server-1   | Validating nullifiers
+bundler-server-1   | Checking in-op conflicts
+bundler-server-1   | Checking in-queue conflicts
+bundler-server-1   | Validating reverts
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:23.599 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:23.599 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:28.724 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:28.724 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:33.848 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:33.848 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-server-1   | Validating request
+bundler-server-1   | Validating nullifiers
+bundler-server-1   | Checking in-op conflicts
+bundler-server-1   | Checking in-queue conflicts
+bundler-server-1   | Validating reverts
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:38.992 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:38.992 . 5 clients connected (0 replicas), 1446392 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:44.127 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:44.127 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:49.295 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:49.295 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:54.422 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:54.422 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:59.553 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:35:59.553 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:04.692 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:04.692 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:09.849 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:09.849 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:14.991 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:14.991 . 5 clients connected (0 replicas), 1425920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:20.111 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:20.111 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:25.238 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:25.238 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:30.325 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:30.325 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:35.441 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:35.441 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:40.563 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:40.563 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:45.679 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:45.679 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:50.799 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:50.799 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:55.929 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:36:55.929 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:01.039 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:01.039 . 5 clients connected (0 replicas), 1384976 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:06.176 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:06.176 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:11.320 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:11.320 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:16.435 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:16.435 . 5 clients connected (0 replicas), 1384920 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:21.553 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:21.553 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:26.679 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:26.679 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:31.809 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:31.809 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:36.947 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:36.947 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:42.100 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:42.100 . 5 clients connected (0 replicas), 1364504 bytes in use
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:47.237 - DB 0: 4 keys (2 volatile) in 4 slots HT.
+bundler-redis-1    | 1:M 19 Jan 2023 21:37:47.237 . 5 clients connected (0 replicas), 1384920 bytes in use
+Gracefully stopping... (press Ctrl+C again to force)
+time="2023-01-19T16:37:51-05:00" level=error msg="got 3 SIGTERM/SIGINTs, forcing shutdown"
+Container bundler-server-1  Stopping
+Container bundler-redis-1  Stopping
+Container bundler-batcher-1  Stopping
+Container bundler-bundler-1  Stopping
+Container bundler-redis-1  Killing
+Container bundler-server-1  Killing
+Container bundler-bundler-1  Killing
+Container bundler-batcher-1  Killing
+Container bundler-redis-1  Killed
+Container bundler-redis-1  Stopped
+Container bundler-batcher-1  Stopped
+Container bundler-batcher-1  Killed
+Container bundler-server-1  Killed
+Container bundler-server-1  Stopped
+Container bundler-bundler-1  Stopped
+Container bundler-bundler-1  Killed
+canceled
