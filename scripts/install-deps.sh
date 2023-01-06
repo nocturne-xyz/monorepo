@@ -13,9 +13,10 @@ if [ -d "../lib/forge-std" ]; then
     echo "Dep directory found, but it's empty"
     echo "Cleaning up and installing deps.."
     rm -rf ../lib/forge-std
-    forge install foundry-rs/forge-std@be5c649 --no-git
   fi
 fi
+
+forge install foundry-rs/forge-std@be5c649 --no-git
 
 echo "Installing circuit deps..."
 echo "checking if cargo is installed..."
