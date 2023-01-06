@@ -17,3 +17,13 @@ export interface Deposit {
   id: bigint;
   depositAddr: NocturneAddress;
 }
+
+export interface OperationResult {
+  opProcessed: boolean;
+  failureReason: string;
+  callSuccesses: boolean[];
+  callResults: string[];
+  verificationGas: bigint;
+  executionGas: bigint;
+  numRefunds: bigint;
+}

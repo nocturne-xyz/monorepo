@@ -8,7 +8,7 @@ import { IncludedNote, Note } from "./sdk/note";
 
 export const SNARK_SCALAR_FIELD =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-export const ERC20_ID = SNARK_SCALAR_FIELD - 1n; // TODO: fix
+export const BLOCK_GAS_LIMIT = 30_000_000n;
 
 export type Address = string;
 export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>

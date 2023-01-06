@@ -12,6 +12,7 @@ import {
   PreProofOperation,
   ProvenOperation,
   encodeAsset,
+  BLOCK_GAS_LIMIT,
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
@@ -24,9 +25,14 @@ import {
 } from "./proof/joinsplit";
 import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NotesDB } from "./sdk/db";
-import { NotesManager, getJoinSplitRequestTotalValue } from "./sdk";
+import {
+  NotesManager,
+  getJoinSplitRequestTotalValue,
+  simulateOperation,
+} from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
+import { Wallet } from "@nocturne-xyz/contracts";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -40,17 +46,20 @@ export class NocturneContext {
   protected prover: JoinSplitProver;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
+  protected walletContract: Wallet;
   readonly db: NotesDB;
 
   constructor(
     signer: NocturneSigner,
     prover: JoinSplitProver,
+    walletContract: Wallet,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: NotesDB
   ) {
     this.signer = signer;
     this.prover = prover;
+    this.walletContract = walletContract;
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;
@@ -368,11 +377,10 @@ export class NocturneContext {
     refundAddr = NocturneAddressTrait.randomize(this.signer.address),
     refundAssets,
     actions,
-    verificationGasLimit = 1_000_000n,
-    executionGasLimit = 1_000_000n,
     gasPrice = 0n,
-    // Default max number of refunds does not support minting
-    maxNumRefunds = BigInt(joinSplitRequests.length + refundAssets.length),
+    verificationGasLimit = 1_000_000n,
+    executionGasLimit,
+    maxNumRefunds,
   }: OperationRequest): Promise<PreSignOperation> {
     const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
@@ -383,7 +391,20 @@ export class NocturneContext {
 
     const encodedRefundAssets: EncodedAsset[] = refundAssets.map(encodeAsset);
 
-    return {
+    let simulationRequired = false;
+    // Required field absent, need to estimate
+    if (!executionGasLimit || !maxNumRefunds) {
+      // Set some upper estimates here for executionGasLimit
+      executionGasLimit = BLOCK_GAS_LIMIT;
+      // TODO: if the default `maxNumRefunds` here is too small and yield an
+      // error during simulation, we should programmatically retry and increase
+      // it. This is important for large NFT mints.
+      maxNumRefunds =
+        BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
+      simulationRequired = true;
+    }
+
+    const op = {
       joinSplitTxs: preSignJoinSplitTxs,
       refundAddr,
       encodedRefundAssets,
@@ -393,6 +414,34 @@ export class NocturneContext {
       gasPrice,
       maxNumRefunds,
     };
+
+    // Required field absent, need to estimate
+    if (simulationRequired) {
+      return this.generateGasEstimatedOperation(op);
+    } else {
+      return op;
+    }
+  }
+
+  /**
+   * Takes input a PreSignOperation and simulate it using connected RPC
+   * provider, the operation result is then used rewrite the values of
+   * `executionGasLimit` and `maxNumRefunds` for the operation. The rest of the
+   * fields for the input operation are unchanged.
+   */
+  async generateGasEstimatedOperation(
+    op: PreSignOperation
+  ): Promise<PreSignOperation> {
+    const result = await simulateOperation(op, this.walletContract);
+    if (!result.opProcessed) {
+      throw Error("Cannot estimate gas with Error: " + result.failureReason);
+    }
+    // Give 10% over-estimate
+    op.executionGasLimit = (result.executionGas * 11n) / 10n;
+    // Force set the max number of refunds to the simulated number
+    op.maxNumRefunds = result.numRefunds;
+
+    return op;
   }
 
   /**
