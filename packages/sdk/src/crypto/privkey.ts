@@ -1,5 +1,5 @@
 import { babyjub, poseidon } from "circomlibjs";
-import { randomBytes } from "crypto";
+import { randomBytes } from "ethers/lib/utils";
 import { Scalar } from "ffjavascript";
 import { NocturneAddress, CanonAddress, NocturneAddressTrait } from "./address";
 
