@@ -29,3 +29,9 @@ bundler-cli run batcher
 
 bundler-cli run submitter --wallet-address <address>
 ```
+
+To run all three bundler components together in a containerized manner, populate a .env file in `packages/bundler` and run this command _from the monorepo root_:
+
+```
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --build
+```
