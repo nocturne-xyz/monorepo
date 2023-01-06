@@ -57,7 +57,7 @@ contract BalanceManager is
                 AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
             );
         }
-        // Accept the transfer
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -78,7 +78,7 @@ contract BalanceManager is
                 AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
         }
-        // Accept the transfer
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -106,7 +106,7 @@ contract BalanceManager is
                 );
             }
         }
-        // Accept the transfer
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
