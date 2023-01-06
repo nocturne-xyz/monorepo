@@ -15,7 +15,7 @@ export interface ABIValue {
 
 const ajv = new Ajv();
 
-const valueSchema = {
+const paramOrRetvalSchema = {
   $id: "value",
   type: "object",
   required: ["name", "type"],
@@ -29,9 +29,9 @@ const valueSchema = {
   },
 };
 
-ajv.addSchema(valueSchema);
+ajv.addSchema(paramOrRetvalSchema);
 
-const itemSchema = {
+const methodSchema = {
   $id: "item",
   type: "object",
   required: ["name", "type", "inputs", "outputs"],
@@ -48,17 +48,17 @@ const itemSchema = {
     },
   },
   definitions: {
-    value: valueSchema,
+    value: paramOrRetvalSchema,
   },
 };
 
-ajv.addSchema(itemSchema);
+ajv.addSchema(methodSchema);
 
 const abiSchema = {
   type: "array",
   items: { $ref: "#/definitions/item" },
   definitions: {
-    item: itemSchema,
+    item: methodSchema,
   },
 };
 
