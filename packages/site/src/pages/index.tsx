@@ -154,7 +154,7 @@ const Playground = () => {
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK || !walletContract) return;
-      await Promise.all([syncNotes(), syncLeaves()]);
+      // await Promise.all([syncNotes(), syncLeaves()]);
     }, 7000);
 
     return () => clearTimeout(timeout);
