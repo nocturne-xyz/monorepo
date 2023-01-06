@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Changed to a custom implementation of ReentrancyGuard to properly reflect operation processing status
+- Fixed a bug that `_receivedAssets` is modified outside an operation
+- Fixed a bug that refunds in `encodedRefundAssets` are not processed
+- Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one `joinSplitTx.encodedAsset`
 - Make `performOperation` nonReentrant
 - Remove unnecessary `_nonce` state variable, use current tree size as nonce
 - Remove `opSuccess` and add `opProcessed`, which indicate internal error during processing
