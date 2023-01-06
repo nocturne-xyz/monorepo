@@ -1,7 +1,7 @@
 import * as ethers from "ethers";
 import { Wallet__factory } from "@nocturne-xyz/contracts";
 
-const WALLET_ADDRESS = "0xE706317bf66b1C741CfCa5dCf5B78A44B5eD79e0";
+const WALLET_ADDRESS = "0xb027DAC90b591Db01a832201DA969b1Dd1935dDB";
 
 /**
  * Detect if the wallet injecting the ethereum object is Flask.
