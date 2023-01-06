@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one `joinSplitTx.encodedAsset`
 - Add utility function to estimate `executionGasLimit` and `maxNumRefund`
 - Change note commitment to use encoded `asset` and `ID`
 - Add and `encode` and `decode` methods to `NoteTrait`
