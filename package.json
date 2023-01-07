@@ -21,8 +21,5 @@
   "devDependencies": {
     "turbo": "1.6.3"
   },
-  "resolutions": {
-    "circomlibjs": "nocturne-xyz/circomlibjs#luke/polyfill"
-  },
   "packageManager": "yarn@3.2.0"
 }
