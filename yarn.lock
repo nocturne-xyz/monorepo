@@ -3089,7 +3089,6 @@ __metadata:
   dependencies:
     "@nocturne-xyz/circuits": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
