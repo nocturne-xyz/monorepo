@@ -13,6 +13,7 @@ COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
 COPY packages/circuits packages/circuits
+COPY circuit-artifacts circuit-artifacts
 
 
 RUN corepack enable
@@ -20,8 +21,6 @@ RUN yarn install
 
 WORKDIR /app/packages/circuits
 
-RUN ./scripts/download_big_ptau.sh
-RUN ./scripts/subtreeupdate/build.sh
 RUN ./scripts/build_witness_generator.sh
 
 WORKDIR /app
