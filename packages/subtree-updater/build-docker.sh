@@ -3,11 +3,16 @@
 set -e
 
 SCRIPT_DIR="$(dirname "$0")"
-ROOT_DIR="SCRIPT_DIR/../../"
+ROOT_DIR="$SCRIPT_DIR/../../"
 
 cd "$ROOT_DIR"
 git submodule init
 git submodule update
+
+pushd rapidsnark
+git submodule init
+git submodule update
+popd
 
 if [[ $(uname -m) == 'arm64' ]]; then
 	echo "dected arm64, building using docker buildx..."
