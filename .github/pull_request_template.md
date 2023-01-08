@@ -23,3 +23,4 @@ the code change.
 - [ ] Added Tests
 - [ ] Updated Documentation
 - [ ] Updated CHANGELOG.md for the appropriate package
+- [ ] Tested site with snap (we haven't automated this yet)
