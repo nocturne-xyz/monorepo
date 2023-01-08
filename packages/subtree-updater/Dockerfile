@@ -1,4 +1,5 @@
-FROM node:16
+FROM node
+
 COPY --from=rapidsnark /rapidsnark /rapidsnark
 
 WORKDIR /app
@@ -6,10 +7,12 @@ WORKDIR /app
 COPY package.json .
 COPY tsconfig.json .
 COPY yarn.lock .
+COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
 COPY packages/circuits packages/circuits
 
+RUN corepack enable
 RUN yarn install
 
 WORKDIR /app/packages/circuits
