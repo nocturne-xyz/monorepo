@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
+  "bin": {
+    "subtree-updater-cli": "dist/src/cli.js"
+  },
   "scripts": {
     "build": "tsc --build",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
