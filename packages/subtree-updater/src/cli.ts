@@ -9,7 +9,7 @@ export default async function main(): Promise<void> {
 
   program
     .requiredOption(
-      "--walletContractAddr <string>",
+      "--wallet-address <string>",
       "address of the wallet contract"
     )
     .requiredOption(
@@ -25,11 +25,11 @@ export default async function main(): Promise<void> {
       "path to the rapidsnark prover executable"
     )
     .requiredOption(
-      "--witnessGenerator <string>",
+      "--witness-generator <string>",
       "path to the subtree update circuit's witness generator executable"
     )
     .option(
-      "--tmpDir <string>",
+      "--tmp-dir <string>",
       "path to a dirctory to use for rapidsnark intermediate files",
       "./prover-tmp"
     )
