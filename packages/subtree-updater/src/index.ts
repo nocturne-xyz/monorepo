@@ -6,10 +6,10 @@ import {
   fetchSubtreeUpdateCommits,
   Note,
   NoteTrait,
+  subtreeUpdateInputsFromBatch,
 } from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from "lmdb";
 import { Wallet } from "@nocturne-xyz/contracts";
-import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
 import * as JSON from "bigint-json-serialization";
 
