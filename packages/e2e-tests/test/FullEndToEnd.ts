@@ -226,7 +226,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const erc721EncodedFunction =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
-        // mint NFT directly to the wallet contract
+        // mint a ERC721 token directly to the wallet contract
         [wallet.address, ERC721_TOKEN_ID]
       );
     const erc721Action: Action = {
@@ -237,7 +237,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const erc1155EncodedFunction =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
-        // mint NFT directly to the wallet contract
+        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
         [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
       );
     const erc1155Action: Action = {

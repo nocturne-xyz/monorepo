@@ -75,7 +75,7 @@ contract Wallet is IWallet, BalanceManager {
 
       @dev The maximum gas cost of a call can be estimated without eth_estimateGas
       1. gas cost of `WalletUtils.computeOperationDigests` and
-      `_verifyAllProofs` can be estimated based on length of op.joinSplitTxs
+      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplitTxs
       and overall size of op
       2. maxmimum gas cost of each processOperation can be estimated using op
       (refer to inline docs for `processOperation`)
@@ -86,7 +86,7 @@ contract Wallet is IWallet, BalanceManager {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        (bool success, uint256 perJoinSplitGas) = _verifyAllProofs(
+        (bool success, uint256 perJoinSplitGas) = _verifyAllProofsMetered(
             ops,
             opDigests
         );
@@ -233,7 +233,7 @@ contract Wallet is IWallet, BalanceManager {
     // Verifies the joinsplit proofs of a bundle of transactions
     // Also returns the gas used to verify per joinsplit
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofs(
+    function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests
     ) internal view returns (bool success, uint256 perJoinSplitGas) {
