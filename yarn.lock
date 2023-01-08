@@ -3013,6 +3013,7 @@ __metadata:
     "@nocturne-xyz/contracts": "workspace:^"
     "@rollup/plugin-commonjs": ^24.0.0
     "@rollup/plugin-json": ^6.0.0
+    "@rollup/plugin-legacy": ^3.0.1
     "@rollup/plugin-node-resolve": ^15.0.1
     "@rollup/plugin-typescript": ^11.0.0
     "@types/bn.js": ^5.1.1
@@ -3022,6 +3023,7 @@ __metadata:
     "@types/randombytes": ^2.0.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    "@wessberg/cjs-to-esm-transformer": ^0.0.22
     "@zk-kit/incremental-merkle-tree": ^1.0.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
@@ -4039,6 +4041,20 @@ __metadata:
     rollup:
       optional: true
   checksum: 77cfc941edaf77a5307977704ffaba706d83bea66f265b2b68f14be2a0af6d08b0fb1b04fdd773146c84cc70938ff64b00ae946808fd6ac057058af824d78128
+  languageName: node
+  linkType: hard
+
+"@rollup/plugin-legacy@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "@rollup/plugin-legacy@npm:3.0.1"
+  dependencies:
+    "@rollup/pluginutils": ^5.0.1
+  peerDependencies:
+    rollup: ^1.20.0||^2.0.0||^3.0.0
+  peerDependenciesMeta:
+    rollup:
+      optional: true
+  checksum: f407fc7f215756736d8a001135db0f6d289bfd0fce85ccaa58c59c45fe8616ae667ff5cfd037d6966fe1d0e6440fa4d46fc5234e6d4b840e46f0a7e5990cdcaa
   languageName: node
   linkType: hard
 
@@ -5642,6 +5658,32 @@ __metadata:
     "@webassemblyjs/ast": 1.11.1
     "@xtuc/long": 4.2.2
   checksum: f15ae4c2441b979a3b4fce78f3d83472fb22350c6dc3fd34bfe7c3da108e0b2360718734d961bba20e7716cb8578e964b870da55b035e209e50ec9db0378a3f7
+  languageName: node
+  linkType: hard
+
+"@wessberg/cjs-to-esm-transformer@npm:^0.0.22":
+  version: 0.0.22
+  resolution: "@wessberg/cjs-to-esm-transformer@npm:0.0.22"
+  dependencies:
+    "@wessberg/stringutil": ^1.0.19
+    chalk: ^4.1.0
+    commander: ^5.1.0
+    glob: ^7.1.6
+    reserved-words: ^0.1.2
+    resolve: ^1.17.0
+    tslib: ^2.0.0
+  peerDependencies:
+    typescript: ^3.x
+  bin:
+    cjstoesm: bin/cjstoesm
+  checksum: 82f3223a958852af934d54a28a2f170a04dc79bd7cafacd4997ca7dbe34b6dc8fae50e48953c6fef051eceb255167b2d4efa8b7ba0bfe3728c00d9eb2540bac5
+  languageName: node
+  linkType: hard
+
+"@wessberg/stringutil@npm:^1.0.19":
+  version: 1.0.19
+  resolution: "@wessberg/stringutil@npm:1.0.19"
+  checksum: 56eaf8fd9ab32de397cb7d30e65f39acbf3bc541298f6fea6a1f791df2ea57c2a9a920509a17221e1c1c2691f3577da225f728df4b20da8489dff823ab90431c
   languageName: node
   linkType: hard
 
@@ -8909,6 +8951,13 @@ blake-hash@nocturne-xyz/blake-hash:
   version: 2.20.3
   resolution: "commander@npm:2.20.3"
   checksum: ab8c07884e42c3a8dbc5dd9592c606176c7eb5c1ca5ff274bcf907039b2c41de3626f684ea75ccf4d361ba004bbaff1f577d5384c155f3871e456bdf27becf9e
+  languageName: node
+  linkType: hard
+
+"commander@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "commander@npm:5.1.0"
+  checksum: 0b7fec1712fbcc6230fcb161d8d73b4730fa91a21dc089515489402ad78810547683f058e2a9835929c212fead1d6a6ade70db28bbb03edbc2829a9ab7d69447
   languageName: node
   linkType: hard
 
@@ -20682,6 +20731,13 @@ blake-hash@nocturne-xyz/blake-hash:
   languageName: node
   linkType: hard
 
+"reserved-words@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "reserved-words@npm:0.1.2"
+  checksum: 72e80f71dcde1e2d697e102473ad6d597e1659118836092c63cc4db68a64857f07f509176d239c8675b24f7f03574336bf202a780cc1adb39574e2884d1fd1fa
+  languageName: node
+  linkType: hard
+
 "resolve-alpn@npm:^1.0.0, resolve-alpn@npm:^1.2.0":
   version: 1.2.1
   resolution: "resolve-alpn@npm:1.2.1"
@@ -20735,7 +20791,7 @@ blake-hash@nocturne-xyz/blake-hash:
   languageName: node
   linkType: hard
 
-"resolve@npm:^1.10.0, resolve@npm:^1.10.1, resolve@npm:^1.14.2, resolve@npm:^1.19.0, resolve@npm:^1.20.0, resolve@npm:^1.22.0, resolve@npm:^1.22.1, resolve@npm:^1.8.1, resolve@npm:~1.22.1":
+"resolve@npm:^1.10.0, resolve@npm:^1.10.1, resolve@npm:^1.14.2, resolve@npm:^1.17.0, resolve@npm:^1.19.0, resolve@npm:^1.20.0, resolve@npm:^1.22.0, resolve@npm:^1.22.1, resolve@npm:^1.8.1, resolve@npm:~1.22.1":
   version: 1.22.1
   resolution: "resolve@npm:1.22.1"
   dependencies:
@@ -20770,7 +20826,7 @@ blake-hash@nocturne-xyz/blake-hash:
   languageName: node
   linkType: hard
 
-"resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.1#~builtin<compat/resolve>":
+"resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.19.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>, resolve@patch:resolve@~1.22.1#~builtin<compat/resolve>":
   version: 1.22.1
   resolution: "resolve@patch:resolve@npm%3A1.22.1#~builtin<compat/resolve>::version=1.22.1&hash=07638b"
   dependencies:

@@ -1,6 +1,6 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { NocturneAddrPrefix } from "./common";
-import { randomBytes } from "ethers/lib/utils";
+import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
 
 export interface NocturneAddress {
