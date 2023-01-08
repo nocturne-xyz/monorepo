@@ -399,7 +399,7 @@ export class NocturneContext {
       executionGasLimit = BLOCK_GAS_LIMIT;
       // TODO: if the default `maxNumRefunds` here is too small and yield an
       // error during simulation, we should programmatically retry and increase
-      // it. This is important for large NFT mints.
+      // it. This is important for large ERC721 or 1155 mints.
       maxNumRefunds =
         BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
       simulationRequired = true;

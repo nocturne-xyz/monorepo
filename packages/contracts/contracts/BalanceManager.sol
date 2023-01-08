@@ -47,7 +47,7 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the NFT transfer outside of an operation
+        // Must reject the transfer outside of an operation
         if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
@@ -68,7 +68,7 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the NFT transfer outside of an operation
+        // Must reject the transfer outside of an operation
         if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
@@ -89,7 +89,7 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the NFT transfer outside of an operation
+        // Must reject the transfer outside of an operation
         if (_operation_stage == _NOT_ENTERED) {
             return 0;
         }
