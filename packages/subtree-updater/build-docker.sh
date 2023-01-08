@@ -17,4 +17,5 @@ if [[ $(uname -m) == 'arm64' ]]; then
     docker buildx build --platform linux/amd64 -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
 else
 	docker build -t rapidsnark ./rapidsnark
+    docker build -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
 fi
