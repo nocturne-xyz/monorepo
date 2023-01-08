@@ -61,7 +61,7 @@ if [[ $OSTYPE == 'darwin'* ]]; then
 	BREW_VERSION=$(brew --version | head -n 1)
 	if [ $? -eq 0 ]
 	then
-		echo "found brew version $CARGO_VERSION"
+		echo "found brew version $BREW_VERSION"
 		echo ""
 	else
 		echo "homebrew not found. installing..."

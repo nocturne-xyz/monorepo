@@ -3,6 +3,8 @@ FROM node
 COPY --from=rapidsnark /rapidsnark /rapidsnark
 
 WORKDIR /app
+COPY scripts scripts
+RUN scripts/install-deps.sh
 
 COPY package.json .
 COPY tsconfig.json .
@@ -11,6 +13,7 @@ COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
 COPY packages/circuits packages/circuits
+
 
 RUN corepack enable
 RUN yarn install
