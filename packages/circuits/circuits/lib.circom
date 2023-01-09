@@ -9,7 +9,7 @@ include "include/escalarmulany.circom";
 template NoteCommit() {
     signal input ownerHash;
     signal input nonce;
-    signal input encodedAsset;
+    signal input encodedAssetAddr;
     signal input encodedAssetId;
     signal input value;
 
@@ -18,7 +18,7 @@ template NoteCommit() {
     component noteHash = Poseidon(5);
     noteHash.inputs[0] <== ownerHash;
     noteHash.inputs[1] <== nonce;
-    noteHash.inputs[2] <== encodedAsset;
+    noteHash.inputs[2] <== encodedAssetAddr;
     noteHash.inputs[3] <== encodedAssetId;
     noteHash.inputs[4] <== value;
 
