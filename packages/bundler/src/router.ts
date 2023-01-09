@@ -70,7 +70,7 @@ export class BundlerRouter {
   async handleGetOperationStatus(req: Request, res: Response): Promise<void> {
     const status = await this.statusDB.getJobStatus(req.params.id);
     if (status) {
-      res.json(status);
+      res.json({ status });
     } else {
       res.status(400).json({ error: "Job doesn't exist" });
     }
