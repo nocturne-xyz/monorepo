@@ -22,14 +22,10 @@ export default {
     }),
     nodePolyfills({
       include: ['../../node_modules/**/*.js'],
-      exclude: ['../../node_modules/@ethersproject/**'],
     }),
-    resolve({
-      modulesOnly: true,
-    }),
+    resolve(),
     json({
       include: ['../../node_modules/**/*.json', '../**/*.json'],
-      exclude: ['../../node_modules/@ethersproject/**'],
     }),
   ],
 };
