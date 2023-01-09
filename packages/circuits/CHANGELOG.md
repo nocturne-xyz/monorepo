@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix regression in subtree update circuit
 - Rename encodedAsset to encodedAssetAddr and encodedId to encodedAssetId
 - fix endianness bug in subtree update circuit's membership proofs
 - add rapidsnark setup script for subtree updater
