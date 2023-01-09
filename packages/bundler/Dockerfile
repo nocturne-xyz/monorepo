@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package.json .
 COPY tsconfig.json .
 COPY yarn.lock .
+COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/bundler packages/bundler
 
