@@ -24,4 +24,4 @@ the code change.
 - [ ] Updated Documentation
 - [ ] Updated CHANGELOG.md for the appropriate package
 - [ ] Tested site with snap (we haven't automated this yet)
-- [ ] Re-built circuits & tested if any circuits were changed
+- [ ] Re-built & tested circuits if any of them changed
