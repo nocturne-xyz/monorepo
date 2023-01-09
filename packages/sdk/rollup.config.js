@@ -3,9 +3,7 @@ import pkg from './package.json';
 import typescript from '@rollup/plugin-typescript';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-import legacy from '@rollup/plugin-legacy';
 import { cjsToEsm } from '@wessberg/cjs-to-esm-transformer';
 
 export default {
