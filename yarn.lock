@@ -7632,7 +7632,7 @@ blake-hash@nocturne-xyz/blake-hash:
     node-addon-api: ^3.0.0
     node-gyp-build: ^4.2.2
     readable-stream: ^3.6.0
-  checksum: 3b2a8a3bcc3a1d87ee1e344a97808a198fc04f49180051f4a264c4249ccc380846ce75b03b4c30956fd3bea4f01429a505ff87344e1445f1b4719a30780dc0e0
+  checksum: fcb316c568262222f17d1ed7af70cc390bfca983f4f9fe407544592fba863b455fccce959af3c800acd5988776a1092d4741588741b072fd1f18114c0c6cf559
   languageName: node
   linkType: hard
 
@@ -11548,7 +11548,7 @@ blake-hash@nocturne-xyz/blake-hash:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
