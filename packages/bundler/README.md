@@ -14,7 +14,7 @@ The batcher is responsible for taking elements from the queue of operations (tha
 
 ### Submitter
 
-Takes batches off the operation batch queue and submits them to chain chain. One can handle greater traffic by running many submitters in parallel (that all draw from the same batch queue).
+Takes batches off the operation batch queue and submits them to chain. One can handle greater traffic by running many submitters in parallel (that all draw from the same batch queue).
 
 <br>
 
