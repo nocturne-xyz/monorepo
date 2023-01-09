@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-import { MerkleProver } from ".";
+import { MerkleProver } from "./abstract";
 
 export class MockMerkleProver extends MerkleProver {
   constructor() {

@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
 import { MerkleDB } from "../db";
-import { MerkleProver } from ".";
+import { MerkleProver } from "./abstract";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { NoteTrait } from "../note";
 import { fetchInsertions } from "../../indexing";

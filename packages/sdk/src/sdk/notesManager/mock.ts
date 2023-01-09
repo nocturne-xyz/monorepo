@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { NotesManager, JoinSplitEvent } from ".";
+import { NotesManager, JoinSplitEvent } from "./abstract";
 import { NocturnePrivKey } from "../../crypto";
 import { NotesDB, InMemoryKVStore } from "../db";
 import { IncludedNote } from "../note";
