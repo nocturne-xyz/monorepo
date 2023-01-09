@@ -14,7 +14,7 @@ export default {
     dir: 'dist',
     format: 'cjs',
   },
-  external: [...builtinModules, ...Object.keys(pkg.devDependencies)],
+  external: [...builtinModules, ...Object.keys(pkg.dependencies)],
   plugins: [
     typescript({
       transformers: [cjsToEsm()],
@@ -27,11 +27,6 @@ export default {
     resolve({
       modulesOnly: true,
     }),
-    // commonjs({
-    //   exclude: ['../../node_modules/@ethersproject/**/*.js'],
-    //   defaultIsModuleExports: 'auto',
-    //   requireReturnsDefault: 'auto',
-    // }),
     json({
       include: ['../../node_modules/**/*.json', '../**/*.json'],
       exclude: ['../../node_modules/@ethersproject/**'],
