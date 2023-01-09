@@ -3,6 +3,7 @@
   "workspaces": [
     "packages/*"
   ],
+  "private": true,
   "scripts": {
     "clean": "echo \"\nRunning clean in each package\" && yarn workspaces foreach run clean && echo \"\nDeleting yarn cache\" && rm -rf .yarn/cache && echo \"\nClearing yarn.lock contents\" && cp /dev/null yarn.lock",
     "build": "yarn turbo run build",

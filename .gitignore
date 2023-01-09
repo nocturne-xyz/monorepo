@@ -13,6 +13,7 @@ MyLogFile.log
 **/MyLogFile.log
 
 **/.env
+**/redis-data
 
 
 # ignore really chonky ptau files
