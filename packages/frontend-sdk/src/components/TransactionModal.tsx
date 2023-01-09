@@ -7,30 +7,30 @@ interface TransactionModalProps {
 }
 
 const TransactionModal: React.FC<TransactionModalProps> = ({ serverUrl }) => {
-  const [stage, setStage] = useState("QUEUED");
+  const [status, setStatus] = useState("QUEUED");
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Poll condition and update stage and progress accordingly
+      // Poll condition and update status and progress accordingly
       fetch(serverUrl)
         .then((response) => response.json())
         .then((result) => {
-          if (result.stage === "QUEUED") {
-            setStage("QUEUED");
+          if (result.status === "QUEUED") {
+            setStatus("QUEUED");
             setProgress(25);
-          } else if (result.stage === "IN_BATCH") {
-            setStage("IN_BATCH");
+          } else if (result.status === "IN_BATCH") {
+            setStatus("IN_BATCH");
             setProgress(50);
-          } else if (result.stage === "IN_FLIGHT") {
-            setStage("IN_FLIGHT");
+          } else if (result.status === "IN_FLIGHT") {
+            setStatus("IN_FLIGHT");
             setProgress(75);
-          } else if (result.stage === "EXECUTED_SUCCESS") {
-            setStage("EXECUTED_SUCCESS");
+          } else if (result.status === "EXECUTED_SUCCESS") {
+            setStatus("EXECUTED_SUCCESS");
             setProgress(100);
             clearInterval(interval);
-          } else if (result.stage === "EXECUTED_FAILED") {
-            setStage("EXECUTED_FAILED");
+          } else if (result.status === "EXECUTED_FAILED") {
+            setStatus("EXECUTED_FAILED");
             setProgress(100);
             clearInterval(interval);
           }
@@ -42,7 +42,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ serverUrl }) => {
 
   return (
     <div className="transaction-modal">
-      <div className="stage">{stage}</div>
+      <div className="status">{status}</div>
       <div className="progress-bar">
         <div className="progress" style={{ width: `${progress}%` }} />
       </div>
