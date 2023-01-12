@@ -13,21 +13,16 @@ import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/types.sol";
+import "./libs/NocturneReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
-    CommitmentTreeManager
+    CommitmentTreeManager,
+    NocturneReentrancyGuard
 {
     using OperationLib for Operation;
 
-    // Constants for operation status
-    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
-    uint256 internal constant _NOT_ENTERED = 1;
-    uint256 internal constant _ENTERED_PROCESS_OPERATION = 2;
-    uint256 internal constant _ENTERED_EXECUTE_OPERATION = 3;
-
-    uint256 public _operation_stage;
     EncodedAsset[] public _receivedAssets;
 
     IVault public immutable _vault;
@@ -36,8 +31,10 @@ contract BalanceManager is
         address vault,
         address joinSplitVerifier,
         address _subtreeUpdateVerifier
-    ) CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier) {
-        _operation_stage = _NOT_ENTERED;
+    )
+        CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier)
+        NocturneReentrancyGuard()
+    {
         _vault = IVault(vault);
     }
 
@@ -48,11 +45,11 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         // Must reject the transfer outside of an operation
-        if (_operation_stage == _NOT_ENTERED) {
+        if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
         }
         // Record the transfer if it results from executed actions
-        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
             _receivedAssets.push(
                 AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
             );
@@ -69,11 +66,11 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         // Must reject the transfer outside of an operation
-        if (_operation_stage == _NOT_ENTERED) {
+        if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
         }
         // Record the transfer if it results from executed actions
-        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
             _receivedAssets.push(
                 AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
@@ -90,11 +87,11 @@ contract BalanceManager is
         bytes calldata // data
     ) external override returns (bytes4) {
         // Must reject the transfer outside of an operation
-        if (_operation_stage == _NOT_ENTERED) {
+        if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
         }
         // Record the transfer if it results from executed actions
-        if (_operation_stage == _ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
             uint256 numIds = ids.length;
             for (uint256 i = 0; i < numIds; i++) {
                 _receivedAssets.push(

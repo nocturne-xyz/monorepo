@@ -38,32 +38,6 @@ contract Wallet is IWallet, BalanceManager {
         _;
     }
 
-    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
-    modifier processOperationGuard() {
-        require(
-            _operation_stage == _NOT_ENTERED,
-            "Reentry into processOperation"
-        );
-        _operation_stage = _ENTERED_PROCESS_OPERATION;
-
-        _;
-
-        _operation_stage = _NOT_ENTERED;
-    }
-
-    // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
-    modifier executeOperationGuard() {
-        require(
-            _operation_stage == _ENTERED_PROCESS_OPERATION,
-            "Reentry into executeOperation"
-        );
-        _operation_stage = _ENTERED_EXECUTE_OPERATION;
-
-        _;
-
-        _operation_stage = _ENTERED_PROCESS_OPERATION;
-    }
-
     function depositFunds(Deposit calldata deposit) external override {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
