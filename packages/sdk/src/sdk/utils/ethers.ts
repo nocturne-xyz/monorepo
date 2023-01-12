@@ -90,7 +90,6 @@ export async function simulateOperation(
     numRefunds,
   } = result;
 
-  console.log("Estimated gas SDK: ", result);
   return {
     opProcessed,
     failureReason,
