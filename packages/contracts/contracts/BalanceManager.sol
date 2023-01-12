@@ -223,7 +223,7 @@ contract BalanceManager is
     */
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplitTxs.length;
-        for (uint256 i = 0; i < numJoinSplits; ++i) {
+        for (uint256 i = 0; i < numJoinSplits; i++) {
             _handleRefundForAsset(
                 op.joinSplitTxs[i].encodedAsset,
                 op.refundAddr
@@ -231,12 +231,12 @@ contract BalanceManager is
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; ++i) {
+        for (uint256 i = 0; i < numRefundAssets; i++) {
             _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
         }
 
         uint256 numReceived = _receivedAssets.length;
-        for (uint256 i = 0; i < numReceived; ++i) {
+        for (uint256 i = 0; i < numReceived; i++) {
             _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
         }
         delete _receivedAssets;

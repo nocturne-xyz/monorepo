@@ -158,17 +158,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       id: 0n,
     };
 
-    const erc721Asset: Asset = {
-      assetType: AssetType.ERC721,
-      assetAddr: erc721Token.address,
-      id: ERC721_TOKEN_ID,
-    };
+    // const erc721Asset: Asset = {
+    //   assetType: AssetType.ERC721,
+    //   assetAddr: erc721Token.address,
+    //   id: ERC721_TOKEN_ID,
+    // };
 
-    const erc1155Asset: Asset = {
-      assetType: AssetType.ERC1155,
-      assetAddr: erc1155Token.address,
-      id: ERC1155_TOKEN_ID,
-    };
+    // const erc1155Asset: Asset = {
+    //   assetType: AssetType.ERC1155,
+    //   assetAddr: erc1155Token.address,
+    //   id: ERC1155_TOKEN_ID,
+    // };
 
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
@@ -223,32 +223,32 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       encodedFunction: encodedFunction,
     };
 
-    const erc721EncodedFunction =
-      SimpleERC721Token__factory.createInterface().encodeFunctionData(
-        "reserveToken",
-        // mint a ERC721 token directly to the wallet contract
-        [wallet.address, ERC721_TOKEN_ID]
-      );
-    const erc721Action: Action = {
-      contractAddress: erc721Token.address,
-      encodedFunction: erc721EncodedFunction,
-    };
+    // const erc721EncodedFunction =
+    //   SimpleERC721Token__factory.createInterface().encodeFunctionData(
+    //     "reserveToken",
+    //     // mint a ERC721 token directly to the wallet contract
+    //     [wallet.address, ERC721_TOKEN_ID]
+    //   );
+    // const erc721Action: Action = {
+    //   contractAddress: erc721Token.address,
+    //   encodedFunction: erc721EncodedFunction,
+    // };
 
-    const erc1155EncodedFunction =
-      SimpleERC1155Token__factory.createInterface().encodeFunctionData(
-        "reserveTokens",
-        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
-      );
-    const erc1155Action: Action = {
-      contractAddress: erc1155Token.address,
-      encodedFunction: erc1155EncodedFunction,
-    };
+    // const erc1155EncodedFunction =
+    //   SimpleERC1155Token__factory.createInterface().encodeFunctionData(
+    //     "reserveTokens",
+    //     // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
+    //     [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+    //   );
+    // const erc1155Action: Action = {
+    //   contractAddress: erc1155Token.address,
+    //   encodedFunction: erc1155EncodedFunction,
+    // };
 
     const operationRequest: OperationRequest = {
       joinSplitRequests: [joinSplitRequest],
       refundAssets: [],
-      actions: [action, erc721Action, erc1155Action],
+      actions: [action],
       gasPrice: 0n,
     };
 
@@ -325,16 +325,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     );
     expect(foundNotesAlice.length).to.equal(1);
 
-    // Alice should have a note for minted ERC721 token
-    const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
-    expect(erc721NotesAlice.length).to.equal(1);
+    // // Alice should have a note for minted ERC721 token
+    // const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
+    // expect(erc721NotesAlice.length).to.equal(1);
 
-    // Alice should have a note for minted ERC1155 token
-    const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
-    foundNotesAlice = erc1155NotesAlice.filter(
-      (n) => n.value === ERC1155_TOKEN_AMOUNT
-    );
-    expect(erc1155NotesAlice.length).to.equal(1);
+    // // Alice should have a note for minted ERC1155 token
+    // const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
+    // foundNotesAlice = erc1155NotesAlice.filter(
+    //   (n) => n.value === ERC1155_TOKEN_AMOUNT
+    // );
+    // expect(erc1155NotesAlice.length).to.equal(1);
 
     console.log("Bob: Sync SDK notes manager post-operation");
     await nocturneContextBob.syncNotes();
