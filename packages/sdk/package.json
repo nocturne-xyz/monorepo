@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.23-alpha",
+  "version": "1.0.24-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
-    "circomlibjs": "0.0.8",
+    "circomlibjs": "nocturne-xyz/circomlibjs#seb/polyfill",
     "ethers": "^5.0.0",
     "ffjavascript": "0.2.57",
     "js-sha256": "^0.9.0",
