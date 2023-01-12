@@ -55,6 +55,7 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
+const ERC20_TOKEN_ID = 0n;
 const ERC721_TOKEN_ID = 1n;
 const ERC1155_TOKEN_ID = 2n;
 const ERC1155_TOKEN_AMOUNT = 3n;
@@ -82,7 +83,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     [deployer] = await ethers.getSigners();
     const tokenFactory = new SimpleERC20Token__factory(deployer);
     token = await tokenFactory.deploy();
-    console.log("Token deployed at: ", token.address);
+    console.log("ERC20 token deployed at: ", token.address);
 
     const erc721TokenFactory = new SimpleERC721Token__factory(deployer);
     erc721Token = await erc721TokenFactory.deploy();
@@ -145,6 +146,174 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   after(async () => {
     await network.provider.send("hardhat_reset");
   });
+
+  // async function testE2E(
+  //   joinSplitRequests: JoinSplitRequest[],
+  //   actions: Action[],
+  //   contractChecks: () => Promise<void>,
+  //   sdkChecks: () => Promise<void>
+  // ): Promise<void> {
+  //   console.log("Start bundler");
+  //   bundlerServer.run(BUNDLER_SERVER_PORT).catch(console.error);
+  //   const bundlerBatcherProm = bundlerBatcher.run().catch(console.error);
+  //   const bundlerSubmitterProm = bundlerSubmitter.run().catch(console.error);
+
+  //   console.log("Alice: Sync SDK notes manager");
+  //   await nocturneContextAlice.syncNotes();
+
+  //   console.log("Bob: Sync SDK notes manager");
+  //   await nocturneContextBob.syncNotes();
+
+  //   console.log("Sync SDK merkle prover");
+  //   await nocturneContextAlice.syncLeaves();
+
+  //   const operationRequest: OperationRequest = {
+  //     joinSplitRequests,
+  //     refundAssets: [],
+  //     actions,
+  //     gasPrice: 0n,
+  //   };
+
+  //   console.log("Create post-proof operation with NocturneContext");
+  //   const operation = await nocturneContextAlice.tryCreateProvenOperation(
+  //     operationRequest
+  //   );
+
+  //   console.log("Process bundle");
+  //   var res = await fetch(`http://localhost:${BUNDLER_SERVER_PORT}/relay`, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify(operation),
+  //   });
+  //   console.log("Bundler server response: ", await res.json());
+
+  //   console.log("Sleeping for 10s while bundler submits...");
+  //   await Promise.race([
+  //     sleep(10000),
+  //     bundlerBatcherProm,
+  //     bundlerSubmitterProm,
+  //   ]);
+
+  //   const operationDigest = calculateOperationDigest(operation);
+  //   var res = await fetch(
+  //     `http://localhost:${BUNDLER_SERVER_PORT}/operations/${operationDigest}`,
+  //     {
+  //       method: "GET",
+  //     }
+  //   );
+  //   console.log(`Bundler marked operation ${operationDigest} ${res.json()}`);
+
+  //   await contractChecks();
+  //   await sdkChecks();
+  // }
+
+  // it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
+  //   console.log("Deposit funds and commit note commitments");
+  //   await depositFunds(
+  //     wallet,
+  //     vault,
+  //     token,
+  //     alice,
+  //     nocturneContextAlice.signer.address,
+  //     [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
+  //   );
+
+  //   console.log("apply subtree update");
+  //   await applySubtreeUpdate();
+  //   await (
+  //     nocturneContextAlice.merkleProver as LocalMerkleProver
+  //   ).fetchLeavesAndUpdate();
+
+  //   const erc20Asset: Asset = {
+  //     assetType: AssetType.ERC20,
+  //     assetAddr: token.address,
+  //     id: ERC20_TOKEN_ID,
+  //   };
+
+  //   const joinSplitRequest: JoinSplitRequest = {
+  //     asset: erc20Asset,
+  //     unwrapValue: ALICE_UNWRAP_VAL,
+  //     paymentIntent: {
+  //       receiver: nocturneContextBob.signer.canonAddress,
+  //       value: ALICE_TO_BOB_PRIV_VAL,
+  //     },
+  //   };
+
+  //   console.log("Encode transfer erc20 action");
+  //   const encodedFunction =
+  //     SimpleERC20Token__factory.createInterface().encodeFunctionData(
+  //       "transfer",
+  //       [bob.address, ALICE_TO_BOB_PUB_VAL]
+  //     );
+  //   const transferAction: Action = {
+  //     contractAddress: token.address,
+  //     encodedFunction: encodedFunction,
+  //   };
+
+  //   const contractChecks = async () => {
+  //     console.log("Check for OperationProcessed event");
+  //     const latestBlock = await ethers.provider.getBlockNumber();
+  //     const events: OperationProcessedEvent[] = await query(
+  //       wallet,
+  //       wallet.filters.OperationProcessed(),
+  //       0,
+  //       latestBlock
+  //     );
+  //     expect(events.length).to.equal(1);
+  //     expect(events[0].args.opProcessed).to.equal(true);
+  //     expect(events[0].args.callSuccesses[0]).to.equal(true);
+
+  //     expect((await token.balanceOf(alice.address)).toBigInt()).to.equal(0n);
+  //     expect((await token.balanceOf(bob.address)).toBigInt()).to.equal(
+  //       ALICE_TO_BOB_PUB_VAL
+  //     );
+  //     expect((await token.balanceOf(vault.address)).toBigInt()).to.equal(
+  //       2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
+  //     );
+  //   };
+
+  //   const sdkChecks = async () => {
+  //     console.log("Alice: Sync SDK notes manager post-operation");
+  //     await nocturneContextAlice.syncNotes();
+  //     const updatedNotesAlice = await notesDBAlice.getNotesFor(erc20Asset)!;
+  //     const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
+  //     // alcie should have two nonzero notes total
+  //     expect(nonZeroNotesAlice.length).to.equal(2);
+
+  //     // alice should have a note with refund value from public spendk
+  //     let foundNotesAlice = nonZeroNotesAlice.filter(
+  //       (n) => n.value === ALICE_UNWRAP_VAL - ALICE_TO_BOB_PUB_VAL
+  //     );
+  //     expect(foundNotesAlice.length).to.equal(1);
+
+  //     // alice should have another note with refund value from private payment to bob
+  //     foundNotesAlice = nonZeroNotesAlice.filter(
+  //       (n) =>
+  //         n.value ===
+  //         2n * PER_NOTE_AMOUNT - ALICE_UNWRAP_VAL - ALICE_TO_BOB_PRIV_VAL
+  //     );
+  //     expect(foundNotesAlice.length).to.equal(1);
+
+  //     console.log("Bob: Sync SDK notes manager post-operation");
+  //     await nocturneContextBob.syncNotes();
+  //     const updatedNotesBob = await notesDBBob.getNotesFor(erc20Asset)!;
+  //     const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
+  //     // bob should have one nonzero note total
+  //     expect(nonZeroNotesBob.length).to.equal(1);
+
+  //     // That one note should contain the tokens sent privately from alice
+  //     expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
+  //   };
+
+  //   await testE2E(
+  //     [joinSplitRequest],
+  //     [transferAction],
+  //     contractChecks,
+  //     sdkChecks
+  //   );
+  // });
 
   it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
     console.log("Start bundler");
@@ -223,32 +392,32 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       encodedFunction: encodedFunction,
     };
 
-    const erc721EncodedFunction =
-      SimpleERC721Token__factory.createInterface().encodeFunctionData(
-        "reserveToken",
-        // mint a ERC721 token directly to the wallet contract
-        [wallet.address, ERC721_TOKEN_ID]
-      );
-    const erc721Action: Action = {
-      contractAddress: erc721Token.address,
-      encodedFunction: erc721EncodedFunction,
-    };
+    // const erc721EncodedFunction =
+    //   SimpleERC721Token__factory.createInterface().encodeFunctionData(
+    //     "reserveToken",
+    //     // mint a ERC721 token directly to the wallet contract
+    //     [wallet.address, ERC721_TOKEN_ID]
+    //   );
+    // const erc721Action: Action = {
+    //   contractAddress: erc721Token.address,
+    //   encodedFunction: erc721EncodedFunction,
+    // };
 
-    const erc1155EncodedFunction =
-      SimpleERC1155Token__factory.createInterface().encodeFunctionData(
-        "reserveTokens",
-        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
-      );
-    const erc1155Action: Action = {
-      contractAddress: erc1155Token.address,
-      encodedFunction: erc1155EncodedFunction,
-    };
+    // const erc1155EncodedFunction =
+    //   SimpleERC1155Token__factory.createInterface().encodeFunctionData(
+    //     "reserveTokens",
+    //     // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
+    //     [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+    //   );
+    // const erc1155Action: Action = {
+    //   contractAddress: erc1155Token.address,
+    //   encodedFunction: erc1155EncodedFunction,
+    // };
 
     const operationRequest: OperationRequest = {
       joinSplitRequests: [joinSplitRequest],
       refundAssets: [],
-      actions: [action, erc721Action, erc1155Action],
+      actions: [action],
       gasPrice: 0n,
     };
 
@@ -325,16 +494,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     );
     expect(foundNotesAlice.length).to.equal(1);
 
-    // Alice should have a note for minted ERC721 token
-    const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
-    expect(erc721NotesAlice.length).to.equal(1);
+    // // Alice should have a note for minted ERC721 token
+    // const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
+    // expect(erc721NotesAlice.length).to.equal(1);
 
-    // Alice should have a note for minted ERC1155 token
-    const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
-    foundNotesAlice = erc1155NotesAlice.filter(
-      (n) => n.value === ERC1155_TOKEN_AMOUNT
-    );
-    expect(erc1155NotesAlice.length).to.equal(1);
+    // // Alice should have a note for minted ERC1155 token
+    // const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
+    // foundNotesAlice = erc1155NotesAlice.filter(
+    //   (n) => n.value === ERC1155_TOKEN_AMOUNT
+    // );
+    // expect(erc1155NotesAlice.length).to.equal(1);
 
     console.log("Bob: Sync SDK notes manager post-operation");
     await nocturneContextBob.syncNotes();

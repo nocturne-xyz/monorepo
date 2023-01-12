@@ -7,34 +7,34 @@ contract NocturneReentrancyGuard {
     uint256 public constant ENTERED_PROCESS_OPERATION = 2;
     uint256 public constant ENTERED_EXECUTE_OPERATION = 3;
 
-    uint256 private _operation_stage;
+    uint256 private _operationStage;
 
     constructor() {
-        _operation_stage = NOT_ENTERED;
+        _operationStage = NOT_ENTERED;
     }
 
     modifier processOperationGuard() {
         require(
-            _operation_stage == NOT_ENTERED,
+            _operationStage == NOT_ENTERED,
             "Reentry into processOperation"
         );
-        _operation_stage = ENTERED_PROCESS_OPERATION;
+        _operationStage = ENTERED_PROCESS_OPERATION;
 
         _;
 
-        _operation_stage = NOT_ENTERED;
+        _operationStage = NOT_ENTERED;
     }
 
     modifier executeOperationGuard() {
         require(
-            _operation_stage == ENTERED_PROCESS_OPERATION,
+            _operationStage == ENTERED_PROCESS_OPERATION,
             "Reentry into executeOperation"
         );
-        _operation_stage = ENTERED_EXECUTE_OPERATION;
+        _operationStage = ENTERED_EXECUTE_OPERATION;
 
         _;
 
-        _operation_stage = ENTERED_PROCESS_OPERATION;
+        _operationStage = ENTERED_PROCESS_OPERATION;
     }
 
     /**
@@ -42,6 +42,6 @@ contract NocturneReentrancyGuard {
      * `nonReentrant` function in the call stack.
      */
     function reentrancyGuardStage() public view returns (uint256) {
-        return _operation_stage;
+        return _operationStage;
     }
 }
