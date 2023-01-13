@@ -174,7 +174,6 @@ const ABIMethodParamInput = ({
         throw new Error("Non-tuple type must not have components");
       }
 
-      console.log("value", value);
       if (typeof value !== "string") {
         throw new Error("Non-tuple type must have string value");
       }

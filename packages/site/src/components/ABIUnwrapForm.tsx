@@ -1,13 +1,7 @@
-import { ERC20_ID, JoinSplitRequest } from "@nocturne-xyz/sdk";
+import { ERC20_ID, JoinSplitRequest, AssetType } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
-
-enum AssetType {
-  ERC20 = "ERC20",
-  ERC721 = "ERC721",
-  ERC1155 = "ERC1155",
-}
 
 export interface ABIUnwrapFormProps {
   handleJoinSplitRequest: (joinSplitRequest: JoinSplitRequest) => void;
@@ -59,8 +53,9 @@ export const ABIUnwrapForm = ({
 
     const joinSplitRequest: JoinSplitRequest = {
       asset: {
-        address: assetAddress,
+        assetAddr: assetAddress,
         id: assetType === AssetType.ERC20 ? ERC20_ID : id,
+        assetType: assetType,
       },
       unwrapValue,
     };
@@ -87,7 +82,6 @@ export const ABIUnwrapForm = ({
             type="text"
             value={assetAddress}
             onChange={(e) => setAssetAddress(e.target.value)}
-            disabled={assetType === "ERC721"}
           />
         </label>
         <label>
@@ -96,7 +90,7 @@ export const ABIUnwrapForm = ({
             type="number"
             value={amount}
             onChange={handleAmountChange}
-            disabled={assetType === "ERC721"}
+            disabled={assetType === AssetType.ERC721}
           />
         </label>
         <br />
@@ -106,7 +100,7 @@ export const ABIUnwrapForm = ({
             type="text"
             value={assetID.toString()}
             onChange={handleAssetIDChange}
-            disabled={assetType === "ERC20"}
+            disabled={assetType === AssetType.ERC20}
           />
         </label>
         <Button onClick={() => handleEnqueueUnwrapAsset()}>

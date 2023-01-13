@@ -113,7 +113,7 @@ const Playground = () => {
     loadNocturneFrontendSDK().then((sdk) => {
       setFrontendSDK(sdk);
     });
-  }, [loadNocturneFrontendSDK]);
+  }, [loadNocturneFrontendSDK, state.installedSnap]);
 
   const handleConnectClick = async () => {
     try {
@@ -154,7 +154,7 @@ const Playground = () => {
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK || !walletContract) return;
-      // await Promise.all([syncNotes(), syncLeaves()]);
+      await Promise.all([syncNotes(), syncLeaves()]);
     }, 7000);
 
     return () => clearTimeout(timeout);
@@ -216,7 +216,7 @@ const Playground = () => {
             />
           </Card>
         )}
-        {shouldDisplayReconnectButton(state.installedSnap) && (
+        {!shouldDisplayReconnectButton(state.installedSnap) && (
           <Notice>
             <p>Please connect using MetaMask Flask to continue.</p>
           </Notice>
@@ -232,7 +232,7 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && walletContract && (
+            {nocturneFrontendSDK && (
               <ABIForm sdk={nocturneFrontendSDK} />
             )}
           </Card>
