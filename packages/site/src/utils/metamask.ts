@@ -1,3 +1,8 @@
+import * as ethers from "ethers";
+import { Wallet__factory } from "@nocturne-xyz/contracts";
+
+const WALLET_ADDRESS = "0xb027DAC90b591Db01a832201DA969b1Dd1935dDB";
+
 /**
  * Detect if the wallet injecting the ethereum object is Flask.
  *
@@ -17,4 +22,11 @@ export const isFlask = async () => {
   } catch {
     return false;
   }
+};
+
+export const connectWalletContract = async () => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+  await provider.send("eth_requestAccounts", []);
+  const signer = provider.getSigner();
+  return Wallet__factory.connect(WALLET_ADDRESS, signer);
 };

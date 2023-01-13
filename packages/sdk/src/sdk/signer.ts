@@ -1,5 +1,5 @@
 import { babyjub, poseidon } from "circomlibjs";
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
 import { Note, IncludedNote, NoteTrait } from "./note";
 import {

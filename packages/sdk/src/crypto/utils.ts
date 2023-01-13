@@ -1,7 +1,7 @@
 import { Scalar } from "ffjavascript";
 import { CanonAddress, NocturneAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
-import { randomBytes } from "ethers/lib/utils";
+import randomBytes from "randombytes";
 import { babyjub, poseidon } from "circomlibjs";
 import { NoteTransmission, SNARK_SCALAR_FIELD } from "../commonTypes";
 

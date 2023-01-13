@@ -2,8 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
 import {
-  clearDb,
   connectSnap,
+  connectWalletContract,
   getSnap,
   shouldDisplayReconnectButton,
 } from "../utils";
@@ -12,23 +12,13 @@ import {
   InstallFlaskButton,
   ReconnectButton,
   Card,
-  SyncNotesButton,
-  SyncLeavesButton,
-  ClearDbButton,
-  GetJoinSplitInputsButton,
-  GetAllBalancesButton,
+  ABIForm,
 } from "../components";
-import {
-  Action,
-  JoinSplitRequest,
-  ERC20_ID,
-  OperationRequest,
-} from "@nocturne-xyz/sdk";
-import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
 } from "@nocturne-xyz/frontend-sdk";
+import { Wallet } from "@nocturne-xyz/contracts";
 
 const Container = styled.div`
   display: flex;
@@ -114,19 +104,22 @@ const ErrorMessage = styled.div`
   }
 `;
 
-const Index = () => {
+const Playground = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
-
+  const [walletContract, setWalletContract] = useState<Wallet>();
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
     loadNocturneFrontendSDK().then((sdk) => {
       setFrontendSDK(sdk);
     });
-  }, [loadNocturneFrontendSDK]);
+  }, [loadNocturneFrontendSDK, state.installedSnap]);
 
   const handleConnectClick = async () => {
     try {
+      const wallet = await connectWalletContract();
+      setWalletContract(wallet);
+
       await connectSnap();
       const installedSnap = await getSnap();
 
@@ -140,7 +133,7 @@ const Index = () => {
     }
   };
 
-  const handleSyncNotesClick = async () => {
+  const syncNotes = async () => {
     try {
       await nocturneFrontendSDK!.syncNotes();
     } catch (e) {
@@ -149,7 +142,7 @@ const Index = () => {
     }
   };
 
-  const handleSyncLeavesClick = async () => {
+  const syncLeaves = async () => {
     try {
       await nocturneFrontendSDK!.syncLeaves();
     } catch (e) {
@@ -158,58 +151,14 @@ const Index = () => {
     }
   };
 
-  const handleGetAllBalancesClick = async () => {
-    try {
-      const balances = await nocturneFrontendSDK!.getAllBalances();
-      console.log(balances);
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
+  useEffect(() => {
+    const timeout = setInterval(async () => {
+      if (!nocturneFrontendSDK || !walletContract) return;
+      await Promise.all([syncNotes(), syncLeaves()]);
+    }, 7000);
 
-  const handleGetJoinSplitInputs = async () => {
-    const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
-    const joinSplitRequest: JoinSplitRequest = {
-      asset: { address: tokenAddress, id: ERC20_ID },
-      unwrapValue: 25n,
-    };
-
-    const refundTokens = [tokenAddress];
-    const encodedFunction =
-      SimpleERC20Token__factory.createInterface().encodeFunctionData(
-        "transfer",
-        [tokenAddress, 50]
-      );
-    const action: Action = {
-      contractAddress: tokenAddress,
-      encodedFunction: encodedFunction,
-    };
-    const operationRequest: OperationRequest = {
-      joinSplitRequests: [joinSplitRequest],
-      refundTokens,
-      actions: [action],
-    };
-
-    console.log("Operation request: ", operationRequest);
-    try {
-      const provenOperation =
-        await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
-      console.log(provenOperation);
-    } catch (e) {
-      console.error("error: ", e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const handleClearDb = async () => {
-    try {
-      await clearDb();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
+    return () => clearTimeout(timeout);
+  }, [nocturneFrontendSDK, walletContract]);
 
   return (
     <Container>
@@ -231,10 +180,11 @@ const Index = () => {
               title: "Install",
               description:
                 "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
-              button: <InstallFlaskButton />,
             }}
             fullWidth
-          />
+          >
+            <InstallFlaskButton />
+          </Card>
         )}
         {!state.installedSnap && (
           <Card
@@ -242,15 +192,14 @@ const Index = () => {
               title: "Connect",
               description:
                 "Get started by connecting to and installing the example snap.",
-              button: (
-                <ConnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.isFlask}
-                />
-              ),
             }}
             disabled={!state.isFlask}
-          />
+          >
+            <ConnectButton
+              onClick={handleConnectClick}
+              disabled={!state.isFlask}
+            />
+          </Card>
         )}
         {shouldDisplayReconnectButton(state.installedSnap) && (
           <Card
@@ -258,117 +207,39 @@ const Index = () => {
               title: "Reconnect",
               description:
                 "While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.",
-              button: (
-                <ReconnectButton
-                  onClick={handleConnectClick}
-                  disabled={!state.installedSnap}
-                />
-              ),
             }}
             disabled={!state.installedSnap}
-          />
+          >
+            <ReconnectButton
+              onClick={handleConnectClick}
+              disabled={!state.installedSnap}
+            />
+          </Card>
         )}
-        <Card
-          content={{
-            title: "Sync Notes",
-            description: "Sync notes.",
-            button: (
-              <SyncNotesButton
-                onClick={handleSyncNotesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Sync Leaves",
-            description: "Sync leaves.",
-            button: (
-              <SyncLeavesButton
-                onClick={handleSyncLeavesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Get All Balances",
-            description: "Get all balances",
-            button: (
-              <GetAllBalancesButton
-                onClick={handleGetAllBalancesClick}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Generate proof",
-            description: "Generate joinsplit proof",
-            button: (
-              <GetJoinSplitInputsButton
-                onClick={handleGetJoinSplitInputs}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Card
-          content={{
-            title: "Clear DB",
-            description: "Clear DB.",
-            button: (
-              <ClearDbButton
-                onClick={handleClearDb}
-                disabled={!state.installedSnap}
-              />
-            ),
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        />
-        <Notice>
-          <p>
-            Please note that the <b>snap.manifest.json</b> and{" "}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
-          </p>
-        </Notice>
+        {!shouldDisplayReconnectButton(state.installedSnap) && (
+          <Notice>
+            <p>Please connect using MetaMask Flask to continue.</p>
+          </Notice>
+        )}
       </CardContainer>
+      {shouldDisplayReconnectButton(state.installedSnap) && (
+        <CardContainer>
+          <Card
+            content={{
+              title: "Contract Interaction",
+              description:
+                "Interact with the contract by pasting its ABI below",
+            }}
+            fullWidth
+          >
+            {nocturneFrontendSDK && (
+              <ABIForm sdk={nocturneFrontendSDK} />
+            )}
+          </Card>
+        </CardContainer>
+      )}
     </Container>
   );
 };
 
-export default Index;
+export default Playground;

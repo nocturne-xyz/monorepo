@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix `localhost` hardhat network to match `hardhat node`, which hosts at `127.0.0.1` instead of `localhost`
 - Break erc20 from erc721/1155 tests and use test runner pattern
 - Add ERC721 and ERC1155 minting to `FullEndToEnd` test suite
 - Add bundler to full e2e test, rename file from `WalletAndContext` to `FullEndToEnd`

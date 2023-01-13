@@ -1,12 +1,3 @@
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-
-export abstract class MerkleProver {
-  abstract getProof(index: number): Promise<MerkleProof>;
-
-  isLocal(): boolean {
-    return "localTree" in this;
-  }
-}
-
+export { MerkleProver } from "./abstract";
 export { LocalMerkleProver } from "./local";
 export { MockMerkleProver } from "./mock";
