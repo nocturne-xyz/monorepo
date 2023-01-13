@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "echo \"\nRunning clean in each package\" && yarn workspaces foreach run clean && echo \"\nDeleting yarn cache\" && rm -rf .yarn/cache && echo \"\nClearing yarn.lock contents\" && cp /dev/null yarn.lock",
     "build": "yarn turbo run build",
+    "build:nocache": "yarn turbo run build --force",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "lint": "yarn turbo run lint",
     "prettier:write": "yarn workspaces foreach run prettier:write",

@@ -15,8 +15,7 @@
     "lint": "eslint --fix src --ext .ts",
     "test:unit": "mocha --require ts-node/register test/** --timeout 10000 --exit",
     "prettier:check": "prettier --check ./src ./test",
-    "prettier:write": "prettier --write ./src ./test",
-    "rollup": "rollup -c --bundleConfigAsCjs rollup.config.js"
+    "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
     "@nocturne-xyz/contracts": "1.0.2-alpha",
@@ -32,11 +31,6 @@
     "sorted-btree": "^1.8.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^24.0.0",
-    "@rollup/plugin-json": "^6.0.0",
-    "@rollup/plugin-legacy": "^3.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-typescript": "^11.0.0",
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
@@ -49,9 +43,6 @@
     "eslint-config-prettier": "^8.3.0",
     "mocha": "^10.1.0",
     "prettier": "^2.8.0",
-    "rollup": "^3.9.1",
-    "rollup-plugin-auto-named-exports": "^1.0.0-beta.3",
-    "rollup-plugin-polyfill-node": "^0.11.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
   }
