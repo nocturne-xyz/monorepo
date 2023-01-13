@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix `NocturneContext.gatherMinimumNotes` bug by adding missing await for `this.ensureMinimumForAssetRequest` and updating test
 - Depend on nocturne fork of circomlibjs
 - Fix `decodeAsset` not padding out address with zeros
 - Change `NocturneContext` constructor to take wallet address and provider instead of `Wallet` object
