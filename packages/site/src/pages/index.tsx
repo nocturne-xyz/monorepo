@@ -232,9 +232,7 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && (
-              <ABIForm sdk={nocturneFrontendSDK} />
-            )}
+            {nocturneFrontendSDK && <ABIForm sdk={nocturneFrontendSDK} />}
           </Card>
         </CardContainer>
       )}
