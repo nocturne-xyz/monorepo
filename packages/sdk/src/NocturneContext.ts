@@ -520,7 +520,7 @@ export class NocturneContext {
     joinSplitRequest: JoinSplitRequest,
     largestFirst = false
   ): Promise<IncludedNote[]> {
-    this.ensureMinimumForAssetRequest(joinSplitRequest);
+    await this.ensureMinimumForAssetRequest(joinSplitRequest);
     const totalVal = getJoinSplitRequestTotalValue(joinSplitRequest);
 
     const notes = await this.db.getNotesFor(joinSplitRequest.asset);
