@@ -433,6 +433,7 @@ export class NocturneContext {
   async generateGasEstimatedOperation(
     op: PreSignOperation
   ): Promise<PreSignOperation> {
+    console.log("Simulating op");
     const result = await simulateOperation(op, this.walletContract);
     if (!result.opProcessed) {
       throw Error("Cannot estimate gas with Error: " + result.failureReason);

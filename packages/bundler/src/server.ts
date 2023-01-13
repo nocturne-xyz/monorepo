@@ -3,6 +3,7 @@ import IORedis from "ioredis";
 import express, { Request, Response } from "express";
 import * as os from "os";
 import { ethers } from "ethers";
+import { Server } from "http";
 
 export class BundlerServer {
   router: BundlerRouter;
@@ -15,7 +16,7 @@ export class BundlerServer {
     this.router = new BundlerRouter(walletAddress, redis, provider);
   }
 
-  async run(port: number): Promise<void> {
+  run(port: number): Server {
     const router = express.Router();
     router.post("/relay", async (req: Request, res: Response) => {
       await this.router.handleRelay(req, res);
@@ -28,7 +29,7 @@ export class BundlerServer {
     app.use(express.json());
     app.use(router);
 
-    app.listen(port, () => {
+    return app.listen(port, () => {
       console.log(`Bundler server listening at ${os.hostname()}:${port}`);
     });
   }

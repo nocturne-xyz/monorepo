@@ -71,9 +71,6 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     await notesDB.kv.clear();
     await server.stop();
     await server.dropDB();
-  });
-
-  after(async () => {
     await network.provider.send("hardhat_reset");
   });
 

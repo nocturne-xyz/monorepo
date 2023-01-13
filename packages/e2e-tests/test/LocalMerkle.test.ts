@@ -63,9 +63,6 @@ describe("LocalMerkle", async () => {
   afterEach(async () => {
     await merkleDB.kv.clear();
     await updater.dropDB();
-  });
-
-  after(async () => {
     await network.provider.send("hardhat_reset");
   });
 
