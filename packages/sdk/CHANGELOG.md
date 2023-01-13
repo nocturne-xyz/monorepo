@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix `NocturneContext.gatherMinimumNotes` bug by adding missing await for `this.ensureMinimumForAssetRequest` and updating test
 - Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one field `joinSplitTx.encodedAsset`
 - Add utility function to estimate `executionGasLimit` and `maxNumRefund`
 - Change note commitment to use encoded `asset` and `ID`
