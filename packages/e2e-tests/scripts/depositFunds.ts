@@ -5,7 +5,6 @@ import {
   Asset,
   AssetType,
   encodeAsset,
-  ERC20_ID,
   NocturneAddressTrait,
   CanonAddress,
 } from "@nocturne-xyz/sdk";
@@ -41,7 +40,7 @@ const TEST_CANONICAL_ADDRS: CanonAddress[] = [
     const asset: Asset = {
       assetType: AssetType.ERC20,
       assetAddr: token.address,
-      id: ERC20_ID,
+      id: 0n,
     };
 
     const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);

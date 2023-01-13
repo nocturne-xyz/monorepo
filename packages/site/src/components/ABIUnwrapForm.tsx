@@ -1,4 +1,4 @@
-import { ERC20_ID, JoinSplitRequest, AssetType } from "@nocturne-xyz/sdk";
+import { JoinSplitRequest, AssetType } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
@@ -54,7 +54,7 @@ export const ABIUnwrapForm = ({
     const joinSplitRequest: JoinSplitRequest = {
       asset: {
         assetAddr: assetAddress,
-        id: assetType === AssetType.ERC20 ? ERC20_ID : id,
+        id: assetType === AssetType.ERC20 ? 0n : id,
         assetType: assetType,
       },
       unwrapValue,

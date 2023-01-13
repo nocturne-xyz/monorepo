@@ -104,7 +104,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
             <ol>
               {joinSplitRequests.map(({ asset, unwrapValue }, index) => (
                 <li key={index}>
-                  Asset ID: {asset.address}, Amount: {unwrapValue.toString()}
+                  Asset Address: {asset.assetAddr}, type: {asset.assetType.toString()} Amount: {unwrapValue.toString()}
                 </li>
               ))}
             </ol>
