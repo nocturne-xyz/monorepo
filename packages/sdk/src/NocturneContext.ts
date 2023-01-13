@@ -179,8 +179,10 @@ export class NocturneContext {
       baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
       baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      baseJoinSplitTx.encodedAssetAddr != publicSignals.encodedAssetAddr ||
-      baseJoinSplitTx.encodedAssetId != publicSignals.encodedAssetId ||
+      baseJoinSplitTx.encodedAsset.encodedAssetAddr !=
+        publicSignals.encodedAssetAddr ||
+      baseJoinSplitTx.encodedAsset.encodedAssetId !=
+        publicSignals.encodedAssetId ||
       opDigest != publicSignals.opDigest
     ) {
       throw new Error(
@@ -342,7 +344,7 @@ export class NocturneContext {
       // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(oldNoteA.asset);
+    const encodedAsset = encodeAsset(oldNoteA.asset);
 
     return {
       commitmentTreeRoot: merkleProofA.root,
@@ -352,8 +354,7 @@ export class NocturneContext {
       newNoteATransmission,
       newNoteBCommitment,
       newNoteBTransmission,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset,
       publicSpend,
       oldNoteA,
       oldNoteB,
@@ -398,7 +399,7 @@ export class NocturneContext {
       executionGasLimit = BLOCK_GAS_LIMIT;
       // TODO: if the default `maxNumRefunds` here is too small and yield an
       // error during simulation, we should programmatically retry and increase
-      // it. This is important for large NFT mints.
+      // it. This is important for large ERC721 or 1155 mints.
       maxNumRefunds =
         BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
       simulationRequired = true;
@@ -432,12 +433,13 @@ export class NocturneContext {
   async generateGasEstimatedOperation(
     op: PreSignOperation
   ): Promise<PreSignOperation> {
+    console.log("Simulating op");
     const result = await simulateOperation(op, this.walletContract);
     if (!result.opProcessed) {
       throw Error("Cannot estimate gas with Error: " + result.failureReason);
     }
-    // Give 10% over-estimate
-    op.executionGasLimit = (result.executionGas * 11n) / 10n;
+    // Give 20% over-estimate
+    op.executionGasLimit = (result.executionGas * 12n) / 10n;
     // Force set the max number of refunds to the simulated number
     op.maxNumRefunds = result.numRefunds;
 
@@ -578,7 +580,9 @@ export class NocturneContext {
   genPaymentRequest(
     asset: Asset,
     receiver: CanonAddress,
-    value: bigint
+    value: bigint,
+    executionGasLimit: bigint,
+    maxNumRefunds: bigint
   ): OperationRequest {
     return {
       joinSplitRequests: [
@@ -593,6 +597,8 @@ export class NocturneContext {
       ],
       refundAssets: [],
       actions: [],
+      executionGasLimit,
+      maxNumRefunds,
     };
   }
 

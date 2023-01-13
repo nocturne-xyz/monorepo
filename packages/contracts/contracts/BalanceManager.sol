@@ -11,23 +11,30 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
+import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/types.sol";
+import "./NocturneReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721Receiver,
     IERC1155Receiver,
-    CommitmentTreeManager
+    CommitmentTreeManager,
+    NocturneReentrancyGuard
 {
     using OperationLib for Operation;
 
     EncodedAsset[] public _receivedAssets;
+
     IVault public immutable _vault;
 
     constructor(
         address vault,
         address joinSplitVerifier,
         address _subtreeUpdateVerifier
-    ) CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier) {
+    )
+        CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier)
+        NocturneReentrancyGuard()
+    {
         _vault = IVault(vault);
     }
 
@@ -37,9 +44,17 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        _receivedAssets.push(
-            AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
-        );
+        // Must reject the transfer outside of an operation
+        if (reentrancyGuardStage() == NOT_ENTERED) {
+            return 0;
+        }
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+            _receivedAssets.push(
+                AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
+            );
+        }
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -50,9 +65,17 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        _receivedAssets.push(
-            AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
-        );
+        // Must reject the transfer outside of an operation
+        if (reentrancyGuardStage() == NOT_ENTERED) {
+            return 0;
+        }
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+            _receivedAssets.push(
+                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+            );
+        }
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
@@ -63,20 +86,34 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        uint256 numIds = ids.length;
-        for (uint256 i = 0; i < numIds; i++) {
-            _receivedAssets.push(
-                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, ids[i])
-            );
+        // Must reject the transfer outside of an operation
+        if (reentrancyGuardStage() == NOT_ENTERED) {
+            return 0;
         }
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+            uint256 numIds = ids.length;
+            for (uint256 i = 0; i < numIds; i++) {
+                _receivedAssets.push(
+                    AssetUtils._encodeAsset(
+                        AssetType.ERC1155,
+                        msg.sender,
+                        ids[i]
+                    )
+                );
+            }
+        }
+        // Accept the transfer when _operation_stage != _NOT_ENTERED
         return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 
-    // TODO: fix this
     function supportsInterface(
-        bytes4 // interfaceId
+        bytes4 interfaceId
     ) external pure override returns (bool) {
-        return false;
+        return
+            (interfaceId == type(IERC165).interfaceId) ||
+            (interfaceId == type(IERC721Receiver).interfaceId) ||
+            (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 
     function _makeDeposit(Deposit calldata deposit) internal {
@@ -94,14 +131,14 @@ contract BalanceManager is
 
     /**
       Process all joinSplitTxs and request all declared publicSpend from the
-      vault, while reserving maxGasFee of gasAsset (asset of joinsplitTxs[0])
+      vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasFee from vault with the same encodedAsset as
+      to request maxGasAssetCost from vault with the same encodedAsset as
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
-        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetToReserve = op.maxGasAssetCost();
 
         uint256 numJoinSplits = op.joinSplitTxs.length;
@@ -117,10 +154,7 @@ contract BalanceManager is
             // from this `joinSplitTx`
             if (
                 gasAssetToReserve > 0 &&
-                encodedGasAsset.encodedAssetAddr ==
-                op.joinSplitTxs[i].encodedAssetAddr &&
-                encodedGasAsset.encodedAssetId ==
-                op.joinSplitTxs[i].encodedAssetId
+                AssetUtils._eq(encodedGasAsset, op.joinSplitTxs[i].encodedAsset)
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
@@ -137,10 +171,7 @@ contract BalanceManager is
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
-                    EncodedAsset({
-                        encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
-                        encodedAssetId: op.joinSplitTxs[i].encodedAssetId
-                    }),
+                    op.joinSplitTxs[i].encodedAsset,
                     valueToTransfer
                 );
             }
@@ -148,15 +179,25 @@ contract BalanceManager is
         require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
-    function _gatherReservedGasAsset(Operation calldata op) internal {
+    function _gatherReservedGasAssetAndPayBundler(
+        Operation calldata op,
+        OperationResult memory opResult,
+        address bundler
+    ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        EncodedAsset memory encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
 
-        // Request reserved maxGasFee from vault.
+        // Request reserved gasAssetAmount from vault.
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
-        /// guaranteed to have reserved maxGasFee since it didn't throw.
+        /// guaranteed to have reserved gasAssetAmount since it didn't throw.
         _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+
+        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
+        AssetUtils._transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
     }
 
     /**
@@ -167,8 +208,9 @@ contract BalanceManager is
         Operation calldata op
     ) internal view returns (uint256) {
         uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
         uint256 numReceived = _receivedAssets.length;
-        return numJoinSplits + numReceived;
+        return numJoinSplits + numRefundAssets + numReceived;
     }
 
     /**
@@ -177,38 +219,39 @@ contract BalanceManager is
       _receivedAssets.
     */
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numRefunds = _totalNumRefundsToHandle(op);
-
-        // @dev Revert if number of refund requested is too large
-        require(numRefunds <= op.maxNumRefunds, "maxNumRefunds is too small.");
-
-        EncodedAsset[] memory assetsToProcess = new EncodedAsset[](numRefunds);
-        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
-            assetsToProcess[i] = EncodedAsset({
-                encodedAssetAddr: op.joinSplitTxs[i].encodedAssetAddr,
-                encodedAssetId: op.joinSplitTxs[i].encodedAssetId
-            });
+        uint256 numJoinSplits = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            _handleRefundForAsset(
+                op.joinSplitTxs[i].encodedAsset,
+                op.refundAddr
+            );
         }
-        for (uint256 i = 0; i < _receivedAssets.length; i++) {
-            assetsToProcess[op.joinSplitTxs.length + i] = _receivedAssets[i];
+
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
+            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
+        }
+
+        uint256 numReceived = _receivedAssets.length;
+        for (uint256 i = 0; i < numReceived; i++) {
+            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
         }
         delete _receivedAssets;
+    }
 
-        for (uint256 i = 0; i < numRefunds; i++) {
-            uint256 value = AssetUtils._balanceOfAsset(assetsToProcess[i]);
-            if (value != 0) {
-                AssetUtils._transferAssetTo(
-                    assetsToProcess[i],
-                    address(_vault),
-                    value
-                );
-                _handleRefundNote(
-                    op.refundAddr,
-                    assetsToProcess[i].encodedAssetAddr,
-                    assetsToProcess[i].encodedAssetId,
-                    value
-                );
-            }
+    function _handleRefundForAsset(
+        EncodedAsset memory encodedAsset,
+        NocturneAddress memory refundAddr
+    ) internal {
+        uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
+        if (value != 0) {
+            AssetUtils._transferAssetTo(encodedAsset, address(_vault), value);
+            _handleRefundNote(
+                refundAddr,
+                encodedAsset.encodedAssetAddr,
+                encodedAsset.encodedAssetId,
+                value
+            );
         }
     }
 }

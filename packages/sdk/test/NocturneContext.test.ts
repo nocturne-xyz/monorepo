@@ -12,7 +12,8 @@ import {
   MockMerkleProver,
   LocalNotesManager,
 } from "../src/sdk";
-import { getDefaultProvider } from "ethers";
+import { ethers, getDefaultProvider } from "ethers";
+import { Wallet__factory } from "@nocturne-xyz/contracts";
 
 describe("NocturneContext", () => {
   const kv = new InMemoryKVStore();
@@ -81,6 +82,9 @@ describe("NocturneContext", () => {
     return new NocturneContext(
       signer,
       prover,
+      new Wallet__factory(ethers.Wallet.createRandom()).attach(
+        "0xcd3b766ccdd6ae721141f452c550ca635964ce71"
+      ),
       merkleProver,
       notesManager,
       notesDB
@@ -199,6 +203,8 @@ describe("NocturneContext", () => {
             "0x6d6168616d000000000000000000000000000000000000000000000000000000",
         },
       ],
+      executionGasLimit: 1_000_000n,
+      maxNumRefunds: 1n,
     });
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
   });
@@ -240,7 +246,13 @@ describe("NocturneContext", () => {
   it("Generates PreProofOperation from a payment request", async () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toCanonAddress();
-    const request = nocturneContext.genPaymentRequest(asset, addr, 20n);
+    const request = nocturneContext.genPaymentRequest(
+      asset,
+      addr,
+      20n,
+      1_000_000n,
+      1n
+    );
     const preProofOp = await nocturneContext.tryGetPreProofOperation(request);
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
   });
@@ -263,6 +275,8 @@ describe("NocturneContext", () => {
             "0x6d6168616d000000000000000000000000000000000000000000000000000000",
         },
       ],
+      executionGasLimit: 1_000_000n,
+      maxNumRefunds: 1n,
     });
     expect(preProofOp.joinSplitTxs.length).to.equal(1);
   });

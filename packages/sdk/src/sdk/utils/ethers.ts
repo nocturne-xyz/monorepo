@@ -89,6 +89,7 @@ export async function simulateOperation(
     executionGas,
     numRefunds,
   } = result;
+
   return {
     opProcessed,
     failureReason,

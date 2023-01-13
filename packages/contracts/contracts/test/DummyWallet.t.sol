@@ -273,13 +273,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             newNoteBCommitment: uint256(1032),
             newNoteBTransmission: newNoteBTransmission,
             proof: dummyProof(),
-            encodedAssetAddr: encodedAsset.encodedAssetAddr,
-            encodedAssetId: encodedAsset.encodedAssetId,
+            encodedAsset: encodedAsset,
             publicSpend: publicSpend
         });
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
-        encodedRefundAssets[0] = encodedAsset;
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
             1

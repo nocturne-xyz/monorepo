@@ -33,7 +33,6 @@
     "wtfnode": "^0.9.1"
   },
   "dependencies": {
-    "@nocturne-xyz/circuits": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",

@@ -5,7 +5,6 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
@@ -17,7 +16,7 @@ import "hardhat/console.sol";
 
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
-contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
+contract Wallet is IWallet, BalanceManager {
     using OperationLib for Operation;
 
     constructor(
@@ -50,7 +49,7 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
 
       @dev The maximum gas cost of a call can be estimated without eth_estimateGas
       1. gas cost of `WalletUtils.computeOperationDigests` and
-      `_verifyAllProofs` can be estimated based on length of op.joinSplitTxs
+      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplitTxs
       and overall size of op
       2. maxmimum gas cost of each processOperation can be estimated using op
       (refer to inline docs for `processOperation`)
@@ -58,23 +57,22 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     function processBundle(
         Bundle calldata bundle
     ) external override returns (OperationResult[] memory) {
-        uint256 preVerificationGasLeft = gasleft();
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        require(
-            _verifyAllProofs(ops, opDigests),
-            "Batched JoinSplit verify failed."
+        (bool success, uint256 perJoinSplitGas) = _verifyAllProofsMetered(
+            ops,
+            opDigests
         );
-        uint256 totalVerificationGasUsed = preVerificationGasLeft - gasleft();
+
+        require(success, "Batched JoinSplit verify failed.");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             uint256 verificationGasForOp = WalletUtils._verificationGasForOp(
-                bundle,
-                i,
-                totalVerificationGasUsed
+                ops[i],
+                perJoinSplitGas
             );
 
             try
@@ -121,7 +119,12 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
         Operation calldata op,
         uint256 verificationGasForOp,
         address bundler
-    ) external onlyThis nonReentrant returns (OperationResult memory opResult) {
+    )
+        external
+        onlyThis
+        processOperationGuard
+        returns (OperationResult memory opResult)
+    {
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
         _processJoinSplitTxsReservingFee(op);
@@ -130,20 +133,19 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
             OperationResult memory result
         ) {
             opResult = result;
-            opResult.verificationGas = verificationGasForOp;
         } catch (bytes memory result) {
             // TODO: properly process this failure case
-            opResult = WalletUtils._unsuccessfulOperation(result);
+            // TODO: properly set opResult.executionGas
+            opResult = WalletUtils._unsuccessfulOperation(op, result);
         }
+        opResult.verificationGas = verificationGasForOp;
 
-        _gatherReservedGasAsset(op);
-
-        // Process gas payment to bundler
-        _payBundlerGasAsset(op, opResult, bundler);
+        // Gather reserved gas asset and process gas payment to bundler
+        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
 
         // Note: if too many refunds condition reverted in execute actions, the
         // actions creating the refunds were reverted too, so numRefunds would =
-        // joinsplits.length
+        // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
 
         return opResult;
@@ -155,7 +157,12 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     */
     function executeOperation(
         Operation calldata op
-    ) external onlyThis returns (OperationResult memory opResult) {
+    )
+        external
+        onlyThis
+        executeOperationGuard
+        returns (OperationResult memory opResult)
+    {
         uint256 preExecutionGas = gasleft();
 
         uint256 numActions = op.actions.length;
@@ -198,15 +205,20 @@ contract Wallet is IWallet, ReentrancyGuard, BalanceManager {
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions
+    // Also returns the gas used to verify per joinsplit
     // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofs(
+    function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests
-    ) internal view returns (bool success) {
+    ) internal view returns (bool success, uint256 perJoinSplitGas) {
+        uint256 preVerificationGasLeft = gasleft();
+
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
         success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
-        return success;
+
+        perJoinSplitGas = (preVerificationGasLeft - gasleft()) / proofs.length;
+        return (success, perJoinSplitGas);
     }
 
     function _makeExternalCall(

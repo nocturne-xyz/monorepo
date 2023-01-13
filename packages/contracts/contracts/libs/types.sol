@@ -48,8 +48,7 @@ struct JoinSplitTransaction {
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
     uint256[8] proof;
-    uint256 encodedAssetAddr;
-    uint256 encodedAssetId;
+    EncodedAsset encodedAsset;
     uint256 publicSpend;
     NoteTransmission newNoteATransmission;
     NoteTransmission newNoteBTransmission;
@@ -135,12 +134,8 @@ library BundleLib {
 library OperationLib {
     function gasAsset(
         Operation calldata self
-    ) internal pure returns (EncodedAsset memory) {
-        return
-            EncodedAsset({
-                encodedAssetAddr: self.joinSplitTxs[0].encodedAssetAddr,
-                encodedAssetId: self.joinSplitTxs[0].encodedAssetId
-            });
+    ) internal pure returns (EncodedAsset calldata) {
+        return self.joinSplitTxs[0].encodedAsset;
     }
 
     function maxGasLimit(

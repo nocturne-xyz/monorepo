@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Break erc20 from erc721/1155 tests and use test runner pattern
+- Add ERC721 and ERC1155 minting to `FullEndToEnd` test suite
 - Add bundler to full e2e test, rename file from `WalletAndContext` to `FullEndToEnd`
 - Change e2e-test to test erc20.trasfer, refund, and confidential payments
 - Add check for `OperationProcessed` event
