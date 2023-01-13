@@ -138,12 +138,20 @@ describe("NocturneContext", () => {
       asset,
       unwrapValue: 1000n,
     };
+
+    let failed = false;
     try {
       await nocturneContext.ensureMinimumForAssetRequest(assetRequest1000);
-      throw new Error("Request should have failed");
     } catch (e) {
-      expect(e).to.be.instanceOf(Error);
+      expect(
+        (e as Error)
+          .toString()
+          .includes("Attempted to spend more funds than owned")
+      ).to.be.true;
+      failed = true;
     }
+
+    expect(failed).to.be.true;
   });
 
   it("Gathers minimum notes for asset request", async () => {
