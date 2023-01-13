@@ -1,7 +1,7 @@
 import { IncludedNote } from "../sdk";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { query } from "../sdk/utils";
-import { JoinSplitEvent } from "../sdk/notesManager/abstract";
+import { JoinSplitEvent } from "../sdk/notesManager";
 import {
   RefundEvent as EthRefundEvent,
   JoinSplitEvent as EthJoinSplitEvent,

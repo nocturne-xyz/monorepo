@@ -2,7 +2,7 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { NotesDB } from "../db";
-import { NotesManager, JoinSplitEvent } from "./abstract";
+import { NotesManager, JoinSplitEvent } from ".";
 import { NocturneSigner } from "../signer";
 import { IncludedNote } from "../note";
 import { fetchJoinSplits, fetchNotesFromRefunds } from "../../indexing";
