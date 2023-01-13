@@ -414,7 +414,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     // gas joinsplit.
     const joinSplitRequest: JoinSplitRequest = {
       asset: erc20Asset,
-      unwrapValue: 0n,
+      unwrapValue: 1n,
     };
 
     await testE2E(

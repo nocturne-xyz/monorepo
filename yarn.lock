@@ -2891,7 +2891,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/circuits@workspace:^, @nocturne-xyz/circuits@workspace:packages/circuits":
+"@nocturne-xyz/circuits@workspace:packages/circuits":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/circuits@workspace:packages/circuits"
   dependencies:
@@ -3089,7 +3089,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
-    "@nocturne-xyz/circuits": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
