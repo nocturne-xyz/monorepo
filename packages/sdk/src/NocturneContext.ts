@@ -13,6 +13,7 @@ import {
   ProvenOperation,
   encodeAsset,
   BLOCK_GAS_LIMIT,
+  Address,
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
@@ -32,7 +33,8 @@ import {
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { ethers } from "ethers";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -52,14 +54,18 @@ export class NocturneContext {
   constructor(
     signer: NocturneSigner,
     prover: JoinSplitProver,
-    walletContract: Wallet,
+    provider: ethers.providers.Provider,
+    walletContractAddress: Address,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: NotesDB
   ) {
     this.signer = signer;
     this.prover = prover;
-    this.walletContract = walletContract;
+    this.walletContract = Wallet__factory.connect(
+      walletContractAddress,
+      provider
+    );
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;

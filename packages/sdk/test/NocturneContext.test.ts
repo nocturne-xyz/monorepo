@@ -12,8 +12,7 @@ import {
   MockMerkleProver,
   LocalNotesManager,
 } from "../src/sdk";
-import { ethers, getDefaultProvider } from "ethers";
-import { Wallet__factory } from "@nocturne-xyz/contracts";
+import { getDefaultProvider } from "ethers";
 
 describe("NocturneContext", () => {
   const kv = new InMemoryKVStore();
@@ -72,19 +71,19 @@ describe("NocturneContext", () => {
     const prover = new MockJoinSplitProver();
     const merkleProver = new MockMerkleProver();
 
+    const provider = getDefaultProvider();
     const notesManager = new LocalNotesManager(
       notesDB,
       signer,
       "0xaaaa",
-      getDefaultProvider()
+      provider
     );
 
     return new NocturneContext(
       signer,
       prover,
-      new Wallet__factory(ethers.Wallet.createRandom()).attach(
-        "0xcd3b766ccdd6ae721141f452c550ca635964ce71"
-      ),
+      provider,
+      "0xcd3b766ccdd6ae721141f452c550ca635964ce71",
       merkleProver,
       notesManager,
       notesDB

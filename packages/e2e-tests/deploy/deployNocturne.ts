@@ -74,7 +74,8 @@ function setupNocturneContext(
   return new NocturneContext(
     nocturneSigner,
     prover,
-    wallet,
+    wallet.provider,
+    wallet.address,
     merkleProver,
     notesManager,
     notesDB
