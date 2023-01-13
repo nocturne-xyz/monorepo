@@ -2898,7 +2898,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.3-alpha, @nocturne-xyz/contracts@^1.0.3-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.4-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -2927,13 +2927,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@npm:1.0.2-alpha":
-  version: 1.0.2-alpha
-  resolution: "@nocturne-xyz/contracts@npm:1.0.2-alpha"
+"@nocturne-xyz/contracts@npm:1.0.3-alpha, @nocturne-xyz/contracts@npm:^1.0.3-alpha":
+  version: 1.0.3-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.3-alpha"
   dependencies:
     "@openzeppelin/contracts": 4.7.3
     "@openzeppelin/contracts-upgradeable": 4.7.3
-  checksum: 8f1f89a5195fdb30007391bcdcc80a3e46591a780175784f93e226a236001626e8ecd71a8e7d591da59941d852cf9f3177709411f59cadf569ef5b4a2479e8cb
+  checksum: 86dc8c7acbe0c8f18f7f1a12778f2ae2e8ef8f26d0675d7bdd512c2b8811e60d4f2dca4e1b0444fe7a642e621bcc31867349a02283fd49791929c96b72b3cbf5
   languageName: node
   linkType: hard
 
@@ -3029,7 +3029,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.2-alpha
+    "@nocturne-xyz/contracts": 1.0.4-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
