@@ -156,6 +156,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   async function testE2E(
     joinSplitRequests: JoinSplitRequest[],
+    refundAssets: Asset[],
     actions: Action[],
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>
@@ -174,12 +175,15 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Bob: Sync SDK notes manager");
     await nocturneContextBob.syncNotes();
 
-    console.log("Sync SDK merkle prover");
+    console.log("Alice: Sync SDK merkle prover");
     await nocturneContextAlice.syncLeaves();
+
+    console.log("Bob: Sync SDK merkle prover");
+    await nocturneContextBob.syncLeaves();
 
     const operationRequest: OperationRequest = {
       joinSplitRequests,
-      refundAssets: [],
+      refundAssets,
       actions,
       gasPrice: 0n,
     };
@@ -317,6 +321,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     await testE2E(
       [joinSplitRequest],
+      [],
       [transferAction],
       contractChecks,
       offchainChecks
@@ -404,16 +409,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       id: ERC20_TOKEN_ID,
     };
 
-    // TODO: This is dummy gas token, needed to ensure SDK has a
+    // TODO: This is dummy gas token, needed to ensure contract has a
     // gas token joinsplit. In future PR, we need to have SDK auto-find
     // gas joinsplit.
     const joinSplitRequest: JoinSplitRequest = {
       asset: erc20Asset,
-      unwrapValue: 1n,
+      unwrapValue: 0n,
     };
 
     await testE2E(
       [joinSplitRequest],
+      [],
       [erc721Action, erc1155Action],
       contractChecks,
       offchainChecks

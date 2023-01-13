@@ -438,7 +438,7 @@ export class NocturneContext {
     if (!result.opProcessed) {
       throw Error("Cannot estimate gas with Error: " + result.failureReason);
     }
-    // Give 10% over-estimate
+    // Give 20% over-estimate
     op.executionGasLimit = (result.executionGas * 12n) / 10n;
     // Force set the max number of refunds to the simulated number
     op.maxNumRefunds = result.numRefunds;

@@ -74,7 +74,6 @@ export async function simulateOperation(
   const verificationGasForOp = 0n;
   const bundler = wallet.address;
 
-  console.log("callStatic processOperation PRE");
   const result = await wallet.callStatic.processOperation(
     provenOp,
     verificationGasForOp,
@@ -91,7 +90,6 @@ export async function simulateOperation(
     numRefunds,
   } = result;
 
-  console.log("callStatic processOperation POST");
   return {
     opProcessed,
     failureReason,
