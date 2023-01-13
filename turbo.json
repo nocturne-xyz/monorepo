@@ -1,11 +1,9 @@
 {
   "$schema": "https://turborepo.org/schema.json",
   "pipeline": {
-    "lint": {
-      "outputs": []
-    },
+    "lint": {},
     "build": {
-      "dependsOn": ["lint"],
+      "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
     "@nocturne-xyz/sdk#build": {
@@ -52,16 +50,15 @@
       "outputs": []
     },
     "test:unit": {
-      "dependsOn": ["build"],
-      "outputs": []
+      "dependsOn": ["build"]
+    },
+    "@nocturne-xyz/subtree-updater#test:unit": {
+      "dependsOn": ["build", "@nocturne-xyz/sdk#test:unit"],
+      "env": ["USE_RAPIDSNARK"]
     },
     "test:ci": {
       "dependsOn": ["build"],
       "outputs": []
-    },
-    "@nocturne-xyz/subtree-updater#test:unit": {
-      "dependsOn": ["build"],
-      "env": ["USE_RAPIDSNARK"]
     },
     "test:e2e": {
       "dependsOn": ["build"],

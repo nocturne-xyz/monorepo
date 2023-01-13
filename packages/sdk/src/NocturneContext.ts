@@ -580,7 +580,9 @@ export class NocturneContext {
   genPaymentRequest(
     asset: Asset,
     receiver: CanonAddress,
-    value: bigint
+    value: bigint,
+    executionGasLimit: bigint,
+    maxNumRefunds: bigint
   ): OperationRequest {
     return {
       joinSplitRequests: [
@@ -595,6 +597,8 @@ export class NocturneContext {
       ],
       refundAssets: [],
       actions: [],
+      executionGasLimit,
+      maxNumRefunds,
     };
   }
 
