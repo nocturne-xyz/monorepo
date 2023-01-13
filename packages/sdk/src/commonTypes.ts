@@ -87,7 +87,8 @@ export function decodeAsset(
 ): Asset {
   const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
   const assetBits = encodedAssetBits.slice(96);
-  const assetAddr = "0x" + BigInt(`0b${assetBits}`).toString(16);
+  const assetAddr =
+    "0x" + BigInt(`0b${assetBits}`).toString(16).padStart(40, "0");
 
   const assetTypeBits = encodedAssetBits.slice(94, 96);
   let assetType: AssetType;

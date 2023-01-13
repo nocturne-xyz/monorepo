@@ -13,6 +13,7 @@ import {
   ReconnectButton,
   Card,
   ABIForm,
+  GetAllBalancesButton,
 } from "../components";
 import {
   loadNocturneFrontendSDK,
@@ -151,6 +152,16 @@ const Playground = () => {
     }
   };
 
+  const handleGetAllBalancesClick = async () => {
+    try {
+      const balances = await nocturneFrontendSDK!.getAllBalances();
+      console.log(balances);
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK || !walletContract) return;
@@ -212,6 +223,10 @@ const Playground = () => {
           >
             <ReconnectButton
               onClick={handleConnectClick}
+              disabled={!state.installedSnap}
+            />
+            <GetAllBalancesButton
+              onClick={handleGetAllBalancesClick}
               disabled={!state.installedSnap}
             />
           </Card>
