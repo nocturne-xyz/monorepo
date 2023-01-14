@@ -1,4 +1,6 @@
 import "mocha";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
 import { JoinSplitRequest, Asset, AssetType } from "../src/commonTypes";
@@ -13,6 +15,8 @@ import {
   LocalNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
+
+chai.use(chaiAsPromised);
 
 describe("NocturneContext", () => {
   const kv = new InMemoryKVStore();
@@ -139,19 +143,12 @@ describe("NocturneContext", () => {
       unwrapValue: 1000n,
     };
 
-    let failed = false;
-    try {
-      await nocturneContext.ensureMinimumForAssetRequest(assetRequest1000);
-    } catch (e) {
-      expect(
-        (e as Error)
-          .toString()
-          .includes("Attempted to spend more funds than owned")
-      ).to.be.true;
-      failed = true;
-    }
-
-    expect(failed).to.be.true;
+    await expect(
+      nocturneContext.ensureMinimumForAssetRequest(assetRequest1000)
+    ).to.eventually.be.rejectedWith(
+      Error,
+      "Attempted to spend more funds than owned"
+    );
   });
 
   it("Gathers minimum notes for asset request", async () => {
