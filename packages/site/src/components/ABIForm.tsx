@@ -4,7 +4,12 @@ import { ABIItem, tryParseABI } from "../utils/abiParser";
 import { Button } from "./Buttons";
 import * as ethers from "ethers";
 import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
-import { Action, Asset, JoinSplitRequest, OperationRequest } from "@nocturne-xyz/sdk";
+import {
+  Action,
+  Asset,
+  JoinSplitRequest,
+  OperationRequest,
+} from "@nocturne-xyz/sdk";
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
@@ -104,7 +109,8 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
             <ol>
               {joinSplitRequests.map(({ asset, unwrapValue }, index) => (
                 <li key={index}>
-                  Asset Address: {asset.assetAddr}, type: {asset.assetType.toString()} Amount: {unwrapValue.toString()}
+                  Asset Address: {asset.assetAddr}, type:{" "}
+                  {asset.assetType.toString()} Amount: {unwrapValue.toString()}
                 </li>
               ))}
             </ol>

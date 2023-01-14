@@ -9,12 +9,9 @@ export interface ABIRefundAssetsFormProps {
 export const ABIRefundAssetsForm = ({
   handleNewRefundAsset,
 }: ABIRefundAssetsFormProps) => {
-  const [assetAddr, setAssetAddr] =
-    useState("");
-  const [assetType, setAssetType] =
-    useState(AssetType.ERC20);
-  const [assetId, setAssetId] =
-    useState(0n);
+  const [assetAddr, setAssetAddr] = useState("");
+  const [assetType, setAssetType] = useState(AssetType.ERC20);
+  const [assetId, setAssetId] = useState(0n);
 
   const handleAddOutputToken = () => {
     if (isAddress(assetAddr)) {
@@ -43,7 +40,10 @@ export const ABIRefundAssetsForm = ({
       </label>
       <label>
         Asset Type:
-        <select value={assetType} onChange={(e) => setAssetType(parseAssetType(e.target.value))}>
+        <select
+          value={assetType}
+          onChange={(e) => setAssetType(parseAssetType(e.target.value))}
+        >
           <option value={AssetType.ERC20.toString()}>ERC20</option>
           <option value={AssetType.ERC721.toString()}>ERC721</option>
           <option value={AssetType.ERC1155.toString()}>ERC1155</option>
