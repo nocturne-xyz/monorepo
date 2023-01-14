@@ -2850,8 +2850,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.4-alpha
+    "@nocturne-xyz/sdk": 1.0.36-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -2998,7 +2998,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.36-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -7430,15 +7430,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-blake-hash@nocturne-xyz/blake-hash:
+"blake-hash@npm:^2.0.0":
   version: 2.0.0
-  resolution: "blake-hash@https://github.com/nocturne-xyz/blake-hash.git#commit=0796a8b52d68fffa947b58ea27288803eb552d4b"
+  resolution: "blake-hash@npm:2.0.0"
   dependencies:
-    buffer: ^6.0.3
     node-addon-api: ^3.0.0
+    node-gyp: latest
     node-gyp-build: ^4.2.2
     readable-stream: ^3.6.0
-  checksum: 3bc59683a2befeeb8c0d6326fc8901d2f9568112fed43bd8476e1d50b4b2a73e46fded9fe7019d085c2ba9ee56e4df6e499a47d1692002f6c02a26f32a45892f
+  checksum: a0d9a8f3953b986d3b30a741a6c000dedcc9a03b1318f52cc01ae62d18829ba6cb1a4d8cbe74785abfdc952a21db410984523bd457764aca716162cfd3ca8ea4
   languageName: node
   linkType: hard
 
