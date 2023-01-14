@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Change `NocturneContext` constructor to take wallet address and provider instead of `Wallet` object
+- Use `randombytes` instead of node `crypto`
+- Use patched fork of `circomlibjs`
+- Avoid usage of `Buffer` in `sdk`.
 - Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one field `joinSplitTx.encodedAsset`
 - Add utility function to estimate `executionGasLimit` and `maxNumRefund`
 - Change note commitment to use encoded `asset` and `ID`

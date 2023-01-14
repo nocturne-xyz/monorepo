@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add ABI form
 - Instantiate local prover on page load with `useEffect`
 - Import `frontend-sdk` for calling snap and remove all snap utils
 - Rename all "flax" instances to "nocturne"
