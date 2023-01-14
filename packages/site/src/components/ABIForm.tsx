@@ -4,9 +4,9 @@ import { ABIItem, tryParseABI } from "../utils/abiParser";
 import { Button } from "./Buttons";
 import * as ethers from "ethers";
 import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
-import { Action, JoinSplitRequest, OperationRequest } from "@nocturne-xyz/sdk";
+import { Action, Asset, JoinSplitRequest, OperationRequest } from "@nocturne-xyz/sdk";
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
-import { ABIRefundTokensForm } from "./ABIRefundTokensForm";
+import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
 
 export type ABIFormProps = {
@@ -24,7 +24,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
   const [joinSplitRequests, setJoinSplitRequests] = useState<
     JoinSplitRequest[]
   >([]);
-  const [refundTokens, setRefundTokens] = useState<string[]>([]);
+  const [refundAssets, setRefundAssets] = useState<Asset[]>([]);
   const [_state, dispatch] = useContext(MetaMaskContext);
 
   const handleSetABI = (event: any) => {
@@ -55,14 +55,14 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
     setJoinSplitRequests([...joinSplitRequests, joinSplitRequest]);
   };
 
-  const handleRefundToken = (refundToken: string) => {
-    setRefundTokens([...refundTokens, refundToken]);
+  const handleRefundAsset = (refundAsset: Asset) => {
+    setRefundAssets([...refundAssets, refundAsset]);
   };
 
   const submitOperation = async () => {
     const operationRequest: OperationRequest = {
       joinSplitRequests,
-      refundTokens,
+      refundAssets,
       actions,
     };
 
@@ -110,11 +110,11 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
             </ol>
           </div>
           <div>
-            <ABIRefundTokensForm handleNewRefundToken={handleRefundToken} />
+            <ABIRefundAssetsForm handleNewRefundAsset={handleRefundAsset} />
             <p>Currently set to produce the following output tokens:</p>
             <ol>
-              {refundTokens.map((refundToken, index) => (
-                <li key={index}>{refundToken}</li>
+              {refundAssets.map((refundAsset, index) => (
+                <li key={index}>{refundAsset.assetAddr}</li>
               ))}
             </ol>
           </div>

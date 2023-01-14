@@ -1,4 +1,4 @@
-import { JoinSplitRequest, AssetType } from "@nocturne-xyz/sdk";
+import { JoinSplitRequest, AssetType, parseAssetType } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
@@ -16,7 +16,7 @@ export const ABIUnwrapForm = ({
   const [assetID, setAssetID] = useState("0");
 
   const handleAssetTypeChange = (event: any) => {
-    setAssetType(event.target.value);
+    setAssetType(parseAssetType(event.target.value));
   };
 
   const handleAssetIDChange = (event: any) => {
@@ -70,9 +70,9 @@ export const ABIUnwrapForm = ({
         <label>
           Asset Type:
           <select value={assetType} onChange={handleAssetTypeChange}>
-            <option value="ERC20">ERC20</option>
-            <option value="ERC721">ERC721</option>
-            <option value="ERC1155">ERC1155</option>
+            <option value={AssetType.ERC20.toString()}>ERC20</option>
+            <option value={AssetType.ERC721.toString()}>ERC721</option>
+            <option value={AssetType.ERC1155.toString()}>ERC1155</option>
           </select>
         </label>
         <br />
