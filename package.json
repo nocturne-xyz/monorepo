@@ -23,8 +23,5 @@
   "devDependencies": {
     "turbo": "1.6.3"
   },
-  "resolutions": {
-    "blake-hash": "nocturne-xyz/blake-hash"
-  },
   "packageManager": "yarn@3.2.0"
 }
