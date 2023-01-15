@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Depend on nocturne fork of circomlibjs
 - Fix `decodeAsset` not padding out address with zeros
 - Change `NocturneContext` constructor to take wallet address and provider instead of `Wallet` object
 - Use `randombytes` instead of node `crypto`
