@@ -23,7 +23,7 @@
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
-    "circomlibjs": "nocturne-xyz/circomlibjs#seb/polyfill",
+    "circomlibjs": "nocturne-xyz/circomlibjs",
     "ethers": "^5.0.0",
     "ffjavascript": "0.2.57",
     "js-sha256": "^0.9.0",
