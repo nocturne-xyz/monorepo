@@ -10,10 +10,10 @@ import {
 } from "@nocturne-xyz/sdk";
 
 // add MM Flask addresses here
-const TEST_USER_ADDRS = ["0x0BA19AfF7aD1e96502eC827587A5A58670162Ac5"];
+const TEST_ETH_ADDRS = ["0x0BA19AfF7aD1e96502eC827587A5A58670162Ac5"];
 
 // add canonical nocturne addresses for testing here
-const TEST_CANONICAL_ADDRS: CanonAddress[] = [
+const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   [
     3711321679534668708996949294670563968795225903991134380930495432172275252741n,
     13294751746981267114060702819072399552602378998462805956484142894638781668216n,
@@ -30,7 +30,7 @@ const TEST_CANONICAL_ADDRS: CanonAddress[] = [
   console.log("Token deployed at: ", token.address);
 
   await token.reserveTokens(eoa.address, 100000000);
-  for (const addr of TEST_USER_ADDRS) {
+  for (const addr of TEST_ETH_ADDRS) {
     await token.reserveTokens(addr, 1000);
   }
 
@@ -54,13 +54,11 @@ const TEST_CANONICAL_ADDRS: CanonAddress[] = [
     });
   };
 
-  const testAddrs = TEST_CANONICAL_ADDRS.map((canonicalAddr) =>
-    NocturneAddressTrait.fromCanonAddress(canonicalAddr)
-  );
+  const testAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(NocturneAddressTrait.fromCanonAddress);
 
   const targetAddrs = [nocturneAddressAlice, ...testAddrs];
 
-  const proms = [];
+  const proms: Promise<void>[] = [];
   for (const addr of targetAddrs) {
     console.log("depositing 2 100 token notes to", addr);
     proms.push(deposit(addr, 100));

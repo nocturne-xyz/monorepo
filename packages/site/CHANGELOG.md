@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove cross-env
 - add ABI form
 - Instantiate local prover on page load with `useEffect`
 - Import `frontend-sdk` for calling snap and remove all snap utils
