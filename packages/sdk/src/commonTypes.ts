@@ -1,5 +1,4 @@
-import { keccak256 } from "ethers/lib/utils";
-import { toUtf8Bytes } from "ethers/lib/utils";
+import { utils } from "ethers";
 import { Action } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
 import { CanonAddress, NocturneAddress } from "./crypto/address";
@@ -15,7 +14,9 @@ export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
 export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
 export function hashAsset(asset: Asset): string {
-  return keccak256(toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`));
+  return utils.keccak256(
+    utils.toUtf8Bytes(`${asset.assetAddr}:${asset.id.toString()}`)
+  );
 }
 
 export enum AssetType {
@@ -86,7 +87,8 @@ export function decodeAsset(
 ): Asset {
   const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
   const assetBits = encodedAssetBits.slice(96);
-  const assetAddr = "0x" + BigInt(`0b${assetBits}`).toString(16);
+  const assetAddr =
+    "0x" + BigInt(`0b${assetBits}`).toString(16).padStart(40, "0");
 
   const assetTypeBits = encodedAssetBits.slice(94, 96);
   let assetType: AssetType;

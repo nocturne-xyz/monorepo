@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.15-alpha",
+  "version": "1.0.37-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,19 +13,21 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 8000 --exit",
+    "test:unit": "mocha --require ts-node/register test/** --timeout 10000 --exit",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/contracts": "1.0.4-alpha",
+    "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
-    "circomlibjs": "0.0.8",
+    "circomlibjs": "nocturne-xyz/circomlibjs",
     "ethers": "^5.0.0",
     "ffjavascript": "0.2.57",
     "js-sha256": "^0.9.0",
+    "randombytes": "^2.1.0",
     "sorted-btree": "^1.8.1"
   },
   "devDependencies": {

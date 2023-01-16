@@ -1,7 +1,8 @@
 import { babyjub, poseidon } from "circomlibjs";
 import { NocturneAddrPrefix } from "./common";
-import { randomBytes } from "crypto";
+import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
+import { Buffer } from "buffer";
 
 export interface NocturneAddress {
   h1X: bigint;
@@ -46,8 +47,8 @@ export class NocturneAddressTrait {
   static fromString(str: string): NocturneAddress {
     const base64str = str.slice(NocturneAddrPrefix.length);
     const b = Buffer.from(base64str, "base64");
-    const b1 = b.slice(0, 32);
-    const b2 = b.slice(32, 64);
+    const b1 = b.subarray(0, 32);
+    const b2 = b.subarray(32, 64);
     const h1 = babyjub.unpackPoint(b1) as [bigint, bigint];
     const h2 = babyjub.unpackPoint(b2) as [bigint, bigint];
     return NocturneAddressTrait.fromPoints({ h1, h2 });
