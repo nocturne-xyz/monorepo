@@ -29,6 +29,7 @@ import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
+  TransactionModal
 } from "@nocturne-xyz/frontend-sdk";
 
 const ERC20_ID = 0n;
