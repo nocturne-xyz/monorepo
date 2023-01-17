@@ -6,6 +6,7 @@ cache/
 lib/
 /db
 hh-logs/
+site-dev-logs/
 
 .DS_Store
 **/.DS_Store"
