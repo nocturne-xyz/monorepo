@@ -36,12 +36,37 @@ sleep 3
 # deposit
 yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
 
+
 read WALLET_CONTRACT_ADDR < <(sed -nr 's/deploying "Wallet" \(tx: 0x[0-9a-fA-F]+\)\.\.\.: deployed at (0x[0-9a-fA-F]+) with [0-9]+ gas/\1/p' $LOG_DIR/hh-node)
+read SUBMITTER_PRIVATE_KEY< <(sed -nr 's/Account #16: (0x[0-9a-fA-F]+) \([0-9]+ ETH\)/\1/p' $LOG_DIR/hh-node)
 read TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Token deployed at:  (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 popd
 
+REDIS_URL="redis://localhost:6379";
+REDIS_PASSWORD="baka";
+RPC_URL="localhost:8545";
+BUNDLER_PORT="3000"
+
 echo "Wallet contract address: $WALLET_CONTRACT_ADDR"
 echo "Token contract address: $TOKEN_CONTRACT_ADDR"
+echo "Submitter private key: $SUBMITTER_PRIVATE_KEY"
+
+pushd packages/bundler
+# write bundler's .env file
+cat > .env <<- EOM
+REDIS_URL=$REDIS_URL
+REDIS_PASSWORD=$REDIS_PASSWORD
+
+WALLET_ADDRESS=$WALLET_CONTRACT_ADDR
+
+RPC_URL=$RPC_URL
+TX_SIGNER_KEY=$SUBMITTER_PRIVATE_KEY
+EOM
+
+yarn bundler-cli batcher &> "$LOG_DIR/bundler-cli-batcher" &
+yarn bundler-cli submitter --wallet-address "$WALLET_CONTRACT_ADDR" &> "$LOG_DIR/bundler-cli-submitter" &
+yarn bundler-cli server --wallet-address "$WALLET_CONTRACT_ADDR" --port "$BUNDLER_PORT" &> "$LOG_DIR/bundler-cli-server" &
+popd
 
 SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
