@@ -3,6 +3,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "node" : "18.12.1"
+  },
   "private": true,
   "scripts": {
     "clean": "echo \"\nRunning clean in each package\" && yarn workspaces foreach run clean && echo \"\nDeleting yarn cache\" && rm -rf .yarn/cache && echo \"\nClearing yarn.lock contents\" && cp /dev/null yarn.lock",

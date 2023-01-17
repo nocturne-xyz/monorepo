@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "license": "MIT",
   "main": "dist/index.js",
+  "engines": {
+    "node" : "18.12.1"
+  },
   "scripts": {
     "build": "tsc --build",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",

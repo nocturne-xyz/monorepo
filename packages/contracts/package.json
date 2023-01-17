@@ -6,6 +6,9 @@
   "author": "Luke Tchang",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "engines": {
+    "node" : "18.12.1"
+  },
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
     "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
