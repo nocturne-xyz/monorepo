@@ -188,6 +188,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
                 }}
               >
                 <div>{`Target: ${contractAddress}`}</div>
+                <br />
                 <div>{`Encoded Function: ${encodedFunction}`}</div>
                 {index !== joinSplitRequests.length - 1 && (
                   <div

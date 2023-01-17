@@ -26,12 +26,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const [eoa] = await hre.ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(eoa);
-  const token1 = await tokenFactory.deploy();
-  const token2 = await tokenFactory.deploy();
-  console.log(`Token 1 deployed at: ${token1.address}`);
-  console.log(`Token 2 deployed at: ${token2.address}`);
 
-  for (const token of [token1, token2]) {
+  for (let i = 0; i < 2; i++) {
+    const token = await tokenFactory.deploy();
+
+    console.log(`Token ${i + 1} deployed at: ${token.address}`);
+
     await token.reserveTokens(eoa.address, 100000000);
     for (const addr of TEST_ETH_ADDRS) {
       await token.reserveTokens(addr, 1000);
