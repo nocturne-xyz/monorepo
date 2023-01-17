@@ -12,6 +12,7 @@ COPY packages/bundler packages/bundler
 RUN yarn install
 
 WORKDIR /app/packages/bundler
+COPY .env .env
 RUN yarn build
 RUN npm i -g
 
