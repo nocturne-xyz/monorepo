@@ -16,11 +16,15 @@ const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
 const VKEY_PATH = "/joinSplitVkey.json";
 
+export type BundlerOperationID = string;
+
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
+  bundlerEndpoint: string;
 
-  constructor(wasmPath: string, zkeyPath: string, vkey: any) {
+  constructor(bundlerEndpoint: string, wasmPath: string, zkeyPath: string, vkey: any) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.bundlerEndpoint = bundlerEndpoint;
   }
 
   /**
@@ -72,6 +76,27 @@ export class NocturneFrontendSDK {
       maxNumRefunds,
     };
   }
+
+  // Submit a proven operation to the bundler server
+  // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
+  async submitProvenOperation(operation: ProvenOperation): Promise<BundlerOperationID> {
+
+    const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(operation),
+    });
+
+    const resJSON = await res.json();
+    if (!res.ok) {
+      throw new Error(`Failed to submit proven operation to bundler: ${JSON.stringify(resJSON)}`);
+    }
+
+    return resJSON.id;
+  }
+
 
   /**
    * Return a list of snap's assets (address & id) along with its given balance.
@@ -171,10 +196,11 @@ export class NocturneFrontendSDK {
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
+  bundlerEndpoint: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return new NocturneFrontendSDK(wasmPath, zkeyPath, vkey);
+  return new NocturneFrontendSDK(bundlerEndpoint, wasmPath, zkeyPath, vkey);
 }
