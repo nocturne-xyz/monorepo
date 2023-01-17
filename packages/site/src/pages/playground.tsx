@@ -13,11 +13,11 @@ import {
   ReconnectButton,
   Card,
   ABIForm,
-  GetAllBalancesButton,
 } from "../components";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
+  AssetBalancesDisplay,
 } from "@nocturne-xyz/frontend-sdk";
 import { Wallet } from "@nocturne-xyz/contracts";
 
@@ -45,16 +45,6 @@ const Heading = styled.h1`
 
 const Span = styled.span`
   color: ${(props) => props.theme.colors.primary.default};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  font-weight: 500;
-  margin-top: 0;
-  margin-bottom: 0;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
-  }
 `;
 
 const CardContainer = styled.div`
@@ -152,16 +142,6 @@ const Playground = () => {
     }
   };
 
-  const handleGetAllBalancesClick = async () => {
-    try {
-      const balances = await nocturneFrontendSDK!.getAllBalances();
-      console.log(balances);
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK || !walletContract) return;
@@ -174,11 +154,8 @@ const Playground = () => {
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        Welcome to the <Span>Nocturne Power-User Frontend</Span>
       </Heading>
-      <Subtitle>
-        Get started by editing <code>src/index.ts</code>
-      </Subtitle>
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -225,10 +202,17 @@ const Playground = () => {
               onClick={handleConnectClick}
               disabled={!state.installedSnap}
             />
-            <GetAllBalancesButton
-              onClick={handleGetAllBalancesClick}
-              disabled={!state.installedSnap}
-            />
+          </Card>
+        )}
+        {shouldDisplayReconnectButton(state.installedSnap) && (
+          <Card
+            content={{
+              title: "Asset Balances",
+              description: "Balances for each asset",
+            }}
+            disabled={!state.installedSnap}
+          >
+            <AssetBalancesDisplay frontendSDK={nocturneFrontendSDK!} />
           </Card>
         )}
         {!shouldDisplayReconnectButton(state.installedSnap) && (

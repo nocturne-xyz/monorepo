@@ -87,20 +87,24 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
   return (
     <>
       <label>
-        ABI:
+        Contract Address
+        <br></br>
         <textarea
-          value={abiText}
-          onChange={(event) => setABIText(event.target.value)}
-        />
-      </label>
-      <label>
-        Contract Address:
-        <textarea
+          style={{ resize: "none", width: "80%", height: "30px" }}
           value={contractAddressText}
           onChange={(event) => setContractAddressText(event.target.value)}
         />
       </label>
-      <Button onClick={handleSetABI}>Set ABI</Button>
+      <label>
+        ABI Form
+        <br></br>
+        <textarea
+          style={{ resize: "none", width: "80%", height: "100px" }}
+          value={abiText}
+          onChange={(event) => setABIText(event.target.value)}
+        />
+      </label>
+      <Button onClick={handleSetABI}>Interact</Button>
       {abi && contractAddress ? (
         <>
           <div>

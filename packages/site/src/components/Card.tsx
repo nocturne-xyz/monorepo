@@ -12,6 +12,7 @@ type CardProps = {
 };
 
 const CardWrapper = styled.div<{ fullWidth?: boolean; disabled: boolean }>`
+  overflow: auto;
   display: flex;
   flex-direction: column;
   width: ${({ fullWidth }) => (fullWidth ? "100%" : "250px")};
