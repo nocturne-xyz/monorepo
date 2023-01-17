@@ -28,18 +28,21 @@ export const ABIRefundAssetsForm = ({
 
   return (
     <div>
-      <h3>Output Tokens</h3>
+      <h1 style={{ fontSize: "20px" }}>Refund Assets</h1>
 
       <label>
-        Output Contract Token Address:
-        <input
-          type="text"
+        Refund Contract Token Address
+        <br />
+        <textarea
+          style={{ resize: "none", width: "70%", height: "30px" }}
           value={assetAddr}
-          onChange={(e) => setAssetAddr(e.target.value)}
+          onChange={(event) => setAssetAddr(event.target.value)}
         />
       </label>
+      <br />
       <label>
-        Asset Type:
+        Asset Type
+        <br />
         <select
           value={assetType}
           onChange={(e) => setAssetType(parseAssetType(e.target.value))}
@@ -49,8 +52,10 @@ export const ABIRefundAssetsForm = ({
           <option value={AssetType.ERC1155.toString()}>ERC1155</option>
         </select>
       </label>
+      <br />
       <label>
-        Asset ID:
+        Asset ID
+        <br />
         <input
           type="text"
           value={assetId.toString()}
@@ -59,6 +64,7 @@ export const ABIRefundAssetsForm = ({
         />
       </label>
 
+      <br />
       <br />
       <button onClick={handleAddOutputToken}>Add Output Token</button>
     </div>

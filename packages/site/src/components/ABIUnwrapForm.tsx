@@ -65,10 +65,12 @@ export const ABIUnwrapForm = ({
 
   return (
     <div>
-      <h3>Unwrap Assets</h3>
+      <br />
+      <h1 style={{ fontSize: "20px" }}>Unwrap Assets</h1>
       <div>
         <label>
-          Asset Type:
+          Asset Type
+          <br />
           <select value={assetType} onChange={handleAssetTypeChange}>
             <option value={AssetType.ERC20.toString()}>ERC20</option>
             <option value={AssetType.ERC721.toString()}>ERC721</option>
@@ -77,15 +79,18 @@ export const ABIUnwrapForm = ({
         </label>
         <br />
         <label>
-          Asset Contract Address:
-          <input
-            type="text"
+          Contract Address
+          <br />
+          <textarea
+            style={{ resize: "none", width: "70%", height: "30px" }}
             value={assetAddress}
-            onChange={(e) => setAssetAddress(e.target.value)}
+            onChange={(event) => setAssetAddress(event.target.value)}
           />
         </label>
+        <br />
         <label>
-          Amount:
+          Amount
+          <br />
           <input
             type="number"
             value={amount}
@@ -95,7 +100,8 @@ export const ABIUnwrapForm = ({
         </label>
         <br />
         <label>
-          Asset ID:
+          Asset ID
+          <br />
           <input
             type="text"
             value={assetID.toString()}
@@ -103,8 +109,9 @@ export const ABIUnwrapForm = ({
             disabled={assetType === AssetType.ERC20}
           />
         </label>
+        <br /> <br />
         <Button onClick={() => handleEnqueueUnwrapAsset()}>
-          Enqueue Unwrap Asset
+          Add Asset to Unwrap
         </Button>
       </div>
     </div>

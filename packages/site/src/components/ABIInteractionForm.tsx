@@ -100,7 +100,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
   return (
     <div key={method.name}>
-      <h3>{method.name}</h3>
+      <h1 style={{ fontSize: "15px" }}>{method.name}</h1>
 
       {method.inputs.map((input, i) => (
         <ABIMethodParamInput
@@ -181,6 +181,7 @@ const ABIMethodParamInput = ({
       return (
         <div key={pathStr}>
           <label htmlFor={pathStr}>{param.name}</label>
+          <br />
           <input
             type="text"
             name={param.name}

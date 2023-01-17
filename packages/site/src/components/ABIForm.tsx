@@ -88,18 +88,18 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
     <>
       <label>
         Contract Address
-        <br></br>
+        <br />
         <textarea
-          style={{ resize: "none", width: "80%", height: "30px" }}
+          style={{ resize: "none", width: "70%", height: "30px" }}
           value={contractAddressText}
           onChange={(event) => setContractAddressText(event.target.value)}
         />
       </label>
       <label>
         ABI Form
-        <br></br>
+        <br />
         <textarea
-          style={{ resize: "none", width: "80%", height: "100px" }}
+          style={{ resize: "none", width: "70%", height: "100px" }}
           value={abiText}
           onChange={(event) => setABIText(event.target.value)}
         />
@@ -109,19 +109,38 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
         <>
           <div>
             <ABIUnwrapForm handleJoinSplitRequest={handleJoinSplitRequest} />
-            <p>Currently unwrapping the following tokens and amounts:</p>
-            <ol>
-              {joinSplitRequests.map(({ asset, unwrapValue }, index) => (
-                <li key={index}>
-                  Asset Address: {asset.assetAddr}, type:{" "}
-                  {asset.assetType.toString()} Amount: {unwrapValue.toString()}
-                </li>
-              ))}
-            </ol>
+            <p>Currently unwrapping the following tokens and amounts...</p>
+            {joinSplitRequests.map(({ asset, unwrapValue }, index) => {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "#505050",
+                    color: "white",
+                    overflowWrap: "break-word",
+                    padding: "5px",
+                  }}
+                >
+                  <div>{`Address: ${asset.assetAddr}`}</div>
+                  <div>{`Unwrap value: ${unwrapValue}`}</div>
+                  {index !== joinSplitRequests.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        width: "100%",
+                        backgroundColor: "white",
+                        margin: "5px 0 0 0",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
+          <br />
           <div>
             <ABIRefundAssetsForm handleNewRefundAsset={handleRefundAsset} />
-            <p>Currently set to produce the following output tokens:</p>
+            <p>Currently set to produce the following output tokens...</p>
             <ol>
               {refundAssets.map((refundAsset, index) => (
                 <li key={index}>{refundAsset.assetAddr}</li>
@@ -137,6 +156,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
                 </li>
               ))}
             </ol>
+            <h1 style={{ fontSize: "20px" }}>Contract Actions</h1>
             <ABIInteractionForm
               handleAction={handleAction}
               abi={abi}
