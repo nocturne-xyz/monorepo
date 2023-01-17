@@ -109,7 +109,13 @@ export const GetAllBalancesButton = (props: ComponentProps<typeof Button>) => {
 export const GetJoinSplitInputsButton = (
   props: ComponentProps<typeof Button>
 ) => {
-  return <Button {...props}>GetJoinSplitInputsButton</Button>;
+  return <Button {...props}>Generate proof</Button>;
+};
+
+export const GenAndSubmitProofButton = (
+  props: ComponentProps<typeof Button>
+) => {
+  return <Button {...props}>Generate and submit proof</Button>;
 };
 
 export const ClearDbButton = (props: ComponentProps<typeof Button>) => {

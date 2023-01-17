@@ -1,2 +1,2 @@
 export * from "./BalanceDisplay";
-export * from "./TransactionModal";
+export * from "./TransactionTracker";
