@@ -4,7 +4,7 @@
   "license": "MIT",
   "main": "dist/index.js",
   "engines": {
-    "node" : "18.12.1"
+    "node": "18.12.1"
   },
   "scripts": {
     "build": "tsc --build",
