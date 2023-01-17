@@ -15,6 +15,8 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
   contractAddress,
   handleAction,
 }) => {
+  const [methodIndex, setMethodIndex] = useState<number>(0);
+
   const iface = new ethers.utils.Interface(abi);
 
   const handleEnqueueAction = (encodedFunction: string) => {
@@ -26,18 +28,31 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
     handleAction(action);
   };
 
-  const formFields = abi
+  const handleMethodChange = (event: any) => {
+    setMethodIndex(event.target.value);
+  };
+
+  const methods = abi
     .filter(({ type }) => type === "function")
-    .map((method, i) => (
+    .map((method) => {
+      return method;
+    });
+
+  return (
+    <div>
+      <select value={methodIndex} onChange={handleMethodChange}>
+        {methods.map((method, i) => {
+          return <option value={i}>{method.name}</option>;
+        })}
+      </select>
       <ABIMethod
-        key={i}
+        key={"key"}
         iface={iface}
-        method={method}
+        method={methods[methodIndex]}
         handleEnqueueAction={handleEnqueueAction}
       />
-    ));
-
-  return <div>{formFields}</div>;
+    </div>
+  );
 };
 
 type ABIMethodProps = {
@@ -100,8 +115,6 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
   return (
     <div key={method.name}>
-      <h1 style={{ fontSize: "15px" }}>{method.name}</h1>
-
       {method.inputs.map((input, i) => (
         <ABIMethodParamInput
           key={i}

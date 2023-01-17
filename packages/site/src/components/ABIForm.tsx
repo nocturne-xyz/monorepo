@@ -165,7 +165,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
           </div>
           <div>
             <Button onClick={submitOperation}>
-              <h3>Go</h3>
+              <h1 style={{ fontSize: "20px" }}>Submit Operation</h1>
             </Button>
           </div>
         </>
