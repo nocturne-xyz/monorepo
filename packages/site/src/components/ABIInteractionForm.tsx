@@ -123,7 +123,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
           handleChange={(param, path) => handleChangeAtIndex(i, param, path)}
         />
       ))}
-
+      <br />
       <button type="submit" onClick={_handleEnqueueAction}>
         Enqueue Action
       </button>

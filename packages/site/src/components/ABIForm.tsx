@@ -141,21 +141,33 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
           <div>
             <ABIRefundAssetsForm handleNewRefundAsset={handleRefundAsset} />
             <p>Currently set to produce the following output tokens...</p>
-            <ol>
-              {refundAssets.map((refundAsset, index) => (
-                <li key={index}>{refundAsset.assetAddr}</li>
-              ))}
-            </ol>
+            {refundAssets.map(({ assetAddr }, index) => {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "#505050",
+                    color: "white",
+                    overflowWrap: "break-word",
+                    padding: "5px",
+                  }}
+                >
+                  <div>{`Address: ${assetAddr}`}</div>
+                  {index !== joinSplitRequests.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        width: "100%",
+                        backgroundColor: "white",
+                        margin: "5px 0 0 0",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div>
-            <p>Currently set to perform the following actions:</p>
-            <ol>
-              {actions.map(({ contractAddress, encodedFunction }, index) => (
-                <li key={index}>
-                  Target: {contractAddress}, encodedFunction: {encodedFunction}
-                </li>
-              ))}
-            </ol>
             <h1 style={{ fontSize: "20px" }}>Contract Actions</h1>
             <ABIInteractionForm
               handleAction={handleAction}
@@ -163,9 +175,37 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
               contractAddress={contractAddress}
             />
           </div>
+          <p>Currently set to perform the following actions:</p>
+          {actions.map(({ contractAddress, encodedFunction }, index) => {
+            return (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: "#505050",
+                  color: "white",
+                  overflowWrap: "break-word",
+                  padding: "5px",
+                }}
+              >
+                <div>{`Target: ${contractAddress}`}</div>
+                <div>{`Encoded Function: ${encodedFunction}`}</div>
+                {index !== joinSplitRequests.length - 1 && (
+                  <div
+                    style={{
+                      height: "1px",
+                      width: "100%",
+                      backgroundColor: "white",
+                      margin: "5px 0 0 0",
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+          <br />
           <div>
             <Button onClick={submitOperation}>
-              <h1 style={{ fontSize: "20px" }}>Submit Operation</h1>
+              <h1 style={{ fontSize: "16px" }}>Submit Operation</h1>
             </Button>
           </div>
         </>
