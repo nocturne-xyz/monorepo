@@ -187,10 +187,6 @@ const ABIMethodParamInput = ({
         throw new Error("Non-tuple type must not have components");
       }
 
-      if (typeof value !== "string") {
-        throw new Error("Non-tuple type must have string value");
-      }
-
       return (
         <div key={pathStr}>
           <label htmlFor={pathStr}>{param.name}</label>
