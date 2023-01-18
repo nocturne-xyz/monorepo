@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import * as os from "os";
 import { ethers } from "ethers";
 import { Server } from "http";
+import cors from "cors";
 
 export class BundlerServer {
   router: BundlerRouter;
@@ -28,6 +29,7 @@ export class BundlerServer {
     const app = express();
     app.use(express.json());
     app.use(router);
+    app.use(cors());
 
     return app.listen(port, () => {
       console.log(`Bundler server listening at ${os.hostname()}:${port}`);

@@ -45,9 +45,9 @@ read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40
 read SUBMITTER_PRIVATE_KEY< <(sed -nr 's/Account #16: (0x[0-9a-fA-F]+) \([0-9]+ ETH\)/\1/p' $LOG_DIR/hh-node)
 popd
 
-REDIS_URL="redis://localhost:6379";
-REDIS_PASSWORD="baka";
-RPC_URL="localhost:8545";
+REDIS_URL="localhost:6379"
+REDIS_PASSWORD="baka"
+RPC_URL="localhost:8545"
 BUNDLER_PORT="3000"
 
 echo "Wallet contract address: $WALLET_ADDRESS"
@@ -57,18 +57,19 @@ echo "Submitter private key: $SUBMITTER_PRIVATE_KEY"
 pushd packages/bundler
 # write bundler's .env file
 cat > .env <<- EOM
-REDIS_URL=$REDIS_URL
-REDIS_PASSWORD=$REDIS_PASSWORD
+REDIS_URL="$REDIS_URL"
+REDIS_PASSWORD="$REDIS_PASSWORD"
 
-WALLET_ADDRESS=$WALLET_ADDRESS
+WALLET_ADDRESS="$WALLET_ADDRESS"
 
-RPC_URL=$RPC_URL
-TX_SIGNER_KEY=$SUBMITTER_PRIVATE_KEY
+RPC_URL="$RPC_URL"
+TX_SIGNER_KEY="$SUBMITTER_PRIVATE_KEY"
 EOM
 
 export WALLET_ADDRESS
 export REDIS_PASSWORD
-docker compose up &> "$LOG_DIR/bundler-docker-compose" &
+export TX_SIGNER_KEY
+docker compose --env-file .env up &> "$LOG_DIR/bundler-docker-compose" &
 popd
 
 SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
@@ -77,8 +78,6 @@ SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 sed -i '' -r -e "s/const WALLET_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$WALLET_CONTRACT_ADDR\";/g" $SNAP_INDEX_TS
 
 sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
-
-
 
 wait $SITE_PID
 wait $SNAP_PID

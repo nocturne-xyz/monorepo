@@ -2872,6 +2872,7 @@ __metadata:
     bullmq: ^3.4.1
     chai: ^4.3.6
     commander: ^9.4.1
+    cors: ^2.8.5
     dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
