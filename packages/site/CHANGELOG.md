@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- Clean up power user site
+  - Add autosyncing display for wallet balances
+  - Clean up form sizing and spacing
+  - Change displays for enqueued actions and tokens to use nicer list
+  - Make ABI form display selector for method names and only display input boxes for selected method
 - Remove cross-env
 - add ABI form
 - Instantiate local prover on page load with `useEffect`
