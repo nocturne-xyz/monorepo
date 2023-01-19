@@ -14,7 +14,6 @@ import {
   NocturneFrontendSDK,
   AssetBalancesDisplay,
 } from "@nocturne-xyz/frontend-sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
 import { bundlerEndpoint } from "../config/bundler";
 
 const Container = styled.div`
