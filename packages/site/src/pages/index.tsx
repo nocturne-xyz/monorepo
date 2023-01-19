@@ -35,7 +35,7 @@ import {
   TransactionStatus,
   BundlerOperationID,
 } from "@nocturne-xyz/frontend-sdk";
-import Modal from 'react-modal';
+import Modal from "react-modal";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
@@ -123,24 +123,28 @@ const ModalContainer = styled.div`
 `;
 
 const TxStatusMsg = styled.span`
-  color: #24272A;
+  color: #24272a;
 `;
 
 type TxStatusMessage =
-  "Submitting transaction to the bundler..." |
-  "Failed to submit transaction to the bundler" |
-  "Waiting to be included in a bundle..." |
-  "Waiting for the bundle to be executed..." |
-  "Transaction executed successfully!" |
-  "Transaction failed to execute";
+  | "Submitting transaction to the bundler..."
+  | "Failed to submit transaction to the bundler"
+  | "Waiting to be included in a bundle..."
+  | "Waiting for the bundle to be executed..."
+  | "Transaction executed successfully!"
+  | "Transaction failed to execute";
 
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
-  const [inFlightOperationID, setInFlightOperationID] = useState<BundlerOperationID | undefined>();
+  const [inFlightOperationID, setInFlightOperationID] = useState<
+    BundlerOperationID | undefined
+  >();
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [txStatusMsg, setTxStatusMsg] = useState<TxStatusMessage>("Submitting transaction to the bundler...");
+  const [txStatusMsg, setTxStatusMsg] = useState<TxStatusMessage>(
+    "Submitting transaction to the bundler..."
+  );
 
   useEffect(() => {
     loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
@@ -241,8 +245,9 @@ const Index = () => {
       console.error("failed to generate proven operation");
       return;
     }
-    
-    nocturneFrontendSDK!.submitProvenOperation(provenOperation)
+
+    nocturneFrontendSDK!
+      .submitProvenOperation(provenOperation)
       .then((opID: BundlerOperationID) => {
         setInFlightOperationID(opID);
       })
@@ -251,7 +256,7 @@ const Index = () => {
         setTxStatusMsg("Failed to submit transaction to the bundler");
         setInFlightOperationID(undefined);
       });
-    
+
     setTxStatusMsg("Submitting transaction to the bundler...");
     openModal();
   };
@@ -269,12 +274,11 @@ const Index = () => {
     setModalIsOpen(true);
   };
 
-
   const onTxStatusUpdate = (txStatus: TransactionStatus) => {
     console.log("transaction status is now", txStatus.toString());
 
     switch (txStatus) {
-      case TransactionStatus.SUBMITTING: 
+      case TransactionStatus.SUBMITTING:
         setTxStatusMsg("Submitting transaction to the bundler...");
         break;
       case TransactionStatus.QUEUED:
@@ -301,6 +305,22 @@ const Index = () => {
 
   return (
     <Container>
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={handleCloseModal}
+        contentLabel="Transaction Status"
+        ariaHideApp={false}
+      >
+        <ModalContainer>
+          <TransactionTracker
+            bundlerEndpoint={bundlerEndpoint}
+            operationID={inFlightOperationID}
+            onTxStatusUpdate={onTxStatusUpdate}
+            progressBarStyles={{ color: "black" }}
+          />
+          <TxStatusMsg>{txStatusMsg}</TxStatusMsg>
+        </ModalContainer>
+      </Modal>
       <Heading>
         Welcome to the <Span>Nocturne Power-User Frontend</Span>
       </Heading>
@@ -457,9 +477,9 @@ const Index = () => {
           <Notice>
             <p>
               Please note that the <b>snap.manifest.json</b> and{" "}
-              <b>package.json</b> must be located in the server root directory and
-              the bundle must be hosted at the location specified by the location
-              field.
+              <b>package.json</b> must be located in the server root directory
+              and the bundle must be hosted at the location specified by the
+              location field.
             </p>
           </Notice>
         </CardContainer>
