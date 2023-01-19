@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `TransactionTracker` component
 - Use `makePostProofJoinSplitTx` in `generateProvenOperation`
 - Change default `WASM_PATH` from `./joinsplit.wasm` to `/joinsplit.wasm`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
