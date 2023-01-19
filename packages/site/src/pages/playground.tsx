@@ -1,12 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import {
-  connectSnap,
-  connectWalletContract,
-  getSnap,
-  shouldDisplayReconnectButton,
-} from "../utils";
+import { connectSnap, getSnap, shouldDisplayReconnectButton } from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
@@ -19,7 +14,6 @@ import {
   NocturneFrontendSDK,
   AssetBalancesDisplay,
 } from "@nocturne-xyz/frontend-sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
 
 const Container = styled.div`
   display: flex;
@@ -97,7 +91,6 @@ const ErrorMessage = styled.div`
 
 const Playground = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
-  const [walletContract, setWalletContract] = useState<Wallet>();
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
@@ -108,9 +101,6 @@ const Playground = () => {
 
   const handleConnectClick = async () => {
     try {
-      const wallet = await connectWalletContract();
-      setWalletContract(wallet);
-
       await connectSnap();
       const installedSnap = await getSnap();
 
@@ -144,12 +134,13 @@ const Playground = () => {
 
   useEffect(() => {
     const timeout = setInterval(async () => {
-      if (!nocturneFrontendSDK || !walletContract) return;
+      if (!nocturneFrontendSDK) return;
+      console.log("Syncing notes and leaves...");
       await Promise.all([syncNotes(), syncLeaves()]);
     }, 7000);
 
     return () => clearTimeout(timeout);
-  }, [nocturneFrontendSDK, walletContract]);
+  }, [nocturneFrontendSDK]);
 
   return (
     <Container>
@@ -212,7 +203,7 @@ const Playground = () => {
             }}
             disabled={!state.installedSnap}
           >
-            <AssetBalancesDisplay frontendSDK={nocturneFrontendSDK!} />
+            <AssetBalancesDisplay frontendSDK={nocturneFrontendSDK} />
           </Card>
         )}
         {!shouldDisplayReconnectButton(state.installedSnap) && (

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { NocturneFrontendSDK } from "../sdk";
 
 interface AssetBalancesDisplayProps {
-  frontendSDK: NocturneFrontendSDK;
+  frontendSDK?: NocturneFrontendSDK;
 }
 
 export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
@@ -13,9 +13,15 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
 
   useEffect(() => {
     const intervalId = setInterval(() => {
+      if (!frontendSDK) return;
+
+      console.log("Syncing snap balances...");
       frontendSDK
         .getAllBalances()
-        .then((response) => setBalances(response))
+        .then((response) => {
+          console.log("Balances: ", response);
+          setBalances(response);
+        })
         .catch((error) => console.log(error));
     }, 5000);
 

@@ -46,7 +46,6 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
         })}
       </select>
       <ABIMethod
-        key={"key"}
         iface={iface}
         method={methods[methodIndex]}
         handleEnqueueAction={handleEnqueueAction}
