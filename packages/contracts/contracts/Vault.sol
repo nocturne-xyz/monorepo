@@ -7,25 +7,27 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
-import "hardhat/console.sol";
-
-contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
+contract Vault is
+    IVault,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable,
+    Initializable
+{
     address public _wallet;
 
     modifier onlyWallet() {
-        require(msg.sender == _wallet, "Not called from Teller");
+        require(msg.sender == _wallet, "Not called from Wallet");
         _;
     }
 
-    // TODO: deployment can be front run
-    function initialize(address wallet) external {
-        require(_wallet == address(0), "Vault already initialized");
+    function initialize(address wallet) external initializer {
         _wallet = wallet;
     }
 
@@ -53,7 +55,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         uint256, // tokenId
         bytes calldata // data
     ) external pure override returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
     function onERC1155Received(
@@ -63,7 +65,7 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         uint256, // value
         bytes calldata // data
     ) external pure override returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
+        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
@@ -73,15 +75,15 @@ contract Vault is IVault, IERC721Receiver, IERC1155Receiver {
         uint256[] calldata, // values
         bytes calldata // data
     ) external pure override returns (bytes4) {
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
+        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
         return
-            (interfaceId == type(IERC165).interfaceId) ||
-            (interfaceId == type(IERC721Receiver).interfaceId) ||
-            (interfaceId == type(IERC1155Receiver).interfaceId);
+            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
+            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
+            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 }
