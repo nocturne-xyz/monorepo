@@ -15,6 +15,8 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
   contractAddress,
   handleAction,
 }) => {
+  const [methodIndex, setMethodIndex] = useState<number>(0);
+
   const iface = new ethers.utils.Interface(abi);
 
   const handleEnqueueAction = (encodedFunction: string) => {
@@ -26,18 +28,30 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
     handleAction(action);
   };
 
-  const formFields = abi
+  const handleMethodChange = (event: any) => {
+    setMethodIndex(event.target.value);
+  };
+
+  const methods = abi
     .filter(({ type }) => type === "function")
-    .map((method, i) => (
+    .map((method) => {
+      return method;
+    });
+
+  return (
+    <div>
+      <select value={methodIndex} onChange={handleMethodChange}>
+        {methods.map((method, i) => {
+          return <option value={i}>{method.name}</option>;
+        })}
+      </select>
       <ABIMethod
-        key={i}
         iface={iface}
-        method={method}
+        method={methods[methodIndex]}
         handleEnqueueAction={handleEnqueueAction}
       />
-    ));
-
-  return <div>{formFields}</div>;
+    </div>
+  );
 };
 
 type ABIMethodProps = {
@@ -100,8 +114,6 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
   return (
     <div key={method.name}>
-      <h3>{method.name}</h3>
-
       {method.inputs.map((input, i) => (
         <ABIMethodParamInput
           key={i}
@@ -110,7 +122,7 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
           handleChange={(param, path) => handleChangeAtIndex(i, param, path)}
         />
       ))}
-
+      <br />
       <button type="submit" onClick={_handleEnqueueAction}>
         Enqueue Action
       </button>
@@ -174,13 +186,10 @@ const ABIMethodParamInput = ({
         throw new Error("Non-tuple type must not have components");
       }
 
-      if (typeof value !== "string") {
-        throw new Error("Non-tuple type must have string value");
-      }
-
       return (
         <div key={pathStr}>
           <label htmlFor={pathStr}>{param.name}</label>
+          <br />
           <input
             type="text"
             name={param.name}

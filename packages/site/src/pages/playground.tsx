@@ -1,25 +1,19 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import {
-  connectSnap,
-  connectWalletContract,
-  getSnap,
-  shouldDisplayReconnectButton,
-} from "../utils";
+import { connectSnap, getSnap, shouldDisplayReconnectButton } from "../utils";
 import {
   ConnectButton,
   InstallFlaskButton,
   ReconnectButton,
   Card,
   ABIForm,
-  GetAllBalancesButton,
 } from "../components";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
+  AssetBalancesDisplay,
 } from "@nocturne-xyz/frontend-sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
 
 const Container = styled.div`
   display: flex;
@@ -45,16 +39,6 @@ const Heading = styled.h1`
 
 const Span = styled.span`
   color: ${(props) => props.theme.colors.primary.default};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  font-weight: 500;
-  margin-top: 0;
-  margin-bottom: 0;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
-  }
 `;
 
 const CardContainer = styled.div`
@@ -107,7 +91,6 @@ const ErrorMessage = styled.div`
 
 const Playground = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
-  const [walletContract, setWalletContract] = useState<Wallet>();
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
@@ -118,9 +101,6 @@ const Playground = () => {
 
   const handleConnectClick = async () => {
     try {
-      const wallet = await connectWalletContract();
-      setWalletContract(wallet);
-
       await connectSnap();
       const installedSnap = await getSnap();
 
@@ -152,33 +132,21 @@ const Playground = () => {
     }
   };
 
-  const handleGetAllBalancesClick = async () => {
-    try {
-      const balances = await nocturneFrontendSDK!.getAllBalances();
-      console.log(balances);
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   useEffect(() => {
     const timeout = setInterval(async () => {
-      if (!nocturneFrontendSDK || !walletContract) return;
+      if (!nocturneFrontendSDK) return;
+      console.log("Syncing notes and leaves...");
       await Promise.all([syncNotes(), syncLeaves()]);
     }, 7000);
 
     return () => clearTimeout(timeout);
-  }, [nocturneFrontendSDK, walletContract]);
+  }, [nocturneFrontendSDK]);
 
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        Welcome to the <Span>Nocturne Power-User Frontend</Span>
       </Heading>
-      <Subtitle>
-        Get started by editing <code>src/index.ts</code>
-      </Subtitle>
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -225,10 +193,17 @@ const Playground = () => {
               onClick={handleConnectClick}
               disabled={!state.installedSnap}
             />
-            <GetAllBalancesButton
-              onClick={handleGetAllBalancesClick}
-              disabled={!state.installedSnap}
-            />
+          </Card>
+        )}
+        {shouldDisplayReconnectButton(state.installedSnap) && (
+          <Card
+            content={{
+              title: "Asset Balances",
+              description: "Balances for each asset",
+            }}
+            disabled={!state.installedSnap}
+          >
+            <AssetBalancesDisplay frontendSDK={nocturneFrontendSDK} />
           </Card>
         )}
         {!shouldDisplayReconnectButton(state.installedSnap) && (

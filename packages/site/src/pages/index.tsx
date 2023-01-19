@@ -59,16 +59,6 @@ const Span = styled.span`
   color: ${(props) => props.theme.colors.primary.default};
 `;
 
-const Subtitle = styled.p`
-  font-size: ${({ theme }) => theme.fontSizes.large};
-  font-weight: 500;
-  margin-top: 0;
-  margin-bottom: 0;
-  ${({ theme }) => theme.mediaQueries.small} {
-    font-size: ${({ theme }) => theme.fontSizes.text};
-  }
-`;
-
 const CardContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -172,7 +162,7 @@ const Index = () => {
   };
 
   const handleGetJoinSplitInputs = async () => {
-    const tokenAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+    const tokenAddress = "";
     const asset: Asset = {
       assetAddr: tokenAddress,
       id: ERC20_ID,
@@ -222,11 +212,8 @@ const Index = () => {
   return (
     <Container>
       <Heading>
-        Welcome to <Span>template-snap</Span>
+        Welcome to the<Span>Nocturne Power-User Frontend</Span>
       </Heading>
-      <Subtitle>
-        Get started by editing <code>src/index.ts</code>
-      </Subtitle>
       <CardContainer>
         {state.error && (
           <ErrorMessage>

@@ -87,61 +87,126 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
   return (
     <>
       <label>
-        ABI:
+        Contract Address
+        <br />
         <textarea
-          value={abiText}
-          onChange={(event) => setABIText(event.target.value)}
-        />
-      </label>
-      <label>
-        Contract Address:
-        <textarea
+          style={{ resize: "none", width: "70%", height: "30px" }}
           value={contractAddressText}
           onChange={(event) => setContractAddressText(event.target.value)}
         />
       </label>
-      <Button onClick={handleSetABI}>Set ABI</Button>
+      <label>
+        ABI Form
+        <br />
+        <textarea
+          style={{ resize: "none", width: "70%", height: "100px" }}
+          value={abiText}
+          onChange={(event) => setABIText(event.target.value)}
+        />
+      </label>
+      <Button onClick={handleSetABI}>Interact</Button>
       {abi && contractAddress ? (
         <>
           <div>
             <ABIUnwrapForm handleJoinSplitRequest={handleJoinSplitRequest} />
-            <p>Currently unwrapping the following tokens and amounts:</p>
-            <ol>
-              {joinSplitRequests.map(({ asset, unwrapValue }, index) => (
-                <li key={index}>
-                  Asset Address: {asset.assetAddr}, type:{" "}
-                  {asset.assetType.toString()} Amount: {unwrapValue.toString()}
-                </li>
-              ))}
-            </ol>
+            <p>Currently unwrapping the following tokens and amounts...</p>
+            {joinSplitRequests.map(({ asset, unwrapValue }, index) => {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "#505050",
+                    color: "white",
+                    overflowWrap: "break-word",
+                    padding: "5px",
+                  }}
+                >
+                  <div>{`Address: ${asset.assetAddr}`}</div>
+                  <div>{`Unwrap value: ${unwrapValue}`}</div>
+                  {index !== joinSplitRequests.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        width: "100%",
+                        backgroundColor: "white",
+                        margin: "5px 0 0 0",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
+          <br />
           <div>
             <ABIRefundAssetsForm handleNewRefundAsset={handleRefundAsset} />
-            <p>Currently set to produce the following output tokens:</p>
-            <ol>
-              {refundAssets.map((refundAsset, index) => (
-                <li key={index}>{refundAsset.assetAddr}</li>
-              ))}
-            </ol>
+            <p>Currently set to produce the following output tokens...</p>
+            {refundAssets.map(({ assetAddr }, index) => {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: "#505050",
+                    color: "white",
+                    overflowWrap: "break-word",
+                    padding: "5px",
+                  }}
+                >
+                  <div>{`Address: ${assetAddr}`}</div>
+                  {index !== joinSplitRequests.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        width: "100%",
+                        backgroundColor: "white",
+                        margin: "5px 0 0 0",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div>
-            <p>Currently set to perform the following actions:</p>
-            <ol>
-              {actions.map(({ contractAddress, encodedFunction }, index) => (
-                <li key={index}>
-                  Target: {contractAddress}, encodedFunction: {encodedFunction}
-                </li>
-              ))}
-            </ol>
+            <h1 style={{ fontSize: "20px" }}>Contract Actions</h1>
             <ABIInteractionForm
               handleAction={handleAction}
               abi={abi}
               contractAddress={contractAddress}
             />
           </div>
+          <p>Currently set to perform the following actions:</p>
+          {actions.map(({ contractAddress, encodedFunction }, index) => {
+            return (
+              <div
+                key={index}
+                style={{
+                  backgroundColor: "#505050",
+                  color: "white",
+                  overflowWrap: "break-word",
+                  padding: "5px",
+                }}
+              >
+                <div>{`Target: ${contractAddress}`}</div>
+                <br />
+                <div>{`Encoded Function: ${encodedFunction}`}</div>
+                {index !== joinSplitRequests.length - 1 && (
+                  <div
+                    style={{
+                      height: "1px",
+                      width: "100%",
+                      backgroundColor: "white",
+                      margin: "5px 0 0 0",
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+          <br />
           <div>
             <Button onClick={submitOperation}>
-              <h3>Go</h3>
+              <h1 style={{ fontSize: "16px" }}>Submit Operation</h1>
             </Button>
           </div>
         </>
