@@ -11,3 +11,7 @@ cache
 artifacts
 
 deployments
+cache_hardhat
+contracts
+dist
+.openzeppelin

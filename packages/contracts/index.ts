@@ -38,6 +38,6 @@ export { TransparentUpgradeableProxy__factory } from './src/factories/Transparen
 export { ProxyAdmin__factory } from './src/factories/ProxyAdmin__factory';
 export { Versioned__factory } from './src/factories/Versioned__factory';
 
-export { deployNocturne } from './scripts/deploy';
+export * from './deployer';
 
 export { version } from './package.json';
