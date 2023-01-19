@@ -27,6 +27,9 @@ contract BalanceManager is
 
     EncodedAsset[] public _receivedAssets;
 
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
     function __BalanceManager__init(
         address vault,
         address joinSplitVerifier,

@@ -22,6 +22,9 @@ contract Vault is
 {
     address public _wallet;
 
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
     modifier onlyWallet() {
         require(msg.sender == _wallet, "Not called from Wallet");
         _;
