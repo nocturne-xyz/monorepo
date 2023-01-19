@@ -2,6 +2,7 @@ import "solhint";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
+import "@openzeppelin/hardhat-upgrades";
 
 const config: HardhatUserConfig = {
   solidity: {

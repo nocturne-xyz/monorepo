@@ -8,6 +8,7 @@ import {
   Wallet,
   SubtreeUpdateVerifier__factory,
   TestSubtreeUpdateVerifier__factory,
+  TransparentUpgradeableProxy__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -86,6 +87,16 @@ export async function setup(): Promise<NocturneSetup> {
   await deployments.fixture(["NocturneContracts"]);
   const vault = await ethers.getContract("Vault");
   const wallet = await ethers.getContract("Wallet");
+  const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");
+  const subtreeUpdateVerifier = await ethers.getContract(
+    "SubtreeUpdateVerifier"
+  );
+
+  await wallet.initialize(
+    vault.address,
+    joinSplitVerifier.address,
+    subtreeUpdateVerifier.address
+  );
   await vault.initialize(wallet.address);
   const [_, alice, bob] = await ethers.getSigners();
 
@@ -140,17 +151,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { owner } = await getNamedAccounts();
 
-  const vault = await deploy("Vault", {
+  await deploy("Vault", {
     from: owner,
     contract: {
       abi: Vault__factory.abi,
       bytecode: Vault__factory.bytecode,
     },
+    proxy: {
+      proxyContract: TransparentUpgradeableProxy__factory,
+    },
     log: true,
     deterministicDeployment: true,
   });
 
-  const joinSplitVerifier = await deploy("JoinSplitVerifier", {
+  await deploy("JoinSplitVerifier", {
     from: owner,
     contract: {
       abi: JoinSplitVerifier__factory.abi,
@@ -161,7 +175,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   const subtreeUpdateVerifierFactory = getSubtreeUpdateContractFactory();
-  const subtreeUpdateVerifier = await deploy("SubtreeUpdateVerifier", {
+  await deploy("SubtreeUpdateVerifier", {
     from: owner,
     contract: {
       abi: subtreeUpdateVerifierFactory.abi,
@@ -177,11 +191,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       abi: Wallet__factory.abi,
       bytecode: Wallet__factory.bytecode,
     },
-    args: [
-      vault.address,
-      joinSplitVerifier.address,
-      subtreeUpdateVerifier.address,
-    ],
+    proxy: {
+      proxyContract: TransparentUpgradeableProxy__factory,
+    },
     log: true,
     deterministicDeployment: true,
   });
