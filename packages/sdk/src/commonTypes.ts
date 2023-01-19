@@ -117,35 +117,6 @@ export function decodeAsset(
   };
 }
 
-export function makeProvenJoinSplitTx(preProof: PreProofJoinSplitTx, proof: BaseProof): ProvenJoinSplitTx {
-
-  const {
-    commitmentTreeRoot,
-    nullifierA,
-    nullifierB,
-    newNoteACommitment,
-    newNoteBCommitment,
-    encodedAsset,
-    publicSpend,
-    newNoteATransmission,
-    newNoteBTransmission,
-  } = preProof;
-
-  return {
-    proof: packToSolidityProof(proof),
-
-    commitmentTreeRoot,
-    nullifierA,
-    nullifierB,
-    newNoteACommitment,
-    newNoteBCommitment,
-    encodedAsset,
-    publicSpend,
-    newNoteATransmission,
-    newNoteBTransmission,
-  };
-}
-
 export interface AssetWithBalance {
   asset: Asset;
   balance: bigint;

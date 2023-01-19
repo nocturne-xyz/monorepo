@@ -1,12 +1,12 @@
 import {
   OperationRequest,
-  makeProvenJoinSplitTx,
   ProvenOperation,
   ProvenJoinSplitTx,
   PreProofOperation,
   NocturneAddress,
   AssetWithBalance,
   encodeAsset,
+  proveJoinSplitTx,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -40,13 +40,7 @@ export class NocturneFrontendSDK {
     );
 
     const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
-      joinSplitInputs.joinSplitTxs.map(
-        async (joinSplitTx) => {
-          const { proof } = await this.localProver.proveJoinSplit(joinSplitTx.proofInputs);
-
-          return makeProvenJoinSplitTx(joinSplitTx, proof);
-        }
-      );
+      joinSplitInputs.joinSplitTxs.map((inputs) => proveJoinSplitTx(this.localProver, inputs));
 
     const {
       joinSplitRequests,
