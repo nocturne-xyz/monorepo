@@ -1,6 +1,8 @@
 import 'hardhat-gas-reporter';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-packager';
+import '@nomiclabs/hardhat-ethers';
+import '@openzeppelin/hardhat-upgrades';
 
 import { subtask } from 'hardhat/config';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
@@ -45,7 +47,7 @@ module.exports = {
 
   networks: {
     localhost: {
-      url: 'http://localhost:8545',
+      url: 'http://127.0.0.1:8545',
     },
     kovan: {
       url: `https://kovan.infura.io/v3/${infuraKey}`,

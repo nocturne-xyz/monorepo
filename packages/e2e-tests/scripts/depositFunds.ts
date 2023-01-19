@@ -54,7 +54,9 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     });
   };
 
-  const testAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(NocturneAddressTrait.fromCanonAddress);
+  const testAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
+    NocturneAddressTrait.fromCanonAddress
+  );
 
   const targetAddrs = [nocturneAddressAlice, ...testAddrs];
 

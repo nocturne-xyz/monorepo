@@ -2907,6 +2907,7 @@ __metadata:
     "@nomiclabs/hardhat-waffle": ^2.0.1
     "@openzeppelin/contracts": 4.7.3
     "@openzeppelin/contracts-upgradeable": 4.7.3
+    "@openzeppelin/hardhat-upgrades": ^1.22.1
     "@typechain/ethers-v5": 7.2.0
     "@typechain/hardhat": ^2.0.1
     "@types/node": ^17.0.14
