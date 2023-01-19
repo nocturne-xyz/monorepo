@@ -295,7 +295,7 @@ const Index = () => {
       case TransactionStatus.EXECUTED_SUCCESS:
         setTxStatusMsg("Transaction executed successfully!");
         break;
-      case TransactionStatus.EXECUTED_FAILURE:
+      case TransactionStatus.EXECUTED_FAILED:
         setTxStatusMsg("Transaction failed to execute");
         break;
     }
