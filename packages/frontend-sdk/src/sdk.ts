@@ -1,6 +1,6 @@
 import {
   OperationRequest,
-  packToSolidityProof,
+  makeProvenJoinSplitTx,
   ProvenOperation,
   ProvenJoinSplitTx,
   PreProofOperation,
@@ -41,13 +41,10 @@ export class NocturneFrontendSDK {
 
     const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
       joinSplitInputs.joinSplitTxs.map(
-        async ({ proofInputs, ...joinSplitTx }) => {
-          const { proof } = await this.localProver.proveJoinSplit(proofInputs);
+        async (joinSplitTx) => {
+          const { proof } = await this.localProver.proveJoinSplit(joinSplitTx.proofInputs);
 
-          return {
-            proof: packToSolidityProof(proof),
-            ...joinSplitTx,
-          };
+          return makeProvenJoinSplitTx(joinSplitTx, proof);
         }
       );
 
