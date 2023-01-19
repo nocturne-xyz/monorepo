@@ -92,6 +92,8 @@ export async function setup(): Promise<NocturneSetup> {
     "SubtreeUpdateVerifier"
   );
 
+  // TODO: pass in proxy admin (currently deploys new one but we don't keep
+  // track of this info)
   await wallet.initialize(
     vault.address,
     joinSplitVerifier.address,
