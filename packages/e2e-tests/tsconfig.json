@@ -1,12 +1,18 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "target": "es2021",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true
+    "outDir": "dist"
   },
+  "exclude": [
+    "artifacts",
+    "cache",
+    "foundry_artifacts",
+    "contracts",
+    "node_modules",
+    "dist",
+    "config",
+    "tmp.ts",
+    "hardhat.config.ts"
+  ],
   "include": ["deploy/**/*.ts", "test/**/*.ts"]
 }

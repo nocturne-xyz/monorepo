@@ -12,7 +12,7 @@
     "build:deps": "../../scripts/install-deps.sh",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
-    "deploy": "hardhat run ./scripts/deploy.ts",
+    "deploy": "hardhat run ./deploy/deploy.ts",
     "copy-definitions": "cp src/*.d.ts dist/src",
     "lint": "solhint contracts/*.sol",
     "lint:fix": "solhint --fix contracts/*.sol && yarn prettier --write",

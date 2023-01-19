@@ -1,30 +1,20 @@
 import {
   JoinSplitVerifier__factory,
   SubtreeUpdateVerifier__factory,
+  TestSubtreeUpdateVerifier__factory,
   Vault__factory,
   Wallet__factory,
 } from '@nocturne-xyz/contracts';
-import { ethers, upgrades } from 'hardhat';
+import { NocturneDeployment, NocturneDeployOpts } from './types';
+import { upgrades, ethers } from 'hardhat';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-export interface ProxiedContract {
-  proxyAddress: string;
-  implementationAddress: string;
-}
-
-export interface NocturneDeployment {
-  proxyAdminAddress: string;
-  walletProxy: ProxiedContract;
-  vaultProxy: ProxiedContract;
-  joinSplitVerifierAddress: string;
-  subtreeUpdateVerifierAddress: string;
-}
-
 export async function deployNocturne(
   proxyAdminAddress: string,
-  provider?: ethers.providers.Provider,
+  provider?: any, // FIX: ts build within hh disallows ethers.providers.Provider
+  opts?: NocturneDeployOpts,
 ): Promise<NocturneDeployment> {
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error('Deploy script missing deployer key');
@@ -60,9 +50,14 @@ export async function deployNocturne(
   console.log('JoinSplitVerifier deployed to:', joinSplitVerifier.address);
 
   // Deploy SubtreeUpdateVerifier
-  const SubtreeUpdateVerifier = new SubtreeUpdateVerifier__factory(deployer);
+  let SubtreeUpdateVerifier;
+  if (opts?.mockSubtreeUpdateVerifier) {
+    SubtreeUpdateVerifier = new TestSubtreeUpdateVerifier__factory(deployer);
+  } else {
+    SubtreeUpdateVerifier = new SubtreeUpdateVerifier__factory(deployer);
+  }
   const subtreeUpdateVerifier = await SubtreeUpdateVerifier.deploy();
-  await subtreeUpdateVerifier.deployed();
+  subtreeUpdateVerifier.deployed();
   console.log(
     'SubtreeUpdateVerifier deployed to:',
     subtreeUpdateVerifier.address,
