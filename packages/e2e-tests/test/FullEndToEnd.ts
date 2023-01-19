@@ -7,6 +7,9 @@ import {
   SimpleERC1155Token__factory,
   Vault,
   Wallet,
+  deployNocturne,
+  Wallet__factory,
+  Vault__factory,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -24,7 +27,12 @@ import {
   AssetType,
 } from "@nocturne-xyz/sdk";
 import { setup } from "../deploy/deployNocturne";
-import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
+import {
+  depositFunds,
+  sleep,
+  getSubtreeUpdateProver,
+  setupAliceAndBob,
+} from "./utils";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import RedisMemoryServer from "redis-memory-server";
@@ -99,16 +107,22 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     erc1155Token = await erc1155TokenFactory.deploy();
     console.log("ERC1155 token deployed at: ", erc1155Token.address);
 
+    const { walletProxy, vaultProxy } = await deployNocturne(
+      "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      ethers.provider,
+      { mockSubtreeUpdateVerifier: true }
+    );
+    wallet = Wallet__factory.connect(walletProxy.proxyAddress, deployer);
+    vault = Vault__factory.connect(vaultProxy.proxyAddress, deployer);
+
     ({
       alice,
       bob,
-      vault,
-      wallet,
       notesDBAlice,
       nocturneContextAlice,
       notesDBBob,
       nocturneContextBob,
-    } = await setup());
+    } = await setupAliceAndBob(wallet));
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
