@@ -11,9 +11,8 @@
     "node_modules",
     "dist",
     "config",
-    "scripts",
     "tmp.ts",
     "hardhat.config.ts"
   ],
-  "include": ["index.ts", "src/**/*.ts", "package.json"]
+  "include": ["index.ts", "src/**/*.ts", "scripts/*.ts", "package.json"]
 }
