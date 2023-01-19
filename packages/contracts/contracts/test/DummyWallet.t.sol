@@ -85,7 +85,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        wallet = new Wallet(
+        wallet = new Wallet();
+        wallet.initialize(
             address(vault),
             address(joinSplitVerifier),
             address(subtreeUpdateVerifier)
