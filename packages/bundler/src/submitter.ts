@@ -49,7 +49,6 @@ export class BundlerSubmitter {
         throw new Error("Missing RPC_URL");
       }
       const provider = new providers.JsonRpcProvider(rpcUrl);
-      console.log("private key:", privateKey);
       this.signingProvider = new ethers.Wallet(privateKey, provider);
     }
 
