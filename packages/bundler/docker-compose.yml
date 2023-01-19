@@ -19,8 +19,6 @@ services:
     command: "run server --wallet-address ${WALLET_ADDRESS} --port 3000"
     ports:
       - "3000:3000"
-    expose:
-      - 3000
 
   batcher:
     build:
