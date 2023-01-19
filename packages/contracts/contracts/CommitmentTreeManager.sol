@@ -8,10 +8,11 @@ import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleT
 import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./libs/types.sol";
 
-contract CommitmentTreeManager {
+contract CommitmentTreeManager is Initializable {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
     // past roots of the merkle tree
@@ -20,7 +21,7 @@ contract CommitmentTreeManager {
     mapping(uint256 => bool) public _nullifierSet;
 
     OffchainMerkleTreeData internal _merkle;
-    IJoinSplitVerifier public immutable _joinSplitVerifier;
+    IJoinSplitVerifier public _joinSplitVerifier;
 
     event Refund(
         NocturneAddress refundAddr,
@@ -45,7 +46,10 @@ contract CommitmentTreeManager {
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
-    constructor(address joinSplitVerifier, address subtreeUpdateVerifier) {
+    function __CommitmentTreeManager_init(
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) public onlyInitializing {
         _merkle.initialize(subtreeUpdateVerifier);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;

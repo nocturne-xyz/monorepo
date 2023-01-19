@@ -11,19 +11,20 @@ import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
-
-import "hardhat/console.sol";
+import "./upgrade/Versioned.sol";
 
 // TODO: use SafeERC20 library
 // TODO: make wallet and vault upgradable
-contract Wallet is IWallet, BalanceManager {
+contract Wallet is IWallet, BalanceManager, Versioned {
     using OperationLib for Operation;
 
-    constructor(
+    function initialize(
         address vault,
         address joinSplitVerifier,
         address subtreeUpdateVerifier
-    ) BalanceManager(vault, joinSplitVerifier, subtreeUpdateVerifier) {} // solhint-disable-line no-empty-blocks
+    ) external initializer {
+        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+    }
 
     event OperationProcessed(
         uint256 indexed operationDigest,
