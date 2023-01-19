@@ -25,6 +25,7 @@ export class OperationValidator {
       this.provider = provider;
     } else {
       const rpcUrl = process.env.RPC_URL;
+      console.log("RPC_URL: ", rpcUrl)
       if (!rpcUrl) {
         throw new Error("Missing RPC_URL");
       }

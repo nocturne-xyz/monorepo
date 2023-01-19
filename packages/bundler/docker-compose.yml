@@ -19,6 +19,8 @@ services:
     command: "run server --wallet-address ${WALLET_ADDRESS} --port 3000"
     ports:
       - "3000:3000"
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
   batcher:
     build:
@@ -33,3 +35,5 @@ services:
       dockerfile: packages/bundler/Dockerfile
     restart: always
     command: "run submitter --wallet-address ${WALLET_ADDRESS}"
+    extra_hosts:
+      - host.docker.internal:host-gateway

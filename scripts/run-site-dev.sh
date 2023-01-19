@@ -45,7 +45,7 @@ popd
 
 REDIS_URL="redis://redis:6379"
 REDIS_PASSWORD="baka"
-RPC_URL="localhost:8545"
+RPC_URL="http://host.docker.internal:8545"
 BUNDLER_PORT="3000"
 
 echo "Wallet contract address: $WALLET_ADDRESS"
