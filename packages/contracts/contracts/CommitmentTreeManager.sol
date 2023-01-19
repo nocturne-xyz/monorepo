@@ -20,6 +20,9 @@ contract CommitmentTreeManager is Initializable {
 
     mapping(uint256 => bool) public _nullifierSet;
 
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
     OffchainMerkleTreeData internal _merkle;
     IJoinSplitVerifier public _joinSplitVerifier;
 

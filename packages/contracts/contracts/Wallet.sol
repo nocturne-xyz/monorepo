@@ -14,9 +14,11 @@ import "./BalanceManager.sol";
 import "./upgrade/Versioned.sol";
 
 // TODO: use SafeERC20 library
-// TODO: make wallet and vault upgradable
 contract Wallet is IWallet, BalanceManager, Versioned {
     using OperationLib for Operation;
+
+    // gap for upgrade safety
+    uint256[50] private __GAP;
 
     function initialize(
         address vault,
