@@ -6,8 +6,12 @@
   "engines": {
     "node": "18.12.1"
   },
+  "bin": {
+    "subtree-updater-cli": "dist/src/cli.js"
+  },
   "scripts": {
     "build": "tsc --build",
+    "build:docker": "./build_docker.sh",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 16000 --require ts-node/register --exit test/**",
     "check": "tsc --noEmit",
@@ -21,6 +25,7 @@
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
     "@types/chai": "^4.3.4",
+    "@types/commander": "^2.12.2",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -36,9 +41,8 @@
     "wtfnode": "^0.9.1"
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "workspace:^",
-    "@nocturne-xyz/local-prover": "workspace:^",
-    "@nocturne-xyz/sdk": "workspace:^",
+    "@nocturne-xyz/contracts": "1.0.4-alpha",
+    "@nocturne-xyz/sdk": "1.0.38-alpha",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",

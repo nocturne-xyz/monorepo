@@ -9,11 +9,9 @@ import {
   NocturneSigner,
   Note,
   NoteTrait,
-} from "@nocturne-xyz/sdk";
-import {
-  LocalSubtreeUpdateProver,
   subtreeUpdateInputsFromBatch,
-} from "../src/subtreeUpdate";
+} from "@nocturne-xyz/sdk";
+import { LocalSubtreeUpdateProver } from "../src/subtreeUpdate";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
