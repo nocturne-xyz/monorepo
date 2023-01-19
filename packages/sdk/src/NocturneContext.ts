@@ -172,35 +172,7 @@ export class NocturneContext {
   protected async proveJoinSplitTx(
     preProofJoinSplitTx: PreProofJoinSplitTx
   ): Promise<ProvenJoinSplitTx> {
-    const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
-    const proof = await this.prover.proveJoinSplit(proofInputs);
-
-    // Check that snarkjs output is consistent with our precomputed joinsplit values
-    const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
-    if (
-      baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment ||
-      baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment ||
-      baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot ||
-      baseJoinSplitTx.publicSpend != publicSignals.publicSpend ||
-      baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
-      baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-      baseJoinSplitTx.encodedAsset.encodedAssetAddr !=
-        publicSignals.encodedAssetAddr ||
-      baseJoinSplitTx.encodedAsset.encodedAssetId !=
-        publicSignals.encodedAssetId ||
-      opDigest != publicSignals.opDigest
-    ) {
-      throw new Error(
-        `SnarkJS generated public input differs from precomputed ones.`
-      );
-    }
-
-    const solidityProof = packToSolidityProof(proof.proof);
-    return {
-      proof: solidityProof,
-      ...baseJoinSplitTx,
-    };
+    return await proveJoinSplitTx(this.prover, preProofJoinSplitTx);
   }
 
   /**
@@ -640,4 +612,39 @@ export class NocturneContext {
       return notes.reduce((a, b) => a + b.value, 0n);
     }
   }
+}
+
+export async function proveJoinSplitTx(
+  prover: JoinSplitProver,
+  preProofJoinSplitTx: PreProofJoinSplitTx
+): Promise<ProvenJoinSplitTx> {
+  const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
+  const proof = await prover.proveJoinSplit(proofInputs);
+
+  // Check that snarkjs output is consistent with our precomputed joinsplit values
+  const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
+  if (
+    baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment ||
+    baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment ||
+    baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot ||
+    baseJoinSplitTx.publicSpend != publicSignals.publicSpend ||
+    baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
+    baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
+    baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
+    baseJoinSplitTx.encodedAsset.encodedAssetAddr !=
+      publicSignals.encodedAssetAddr ||
+    baseJoinSplitTx.encodedAsset.encodedAssetId !=
+      publicSignals.encodedAssetId ||
+    opDigest != publicSignals.opDigest
+  ) {
+    throw new Error(
+      `SnarkJS generated public input differs from precomputed ones.`
+    );
+  }
+
+  const solidityProof = packToSolidityProof(proof.proof);
+  return {
+    proof: solidityProof,
+    ...baseJoinSplitTx,
+  };
 }

@@ -33,7 +33,7 @@ import {
   NocturneFrontendSDK,
   TransactionTracker,
   TransactionStatus,
-  BundlerOperationID
+  BundlerOperationID,
 } from "@nocturne-xyz/frontend-sdk";
 import Modal from 'react-modal';
 
