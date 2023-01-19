@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Add genAndSubmitProofs button
+- Add back old test site
+- Add bundler endpoint to cofig
 - Remove cross-env
 - add ABI form
 - Instantiate local prover on page load with `useEffect`
