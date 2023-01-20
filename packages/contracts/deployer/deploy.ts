@@ -11,12 +11,10 @@ import { Wallet__factory } from '../src/factories/Wallet__factory';
 dotenv.config();
 
 export async function deployNocturne(
+  network: string,
   proxyAdminOwner: string,
   opts?: NocturneDeployOpts,
 ): Promise<NocturneDeployment> {
-  const network = process.env.HARDHAT_NETWORK;
-  if (!network) throw new Error('Deploy script missing network');
-
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error('Deploy script missing deployer key');
 
@@ -144,11 +142,14 @@ export async function deployNocturne(
 }
 
 (async () => {
+  const network = process.env.HARDHAT_NETWORK;
+  if (!network) throw new Error('Deploy script missing network');
+
   const proxyAdminOwner = process.env.PROXY_ADMIN_OWNER;
   if (!proxyAdminOwner)
     throw new Error('Deploy script missing proxy admin owner address');
 
-  const deployment = await deployNocturne(proxyAdminOwner);
+  const deployment = await deployNocturne(network, proxyAdminOwner);
   console.log(deployment);
   process.exit(0);
 })();
