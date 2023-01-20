@@ -12,7 +12,7 @@
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
     "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
-    "build:deps": "../../scripts/install-deps.sh",
+    "build:deps": "./scripts/install_deps.sh",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",

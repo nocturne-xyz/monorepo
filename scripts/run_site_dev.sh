@@ -1,6 +1,8 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(dirname "$0")
+ROOT_DIR="$SCRIPT_DIR/../"
+cd $ROOT_DIR
 
 yarn build
 
