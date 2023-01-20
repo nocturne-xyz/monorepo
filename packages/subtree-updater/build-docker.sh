@@ -14,8 +14,7 @@ git submodule init
 git submodule update
 popd
 
-if [ ! -d "$ROOT_DIR/circuit-artifacts/subtreeupdate/" ]
-then
+if [ -d "$ROOT_DIR/circuit-artifacts/subtreeupdate/" ]; then
     pushd packages/circuits
     yarn download-big-ptau
     yarn build:subtreeupdate
