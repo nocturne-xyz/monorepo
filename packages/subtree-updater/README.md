@@ -34,7 +34,7 @@ ACTUALLY_PROVE_SUBTREE_UPDATE=true USE_RAPIDSNARK=true yarn test:e2e
 > Note: because the zkey is quite large, the built circuit isn't included in the repo by default, so you must manually build it by running `yarn build:subtreeupdate` in `packages/circuits`.
 
 One can additionally pass in optional arguments:
-- `--network <endpoint>`: connect to a diffirent RPC node enpoint
+- `--network <endpoint>`: connect to a different RPC node enpoint
 - `--dbPath <path>`: persist state somewhere other than `./db` (the default)
 - `--tmp-dir <path>`: write intermediate files from rapidsnark somewhere other than `./prover-tmp` (the default)
 
