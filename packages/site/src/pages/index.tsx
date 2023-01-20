@@ -304,7 +304,7 @@ const Index = () => {
   };
 
   return (
-    <Container>
+    <>
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={handleCloseModal}
@@ -321,41 +321,42 @@ const Index = () => {
           <TxStatusMsg>{txStatusMsg}</TxStatusMsg>
         </ModalContainer>
       </Modal>
-      <Heading>
-        Welcome to the <Span>Nocturne Power-User Frontend</Span>
-      </Heading>
-      <CardContainer>
-        {state.error && (
-          <ErrorMessage>
-            <b>An error happened:</b> {state.error.message}
-          </ErrorMessage>
-        )}
-        {!state.isFlask && (
-          <Card
-            content={{
-              title: "Install",
-              description:
-                "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
-            }}
-            fullWidth
-          >
-            <InstallFlaskButton />,
-          </Card>
-        )}
-        {!state.installedSnap && (
-          <Card
-            content={{
-              title: "Connect",
-              description:
-                "Get started by connecting to and installing the example snap.",
-            }}
-            disabled={!state.isFlask}
-          >
-            <ConnectButton
-              onClick={handleConnectClick}
+      <Container>
+        <Heading>
+          <Span>Nocturne Power-User Frontend</Span>
+        </Heading>
+        <CardContainer>
+          {state.error && (
+            <ErrorMessage>
+              <b>An error happened:</b> {state.error.message}
+            </ErrorMessage>
+          )}
+          {!state.isFlask && (
+            <Card
+              content={{
+                title: "Install",
+                description:
+                  "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
+              }}
+              fullWidth
+            >
+              <InstallFlaskButton />,
+            </Card>
+          )}
+          {!state.installedSnap && (
+            <Card
+              content={{
+                title: "Connect",
+                description:
+                  "Get started by connecting to and installing the example snap.",
+              }}
               disabled={!state.isFlask}
-            />
-          </Card>
+            >
+              <ConnectButton
+                onClick={handleConnectClick}
+                disabled={!state.isFlask}
+              />
+            </Card>
           )}
           {shouldDisplayReconnectButton(state.installedSnap) && (
             <Card

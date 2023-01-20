@@ -2,8 +2,11 @@
 
 SCRIPT_DIR=$(dirname "$0")
 ROOT_DIR="$SCRIPT_DIR/../"
-LOG_DIR="$SCRIPT_DIR/../site-dev-logs"
 cd $ROOT_DIR
+
+LOG_DIR="$ROOT_DIR/site-dev-logs"
+mkdir -p $LOG_DIR
+
 
 yarn build
 
@@ -29,7 +32,6 @@ popd
 
 # start the hardhat node
 pushd packages/e2e-tests
-mkdir -p $LOG_DIR
 yarn hh-node &> "$LOG_DIR/hh-node" &
 HH_NODE_PID=$!
 
