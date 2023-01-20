@@ -1,6 +1,7 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(dirname "$0")
+# https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
 ROOT_DIR="$SCRIPT_DIR/../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts/"
 CIRCUIT_CPP_DIR="$CIRCUIT_ARTIFACTS_DIR/subtreeupdate/subtreeupdate_cpp"
