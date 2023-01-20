@@ -27,10 +27,6 @@ const config: HardhatUserConfig = {
       saveDeployments: false,
     },
   },
-  paths: {
-    sources: "./contracts",
-    cache: "./cache_hardhat",
-  },
 };
 
 export default config;
