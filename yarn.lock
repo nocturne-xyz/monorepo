@@ -2945,7 +2945,6 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     circomlibjs: 0.0.8
     find-yarn-workspace-root: ^2.0.0
-    forge-std: foundry-rs/forge-std
     hardhat: ^2.12.0
     hardhat-deploy: ^0.11.18
     ioredis: ^5.2.4
@@ -12444,13 +12443,6 @@ __metadata:
   version: 0.6.1
   resolution: "forever-agent@npm:0.6.1"
   checksum: 766ae6e220f5fe23676bb4c6a99387cec5b7b62ceb99e10923376e27bfea72f3c3aeec2ba5f45f3f7ba65d6616965aa7c20b15002b6860833bb6e394dea546a8
-  languageName: node
-  linkType: hard
-
-forge-std@foundry-rs/forge-std:
-  version: 1.2.0
-  resolution: "forge-std@https://github.com/foundry-rs/forge-std.git#commit=066ff16c5c03e6f931cd041fd366bc4be1fae82a"
-  checksum: 916217a77a343219879d5511643bc99e123cc0e26aae0b313a025178c7dfda33514e2b0e3a7dd8d61c65a44bacc94b1706155819beccb74336156decb818f8b2
   languageName: node
   linkType: hard
 

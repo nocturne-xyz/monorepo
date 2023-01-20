@@ -26,7 +26,6 @@ import {
   calculateOperationDigest,
   AssetType,
 } from "@nocturne-xyz/sdk";
-import { setup } from "../deploy/deployNocturne";
 import {
   depositFunds,
   sleep,
@@ -68,6 +67,8 @@ const ERC721_TOKEN_ID = 1n;
 const ERC1155_TOKEN_ID = 2n;
 const ERC1155_TOKEN_AMOUNT = 3n;
 
+const DUMMY_PROXY_ADMIN_OWNER = "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6";
+
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
@@ -108,9 +109,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("ERC1155 token deployed at: ", erc1155Token.address);
 
     const { walletProxy, vaultProxy } = await deployNocturne(
-      "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      ethers.provider,
-      { mockSubtreeUpdateVerifier: true }
+      DUMMY_PROXY_ADMIN_OWNER,
+      { provider: ethers.provider, mockSubtreeUpdateVerifier: true }
     );
     wallet = Wallet__factory.connect(walletProxy.proxyAddress, deployer);
     vault = Vault__factory.connect(vaultProxy.proxyAddress, deployer);
