@@ -5,9 +5,6 @@ import {
   SimpleERC20Token__factory,
   Vault,
   Wallet,
-  deployNocturne,
-  Wallet__factory,
-  Vault__factory,
 } from "@nocturne-xyz/contracts";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
@@ -16,14 +13,9 @@ import {
   LocalMerkleProver,
   MerkleDB,
 } from "@nocturne-xyz/sdk";
-import {
-  depositFunds,
-  getSubtreeUpdateProver,
-  setupAliceAndBob,
-} from "./utils";
+import { setup } from "../deploy/deployNocturne";
+import { depositFunds, getSubtreeUpdateProver } from "./utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-
-const DUMMY_PROXY_ADMIN_OWNER = "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
@@ -42,17 +34,13 @@ describe("LocalMerkle", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const { walletProxy, vaultProxy } = await deployNocturne(
-      DUMMY_PROXY_ADMIN_OWNER,
-      { provider: ethers.provider, mockSubtreeUpdateVerifier: true }
-    );
-    wallet = Wallet__factory.connect(walletProxy.proxyAddress, deployer);
-    vault = Vault__factory.connect(vaultProxy.proxyAddress, deployer);
-
-    const setup = await setupAliceAndBob(wallet);
-    alice = setup.alice;
-    merkleDB = setup.merkleDBAlice;
-    nocturneContext = setup.nocturneContextAlice;
+    const nocturneSetup = await setup();
+    alice = nocturneSetup.alice;
+    vault = nocturneSetup.vault;
+    wallet = nocturneSetup.wallet;
+    token = token;
+    merkleDB = nocturneSetup.merkleDBAlice;
+    nocturneContext = nocturneSetup.nocturneContextAlice;
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
