@@ -31,15 +31,14 @@ export async function deployNocturne(
   // Maybe deploy proxy admin
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
-    console.log('Deploying ProxyAdmin');
+    console.log('\nDeploying ProxyAdmin');
     const ProxyAdmin = new ProxyAdmin__factory(deployer);
     proxyAdmin = await ProxyAdmin.deploy();
     console.log('ProxyAdmin deployed to:', proxyAdmin.address);
-    console.log('ProxyAdmin owner:', await proxyAdmin.owner());
   }
 
   // Deploy Vault
-  console.log('Deploying Vault');
+  console.log('\nDeploying Vault');
   const Vault = new Vault__factory(deployer);
   const vaultProxy = await upgrades.deployProxy(Vault, {
     initializer: false,
@@ -55,22 +54,20 @@ export async function deployNocturne(
   const vaultAdminAddress = await upgrades.erc1967.getAdminAddress(
     vaultProxy.address,
   );
-  console.log('Vault proxy admin currently at:', vaultAdminAddress);
-  const vaultAdmin = ProxyAdmin__factory.connect(vaultAdminAddress, provider);
-  console.log('Vault proxy admin owner:', await vaultAdmin.owner());
+  console.log('Vault proxy admin currently set to:', vaultAdminAddress);
 
   await upgrades.admin.changeProxyAdmin(vaultProxy.address, proxyAdmin.address);
   console.log('Vault proxy admin changed to:', proxyAdmin.address);
 
   // Deploy JoinSplitVerifier
-  console.log('Deploying JoinSplitVerifier');
+  console.log('\nDeploying JoinSplitVerifier');
   const JoinSplitVerifier = new JoinSplitVerifier__factory(deployer);
   const joinSplitVerifier = await JoinSplitVerifier.deploy();
   await joinSplitVerifier.deployed();
   console.log('JoinSplitVerifier deployed to:', joinSplitVerifier.address);
 
   // Deploy SubtreeUpdateVerifier
-  console.log('Deploying SubtreeUpdateVerifier');
+  console.log('\nDeploying SubtreeUpdateVerifier');
   let SubtreeUpdateVerifier;
   if (opts?.mockSubtreeUpdateVerifier) {
     SubtreeUpdateVerifier = new TestSubtreeUpdateVerifier__factory(deployer);
@@ -85,7 +82,7 @@ export async function deployNocturne(
   );
 
   // Deploy Wallet
-  console.log('Deploying Wallet');
+  console.log('\nDeploying Wallet');
   const Wallet = new Wallet__factory(deployer);
   const walletProxy = await upgrades.deployProxy(Wallet, {
     initializer: false,
@@ -101,6 +98,11 @@ export async function deployNocturne(
     walletImplementationAddress,
   );
 
+  const walletAdminAddress = await upgrades.erc1967.getAdminAddress(
+    vaultProxy.address,
+  );
+  console.log('Wallet proxy admin currently set to:', walletAdminAddress);
+
   await upgrades.admin.changeProxyAdmin(
     walletProxy.address,
     proxyAdmin.address,
@@ -108,7 +110,7 @@ export async function deployNocturne(
   console.log('Wallet proxy admin changed to:', proxyAdmin.address);
 
   // Initialize Vault and Wallet
-  console.log('Initializing Vault');
+  console.log('\nInitializing Vault');
   await vaultProxy.initialize(walletProxy.address);
 
   console.log('Initializing Wallet');
@@ -123,7 +125,7 @@ export async function deployNocturne(
     proxyAdminOwner,
   );
   transferOwnershipTx.wait(3);
-  console.log('Transfered proxy admin ownership to:', proxyAdminOwner);
+  console.log('\nTransfered proxy admin ownership to:', proxyAdminOwner);
 
   return {
     proxyAdminOwner,
