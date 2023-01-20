@@ -8,13 +8,13 @@
     "node": "18.12.1"
   },
   "scripts": {
-    "setup-rapidsnark": "./scripts/setup_rapidsnark_prover.sh",
+    "setup-rapidsnark": "scripts/setup_rapidsnark_prover.sh",
     "build": "tsc --build",
-    "build-all-circuits": "./scripts/build_all.sh",
-    "build:joinsplit": "./scripts/joinsplit/build.sh",
-    "build:subtreeupdate": "./scripts/subtreeupdate/build.sh",
+    "build-all-circuits": "scripts/build_all.sh",
+    "build:joinsplit": "scripts/joinsplit/build.sh",
+    "build:subtreeupdate": "scripts/subtreeupdate/build.sh",
     "build:deps": "../../scripts/install_base_deps.sh && ./scripts/install_deps.sh",
-    "download-big-ptau": "./scripts/download_big_ptau.sh",
+    "download-big-ptau": "scripts/download_big_ptau.sh",
     "lint": "",
     "test:unit": "",
     "clean": "",
