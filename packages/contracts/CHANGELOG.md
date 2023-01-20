@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- put forge deps install script into this package
 - Add additional unit tests for processing multiple joinsplits
 - Make underscores consistent in `WalletUtils` and `AssetUtils`
 - Optimizer runs 99999 -> 500 to get back under code size limit
