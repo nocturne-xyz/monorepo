@@ -44,12 +44,15 @@ module.exports = {
   },
 
   networks: {
+    // NOTE: hardhat localhost has bug and will always default to using private
+    // key #0, if you are deploying to localhost, you must set
+    // DEPLOYER_KEY=<private key #0>
     localhost: {
       url: 'http://127.0.0.1:8545',
       accounts: [process.env.DEPLOYER_KEY],
     },
     goerli: {
-      url: process.env.GOERLI_RPC_URL,
+      url: `${process.env.GOERLI_RPC_URL}`,
       accounts: [process.env.DEPLOYER_KEY!],
     },
   },
