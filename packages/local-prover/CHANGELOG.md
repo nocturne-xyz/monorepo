@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `subtreeUpdateInputsFromBatch` to `sdk`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - Add local prover for subtree update
 - Refactor joinsplit prover to take circuit files as class fields not function args

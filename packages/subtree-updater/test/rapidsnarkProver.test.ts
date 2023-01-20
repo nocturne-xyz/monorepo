@@ -9,8 +9,8 @@ import {
   BinaryPoseidonTree,
   NoteTrait,
   AssetType,
+  subtreeUpdateInputsFromBatch,
 } from "@nocturne-xyz/sdk";
-import { subtreeUpdateInputsFromBatch } from "@nocturne-xyz/local-prover";
 import { RapidsnarkSubtreeUpdateProver } from "../src/rapidsnarkProver";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 

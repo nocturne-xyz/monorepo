@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- Add a script `yarn build:docker` to build the dockerized subtree updater
+- Switch to CLI options for all non-secrets
+- Add CLI instructions to readme
+- Move most CLI params into env vars
+- Dockerize
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - modify `SubtreeUpdater` to index `SubtreeUpdate` events and use those to determine when insertions are committed
 - spit `tryGenAndSubmitProofs` into separate method
