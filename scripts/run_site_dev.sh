@@ -32,6 +32,7 @@ popd
 
 # start the hardhat node
 pushd packages/e2e-tests
+echo "outputting logs to $LOG_DIR/"
 yarn hh-node &> "$LOG_DIR/hh-node" &
 HH_NODE_PID=$!
 
