@@ -1,24 +1,23 @@
-import {
-  JoinSplitVerifier__factory,
-  SubtreeUpdateVerifier__factory,
-  TestSubtreeUpdateVerifier__factory,
-  Vault__factory,
-  Wallet__factory,
-} from '@nocturne-xyz/contracts';
 import { NocturneDeployment, NocturneDeployOpts } from './types';
 import { upgrades, ethers } from 'hardhat';
 import * as dotenv from 'dotenv';
+import { ProxyAdmin__factory } from '../src/factories/ProxyAdmin__factory';
+import { Vault__factory } from '../src/factories/Vault__factory';
+import { JoinSplitVerifier__factory } from '../src/factories/JoinSplitVerifier__factory';
+import { TestSubtreeUpdateVerifier__factory } from '../src/factories/TestSubtreeUpdateVerifier__factory';
+import { SubtreeUpdateVerifier__factory } from '../src/factories/SubtreeUpdateVerifier__factory';
+import { Wallet__factory } from '../src/factories/Wallet__factory';
 
 dotenv.config();
 
 export async function deployNocturne(
-  proxyAdminAddress: string,
-  provider?: any, // FIX: ts build within hh disallows ethers.providers.Provider
+  proxyAdminOwner: string,
   opts?: NocturneDeployOpts,
 ): Promise<NocturneDeployment> {
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error('Deploy script missing deployer key');
 
+  let provider = opts?.provider;
   if (!provider) {
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) throw new Error('Deploy script missing rpc url');
@@ -26,6 +25,13 @@ export async function deployNocturne(
   }
 
   const deployer = new ethers.Wallet(deployerKey, provider);
+
+  // Maybe deploy proxy admin
+  let proxyAdmin = opts?.proxyAdmin;
+  if (!proxyAdmin) {
+    const ProxyAdmin = new ProxyAdmin__factory(deployer);
+    proxyAdmin = await ProxyAdmin.deploy();
+  }
 
   // Deploy Vault
   const Vault = new Vault__factory(deployer);
@@ -40,8 +46,8 @@ export async function deployNocturne(
     await upgrades.erc1967.getImplementationAddress(vaultProxy.address);
   console.log('Wallet implementation deployed to:', vaultImplementationAddress);
 
-  await upgrades.admin.changeProxyAdmin(vaultProxy.address, proxyAdminAddress);
-  console.log('Vault proxy admin changed to:', proxyAdminAddress);
+  await upgrades.admin.changeProxyAdmin(vaultProxy.address, proxyAdmin.address);
+  console.log('Vault proxy admin changed to:', proxyAdmin.address);
 
   // Deploy JoinSplitVerifier
   const JoinSplitVerifier = new JoinSplitVerifier__factory(deployer);
@@ -79,8 +85,11 @@ export async function deployNocturne(
     walletImplementationAddress,
   );
 
-  await upgrades.admin.changeProxyAdmin(walletProxy.address, proxyAdminAddress);
-  console.log('Wallet proxy admin changed to:', proxyAdminAddress);
+  await upgrades.admin.changeProxyAdmin(
+    walletProxy.address,
+    proxyAdmin.address,
+  );
+  console.log('Wallet proxy admin changed to:', proxyAdmin.address);
 
   // Initialize Vault and Wallet
   await vaultProxy.initialize(walletProxy.address);
@@ -90,8 +99,16 @@ export async function deployNocturne(
     subtreeUpdateVerifier.address,
   );
 
+  // Try transfer ownership of proxy admin
+  const transferOwnershipTx = await proxyAdmin.transferOwnership(
+    proxyAdminOwner,
+  );
+  transferOwnershipTx.wait(3);
+  console.log('Transfered proxy admin ownership to:', proxyAdminOwner);
+
   return {
-    proxyAdminAddress,
+    proxyAdminOwner,
+    proxyAdmin: proxyAdmin.address,
     walletProxy: {
       proxyAddress: walletProxy.address,
       implementationAddress: walletImplementationAddress,
@@ -106,10 +123,11 @@ export async function deployNocturne(
 }
 
 (async () => {
-  const proxyAdminAddress = process.env.PROXY_ADMIN_ADDRESS;
-  if (!proxyAdminAddress)
-    throw new Error('Deploy script missing proxy admin address');
+  const proxyAdminOwner = process.env.PROXY_ADMIN_OWNER;
+  if (!proxyAdminOwner)
+    throw new Error('Deploy script missing proxy admin owner address');
 
-  const deployment = await deployNocturne(proxyAdminAddress);
+  const deployment = await deployNocturne(proxyAdminOwner);
   console.log(deployment);
+  process.exit(0);
 })();

@@ -1,10 +1,13 @@
+import { ProxyAdmin } from '../src/ProxyAdmin';
+
 export interface ProxiedContract {
   proxyAddress: string;
   implementationAddress: string;
 }
 
 export interface NocturneDeployment {
-  proxyAdminAddress: string;
+  proxyAdminOwner: string;
+  proxyAdmin: string;
   walletProxy: ProxiedContract;
   vaultProxy: ProxiedContract;
   joinSplitVerifierAddress: string;
@@ -12,5 +15,8 @@ export interface NocturneDeployment {
 }
 
 export interface NocturneDeployOpts {
-  mockSubtreeUpdateVerifier: boolean;
+  proxyAdmin?: ProxyAdmin;
+  provider?: any; // FIX: ts build within hh disallows ethers.providers.Provider
+  mockSubtreeUpdateVerifier?: boolean;
+  confirmations?: number;
 }
