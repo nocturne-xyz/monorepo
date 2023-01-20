@@ -10,6 +10,9 @@ import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/ta
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+const DEFAULT_ADDRESS =
+  '1111111111111111111111111111111111111111111111111111111111111111';
+
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
@@ -49,11 +52,11 @@ module.exports = {
     // DEPLOYER_KEY=<private key #0>
     localhost: {
       url: 'http://127.0.0.1:8545',
-      accounts: [process.env.DEPLOYER_KEY],
+      accounts: [`${process.env.DEPLOYER_KEY ?? DEFAULT_ADDRESS}`],
     },
     goerli: {
       url: `${process.env.GOERLI_RPC_URL}`,
-      accounts: [process.env.DEPLOYER_KEY!],
+      accounts: [`${process.env.DEPLOYER_KEY ?? DEFAULT_ADDRESS}`],
     },
   },
 
