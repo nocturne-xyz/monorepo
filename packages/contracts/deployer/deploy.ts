@@ -7,6 +7,7 @@ import { JoinSplitVerifier__factory } from '../src/factories/JoinSplitVerifier__
 import { TestSubtreeUpdateVerifier__factory } from '../src/factories/TestSubtreeUpdateVerifier__factory';
 import { SubtreeUpdateVerifier__factory } from '../src/factories/SubtreeUpdateVerifier__factory';
 import { Wallet__factory } from '../src/factories/Wallet__factory';
+import * as fs from 'fs';
 
 dotenv.config();
 
@@ -153,5 +154,20 @@ export async function deployNocturne(
 
   const deployment = await deployNocturne(network, proxyAdminOwner);
   console.log(deployment);
+
+  const deploysDir = `${__dirname}/../deploys/`;
+  if (!fs.existsSync(deploysDir)) {
+    fs.mkdirSync(deploysDir);
+  }
+
+  fs.writeFileSync(
+    `${deploysDir}/${network}-${Date.now().toString()}.json`,
+    JSON.stringify(deployment),
+    {
+      encoding: 'utf8',
+      flag: 'w',
+    },
+  );
+
   process.exit(0);
 })();
