@@ -14,12 +14,16 @@ export async function deployNocturne(
   proxyAdminOwner: string,
   opts?: NocturneDeployOpts,
 ): Promise<NocturneDeployment> {
+  const network = process.env.HARDHAT_NETWORK;
+  if (!network) throw new Error('Deploy script missing network');
+
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error('Deploy script missing deployer key');
 
   let provider = opts?.provider;
   if (!provider) {
-    const rpcUrl = process.env.RPC_URL;
+    const rpcUrlName = `${network.toUpperCase()}_RPC_URL`;
+    const rpcUrl = process.env[rpcUrlName];
     if (!rpcUrl) throw new Error('Deploy script missing rpc url');
     provider = ethers.providers.getDefaultProvider(rpcUrl);
   }
@@ -29,11 +33,15 @@ export async function deployNocturne(
   // Maybe deploy proxy admin
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
+    console.log('Deploying ProxyAdmin');
     const ProxyAdmin = new ProxyAdmin__factory(deployer);
     proxyAdmin = await ProxyAdmin.deploy();
+    console.log('ProxyAdmin deployed to:', proxyAdmin.address);
+    console.log('ProxyAdmin owner:', await proxyAdmin.owner());
   }
 
   // Deploy Vault
+  console.log('Deploying Vault');
   const Vault = new Vault__factory(deployer);
   const vaultProxy = await upgrades.deployProxy(Vault, {
     initializer: false,
@@ -44,18 +52,27 @@ export async function deployNocturne(
 
   const vaultImplementationAddress =
     await upgrades.erc1967.getImplementationAddress(vaultProxy.address);
-  console.log('Wallet implementation deployed to:', vaultImplementationAddress);
+  console.log('Vault implementation deployed to:', vaultImplementationAddress);
+
+  const vaultAdminAddress = await upgrades.erc1967.getAdminAddress(
+    vaultProxy.address,
+  );
+  console.log('Vault proxy admin currently at:', vaultAdminAddress);
+  const vaultAdmin = ProxyAdmin__factory.connect(vaultAdminAddress, provider);
+  console.log('Vault proxy admin owner:', await vaultAdmin.owner());
 
   await upgrades.admin.changeProxyAdmin(vaultProxy.address, proxyAdmin.address);
   console.log('Vault proxy admin changed to:', proxyAdmin.address);
 
   // Deploy JoinSplitVerifier
+  console.log('Deploying JoinSplitVerifier');
   const JoinSplitVerifier = new JoinSplitVerifier__factory(deployer);
   const joinSplitVerifier = await JoinSplitVerifier.deploy();
   await joinSplitVerifier.deployed();
   console.log('JoinSplitVerifier deployed to:', joinSplitVerifier.address);
 
   // Deploy SubtreeUpdateVerifier
+  console.log('Deploying SubtreeUpdateVerifier');
   let SubtreeUpdateVerifier;
   if (opts?.mockSubtreeUpdateVerifier) {
     SubtreeUpdateVerifier = new TestSubtreeUpdateVerifier__factory(deployer);
@@ -70,6 +87,7 @@ export async function deployNocturne(
   );
 
   // Deploy Wallet
+  console.log('Deploying Wallet');
   const Wallet = new Wallet__factory(deployer);
   const walletProxy = await upgrades.deployProxy(Wallet, {
     initializer: false,
@@ -92,7 +110,10 @@ export async function deployNocturne(
   console.log('Wallet proxy admin changed to:', proxyAdmin.address);
 
   // Initialize Vault and Wallet
+  console.log('Initializing Vault');
   await vaultProxy.initialize(walletProxy.address);
+
+  console.log('Initializing Wallet');
   await walletProxy.initialize(
     vaultProxy.address,
     joinSplitVerifier.address,

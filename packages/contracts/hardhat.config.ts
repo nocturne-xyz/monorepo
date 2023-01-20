@@ -10,8 +10,6 @@ import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/ta
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const infuraKey = process.env.INFURA_API_KEY;
-
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
     const paths: string[] = await runSuper();
@@ -48,15 +46,11 @@ module.exports = {
   networks: {
     localhost: {
       url: 'http://127.0.0.1:8545',
+      accounts: [process.env.DEPLOYER_KEY],
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${infuraKey}`,
-    },
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
-    },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${infuraKey}`,
+    goerli: {
+      url: process.env.GOERLI_RPC_URL,
+      accounts: [process.env.DEPLOYER_KEY!],
     },
   },
 
