@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Replace all dependent OZ libraries with their upgradeable versions for Wallet, BalanceManager, CommitmentTreeManager, and NocturneReetrancyGuard
+- Replace all constructors for initializers (in Wallet, BalanceManager, CommitmentTreeManager, and NocturneReentrancyGuard)
+- Add TransparentProxy, ProxyAdmin, and Versioned to `contracts/upgrade`
 - Changed to a custom implementation of ReentrancyGuard to properly reflect operation processing status
 - Fixed a bug that `_receivedAssets` is modified outside an operation
 - Fixed a bug that refunds in `encodedRefundAssets` are not processed
