@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
-contract NocturneReentrancyGuard {
+contract NocturneReentrancyGuard is Initializable {
     uint256 public constant NOT_ENTERED = 1;
     uint256 public constant ENTERED_PROCESS_OPERATION = 2;
     uint256 public constant ENTERED_EXECUTE_OPERATION = 3;
 
     uint256 private _operationStage;
 
-    constructor() {
+    function __NocturneReentrancyGuard_init() internal onlyInitializing {
         _operationStage = NOT_ENTERED;
     }
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Slightly modify deployNocturne script to deploy proxies without properly managing proxy admin (temporary, to be replaced by proper deploy script later)
 - Deposit script creates and sends funds for two tokens
 - Modify deposit script to airdrop tokens to hardcoded nocturne addresses
 - Fix `localhost` hardhat network to match `hardhat node`, which hosts at `127.0.0.1` instead of `localhost`

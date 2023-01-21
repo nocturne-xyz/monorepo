@@ -7,8 +7,8 @@ import {IVault} from "./interfaces/IVault.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
@@ -16,25 +16,27 @@ import "./libs/types.sol";
 import "./NocturneReentrancyGuard.sol";
 
 contract BalanceManager is
-    IERC721Receiver,
-    IERC1155Receiver,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable,
     CommitmentTreeManager,
     NocturneReentrancyGuard
 {
     using OperationLib for Operation;
 
+    IVault public _vault;
+
     EncodedAsset[] public _receivedAssets;
 
-    IVault public immutable _vault;
+    // gap for upgrade safety
+    uint256[50] private __GAP;
 
-    constructor(
+    function __BalanceManager__init(
         address vault,
         address joinSplitVerifier,
-        address _subtreeUpdateVerifier
-    )
-        CommitmentTreeManager(joinSplitVerifier, _subtreeUpdateVerifier)
-        NocturneReentrancyGuard()
-    {
+        address subtreeUpdateVerifier
+    ) public onlyInitializing {
+        __NocturneReentrancyGuard_init();
+        __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _vault = IVault(vault);
     }
 
@@ -55,7 +57,7 @@ contract BalanceManager is
             );
         }
         // Accept the transfer when _operation_stage != _NOT_ENTERED
-        return IERC721Receiver.onERC721Received.selector;
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
     function onERC1155Received(
@@ -76,7 +78,7 @@ contract BalanceManager is
             );
         }
         // Accept the transfer when _operation_stage != _NOT_ENTERED
-        return IERC1155Receiver.onERC1155Received.selector;
+        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
@@ -104,16 +106,16 @@ contract BalanceManager is
             }
         }
         // Accept the transfer when _operation_stage != _NOT_ENTERED
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
+        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
         return
-            (interfaceId == type(IERC165).interfaceId) ||
-            (interfaceId == type(IERC721Receiver).interfaceId) ||
-            (interfaceId == type(IERC1155Receiver).interfaceId);
+            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
+            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
+            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
     function _makeDeposit(Deposit calldata deposit) internal {
