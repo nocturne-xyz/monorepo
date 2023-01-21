@@ -228,7 +228,11 @@ const Index = () => {
     try {
       const provenOperation =
         await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
+      
       console.log(provenOperation);
+
+      const isValid = await nocturneFrontendSDK!.verifyProvenOperation(provenOperation);
+      console.log("is valid: ", isValid);
 
       return provenOperation;
     } catch (e) {

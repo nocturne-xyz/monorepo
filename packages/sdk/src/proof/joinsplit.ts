@@ -68,3 +68,19 @@ export function joinSplitPublicSignalsFromArray(
     encodedAssetId: publicSignals[8],
   };
 }
+
+export function joinSplitPublicSignalsToArray(
+  publicSignals: JoinSplitPublicSignals
+): [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint] {
+  return [
+    publicSignals.newNoteACommitment,
+    publicSignals.newNoteBCommitment,
+    publicSignals.commitmentTreeRoot,
+    publicSignals.publicSpend,
+    publicSignals.nullifierA,
+    publicSignals.nullifierB,
+    publicSignals.opDigest,
+    publicSignals.encodedAssetAddr,
+    publicSignals.encodedAssetId,
+  ];
+}

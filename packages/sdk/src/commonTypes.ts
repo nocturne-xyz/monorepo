@@ -172,6 +172,16 @@ export function packToSolidityProof(proof: BaseProof): SolidityProof {
   ];
 }
 
+export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
+  return {
+    pi_a: [proof[0], proof[1]],
+    pi_b: [[proof[3], proof[2]], [proof[5], proof[4]]],
+    pi_c: [proof[6], proof[7]],
+    protocol: "groth16",
+    curve: "bn128",
+  };
+}
+
 export interface NoteTransmission {
   owner: NocturneAddress;
   encappedKey: bigint;

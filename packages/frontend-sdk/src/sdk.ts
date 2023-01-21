@@ -7,6 +7,10 @@ import {
   AssetWithBalance,
   encodeAsset,
   proveJoinSplitTx,
+  calculateOperationDigest,
+  JoinSplitProofWithPublicSignals,
+  unpackFromSolidityProof,
+  joinSplitPublicSignalsToArray,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -68,10 +72,39 @@ export class NocturneFrontendSDK {
     };
   }
 
+  async verifyProvenOperation(
+    operation: ProvenOperation
+  ): Promise<boolean> {
+    const opDigest = calculateOperationDigest(operation);
+    const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] = operation.joinSplitTxs.map((joinSplit) => {
+      const publicSignals = joinSplitPublicSignalsToArray({
+        newNoteACommitment: joinSplit.newNoteACommitment,
+        newNoteBCommitment: joinSplit.newNoteBCommitment,
+        commitmentTreeRoot: joinSplit.commitmentTreeRoot,
+        publicSpend: joinSplit.publicSpend,
+        nullifierA: joinSplit.nullifierA,
+        nullifierB: joinSplit.nullifierB,
+        opDigest,
+        encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
+        encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
+      });
+
+      const proof = unpackFromSolidityProof(joinSplit.proof);
+      console.log("proof", proof);
+
+      return { publicSignals, proof };
+    });
+
+    const results = await Promise.all(
+      proofsWithPublicInputs.map(this.localProver.verifyJoinSplitProof)
+    );
+
+    return results.every((result) => result);
+  }
+
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
   async submitProvenOperation(operation: ProvenOperation): Promise<BundlerOperationID> {
-
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {
       method: "POST",
       headers: {

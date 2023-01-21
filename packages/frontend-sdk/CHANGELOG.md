@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add method to verify operation proofs
 - add `TransactionTracker` component
 - Use `makePostProofJoinSplitTx` in `generateProvenOperation`
 - Change default `WASM_PATH` from `./joinsplit.wasm` to `/joinsplit.wasm`
