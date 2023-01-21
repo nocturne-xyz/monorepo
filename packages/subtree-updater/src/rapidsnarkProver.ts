@@ -46,12 +46,19 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
       inputJsonPath,
       serializeRapidsnarkInputs(inputs)
     );
-    await runCommand(
+    let [stdout, stderr] = await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
-    await runCommand(
+
+    console.log(stdout);
+    console.error(stderr);
+
+    [stdout, stderr] = await runCommand(
       `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`
     );
+
+    console.log(stdout);
+    console.error(stderr);
 
     const [proofStr, publicSignalsStr] = await Promise.all([
       fs.promises.readFile(proofJsonPath, "utf-8"),

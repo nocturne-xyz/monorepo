@@ -637,8 +637,22 @@ export async function proveJoinSplitTx(
       publicSignals.encodedAssetId ||
     opDigest != publicSignals.opDigest
   ) {
+
+    console.error("from proof, got", publicSignals);
+    console.error("from sdk, got", {
+      newNoteACommitment: baseJoinSplitTx.newNoteACommitment,
+      newNoteBCommitment: baseJoinSplitTx.newNoteBCommitment,
+      commitmentTreeRoot: baseJoinSplitTx.commitmentTreeRoot,
+      publicSpend: baseJoinSplitTx.publicSpend,
+      nullifierA: baseJoinSplitTx.nullifierA,
+      nullifierB: baseJoinSplitTx.nullifierB,
+      encodedAssetAddr: baseJoinSplitTx.encodedAsset.encodedAssetAddr,
+      encodedAssetId: baseJoinSplitTx.encodedAsset.encodedAssetId,
+      opDigest,
+    });
+
     throw new Error(
-      `SnarkJS generated public input differs from precomputed ones.`
+      `SnarkJS generated public input differs from precomputed ones`
     );
   }
 

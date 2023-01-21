@@ -436,7 +436,7 @@ const Index = () => {
               !shouldDisplayReconnectButton(state.installedSnap)
             }
           >
-            <GenAndSubmitProofButton
+            <GetJoinSplitInputsButton
               onClick={() => handleGenProof()}
               disabled={!state.installedSnap}
             />
@@ -453,8 +453,8 @@ const Index = () => {
               !shouldDisplayReconnectButton(state.installedSnap)
             }
           >
-            <GetJoinSplitInputsButton
-              onClick={handleGenAndSubmitProof}
+            <GenAndSubmitProofButton
+              onClick={() => handleGenAndSubmitProof()}
               disabled={!state.installedSnap}
             />
           </Card>
