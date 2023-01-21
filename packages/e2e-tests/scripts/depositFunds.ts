@@ -41,7 +41,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
-      await token.connect(depositor).reserveTokens(addr, 1000);
+      await token.connect(depositor).reserveTokens(addr, 100000000);
     }
 
     // Reserve and approve tokens for nocturne addr depositor
@@ -61,29 +61,24 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
 
     // Deposit two 100 unit notes for given token
-    const depositProms: Promise<any>[] = [];
     for (const addr of targetAddrs) {
-      console.log("depositing 2 100 token notes to", addr);
-      depositProms.push(
-        wallet.connect(depositor).depositFunds({
-          encodedAssetAddr,
-          encodedAssetId,
-          spender: depositor.address,
-          value: 100n,
-          depositAddr: addr,
-        })
-      );
-      depositProms.push(
-        wallet.connect(depositor).depositFunds({
-          encodedAssetAddr,
-          encodedAssetId,
-          spender: depositor.address,
-          value: 100n,
-          depositAddr: addr,
-        })
-      );
+      console.log("depositing 16 100 token notes to", addr);
+      const depositProms: Promise<any>[] = [];
+      for (let i = 0; i < 16; i++) {
+        depositProms.push(
+          wallet.connect(depositor).depositFunds({
+            encodedAssetAddr,
+            encodedAssetId,
+            spender: depositor.address,
+            value: 100n,
+            depositAddr: addr,
+          }, {
+            gasLimit: 1000000,
+          })
+        );
+      }
+      await Promise.all(depositProms);
     }
 
-    await Promise.all(depositProms);
   }
 })();
