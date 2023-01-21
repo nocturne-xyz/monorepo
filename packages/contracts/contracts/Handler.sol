@@ -15,6 +15,16 @@ contract Handler is IHandler, BalanceManager {
     // gap for upgrade safety
     uint256[50] private __GAP;
 
+    modifier onlyThis() {
+        require(msg.sender == address(this), "only Handler");
+        _;
+    }
+
+    modifier onlyWallet() {
+        require(msg.sender == _wallet, "only Wallet");
+        _;
+    }
+
     function initialize(
         address wallet,
         address vault,
@@ -26,27 +36,15 @@ contract Handler is IHandler, BalanceManager {
         _wallet = wallet;
     }
 
-    modifier onlyThis() {
-        require(msg.sender == address(this), "only Handler");
-        _;
-    }
-
-    modifier onlyWallet() {
-        require(msg.sender == _wallet, "only Wallet");
-        _;
-    }
-
     function handleDeposit(Deposit calldata deposit) external onlyWallet {
-        NocturneAddress calldata depositAddr = deposit.depositAddr;
+        _vault.makeDeposit(deposit);
 
         _handleRefundNote(
-            depositAddr,
+            deposit.depositAddr,
             deposit.encodedAssetAddr,
             deposit.encodedAssetId,
             deposit.value
         );
-
-        _vault.makeDeposit(deposit);
     }
 
     /**
