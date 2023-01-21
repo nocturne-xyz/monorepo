@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Modify `hardhat.config.ts` to take private keys from env for deploy script
+- Add deploy script to `deployer` directory
 - Replace all dependent OZ libraries with their upgradeable versions for Wallet, BalanceManager, CommitmentTreeManager, and NocturneReetrancyGuard
 - Replace all constructors for initializers (in Wallet, BalanceManager, CommitmentTreeManager, and NocturneReentrancyGuard)
 - Add TransparentProxy, ProxyAdmin, and Versioned to `contracts/upgrade`
