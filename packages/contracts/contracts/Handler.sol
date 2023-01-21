@@ -3,15 +3,17 @@ pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "./libs/types.sol";
-import "./libs/WalletUtils.sol";
+import "./libs/HandlerUtils.sol";
 
-import "./interfaces/IWallet.sol";
-import "./Wallet.sol";
+import "./interfaces/IHandler.sol";
 import "./BalanceManager.sol";
 import "./NocturneReentrancyGuard.sol";
 
-contract Handler is BalanceManager {
+contract Handler is IHandler, BalanceManager {
     address public _wallet;
+
+    // gap for upgrade safety
+    uint256[50] private __GAP;
 
     function initialize(
         address wallet,
@@ -73,7 +75,7 @@ contract Handler is BalanceManager {
         address bundler
     )
         external
-        onlyThis
+        onlyWallet
         processOperationGuard
         returns (OperationResult memory opResult)
     {
@@ -88,7 +90,7 @@ contract Handler is BalanceManager {
         } catch (bytes memory result) {
             // TODO: properly process this failure case
             // TODO: properly set opResult.executionGas
-            opResult = WalletUtils._unsuccessfulOperation(op, result);
+            opResult = HandlerUtils.unsuccessfulOperation(op, result);
         }
         opResult.verificationGas = verificationGasForOp;
 

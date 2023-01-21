@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
+import {HandlerUtils} from "./libs/HandlerUtils.sol";
 import "./libs/types.sol";
 import "./NocturneReentrancyGuard.sol";
 
@@ -118,19 +118,6 @@ contract BalanceManager is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    function _makeDeposit(Deposit calldata deposit) internal {
-        NocturneAddress calldata depositAddr = deposit.depositAddr;
-
-        _handleRefundNote(
-            depositAddr,
-            deposit.encodedAssetAddr,
-            deposit.encodedAssetId,
-            deposit.value
-        );
-
-        _vault.makeDeposit(deposit);
-    }
-
     /**
       Process all joinSplitTxs and request all declared publicSpend from the
       vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
@@ -195,7 +182,7 @@ contract BalanceManager is
         /// guaranteed to have reserved gasAssetAmount since it didn't throw.
         _vault.requestAsset(encodedGasAsset, gasAssetAmount);
 
-        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
+        uint256 bundlerPayout = HandlerUtils.calculateBundlerGasAssetPayout(
             op,
             opResult
         );

@@ -20,28 +20,28 @@ contract Vault is
     IERC1155ReceiverUpgradeable,
     Initializable
 {
-    address public _wallet;
+    address public _handler;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    modifier onlyWallet() {
-        require(msg.sender == _wallet, "Not called from Wallet");
+    modifier onlyHandler() {
+        require(msg.sender == _handler, "only Handler");
         _;
     }
 
-    function initialize(address wallet) external initializer {
-        _wallet = wallet;
+    function initialize(address handler) external initializer {
+        _handler = handler;
     }
 
     function requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external override onlyWallet {
-        AssetUtils._transferAssetTo(encodedAsset, _wallet, value);
+    ) external override onlyHandler {
+        AssetUtils._transferAssetTo(encodedAsset, _handler, value);
     }
 
-    function makeDeposit(Deposit calldata deposit) public override onlyWallet {
+    function makeDeposit(Deposit calldata deposit) public override onlyHandler {
         AssetUtils._transferAssetFrom(
             EncodedAsset({
                 encodedAssetAddr: deposit.encodedAssetAddr,

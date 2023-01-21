@@ -18,6 +18,7 @@ import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
+import {Handler} from "../Handler.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
@@ -41,6 +42,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
 
     Wallet wallet;
+    Handler handler;
     Vault vault;
     TreeTest treeTest;
     IJoinSplitVerifier joinSplitVerifier;
@@ -85,19 +87,22 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        handler = new Handler();
         wallet = new Wallet();
-        wallet.initialize(
+
+        handler.initialize(
+            address(wallet),
             address(vault),
             address(joinSplitVerifier),
             address(subtreeUpdateVerifier)
         );
+        wallet.initialize(address(handler), address(joinSplitVerifier));
+        vault.initialize(address(handler));
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
         treeTest.initialize(hasherT3, hasherT6);
-
-        vault.initialize(address(wallet));
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -214,9 +219,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 root = path[path.length - 1];
 
         // fill the tree batch
-        wallet.fillBatchWithZeros();
+        handler.fillBatchWithZeros();
 
-        wallet.applySubtreeUpdate(root, dummyProof());
+        handler.applySubtreeUpdate(root, dummyProof());
     }
 
     function formatTransferOperation(
@@ -237,7 +242,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             )
         });
 
-        uint256 root = wallet.root();
+        uint256 root = handler.root();
         NoteTransmission memory newNoteATransmission = NoteTransmission({
             owner: NocturneAddress({
                 h1X: uint256(123),

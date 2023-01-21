@@ -139,7 +139,7 @@ library WalletUtils {
     }
 
     // From https://ethereum.stackexchange.com/questions/83528
-    function _getRevertMsg(
+    function getRevertMsg(
         bytes memory reason
     ) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
@@ -154,7 +154,7 @@ library WalletUtils {
         return abi.decode(reason, (string)); // All that remains is the revert string
     }
 
-    function _failOperationWithReason(
+    function failOperationWithReason(
         string memory reason
     ) internal pure returns (OperationResult memory result) {
         return
@@ -169,57 +169,10 @@ library WalletUtils {
             });
     }
 
-    // TODO: properly process this failure case
-    function _unsuccessfulOperation(
-        Operation calldata op,
-        bytes memory result
-    ) internal pure returns (OperationResult memory) {
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = false;
-        bytes[] memory callResults = new bytes[](1);
-        callResults[0] = result;
-        return
-            OperationResult({
-                opProcessed: true,
-                failureReason: "",
-                callSuccesses: callSuccesses,
-                callResults: callResults,
-                executionGas: 0,
-                verificationGas: 0,
-                numRefunds: op.joinSplitTxs.length +
-                    op.encodedRefundAssets.length
-            });
-    }
-
-    function _verificationGasForOp(
+    function verificationGasForOp(
         Operation calldata op,
         uint256 perJoinSplitGas
     ) internal pure returns (uint256) {
         return perJoinSplitGas * op.joinSplitTxs.length;
-    }
-
-    function _calculateBundlerGasAssetPayout(
-        Operation calldata op,
-        OperationResult memory opResult
-    ) internal pure returns (uint256) {
-        uint256 handleRefundGas = _handleRefundGas(opResult.numRefunds);
-
-        return
-            op.gasPrice *
-            (opResult.executionGas +
-                opResult.verificationGas +
-                handleRefundGas);
-    }
-
-    function _handleRefundGas(
-        uint256 numRefunds
-    ) internal pure returns (uint256) {
-        return numRefunds * GAS_PER_REFUND_HANDLE;
-    }
-
-    function _treeRefundGas(
-        uint256 numRefunds
-    ) internal pure returns (uint256) {
-        return numRefunds * GAS_PER_REFUND_TREE;
     }
 }
