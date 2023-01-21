@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+pragma abicoder v2;
+
+import "./libs/types.sol";
+import "./libs/WalletUtils.sol";
+
+import "./interfaces/IWallet.sol";
+import "./Wallet.sol";
+import "./BalanceManager.sol";
+import "./NocturneReentrancyGuard.sol";
+
+contract Handler is BalanceManager {
+    address public _wallet;
+
+    function initialize(
+        address wallet,
+        address vault,
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) external initializer {
+        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+
+        _wallet = wallet;
+    }
+
+    modifier onlyThis() {
+        require(msg.sender == address(this), "only Handler");
+        _;
+    }
+
+    modifier onlyWallet() {
+        require(msg.sender == _wallet, "only Wallet");
+        _;
+    }
+
+    function handleDeposit(Deposit calldata deposit) external onlyWallet {
+        NocturneAddress calldata depositAddr = deposit.depositAddr;
+
+        _handleRefundNote(
+            depositAddr,
+            deposit.encodedAssetAddr,
+            deposit.encodedAssetId,
+            deposit.value
+        );
+
+        _vault.makeDeposit(deposit);
+    }
+
+    /**
+      @dev This function will only be message-called from `processBundle` and
+      can only be entered once inside an Evm transaction. It will message-call
+      `executeOperation`.
+
+      @param op an Operation
+      @param bundler address of the bundler that provided the bundle
+      @return opResult the result of the operation
+
+      @dev This function can throw due to internal errors or being out-of-gas.
+      It is expected of `processBundle` to catch this error.
+
+      @dev The gas cost of the call can be estimated in constant time given op:
+      1. The gas cost before `executeOperation` can be bounded as a function of
+      op.joinSplitTxs.length
+      2. `executeOperation` uses at most op.executionGasLimit
+      3. The gas cost after `executeOperation` can be bounded as a function of
+      op.maxNumRefunds
+      The bundler should estimate the gas cost functions in 1 and 3 offchain.
+    */
+    function handleOperation(
+        Operation calldata op,
+        uint256 verificationGasForOp,
+        address bundler
+    )
+        external
+        onlyThis
+        processOperationGuard
+        returns (OperationResult memory opResult)
+    {
+        // Handle all joinsplit transctions.
+        /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
+        _processJoinSplitTxsReservingFee(op);
+
+        try this.executeOperation{gas: op.executionGasLimit}(op) returns (
+            OperationResult memory result
+        ) {
+            opResult = result;
+        } catch (bytes memory result) {
+            // TODO: properly process this failure case
+            // TODO: properly set opResult.executionGas
+            opResult = WalletUtils._unsuccessfulOperation(op, result);
+        }
+        opResult.verificationGas = verificationGasForOp;
+
+        // Gather reserved gas asset and process gas payment to bundler
+        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
+
+        // Note: if too many refunds condition reverted in execute actions, the
+        // actions creating the refunds were reverted too, so numRefunds would =
+        // joinsplits.length + encodedRefundAssets.length
+        _handleAllRefunds(op);
+
+        return opResult;
+    }
+
+    /**
+      @dev This function will only be message-called from `processOperation`.
+      The call gas given is the execution gas specified by the operation.
+    */
+    function executeOperation(
+        Operation calldata op
+    )
+        external
+        onlyThis
+        executeOperationGuard
+        returns (OperationResult memory opResult)
+    {
+        uint256 preExecutionGas = gasleft();
+
+        uint256 numActions = op.actions.length;
+        opResult.opProcessed = true; // default to true
+        opResult.callSuccesses = new bool[](numActions);
+        opResult.callResults = new bytes[](numActions);
+
+        // Execute each external call
+        // TODO: Add sequential call semantic
+        for (uint256 i = 0; i < numActions; i++) {
+            (bool success, bytes memory result) = _makeExternalCall(
+                op.actions[i]
+            );
+
+            opResult.callSuccesses[i] = success;
+            opResult.callResults[i] = result;
+        }
+
+        // Ensure number of refunds didn't exceed max specified in op.
+        // If it did, executeOperation is reverts and all action state changes
+        // are rolled back.
+        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
+        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+
+        opResult.numRefunds = numRefundsToHandle;
+
+        opResult.executionGas = preExecutionGas - gasleft();
+    }
+
+    function _makeExternalCall(
+        Action calldata action
+    ) internal returns (bool success, bytes memory result) {
+        require(
+            action.contractAddress != address(_vault),
+            "Cannot call the Nocturne vault"
+        );
+
+        (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+}
