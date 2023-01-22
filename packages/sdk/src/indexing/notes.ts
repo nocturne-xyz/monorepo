@@ -1,15 +1,15 @@
 import { IncludedNote } from "../sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Accountant } from "@nocturne-xyz/contracts";
 import { query } from "../sdk/utils";
 import { JoinSplitEvent } from "../sdk/notesManager";
 import {
   RefundEvent as EthRefundEvent,
   JoinSplitEvent as EthJoinSplitEvent,
-} from "@nocturne-xyz/contracts/dist/src/Wallet";
+} from "@nocturne-xyz/contracts/dist/src/Accountant";
 import { decodeAsset } from "../commonTypes";
 
 export async function fetchNotesFromRefunds(
-  contract: Wallet,
+  contract: Accountant,
   from: number,
   to: number
 ): Promise<IncludedNote[]> {
@@ -47,7 +47,7 @@ export async function fetchNotesFromRefunds(
 }
 
 export async function fetchJoinSplits(
-  contract: Wallet,
+  contract: Accountant,
   from: number,
   to: number
 ): Promise<JoinSplitEvent[]> {

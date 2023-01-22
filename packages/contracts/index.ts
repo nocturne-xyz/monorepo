@@ -1,6 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { Wallet } from './src/Wallet';
+export type { Accountant } from './src/Accountant';
 export type { Vault } from './src/Vault';
 export type { JoinSplitVerifier } from './src/JoinSplitVerifier';
 export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
@@ -20,6 +21,7 @@ export type { ProxyAdmin } from './src/ProxyAdmin';
 export type { Versioned } from './src/Versioned';
 
 export { Wallet__factory } from './src/factories/Wallet__factory';
+export { Accountant__factory } from './src/factories/Accountant__factory';
 export { Vault__factory } from './src/factories/Vault__factory';
 export { JoinSplitVerifier__factory } from './src/factories/JoinSplitVerifier__factory';
 export { SubtreeUpdateVerifier__factory } from './src/factories/SubtreeUpdateVerifier__factory';

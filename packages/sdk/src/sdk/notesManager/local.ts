@@ -1,4 +1,4 @@
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Accountant, Accountant__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { NotesDB } from "../db";
@@ -16,18 +16,21 @@ const JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK =
   "JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK";
 
 export class LocalNotesManager extends NotesManager {
-  walletContract: Wallet;
+  accountantContract: Accountant;
   provider: ethers.providers.Provider;
 
   constructor(
     db: NotesDB,
     signer: NocturneSigner,
-    walletAddress: Address,
+    accountantAddress: Address,
     provider: ethers.providers.Provider
   ) {
     super(db, signer);
     this.provider = provider;
-    this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
+    this.accountantContract = Accountant__factory.connect(
+      accountantAddress,
+      this.provider
+    );
   }
 
   async fetchNotesFromRefunds(): Promise<IncludedNote[]> {
@@ -38,7 +41,7 @@ export class LocalNotesManager extends NotesManager {
     const latestBlock = await this.provider.getBlockNumber();
 
     const newRefunds = await fetchNotesFromRefunds(
-      this.walletContract,
+      this.accountantContract,
       lastSeen,
       latestBlock
     );
@@ -72,7 +75,7 @@ export class LocalNotesManager extends NotesManager {
     const latestBlock = await this.provider.getBlockNumber();
 
     const newJoinSplits = await fetchJoinSplits(
-      this.walletContract,
+      this.accountantContract,
       lastSeen,
       latestBlock
     );

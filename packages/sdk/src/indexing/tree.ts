@@ -1,9 +1,9 @@
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Accountant } from "@nocturne-xyz/contracts";
 import {
   InsertNoteCommitmentsEvent,
   InsertNotesEvent,
   SubtreeUpdateEvent,
-} from "@nocturne-xyz/contracts/dist/src/Wallet";
+} from "@nocturne-xyz/contracts/dist/src/Accountant";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
 import { decodeAsset } from "../commonTypes";
@@ -17,7 +17,7 @@ interface OrderedInsertion {
 
 // returns SubtreeUpdateCommit events sorted in the order in which they appeared on-chain
 export async function fetchInsertions(
-  contract: Wallet,
+  contract: Accountant,
   from: number,
   to: number
 ): Promise<(Note | bigint)[]> {
@@ -100,7 +100,7 @@ export interface SubtreeUpdateCommit {
 
 // returns SubtreeUpdateCommit events in the order in which they appeared on-chain
 export async function fetchSubtreeUpdateCommits(
-  contract: Wallet,
+  contract: Accountant,
   from: number,
   to: number
 ): Promise<SubtreeUpdateCommit[]> {
