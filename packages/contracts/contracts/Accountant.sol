@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import "./interfaces/IAccountant.sol";
 import "./CommitmentTreeManager.sol";
-import "./Vault.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
