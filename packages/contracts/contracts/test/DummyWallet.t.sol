@@ -227,7 +227,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 publicSpend,
         uint256 verificationGasLimit,
         uint256 executionGasLimit,
-        uint256 gasPrice
+        uint256 gasPrice,
+        uint256 numJoinSplits
     ) internal view returns (Operation memory) {
         Action memory transferAction = Action({
             contractAddress: address(token),
@@ -266,25 +267,26 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedAssetAddr: uint256(uint160(address(token))),
             encodedAssetId: uint256(0)
         });
-        JoinSplitTransaction memory joinSplitTx = JoinSplitTransaction({
-            commitmentTreeRoot: root,
-            nullifierA: uint256(182),
-            nullifierB: uint256(183),
-            newNoteACommitment: uint256(1038),
-            newNoteATransmission: newNoteATransmission,
-            newNoteBCommitment: uint256(1032),
-            newNoteBTransmission: newNoteBTransmission,
-            proof: dummyProof(),
-            encodedAsset: encodedAsset,
-            publicSpend: publicSpend
-        });
-
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
-            1
+            numJoinSplits
         );
-        joinSplitTxs[0] = joinSplitTx;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplitTxs[i] = JoinSplitTransaction({
+                commitmentTreeRoot: root,
+                nullifierA: uint256(182),
+                nullifierB: uint256(183),
+                newNoteACommitment: uint256(1038),
+                newNoteATransmission: newNoteATransmission,
+                newNoteBCommitment: uint256(1032),
+                newNoteBTransmission: newNoteBTransmission,
+                proof: dummyProof(),
+                encodedAsset: encodedAsset,
+                publicSpend: publicSpend
+            });
+        }
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
         Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
         Operation memory op = Operation({
@@ -335,7 +337,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            0
+            0,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -397,7 +400,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             15 gwei, // this will overdraw the accountant
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            1000
+            1000,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -448,7 +452,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            1000
+            1000,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
