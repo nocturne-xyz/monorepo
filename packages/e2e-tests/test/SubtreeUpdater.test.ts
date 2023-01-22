@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import {
+  Handler,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
@@ -25,6 +26,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let serverSigner: ethers.Signer;
   let vault: Vault;
   let wallet: Wallet;
+  let handler: Handler;
   let token: SimpleERC20Token;
   let nocturneContext: NocturneContext;
   let server: SubtreeUpdateServer;
@@ -43,6 +45,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     alice = nocturneSetup.alice;
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
+    handler = nocturneSetup.handler;
     token = token;
     nocturneContext = nocturneSetup.nocturneContextAlice;
     notesDB = nocturneSetup.notesDBAlice;
@@ -59,7 +62,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     const prover = getSubtreeUpdateProver();
     const server = new SubtreeUpdateServer(
       prover,
-      wallet.address,
+      handler.address,
       serverDBPath,
       serverSigner,
       TEST_SERVER_POLL_INTERVAL
@@ -84,7 +87,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
-    await wallet.fillBatchWithZeros();
+    await handler.fillBatchWithZeros();
 
     await sleep(getSubtreeUpdaterDelay());
     await server.stop();

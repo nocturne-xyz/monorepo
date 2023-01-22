@@ -4,6 +4,7 @@ import { open } from "lmdb";
 import {
   SimpleERC20Token__factory,
   Vault,
+  Handler,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
@@ -21,6 +22,7 @@ describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let wallet: Wallet;
+  let handler: Handler;
   let vault: Vault;
   let token: SimpleERC20Token;
   let merkleDB: MerkleDB;
@@ -38,24 +40,25 @@ describe("LocalMerkle", async () => {
     alice = nocturneSetup.alice;
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
+    handler = nocturneSetup.handler;
     token = token;
     merkleDB = nocturneSetup.merkleDBAlice;
     nocturneContext = nocturneSetup.nocturneContextAlice;
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    updater = new SubtreeUpdater(handler, serverDB, prover);
     await updater.init();
 
     localMerkle = new LocalMerkleProver(
-      wallet.address,
+      handler.address,
       ethers.provider,
       merkleDB
     );
   });
 
   async function applySubtreeUpdate() {
-    await wallet.fillBatchWithZeros();
+    await handler.fillBatchWithZeros();
     await updater.pollInsertionsAndTryMakeBatch();
     await updater.tryGenAndSubmitProofs();
   }

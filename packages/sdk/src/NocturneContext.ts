@@ -56,7 +56,7 @@ export class NocturneContext {
     signer: NocturneSigner,
     prover: JoinSplitProver,
     provider: ethers.providers.Provider,
-    walletContractAddress: Address,
+    handlerContractAddress: Address,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: NotesDB
@@ -64,7 +64,7 @@ export class NocturneContext {
     this.signer = signer;
     this.prover = prover;
     this.handlerContract = Handler__factory.connect(
-      walletContractAddress,
+      handlerContractAddress,
       provider
     );
     this.merkleProver = merkleProver;
@@ -480,11 +480,12 @@ export class NocturneContext {
     const verificationGasForOp = 0n;
     const bundler = handler.address;
 
+    const walletAddress = await handler._wallet();
     const result = await handler.callStatic.handleOperation(
       provenOp,
       verificationGasForOp,
       bundler,
-      { from: handler.address }
+      { from: walletAddress }
     );
     const {
       opProcessed,

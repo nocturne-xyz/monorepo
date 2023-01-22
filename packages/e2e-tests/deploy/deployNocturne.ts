@@ -55,7 +55,7 @@ export interface NocturneSetup {
 
 function setupNocturneContext(
   sk: bigint,
-  wallet: any,
+  handler: Handler,
   notesDB: NotesDB,
   merkleDB: MerkleDB
 ): NocturneContext {
@@ -64,7 +64,7 @@ function setupNocturneContext(
 
   const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new LocalMerkleProver(
-    wallet.address,
+    handler.address,
     ethers.provider,
     merkleDB
   );
@@ -72,14 +72,14 @@ function setupNocturneContext(
   const notesManager = new LocalNotesManager(
     notesDB,
     nocturneSigner,
-    wallet.address,
+    handler.address,
     ethers.provider
   );
   return new NocturneContext(
     nocturneSigner,
     prover,
-    wallet.provider,
-    wallet.address,
+    handler.provider,
+    handler.address,
     merkleProver,
     notesManager,
     notesDB
@@ -114,7 +114,7 @@ export async function setup(): Promise<NocturneSetup> {
   const merkleDBAlice = new MerkleDB(aliceKV);
   const nocturneContextAlice = setupNocturneContext(
     3n,
-    wallet,
+    handler,
     notesDBAlice,
     merkleDBAlice
   );
@@ -125,7 +125,7 @@ export async function setup(): Promise<NocturneSetup> {
   const merkleDBBob = new MerkleDB(bobKV);
   const nocturneContextBob = setupNocturneContext(
     5n,
-    wallet,
+    handler,
     notesDBBob,
     merkleDBBob
   );

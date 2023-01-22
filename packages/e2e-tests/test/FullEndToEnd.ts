@@ -115,7 +115,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    updater = new SubtreeUpdater(handler, serverDB, prover);
 
     redisServer = await RedisMemoryServer.create();
     const host = await redisServer.getHost();
@@ -150,10 +150,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await notesDBAlice.kv.clear();
     await notesDBBob.kv.clear();
     await updater.dropDB();
-    await network.provider.send("hardhat_reset");
-  });
-
-  after(async () => {
     await network.provider.send("hardhat_reset");
   });
 
@@ -360,7 +356,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
-        [wallet.address, ERC721_TOKEN_ID]
+        [handler.address, ERC721_TOKEN_ID]
       );
     const erc721Action: Action = {
       contractAddress: erc721Token.address,
@@ -371,7 +367,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+        [handler.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
       );
     const erc1155Action: Action = {
       contractAddress: erc1155Token.address,
