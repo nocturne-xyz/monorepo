@@ -29,7 +29,12 @@ contract Accountant is
         _;
     }
 
-    function initialize(address wallet) external initializer {
+    function initialize(
+        address wallet,
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) external initializer {
+        __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _wallet = wallet;
     }
 
@@ -55,6 +60,20 @@ contract Accountant is
             deposit.encodedAssetAddr,
             deposit.encodedAssetId,
             deposit.value
+        );
+    }
+
+    function handleRefund(
+        EncodedAsset memory encodedAsset,
+        uint256 value,
+        NocturneAddress memory refundAddr
+    ) external override onlyWallet {
+        AssetUtils._transferAssetTo(encodedAsset, address(this), value);
+        _handleRefundNote(
+            refundAddr,
+            encodedAsset.encodedAssetAddr,
+            encodedAsset.encodedAssetId,
+            value
         );
     }
 

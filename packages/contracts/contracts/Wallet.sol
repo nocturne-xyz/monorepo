@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IWallet} from "./interfaces/IWallet.sol";
-import "./interfaces/IVault.sol";
+import "./interfaces/IAccountant.sol";
 import "./libs/WalletUtils.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
@@ -21,11 +21,15 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     uint256[50] private __GAP;
 
     function initialize(
-        address vault,
+        address accountant,
         address joinSplitVerifier,
         address subtreeUpdateVerifier
     ) external initializer {
-        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+        __BalanceManager__init(
+            accountant,
+            joinSplitVerifier,
+            subtreeUpdateVerifier
+        );
     }
 
     event OperationProcessed(
@@ -228,8 +232,8 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
         require(
-            action.contractAddress != address(_vault),
-            "Cannot call the Nocturne vault"
+            action.contractAddress != address(_accountant),
+            "Cannot call the accountant"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
-import {IVault} from "./interfaces/IVault.sol";
+import {IAccountant} from "./interfaces/IAccountant.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -23,7 +23,7 @@ contract BalanceManager is
 {
     using OperationLib for Operation;
 
-    IVault public _vault;
+    IAccountant public _accountant;
 
     EncodedAsset[] public _receivedAssets;
 
@@ -31,13 +31,13 @@ contract BalanceManager is
     uint256[50] private __GAP;
 
     function __BalanceManager__init(
-        address vault,
+        address accountant,
         address joinSplitVerifier,
         address subtreeUpdateVerifier
     ) public onlyInitializing {
         __NocturneReentrancyGuard_init();
         __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
-        _vault = IVault(vault);
+        _accountant = IAccountant(accountant);
     }
 
     function onERC721Received(
@@ -128,15 +128,15 @@ contract BalanceManager is
             deposit.value
         );
 
-        _vault.makeDeposit(deposit);
+        _accountant.makeDeposit(deposit);
     }
 
     /**
       Process all joinSplitTxs and request all declared publicSpend from the
-      vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
+      accountant, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from vault with the same encodedAsset as
+      to request maxGasAssetCost from accountant with the same encodedAsset as
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
@@ -149,7 +149,7 @@ contract BalanceManager is
             // they are not fresh
             _handleJoinSplit(op.joinSplitTxs[i]);
 
-            // Defaults to requesting all publicSpend from vault
+            // Defaults to requesting all publicSpend from accountant
             uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
             // If we still need to reserve more gas and the current
             // `joinSplitTx` is spending the gasAsset, then reserve what we can
@@ -172,7 +172,7 @@ contract BalanceManager is
 
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
-                _vault.requestAsset(
+                _accountant.requestAsset(
                     op.joinSplitTxs[i].encodedAsset,
                     valueToTransfer
                 );
@@ -190,10 +190,10 @@ contract BalanceManager is
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
 
-        // Request reserved gasAssetAmount from vault.
+        // Request reserved gasAssetAmount from accountant.
         /// @dev This is safe because _processJoinSplitTxsReservingFee is
         /// guaranteed to have reserved gasAssetAmount since it didn't throw.
-        _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+        _accountant.requestAsset(encodedGasAsset, gasAssetAmount);
 
         uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
             op,
@@ -247,13 +247,7 @@ contract BalanceManager is
     ) internal {
         uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
         if (value != 0) {
-            AssetUtils._transferAssetTo(encodedAsset, address(_vault), value);
-            _handleRefundNote(
-                refundAddr,
-                encodedAsset.encodedAssetAddr,
-                encodedAsset.encodedAssetId,
-                value
-            );
+            _accountant.handleRefund(encodedAsset, value, refundAddr);
         }
     }
 }
