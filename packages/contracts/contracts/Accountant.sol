@@ -2,12 +2,9 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+import "./interfaces/IAccountant.sol";
 import "./CommitmentTreeManager.sol";
 import "./Vault.sol";
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
@@ -17,6 +14,7 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/types.sol";
 
 contract Accountant is
+    IAccountant,
     CommitmentTreeManager,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable
@@ -38,11 +36,11 @@ contract Accountant is
     function requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external onlyWallet {
+    ) external override onlyWallet {
         AssetUtils._transferAssetTo(encodedAsset, _wallet, value);
     }
 
-    function makeDeposit(Deposit calldata deposit) public onlyWallet {
+    function makeDeposit(Deposit calldata deposit) public override onlyWallet {
         AssetUtils._transferAssetFrom(
             EncodedAsset({
                 encodedAssetAddr: deposit.encodedAssetAddr,
