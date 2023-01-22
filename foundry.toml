@@ -25,7 +25,7 @@ src = 'packages/contracts/contracts'
 test = 'packages/contracts/contracts/test'
 out = 'packages/contracts/foundry_artifacts'
 ffi = true
-gas_reports = ["Wallet", "JoinSplitVerifier", "SubtreeUpdateVerifier"]
+gas_reports = ["Wallet", "Accountant", "JoinSplitVerifier", "SubtreeUpdateVerifier"]
 
 [profile.contracts-ci]
 src = 'packages/contracts/contracts'
