@@ -63,18 +63,23 @@ contract Accountant is
         );
     }
 
-    function handleRefund(
+    function handleRefundNote(
         EncodedAsset memory encodedAsset,
         uint256 value,
         NocturneAddress memory refundAddr
     ) external override onlyWallet {
-        AssetUtils._transferAssetTo(encodedAsset, address(this), value);
         _handleRefundNote(
             refundAddr,
             encodedAsset.encodedAssetAddr,
             encodedAsset.encodedAssetId,
             value
         );
+    }
+
+    function handleJoinSplit(
+        JoinSplitTransaction calldata joinSplitTx
+    ) external override onlyWallet {
+        _handleJoinSplit(joinSplitTx);
     }
 
     function onERC721Received(

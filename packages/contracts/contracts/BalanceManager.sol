@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "./CommitmentTreeManager.sol";
 import {IAccountant} from "./interfaces/IAccountant.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -18,7 +17,6 @@ import "./NocturneReentrancyGuard.sol";
 contract BalanceManager is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
-    CommitmentTreeManager,
     NocturneReentrancyGuard
 {
     using OperationLib for Operation;
@@ -31,12 +29,9 @@ contract BalanceManager is
     uint256[50] private __GAP;
 
     function __BalanceManager__init(
-        address accountant,
-        address joinSplitVerifier,
-        address subtreeUpdateVerifier
+        address accountant
     ) public onlyInitializing {
         __NocturneReentrancyGuard_init();
-        __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _accountant = IAccountant(accountant);
     }
 
@@ -118,19 +113,6 @@ contract BalanceManager is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    function _makeDeposit(Deposit calldata deposit) internal {
-        NocturneAddress calldata depositAddr = deposit.depositAddr;
-
-        _handleRefundNote(
-            depositAddr,
-            deposit.encodedAssetAddr,
-            deposit.encodedAssetId,
-            deposit.value
-        );
-
-        _accountant.makeDeposit(deposit);
-    }
-
     /**
       Process all joinSplitTxs and request all declared publicSpend from the
       accountant, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
@@ -147,7 +129,7 @@ contract BalanceManager is
         for (uint256 i = 0; i < numJoinSplits; i++) {
             // Process nullifiers in the current joinSplitTx, will throw if
             // they are not fresh
-            _handleJoinSplit(op.joinSplitTxs[i]);
+            _accountant.handleJoinSplit(op.joinSplitTxs[i]);
 
             // Defaults to requesting all publicSpend from accountant
             uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
@@ -247,7 +229,12 @@ contract BalanceManager is
     ) internal {
         uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
         if (value != 0) {
-            _accountant.handleRefund(encodedAsset, value, refundAddr);
+            AssetUtils._transferAssetTo(
+                encodedAsset,
+                address(_accountant),
+                value
+            );
+            _accountant.handleRefundNote(encodedAsset, value, refundAddr);
         }
     }
 }

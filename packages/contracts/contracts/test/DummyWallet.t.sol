@@ -16,7 +16,7 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./utils/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
-import {Vault} from "../Vault.sol";
+import {Accountant} from "../Accountant.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
@@ -41,7 +41,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
 
     Wallet wallet;
-    Vault vault;
+    Accountant accountant;
     TreeTest treeTest;
     IJoinSplitVerifier joinSplitVerifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
@@ -79,25 +79,24 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
 
-        // Instantiate vault, joinSplitVerifier, tree, and wallet
-        vault = new Vault();
+        // Instantiate accountant, joinSplitVerifier, tree, and wallet
         joinSplitVerifier = new TestJoinSplitVerifier();
-
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
+        accountant = new Accountant();
         wallet = new Wallet();
-        wallet.initialize(
-            address(vault),
+
+        accountant.initialize(
+            address(wallet),
             address(joinSplitVerifier),
             address(subtreeUpdateVerifier)
         );
+        wallet.initialize(address(accountant), address(joinSplitVerifier));
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
         treeTest.initialize(hasherT3, hasherT6);
-
-        vault.initialize(address(wallet));
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -154,7 +153,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         token.reserveTokens(recipient, reserveAmount);
 
         vm.prank(recipient);
-        token.approve(address(vault), depositAmount);
+        token.approve(address(accountant), depositAmount);
 
         uint256[] memory batch = new uint256[](16);
 
@@ -163,7 +162,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             ? depositAmount / PER_DEPOSIT_AMOUNT
             : depositAmount / PER_DEPOSIT_AMOUNT + 1;
 
-        // Deposit funds to vault
+        // Deposit funds to accountant
         for (uint256 i = 0; i < depositIterations; i++) {
             NocturneAddress memory addr = defaultNocturneAddress();
             vm.expectEmit(true, true, true, true);
@@ -214,9 +213,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 root = path[path.length - 1];
 
         // fill the tree batch
-        wallet.fillBatchWithZeros();
+        accountant.fillBatchWithZeros();
 
-        wallet.applySubtreeUpdate(root, dummyProof());
+        accountant.applySubtreeUpdate(root, dummyProof());
     }
 
     function formatTransferOperation(
@@ -237,7 +236,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             )
         });
 
-        uint256 root = wallet.root();
+        uint256 root = accountant.root();
         NoteTransmission memory newNoteATransmission = NoteTransmission({
             owner: NocturneAddress({
                 h1X: uint256(123),
@@ -338,7 +337,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(accountant)), uint256(8 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -375,8 +374,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertLe(token.balanceOf(address(accountant)), uint256(7 gwei));
+        assertGe(token.balanceOf(address(accountant)), uint256(6 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
     }
@@ -393,14 +392,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             token,
             BOB,
             1 gwei,
-            15 gwei, // this will overdraw the vault
+            15 gwei, // this will overdraw the accountant
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
             1000
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(accountant)), uint256(8 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -426,8 +425,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Balances should not have changed, besides gas being paid
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
+        assertLe(token.balanceOf(address(accountant)), uint256(8 gwei));
+        assertGe(token.balanceOf(address(accountant)), uint256(7 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -451,7 +450,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(accountant)), uint256(8 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -478,8 +477,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
+        assertLe(token.balanceOf(address(accountant)), uint256(8 gwei));
+        assertGe(token.balanceOf(address(accountant)), uint256(7 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }

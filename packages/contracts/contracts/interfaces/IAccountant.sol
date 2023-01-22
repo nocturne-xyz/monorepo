@@ -12,9 +12,13 @@ interface IAccountant {
 
     function makeDeposit(Deposit calldata deposit) external;
 
-    function handleRefund(
+    function handleRefundNote(
         EncodedAsset memory encodedAsset,
         uint256 value,
         NocturneAddress memory refundAddr
+    ) external;
+
+    function handleJoinSplit(
+        JoinSplitTransaction calldata joinSplitTx
     ) external;
 }

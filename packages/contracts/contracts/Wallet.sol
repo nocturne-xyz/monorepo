@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {IWallet} from "./interfaces/IWallet.sol";
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import "./interfaces/IAccountant.sol";
 import "./libs/WalletUtils.sol";
 import "./libs/types.sol";
@@ -17,19 +18,18 @@ import "./upgrade/Versioned.sol";
 contract Wallet is IWallet, BalanceManager, Versioned {
     using OperationLib for Operation;
 
+    IJoinSplitVerifier public _joinSplitVerifier;
+
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     function initialize(
         address accountant,
-        address joinSplitVerifier,
-        address subtreeUpdateVerifier
+        address joinSplitVerifier
     ) external initializer {
-        __BalanceManager__init(
-            accountant,
-            joinSplitVerifier,
-            subtreeUpdateVerifier
-        );
+        __BalanceManager__init(accountant);
+
+        _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
 
     event OperationProcessed(
@@ -48,7 +48,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     function depositFunds(Deposit calldata deposit) external override {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
-        _makeDeposit(deposit);
+        _accountant.makeDeposit(deposit);
     }
 
     /**
