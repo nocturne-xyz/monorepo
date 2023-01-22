@@ -65,10 +65,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     const depositProms: Promise<any>[] = [];
     for (const addr of targetAddrs) {
       console.log("depositing 2 100 token notes to", addr);
+      const encodedAsset = {
+        encodedAssetAddr,
+        encodedAssetId,
+      };
       depositProms.push(
         wallet.connect(depositor).depositFunds({
-          encodedAssetAddr,
-          encodedAssetId,
+          encodedAsset,
           spender: depositor.address,
           value: 100n,
           depositAddr: addr,
@@ -76,8 +79,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       );
       depositProms.push(
         wallet.connect(depositor).depositFunds({
-          encodedAssetAddr,
-          encodedAssetId,
+          encodedAsset,
           spender: depositor.address,
           value: 100n,
           depositAddr: addr,

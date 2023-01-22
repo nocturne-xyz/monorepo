@@ -217,22 +217,26 @@ contract BalanceManager is
             refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
         }
 
+        uint256 refundAssetsStartIndex = numJoinSplitTxs;
         uint256 numRefundAssets = op.encodedRefundAssets.length;
-        for (uint256 i = numJoinSplitTxs; i < numRefundAssets; i++) {
+        for (uint256 i = 0; i < numRefundAssets; i++) {
             EncodedAsset calldata encodedAsset = op.encodedRefundAssets[i];
             uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
-            refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
+            refunds[refundAssetsStartIndex + i] = RefundNote({
+                encodedAsset: encodedAsset,
+                value: value
+            });
         }
 
+        uint256 receivedStartIndex = numJoinSplitTxs + numRefundAssets;
         uint256 numReceived = _receivedAssets.length;
-        for (
-            uint256 i = numJoinSplitTxs + numRefundAssets;
-            i < numReceived;
-            i++
-        ) {
+        for (uint256 i = 0; i < numReceived; i++) {
             EncodedAsset memory encodedAsset = _receivedAssets[i];
             uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
-            refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
+            refunds[receivedStartIndex + i] = RefundNote({
+                encodedAsset: encodedAsset,
+                value: value
+            });
         }
         delete _receivedAssets;
 

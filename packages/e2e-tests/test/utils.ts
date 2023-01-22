@@ -51,8 +51,10 @@ export async function depositFunds(
   for (let i = 0; i < amounts.length; i++) {
     await wallet.connect(eoa).depositFunds({
       spender: eoa.address as string,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset: {
+        encodedAssetAddr,
+        encodedAssetId,
+      },
       value: amounts[i],
       depositAddr: nocturneAddress,
     });
