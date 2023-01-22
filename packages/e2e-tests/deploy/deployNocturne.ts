@@ -2,9 +2,9 @@ import { ethers, deployments } from "hardhat";
 import * as fs from "fs";
 import {
   Wallet__factory,
-  Vault__factory,
+  Accountant__factory,
   JoinSplitVerifier__factory,
-  Vault,
+  Accountant,
   Wallet,
   SubtreeUpdateVerifier__factory,
   TestSubtreeUpdateVerifier__factory,
@@ -40,7 +40,7 @@ const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 export interface NocturneSetup {
   alice: ethers.Signer;
   bob: ethers.Signer;
-  vault: Vault;
+  accountant: Accountant;
   wallet: Wallet;
   notesDBAlice: NotesDB;
   merkleDBAlice: MerkleDB;
@@ -52,7 +52,8 @@ export interface NocturneSetup {
 
 function setupNocturneContext(
   sk: bigint,
-  wallet: any,
+  wallet: Wallet,
+  accountant: Accountant,
   notesDB: NotesDB,
   merkleDB: MerkleDB
 ): NocturneContext {
@@ -61,7 +62,7 @@ function setupNocturneContext(
 
   const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new LocalMerkleProver(
-    wallet.address,
+    accountant.address,
     ethers.provider,
     merkleDB
   );
@@ -69,7 +70,7 @@ function setupNocturneContext(
   const notesManager = new LocalNotesManager(
     notesDB,
     nocturneSigner,
-    wallet.address,
+    accountant.address,
     ethers.provider
   );
   return new NocturneContext(
@@ -85,7 +86,7 @@ function setupNocturneContext(
 
 export async function setup(): Promise<NocturneSetup> {
   await deployments.fixture(["NocturneContracts"]);
-  const vault = await ethers.getContract("Vault");
+  const accountant = await ethers.getContract("Accountant");
   const wallet = await ethers.getContract("Wallet");
   const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");
   const subtreeUpdateVerifier = await ethers.getContract(
@@ -94,12 +95,13 @@ export async function setup(): Promise<NocturneSetup> {
 
   // TODO: pass in proxy admin (currently deploys new one but we don't keep
   // track of this info)
-  await wallet.initialize(
-    vault.address,
+  await accountant.initialize(
+    wallet.address,
     joinSplitVerifier.address,
     subtreeUpdateVerifier.address
   );
-  await vault.initialize(wallet.address);
+  await wallet.initialize(accountant.address, joinSplitVerifier.address);
+
   const [_, alice, bob] = await ethers.getSigners();
 
   console.log("Create NocturneContextAlice");
@@ -109,6 +111,7 @@ export async function setup(): Promise<NocturneSetup> {
   const nocturneContextAlice = setupNocturneContext(
     3n,
     wallet,
+    accountant,
     notesDBAlice,
     merkleDBAlice
   );
@@ -120,6 +123,7 @@ export async function setup(): Promise<NocturneSetup> {
   const nocturneContextBob = setupNocturneContext(
     5n,
     wallet,
+    accountant,
     notesDBBob,
     merkleDBBob
   );
@@ -127,7 +131,7 @@ export async function setup(): Promise<NocturneSetup> {
   return {
     alice,
     bob,
-    vault,
+    accountant,
     wallet,
     notesDBAlice,
     merkleDBAlice,
@@ -153,19 +157,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { owner } = await getNamedAccounts();
 
-  await deploy("Vault", {
-    from: owner,
-    contract: {
-      abi: Vault__factory.abi,
-      bytecode: Vault__factory.bytecode,
-    },
-    proxy: {
-      proxyContract: TransparentUpgradeableProxy__factory,
-    },
-    log: true,
-    deterministicDeployment: true,
-  });
-
   await deploy("JoinSplitVerifier", {
     from: owner,
     contract: {
@@ -182,6 +173,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     contract: {
       abi: subtreeUpdateVerifierFactory.abi,
       bytecode: subtreeUpdateVerifierFactory.bytecode,
+    },
+    log: true,
+    deterministicDeployment: true,
+  });
+
+  await deploy("Accountant", {
+    from: owner,
+    contract: {
+      abi: Accountant__factory.abi,
+      bytecode: Accountant__factory.bytecode,
+    },
+    proxy: {
+      proxyContract: TransparentUpgradeableProxy__factory,
     },
     log: true,
     deterministicDeployment: true,

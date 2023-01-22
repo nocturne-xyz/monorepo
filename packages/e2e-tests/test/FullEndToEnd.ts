@@ -5,7 +5,7 @@ import {
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
   SimpleERC1155Token__factory,
-  Vault,
+  Accountant,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -64,7 +64,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let bob: ethers.Signer;
-  let vault: Vault;
+  let accountant: Accountant;
   let wallet: Wallet;
   let erc20Token: SimpleERC20Token;
   let erc721Token: SimpleERC721Token;
@@ -102,7 +102,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     ({
       alice,
       bob,
-      vault,
+      accountant,
       wallet,
       notesDBAlice,
       nocturneContextAlice,
@@ -112,7 +112,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    updater = new SubtreeUpdater(accountant, serverDB, prover);
 
     redisServer = await RedisMemoryServer.create();
     const host = await redisServer.getHost();
@@ -138,7 +138,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   async function applySubtreeUpdate() {
-    await wallet.fillBatchWithZeros();
+    await accountant.fillBatchWithZeros();
     await updater.pollInsertionsAndTryMakeBatch();
     await updater.tryGenAndSubmitProofs();
   }
@@ -229,7 +229,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       wallet,
-      vault,
+      accountant,
       erc20Token,
       alice,
       nocturneContextAlice.signer.address,
@@ -281,9 +281,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect((await erc20Token.balanceOf(bob.address)).toBigInt()).to.equal(
         ALICE_TO_BOB_PUB_VAL
       );
-      expect((await erc20Token.balanceOf(vault.address)).toBigInt()).to.equal(
-        2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
-      );
+      expect(
+        (await erc20Token.balanceOf(accountant.address)).toBigInt()
+      ).to.equal(2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL);
     };
 
     const offchainChecks = async () => {
@@ -332,7 +332,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       wallet,
-      vault,
+      accountant,
       erc20Token,
       alice,
       nocturneContextAlice.signer.address,

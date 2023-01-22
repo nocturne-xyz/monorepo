@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import {
   SimpleERC20Token__factory,
-  Vault,
+  Accountant,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -23,7 +23,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let serverSigner: ethers.Signer;
-  let vault: Vault;
+  let accountant: Accountant;
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let nocturneContext: NocturneContext;
@@ -41,7 +41,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
     const nocturneSetup = await setup();
     alice = nocturneSetup.alice;
-    vault = nocturneSetup.vault;
+    accountant = nocturneSetup.accountant;
     wallet = nocturneSetup.wallet;
     token = token;
     nocturneContext = nocturneSetup.nocturneContextAlice;
@@ -59,7 +59,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     const prover = getSubtreeUpdateProver();
     const server = new SubtreeUpdateServer(
       prover,
-      wallet.address,
+      accountant.address,
       serverDBPath,
       serverSigner,
       TEST_SERVER_POLL_INTERVAL
@@ -77,14 +77,14 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   it("can recover state", async () => {
     await depositFunds(
       wallet,
-      vault,
+      accountant,
       token,
       alice,
       nocturneContext.signer.address,
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
-    await wallet.fillBatchWithZeros();
+    await accountant.fillBatchWithZeros();
 
     await sleep(getSubtreeUpdaterDelay());
     await server.stop();

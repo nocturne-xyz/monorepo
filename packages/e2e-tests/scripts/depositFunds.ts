@@ -28,7 +28,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  const { wallet, vault, nocturneContextAlice } = await setup();
+  const { wallet, accountant, nocturneContextAlice } = await setup();
   const nocturneAddressAlice = nocturneContextAlice.signer.address;
 
   const [depositor] = await hre.ethers.getSigners();
@@ -46,7 +46,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
     // Reserve and approve tokens for nocturne addr depositor
     await token.reserveTokens(depositor.address, 100000000);
-    await token.connect(depositor).approve(vault.address, 100000000);
+    await token.connect(depositor).approve(accountant.address, 100000000);
 
     // We will deposit to setup alice and test nocturne addrs
     const testAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(

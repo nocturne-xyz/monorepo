@@ -8,7 +8,7 @@ import {
   AssetType,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
-import { Vault, Wallet } from "@nocturne-xyz/contracts";
+import { Accountant, Wallet } from "@nocturne-xyz/contracts";
 import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import { ethers } from "hardhat";
 import * as fs from "fs";
@@ -28,7 +28,7 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 export async function depositFunds(
   wallet: Wallet,
-  vault: Vault,
+  accountant: Accountant,
   token: SimpleERC20Token,
   eoa: ethers.Signer,
   nocturneAddress: NocturneAddress,
@@ -37,7 +37,7 @@ export async function depositFunds(
 ): Promise<bigint[]> {
   const total = amounts.reduce((sum, a) => sum + a);
   token.reserveTokens(eoa.address, total);
-  await token.connect(eoa).approve(vault.address, total);
+  await token.connect(eoa).approve(accountant.address, total);
 
   const asset = {
     assetType: AssetType.ERC20,
