@@ -9,7 +9,7 @@ export interface NocturneDeployment {
   proxyAdminOwner: string;
   proxyAdmin: string;
   walletProxy: ProxiedContract;
-  vaultProxy: ProxiedContract;
+  accountantProxy: ProxiedContract;
   joinSplitVerifierAddress: string;
   subtreeUpdateVerifierAddress: string;
 }

@@ -2,7 +2,7 @@ import { NocturneDeployment, NocturneDeployOpts } from './types';
 import { upgrades, ethers } from 'hardhat';
 import * as dotenv from 'dotenv';
 import { ProxyAdmin__factory } from '../src/factories/ProxyAdmin__factory';
-import { Vault__factory } from '../src/factories/Vault__factory';
+import { Accountant__factory } from '../src/factories/Accountant__factory';
 import { JoinSplitVerifier__factory } from '../src/factories/JoinSplitVerifier__factory';
 import { TestSubtreeUpdateVerifier__factory } from '../src/factories/TestSubtreeUpdateVerifier__factory';
 import { SubtreeUpdateVerifier__factory } from '../src/factories/SubtreeUpdateVerifier__factory';
@@ -37,27 +37,36 @@ export async function deployNocturne(
     console.log('ProxyAdmin deployed to:', proxyAdmin.address);
   }
 
-  // Deploy Vault
-  console.log('\nDeploying Vault');
-  const Vault = new Vault__factory(deployer);
-  const vaultProxy = await upgrades.deployProxy(Vault, {
+  // Deploy Accountant
+  console.log('\nDeploying Accountant');
+  const Accountant = new Accountant__factory(deployer);
+  const accountantProxy = await upgrades.deployProxy(Accountant, {
     initializer: false,
     kind: 'transparent',
   });
-  await vaultProxy.deployed();
-  console.log('Vault proxy deployed to:', vaultProxy.address);
+  await accountantProxy.deployed();
+  console.log('Accountant proxy deployed to:', accountantProxy.address);
 
-  const vaultImplementationAddress =
-    await upgrades.erc1967.getImplementationAddress(vaultProxy.address);
-  console.log('Vault implementation deployed to:', vaultImplementationAddress);
-
-  const vaultAdminAddress = await upgrades.erc1967.getAdminAddress(
-    vaultProxy.address,
+  const accountantImplementationAddress =
+    await upgrades.erc1967.getImplementationAddress(accountantProxy.address);
+  console.log(
+    'Accountant implementation deployed to:',
+    accountantImplementationAddress,
   );
-  console.log('Vault proxy admin currently set to:', vaultAdminAddress);
 
-  await upgrades.admin.changeProxyAdmin(vaultProxy.address, proxyAdmin.address);
-  console.log('Vault proxy admin changed to:', proxyAdmin.address);
+  const accountantAdminAddress = await upgrades.erc1967.getAdminAddress(
+    accountantProxy.address,
+  );
+  console.log(
+    'Accountant proxy admin currently set to:',
+    accountantAdminAddress,
+  );
+
+  await upgrades.admin.changeProxyAdmin(
+    accountantProxy.address,
+    proxyAdmin.address,
+  );
+  console.log('Accountant proxy admin changed to:', proxyAdmin.address);
 
   // Deploy JoinSplitVerifier
   console.log('\nDeploying JoinSplitVerifier');
@@ -99,7 +108,7 @@ export async function deployNocturne(
   );
 
   const walletAdminAddress = await upgrades.erc1967.getAdminAddress(
-    vaultProxy.address,
+    accountantProxy.address,
   );
   console.log('Wallet proxy admin currently set to:', walletAdminAddress);
 
@@ -109,15 +118,18 @@ export async function deployNocturne(
   );
   console.log('Wallet proxy admin changed to:', proxyAdmin.address);
 
-  // Initialize Vault and Wallet
-  console.log('\nInitializing Vault');
-  await vaultProxy.initialize(walletProxy.address);
+  // Initialize Accountant and Wallet
+  console.log('\nInitializing Accountant');
+  await accountantProxy.initialize(
+    walletProxy.address,
+    joinSplitVerifier.address,
+    subtreeUpdateVerifier.address,
+  );
 
   console.log('Initializing Wallet');
   await walletProxy.initialize(
-    vaultProxy.address,
+    accountantProxy.address,
     joinSplitVerifier.address,
-    subtreeUpdateVerifier.address,
   );
 
   // Try transfer ownership of proxy admin
@@ -134,9 +146,9 @@ export async function deployNocturne(
       proxyAddress: walletProxy.address,
       implementationAddress: walletImplementationAddress,
     },
-    vaultProxy: {
-      proxyAddress: vaultProxy.address,
-      implementationAddress: vaultImplementationAddress,
+    accountantProxy: {
+      proxyAddress: accountantProxy.address,
+      implementationAddress: accountantImplementationAddress,
     },
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
