@@ -11,8 +11,8 @@ export default async function main(): Promise<void> {
 
   program
     .requiredOption(
-      "--wallet-address <string>",
-      "address of the wallet contract"
+      "--accountant-address <string>",
+      "address of the accountant contract"
     )
     .requiredOption(
       "--zkey-path <stirng>",
@@ -52,7 +52,7 @@ export default async function main(): Promise<void> {
     vkeyPath,
     proverPath,
     witnessGeneratorPath,
-    walletAddress,
+    accountantAddress,
   } = program.opts();
 
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
@@ -72,7 +72,7 @@ export default async function main(): Promise<void> {
   );
   const server = new SubtreeUpdateServer(
     rapidsnarkProver,
-    walletAddress,
+    accountantAddress,
     dbPath,
     signer
   );

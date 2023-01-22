@@ -9,7 +9,7 @@ import {
   subtreeUpdateInputsFromBatch,
 } from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from "lmdb";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Accountant } from "@nocturne-xyz/contracts";
 import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
 import * as JSON from "bigint-json-serialization";
 
@@ -44,7 +44,7 @@ interface SubtreeUpdateBatch {
 }
 
 export class SubtreeUpdater {
-  private walletContract: Wallet;
+  private accountantContract: Accountant;
   private db: Database<string, string>;
   private prover: SubtreeUpdateProver;
   private submitter: SubtreeUpdateSubmitter;
@@ -54,12 +54,14 @@ export class SubtreeUpdater {
   private tree: BinaryPoseidonTree;
 
   constructor(
-    walletContract: Wallet,
+    accountantContract: Accountant,
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
-    submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)
+    submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(
+      accountantContract
+    )
   ) {
-    this.walletContract = walletContract;
+    this.accountantContract = accountantContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
     this.prover = prover;
 
@@ -84,7 +86,7 @@ export class SubtreeUpdater {
   // return true if at least one batch was filled
   public async pollInsertionsAndTryMakeBatch(): Promise<boolean> {
     const currentBlockNumber =
-      await this.walletContract.provider.getBlockNumber();
+      await this.accountantContract.provider.getBlockNumber();
     const nextBlockToIndex = await this.getNextBlockToIndex();
     if (nextBlockToIndex > currentBlockNumber) {
       return false;
@@ -92,12 +94,12 @@ export class SubtreeUpdater {
 
     const [newInsertions, newCommits] = await Promise.all([
       fetchInsertions(
-        this.walletContract,
+        this.accountantContract,
         nextBlockToIndex,
         currentBlockNumber
       ),
       fetchSubtreeUpdateCommits(
-        this.walletContract,
+        this.accountantContract,
         nextBlockToIndex,
         currentBlockNumber
       ),
