@@ -1,12 +1,10 @@
-## Nomad Router
+# Nocturne Contracts
 
-Solidity implementations of the Nomad Router.
+## How to Run Deploy Script Locally
 
-### Setup
+1. Ensure the desired network has an entry in `hardhat.config.ts` networks section. You can simply copy an existing network object and replace the network name (key) and url env var.
+2. Populate a `.env` file. `HARDHAT_NETWORK` should match the name of the network populated in `hardhat.config.ts`.
+3. Run `yarn deploy` to run the script.
+4. Check `contracts/deploys` for a new JSON file containing newly deployed addresses.
 
-- See repo setup
-- `brew install jq` &nbsp; OR &nbsp; `sudo apt-get install jq`
-
-### Build
-
-- `yarn build`
+## How to Run Deploy Script Via Docker (coming soon)

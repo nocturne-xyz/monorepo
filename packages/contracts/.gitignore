@@ -9,3 +9,5 @@ src/
 dist/
 foundry_artifacts/
 cache_hardhat/
+.openzeppelin
+deploys

@@ -18,6 +18,13 @@ Summarize the solution and provide any necessary context needed to understand
 the code change.
 -->
 
+## Proof
+
+<!--
+If features/changes is hard to test e2e, include a video or image proving you've
+tested your solution and it works.
+-->
+
 ## PR Checklist
 
 - [ ] Added Tests

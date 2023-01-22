@@ -1,6 +1,8 @@
 import 'hardhat-gas-reporter';
 import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-packager';
+import '@nomiclabs/hardhat-ethers';
+import '@openzeppelin/hardhat-upgrades';
 
 import { subtask } from 'hardhat/config';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
@@ -8,7 +10,9 @@ import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/ta
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const infuraKey = process.env.INFURA_API_KEY;
+// NOTE: here to satisfy `hardhat build` validation, not actually used
+const DUMMY_KEY =
+  '1111111111111111111111111111111111111111111111111111111111111111';
 
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
   async (_, __, runSuper) => {
@@ -44,17 +48,16 @@ module.exports = {
   },
 
   networks: {
+    // NOTE: hardhat localhost has bug and will always default to using private
+    // key #0, if you are deploying to localhost, you must set
+    // DEPLOYER_KEY=<private key #0>
     localhost: {
-      url: 'http://localhost:8545',
+      url: 'http://127.0.0.1:8545',
+      accounts: [`${process.env.DEPLOYER_KEY ?? DUMMY_KEY}`],
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${infuraKey}`,
-    },
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
-    },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${infuraKey}`,
+    goerli: {
+      url: `${process.env.GOERLI_RPC_URL}`,
+      accounts: [`${process.env.DEPLOYER_KEY ?? DUMMY_KEY}`],
     },
   },
 
