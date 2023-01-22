@@ -1,4 +1,4 @@
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
 import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
@@ -13,12 +13,12 @@ const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
 export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
-  protected contract: Wallet;
+  protected contract: Handler;
   protected provider: ethers.providers.Provider;
   protected db: MerkleDB;
 
   constructor(
-    walletContractAddress: Address,
+    handlerContractAddress: Address,
     provider: ethers.providers.Provider,
     db: MerkleDB
   ) {
@@ -26,8 +26,8 @@ export class LocalMerkleProver extends MerkleProver {
 
     this.localTree = new BinaryPoseidonTree();
     this.provider = provider;
-    this.contract = Wallet__factory.connect(
-      walletContractAddress,
+    this.contract = Handler__factory.connect(
+      handlerContractAddress,
       this.provider
     );
     this.db = db;

@@ -1,4 +1,4 @@
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Handler } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
 
 export interface SubtreeUpdateSubmitter {
@@ -13,16 +13,16 @@ export interface SubtreeUpdateSubmitter {
 // Default implementation of `SubtreeUpdateSubmitter` that just sits there and waits
 // for the TX to confirm.
 export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
-  walletContract: Wallet;
+  handlerContract: Handler;
 
-  constructor(walletContract: Wallet) {
-    this.walletContract = walletContract;
+  constructor(handlerContract: Handler) {
+    this.handlerContract = handlerContract;
   }
 
   async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
     try {
-      const tx = await this.walletContract.applySubtreeUpdate(
+      const tx = await this.handlerContract.applySubtreeUpdate(
         newRoot,
         solidityProof
       );

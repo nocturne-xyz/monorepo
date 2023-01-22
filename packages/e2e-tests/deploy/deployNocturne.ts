@@ -9,6 +9,8 @@ import {
   SubtreeUpdateVerifier__factory,
   TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
+  Handler__factory,
+  Handler,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -42,6 +44,7 @@ export interface NocturneSetup {
   bob: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
+  handler: Handler;
   notesDBAlice: NotesDB;
   merkleDBAlice: MerkleDB;
   nocturneContextAlice: NocturneContext;
@@ -86,6 +89,7 @@ function setupNocturneContext(
 export async function setup(): Promise<NocturneSetup> {
   await deployments.fixture(["NocturneContracts"]);
   const vault = await ethers.getContract("Vault");
+  const handler = await ethers.getContract("Handler");
   const wallet = await ethers.getContract("Wallet");
   const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");
   const subtreeUpdateVerifier = await ethers.getContract(
@@ -94,12 +98,14 @@ export async function setup(): Promise<NocturneSetup> {
 
   // TODO: pass in proxy admin (currently deploys new one but we don't keep
   // track of this info)
-  await wallet.initialize(
+  await handler.initialize(
+    wallet.address,
     vault.address,
     joinSplitVerifier.address,
     subtreeUpdateVerifier.address
   );
-  await vault.initialize(wallet.address);
+  await wallet.initialize(handler.address, joinSplitVerifier.address);
+  await vault.initialize(handler.address);
   const [_, alice, bob] = await ethers.getSigners();
 
   console.log("Create NocturneContextAlice");
@@ -129,6 +135,7 @@ export async function setup(): Promise<NocturneSetup> {
     bob,
     vault,
     wallet,
+    handler,
     notesDBAlice,
     merkleDBAlice,
     nocturneContextAlice,
@@ -182,6 +189,19 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     contract: {
       abi: subtreeUpdateVerifierFactory.abi,
       bytecode: subtreeUpdateVerifierFactory.bytecode,
+    },
+    log: true,
+    deterministicDeployment: true,
+  });
+
+  await deploy("Handler", {
+    from: owner,
+    contract: {
+      abi: Handler__factory.abi,
+      bytecode: Handler__factory.bytecode,
+    },
+    proxy: {
+      proxyContract: TransparentUpgradeableProxy__factory,
     },
     log: true,
     deterministicDeployment: true,

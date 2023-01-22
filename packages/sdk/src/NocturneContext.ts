@@ -29,12 +29,13 @@ import { NotesDB } from "./sdk/db";
 import {
   NotesManager,
   getJoinSplitRequestTotalValue,
-  simulateOperation,
+  fakeProvenOperation,
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
 import { genNoteTransmission } from "./crypto/utils";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
+import { OperationResult } from "./contract";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -48,7 +49,7 @@ export class NocturneContext {
   protected prover: JoinSplitProver;
   protected merkleProver: MerkleProver;
   protected notesManager: NotesManager;
-  protected walletContract: Wallet;
+  protected handlerContract: Handler;
   readonly db: NotesDB;
 
   constructor(
@@ -62,7 +63,7 @@ export class NocturneContext {
   ) {
     this.signer = signer;
     this.prover = prover;
-    this.walletContract = Wallet__factory.connect(
+    this.handlerContract = Handler__factory.connect(
       walletContractAddress,
       provider
     );
@@ -440,7 +441,7 @@ export class NocturneContext {
     op: PreSignOperation
   ): Promise<PreSignOperation> {
     console.log("Simulating op");
-    const result = await simulateOperation(op, this.walletContract);
+    const result = await this.simulateOperation(op);
     if (!result.opProcessed) {
       throw Error("Cannot estimate gas with Error: " + result.failureReason);
     }
@@ -450,6 +451,60 @@ export class NocturneContext {
     op.maxNumRefunds = result.numRefunds;
 
     return op;
+  }
+
+  /**
+   * Simulate an operation getting back OperationResult
+   * @param op an operation-ish object
+   * @param wallet an ethers instance of the wallet contract
+   */
+  async simulateOperation(
+    op: PreSignOperation | PreProofOperation | ProvenOperation
+  ): Promise<OperationResult> {
+    // We need to do staticCall, which fails if wallet is connected a signer
+    // https://github.com/ethers-io/ethers.js/discussions/3327#discussioncomment-3539505
+    // Switching to a regular provider underlying the signer
+    let handler = this.handlerContract;
+    if (handler.signer) {
+      handler = handler.connect(handler.provider);
+    }
+
+    // Fill-in the some fake proof
+    const provenOp = fakeProvenOperation(op);
+
+    // Set gasPrice to 0 so that gas payment does not interfere with amount of
+    // assets unwrapped pre gas estimation
+    op.gasPrice = 0n;
+
+    // Set dummy parameters which should not affect operation simulation
+    const verificationGasForOp = 0n;
+    const bundler = handler.address;
+
+    const result = await handler.callStatic.handleOperation(
+      provenOp,
+      verificationGasForOp,
+      bundler,
+      { from: handler.address }
+    );
+    const {
+      opProcessed,
+      failureReason,
+      callSuccesses,
+      callResults,
+      verificationGas,
+      executionGas,
+      numRefunds,
+    } = result;
+
+    return {
+      opProcessed,
+      failureReason,
+      callSuccesses,
+      callResults,
+      verificationGas: verificationGas.toBigInt(),
+      executionGas: executionGas.toBigInt(),
+      numRefunds: numRefunds.toBigInt(),
+    };
   }
 
   /**

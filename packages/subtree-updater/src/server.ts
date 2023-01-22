@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import { open } from "lmdb";
 import { SubtreeUpdater } from ".";
-import { Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler__factory } from "@nocturne-xyz/contracts";
 import { clearTimeout } from "timers";
 import { SubtreeUpdateProver } from "@nocturne-xyz/sdk";
 
@@ -16,19 +16,19 @@ export class SubtreeUpdateServer {
 
   constructor(
     prover: SubtreeUpdateProver,
-    walletContractAddress: string,
+    handlerContractAddress: string,
     dbPath: string,
     signer: ethers.Signer,
     interval: number = TWELVE_SECONDS
   ) {
-    const walletContract = Wallet__factory.connect(
-      walletContractAddress,
+    const handlerContract = Handler__factory.connect(
+      handlerContractAddress,
       signer
     );
     const rootDB = open({ path: dbPath });
 
     this.interval = interval;
-    this.updater = new SubtreeUpdater(walletContract, rootDB, prover);
+    this.updater = new SubtreeUpdater(handlerContract, rootDB, prover);
     this.stopped = true;
   }
 

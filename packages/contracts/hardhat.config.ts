@@ -95,6 +95,7 @@ module.exports = {
       'PoseidonHasherT6',
       'PoseidonHasherT7',
       'Wallet',
+      'Handler',
       'Vault',
       'CommitmentTreeManager',
       'BalanceManager',

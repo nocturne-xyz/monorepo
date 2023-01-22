@@ -7,6 +7,7 @@ import {
   SimpleERC1155Token__factory,
   Vault,
   Wallet,
+  Handler,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -66,6 +67,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let bob: ethers.Signer;
   let vault: Vault;
   let wallet: Wallet;
+  let handler: Handler;
   let erc20Token: SimpleERC20Token;
   let erc721Token: SimpleERC721Token;
   let erc1155Token: SimpleERC1155Token;
@@ -104,6 +106,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       bob,
       vault,
       wallet,
+      handler,
       notesDBAlice,
       nocturneContextAlice,
       notesDBBob,
@@ -138,7 +141,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   async function applySubtreeUpdate() {
-    await wallet.fillBatchWithZeros();
+    await handler.fillBatchWithZeros();
     await updater.pollInsertionsAndTryMakeBatch();
     await updater.tryGenAndSubmitProofs();
   }
