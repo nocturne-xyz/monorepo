@@ -122,15 +122,16 @@ contract BalanceManager is
       joinSplitTxs[0].
     */
     function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
+        // Process all nullifiers in the current joinSplitTxs, will throw if
+        // they are not fresh
+        _accountant.handleJoinSplitsBatched(op.joinSplitTxs);
+
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetToReserve = op.maxGasAssetCost();
 
-        uint256 numJoinSplits = op.joinSplitTxs.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Process nullifiers in the current joinSplitTx, will throw if
-            // they are not fresh
-            _accountant.handleJoinSplit(op.joinSplitTxs[i]);
-
+        // Loop through validated joinsplits and request assets minus what's
+        // needed for gas
+        for (uint256 i = 0; i < op.joinSplitTxs.length; i++) {
             // Defaults to requesting all publicSpend from accountant
             uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
             // If we still need to reserve more gas and the current
@@ -203,44 +204,53 @@ contract BalanceManager is
       _receivedAssets.
     */
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplitTxs.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleRefundForAsset(
-                op.joinSplitTxs[i].encodedAsset,
-                op.refundAddr
-            );
+        // Gather all refund notes
+        uint256 totalNumRefunds = _totalNumRefundsToHandle(op);
+        RefundNote[] memory refunds = new RefundNote[](totalNumRefunds);
+
+        uint256 numJoinSplitTxs = op.joinSplitTxs.length;
+        for (uint256 i = 0; i < numJoinSplitTxs; i++) {
+            EncodedAsset calldata encodedAsset = op
+                .joinSplitTxs[i]
+                .encodedAsset;
+            uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
+            refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
-            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
+        for (uint256 i = numJoinSplitTxs; i < numRefundAssets; i++) {
+            EncodedAsset calldata encodedAsset = op.encodedRefundAssets[i];
+            uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
+            refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
         }
 
         uint256 numReceived = _receivedAssets.length;
-        for (uint256 i = 0; i < numReceived; i++) {
-            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
+        for (
+            uint256 i = numJoinSplitTxs + numRefundAssets;
+            i < numReceived;
+            i++
+        ) {
+            EncodedAsset memory encodedAsset = _receivedAssets[i];
+            uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
+            refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
         }
         delete _receivedAssets;
-    }
 
-    function _handleRefundForAsset(
-        EncodedAsset memory encodedAsset,
-        NocturneAddress memory refundAddr
-    ) internal {
-        uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
-        if (value != 0) {
-            AssetUtils.transferAssetTo(
-                encodedAsset,
-                address(_accountant),
-                value
-            );
-            _accountant.handleRefundNote(
-                RefundNote({
-                    refundAddr: refundAddr,
-                    encodedAsset: encodedAsset,
-                    value: value
-                })
-            );
+        // Transfer assets back to accountant
+        for (uint256 i = 0; i < totalNumRefunds; i++) {
+            uint256 value = refunds[i].value;
+            if (value > 0) {
+                AssetUtils.transferAssetTo(
+                    refunds[i].encodedAsset,
+                    address(_accountant),
+                    value
+                );
+            }
         }
+
+        // Insert note commitments for all refunds
+        // NOTE: refund notes with value = 0 may be passed to _accountant, they
+        // are ignored by accountant contract
+        _accountant.handleRefundNotesBatched(refunds, op.refundAddr);
     }
 }

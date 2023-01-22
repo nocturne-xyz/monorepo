@@ -53,23 +53,24 @@ contract Accountant is
 
         _handleRefundNote(
             RefundNote({
-                refundAddr: deposit.depositAddr,
                 encodedAsset: deposit.encodedAsset,
                 value: deposit.value
-            })
+            }),
+            deposit.depositAddr
         );
     }
 
-    function handleRefundNote(
-        RefundNote memory refund
+    function handleRefundNotesBatched(
+        RefundNote[] memory refunds,
+        NocturneAddress memory refundAddr
     ) external override onlyWallet {
-        _handleRefundNote(refund);
+        _handleRefundNotesBatched(refunds, refundAddr);
     }
 
-    function handleJoinSplit(
-        JoinSplitTransaction calldata joinSplitTx
+    function handleJoinSplitsBatched(
+        JoinSplitTransaction[] calldata joinSplitTxs
     ) external override onlyWallet {
-        _handleJoinSplit(joinSplitTx);
+        _handleJoinSplitsBatched(joinSplitTxs);
     }
 
     function onERC721Received(

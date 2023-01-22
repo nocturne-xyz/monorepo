@@ -12,9 +12,12 @@ interface IAccountant {
 
     function makeDeposit(Deposit calldata deposit) external;
 
-    function handleRefundNote(RefundNote memory refund) external;
+    function handleRefundNotesBatched(
+        RefundNote[] memory refunds,
+        NocturneAddress memory refundAddr
+    ) external;
 
-    function handleJoinSplit(
-        JoinSplitTransaction calldata joinSplitTx
+    function handleJoinSplitsBatched(
+        JoinSplitTransaction[] calldata joinSplitTx
     ) external;
 }

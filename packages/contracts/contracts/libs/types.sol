@@ -119,7 +119,6 @@ struct Deposit {
 }
 
 struct RefundNote {
-    NocturneAddress refundAddr;
     EncodedAsset encodedAsset;
     uint256 value;
 }

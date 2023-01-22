@@ -169,15 +169,25 @@ contract CommitmentTreeManager is Initializable {
         emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
-    // function _handleRefundNotesBatched(
+    function _handleRefundNotesBatched(
+        RefundNote[] memory refunds,
+        NocturneAddress memory refundAddr
+    ) internal {
+        for (uint256 i = 0; i < refunds.length; i++) {
+            if (refunds[i].value > 0) {
+                _handleRefundNote(refunds[i], refundAddr);
+            }
+        }
+    }
 
-    // )
-
-    function _handleRefundNote(RefundNote memory refund) internal {
+    function _handleRefundNote(
+        RefundNote memory refund,
+        NocturneAddress memory refundAddr
+    ) internal {
         uint128 index = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
-            ownerH1: refund.refundAddr.h1X,
-            ownerH2: refund.refundAddr.h2X,
+            ownerH1: refundAddr.h1X,
+            ownerH2: refundAddr.h2X,
             nonce: index,
             encodedAssetAddr: refund.encodedAsset.encodedAssetAddr,
             encodedAssetId: refund.encodedAsset.encodedAssetId,
@@ -187,7 +197,7 @@ contract CommitmentTreeManager is Initializable {
         insertNote(note);
 
         emit Refund(
-            refund.refundAddr,
+            refundAddr,
             index,
             refund.encodedAsset.encodedAssetAddr,
             refund.encodedAsset.encodedAssetId,
