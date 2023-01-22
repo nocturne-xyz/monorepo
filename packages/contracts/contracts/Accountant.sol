@@ -46,33 +46,24 @@ contract Accountant is
 
     function makeDeposit(Deposit calldata deposit) public override onlyWallet {
         AssetUtils.transferAssetFrom(
-            EncodedAsset({
-                encodedAssetAddr: deposit.encodedAssetAddr,
-                encodedAssetId: deposit.encodedAssetId
-            }),
+            deposit.encodedAsset,
             deposit.spender,
             deposit.value
         );
 
         _handleRefundNote(
-            deposit.depositAddr,
-            deposit.encodedAssetAddr,
-            deposit.encodedAssetId,
-            deposit.value
+            RefundNote({
+                refundAddr: deposit.depositAddr,
+                encodedAsset: deposit.encodedAsset,
+                value: deposit.value
+            })
         );
     }
 
     function handleRefundNote(
-        EncodedAsset memory encodedAsset,
-        uint256 value,
-        NocturneAddress memory refundAddr
+        RefundNote memory refund
     ) external override onlyWallet {
-        _handleRefundNote(
-            refundAddr,
-            encodedAsset.encodedAssetAddr,
-            encodedAsset.encodedAssetId,
-            value
-        );
+        _handleRefundNote(refund);
     }
 
     function handleJoinSplit(

@@ -59,6 +59,14 @@ contract CommitmentTreeManager is Initializable {
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
+    function _handleJoinSplitsBatched(
+        JoinSplitTransaction[] calldata joinSplitTxs
+    ) internal {
+        for (uint256 i = 0; i < joinSplitTxs.length; i++) {
+            _handleJoinSplit(joinSplitTxs[i]);
+        }
+    }
+
     /**
       Process a joinsplit transaction, assuming that the encoded proof is valid
 
@@ -161,30 +169,29 @@ contract CommitmentTreeManager is Initializable {
         emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
-    function _handleRefundNote(
-        NocturneAddress memory refundAddr,
-        uint256 encodedAssetAddr,
-        uint256 encodedAssetId,
-        uint256 value
-    ) internal {
+    // function _handleRefundNotesBatched(
+
+    // )
+
+    function _handleRefundNote(RefundNote memory refund) internal {
         uint128 index = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
-            ownerH1: refundAddr.h1X,
-            ownerH2: refundAddr.h2X,
+            ownerH1: refund.refundAddr.h1X,
+            ownerH2: refund.refundAddr.h2X,
             nonce: index,
-            encodedAssetAddr: encodedAssetAddr,
-            encodedAssetId: encodedAssetId,
-            value: value
+            encodedAssetAddr: refund.encodedAsset.encodedAssetAddr,
+            encodedAssetId: refund.encodedAsset.encodedAssetId,
+            value: refund.value
         });
 
         insertNote(note);
 
         emit Refund(
-            refundAddr,
+            refund.refundAddr,
             index,
-            encodedAssetAddr,
-            encodedAssetId,
-            value,
+            refund.encodedAsset.encodedAssetAddr,
+            refund.encodedAsset.encodedAssetId,
+            refund.value,
             index
         );
     }

@@ -113,10 +113,15 @@ struct Action {
 
 struct Deposit {
     address spender;
-    uint256 encodedAssetAddr;
-    uint256 encodedAssetId;
+    EncodedAsset encodedAsset;
     uint256 value;
     NocturneAddress depositAddr;
+}
+
+struct RefundNote {
+    NocturneAddress refundAddr;
+    EncodedAsset encodedAsset;
+    uint256 value;
 }
 
 library BundleLib {

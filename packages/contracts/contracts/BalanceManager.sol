@@ -234,7 +234,13 @@ contract BalanceManager is
                 address(_accountant),
                 value
             );
-            _accountant.handleRefundNote(encodedAsset, value, refundAddr);
+            _accountant.handleRefundNote(
+                RefundNote({
+                    refundAddr: refundAddr,
+                    encodedAsset: encodedAsset,
+                    value: value
+                })
+            );
         }
     }
 }

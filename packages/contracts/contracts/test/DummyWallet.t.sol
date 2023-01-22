@@ -136,8 +136,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         _wallet.depositFunds(
             Deposit({
                 spender: _spender,
-                encodedAssetAddr: uint256(uint160(_asset)),
-                encodedAssetId: _id,
+                encodedAsset: EncodedAsset({
+                    encodedAssetAddr: uint256(uint160(_asset)),
+                    encodedAssetId: _id
+                }),
                 value: _value,
                 depositAddr: _depositAddr
             })
