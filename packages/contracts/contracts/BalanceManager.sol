@@ -48,7 +48,7 @@ contract BalanceManager is
         // Record the transfer if it results from executed actions
         if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
             _receivedAssets.push(
-                AssetUtils._encodeAsset(AssetType.ERC721, msg.sender, id)
+                AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
             );
         }
         // Accept the transfer when _operation_stage != _NOT_ENTERED
@@ -69,7 +69,7 @@ contract BalanceManager is
         // Record the transfer if it results from executed actions
         if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
             _receivedAssets.push(
-                AssetUtils._encodeAsset(AssetType.ERC1155, msg.sender, id)
+                AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
         }
         // Accept the transfer when _operation_stage != _NOT_ENTERED
@@ -92,7 +92,7 @@ contract BalanceManager is
             uint256 numIds = ids.length;
             for (uint256 i = 0; i < numIds; i++) {
                 _receivedAssets.push(
-                    AssetUtils._encodeAsset(
+                    AssetUtils.encodeAsset(
                         AssetType.ERC1155,
                         msg.sender,
                         ids[i]
@@ -138,7 +138,7 @@ contract BalanceManager is
             // from this `joinSplitTx`
             if (
                 gasAssetToReserve > 0 &&
-                AssetUtils._eq(encodedGasAsset, op.joinSplitTxs[i].encodedAsset)
+                AssetUtils.eq(encodedGasAsset, op.joinSplitTxs[i].encodedAsset)
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
@@ -177,11 +177,11 @@ contract BalanceManager is
         /// guaranteed to have reserved gasAssetAmount since it didn't throw.
         _accountant.requestAsset(encodedGasAsset, gasAssetAmount);
 
-        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
+        uint256 bundlerPayout = WalletUtils.calculateBundlerGasAssetPayout(
             op,
             opResult
         );
-        AssetUtils._transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
+        AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
     }
 
     /**
@@ -227,9 +227,9 @@ contract BalanceManager is
         EncodedAsset memory encodedAsset,
         NocturneAddress memory refundAddr
     ) internal {
-        uint256 value = AssetUtils._balanceOfAsset(encodedAsset);
+        uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
         if (value != 0) {
-            AssetUtils._transferAssetTo(
+            AssetUtils.transferAssetTo(
                 encodedAsset,
                 address(_accountant),
                 value

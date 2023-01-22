@@ -42,11 +42,11 @@ contract Accountant is
         EncodedAsset calldata encodedAsset,
         uint256 value
     ) external override onlyWallet {
-        AssetUtils._transferAssetTo(encodedAsset, _wallet, value);
+        AssetUtils.transferAssetTo(encodedAsset, _wallet, value);
     }
 
     function makeDeposit(Deposit calldata deposit) public override onlyWallet {
-        AssetUtils._transferAssetFrom(
+        AssetUtils.transferAssetFrom(
             EncodedAsset({
                 encodedAssetAddr: deposit.encodedAssetAddr,
                 encodedAssetId: deposit.encodedAssetId
