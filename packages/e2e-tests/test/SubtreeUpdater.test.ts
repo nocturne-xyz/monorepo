@@ -8,7 +8,7 @@ import {
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
-import { setup } from "../deploy/deployNocturne";
+import { postDeploySetup } from "../deploy/deployNocturne";
 import {
   depositFunds,
   getSubtreeUpdateProver,
@@ -39,7 +39,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const nocturneSetup = await setup();
+    const nocturneSetup = await postDeploySetup();
     alice = nocturneSetup.alice;
     accountant = nocturneSetup.accountant;
     wallet = nocturneSetup.wallet;

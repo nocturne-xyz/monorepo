@@ -84,8 +84,7 @@ function setupNocturneContext(
   );
 }
 
-export async function setup(): Promise<NocturneSetup> {
-  await deployments.fixture(["NocturneContracts"]);
+export async function postDeploySetup(): Promise<NocturneSetup> {
   const accountant = await ethers.getContract("Accountant");
   const wallet = await ethers.getContract("Wallet");
   const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");
@@ -128,6 +127,8 @@ export async function setup(): Promise<NocturneSetup> {
     merkleDBBob
   );
 
+  console.log("Wallet address:", wallet.address);
+  console.log("Accountant address:", accountant.address);
   return {
     alice,
     bob,
