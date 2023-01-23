@@ -7,10 +7,10 @@ import {
   AssetWithBalance,
   encodeAsset,
   proveJoinSplitTx,
-  calculateOperationDigest,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
+  VerifyingKey,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -26,8 +26,9 @@ export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
   bundlerEndpoint: string;
 
-  constructor(bundlerEndpoint: string, wasmPath: string, zkeyPath: string, vkey: any) {
+  constructor(bundlerEndpoint: string, wasmPath: string, zkeyPath: string, vkey: VerifyingKey) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+    console.log("localprover.vkey", this.localProver.vkey);
     this.bundlerEndpoint = bundlerEndpoint;
   }
 
@@ -75,7 +76,7 @@ export class NocturneFrontendSDK {
   async verifyProvenOperation(
     operation: ProvenOperation
   ): Promise<boolean> {
-    const opDigest = calculateOperationDigest(operation);
+
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] = operation.joinSplitTxs.map((joinSplit) => {
       const publicSignals = joinSplitPublicSignalsToArray({
         newNoteACommitment: joinSplit.newNoteACommitment,
@@ -84,19 +85,20 @@ export class NocturneFrontendSDK {
         publicSpend: joinSplit.publicSpend,
         nullifierA: joinSplit.nullifierA,
         nullifierB: joinSplit.nullifierB,
-        opDigest,
+        opDigest: joinSplit.opDigest,
         encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
         encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
       });
 
       const proof = unpackFromSolidityProof(joinSplit.proof);
-      console.log("proof", proof);
 
-      return { publicSignals, proof };
+      return { proof, publicSignals };
     });
 
     const results = await Promise.all(
-      proofsWithPublicInputs.map(this.localProver.verifyJoinSplitProof)
+      proofsWithPublicInputs.map(async (proofWithPis) => {
+        return await this.localProver.verifyJoinSplitProof(proofWithPis);
+      })
     );
 
     return results.every((result) => result);
@@ -226,5 +228,5 @@ export async function loadNocturneFrontendSDK(
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return new NocturneFrontendSDK(bundlerEndpoint, wasmPath, zkeyPath, vkey);
+  return new NocturneFrontendSDK(bundlerEndpoint, wasmPath, zkeyPath, vkey as VerifyingKey);
 }
