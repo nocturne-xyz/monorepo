@@ -22,17 +22,21 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
     try {
+      console.log("submitting tx...");
       const tx = await this.walletContract.applySubtreeUpdate(
         newRoot,
         solidityProof
       );
       await tx.wait();
+      console.log("successfully updated root to", newRoot);
     } catch (err: any) {
       // ignore errors that are due to duplicate submissions
       // this can happen if there are multiple instances of subtree updaters running
       if (!err.toString().includes("newRoot already a past root")) {
+        console.error("error submitting proof:", err);
         throw err;
       }
+      console.log("update already submitted by another agent");
     }
   }
 
