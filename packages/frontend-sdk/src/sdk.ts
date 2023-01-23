@@ -5,12 +5,12 @@ import {
   PreProofOperation,
   NocturneAddress,
   AssetWithBalance,
-  encodeAsset,
   proveJoinSplitTx,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
   VerifyingKey,
+  calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -40,24 +40,23 @@ export class NocturneFrontendSDK {
   async generateProvenOperation(
     operationRequest: OperationRequest
   ): Promise<ProvenOperation> {
-    const joinSplitInputs = await this.getJoinSplitInputsFromSnap(
+    const preProofOperation = await this.getJoinSplitInputsFromSnap(
       operationRequest
     );
 
+    console.log("PreProofOperation", preProofOperation);
+
     const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
-      joinSplitInputs.joinSplitTxs.map((inputs) => proveJoinSplitTx(this.localProver, inputs));
+      preProofOperation.joinSplitTxs.map((inputs) => proveJoinSplitTx(this.localProver, inputs));
 
     const {
-      joinSplitRequests,
-      refundAssets,
+      encodedRefundAssets,
       actions,
-      verificationGasLimit = 1_000_000n,
-      executionGasLimit = 1_000_000n,
-      gasPrice = 0n,
-      maxNumRefunds = BigInt(refundAssets.length + joinSplitRequests.length),
-    } = operationRequest;
-
-    const encodedRefundAssets = refundAssets.map(encodeAsset);
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
+    } = preProofOperation;
 
     const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
     const refundAddr = await this.getRandomizedAddr();
@@ -77,6 +76,9 @@ export class NocturneFrontendSDK {
     operation: ProvenOperation
   ): Promise<boolean> {
 
+    console.log("ProvenOperation", operation);
+    const opDigest = calculateOperationDigest(operation);
+
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] = operation.joinSplitTxs.map((joinSplit) => {
       const publicSignals = joinSplitPublicSignalsToArray({
         newNoteACommitment: joinSplit.newNoteACommitment,
@@ -85,7 +87,7 @@ export class NocturneFrontendSDK {
         publicSpend: joinSplit.publicSpend,
         nullifierA: joinSplit.nullifierA,
         nullifierB: joinSplit.nullifierB,
-        opDigest: joinSplit.opDigest,
+        opDigest,
         encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
         encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
       });

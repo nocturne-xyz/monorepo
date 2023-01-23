@@ -661,7 +661,6 @@ export async function proveJoinSplitTx(
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
-    opDigest,
     ...baseJoinSplitTx,
   };
 }

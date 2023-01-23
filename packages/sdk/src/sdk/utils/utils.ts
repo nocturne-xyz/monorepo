@@ -31,7 +31,6 @@ export function fakeProvenOperation(
       newNoteATransmission: joinSplitTx.newNoteATransmission,
       newNoteBTransmission: joinSplitTx.newNoteBTransmission,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
-      opDigest: 0n,
     };
   });
   return {
