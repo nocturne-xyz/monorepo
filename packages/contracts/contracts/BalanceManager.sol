@@ -215,6 +215,11 @@ contract BalanceManager is
                 .encodedAsset;
             uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
             refunds[i] = RefundNote({encodedAsset: encodedAsset, value: value});
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_accountant),
+                value
+            );
         }
 
         uint256 refundAssetsStartIndex = numJoinSplitTxs;
@@ -226,6 +231,11 @@ contract BalanceManager is
                 encodedAsset: encodedAsset,
                 value: value
             });
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_accountant),
+                value
+            );
         }
 
         uint256 receivedStartIndex = numJoinSplitTxs + numRefundAssets;
@@ -237,20 +247,13 @@ contract BalanceManager is
                 encodedAsset: encodedAsset,
                 value: value
             });
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_accountant),
+                value
+            );
         }
         delete _receivedAssets;
-
-        // Transfer assets back to accountant
-        for (uint256 i = 0; i < totalNumRefunds; i++) {
-            uint256 value = refunds[i].value;
-            if (value > 0) {
-                AssetUtils.transferAssetTo(
-                    refunds[i].encodedAsset,
-                    address(_accountant),
-                    value
-                );
-            }
-        }
 
         // Insert note commitments for all refunds
         // NOTE: refund notes with value = 0 may be passed to _accountant, they
