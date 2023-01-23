@@ -5,6 +5,7 @@ RUN apt update -y && apt install -y build-essential libgmp-dev libsodium-dev nas
 COPY --from=rapidsnark /rapidsnark /rapidsnark
 
 WORKDIR /app
+
 COPY scripts scripts
 
 COPY package.json .
@@ -21,7 +22,6 @@ RUN yarn install
 
 WORKDIR /app/packages/circuits
 
-RUN yarn build:deps
 RUN ./scripts/build_witness_generator.sh
 
 WORKDIR /app/packages/subtree-updater
