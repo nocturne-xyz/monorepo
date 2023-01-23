@@ -174,9 +174,9 @@ export function packToSolidityProof(proof: BaseProof): SolidityProof {
 
 export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
   return {
-    pi_a: [proof[0], proof[1]],
-    pi_b: [[proof[3], proof[2]], [proof[5], proof[4]]],
-    pi_c: [proof[6], proof[7]],
+    pi_a: [proof[0], proof[1], 1n],
+    pi_b: [[proof[3], proof[2]], [proof[5], proof[4]], [1n, 0n]],
+    pi_c: [proof[6], proof[7], 1n],
     protocol: "groth16",
     curve: "bn128",
   };
@@ -216,6 +216,7 @@ export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
 }
 
 export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
+  opDigest: bigint;
   proof: SolidityProof;
 }
 

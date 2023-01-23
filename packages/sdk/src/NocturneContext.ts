@@ -656,9 +656,12 @@ export async function proveJoinSplitTx(
     );
   }
 
+  console.log("proofWithPis", proof);
+
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
+    opDigest,
     ...baseJoinSplitTx,
   };
 }
