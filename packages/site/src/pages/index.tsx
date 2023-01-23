@@ -32,6 +32,7 @@ import {
 } from "@nocturne-xyz/frontend-sdk";
 
 const ERC20_ID = 0n;
+const TOKEN_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
 
 const Container = styled.div`
   display: flex;
@@ -162,9 +163,8 @@ const Index = () => {
   };
 
   const handleGetJoinSplitInputs = async () => {
-    const tokenAddress = "";
     const asset: Asset = {
-      assetAddr: tokenAddress,
+      assetAddr: TOKEN_ADDRESS,
       id: ERC20_ID,
       assetType: AssetType.ERC20,
     };
@@ -174,13 +174,15 @@ const Index = () => {
     };
 
     const refundAssets = [asset];
+
+    console.log("Encoding transfer function data");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [tokenAddress, 50]
+        [TOKEN_ADDRESS, 50]
       );
     const action: Action = {
-      contractAddress: tokenAddress,
+      contractAddress: TOKEN_ADDRESS,
       encodedFunction: encodedFunction,
     };
     const operationRequest: OperationRequest = {
@@ -212,7 +214,7 @@ const Index = () => {
   return (
     <Container>
       <Heading>
-        Welcome to the<Span>Nocturne Power-User Frontend</Span>
+        Welcome to the <Span>Nocturne Power-User Frontend</Span>
       </Heading>
       <CardContainer>
         {state.error && (

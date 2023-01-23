@@ -13,7 +13,7 @@ import {
   LocalMerkleProver,
   MerkleDB,
 } from "@nocturne-xyz/sdk";
-import { setup } from "../deploy/deployNocturne";
+import { postDeploySetup } from "../deploy/deployNocturne";
 import { depositFunds, getSubtreeUpdateProver } from "./utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
@@ -34,7 +34,7 @@ describe("LocalMerkle", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const nocturneSetup = await setup();
+    const nocturneSetup = await postDeploySetup();
     alice = nocturneSetup.alice;
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;
