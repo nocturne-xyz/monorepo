@@ -5,14 +5,15 @@ import {
   JoinSplitInputs,
   JoinSplitProofWithPublicSignals,
   JoinSplitProver,
+  VerifyingKey,
 } from "@nocturne-xyz/sdk";
 
 export class LocalJoinSplitProver implements JoinSplitProver {
   wasmPath: string;
   zkeyPath: string;
-  vkey: any;
+  vkey: VerifyingKey;
 
-  constructor(wasmPath: string, zkeyPath: string, vkey: any) {
+  constructor(wasmPath: string, zkeyPath: string, vkey: VerifyingKey) {
     this.wasmPath = wasmPath;
     this.zkeyPath = zkeyPath;
     this.vkey = vkey;
