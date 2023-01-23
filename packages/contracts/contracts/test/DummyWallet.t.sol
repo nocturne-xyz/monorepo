@@ -226,7 +226,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 publicSpend,
         uint256 verificationGasLimit,
         uint256 executionGasLimit,
-        uint256 gasPrice
+        uint256 gasPrice,
+        uint256 numJoinSplits
     ) internal view returns (Operation memory) {
         Action memory transferAction = Action({
             contractAddress: address(token),
@@ -265,25 +266,26 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedAssetAddr: uint256(uint160(address(token))),
             encodedAssetId: uint256(0)
         });
-        JoinSplitTransaction memory joinSplitTx = JoinSplitTransaction({
-            commitmentTreeRoot: root,
-            nullifierA: uint256(182),
-            nullifierB: uint256(183),
-            newNoteACommitment: uint256(1038),
-            newNoteATransmission: newNoteATransmission,
-            newNoteBCommitment: uint256(1032),
-            newNoteBTransmission: newNoteBTransmission,
-            proof: dummyProof(),
-            encodedAsset: encodedAsset,
-            publicSpend: publicSpend
-        });
-
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
-            1
+            numJoinSplits
         );
-        joinSplitTxs[0] = joinSplitTx;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplitTxs[i] = JoinSplitTransaction({
+                commitmentTreeRoot: root,
+                nullifierA: uint256(2 * i),
+                nullifierB: uint256(2 * i + 1),
+                newNoteACommitment: uint256(i),
+                newNoteATransmission: newNoteATransmission,
+                newNoteBCommitment: uint256(i),
+                newNoteBTransmission: newNoteBTransmission,
+                proof: dummyProof(),
+                encodedAsset: encodedAsset,
+                publicSpend: publicSpend
+            });
+        }
+
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
         Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
         Operation memory op = Operation({
@@ -294,7 +296,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             verificationGasLimit: verificationGasLimit,
             executionGasLimit: executionGasLimit,
             gasPrice: gasPrice,
-            maxNumRefunds: 1
+            maxNumRefunds: joinSplitTxs.length
         });
 
         return op;
@@ -321,7 +323,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         );
     }
 
-    function testDummyTransfer() public {
+    function testDummyTransferSingleJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
 
@@ -334,7 +336,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            0
+            0,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -381,6 +384,108 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
     }
 
+    function testDummyTransferManyJoinSplit() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
+
+        // Create operation to transfer 50 tokens to bob
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = formatTransferOperation(
+            token,
+            BOB,
+            1 gwei,
+            2 gwei,
+            DEFAULT_GAS_LIMIT,
+            DEFAULT_GAS_LIMIT,
+            0,
+            3
+        );
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = true;
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
+        assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
+    }
+
+    function testDummyTransferSixJoinSplit() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 20 gwei, 16 gwei);
+
+        // Create operation to transfer 50 tokens to bob
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = formatTransferOperation(
+            token,
+            BOB,
+            1 gwei,
+            2 gwei,
+            DEFAULT_GAS_LIMIT,
+            DEFAULT_GAS_LIMIT,
+            0,
+            5
+        );
+
+        // assertEq(token.balanceOf(address(wallet)), uint256(0));
+        // assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        // assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        // assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = true;
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callResults.length, uint256(1));
+
+        // assertEq(token.balanceOf(address(wallet)), uint256(0));
+        // assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
+        // assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
+        // assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        // assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
+    }
+
     // Ill-formatted operation should not be processed
     function testProcessesFailingOperation() public {
         SimpleERC20Token token = ERC20s[0];
@@ -396,7 +501,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             15 gwei, // this will overdraw the vault
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            1000
+            1000,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -447,7 +553,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
-            1000
+            1000,
+            1
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
