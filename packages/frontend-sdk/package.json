@@ -19,9 +19,11 @@
     "test:unit": ""
   },
   "dependencies": {
+    "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",
-    "bigint-json-serialization": "^1.0.1"
+    "bigint-json-serialization": "^1.0.1",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

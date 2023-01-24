@@ -11,6 +11,8 @@ import {
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
+import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { ethers } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -18,9 +20,37 @@ const VKEY_PATH = "/joinSplitVkey.json";
 
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
+  walletContract: Wallet;
 
-  constructor(wasmPath: string, zkeyPath: string, vkey: any) {
+  private constructor(
+    walletContract: Wallet,
+    wasmPath: string,
+    zkeyPath: string,
+    vkey: any
+  ) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.walletContract = walletContract;
+  }
+
+  static async instantiate(
+    walletContractAddress: string,
+    wasmPath: string,
+    zkeyPath: string,
+    vkey: any
+  ): Promise<NocturneFrontendSDK> {
+    const walletContract = await NocturneFrontendSDK.connectWalletContract(
+      walletContractAddress
+    );
+    return new NocturneFrontendSDK(walletContract, wasmPath, zkeyPath, vkey);
+  }
+
+  static async connectWalletContract(
+    walletContractAddress: string
+  ): Promise<Wallet> {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+    return Wallet__factory.connect(walletContractAddress, signer);
   }
 
   /**
@@ -162,19 +192,26 @@ export class NocturneFrontendSDK {
 }
 
 /**
- * Load a `NocturneFrontendSDK` instance, provided paths to local prover's wasm,
- * zkey, and vkey. Circuit file paths default to caller's current directory
- * (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.json).
+ * Load a `NocturneFrontendSDK` instance, provided paths to a wallet contract
+ * address, local prover's wasm, zkey, and vkey. Circuit file paths default to
+ * caller's current directory (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.
+ * json).
  *
  * @param wasmPath Wasm path
  * @param zkeyPath Zkey path
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
+  walletContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return new NocturneFrontendSDK(wasmPath, zkeyPath, vkey);
+  return await NocturneFrontendSDK.instantiate(
+    walletContractAddress,
+    wasmPath,
+    zkeyPath,
+    vkey
+  );
 }

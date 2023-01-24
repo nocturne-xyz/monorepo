@@ -89,12 +89,15 @@ const ErrorMessage = styled.div`
   }
 `;
 
+const WALLET_CONTRACT_ADDRESS = "0x352f0a59E6431562A2878926a2cF0De76ED2AA55";
+
 const Playground = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
-    loadNocturneFrontendSDK().then((sdk) => {
+    loadNocturneFrontendSDK(WALLET_CONTRACT_ADDRESS).then((sdk) => {
+      console.log("Instantiated frontend sdk");
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK, state.installedSnap]);
@@ -212,6 +215,19 @@ const Playground = () => {
           </Notice>
         )}
       </CardContainer>
+      {shouldDisplayReconnectButton(state.installedSnap) && (
+        <CardContainer>
+          <Card
+            content={{
+              title: "Deposit to Wallet",
+              description: "Deposit assets to smart contract wallet",
+            }}
+            fullWidth
+          >
+            {nocturneFrontendSDK && <ABIForm sdk={nocturneFrontendSDK} />}
+          </Card>
+        </CardContainer>
+      )}
       {shouldDisplayReconnectButton(state.installedSnap) && (
         <CardContainer>
           <Card
