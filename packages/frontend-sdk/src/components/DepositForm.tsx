@@ -8,7 +8,7 @@ export interface DepositFormProps {
   sdk: NocturneFrontendSDK;
 }
 
-export const ABIUnwrapForm = ({ sdk }: DepositFormProps) => {
+export const DepositForm = ({ sdk }: DepositFormProps) => {
   const [assetType, setAssetType] = useState<AssetType>(AssetType.ERC20);
   const [assetAddress, setAssetAddress] = useState("");
   const [amount, setAmount] = useState("0");
@@ -55,8 +55,6 @@ export const ABIUnwrapForm = ({ sdk }: DepositFormProps) => {
 
   return (
     <div>
-      <br />
-      <h1 style={{ fontSize: "20px" }}>Unwrap Assets</h1>
       <div>
         <label>
           Asset Type

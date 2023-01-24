@@ -13,6 +13,7 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
   AssetBalancesDisplay,
+  DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
 
 const Container = styled.div`
@@ -224,7 +225,7 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && <ABIForm sdk={nocturneFrontendSDK} />}
+            {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}
           </Card>
         </CardContainer>
       )}
