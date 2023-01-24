@@ -10,11 +10,12 @@ import {
   AssetType,
   Address,
 } from "@nocturne-xyz/sdk";
-import { DEFAULT_SNAP_ORIGIN } from "./common";
+import { DEFAULT_SNAP_ORIGIN, getWindowSigner } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ContractTransaction, ethers } from "ethers";
+import ERC20 from "./abis/ERC20.json";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -23,15 +24,18 @@ const VKEY_PATH = "/joinSplitVkey.json";
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
   walletContract: Wallet;
+  vaultContractAddress: Address;
 
   private constructor(
     walletContract: Wallet,
+    vaultContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
   ) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.walletContract = walletContract;
+    this.vaultContractAddress = vaultContractAddress;
   }
 
   /**
@@ -44,6 +48,7 @@ export class NocturneFrontendSDK {
    */
   static async instantiate(
     walletContractAddress: string,
+    vaultContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
@@ -51,15 +56,19 @@ export class NocturneFrontendSDK {
     const walletContract = await NocturneFrontendSDK.connectWalletContract(
       walletContractAddress
     );
-    return new NocturneFrontendSDK(walletContract, wasmPath, zkeyPath, vkey);
+    return new NocturneFrontendSDK(
+      walletContract,
+      vaultContractAddress,
+      wasmPath,
+      zkeyPath,
+      vkey
+    );
   }
 
   private static async connectWalletContract(
     walletContractAddress: string
   ): Promise<Wallet> {
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
+    const signer = await getWindowSigner();
     return Wallet__factory.connect(walletContractAddress, signer);
   }
 
@@ -85,6 +94,13 @@ export class NocturneFrontendSDK {
       assetAddr: assetAddress,
       id: assetId,
     });
+
+    const signer = await getWindowSigner();
+    if (assetType == AssetType.ERC20) {
+      const erc20Contract = new ethers.Contract(assetAddress, ERC20, signer);
+      await erc20Contract.approve(this.vaultContractAddress, value);
+    }
+
     return this.walletContract.depositFunds({
       spender,
       encodedAssetAddr,
@@ -244,6 +260,7 @@ export class NocturneFrontendSDK {
  */
 export async function loadNocturneFrontendSDK(
   walletContractAddress: string,
+  vaultContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
@@ -251,6 +268,7 @@ export async function loadNocturneFrontendSDK(
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
     walletContractAddress,
+    vaultContractAddress,
     wasmPath,
     zkeyPath,
     vkey
