@@ -2,16 +2,12 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-
+import "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
 import "./libs/types.sol";
 import "./BalanceManager.sol";
-import "./upgrade/Versioned.sol";
 
 // TODO: use SafeERC20 library
 contract Wallet is IWallet, BalanceManager, Versioned {
@@ -73,7 +69,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            uint256 verificationGasForOp = WalletUtils._verificationGasForOp(
+            uint256 verificationGasForOp = WalletUtils.verificationGasForOp(
                 ops[i],
                 perJoinSplitGas
             );
@@ -83,8 +79,8 @@ contract Wallet is IWallet, BalanceManager, Versioned {
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = WalletUtils._failOperationWithReason(
-                    WalletUtils._getRevertMsg(reason)
+                opResults[i] = WalletUtils.failOperationWithReason(
+                    WalletUtils.getRevertMsg(reason)
                 );
             }
             emit OperationProcessed(
@@ -139,7 +135,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         } catch (bytes memory result) {
             // TODO: properly process this failure case
             // TODO: properly set opResult.executionGas
-            opResult = WalletUtils._unsuccessfulOperation(op, result);
+            opResult = WalletUtils.unsuccessfulOperation(op, result);
         }
         opResult.verificationGas = verificationGasForOp;
 
@@ -193,18 +189,6 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         opResult.numRefunds = numRefundsToHandle;
 
         opResult.executionGas = preExecutionGas - gasleft();
-    }
-
-    function _payBundlerGasAsset(
-        Operation calldata op,
-        OperationResult memory opResult,
-        address bundler
-    ) internal {
-        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
-            op,
-            opResult
-        );
-        AssetUtils._transferAssetTo(op.gasAsset(), bundler, bundlerPayout);
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

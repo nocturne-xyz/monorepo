@@ -11,7 +11,7 @@
   },
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build",
+    "build": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions && FOUNDRY_PROFILE=contracts forge build --sizes",
     "build:deps": "scripts/install_deps.sh",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
@@ -42,6 +42,7 @@
     "ethereum-waffle": "^3.2.2",
     "ethers": "^5.4.4",
     "hardhat": "^2.11.2",
+    "hardhat-contract-sizer": "^2.7.0",
     "hardhat-gas-reporter": "^1.0.4",
     "hardhat-packager": "~1.2.1",
     "prettier": "^2.8.0",

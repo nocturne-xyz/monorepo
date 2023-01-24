@@ -48,7 +48,7 @@ library AssetUtils {
         return (assetType, assetAddr, id);
     }
 
-    function _encodeAssetToTuple(
+    function encodeAssetToTuple(
         AssetType assetType,
         address assetAddr,
         uint256 id
@@ -71,15 +71,16 @@ library AssetUtils {
         return (encodedAssetAddr, encodedAssetId);
     }
 
-    function _encodeAsset(
+    function encodeAsset(
         AssetType assetType,
         address assetAddr,
         uint256 id
     ) internal pure returns (EncodedAsset memory encodedAsset) {
-        (
-            uint256 encodedAssetAddr,
-            uint256 encodedAssetId
-        ) = _encodeAssetToTuple(assetType, assetAddr, id);
+        (uint256 encodedAssetAddr, uint256 encodedAssetId) = encodeAssetToTuple(
+            assetType,
+            assetAddr,
+            id
+        );
         return
             EncodedAsset({
                 encodedAssetAddr: encodedAssetAddr,
@@ -87,15 +88,7 @@ library AssetUtils {
             });
     }
 
-    function _checkEqual(
-        EncodedAsset memory assetA,
-        EncodedAsset memory assetB
-    ) internal pure returns (bool) {
-        return (assetA.encodedAssetAddr == assetB.encodedAssetAddr &&
-            assetA.encodedAssetId == assetB.encodedAssetId);
-    }
-
-    function _balanceOfAsset(
+    function balanceOfAsset(
         EncodedAsset memory encodedAsset
     ) internal view returns (uint256) {
         (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
@@ -116,7 +109,7 @@ library AssetUtils {
     /**
       @dev Transfer asset to receiver. Throws if unsuccssful.
     */
-    function _transferAssetTo(
+    function transferAssetTo(
         EncodedAsset memory encodedAsset,
         address receiver,
         uint256 value
@@ -149,7 +142,7 @@ library AssetUtils {
     /**
       @dev Transfer asset from spender. Throws if unsuccssful.
     */
-    function _transferAssetFrom(
+    function transferAssetFrom(
         EncodedAsset memory encodedAsset,
         address spender,
         uint256 value
@@ -179,7 +172,7 @@ library AssetUtils {
         }
     }
 
-    function _eq(
+    function eq(
         EncodedAsset calldata assetA,
         EncodedAsset calldata assetB
     ) internal pure returns (bool) {

@@ -3,6 +3,7 @@ import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-packager';
 import '@nomiclabs/hardhat-ethers';
 import '@openzeppelin/hardhat-upgrades';
+import 'hardhat-contract-sizer';
 
 import { subtask } from 'hardhat/config';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
@@ -35,7 +36,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 999999,
+        runs: 500,
       },
       metadata: {
         bytecodeHash: 'none',

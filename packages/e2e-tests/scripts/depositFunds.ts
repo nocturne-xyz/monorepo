@@ -1,5 +1,5 @@
-import { setup } from "../deploy/deployNocturne";
-const hre = require("hardhat");
+import { setupNocturne } from "../deploy/deployNocturne";
+import { ethers } from "hardhat";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   Asset,
@@ -28,10 +28,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  const { wallet, vault, nocturneContextAlice } = await setup();
-  const nocturneAddressAlice = nocturneContextAlice.signer.address;
+  console.log("Post deploy setup");
+  const { wallet, vault } = await setupNocturne({ deployContracts: false });
 
-  const [depositor] = await hre.ethers.getSigners();
+  const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
 
   for (let i = 0; i < 2; i++) {
@@ -41,18 +41,17 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
-      await token.reserveTokens(addr, 1000);
+      await token.connect(depositor).reserveTokens(addr, 1000);
     }
 
     // Reserve and approve tokens for nocturne addr depositor
-    await token.reserveTokens(depositor.address, 100000000);
+    await token.connect(depositor).reserveTokens(depositor.address, 100000000);
     await token.connect(depositor).approve(vault.address, 100000000);
 
     // We will deposit to setup alice and test nocturne addrs
-    const testAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
+    const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
       NocturneAddressTrait.fromCanonAddress
     );
-    const targetAddrs = [nocturneAddressAlice, ...testAddrs];
 
     const asset: Asset = {
       assetType: AssetType.ERC20,
