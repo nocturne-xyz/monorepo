@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix dir not existing in rapidsnark prover
+- remove install deps from dockerfile
 - Add a script `yarn build:docker` to build the dockerized subtree updater
 - Switch to CLI options for all non-secrets
 - Add CLI instructions to readme

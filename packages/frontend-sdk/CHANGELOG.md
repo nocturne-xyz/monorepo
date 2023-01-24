@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix overwriting of gas and refunds in `generateProvenOperation`
 - add method to verify operation proofs
 - add `TransactionTracker` component
 - Use `makePostProofJoinSplitTx` in `generateProvenOperation`

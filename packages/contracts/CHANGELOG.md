@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix contract calculating opDigest differently from frontend
 - put forge deps install script into this package
 - Add additional unit tests for processing multiple joinsplits
 - Make underscores consistent in `WalletUtils` and `AssetUtils`

@@ -24,15 +24,13 @@ function hashOperation(
 
   let refundAssetsPayload = [] as any;
   for (const encodedAsset of op.encodedRefundAssets) {
-    refundAssetsPayload = ethers.utils.keccak256(
-      ethers.utils.solidityPack(
-        ["bytes", "uint256", "uint256"],
-        [
-          refundAssetsPayload,
-          encodedAsset.encodedAssetAddr,
-          encodedAsset.encodedAssetId,
-        ]
-      )
+    refundAssetsPayload =  ethers.utils.solidityPack(
+      ["bytes", "uint256", "uint256"],
+      [
+        refundAssetsPayload,
+        encodedAsset.encodedAssetAddr,
+        encodedAsset.encodedAssetId,
+      ]
     );
   }
 

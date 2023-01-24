@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`
 - add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`
 - factor contents of `NocturneContext.proveJoinSplitTx` into a standalone helper

@@ -624,18 +624,17 @@ export async function proveJoinSplitTx(
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
   if (
-    baseJoinSplitTx.newNoteACommitment != publicSignals.newNoteACommitment ||
-    baseJoinSplitTx.newNoteBCommitment != publicSignals.newNoteBCommitment ||
-    baseJoinSplitTx.commitmentTreeRoot != publicSignals.commitmentTreeRoot ||
-    baseJoinSplitTx.publicSpend != publicSignals.publicSpend ||
-    baseJoinSplitTx.nullifierA != publicSignals.nullifierA ||
-    baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-    baseJoinSplitTx.nullifierB != publicSignals.nullifierB ||
-    baseJoinSplitTx.encodedAsset.encodedAssetAddr !=
-      publicSignals.encodedAssetAddr ||
-    baseJoinSplitTx.encodedAsset.encodedAssetId !=
-      publicSignals.encodedAssetId ||
-    opDigest != publicSignals.opDigest
+    baseJoinSplitTx.newNoteACommitment !== BigInt(publicSignals.newNoteACommitment) ||
+    baseJoinSplitTx.newNoteBCommitment !== BigInt(publicSignals.newNoteBCommitment) ||
+    baseJoinSplitTx.commitmentTreeRoot !== BigInt(publicSignals.commitmentTreeRoot) ||
+    baseJoinSplitTx.publicSpend !== BigInt(publicSignals.publicSpend) ||
+    baseJoinSplitTx.nullifierA !== BigInt(publicSignals.nullifierA) ||
+    baseJoinSplitTx.nullifierB !== BigInt(publicSignals.nullifierB) ||
+    baseJoinSplitTx.encodedAsset.encodedAssetAddr !==
+      BigInt(publicSignals.encodedAssetAddr) ||
+    baseJoinSplitTx.encodedAsset.encodedAssetId !==
+      BigInt(publicSignals.encodedAssetId) ||
+    opDigest !== BigInt(publicSignals.opDigest)
   ) {
 
     console.error("from proof, got", publicSignals);

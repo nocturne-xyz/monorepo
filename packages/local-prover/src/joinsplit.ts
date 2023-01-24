@@ -79,6 +79,7 @@ export class LocalJoinSplitProver implements JoinSplitProver {
       this.wasmPath,
       this.zkeyPath
     );
+
     return proof;
   }
 
