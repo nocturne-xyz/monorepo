@@ -624,9 +624,12 @@ export async function proveJoinSplitTx(
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
   if (
-    baseJoinSplitTx.newNoteACommitment !== BigInt(publicSignals.newNoteACommitment) ||
-    baseJoinSplitTx.newNoteBCommitment !== BigInt(publicSignals.newNoteBCommitment) ||
-    baseJoinSplitTx.commitmentTreeRoot !== BigInt(publicSignals.commitmentTreeRoot) ||
+    baseJoinSplitTx.newNoteACommitment !==
+      BigInt(publicSignals.newNoteACommitment) ||
+    baseJoinSplitTx.newNoteBCommitment !==
+      BigInt(publicSignals.newNoteBCommitment) ||
+    baseJoinSplitTx.commitmentTreeRoot !==
+      BigInt(publicSignals.commitmentTreeRoot) ||
     baseJoinSplitTx.publicSpend !== BigInt(publicSignals.publicSpend) ||
     baseJoinSplitTx.nullifierA !== BigInt(publicSignals.nullifierA) ||
     baseJoinSplitTx.nullifierB !== BigInt(publicSignals.nullifierB) ||
@@ -636,7 +639,6 @@ export async function proveJoinSplitTx(
       BigInt(publicSignals.encodedAssetId) ||
     opDigest !== BigInt(publicSignals.opDigest)
   ) {
-
     console.error("from proof, got", publicSignals);
     console.error("from sdk, got", {
       newNoteACommitment: baseJoinSplitTx.newNoteACommitment,

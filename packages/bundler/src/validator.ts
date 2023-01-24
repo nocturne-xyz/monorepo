@@ -82,7 +82,7 @@ export class OperationValidator {
     console.log("with digest", opDigest);
     console.log("with joinsplits", operation.joinSplitTxs);
 
-    const id = opDigest.toString() ;
+    const id = opDigest.toString();
     const bundle: Bundle = { operations: [operation] };
     const data = this.walletContract.interface.encodeFunctionData(
       "processBundle",

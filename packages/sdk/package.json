@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.42-alpha",
+  "version": "1.0.45-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/contracts": "1.0.4-alpha",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",

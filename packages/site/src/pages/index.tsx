@@ -229,11 +229,16 @@ const Index = () => {
     try {
       const provenOperation =
         await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
-      
-      console.log(provenOperation);
-      console.log("opDigest of provenOperation", calculateOperationDigest(provenOperation));
 
-      const isValid = await nocturneFrontendSDK!.verifyProvenOperation(provenOperation);
+      console.log(provenOperation);
+      console.log(
+        "opDigest of provenOperation",
+        calculateOperationDigest(provenOperation)
+      );
+
+      const isValid = await nocturneFrontendSDK!.verifyProvenOperation(
+        provenOperation
+      );
       console.log("is valid: ", isValid);
 
       return provenOperation;
