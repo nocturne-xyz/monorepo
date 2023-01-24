@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Add additional unit tests for processing multiple joinsplits
+- Make underscores consistent in `WalletUtils` and `AssetUtils`
+- Optimizer runs 99999 -> 500 to get back under code size limit
 - Modify `hardhat.config.ts` to take private keys from env for deploy script
 - Add deploy script to `deployer` directory
 - Replace all dependent OZ libraries with their upgradeable versions for Wallet, BalanceManager, CommitmentTreeManager, and NocturneReetrancyGuard

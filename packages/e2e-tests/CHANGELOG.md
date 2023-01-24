@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix setup script regression post-upgrades, we only deploy contracts in setup script in e2e-tests, not hh-node
 - Slightly modify deployNocturne script to deploy proxies without properly managing proxy admin (temporary, to be replaced by proper deploy script later)
 - Deposit script creates and sends funds for two tokens
 - Modify deposit script to airdrop tokens to hardcoded nocturne addresses

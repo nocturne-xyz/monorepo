@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Remove unused wallet contract connect methods from metamask.ts
+- Fix regression with dev script not updating token address
 - Clean up power user site
   - Add autosyncing display for wallet balances
   - Clean up form sizing and spacing
