@@ -86,7 +86,7 @@ export class NocturneFrontendSDK {
     assetType: AssetType,
     assetAddress: Address,
     assetId: bigint,
-    value: bigint,
+    value: bigint
   ): Promise<ContractTransaction> {
     const spender = await this.walletContract.signer.getAddress();
     const depositAddr = await this.getRandomizedAddr();
