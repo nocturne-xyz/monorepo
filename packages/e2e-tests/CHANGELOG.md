@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Deposit funds script sends ETH to test eth addrs
 - Fill batch with zeros in deposit script
 - Fix setup script regression post-upgrades, we only deploy contracts in setup script in e2e-tests, not hh-node
 - Slightly modify deployNocturne script to deploy proxies without properly managing proxy admin (temporary, to be replaced by proper deploy script later)

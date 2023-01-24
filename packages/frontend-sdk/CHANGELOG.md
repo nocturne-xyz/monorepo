@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Add `DepositForm` component
+- Add erc20/721/1155 JSON abis for token approvals
+- Add `depositFunds` method to `NocturneFrontendSDK`, which required sdk taken wallet and vault addresses
 - fix overwriting of gas and refunds in `generateProvenOperation`
 - add method to verify operation proofs
 - add `TransactionTracker` component

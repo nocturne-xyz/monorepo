@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `DepositForm` to power user site and have `NocturneFrontendSDK` take wallet and vault addresses
 - Add genAndSubmitProofs button
 - Add back old test site
 - Add bundler endpoint to cofig
