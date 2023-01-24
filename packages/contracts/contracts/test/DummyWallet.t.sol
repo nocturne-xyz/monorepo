@@ -50,6 +50,17 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
 
+    struct TransferOperationArgs {
+        SimpleERC20Token token;
+        address recipient;
+        uint256 amount;
+        uint256 publicSpendPerJoinSplit;
+        uint256 numJoinSplits;
+        uint256 verificationGasLimit;
+        uint256 executionGasLimit;
+        uint256 gasPrice;
+    }
+
     event Refund(
         NocturneAddress refundAddr,
         uint256 nonce,
@@ -220,21 +231,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     }
 
     function formatTransferOperation(
-        SimpleERC20Token token,
-        address recipient,
-        uint256 amount,
-        uint256 publicSpendPerJoinSplit,
-        uint256 verificationGasLimit,
-        uint256 executionGasLimit,
-        uint256 gasPrice,
-        uint256 numJoinSplits
+        TransferOperationArgs memory args
     ) internal view returns (Operation memory) {
         Action memory transferAction = Action({
-            contractAddress: address(token),
+            contractAddress: address(args.token),
             encodedFunction: abi.encodeWithSelector(
-                token.transfer.selector,
-                recipient,
-                amount
+                args.token.transfer.selector,
+                args.recipient,
+                args.amount
             )
         });
 
@@ -263,14 +267,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         EncodedAsset memory encodedAsset = EncodedAsset({
-            encodedAssetAddr: uint256(uint160(address(token))),
+            encodedAssetAddr: uint256(uint160(address(args.token))),
             encodedAssetId: uint256(0)
         });
 
         JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
-            numJoinSplits
+            args.numJoinSplits
         );
-        for (uint256 i = 0; i < numJoinSplits; i++) {
+        for (uint256 i = 0; i < args.numJoinSplits; i++) {
             joinSplitTxs[i] = JoinSplitTransaction({
                 commitmentTreeRoot: root,
                 nullifierA: uint256(2 * i),
@@ -281,7 +285,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 newNoteBTransmission: newNoteBTransmission,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
-                publicSpend: publicSpendPerJoinSplit
+                publicSpend: args.publicSpendPerJoinSplit
             });
         }
 
@@ -293,9 +297,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             refundAddr: defaultNocturneAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
-            verificationGasLimit: verificationGasLimit,
-            executionGasLimit: executionGasLimit,
-            gasPrice: gasPrice,
+            verificationGasLimit: args.verificationGasLimit,
+            executionGasLimit: args.executionGasLimit,
+            gasPrice: args.gasPrice,
             maxNumRefunds: joinSplitTxs.length
         });
 
@@ -330,14 +334,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
-            token,
-            BOB,
-            1 gwei,
-            2 gwei,
-            DEFAULT_GAS_LIMIT,
-            DEFAULT_GAS_LIMIT,
-            0,
-            1
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 1 gwei,
+                publicSpendPerJoinSplit: 2 gwei,
+                numJoinSplits: 1,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0
+            })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -391,14 +397,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
-            token,
-            BOB,
-            6 gwei,
-            2 gwei,
-            DEFAULT_GAS_LIMIT,
-            DEFAULT_GAS_LIMIT,
-            0,
-            3
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 6 gwei,
+                publicSpendPerJoinSplit: 2 gwei,
+                numJoinSplits: 3,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0
+            })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -441,14 +449,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
-            token,
-            BOB,
-            10 gwei,
-            2 gwei,
-            DEFAULT_GAS_LIMIT,
-            DEFAULT_GAS_LIMIT,
-            0,
-            5
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 10 gwei,
+                publicSpendPerJoinSplit: 2 gwei,
+                numJoinSplits: 5,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0
+            })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -493,14 +503,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // alice has)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
-            token,
-            BOB,
-            1 gwei,
-            15 gwei, // this will overdraw the vault
-            DEFAULT_GAS_LIMIT,
-            DEFAULT_GAS_LIMIT,
-            1000,
-            1
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 1 gwei,
+                publicSpendPerJoinSplit: 15 gwei,
+                numJoinSplits: 1,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 1000
+            })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
@@ -545,14 +557,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // alice has)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatTransferOperation(
-            token,
-            BOB,
-            15 gwei,
-            2 gwei,
-            DEFAULT_GAS_LIMIT,
-            DEFAULT_GAS_LIMIT,
-            1000,
-            1
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 15 gwei,
+                publicSpendPerJoinSplit: 2 gwei,
+                numJoinSplits: 1,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 1000
+            })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
