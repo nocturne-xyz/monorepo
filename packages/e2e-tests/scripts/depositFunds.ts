@@ -8,6 +8,7 @@ import {
   NocturneAddressTrait,
   CanonAddress,
 } from "@nocturne-xyz/sdk";
+import { ethers } from "hardhat";
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [
@@ -29,7 +30,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
 (async () => {
   console.log("Post deploy setup");
-  const { wallet, vault } = await setupNocturne({ deployContracts: false });
 
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
@@ -41,7 +41,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
-      await token.connect(depositor).reserveTokens(addr, 1000);
+      console.log(`Sending ETH and tokens to ${addr}`);
+      await depositor.sendTransaction({
+        to: addr,
+        value: ethers.utils.parseEther("1.0"),
+      });
+      await token.reserveTokens(addr, 5_000_000_000_000_000);
     }
 
     // Reserve and approve tokens for nocturne addr depositor
@@ -85,5 +90,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     }
 
     await Promise.all(depositProms);
+
+    console.log(
+      `ETH addr balance for ${token.address}: ${await token.balanceOf(
+        TEST_ETH_ADDRS[0]
+      )}`
+    );
   }
 })();

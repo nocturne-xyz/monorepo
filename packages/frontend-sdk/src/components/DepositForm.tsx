@@ -2,7 +2,7 @@ import { AssetType, parseAssetType } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
-import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
+import { NocturneFrontendSDK } from "../sdk";
 
 export interface DepositFormProps {
   sdk: NocturneFrontendSDK;
