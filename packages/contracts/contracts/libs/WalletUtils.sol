@@ -139,7 +139,7 @@ library WalletUtils {
     }
 
     // From https://ethereum.stackexchange.com/questions/83528
-    function _getRevertMsg(
+    function getRevertMsg(
         bytes memory reason
     ) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
@@ -154,7 +154,7 @@ library WalletUtils {
         return abi.decode(reason, (string)); // All that remains is the revert string
     }
 
-    function _failOperationWithReason(
+    function failOperationWithReason(
         string memory reason
     ) internal pure returns (OperationResult memory result) {
         return
@@ -170,7 +170,7 @@ library WalletUtils {
     }
 
     // TODO: properly process this failure case
-    function _unsuccessfulOperation(
+    function unsuccessfulOperation(
         Operation calldata op,
         bytes memory result
     ) internal pure returns (OperationResult memory) {
@@ -191,14 +191,14 @@ library WalletUtils {
             });
     }
 
-    function _verificationGasForOp(
+    function verificationGasForOp(
         Operation calldata op,
         uint256 perJoinSplitGas
     ) internal pure returns (uint256) {
         return perJoinSplitGas * op.joinSplitTxs.length;
     }
 
-    function _calculateBundlerGasAssetPayout(
+    function calculateBundlerGasAssetPayout(
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
