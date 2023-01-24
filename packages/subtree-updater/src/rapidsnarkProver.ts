@@ -40,34 +40,25 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
     // create prover tmp dir if it DNE yet
-    console.log("0");
     await fs.promises.mkdir(this.tmpDir, { recursive: true });
-
-    console.log("1");
     await fs.promises.writeFile(
       inputJsonPath,
       serializeRapidsnarkInputs(inputs)
     );
 
-    console.log("2");
     await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
-    console.log("3");
-
     await runCommand(
       `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`
     );
 
-    console.log("4");
     const [proofStr, publicSignalsStr] = await Promise.all([
       fs.promises.readFile(proofJsonPath, "utf-8"),
       fs.promises.readFile(publicSignalsPath, "utf-8"),
     ]);
 
-    console.log("5");
     const proof = deserializeRapidsnarkProof(proofStr);
-    console.log("6");
     const publicSignals = deserializeRapidsnarkPublicSignals(publicSignalsStr);
 
     return {

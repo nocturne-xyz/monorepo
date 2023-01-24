@@ -47,9 +47,11 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
 
     const interval = setInterval(() => {
       // Poll condition and update status and progress accordingly
+      console.log("checking status of operation", operationID);
       fetch(getStatusURL)
         .then((response) => response.json())
         .then((result) => {
+          console.log("result", result);
           switch (TxStatusFromResString(result.status)) {
             case TransactionStatus.QUEUED:
               setProgress(25);
