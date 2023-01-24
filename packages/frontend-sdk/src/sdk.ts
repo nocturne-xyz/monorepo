@@ -75,8 +75,8 @@ export class NocturneFrontendSDK {
   async depositFunds(
     assetType: AssetType,
     assetAddress: Address,
+    assetId: bigint,
     value: bigint,
-    assetId: bigint
   ): Promise<ContractTransaction> {
     const spender = await this.walletContract.signer.getAddress();
     const depositAddr = await this.getRandomizedAddr();
