@@ -10,12 +10,15 @@ import {
   AssetType,
   Address,
 } from "@nocturne-xyz/sdk";
-import { DEFAULT_SNAP_ORIGIN, getWindowSigner } from "./common";
+import {
+  DEFAULT_SNAP_ORIGIN,
+  getTokenContract,
+  getWindowSigner,
+} from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { ContractTransaction, ethers } from "ethers";
-import ERC20 from "./abis/ERC20.json";
+import { ContractTransaction } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -96,9 +99,13 @@ export class NocturneFrontendSDK {
     });
 
     const signer = await getWindowSigner();
+    const tokenContract = getTokenContract(assetType, assetAddress, signer);
     if (assetType == AssetType.ERC20) {
-      const erc20Contract = new ethers.Contract(assetAddress, ERC20, signer);
-      await erc20Contract.approve(this.vaultContractAddress, value);
+      await tokenContract.approve(this.vaultContractAddress, value);
+    } else if (assetType == AssetType.ERC721) {
+      await tokenContract.approve(this.vaultContractAddress, assetId);
+    } else if (assetType == AssetType.ERC1155) {
+      await tokenContract.setApprovalForAll(this.vaultContractAddress, true);
     }
 
     return this.walletContract.depositFunds({
@@ -249,10 +256,10 @@ export class NocturneFrontendSDK {
 }
 
 /**
- * Load a `NocturneFrontendSDK` instance, provided paths to a wallet contract
- * address, local prover's wasm, zkey, and vkey. Circuit file paths default to
- * caller's current directory (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.
- * json).
+ * Load a `NocturneFrontendSDK` instance, provided a wallet contract
+ * address, vault contract address, and paths to local prover's wasm, zkey, and
+ * vkey. Circuit file paths default to caller's current directory (joinsplit.
+ * wasm, joinsplit.zkey, joinSplitVkey.json).
  *
  * @param wasmPath Wasm path
  * @param zkeyPath Zkey path
