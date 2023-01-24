@@ -15,6 +15,8 @@ import {
 import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
+import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { ethers } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -24,12 +26,40 @@ export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
-  bundlerEndpoint: string;
+  walletContract: Wallet;
 
-  constructor(bundlerEndpoint: string, wasmPath: string, zkeyPath: string, vkey: VerifyingKey) {
+  private constructor(
+	bundlerEndpoint: string,
+    walletContract: Wallet,
+    wasmPath: string,
+    zkeyPath: string,
+    vkey: any
+  ) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
-    console.log("localprover.vkey", this.localProver.vkey);
-    this.bundlerEndpoint = bundlerEndpoint;
+	this.bundlerEndpoint = bundlerEndpoint;
+    this.walletContract = walletContract;
+  }
+
+  static async instantiate(
+	bundlerEndpoint: string,
+    walletContractAddress: string,
+    wasmPath: string,
+    zkeyPath: string,
+    vkey: any
+  ): Promise<NocturneFrontendSDK> {
+    const walletContract = await NocturneFrontendSDK.connectWalletContract(
+      walletContractAddress
+    );
+    return new NocturneFrontendSDK(bundlerEndpoint, walletContract, wasmPath, zkeyPath, vkey);
+  }
+
+  static async connectWalletContract(
+    walletContractAddress: string
+  ): Promise<Wallet> {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+    return Wallet__factory.connect(walletContractAddress, signer);
   }
 
   /**
@@ -215,9 +245,10 @@ export class NocturneFrontendSDK {
 }
 
 /**
- * Load a `NocturneFrontendSDK` instance, provided paths to local prover's wasm,
- * zkey, and vkey. Circuit file paths default to caller's current directory
- * (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.json).
+ * Load a `NocturneFrontendSDK` instance, provided paths to a wallet contract
+ * address, local prover's wasm, zkey, and vkey. Circuit file paths default to
+ * caller's current directory (joinsplit.wasm, joinsplit.zkey, joinSplitVkey.
+ * json).
  *
  * @param wasmPath Wasm path
  * @param zkeyPath Zkey path
@@ -225,10 +256,16 @@ export class NocturneFrontendSDK {
  */
 export async function loadNocturneFrontendSDK(
   bundlerEndpoint: string,
+  walletContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
-  return new NocturneFrontendSDK(bundlerEndpoint, wasmPath, zkeyPath, vkey as VerifyingKey);
+  return await NocturneFrontendSDK.instantiate(
+    walletContractAddress,
+    wasmPath,
+    zkeyPath,
+    vkey
+  );
 }
