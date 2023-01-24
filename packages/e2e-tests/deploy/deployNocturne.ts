@@ -83,7 +83,17 @@ function setupNocturneContext(
   );
 }
 
-export async function postDeploySetup(): Promise<NocturneSetup> {
+interface SetupNocturneOpts {
+  deployContracts: boolean;
+}
+
+export async function setupNocturne(
+  opts?: SetupNocturneOpts
+): Promise<NocturneSetup> {
+  if (opts?.deployContracts) {
+    await deployments.fixture(["NocturneContracts"]);
+  }
+
   const vault = await ethers.getContract("Vault");
   const wallet = await ethers.getContract("Wallet");
   const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");

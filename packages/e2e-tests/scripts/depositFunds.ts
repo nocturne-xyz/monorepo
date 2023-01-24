@@ -1,4 +1,4 @@
-import { postDeploySetup } from "../deploy/deployNocturne";
+import { setupNocturne } from "../deploy/deployNocturne";
 import { ethers } from "hardhat";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
@@ -29,7 +29,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
 (async () => {
   console.log("Post deploy setup");
-  const { wallet, vault } = await postDeploySetup();
+  const { wallet, vault } = await setupNocturne({ deployContracts: false });
 
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
