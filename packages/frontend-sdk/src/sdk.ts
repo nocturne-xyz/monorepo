@@ -56,10 +56,10 @@ export class NocturneFrontendSDK {
       executionGasLimit,
       gasPrice,
       maxNumRefunds,
+      refundAddr,
     } = preProofOperation;
 
     const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
-    const refundAddr = await this.getRandomizedAddr();
     return {
       joinSplitTxs,
       refundAddr,

@@ -26,6 +26,7 @@ import {
   AssetType,
   JoinSplitRequest,
   OperationRequest,
+  calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
@@ -230,6 +231,7 @@ const Index = () => {
         await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
       
       console.log(provenOperation);
+      console.log("opDigest of provenOperation", calculateOperationDigest(provenOperation));
 
       const isValid = await nocturneFrontendSDK!.verifyProvenOperation(provenOperation);
       console.log("is valid: ", isValid);

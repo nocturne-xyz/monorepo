@@ -40,32 +40,34 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
     // create prover tmp dir if it DNE yet
+    console.log("0");
     await fs.promises.mkdir(this.tmpDir, { recursive: true });
 
+    console.log("1");
     await fs.promises.writeFile(
       inputJsonPath,
       serializeRapidsnarkInputs(inputs)
     );
-    let [stdout, stderr] = await runCommand(
+
+    console.log("2");
+    await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
+    console.log("3");
 
-    console.log(stdout);
-    console.error(stderr);
-
-    [stdout, stderr] = await runCommand(
+    await runCommand(
       `${this.rapidsnarkExecutablePath} ${this.zkeyPath} ${witnessPath} ${proofJsonPath} ${publicSignalsPath}`
     );
 
-    console.log(stdout);
-    console.error(stderr);
-
+    console.log("4");
     const [proofStr, publicSignalsStr] = await Promise.all([
       fs.promises.readFile(proofJsonPath, "utf-8"),
       fs.promises.readFile(publicSignalsPath, "utf-8"),
     ]);
 
+    console.log("5");
     const proof = deserializeRapidsnarkProof(proofStr);
+    console.log("6");
     const publicSignals = deserializeRapidsnarkPublicSignals(publicSignalsStr);
 
     return {
@@ -95,8 +97,14 @@ async function runCommand(cmd: string): Promise<[string, string]> {
       const output = data.toString();
       stderr += output;
     });
-    child.on("error", () => reject(stderr));
-    child.on("exit", () => resolve([stdout, stderr]));
+    child.on("error", () => {
+      console.error(stderr);
+      reject(stderr);
+    });
+    child.on("exit", () => {
+      console.log(stdout);
+      resolve([stdout, stderr]);
+    });
   });
 }
 

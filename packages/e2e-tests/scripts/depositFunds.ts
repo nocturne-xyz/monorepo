@@ -7,6 +7,7 @@ import {
   encodeAsset,
   NocturneAddressTrait,
   CanonAddress,
+  BinaryPoseidonTree,
 } from "@nocturne-xyz/sdk";
 
 // add MM Flask addresses here
@@ -33,8 +34,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
-
-  for (let i = 0; i < 2; i++) {
+  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => {
     const token = await tokenFactory.deploy();
 
     console.log(`Token ${i + 1} deployed at: ${token.address}`);
@@ -48,37 +48,57 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     await token.connect(depositor).reserveTokens(depositor.address, 100000000);
     await token.connect(depositor).approve(vault.address, 100000000);
 
-    // We will deposit to setup alice and test nocturne addrs
-    const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
-      NocturneAddressTrait.fromCanonAddress
-    );
+    return token
+  }));
 
-    const asset: Asset = {
+  const assets = tokens.map(token => ({
       assetType: AssetType.ERC20,
       assetAddr: token.address,
       id: 0n,
-    };
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+  }));
+  const encodedAssets = assets.map(encodeAsset);
 
+  // We will deposit to setup alice and test nocturne addrs
+  const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
+    NocturneAddressTrait.fromCanonAddress
+  );
+
+  let numDeposits = 0;
+  for (const { encodedAssetAddr, encodedAssetId } of encodedAssets) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
-      console.log("depositing 16 100 token notes to", addr);
-      const depositProms: Promise<any>[] = [];
-      for (let i = 0; i < 16; i++) {
-        depositProms.push(
-          wallet.connect(depositor).depositFunds({
-            encodedAssetAddr,
-            encodedAssetId,
-            spender: depositor.address,
-            value: 100n,
-            depositAddr: addr,
-          }, {
-            gasLimit: 1000000,
-          })
-        );
-      }
-      await Promise.all(depositProms);
-    }
+      console.log("depositing 1 100 token note to", addr);
+      await wallet.connect(depositor).depositFunds({
+        encodedAssetAddr,
+        encodedAssetId,
+        spender: depositor.address,
+        value: 100n,
+        depositAddr: addr,
+      }, {
+        gasLimit: 1000000,
+      });
 
+      numDeposits += 1;
+    }
+  }
+
+  let rem = numDeposits % BinaryPoseidonTree.BATCH_SIZE;
+  if (rem !== 0) {
+    let numZeroDeposits = BinaryPoseidonTree.BATCH_SIZE - rem;
+    const addr = targetAddrs[0];
+    const { encodedAssetAddr, encodedAssetId } = encodedAssets[0];
+    const proms = Array(numZeroDeposits).fill(0).map(_ =>
+      wallet.connect(depositor).depositFunds({
+        encodedAssetAddr,
+        encodedAssetId,
+        spender: depositor.address,
+        value: 0n,
+        depositAddr: addr,
+      }, {
+        gasLimit: 1000000,
+      })
+    )
+    
+    await Promise.all(proms);
   }
 })();
