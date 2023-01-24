@@ -223,7 +223,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token token,
         address recipient,
         uint256 amount,
-        uint256 publicSpend,
+        uint256 publicSpendPerJoinSplit,
         uint256 verificationGasLimit,
         uint256 executionGasLimit,
         uint256 gasPrice,
@@ -281,7 +281,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 newNoteBTransmission: newNoteBTransmission,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
-                publicSpend: publicSpend
+                publicSpend: publicSpendPerJoinSplit
             });
         }
 
@@ -384,7 +384,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
     }
 
-    function testDummyTransferManyJoinSplit() public {
+    function testDummyTransferThreeJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
 
@@ -393,7 +393,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bundle.operations[0] = formatTransferOperation(
             token,
             BOB,
-            1 gwei,
+            6 gwei,
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
@@ -429,10 +429,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertLe(token.balanceOf(address(vault)), uint256(2 gwei));
         assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
-        assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(6 gwei));
     }
 
     function testDummyTransferSixJoinSplit() public {
@@ -444,7 +443,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         bundle.operations[0] = formatTransferOperation(
             token,
             BOB,
-            1 gwei,
+            10 gwei,
             2 gwei,
             DEFAULT_GAS_LIMIT,
             DEFAULT_GAS_LIMIT,
@@ -452,10 +451,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             5
         );
 
-        // assertEq(token.balanceOf(address(wallet)), uint256(0));
-        // assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
-        // assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
-        // assertEq(token.balanceOf(address(BOB)), uint256(0));
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(16 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(4 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
         vm.expectEmit(false, true, false, false);
@@ -479,11 +478,10 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
-        // assertEq(token.balanceOf(address(wallet)), uint256(0));
-        // assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
-        // assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
-        // assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
-        // assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertLe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(4 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(10 gwei));
     }
 
     // Ill-formatted operation should not be processed
