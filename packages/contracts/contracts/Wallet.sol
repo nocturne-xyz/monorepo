@@ -2,10 +2,6 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
@@ -193,18 +189,6 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         opResult.numRefunds = numRefundsToHandle;
 
         opResult.executionGas = preExecutionGas - gasleft();
-    }
-
-    function _payBundlerGasAsset(
-        Operation calldata op,
-        OperationResult memory opResult,
-        address bundler
-    ) internal {
-        uint256 bundlerPayout = WalletUtils._calculateBundlerGasAssetPayout(
-            op,
-            opResult
-        );
-        AssetUtils._transferAssetTo(op.gasAsset(), bundler, bundlerPayout);
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

@@ -202,24 +202,12 @@ library WalletUtils {
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
-        uint256 handleRefundGas = _handleRefundGas(opResult.numRefunds);
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
 
         return
             op.gasPrice *
             (opResult.executionGas +
                 opResult.verificationGas +
                 handleRefundGas);
-    }
-
-    function _handleRefundGas(
-        uint256 numRefunds
-    ) internal pure returns (uint256) {
-        return numRefunds * GAS_PER_REFUND_HANDLE;
-    }
-
-    function _treeRefundGas(
-        uint256 numRefunds
-    ) internal pure returns (uint256) {
-        return numRefunds * GAS_PER_REFUND_TREE;
     }
 }
