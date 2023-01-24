@@ -5,6 +5,9 @@ import {
   PreProofOperation,
   NocturneAddress,
   AssetWithBalance,
+  encodeAsset,
+  AssetType,
+  Address,
   proveJoinSplitTx,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
@@ -16,7 +19,7 @@ import { DEFAULT_SNAP_ORIGIN } from "./common";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { ethers } from "ethers";
+import { ContractTransaction, ethers } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -40,6 +43,14 @@ export class NocturneFrontendSDK {
     this.walletContract = walletContract;
   }
 
+  /**
+   * Instantiate new `NocturneFrontendSDK` instance.
+   *
+   * @param walletContractAddress Wallet contract address
+   * @param wasPath Joinsplit wasm path
+   * @param zkeyPath Joinsplit zkey path
+   * @param vkey Vkey object
+   */
   static async instantiate(
 	bundlerEndpoint: string,
     walletContractAddress: string,
@@ -53,13 +64,44 @@ export class NocturneFrontendSDK {
     return new NocturneFrontendSDK(bundlerEndpoint, walletContract, wasmPath, zkeyPath, vkey);
   }
 
-  static async connectWalletContract(
+  private static async connectWalletContract(
     walletContractAddress: string
   ): Promise<Wallet> {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send("eth_requestAccounts", []);
     const signer = provider.getSigner();
     return Wallet__factory.connect(walletContractAddress, signer);
+  }
+
+  /**
+   * Call `walletContract.depositFunds` given the provided `assetType`,
+   * `assetAddress`, `value`, and `assetId`.
+   *
+   * @param assetType Asset type
+   * @param assetAddress Asset address
+   * @param value Asset amount
+   * @param assetId Asset id
+   */
+  async depositFunds(
+    assetType: AssetType,
+    assetAddress: Address,
+    value: bigint,
+    assetId: bigint
+  ): Promise<ContractTransaction> {
+    const spender = await this.walletContract.signer.getAddress();
+    const depositAddr = await this.getRandomizedAddr();
+    const { encodedAssetAddr, encodedAssetId } = encodeAsset({
+      assetType,
+      assetAddr: assetAddress,
+      id: assetId,
+    });
+    return this.walletContract.depositFunds({
+      spender,
+      encodedAssetAddr,
+      encodedAssetId,
+      value,
+      depositAddr,
+    });
   }
 
   /**
