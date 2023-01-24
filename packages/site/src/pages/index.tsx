@@ -113,6 +113,9 @@ const ErrorMessage = styled.div`
   }
 `;
 
+const WALLET_CONTRACT_ADDRESS = "0x352f0a59E6431562A2878926a2cF0De76ED2AA55";
+const VAULT_CONTRACT_ADDRESS = "0xe29C2A28621dd358ABF5dAc8d0e7735117B77E85";
+
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
@@ -123,7 +126,11 @@ const Index = () => {
   const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
+    loadNocturneFrontendSDK(
+	  bundlerEndpoint,
+      WALLET_CONTRACT_ADDRESS,
+      VAULT_CONTRACT_ADDRESS
+    ).then((sdk) => {
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK]);

@@ -9,7 +9,6 @@ import {
   CanonAddress,
   BinaryPoseidonTree,
 } from "@nocturne-xyz/sdk";
-import { ethers } from "hardhat";
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [
@@ -31,7 +30,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
 (async () => {
   console.log("Post deploy setup");
-
+  const { wallet, vault } = await setupNocturne({ deployContracts: false });
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
   const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => {
