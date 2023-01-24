@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove nested hash for refund assets in `calculateOperationDigest`
 - factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`
 - add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`
