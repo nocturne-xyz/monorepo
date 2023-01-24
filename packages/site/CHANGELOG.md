@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `DepositForm` to power user site and have `NocturneFrontendSDK` take wallet and vault addresses
 - Remove unused wallet contract connect methods from metamask.ts
 - Fix regression with dev script not updating token address
 - Clean up power user site
