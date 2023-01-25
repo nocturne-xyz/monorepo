@@ -45,8 +45,8 @@ library WalletUtils {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
-            uint256 numJoinSplits = op.joinSplitTxs.length;
-            for (uint256 j = 0; j < numJoinSplits; j++) {
+            uint256 numJoinSplitsForOp = op.joinSplitTxs.length;
+            for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
