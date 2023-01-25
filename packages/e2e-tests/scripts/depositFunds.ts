@@ -34,7 +34,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
-  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => await tokenFactory.deploy()));
+  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => {
+    const token = await tokenFactory.deploy()
+    console.log(`Token ${i + 1} deployed at: ${token.address}`);
+
+    return token
+  }));
   
   for (const token of tokens) {
     // Reserve tokens to eth addresses
