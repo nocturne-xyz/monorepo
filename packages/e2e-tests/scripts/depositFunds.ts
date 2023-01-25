@@ -58,7 +58,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     NocturneAddressTrait.fromCanonAddress
   );
 
-  let numDeposits = 0;
   for (const { encodedAssetAddr, encodedAssetId } of encodedAssets) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
@@ -72,28 +71,8 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       }, {
         gasLimit: 1000000,
       });
-
-      numDeposits += 1;
     }
   }
 
-  let rem = numDeposits % BinaryPoseidonTree.BATCH_SIZE;
-  if (rem !== 0) {
-    let numZeroDeposits = BinaryPoseidonTree.BATCH_SIZE - rem;
-    const addr = targetAddrs[0];
-    const { encodedAssetAddr, encodedAssetId } = encodedAssets[0];
-    const proms = Array(numZeroDeposits).fill(0).map(_ =>
-      wallet.connect(depositor).depositFunds({
-        encodedAssetAddr,
-        encodedAssetId,
-        spender: depositor.address,
-        value: 0n,
-        depositAddr: addr,
-      }, {
-        gasLimit: 1000000,
-      })
-    );
-    
-    await Promise.all(proms);
-  }
+  await wallet.connect(depositor).fillBatchWithZeros();
 })();
