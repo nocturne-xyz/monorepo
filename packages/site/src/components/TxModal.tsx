@@ -2,7 +2,6 @@ import styled from "styled-components";
 import Modal from "react-modal";
 import { TransactionTracker } from "@nocturne-xyz/frontend-sdk";
 
-
 const ModalContainer = styled.div`
   height: 100%;
   width: 100%;
@@ -12,13 +11,18 @@ const ModalContainer = styled.div`
 `;
 
 export interface TxModalProps {
-  operationId?: string
-  bundlerEndpoint: string,
-  isOpen: boolean,
+  operationId?: string;
+  bundlerEndpoint: string;
+  isOpen: boolean;
   handleClose: () => void;
 }
 
-export const TxModal: React.FC<TxModalProps> = ({bundlerEndpoint, isOpen, operationId, handleClose}) => {
+export const TxModal: React.FC<TxModalProps> = ({
+  bundlerEndpoint,
+  isOpen,
+  operationId,
+  handleClose,
+}) => {
   return (
     <Modal
       isOpen={isOpen}
@@ -31,9 +35,9 @@ export const TxModal: React.FC<TxModalProps> = ({bundlerEndpoint, isOpen, operat
           bundlerEndpoint={bundlerEndpoint}
           operationID={operationId}
           progressBarStyles={{ color: "black" }}
-          textStyles={{ color: "#24272a"}}
+          textStyles={{ color: "#24272a" }}
         />
       </ModalContainer>
     </Modal>
   );
-}
+};

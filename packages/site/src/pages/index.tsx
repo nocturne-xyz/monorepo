@@ -266,7 +266,6 @@ const Index = () => {
     setTxModalIsOpen(true);
   };
 
-
   const handleCloseTxModal = () => {
     setTxModalIsOpen(false);
     setInFlightOperationID(undefined);
