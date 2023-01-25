@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { ABIItem, ABIValue } from "../utils/abiParser";
 import { ethers } from "ethers";
-import { Action } from "@nocturne-xyz/sdk";
 import * as _ from "lodash";
+import { ExtendedAction } from "./ABIForm";
 
 type ABIInteractionFormProps = {
   abi: ABIItem[];
   contractAddress: string;
-  handleAction: (action: Action) => void;
+  handleAction: (action: ExtendedAction) => void;
 };
 
 export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
@@ -19,13 +19,14 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
 
   const iface = new ethers.utils.Interface(abi);
 
-  const handleEnqueueAction = (encodedFunction: string) => {
-    const action = {
+  const handleEnqueueAction = (encodedFunction: string, signature: string) => {
+    const extendedAction = {
       contractAddress,
       encodedFunction,
+      signature,
     };
 
-    handleAction(action);
+    handleAction(extendedAction);
   };
 
   const handleMethodChange = (event: any) => {
@@ -57,7 +58,7 @@ export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({
 type ABIMethodProps = {
   iface: ethers.utils.Interface;
   method: ABIItem;
-  handleEnqueueAction: (encodedFunction: string) => void;
+  handleEnqueueAction: (encodedFunction: string, signature: string) => void;
 };
 
 type ABIInteractionParamFormData =
@@ -107,9 +108,22 @@ const ABIMethod = ({ iface, method, handleEnqueueAction }: ABIMethodProps) => {
 
   const _handleEnqueueAction = (event: any) => {
     event.preventDefault();
-    const encodedFunction = iface.encodeFunctionData(method.name, inputs);
 
-    handleEnqueueAction(encodedFunction);
+    // KLUDGE: have to parse array separately because it's being auto wrapped
+    // in double quotes
+    let params = [];
+    for (const input of inputs) {
+      if (input.toString()[0] == "[") {
+        params.push(JSON.parse(input));
+      } else {
+        params.push(input);
+      }
+    }
+
+    const signature = `${method.name}(${params})`;
+    const encodedFunction = iface.encodeFunctionData(method.name, params);
+
+    handleEnqueueAction(encodedFunction, signature);
   };
 
   return (
