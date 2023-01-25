@@ -13,6 +13,11 @@ import {
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
+import { formatAbbreviatedAddress } from "../utils/formatting";
+
+export interface ExtendedAction extends Action {
+  signature: string;
+}
 
 export type ABIFormProps = {
   sdk: NocturneFrontendSDK;
@@ -25,7 +30,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
   const [contractAddress, setContractAddress] = useState<string | undefined>(
     undefined
   );
-  const [actions, setActions] = useState<Action[]>([]);
+  const [actions, setActions] = useState<ExtendedAction[]>([]);
   const [joinSplitRequests, setJoinSplitRequests] = useState<
     JoinSplitRequest[]
   >([]);
@@ -52,7 +57,7 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
     setABI(abi);
   };
 
-  const handleAction = (action: Action) => {
+  const handleAction = (action: ExtendedAction) => {
     setActions([...actions, action]);
   };
 
@@ -107,67 +112,76 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
       <Button onClick={handleSetABI}>Interact</Button>
       {abi && contractAddress ? (
         <>
+          <br />
+          <hr style={{ border: "0.25px solid white", width: "100%" }} />
           <div>
             <ABIUnwrapForm handleJoinSplitRequest={handleJoinSplitRequest} />
             <p>Currently unwrapping the following tokens and amounts...</p>
-            {joinSplitRequests.map(({ asset, unwrapValue }, index) => {
-              return (
-                <div
-                  key={index}
-                  style={{
-                    backgroundColor: "#505050",
-                    color: "white",
-                    overflowWrap: "break-word",
-                    padding: "5px",
-                  }}
-                >
-                  <div>{`Address: ${asset.assetAddr}`}</div>
-                  <div>{`Unwrap value: ${unwrapValue}`}</div>
-                  {index !== joinSplitRequests.length - 1 && (
-                    <div
-                      style={{
-                        height: "1px",
-                        width: "100%",
-                        backgroundColor: "white",
-                        margin: "5px 0 0 0",
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left" }}>Address</th>
+                    <th style={{ textAlign: "left" }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {joinSplitRequests.map(({ asset, unwrapValue }) => (
+                    <tr key={asset.assetAddr}>
+                      <td
+                        style={{
+                          textAlign: "left",
+                          color: "#ADD8E6",
+                          cursor: "pointer",
+                          paddingRight: "50px",
+                        }}
+                      >
+                        {formatAbbreviatedAddress(asset.assetAddr)}
+                      </td>
+                      <td style={{ textAlign: "left" }}>
+                        {unwrapValue.toString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            }
           </div>
-          <br />
+
           <div>
+            <br />
+            <hr style={{ border: "0.25px solid white", width: "100%" }} />
             <ABIRefundAssetsForm handleNewRefundAsset={handleRefundAsset} />
             <p>Currently set to produce the following output tokens...</p>
-            {refundAssets.map(({ assetAddr }, index) => {
-              return (
-                <div
-                  key={index}
-                  style={{
-                    backgroundColor: "#505050",
-                    color: "white",
-                    overflowWrap: "break-word",
-                    padding: "5px",
-                  }}
-                >
-                  <div>{`Address: ${assetAddr}`}</div>
-                  {index !== joinSplitRequests.length - 1 && (
-                    <div
-                      style={{
-                        height: "1px",
-                        width: "100%",
-                        backgroundColor: "white",
-                        margin: "5px 0 0 0",
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left" }}>Address</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {refundAssets.map(({ assetAddr }) => (
+                    <tr key={assetAddr}>
+                      <td
+                        style={{
+                          textAlign: "left",
+                          color: "#ADD8E6",
+                          cursor: "pointer",
+                          paddingRight: "50px",
+                        }}
+                      >
+                        {formatAbbreviatedAddress(assetAddr)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            }
           </div>
           <div>
+            <br />
+            <hr style={{ border: "0.25px solid white", width: "100%" }} />
             <h1 style={{ fontSize: "20px" }}>Contract Actions</h1>
             <ABIInteractionForm
               handleAction={handleAction}
@@ -176,33 +190,41 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
             />
           </div>
           <p>Currently set to perform the following actions:</p>
-          {actions.map(({ contractAddress, encodedFunction }, index) => {
-            return (
-              <div
-                key={index}
-                style={{
-                  backgroundColor: "#505050",
-                  color: "white",
-                  overflowWrap: "break-word",
-                  padding: "5px",
-                }}
-              >
-                <div>{`Target: ${contractAddress}`}</div>
-                <br />
-                <div>{`Encoded Function: ${encodedFunction}`}</div>
-                {index !== joinSplitRequests.length - 1 && (
-                  <div
-                    style={{
-                      height: "1px",
-                      width: "100%",
-                      backgroundColor: "white",
-                      margin: "5px 0 0 0",
-                    }}
-                  />
+          {
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left" }}>Target</th>
+                  <th style={{ textAlign: "left" }}>Call</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actions.map(
+                  ({ contractAddress, encodedFunction, signature }) => (
+                    <tr key={encodedFunction}>
+                      <td
+                        style={{
+                          textAlign: "left",
+                          color: "#ADD8E6",
+                          cursor: "pointer",
+                          paddingRight: "50px",
+                        }}
+                      >
+                        {formatAbbreviatedAddress(contractAddress)}
+                      </td>
+                      <td style={{ textAlign: "left", overflow: "hidden" }}>
+                        <div
+                          style={{ maxWidth: "200px", wordWrap: "break-word" }}
+                        >
+                          <p>{signature}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )
                 )}
-              </div>
-            );
-          })}
+              </tbody>
+            </table>
+          }
           <br />
           <div>
             <Button onClick={submitOperation}>
