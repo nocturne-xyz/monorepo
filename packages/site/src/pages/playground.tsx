@@ -15,6 +15,7 @@ import {
   AssetBalancesDisplay,
   DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
+import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { bundlerEndpoint } from "../config/bundler";
 
 const Container = styled.div`
@@ -90,9 +91,6 @@ const ErrorMessage = styled.div`
     max-width: 100%;
   }
 `;
-
-const WALLET_CONTRACT_ADDRESS = "0x352f0a59E6431562A2878926a2cF0De76ED2AA55";
-const VAULT_CONTRACT_ADDRESS = "0xe29C2A28621dd358ABF5dAc8d0e7735117B77E85";
 
 const Playground = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
