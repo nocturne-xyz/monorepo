@@ -32,11 +32,9 @@ import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
-  TransactionTracker,
-  TransactionStatus,
   BundlerOperationID,
 } from "@nocturne-xyz/frontend-sdk";
-import Modal from "react-modal";
+import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
@@ -123,18 +121,6 @@ const ModalContainer = styled.div`
   justify-content: center;
 `;
 
-const TxStatusMsg = styled.span`
-  color: #24272a;
-`;
-
-type TxStatusMessage =
-  | "Submitting transaction to the bundler..."
-  | "Failed to submit transaction to the bundler"
-  | "Waiting to be included in a bundle..."
-  | "Waiting for the bundle to be executed..."
-  | "Transaction executed successfully!"
-  | "Transaction failed to execute";
-
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
@@ -142,10 +128,7 @@ const Index = () => {
   const [inFlightOperationID, setInFlightOperationID] = useState<
     BundlerOperationID | undefined
   >();
-  const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [txStatusMsg, setTxStatusMsg] = useState<TxStatusMessage>(
-    "Submitting transaction to the bundler..."
-  );
+  const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
     loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
@@ -264,12 +247,10 @@ const Index = () => {
       })
       .catch((err: any) => {
         console.error(err);
-        setTxStatusMsg("Failed to submit transaction to the bundler");
         setInFlightOperationID(undefined);
       });
 
-    setTxStatusMsg("Submitting transaction to the bundler...");
-    openModal();
+    openTxModal();
   };
 
   const handleClearDb = async () => {
@@ -281,57 +262,24 @@ const Index = () => {
     }
   };
 
-  const openModal = () => {
-    setModalIsOpen(true);
+  const openTxModal = () => {
+    setTxModalIsOpen(true);
   };
 
-  const onTxStatusUpdate = (txStatus: TransactionStatus) => {
-    console.log("transaction status is now", txStatus.toString());
 
-    switch (txStatus) {
-      case TransactionStatus.SUBMITTING:
-        setTxStatusMsg("Submitting transaction to the bundler...");
-        break;
-      case TransactionStatus.QUEUED:
-        setTxStatusMsg("Waiting to be included in a bundle...");
-        break;
-      case TransactionStatus.IN_BATCH:
-      case TransactionStatus.IN_FLIGHT:
-        setTxStatusMsg("Waiting for the bundle to be executed...");
-        break;
-      case TransactionStatus.EXECUTED_SUCCESS:
-        setTxStatusMsg("Transaction executed successfully!");
-        break;
-      case TransactionStatus.EXECUTED_FAILED:
-        setTxStatusMsg("Transaction failed to execute");
-        break;
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalIsOpen(false);
+  const handleCloseTxModal = () => {
+    setTxModalIsOpen(false);
     setInFlightOperationID(undefined);
-    setTxStatusMsg("Submitting transaction to the bundler...");
   };
 
   return (
     <>
-      <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={handleCloseModal}
-        contentLabel="Transaction Status"
-        ariaHideApp={false}
-      >
-        <ModalContainer>
-          <TransactionTracker
-            bundlerEndpoint={bundlerEndpoint}
-            operationID={inFlightOperationID}
-            onTxStatusUpdate={onTxStatusUpdate}
-            progressBarStyles={{ color: "black" }}
-          />
-          <TxStatusMsg>{txStatusMsg}</TxStatusMsg>
-        </ModalContainer>
-      </Modal>
+      <TxModal
+        operationId={inFlightOperationID}
+        bundlerEndpoint={bundlerEndpoint}
+        isOpen={txModalIsOpen}
+        handleClose={handleCloseTxModal}
+      />
       <Container>
         <Heading>
           <Span>Nocturne Power-User Frontend</Span>

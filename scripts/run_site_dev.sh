@@ -89,9 +89,8 @@ SUBTREE_UPDATER_PID=$!
 SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 
-sed -i '' -r -e "s/const WALLET_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$WALLET_ADDRESS\";/g" $SNAP_INDEX_TS
-
-sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
+sed -i '' -r -e "s/const WALLET_ADDRESS = \"[0x]?[0-9a-faA-F]*\";/const WALLET_ADDRESS = \"$WALLET_ADDRESS\";/g" $SNAP_INDEX_TS
+sed -i '' -r -e "s/const TOKEN_ADDRESS = \"[0x]?[0-9a-faA-F]*\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
 
 wait $SITE_PID
 wait $SNAP_PID

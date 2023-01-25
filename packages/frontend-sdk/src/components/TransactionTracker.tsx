@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 
 const POLL_INTERVAL = 1000; // Poll condition every 1 second
 
-interface TransactionTrackerProps {
+export interface TransactionTrackerProps {
   bundlerEndpoint: string;
   operationID?: string;
-  onTxStatusUpdate: (status: TransactionStatus) => void;
-  progressBarStyles: React.CSSProperties;
+  progressBarStyles?: React.CSSProperties;
+  textStyles?: React.CSSProperties;
 }
 
 export enum TransactionStatus {
@@ -18,7 +18,7 @@ export enum TransactionStatus {
   EXECUTED_FAILED = "EXECUTED_FAILED",
 };
 
-function TxStatusFromResString(status: string): TransactionStatus {
+function txStatusFromResString(status: string): TransactionStatus {
   switch (status) {
     case TransactionStatus.QUEUED:
       return TransactionStatus.QUEUED;
@@ -35,10 +35,42 @@ function TxStatusFromResString(status: string): TransactionStatus {
   }
 }
 
-export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, onTxStatusUpdate, progressBarStyles }) => {
+type TxStatusMessage =
+  | "Submitting transaction to the bundler..."
+  | "Failed to submit transaction to the bundler"
+  | "Waiting to be included in a bundle..."
+  | "Waiting for the bundle to be executed..."
+  | "Transaction executed successfully!"
+  | "Transaction failed to execute";
+
+export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, progressBarStyles, textStyles }) => {
   const [progress, setProgress] = useState(0);
+  const [msg, setMsg] = useState<TxStatusMessage>("Submitting transaction to the bundler...");
 
   const getStatusURL = `${bundlerEndpoint}/operations/${operationID}`;
+
+  const onTxStatusUpdate = (txStatus: TransactionStatus) => {
+    console.log("transaction status is now", txStatus.toString());
+
+    switch (txStatus) {
+      case TransactionStatus.SUBMITTING:
+        setMsg("Submitting transaction to the bundler...");
+        break;
+      case TransactionStatus.QUEUED:
+        setMsg("Waiting to be included in a bundle...");
+        break;
+      case TransactionStatus.IN_BATCH:
+      case TransactionStatus.IN_FLIGHT:
+        setMsg("Waiting for the bundle to be executed...");
+        break;
+      case TransactionStatus.EXECUTED_SUCCESS:
+        setMsg("Transaction executed successfully!");
+        break;
+      case TransactionStatus.EXECUTED_FAILED:
+        setMsg("Transaction failed to execute");
+        break;
+    }
+  };
 
   useEffect(() => {
     if (!operationID) {
@@ -52,7 +84,7 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
         .then((response) => response.json())
         .then((result) => {
           console.log("result", result);
-          switch (TxStatusFromResString(result.status)) {
+          switch (txStatusFromResString(result.status)) {
             case TransactionStatus.QUEUED:
               setProgress(25);
               onTxStatusUpdate(TransactionStatus.QUEUED);
@@ -88,6 +120,7 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
     <div className="transaction-tracker">
       <div className="progress-bar">
         <div className="progress" style={{ ...progressBarStyles, width: `${progress}%`, height: 30}} />
+        <span style={textStyles}>{msg}</span> 
       </div>
     </div>
   );
