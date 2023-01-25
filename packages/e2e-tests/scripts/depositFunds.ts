@@ -34,11 +34,9 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
-  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => {
-    const token = await tokenFactory.deploy();
-
-    console.log(`Token ${i + 1} deployed at: ${token.address}`);
-
+  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => await tokenFactory.deploy()));
+  
+  for (const token of tokens) {
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
       await token.connect(depositor).reserveTokens(addr, 100000000);
@@ -47,16 +45,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Reserve and approve tokens for nocturne addr depositor
     await token.connect(depositor).reserveTokens(depositor.address, 100000000);
     await token.connect(depositor).approve(vault.address, 100000000);
+  }
 
-    return token
-  }));
-
-  const assets = tokens.map(token => ({
+  const encodedAssets = tokens.map(token => ({
       assetType: AssetType.ERC20,
       assetAddr: token.address,
       id: 0n,
-  }));
-  const encodedAssets = assets.map(encodeAsset);
+  })).map(encodeAsset);
 
   // We will deposit to setup alice and test nocturne addrs
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
@@ -97,7 +92,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       }, {
         gasLimit: 1000000,
       })
-    )
+    );
     
     await Promise.all(proms);
   }
