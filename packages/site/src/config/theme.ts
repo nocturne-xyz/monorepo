@@ -126,12 +126,12 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    background-color: ${(props) => props.theme.colors.background.default};
     color: ${(props) => props.theme.colors.text.default};
     font-family: ${(props) => props.theme.fonts.default};
     font-size: ${(props) => props.theme.fontSizes.text};
     margin: 0;
-  }
+    background: linear-gradient(to top, rgba(3, 27, 48, 1), rgba(3, 27, 48, 0.8));
+}
 
   * {
     transition: background-color .1s linear;
