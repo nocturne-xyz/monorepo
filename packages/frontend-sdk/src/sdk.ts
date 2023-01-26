@@ -33,19 +33,20 @@ export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
   localProver: LocalJoinSplitProver;
+  bundlerEndpoint: string;
   walletContract: Wallet;
   vaultContractAddress: Address;
 
   private constructor(
-	bundlerEndpoint: string,
+    bundlerEndpoint: string,
     walletContract: Wallet,
     vaultContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
-    vkey: any
+    vkey: VerifyingKey
   ) {
     this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
-	this.bundlerEndpoint = bundlerEndpoint;
+    this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
     this.vaultContractAddress = vaultContractAddress;
   }
@@ -59,7 +60,7 @@ export class NocturneFrontendSDK {
    * @param vkey Vkey object
    */
   static async instantiate(
-	bundlerEndpoint: string,
+    bundlerEndpoint: string,
     walletContractAddress: string,
     vaultContractAddress: string,
     wasmPath: string,
@@ -69,7 +70,14 @@ export class NocturneFrontendSDK {
     const walletContract = await NocturneFrontendSDK.connectWalletContract(
       walletContractAddress
     );
-    return new NocturneFrontendSDK(bundlerEndpoint, walletContract, vaultContractAddress, wasmPath, zkeyPath, vkey);
+    return new NocturneFrontendSDK(
+      bundlerEndpoint,
+      walletContract,
+      vaultContractAddress,
+      wasmPath,
+      zkeyPath,
+      vkey
+    );
   }
 
   private static async connectWalletContract(
@@ -136,7 +144,9 @@ export class NocturneFrontendSDK {
     console.log("PreProofOperation", preProofOperation);
 
     const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
-      preProofOperation.joinSplitTxs.map((inputs) => proveJoinSplitTx(this.localProver, inputs));
+      preProofOperation.joinSplitTxs.map((inputs) =>
+        proveJoinSplitTx(this.localProver, inputs)
+      );
 
     const {
       encodedRefundAssets,
@@ -161,30 +171,28 @@ export class NocturneFrontendSDK {
     };
   }
 
-  async verifyProvenOperation(
-    operation: ProvenOperation
-  ): Promise<boolean> {
-
+  async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     console.log("ProvenOperation", operation);
     const opDigest = calculateOperationDigest(operation);
 
-    const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] = operation.joinSplitTxs.map((joinSplit) => {
-      const publicSignals = joinSplitPublicSignalsToArray({
-        newNoteACommitment: joinSplit.newNoteACommitment,
-        newNoteBCommitment: joinSplit.newNoteBCommitment,
-        commitmentTreeRoot: joinSplit.commitmentTreeRoot,
-        publicSpend: joinSplit.publicSpend,
-        nullifierA: joinSplit.nullifierA,
-        nullifierB: joinSplit.nullifierB,
-        opDigest,
-        encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
-        encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
+    const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
+      operation.joinSplitTxs.map((joinSplit) => {
+        const publicSignals = joinSplitPublicSignalsToArray({
+          newNoteACommitment: joinSplit.newNoteACommitment,
+          newNoteBCommitment: joinSplit.newNoteBCommitment,
+          commitmentTreeRoot: joinSplit.commitmentTreeRoot,
+          publicSpend: joinSplit.publicSpend,
+          nullifierA: joinSplit.nullifierA,
+          nullifierB: joinSplit.nullifierB,
+          opDigest,
+          encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
+          encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
+        });
+
+        const proof = unpackFromSolidityProof(joinSplit.proof);
+
+        return { proof, publicSignals };
       });
-
-      const proof = unpackFromSolidityProof(joinSplit.proof);
-
-      return { proof, publicSignals };
-    });
 
     const results = await Promise.all(
       proofsWithPublicInputs.map(async (proofWithPis) => {
@@ -197,7 +205,9 @@ export class NocturneFrontendSDK {
 
   // Submit a proven operation to the bundler server
   // returns the bundler's ID for the submitted operation, which can be used to check the status of the operation
-  async submitProvenOperation(operation: ProvenOperation): Promise<BundlerOperationID> {
+  async submitProvenOperation(
+    operation: ProvenOperation
+  ): Promise<BundlerOperationID> {
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {
       method: "POST",
       headers: {
@@ -208,12 +218,15 @@ export class NocturneFrontendSDK {
 
     const resJSON = await res.json();
     if (!res.ok) {
-      throw new Error(`Failed to submit proven operation to bundler: ${JSON.stringify(resJSON)}`);
+      throw new Error(
+        `Failed to submit proven operation to bundler: ${JSON.stringify(
+          resJSON
+        )}`
+      );
     }
 
     return resJSON.id;
   }
-
 
   /**
    * Return a list of snap's assets (address & id) along with its given balance.
@@ -323,10 +336,11 @@ export async function loadNocturneFrontendSDK(
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
+    bundlerEndpoint,
     walletContractAddress,
     vaultContractAddress,
     wasmPath,
     zkeyPath,
-    vkey
+    vkey as VerifyingKey
   );
 }
