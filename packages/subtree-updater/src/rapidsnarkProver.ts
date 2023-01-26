@@ -39,10 +39,13 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
     const proofJsonPath = `${this.tmpDir}/_proof.json`;
     const publicSignalsPath = `${this.tmpDir}/_public.json`;
 
+    // create prover tmp dir if it DNE yet
+    await fs.promises.mkdir(this.tmpDir, { recursive: true });
     await fs.promises.writeFile(
       inputJsonPath,
       serializeRapidsnarkInputs(inputs)
     );
+
     await runCommand(
       `${this.witnessGeneratorExecutablePath} ${inputJsonPath} ${witnessPath}`
     );
@@ -85,8 +88,14 @@ async function runCommand(cmd: string): Promise<[string, string]> {
       const output = data.toString();
       stderr += output;
     });
-    child.on("error", () => reject(stderr));
-    child.on("exit", () => resolve([stdout, stderr]));
+    child.on("error", () => {
+      console.error(stderr);
+      reject(stderr);
+    });
+    child.on("exit", () => {
+      console.log(stdout);
+      resolve([stdout, stderr]);
+    });
   });
 }
 

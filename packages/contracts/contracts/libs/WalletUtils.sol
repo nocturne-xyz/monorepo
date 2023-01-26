@@ -45,7 +45,8 @@ library WalletUtils {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
-            for (uint256 j = 0; j < numJoinSplits; j++) {
+            uint256 numJoinSplitsForOp = op.joinSplitTxs.length;
+            for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
                 proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
@@ -109,6 +110,13 @@ library WalletUtils {
             );
         }
 
+        bytes memory refundAddrPayload = abi.encodePacked(
+            op.refundAddr.h1X,
+            op.refundAddr.h1Y,
+            op.refundAddr.h2X,
+            op.refundAddr.h2Y
+        );
+
         bytes memory refundAssetsPayload;
         for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
             refundAssetsPayload = abi.encodePacked(
@@ -118,18 +126,11 @@ library WalletUtils {
             );
         }
 
-        bytes memory refundAddrPayload = abi.encodePacked(
-            op.refundAddr.h1X,
-            op.refundAddr.h1Y,
-            op.refundAddr.h2X,
-            op.refundAddr.h2Y
-        );
-
         bytes memory payload = abi.encodePacked(
             actionPayload,
             joinSplitTxsPayload,
-            refundAssetsPayload,
             refundAddrPayload,
+            refundAssetsPayload,
             op.executionGasLimit,
             op.gasPrice,
             op.maxNumRefunds

@@ -76,7 +76,13 @@ export class OperationValidator {
   async checkRevertError(
     operation: ProvenOperation
   ): Promise<ErrString | undefined> {
-    const id = calculateOperationDigest(operation).toString();
+    console.log("submitting operation", operation);
+
+    const opDigest = calculateOperationDigest(operation);
+    console.log("with digest", opDigest);
+    console.log("with joinsplits", operation.joinSplitTxs);
+
+    const id = opDigest.toString();
     const bundle: Bundle = { operations: [operation] };
     const data = this.walletContract.interface.encodeFunctionData(
       "processBundle",

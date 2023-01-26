@@ -1,8 +1,11 @@
 FROM node:18.12.1
 
+RUN apt update -y && apt install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+
 COPY --from=rapidsnark /rapidsnark /rapidsnark
 
 WORKDIR /app
+
 COPY scripts scripts
 
 COPY package.json .
@@ -19,7 +22,6 @@ RUN yarn install
 
 WORKDIR /app/packages/circuits
 
-RUN yarn build:deps
 RUN ./scripts/build_witness_generator.sh
 
 WORKDIR /app/packages/subtree-updater

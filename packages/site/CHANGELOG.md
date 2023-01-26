@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Add genAndSubmitProofs button
+- Add back old test site
+- Add bundler endpoint to cofig
 - Remove unused wallet contract connect methods from metamask.ts
 - Fix regression with dev script not updating token address
 - Clean up power user site

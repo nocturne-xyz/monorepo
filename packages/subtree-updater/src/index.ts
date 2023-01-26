@@ -103,6 +103,8 @@ export class SubtreeUpdater {
       ),
     ]);
 
+    console.log("fetched", newInsertions.length, "new insertions");
+
     const lastCommit =
       newCommits.length > 0 ? newCommits[newCommits.length - 1] : undefined;
 

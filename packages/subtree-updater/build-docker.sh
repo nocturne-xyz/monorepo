@@ -2,7 +2,7 @@
 
 set -e
 
-SCRIPT_DIR="$(dirname "$0")"
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
 ROOT_DIR="$SCRIPT_DIR/../../"
 
 cd "$ROOT_DIR"
@@ -14,7 +14,7 @@ git submodule init
 git submodule update
 popd
 
-if [ -d "$ROOT_DIR/circuit-artifacts/subtreeupdate/" ]; then
+if [ ! -d "$ROOT_DIR/circuit-artifacts/subtreeupdate/" ]; then
     pushd packages/circuits
     yarn download-big-ptau
     yarn build:subtreeupdate

@@ -2858,10 +2858,11 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.4-alpha
-    "@nocturne-xyz/sdk": 1.0.36-alpha
+    "@nocturne-xyz/sdk": 1.0.42-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
+    "@types/cors": ^2.8.13
     "@types/express": ^4.17.14
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
@@ -2872,6 +2873,7 @@ __metadata:
     bullmq: ^3.4.1
     chai: ^4.3.6
     commander: ^9.4.1
+    cors: ^2.8.5
     dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
@@ -2978,6 +2980,7 @@ __metadata:
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     mocha: ^10.1.0
+    react: ^18.2.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -3008,7 +3011,45 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.38-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@npm:1.0.38-alpha":
+  version: 1.0.38-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.38-alpha"
+  dependencies:
+    "@nocturne-xyz/contracts": 1.0.4-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    circomlibjs: "github:nocturne-xyz/circomlibjs"
+    ethers: ^5.0.0
+    ffjavascript: 0.2.57
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: d1ddc75075f29bf1d2856a6123ebfb02c33650f20efab75580556f34d1da00afc8ed04a148013d486148f469dc9a8e5e33c006f6875037f1559fe0bb5e40b97f
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@npm:1.0.42-alpha":
+  version: 1.0.42-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.42-alpha"
+  dependencies:
+    "@nocturne-xyz/contracts": 1.0.4-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    circomlibjs: "github:nocturne-xyz/circomlibjs"
+    ethers: ^5.0.0
+    ffjavascript: 0.2.57
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 3a46d5bbd8cc2d1cde8aef9e26a02f46f06a787060ea6ebf310f55cc820b60807dbd467abfee5d8e09266103e23bf9339e2ec8b9a25a9f13e4478eda0142af4e
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3040,25 +3081,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.36-alpha":
-  version: 1.0.36-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.36-alpha"
-  dependencies:
-    "@nocturne-xyz/contracts": 1.0.4-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    circomlibjs: "github:nocturne-xyz/circomlibjs#seb/polyfill"
-    ethers: ^5.0.0
-    ffjavascript: 0.2.57
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: ef04e4e1c53bfbb1f9a91f0afe8c6248c265323a426db57bdce0dc3224b1a3d92754162c64f203594926ae32b3c1a548a975da2110fe67b9df925352b3055393
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/site@workspace:packages/site"
@@ -3080,6 +3102,7 @@ __metadata:
     "@types/styled-components": ^5.1.25
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
+    bigint-json-serialization: ^1.0.1
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     eslint-plugin-import: ^2.26.0
@@ -3101,6 +3124,7 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
     react-is: ^18.2.0
+    react-modal: ^3.16.1
     rimraf: ^3.0.2
     snarkjs: ^0.5.0
     styled-components: 5.3.3
@@ -4698,7 +4722,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/cors@npm:^2.8.8":
+"@types/cors@npm:^2.8.13, @types/cors@npm:^2.8.8":
   version: 2.8.13
   resolution: "@types/cors@npm:2.8.13"
   dependencies:
@@ -8454,7 +8478,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"circomlibjs@github:nocturne-xyz/circomlibjs#seb/polyfill, circomlibjs@nocturne-xyz/circomlibjs":
+"circomlibjs@github:nocturne-xyz/circomlibjs, circomlibjs@nocturne-xyz/circomlibjs":
   version: 0.0.8
   resolution: "circomlibjs@https://github.com/nocturne-xyz/circomlibjs.git#commit=d32b33e2f0b236a828be95111412a1c0381cf9e4"
   dependencies:
@@ -11404,7 +11428,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -11796,6 +11820,13 @@ __metadata:
     signal-exit: ^3.0.3
     strip-final-newline: ^2.0.0
   checksum: fba9022c8c8c15ed862847e94c252b3d946036d7547af310e344a527e59021fd8b6bb0723883ea87044dc4f0201f949046993124a42ccb0855cae5bf8c786343
+  languageName: node
+  linkType: hard
+
+"exenv@npm:^1.2.0":
+  version: 1.2.2
+  resolution: "exenv@npm:1.2.2"
+  checksum: a894f3b60ab8419e0b6eec99c690a009c8276b4c90655ccaf7d28faba2de3a6b93b3d92210f9dc5efd36058d44f04098f6bbccef99859151104bfd49939904dc
   languageName: node
   linkType: hard
 
@@ -19850,10 +19881,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-lifecycles-compat@npm:^3.0.4":
+"react-lifecycles-compat@npm:^3.0.0, react-lifecycles-compat@npm:^3.0.4":
   version: 3.0.4
   resolution: "react-lifecycles-compat@npm:3.0.4"
   checksum: a904b0fc0a8eeb15a148c9feb7bc17cec7ef96e71188280061fc340043fd6d8ee3ff233381f0e8f95c1cf926210b2c4a31f38182c8f35ac55057e453d6df204f
+  languageName: node
+  linkType: hard
+
+"react-modal@npm:^3.16.1":
+  version: 3.16.1
+  resolution: "react-modal@npm:3.16.1"
+  dependencies:
+    exenv: ^1.2.0
+    prop-types: ^15.7.2
+    react-lifecycles-compat: ^3.0.0
+    warning: ^4.0.3
+  peerDependencies:
+    react: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18
+    react-dom: ^0.14.0 || ^15.0.0 || ^16 || ^17 || ^18
+  checksum: 978936e9320fad839c039b9ee4de55d40888156cb40e093615d6fbc2ff07139d5db06f14782cb7767f780bd5fb57956778669426c535ebc0068a7a03882c7e75
   languageName: node
   linkType: hard
 
@@ -23508,6 +23554,15 @@ __metadata:
     core-util-is: 1.0.2
     extsprintf: ^1.2.0
   checksum: c431df0bedf2088b227a4e051e0ff4ca54df2c114096b0c01e1cbaadb021c30a04d7dd5b41ab277bcd51246ca135bf931d4c4c796ecae7a4fef6d744ecef36ea
+  languageName: node
+  linkType: hard
+
+"warning@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "warning@npm:4.0.3"
+  dependencies:
+    loose-envify: ^1.0.0
+  checksum: 4f2cb6a9575e4faf71ddad9ad1ae7a00d0a75d24521c193fa464f30e6b04027bd97aa5d9546b0e13d3a150ab402eda216d59c1d0f2d6ca60124d96cd40dfa35c
   languageName: node
   linkType: hard
 

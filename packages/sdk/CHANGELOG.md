@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- remove nested hash for refund assets in `calculateOperationDigest`
+- factor `proveJoiNSplitTx` into a separate function
+- add function `JoinSplitPublicSignalsToArray`
+- add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`
+- factor contents of `NocturneContext.proveJoinSplitTx` into a standalone helper
+- Add `makeProvenJoinSplitTx` util function that removes additional fields `PreProofJoinSplitTx` has
 - Fix `NocturneContext.gatherMinimumNotes` bug by adding missing await for `this.ensureMinimumForAssetRequest` and updating test
 - Depend on nocturne fork of circomlibjs
 - Fix `decodeAsset` not padding out address with zeros

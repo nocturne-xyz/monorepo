@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- use `node:18.12.1` in dockerfile
+- Add docker internal host gateway network to server and submitter so they can connect to hh
+- Expose server ports in docker compose file
+- Add `cors` middleware to server
 - Remove unused env var from `.env.example`
 - `BundlerServer.run` returns `http.Server`
 - Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one field `joinSplitTx.encodedAsset`

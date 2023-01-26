@@ -4,6 +4,7 @@ import express, { Request, Response } from "express";
 import * as os from "os";
 import { ethers } from "ethers";
 import { Server } from "http";
+import cors from "cors";
 
 export class BundlerServer {
   router: BundlerRouter;
@@ -26,6 +27,7 @@ export class BundlerServer {
     });
 
     const app = express();
+    app.use(cors());
     app.use(express.json());
     app.use(router);
 

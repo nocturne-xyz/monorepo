@@ -14,6 +14,7 @@ import {
   NocturneFrontendSDK,
   AssetBalancesDisplay,
 } from "@nocturne-xyz/frontend-sdk";
+import { bundlerEndpoint } from "../config/bundler";
 
 const Container = styled.div`
   display: flex;
@@ -94,7 +95,7 @@ const Playground = () => {
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
-    loadNocturneFrontendSDK().then((sdk) => {
+    loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK, state.installedSnap]);

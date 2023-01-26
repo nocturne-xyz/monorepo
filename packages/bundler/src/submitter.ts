@@ -93,6 +93,7 @@ export class BundlerSubmitter {
       }
     });
 
+    console.log("submitting bundle...");
     // Hardcode gas limit to skip eth_estimateGas
     const tx = await this.walletContract.processBundle(
       { operations },
@@ -100,6 +101,7 @@ export class BundlerSubmitter {
         gasLimit: 1_000_000,
       }
     );
+    console.log("watiing for confirmation...");
     const receipt = await tx.wait(1);
 
     const matchingEvents = parseEventsFromContractReceipt(

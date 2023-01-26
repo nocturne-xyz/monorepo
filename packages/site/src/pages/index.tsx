@@ -17,19 +17,24 @@ import {
   ClearDbButton,
   GetJoinSplitInputsButton,
   GetAllBalancesButton,
+  GenAndSubmitProofButton,
 } from "../components";
+import { bundlerEndpoint } from "../config";
 import {
   Action,
   Asset,
   AssetType,
   JoinSplitRequest,
   OperationRequest,
+  calculateOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
+  BundlerOperationID,
 } from "@nocturne-xyz/frontend-sdk";
+import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
@@ -112,9 +117,13 @@ const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
 
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
+  const [inFlightOperationID, setInFlightOperationID] = useState<
+    BundlerOperationID | undefined
+  >();
+  const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK().then((sdk) => {
+    loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK]);
@@ -162,7 +171,7 @@ const Index = () => {
     }
   };
 
-  const handleGetJoinSplitInputs = async () => {
+  const handleGenProof = async () => {
     const asset: Asset = {
       assetAddr: TOKEN_ADDRESS,
       id: ERC20_ID,
@@ -195,11 +204,45 @@ const Index = () => {
     try {
       const provenOperation =
         await nocturneFrontendSDK!.generateProvenOperation(operationRequest);
+
       console.log(provenOperation);
+      console.log(
+        "opDigest of provenOperation",
+        calculateOperationDigest(provenOperation)
+      );
+
+      const isValid = await nocturneFrontendSDK!.verifyProvenOperation(
+        provenOperation
+      );
+      console.log("is valid: ", isValid);
+
+      return provenOperation;
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
+
+      return null;
     }
+  };
+
+  const handleGenAndSubmitProof = async () => {
+    const provenOperation = await handleGenProof();
+    if (provenOperation === null) {
+      console.error("failed to generate proven operation");
+      return;
+    }
+
+    nocturneFrontendSDK!
+      .submitProvenOperation(provenOperation)
+      .then((opID: BundlerOperationID) => {
+        setInFlightOperationID(opID);
+      })
+      .catch((err: any) => {
+        console.error(err);
+        setInFlightOperationID(undefined);
+      });
+
+    openTxModal();
   };
 
   const handleClearDb = async () => {
@@ -211,154 +254,188 @@ const Index = () => {
     }
   };
 
+  const openTxModal = () => {
+    setTxModalIsOpen(true);
+  };
+
+  const handleCloseTxModal = () => {
+    setTxModalIsOpen(false);
+    setInFlightOperationID(undefined);
+  };
+
   return (
-    <Container>
-      <Heading>
-        Welcome to the <Span>Nocturne Power-User Frontend</Span>
-      </Heading>
-      <CardContainer>
-        {state.error && (
-          <ErrorMessage>
-            <b>An error happened:</b> {state.error.message}
-          </ErrorMessage>
-        )}
-        {!state.isFlask && (
-          <Card
-            content={{
-              title: "Install",
-              description:
-                "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
-            }}
-            fullWidth
-          >
-            <InstallFlaskButton />,
-          </Card>
-        )}
-        {!state.installedSnap && (
-          <Card
-            content={{
-              title: "Connect",
-              description:
-                "Get started by connecting to and installing the example snap.",
-            }}
-            disabled={!state.isFlask}
-          >
-            <ConnectButton
-              onClick={handleConnectClick}
+    <>
+      <TxModal
+        operationId={inFlightOperationID}
+        bundlerEndpoint={bundlerEndpoint}
+        isOpen={txModalIsOpen}
+        handleClose={handleCloseTxModal}
+      />
+      <Container>
+        <Heading>
+          <Span>Nocturne Power-User Frontend</Span>
+        </Heading>
+        <CardContainer>
+          {state.error && (
+            <ErrorMessage>
+              <b>An error happened:</b> {state.error.message}
+            </ErrorMessage>
+          )}
+          {!state.isFlask && (
+            <Card
+              content={{
+                title: "Install",
+                description:
+                  "Snaps is pre-release software only available in MetaMask Flask, a canary distribution for developers with access to upcoming features.",
+              }}
+              fullWidth
+            >
+              <InstallFlaskButton />,
+            </Card>
+          )}
+          {!state.installedSnap && (
+            <Card
+              content={{
+                title: "Connect",
+                description:
+                  "Get started by connecting to and installing the example snap.",
+              }}
               disabled={!state.isFlask}
-            />
-          </Card>
-        )}
-        {shouldDisplayReconnectButton(state.installedSnap) && (
+            >
+              <ConnectButton
+                onClick={handleConnectClick}
+                disabled={!state.isFlask}
+              />
+            </Card>
+          )}
+          {shouldDisplayReconnectButton(state.installedSnap) && (
+            <Card
+              content={{
+                title: "Reconnect",
+                description:
+                  "While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.",
+              }}
+              disabled={!state.installedSnap}
+            >
+              <ReconnectButton
+                onClick={handleConnectClick}
+                disabled={!state.installedSnap}
+              />
+            </Card>
+          )}
           <Card
             content={{
-              title: "Reconnect",
-              description:
-                "While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.",
+              title: "Sync Notes",
+              description: "Sync notes.",
             }}
             disabled={!state.installedSnap}
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
           >
-            <ReconnectButton
-              onClick={handleConnectClick}
+            <SyncNotesButton
+              onClick={handleSyncNotesClick}
               disabled={!state.installedSnap}
             />
           </Card>
-        )}
-        <Card
-          content={{
-            title: "Sync Notes",
-            description: "Sync notes.",
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        >
-          <SyncNotesButton
-            onClick={handleSyncNotesClick}
+          <Card
+            content={{
+              title: "Sync Leaves",
+              description: "Sync leaves.",
+            }}
             disabled={!state.installedSnap}
-          />
-        </Card>
-        <Card
-          content={{
-            title: "Sync Leaves",
-            description: "Sync leaves.",
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        >
-          <SyncLeavesButton
-            onClick={handleSyncLeavesClick}
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
+          >
+            <SyncLeavesButton
+              onClick={handleSyncLeavesClick}
+              disabled={!state.installedSnap}
+            />
+          </Card>
+          <Card
+            content={{
+              title: "Get All Balances",
+              description: "Get all balances",
+            }}
             disabled={!state.installedSnap}
-          />
-        </Card>
-        <Card
-          content={{
-            title: "Get All Balances",
-            description: "Get all balances",
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        >
-          <GetAllBalancesButton
-            onClick={handleGetAllBalancesClick}
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
+          >
+            <GetAllBalancesButton
+              onClick={handleGetAllBalancesClick}
+              disabled={!state.installedSnap}
+            />
+          </Card>
+          <Card
+            content={{
+              title: "Generate proof",
+              description: "Generate joinsplit proof",
+            }}
             disabled={!state.installedSnap}
-          />
-        </Card>
-        <Card
-          content={{
-            title: "Generate proof",
-            description: "Generate joinsplit proof",
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        >
-          <GetJoinSplitInputsButton
-            onClick={handleGetJoinSplitInputs}
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
+          >
+            <GetJoinSplitInputsButton
+              onClick={() => handleGenProof()}
+              disabled={!state.installedSnap}
+            />
+          </Card>
+          <Card
+            content={{
+              title: "Generate proof and Submit Transaction",
+              description: "Submit transaction",
+            }}
             disabled={!state.installedSnap}
-          />
-        </Card>
-        <Card
-          content={{
-            title: "Clear DB",
-            description: "Clear DB.",
-          }}
-          disabled={!state.installedSnap}
-          fullWidth={
-            state.isFlask &&
-            Boolean(state.installedSnap) &&
-            !shouldDisplayReconnectButton(state.installedSnap)
-          }
-        >
-          <ClearDbButton
-            onClick={handleClearDb}
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
+          >
+            <GenAndSubmitProofButton
+              onClick={() => handleGenAndSubmitProof()}
+              disabled={!state.installedSnap}
+            />
+          </Card>
+          <Card
+            content={{
+              title: "Clear DB",
+              description: "Clear DB.",
+            }}
             disabled={!state.installedSnap}
-          />
-        </Card>
-        <Notice>
-          <p>
-            Please note that the <b>snap.manifest.json</b> and{" "}
-            <b>package.json</b> must be located in the server root directory and
-            the bundle must be hosted at the location specified by the location
-            field.
-          </p>
-        </Notice>
-      </CardContainer>
-    </Container>
+            fullWidth={
+              state.isFlask &&
+              Boolean(state.installedSnap) &&
+              !shouldDisplayReconnectButton(state.installedSnap)
+            }
+          >
+            <ClearDbButton
+              onClick={handleClearDb}
+              disabled={!state.installedSnap}
+            />
+          </Card>
+          <Notice>
+            <p>
+              Please note that the <b>snap.manifest.json</b> and{" "}
+              <b>package.json</b> must be located in the server root directory
+              and the bundle must be hosted at the location specified by the
+              location field.
+            </p>
+          </Notice>
+        </CardContainer>
+      </Container>
+    </>
   );
 };
 
