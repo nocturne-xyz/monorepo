@@ -19,7 +19,7 @@ We use hardhat node to run a local devnet. The caveat is that the chain ID for h
 
 - Network Name: hh-node
 - New RPC URL: http://127.0.0.1:8545
-- Chain ID: 31377
+- Chain ID: 31337
 - Currency Symbol: GO
 
 Additionally, make sure to go to Settings -> Advanced and click "Reset account." This will reset the nonce for the selected network back to zero.
