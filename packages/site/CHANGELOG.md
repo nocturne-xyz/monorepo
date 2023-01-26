@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix unwrap / spend amounts in `index.tsx`
 - Add tx modal to `playground.tsx`
 - Fix solidity array input bug (misinterpreted as string)
 - Redo UI background and cards
