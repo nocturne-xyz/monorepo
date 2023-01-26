@@ -8,13 +8,12 @@ import {
   PROVEN_OPERATION_QUEUE,
   ProvenOperationJobData,
   PROVEN_OPERATION_JOB_TAG,
-  OperationStatus,
 } from "../src/common";
 import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
-import { calculateOperationDigest } from "@nocturne-xyz/sdk";
+import { OperationStatus, calculateOperationDigest } from "@nocturne-xyz/sdk";
 
 const BATCH_SIZE = 8;
 const MAX_BATCH_LATENCY_SECS = 5;

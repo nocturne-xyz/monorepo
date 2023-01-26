@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from "react";
-
-// TODO: make a common package this can live in
-// we can't currently import it into site because bundler also has a bunch of node-specifc deps that we can't include in browser
-export enum OperationStatus {
-  QUEUED = "QUEUED",
-  PRE_BATCH = "PRE_BATCH",
-  IN_BATCH = "IN_BATCH",
-  IN_FLIGHT = "IN_FLIGHT",
-  EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
-  EXECUTED_FAILED = "EXECUTED_FAILED",
-}
-
+import { OperationStatus } from "@nocturne-xyz/sdk";
 
 const POLL_INTERVAL = 1000; // Poll condition every 1 second
 

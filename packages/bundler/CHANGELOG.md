@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `OperationStatus` enum to `@nocturne-xyz/sdk`
 - use `node:18.12.1` in dockerfile
 - Add docker internal host gateway network to server and submitter so they can connect to hh
 - Expose server ports in docker compose file
