@@ -6,7 +6,11 @@ import {
   PROVEN_OPERATION_JOB_TAG,
 } from "./common";
 import { Request, Response } from "express";
-import { OperationStatus, calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import {
+  OperationStatus,
+  calculateOperationDigest,
+  ProvenOperation,
+} from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";

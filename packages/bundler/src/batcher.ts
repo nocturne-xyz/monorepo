@@ -2,7 +2,11 @@ import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
 import { BatcherDB, StatusDB } from "./db";
 import { getRedis } from "./utils";
-import { OperationStatus, calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import {
+  OperationStatus,
+  calculateOperationDigest,
+  ProvenOperation,
+} from "@nocturne-xyz/sdk";
 import {
   OperationBatchJobData,
   OPERATION_BATCH_QUEUE,
