@@ -87,12 +87,7 @@ export default async function main(): Promise<void> {
     );
   }
 
-  const server = new SubtreeUpdateServer(
-    prover,
-    walletAddress,
-    dbPath,
-    signer
-  );
+  const server = new SubtreeUpdateServer(prover, walletAddress, dbPath, signer);
 
   await server.start();
 }
