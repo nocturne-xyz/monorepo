@@ -1,14 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
-import { connectSnap, getSnap, shouldDisplayReconnectButton } from "../utils";
-import {
-  ConnectButton,
-  InstallFlaskButton,
-  ReconnectButton,
-  Card,
-  ABIForm,
-} from "../components";
+import { shouldDisplayReconnectButton } from "../utils";
+import { InstallFlaskButton, Card, ABIForm } from "../components";
 import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
@@ -34,16 +28,6 @@ const Container = styled.div`
   }
 `;
 
-const Heading = styled.h1`
-  margin-top: 0;
-  margin-bottom: 2.4rem;
-  text-align: center;
-`;
-
-const Span = styled.span`
-  color: ${(props) => props.theme.colors.primary.default};
-`;
-
 const CardContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -53,25 +37,6 @@ const CardContainer = styled.div`
   width: 100%;
   height: 100%;
   margin-top: 1.5rem;
-`;
-
-const Notice = styled.div`
-  background-color: ${({ theme }) => theme.colors.background.alternative};
-  border: 1px solid ${({ theme }) => theme.colors.border.default};
-  color: ${({ theme }) => theme.colors.text.alternative};
-  border-radius: ${({ theme }) => theme.radii.default};
-  padding: 2.4rem;
-  margin-top: 2.4rem;
-  max-width: 60rem;
-  width: 100%;
-
-  & > * {
-    margin: 0;
-  }
-  ${({ theme }) => theme.mediaQueries.small} {
-    margin-top: 1.2rem;
-    padding: 1.6rem;
-  }
 `;
 
 const ErrorMessage = styled.div`
@@ -107,21 +72,6 @@ const Playground = () => {
     });
   }, [loadNocturneFrontendSDK, state.installedSnap]);
 
-  const handleConnectClick = async () => {
-    try {
-      await connectSnap();
-      const installedSnap = await getSnap();
-
-      dispatch({
-        type: MetamaskActions.SetInstalled,
-        payload: installedSnap,
-      });
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
   const syncNotes = async () => {
     try {
       await nocturneFrontendSDK!.syncNotes();
@@ -152,9 +102,6 @@ const Playground = () => {
 
   return (
     <Container>
-      <Heading>
-        Welcome to the <Span>Nocturne Power-User Frontend</Span>
-      </Heading>
       <CardContainer>
         {state.error && (
           <ErrorMessage>
@@ -173,34 +120,14 @@ const Playground = () => {
             <InstallFlaskButton />
           </Card>
         )}
-        {!state.installedSnap && (
-          <Card
-            content={{
-              title: "Connect",
-              description:
-                "Get started by connecting to and installing the example snap.",
-            }}
-            disabled={!state.isFlask}
-          >
-            <ConnectButton
-              onClick={handleConnectClick}
-              disabled={!state.isFlask}
-            />
-          </Card>
-        )}
         {shouldDisplayReconnectButton(state.installedSnap) && (
           <Card
             content={{
-              title: "Reconnect",
-              description:
-                "While connected to a local running snap this button will always be displayed in order to update the snap if a change is made.",
+              title: "Deposit to Wallet",
+              description: "Deposit assets to smart contract wallet",
             }}
-            disabled={!state.installedSnap}
           >
-            <ReconnectButton
-              onClick={handleConnectClick}
-              disabled={!state.installedSnap}
-            />
+            {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}
           </Card>
         )}
         {shouldDisplayReconnectButton(state.installedSnap) && (
@@ -214,25 +141,7 @@ const Playground = () => {
             <AssetBalancesDisplay frontendSDK={nocturneFrontendSDK} />
           </Card>
         )}
-        {!shouldDisplayReconnectButton(state.installedSnap) && (
-          <Notice>
-            <p>Please connect using MetaMask Flask to continue.</p>
-          </Notice>
-        )}
       </CardContainer>
-      {shouldDisplayReconnectButton(state.installedSnap) && (
-        <CardContainer>
-          <Card
-            content={{
-              title: "Deposit to Wallet",
-              description: "Deposit assets to smart contract wallet",
-            }}
-            fullWidth
-          >
-            {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}
-          </Card>
-        </CardContainer>
-      )}
       {shouldDisplayReconnectButton(state.installedSnap) && (
         <CardContainer>
           <Card

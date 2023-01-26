@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Abbreviate token addresses and show call sig instead of calldata for actions
 - Add `DepositForm` component
 - Add erc20/721/1155 JSON abis for token approvals
 - Add `depositFunds` method to `NocturneFrontendSDK`, which required sdk taken wallet and vault addresses

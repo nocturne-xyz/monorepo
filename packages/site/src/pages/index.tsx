@@ -277,9 +277,6 @@ const Index = () => {
         handleClose={handleCloseTxModal}
       />
       <Container>
-        <Heading>
-          <Span>Nocturne Power-User Frontend</Span>
-        </Heading>
         <CardContainer>
           {state.error && (
             <ErrorMessage>

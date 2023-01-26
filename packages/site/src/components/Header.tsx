@@ -1,9 +1,8 @@
 import { useContext } from "react";
-import styled, { useTheme } from "styled-components";
+import styled from "styled-components";
 import { MetamaskActions, MetaMaskContext } from "../hooks";
 import { connectSnap, getThemePreference, getSnap } from "../utils";
 import { HeaderButtons } from "./Buttons";
-import { SnapLogo } from "./SnapLogo";
 import { Toggle } from "./Toggle";
 
 const HeaderWrapper = styled.header`
@@ -42,7 +41,6 @@ export const Header = ({
 }: {
   handleToggleClick(): void;
 }) => {
-  const theme = useTheme();
   const [state, dispatch] = useContext(MetaMaskContext);
 
   const handleConnectClick = async () => {
@@ -62,7 +60,6 @@ export const Header = ({
   return (
     <HeaderWrapper>
       <LogoWrapper>
-        <SnapLogo color={theme.colors.icon.default} size={36} />
         <Title>Nocturne</Title>
       </LogoWrapper>
       <RightContainer>
