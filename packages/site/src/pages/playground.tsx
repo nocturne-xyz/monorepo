@@ -13,7 +13,9 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
   AssetBalancesDisplay,
+  DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
+import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { bundlerEndpoint } from "../config/bundler";
 
 const Container = styled.div`
@@ -95,7 +97,12 @@ const Playground = () => {
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
-    loadNocturneFrontendSDK(bundlerEndpoint).then((sdk) => {
+    loadNocturneFrontendSDK(
+      bundlerEndpoint,
+      WALLET_CONTRACT_ADDRESS,
+      VAULT_CONTRACT_ADDRESS
+    ).then((sdk) => {
+      console.log("Instantiated frontend sdk");
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK, state.installedSnap]);
@@ -213,6 +220,19 @@ const Playground = () => {
           </Notice>
         )}
       </CardContainer>
+      {shouldDisplayReconnectButton(state.installedSnap) && (
+        <CardContainer>
+          <Card
+            content={{
+              title: "Deposit to Wallet",
+              description: "Deposit assets to smart contract wallet",
+            }}
+            fullWidth
+          >
+            {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}
+          </Card>
+        </CardContainer>
+      )}
       {shouldDisplayReconnectButton(state.installedSnap) && (
         <CardContainer>
           <Card

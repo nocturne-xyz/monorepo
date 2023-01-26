@@ -31,20 +31,28 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 (async () => {
   console.log("Post deploy setup");
   const { wallet, vault } = await setupNocturne({ deployContracts: false });
-
   const [depositor] = await ethers.getSigners();
   const tokenFactory = new SimpleERC20Token__factory(depositor);
-  const tokens = await Promise.all(Array(2).fill(0).map(async (_, i) => {
-    const token = await tokenFactory.deploy()
-    console.log(`Token ${i + 1} deployed at: ${token.address}`);
+  const tokens = await Promise.all(
+    Array(2)
+      .fill(0)
+      .map(async (_, i) => {
+        const token = await tokenFactory.deploy();
+        console.log(`Token ${i + 1} deployed at: ${token.address}`);
 
-    return token
-  }));
-  
+        return token;
+      })
+  );
+
   for (const token of tokens) {
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
-      await token.connect(depositor).reserveTokens(addr, 100000000);
+      console.log(`Sending ETH and tokens to ${addr}`);
+      await depositor.sendTransaction({
+        to: addr,
+        value: ethers.utils.parseEther("1.0"),
+      });
+      await token.reserveTokens(addr, 5_000_000_000_000_000);
     }
 
     // Reserve and approve tokens for nocturne addr depositor
@@ -52,11 +60,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     await token.connect(depositor).approve(vault.address, 100000000);
   }
 
-  const encodedAssets = tokens.map(token => ({
+  const encodedAssets = tokens
+    .map((token) => ({
       assetType: AssetType.ERC20,
       assetAddr: token.address,
       id: 0n,
-  })).map(encodeAsset);
+    }))
+    .map(encodeAsset);
 
   // We will deposit to setup alice and test nocturne addrs
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
@@ -67,15 +77,18 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
-      await wallet.connect(depositor).depositFunds({
-        encodedAssetAddr,
-        encodedAssetId,
-        spender: depositor.address,
-        value: 100n,
-        depositAddr: addr,
-      }, {
-        gasLimit: 1000000,
-      });
+      await wallet.connect(depositor).depositFunds(
+        {
+          encodedAssetAddr,
+          encodedAssetId,
+          spender: depositor.address,
+          value: 100n,
+          depositAddr: addr,
+        },
+        {
+          gasLimit: 1000000,
+        }
+      );
     }
   }
 

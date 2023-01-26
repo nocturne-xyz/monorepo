@@ -9,7 +9,7 @@
   "include": [
     "index.ts",
     "src",
-    "src/**/*.ts",
+    "src/**/*",
     "scripts/*.ts",
     "package.json",
     "global.d.ts"
