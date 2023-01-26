@@ -43,12 +43,17 @@ One can additionally pass in optional arguments:
 1. Build the docker image by running `yarn build:docker`. This will build the subtree update circuit and witness generator if it hasn't been built yet
   * this will take a while (on the order of 30-40 minutes) in the event that the circuit needs to be built.
   * if the circuit ever changes, you need to manually rebuild it by running `yarn build:subtreeupdate` in `packages/circuits`.
+  * This may not work on some machines. If it doesn't, build it the mock prover with `yarn build:mock:docker`
 2. Make a `.env` file containing `SUBMITTER_SECRET_KEY` in the `packages/subtree-updater`. See `.env.example` for the format.
   * you can get a test secret key by running `yarn hh-node` from `packages/e2e-tests` and picking one of the test keys it prints out.
 3. Assuming you already have an RPC node running at `localhost:8545`, Run the container by running the following command from monorepo root:
 ```
+docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address <WALLET_ADDRESS> --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network http://host.docker.internal:8545
+```
 
-docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/subtree-updater --wallet-address <WALLET_ADDRESS> --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network http://host.docker.internal:8545
+And to run the mock subtree updater:
+```
+docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address <WALLET_ADDRESS> --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network http://host.docker.internal:8545
 ```
 
 > We have to include the optional `--network` parameter to the CLI here because, in docker, we need to use the internal host gateway to connect to a process running outside the container. The `--add-host` option we're using with `docker run` tells docker to attach the gateway to the container (this is automatic on docker for mac and windows, but not linux).
