@@ -6,6 +6,7 @@ import * as ethers from "ethers";
 import {
   NocturneFrontendSDK,
   formatAbbreviatedAddress,
+  BundlerOperationID,
 } from "@nocturne-xyz/frontend-sdk";
 import {
   Action,
@@ -16,6 +17,7 @@ import {
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
+import { TxModal } from "../components/TxModal";
 
 export interface ExtendedAction extends Action {
   signature: string;
@@ -23,9 +25,10 @@ export interface ExtendedAction extends Action {
 
 export type ABIFormProps = {
   sdk: NocturneFrontendSDK;
+  bundlerEndpoint: string;
 };
 
-export const ABIForm = ({ sdk }: ABIFormProps) => {
+export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
   const [abiText, setABIText] = useState("");
   const [contractAddressText, setContractAddressText] = useState("");
   const [abi, setABI] = useState<ABIItem[] | undefined>(undefined);
@@ -38,6 +41,11 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
   >([]);
   const [refundAssets, setRefundAssets] = useState<Asset[]>([]);
   const [_state, dispatch] = useContext(MetaMaskContext);
+
+  const [inFlightOperationID, setInFlightOperationID] = useState<
+    BundlerOperationID | undefined
+  >();
+  const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   const handleSetABI = (event: any) => {
     event.preventDefault();
@@ -84,15 +92,41 @@ export const ABIForm = ({ sdk }: ABIFormProps) => {
         operationRequest
       );
       console.log("Proven operation:", provenOperation);
-      // TODO: submit bundle to bundler
+
+      sdk
+        .submitProvenOperation(provenOperation)
+        .then((opID: BundlerOperationID) => {
+          setInFlightOperationID(opID);
+        })
+        .catch((err: any) => {
+          console.error(err);
+          setInFlightOperationID(undefined);
+        });
+
+      openTxModal();
     } catch (e) {
       console.error("error: ", e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
 
+  const openTxModal = () => {
+    setTxModalIsOpen(true);
+  };
+
+  const handleCloseTxModal = () => {
+    setTxModalIsOpen(false);
+    setInFlightOperationID(undefined);
+  };
+
   return (
     <>
+      <TxModal
+        operationId={inFlightOperationID}
+        bundlerEndpoint={bundlerEndpoint}
+        isOpen={txModalIsOpen}
+        handleClose={handleCloseTxModal}
+      />
       <label>
         Contract Address
         <br />
