@@ -193,7 +193,7 @@ const Index = () => {
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [TOKEN_ADDRESS, 50]
+        [TOKEN_ADDRESS, 25n]
       );
     const action: Action = {
       contractAddress: TOKEN_ADDRESS,
