@@ -125,7 +125,7 @@ const Index = () => {
 
   useEffect(() => {
     loadNocturneFrontendSDK(
-	  bundlerEndpoint,
+      bundlerEndpoint,
       WALLET_CONTRACT_ADDRESS,
       VAULT_CONTRACT_ADDRESS
     ).then((sdk) => {
