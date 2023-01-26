@@ -93,7 +93,8 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
       );
       console.log("Proven operation:", provenOperation);
 
-      sdk.submitProvenOperation(provenOperation)
+      sdk
+        .submitProvenOperation(provenOperation)
         .then((opID: BundlerOperationID) => {
           setInFlightOperationID(opID);
         })
