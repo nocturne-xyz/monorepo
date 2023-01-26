@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use `OperationStatus` from `@nocturne-xyz/sdk`
 - move `subtreeUpdateInputsFromBatch` to `sdk`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
 - Add local prover for subtree update

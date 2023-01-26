@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
 - remove nested hash for refund assets in `calculateOperationDigest`
 - factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`

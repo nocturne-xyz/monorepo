@@ -12,12 +12,3 @@ export type ProvenOperationJobData = {
 export type OperationBatchJobData = {
   operationBatchJson: string;
 };
-
-export enum OperationStatus {
-  QUEUED = "QUEUED",
-  PRE_BATCH = "PRE_BATCH",
-  IN_BATCH = "IN_BATCH",
-  IN_FLIGHT = "IN_FLIGHT",
-  EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
-  EXECUTED_FAILED = "EXECUTED_FAILED",
-}
