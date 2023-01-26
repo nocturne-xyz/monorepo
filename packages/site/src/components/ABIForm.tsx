@@ -3,7 +3,10 @@ import { ABIInteractionForm } from "./ABIInteractionForm";
 import { ABIItem, tryParseABI } from "../utils/abiParser";
 import { Button } from "./Buttons";
 import * as ethers from "ethers";
-import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
+import {
+  NocturneFrontendSDK,
+  formatAbbreviatedAddress,
+} from "@nocturne-xyz/frontend-sdk";
 import {
   Action,
   Asset,
@@ -13,7 +16,6 @@ import {
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
-import { formatAbbreviatedAddress } from "../utils/formatting";
 
 export interface ExtendedAction extends Action {
   signature: string;

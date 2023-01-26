@@ -1,5 +1,6 @@
 import { AssetWithBalance } from "@nocturne-xyz/sdk";
 import React, { useState, useEffect } from "react";
+import { formatAbbreviatedAddress } from "../common";
 import { NocturneFrontendSDK } from "../sdk";
 
 interface AssetBalancesDisplayProps {
@@ -22,11 +23,8 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
     const data = await frontendSDK.getAllBalances();
     const abbreviated = data.map(({ asset, balance }) => {
       const { assetAddr } = asset;
-      const abbreviatedAddress =
-        assetAddr.substring(0, 6) +
-        "..." +
-        assetAddr.substring(assetAddr.length - 4);
-      return { asset, balance, abbreviatedAddress: abbreviatedAddress };
+      const abbreviatedAddress = formatAbbreviatedAddress(assetAddr);
+      return { asset, balance, abbreviatedAddress };
     });
     setBalances(abbreviated);
   };
