@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- add `yarn build:mock:docker` script and corresponding functionality in `build_docker.sh`
+- create separate subtree updater dockerfile that doesn't use rapidsnark
+- change CLI to allow using mock subtree update prover
 - fix dir not existing in rapidsnark prover
 - remove install deps from dockerfile
 - Add a script `yarn build:docker` to build the dockerized subtree updater
