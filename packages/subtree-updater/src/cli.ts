@@ -5,6 +5,7 @@ import { SubtreeUpdateServer } from "./server";
 import { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
+import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
 
 export default async function main(): Promise<void> {
   dotenv.config();
@@ -22,11 +23,15 @@ export default async function main(): Promise<void> {
       "--vkey-path <string>",
       "path to `vkey.json`, the verification key for the subtree update circuit"
     )
-    .requiredOption(
+    .option(
+      "--use-mock-prover",
+      "use a mock prover instead of rapidsnark. This is useful for testing"
+    )
+    .option(
       "--prover-path <string>",
       "path to the rapidsnark prover exectuable. After building from the rapidsnark repo, this is typically `rapidsnark/build/prover`"
     )
-    .requiredOption(
+    .option(
       "--witness-generator-path <string>",
       "path to the C++ witness generator executable. This can be built by running `make` in the `subtreeupdate_cpp` directory emitted by circom"
     )
@@ -53,6 +58,7 @@ export default async function main(): Promise<void> {
     proverPath,
     witnessGeneratorPath,
     walletAddress,
+    useMockProver,
   } = program.opts();
 
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
@@ -63,15 +69,26 @@ export default async function main(): Promise<void> {
   const provider = ethers.getDefaultProvider(network);
   const signer = new ethers.Wallet(submitterSecretKey, provider);
 
-  const rapidsnarkProver = new RapidsnarkSubtreeUpdateProver(
-    proverPath,
-    witnessGeneratorPath,
-    zkeyPath,
-    vkeyPath,
-    tmpDir
-  );
+  let prover;
+  if (useMockProver) {
+    prover = new MockSubtreeUpdateProver();
+  } else {
+    if (proverPath === undefined || witnessGeneratorPath === undefined) {
+      throw new Error(
+        "Must provide --prover-path and --witness-generator-path when not using mock prover"
+      );
+    }
+    prover = new RapidsnarkSubtreeUpdateProver(
+      proverPath,
+      witnessGeneratorPath,
+      zkeyPath,
+      vkeyPath,
+      tmpDir
+    );
+  }
+
   const server = new SubtreeUpdateServer(
-    rapidsnarkProver,
+    prover,
     walletAddress,
     dbPath,
     signer
