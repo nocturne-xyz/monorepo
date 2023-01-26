@@ -71,6 +71,9 @@ WALLET_ADDRESS="$WALLET_ADDRESS"
 RPC_URL="$RPC_URL"
 TX_SIGNER_KEY="$BUNDLER_SUBMITTER_PRIVATE_KEY"
 EOM
+
+# clear redis if it exists 
+rm -r ./redis-data || "echo 'redis-data does not yet exist'"
 popd
 
 # run bundler

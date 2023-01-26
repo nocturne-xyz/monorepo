@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
 
+// TODO: make a common package this can live in
+// we can't currently import it into site because bundler also has a bunch of node-specifc deps that we can't include in browser
+export enum OperationStatus {
+  QUEUED = "QUEUED",
+  PRE_BATCH = "PRE_BATCH",
+  IN_BATCH = "IN_BATCH",
+  IN_FLIGHT = "IN_FLIGHT",
+  EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
+  EXECUTED_FAILED = "EXECUTED_FAILED",
+}
+
+
 const POLL_INTERVAL = 1000; // Poll condition every 1 second
 
 export interface TransactionTrackerProps {
@@ -9,67 +21,63 @@ export interface TransactionTrackerProps {
   textStyles?: React.CSSProperties;
 }
 
-export enum TransactionStatus {
-  SUBMITTING = "SUBMITTING",
-  QUEUED = "QUEUED",
-  IN_BATCH = "IN_BATCH",
-  IN_FLIGHT = "IN_FLIGHT",
-  EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
-  EXECUTED_FAILED = "EXECUTED_FAILED",
-};
-
-function txStatusFromResString(status: string): TransactionStatus {
+function parseOperationStatus(status: string): OperationStatus {
   switch (status) {
-    case TransactionStatus.QUEUED:
-      return TransactionStatus.QUEUED;
-    case TransactionStatus.IN_BATCH:
-      return TransactionStatus.IN_BATCH;
-    case TransactionStatus.IN_FLIGHT:
-      return TransactionStatus.IN_FLIGHT;
-    case TransactionStatus.EXECUTED_SUCCESS:
-      return TransactionStatus.EXECUTED_SUCCESS;
-    case TransactionStatus.EXECUTED_FAILED:
-      return TransactionStatus.EXECUTED_FAILED;
+    case OperationStatus.QUEUED:
+      return OperationStatus.QUEUED;
+    case OperationStatus.PRE_BATCH:
+      return OperationStatus.PRE_BATCH;
+    case OperationStatus.IN_BATCH:
+      return OperationStatus.IN_BATCH;
+    case OperationStatus.IN_FLIGHT:
+      return OperationStatus.IN_FLIGHT;
+    case OperationStatus.EXECUTED_SUCCESS:
+      return OperationStatus.EXECUTED_SUCCESS;
+    case OperationStatus.EXECUTED_FAILED:
+      return OperationStatus.EXECUTED_FAILED;
     default:
       throw new Error("Invalid transaction status - should never happen!");
   }
 }
 
-type TxStatusMessage =
-  | "Submitting transaction to the bundler..."
-  | "Failed to submit transaction to the bundler"
-  | "Waiting to be included in a bundle..."
-  | "Waiting for the bundle to be executed..."
-  | "Transaction executed successfully!"
-  | "Transaction failed to execute";
+enum TxStatusMessage {
+  SUBMITTING = "Submitting transaction to the bundler...",
+  QUEUED = "Waiting to be included in a bundle...",
+  IN_BATCH = "Waiting for the bundle to be submitted...",
+  IN_FLIGHT = "Waiting for the bundle to be executed...",
+  EXECUTED_SUCCESS = "Transaction executed successfully!",
+  EXECUTED_FAILED = "Transaction failed to execute",
+};
+
+function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
+  switch (status) {
+
+    // display same message for QUEUED and PRE_BATCHß
+    case OperationStatus.QUEUED:
+    case OperationStatus.PRE_BATCH:
+      return TxStatusMessage.QUEUED;
+    case OperationStatus.IN_BATCH:
+      return TxStatusMessage.IN_BATCH;
+    case OperationStatus.IN_FLIGHT:
+      return TxStatusMessage.IN_FLIGHT;
+    case OperationStatus.EXECUTED_SUCCESS:
+      return TxStatusMessage.EXECUTED_SUCCESS;
+    case OperationStatus.EXECUTED_FAILED:
+      return TxStatusMessage.EXECUTED_FAILED;
+    default:
+      return TxStatusMessage.SUBMITTING;
+  }
+}
 
 export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, progressBarStyles, textStyles }) => {
   const [progress, setProgress] = useState(0);
-  const [msg, setMsg] = useState<TxStatusMessage>("Submitting transaction to the bundler...");
+  const [msg, setMsg] = useState<TxStatusMessage>(TxStatusMessage.SUBMITTING);
 
   const getStatusURL = `${bundlerEndpoint}/operations/${operationID}`;
 
-  const onTxStatusUpdate = (txStatus: TransactionStatus) => {
-    console.log("transaction status is now", txStatus.toString());
-
-    switch (txStatus) {
-      case TransactionStatus.SUBMITTING:
-        setMsg("Submitting transaction to the bundler...");
-        break;
-      case TransactionStatus.QUEUED:
-        setMsg("Waiting to be included in a bundle...");
-        break;
-      case TransactionStatus.IN_BATCH:
-      case TransactionStatus.IN_FLIGHT:
-        setMsg("Waiting for the bundle to be executed...");
-        break;
-      case TransactionStatus.EXECUTED_SUCCESS:
-        setMsg("Transaction executed successfully!");
-        break;
-      case TransactionStatus.EXECUTED_FAILED:
-        setMsg("Transaction failed to execute");
-        break;
-    }
+  const onTxStatusUpdate = (operationStatus: OperationStatus) => {
+    console.log("transaction status is now", operationStatus.toString());
+    setMsg(getTxStatusMsg(operationStatus));
   };
 
   useEffect(() => {
@@ -84,32 +92,33 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
         .then((response) => response.json())
         .then((result) => {
           console.log("result", result);
-          switch (txStatusFromResString(result.status)) {
-            case TransactionStatus.QUEUED:
+          const status = parseOperationStatus(result.status);
+          switch (status) {
+            case OperationStatus.QUEUED:
+              setProgress(12);
+              break;
+            case OperationStatus.PRE_BATCH:
               setProgress(25);
-              onTxStatusUpdate(TransactionStatus.QUEUED);
               break;
-            case TransactionStatus.IN_BATCH:
+            case OperationStatus.IN_BATCH:
               setProgress(50);
-              onTxStatusUpdate(TransactionStatus.IN_BATCH);
               break;
-            case TransactionStatus.IN_FLIGHT:
+            case OperationStatus.IN_FLIGHT:
               setProgress(75);
-              onTxStatusUpdate(TransactionStatus.IN_FLIGHT);
               break;
-            case TransactionStatus.EXECUTED_SUCCESS:
+            case OperationStatus.EXECUTED_SUCCESS:
               setProgress(100);
               clearInterval(interval);
-              onTxStatusUpdate(TransactionStatus.EXECUTED_SUCCESS);
               break;
-            case TransactionStatus.EXECUTED_FAILED:
+            case OperationStatus.EXECUTED_FAILED:
               setProgress(100);
               clearInterval(interval);
-              onTxStatusUpdate(TransactionStatus.EXECUTED_FAILED);
               break;
             default: 
-              throw new Error("Invalid transaction status - should never happen!");
+             throw new Error("Invalid transaction status - should never happen!");
           }
+
+          onTxStatusUpdate(status);
         });
     }, POLL_INTERVAL);
 
