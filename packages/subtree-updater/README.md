@@ -43,7 +43,7 @@ One can additionally pass in optional arguments:
 1. Build the docker image by running `yarn build:docker`. This will build the subtree update circuit and witness generator if it hasn't been built yet
   * this will take a while (on the order of 30-40 minutes) in the event that the circuit needs to be built.
   * if the circuit ever changes, you need to manually rebuild it by running `yarn build:subtreeupdate` in `packages/circuits`.
-  * to build with the mock prover, run `yarn build:mock:docker`
+  * This may not work on some machines. If it doesn't, build it the mock prover with `yarn build:mock:docker`
 2. Make a `.env` file containing `SUBMITTER_SECRET_KEY` in the `packages/subtree-updater`. See `.env.example` for the format.
   * you can get a test secret key by running `yarn hh-node` from `packages/e2e-tests` and picking one of the test keys it prints out.
 3. Assuming you already have an RPC node running at `localhost:8545`, Run the container by running the following command from monorepo root:
