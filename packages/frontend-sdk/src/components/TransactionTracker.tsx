@@ -6,7 +6,6 @@ const POLL_INTERVAL = 1000; // Poll condition every 1 second
 export interface TransactionTrackerProps {
   bundlerEndpoint: string;
   operationID?: string;
-  progressBarStyles?: React.CSSProperties;
   textStyles?: React.CSSProperties;
 }
 
@@ -58,8 +57,7 @@ function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
   }
 }
 
-export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, progressBarStyles, textStyles }) => {
-  const [progress, setProgress] = useState(0);
+export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, textStyles }) => {
   const [msg, setMsg] = useState<TxStatusMessage>(TxStatusMessage.SUBMITTING);
 
   const getStatusURL = `${bundlerEndpoint}/operations/${operationID}`;
@@ -82,29 +80,9 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
         .then((result) => {
           console.log("result", result);
           const status = parseOperationStatus(result.status);
-          switch (status) {
-            case OperationStatus.QUEUED:
-              setProgress(12);
-              break;
-            case OperationStatus.PRE_BATCH:
-              setProgress(25);
-              break;
-            case OperationStatus.IN_BATCH:
-              setProgress(50);
-              break;
-            case OperationStatus.IN_FLIGHT:
-              setProgress(75);
-              break;
-            case OperationStatus.EXECUTED_SUCCESS:
-              setProgress(100);
-              clearInterval(interval);
-              break;
-            case OperationStatus.EXECUTED_FAILED:
-              setProgress(100);
-              clearInterval(interval);
-              break;
-            default: 
-             throw new Error("Invalid transaction status - should never happen!");
+
+          if (status === OperationStatus.EXECUTED_FAILED || status === OperationStatus.EXECUTED_SUCCESS) {
+            clearInterval(interval);
           }
 
           onTxStatusUpdate(status);
