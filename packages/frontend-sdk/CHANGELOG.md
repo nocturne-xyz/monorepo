@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Deposit form parses token amount in proper decimal amount
+- Add symbol/decimal fetching and display to balance display component
 - Abbreviate token addresses and show call sig instead of calldata for actions
 - Add `DepositForm` component
 - Add erc20/721/1155 JSON abis for token approvals

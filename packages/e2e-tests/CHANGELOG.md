@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Deposit script funds with proper decimal-based amount using parseEther
 - Deposit funds script sends ETH to test eth addrs
 - Fill batch with zeros in deposit script
 - Fix setup script regression post-upgrades, we only deploy contracts in setup script in e2e-tests, not hh-node
