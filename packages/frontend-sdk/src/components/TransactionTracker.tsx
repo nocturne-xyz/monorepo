@@ -7,6 +7,7 @@ export interface TransactionTrackerProps {
   bundlerEndpoint: string;
   operationID?: string;
   textStyles?: React.CSSProperties;
+  onComplete?: (status: OperationStatus) => void
 }
 
 function parseOperationStatus(status: string): OperationStatus {
@@ -57,7 +58,7 @@ function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
   }
 }
 
-export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, textStyles }) => {
+export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, textStyles, onComplete }) => {
   const [msg, setMsg] = useState<TxStatusMessage>(TxStatusMessage.SUBMITTING);
 
   const getStatusURL = `${bundlerEndpoint}/operations/${operationID}`;
@@ -83,6 +84,10 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
 
           if (status === OperationStatus.EXECUTED_FAILED || status === OperationStatus.EXECUTED_SUCCESS) {
             clearInterval(interval);
+
+            if (onComplete) {
+              onComplete(status);
+            }
           }
 
           onTxStatusUpdate(status);
@@ -95,7 +100,6 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
   return (
     <div className="transaction-tracker">
       <div className="progress-bar">
-        <div className="progress" style={{ ...progressBarStyles, width: `${progress}%`, height: 30}} />
         <span style={textStyles}>{msg}</span> 
       </div>
     </div>
