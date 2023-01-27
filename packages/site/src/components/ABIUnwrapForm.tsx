@@ -1,10 +1,18 @@
-import { JoinSplitRequest, AssetType, parseAssetType } from "@nocturne-xyz/sdk";
+import { AssetType, parseAssetType } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
+import {
+  getTokenDetails,
+  getWindowSigner,
+  formatTokenAmountEvmRepr,
+} from "@nocturne-xyz/frontend-sdk";
+import { JoinSplitRequestWithDecimals } from "../types/display";
 
 export interface ABIUnwrapFormProps {
-  handleJoinSplitRequest: (joinSplitRequest: JoinSplitRequest) => void;
+  handleJoinSplitRequest: (
+    joinSplitRequest: JoinSplitRequestWithDecimals
+  ) => void;
 }
 
 export const ABIUnwrapForm = ({
@@ -29,7 +37,7 @@ export const ABIUnwrapForm = ({
     setAmount(amount);
   };
 
-  const handleEnqueueUnwrapAsset = () => {
+  const handleEnqueueUnwrapAsset = async () => {
     if (!isAddress(assetAddress)) {
       alert("Invalid asset address");
       return;
@@ -43,21 +51,31 @@ export const ABIUnwrapForm = ({
       return;
     }
 
-    let unwrapValue;
+    let unwrapValueDecimals;
     try {
-      unwrapValue = BigInt(amount);
+      unwrapValueDecimals = Number(amount);
     } catch {
       alert("Invalid amount");
       return;
     }
 
-    const joinSplitRequest: JoinSplitRequest = {
-      asset: {
-        assetAddr: assetAddress,
-        id: assetType === AssetType.ERC20 ? 0n : id,
-        assetType: assetType,
+    const { decimals } = await getTokenDetails(
+      assetType,
+      assetAddress,
+      await getWindowSigner()
+    );
+    const unwrapValue = formatTokenAmountEvmRepr(unwrapValueDecimals, decimals);
+
+    const joinSplitRequest: JoinSplitRequestWithDecimals = {
+      joinSplitRequest: {
+        asset: {
+          assetAddr: assetAddress,
+          id: assetType === AssetType.ERC20 ? 0n : id,
+          assetType: assetType,
+        },
+        unwrapValue,
       },
-      unwrapValue,
+      decimals,
     };
 
     handleJoinSplitRequest(joinSplitRequest);
@@ -110,7 +128,7 @@ export const ABIUnwrapForm = ({
           />
         </label>
         <br /> <br />
-        <Button onClick={() => handleEnqueueUnwrapAsset()}>
+        <Button onClick={async () => await handleEnqueueUnwrapAsset()}>
           Add Asset to Unwrap
         </Button>
       </div>
