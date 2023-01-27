@@ -3,7 +3,6 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
-import "hardhat-ethernal";
 
 const config: HardhatUserConfig = {
   solidity: {

@@ -24,7 +24,7 @@ export async function largeQueryInChunks<T extends Result>(
     const rangeEvents = await contract.queryFilter(filter, from, finalTo);
     from = finalTo;
     events.push(...(rangeEvents as TypedEvent<T>[]));
-  } while (from <= to);
+  } while (from < to);
 
   return events;
 }
