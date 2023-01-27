@@ -175,6 +175,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Bob: Sync SDK notes manager");
     await nocturneContextBob.syncNotes();
 
+    const preOpNotesAlice = await notesDBAlice.getAllNotes();
+    console.log("Alice pre-op notes:", preOpNotesAlice);
+
     console.log("Alice: Sync SDK merkle prover");
     await nocturneContextAlice.syncLeaves();
 
@@ -225,7 +228,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await offchainChecks();
   }
 
-  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, spends one and unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PUB_VAL} to Bob privately`, async () => {
+  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately, leaving one ${
+    2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL - ALICE_TO_BOB_PRIV_VAL
+  } left for Alice`, async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       wallet,
@@ -291,8 +296,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       await nocturneContextAlice.syncNotes();
       const updatedNotesAlice = await notesDBAlice.getNotesFor(erc20Asset)!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
-      // alcie should have two nonzero notes total
+      // alice should have two nonzero notes total
       expect(nonZeroNotesAlice.length).to.equal(2);
+      console.log("Alice post-op notes:", nonZeroNotesAlice);
 
       // alice should have a note with refund value from public spendk
       let foundNotesAlice = nonZeroNotesAlice.filter(

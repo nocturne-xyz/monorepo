@@ -37,11 +37,13 @@ export class LocalNotesManager extends NotesManager {
       DEFAULT_START_BLOCK;
     const latestBlock = await this.provider.getBlockNumber();
 
+    console.log("Fetching notes from refunds...");
     const newRefunds = await fetchNotesFromRefunds(
       this.walletContract,
       lastSeen,
       latestBlock
     );
+    console.log("Fetched notes from refunds:", newRefunds);
 
     await this.db.kv.putNumber(
       REFUNDS_TENTATIVE_LAST_INDEXED_BLOCK,

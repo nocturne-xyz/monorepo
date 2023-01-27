@@ -3,6 +3,7 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-deploy";
 import { HardhatUserConfig } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-ethernal";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -26,6 +27,10 @@ const config: HardhatUserConfig = {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
       saveDeployments: false,
+      mining: {
+        auto: false,
+        interval: 5000,
+      },
     },
   },
 };

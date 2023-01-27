@@ -56,16 +56,6 @@ const Container = styled.div`
   }
 `;
 
-const Heading = styled.h1`
-  margin-top: 0;
-  margin-bottom: 2.4rem;
-  text-align: center;
-`;
-
-const Span = styled.span`
-  color: ${(props) => props.theme.colors.primary.default};
-`;
-
 const CardContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -184,7 +174,7 @@ const Index = () => {
     };
     const joinSplitRequest: JoinSplitRequest = {
       asset,
-      unwrapValue: 25n,
+      unwrapValue: 25_000_000_000n,
     };
 
     const refundAssets = [asset];
@@ -193,7 +183,7 @@ const Index = () => {
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [TOKEN_ADDRESS, 25n]
+        [TOKEN_ADDRESS, 25_000_000_000n]
       );
     const action: Action = {
       contractAddress: TOKEN_ADDRESS,
