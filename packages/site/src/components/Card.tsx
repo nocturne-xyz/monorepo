@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import styled from "styled-components";
 
 type CardProps = {
-  content: {
+  content?: {
     title: string;
     description: string;
   };
@@ -62,13 +62,22 @@ export const Card = ({
   fullWidth,
   children,
 }: CardProps) => {
-  const { title, description } = content;
-  return (
-    <CardWrapper fullWidth={fullWidth} disabled={disabled}>
-      <CardBackground />
-      <Title>{title}</Title>
-      <Description>{description}</Description>
-      {children}
-    </CardWrapper>
-  );
+  if (content) {
+    const { title, description } = content;
+    return (
+      <CardWrapper fullWidth={fullWidth} disabled={disabled}>
+        <CardBackground />
+        <Title>{title}</Title>
+        <Description>{description}</Description>
+        {children}
+      </CardWrapper>
+    );
+  } else {
+      return (
+        <CardWrapper fullWidth={fullWidth} disabled={disabled}>
+          <CardBackground />
+          {children}
+        </CardWrapper>
+      );
+  }
 };
