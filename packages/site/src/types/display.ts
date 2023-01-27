@@ -1,11 +1,11 @@
 import { Action, JoinSplitRequest } from "@nocturne-xyz/sdk";
 
-export interface ExtendedAction {
+export interface ActionWithSignature {
   action: Action;
   signature: string;
 }
 
-export interface ExtendedJoinSplitRequest {
+export interface JoinSplitRequestWithDecimals {
   joinSplitRequest: JoinSplitRequest;
   decimals: number;
 }

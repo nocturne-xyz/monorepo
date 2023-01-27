@@ -14,7 +14,10 @@ import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
 import { TxModal } from "../components/TxModal";
-import { ExtendedAction, ExtendedJoinSplitRequest } from "../types/display";
+import {
+  ActionWithSignature,
+  JoinSplitRequestWithDecimals,
+} from "../types/display";
 
 export type ABIFormProps = {
   sdk: NocturneFrontendSDK;
@@ -28,9 +31,9 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
   const [contractAddress, setContractAddress] = useState<string | undefined>(
     undefined
   );
-  const [actions, setActions] = useState<ExtendedAction[]>([]);
+  const [actions, setActions] = useState<ActionWithSignature[]>([]);
   const [joinSplitRequests, setJoinSplitRequests] = useState<
-    ExtendedJoinSplitRequest[]
+    JoinSplitRequestWithDecimals[]
   >([]);
   const [refundAssets, setRefundAssets] = useState<Asset[]>([]);
   const [_state, dispatch] = useContext(MetaMaskContext);
@@ -60,12 +63,12 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
     setABI(abi);
   };
 
-  const handleAction = (action: ExtendedAction) => {
+  const handleAction = (action: ActionWithSignature) => {
     setActions([...actions, action]);
   };
 
   const handleJoinSplitRequest = (
-    joinSplitRequest: ExtendedJoinSplitRequest
+    joinSplitRequest: JoinSplitRequestWithDecimals
   ) => {
     setJoinSplitRequests([...joinSplitRequests, joinSplitRequest]);
   };

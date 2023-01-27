@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { ABIItem, ABIValue } from "../utils/abiParser";
 import { ethers } from "ethers";
 import * as _ from "lodash";
-import { ExtendedAction } from "../types/display";
+import { ActionWithSignature } from "../types/display";
 
 type ABIInteractionFormProps = {
   abi: ABIItem[];
   contractAddress: string;
-  handleAction: (action: ExtendedAction) => void;
+  handleAction: (action: ActionWithSignature) => void;
 };
 
 export const ABIInteractionForm: React.FC<ABIInteractionFormProps> = ({

@@ -7,10 +7,12 @@ import {
   getWindowSigner,
   formatTokenAmountEvmRepr,
 } from "@nocturne-xyz/frontend-sdk";
-import { ExtendedJoinSplitRequest } from "../types/display";
+import { JoinSplitRequestWithDecimals } from "../types/display";
 
 export interface ABIUnwrapFormProps {
-  handleJoinSplitRequest: (joinSplitRequest: ExtendedJoinSplitRequest) => void;
+  handleJoinSplitRequest: (
+    joinSplitRequest: JoinSplitRequestWithDecimals
+  ) => void;
 }
 
 export const ABIUnwrapForm = ({
@@ -64,7 +66,7 @@ export const ABIUnwrapForm = ({
     );
     const unwrapValue = formatTokenAmountEvmRepr(unwrapValueDecimals, decimals);
 
-    const joinSplitRequest: ExtendedJoinSplitRequest = {
+    const joinSplitRequest: JoinSplitRequestWithDecimals = {
       joinSplitRequest: {
         asset: {
           assetAddr: assetAddress,
