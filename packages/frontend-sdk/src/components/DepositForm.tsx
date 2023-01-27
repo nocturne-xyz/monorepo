@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
 import { NocturneFrontendSDK } from "../sdk";
+import { getTokenDetails, parseToTokenUnits } from "../common";
 
 export interface DepositFormProps {
   sdk: NocturneFrontendSDK;
@@ -50,7 +51,14 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
       return;
     }
 
-    await sdk.depositFunds(assetType, assetAddress, id, value);
+    const { decimals } = await getTokenDetails(
+      assetType,
+      assetAddress,
+      sdk.walletContract.provider
+    );
+    const tokenUnitsValue = parseToTokenUnits(value, decimals);
+
+    await sdk.depositFunds(assetType, assetAddress, id, tokenUnitsValue);
   };
 
   return (

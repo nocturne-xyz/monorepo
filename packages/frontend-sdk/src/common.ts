@@ -4,6 +4,11 @@ import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
 import ERC1155 from "./abis/ERC1155.json";
 
+export interface TokenDetails {
+  decimals: number;
+  symbol: string;
+}
+
 export const DEFAULT_SNAP_ORIGIN =
   process.env.REACT_APP_SNAP_ORIGIN ?? `local:http://localhost:8080`;
 
@@ -30,6 +35,42 @@ export function getTokenContract(
   }
 
   return new ethers.Contract(assetAddress, abi, signerOrProvider);
+}
+
+export async function getTokenDetails(
+  assetType: AssetType,
+  assetAddress: Address,
+  signerOrProvider: ethers.Signer | ethers.providers.Provider
+): Promise<TokenDetails> {
+  console.log("Getting token contract...");
+  const tokenContract = getTokenContract(
+    assetType,
+    assetAddress,
+    signerOrProvider
+  );
+
+  if (assetType == AssetType.ERC20) {
+    const decimals = await tokenContract.decimals();
+    const symbol = await tokenContract.symbol();
+    return { decimals, symbol };
+  } else if (assetType == AssetType.ERC721) {
+    const symbol = await tokenContract.symbol();
+    return { decimals: 1, symbol };
+  } else if (assetType == AssetType.ERC1155) {
+    return { decimals: 1, symbol: "" };
+  } else {
+    throw new Error(`Unknown asset variant: ${assetType}`);
+  }
+}
+
+export function formatDecimals(balance: bigint, decimals: number): string {
+  return Number.parseFloat(
+    (balance / BigInt(Math.pow(10, decimals))).toString()
+  ).toString();
+}
+
+export function parseToTokenUnits(amount: bigint, decimals: number): bigint {
+  return amount * BigInt(Math.pow(10, decimals));
 }
 
 export function formatAbbreviatedAddress(address: string): string {

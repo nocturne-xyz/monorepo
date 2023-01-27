@@ -50,14 +50,17 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       console.log(`Sending ETH and tokens to ${addr}`);
       await depositor.sendTransaction({
         to: addr,
-        value: ethers.utils.parseEther("1.0"),
+        value: ethers.utils.parseEther("10.0"),
       });
-      await token.reserveTokens(addr, 5_000_000_000_000_000);
+      await token.reserveTokens(addr, ethers.utils.parseEther("10.0"));
     }
 
     // Reserve and approve tokens for nocturne addr depositor
-    await token.connect(depositor).reserveTokens(depositor.address, 100000000);
-    await token.connect(depositor).approve(vault.address, 100000000);
+    const reserveAmount = ethers.utils.parseEther("100.0");
+    await token
+      .connect(depositor)
+      .reserveTokens(depositor.address, reserveAmount);
+    await token.connect(depositor).approve(vault.address, reserveAmount);
   }
 
   const encodedAssets = tokens
@@ -73,6 +76,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     NocturneAddressTrait.fromCanonAddress
   );
 
+  const perNoteAmount = ethers.utils.parseEther("10.0");
   for (const { encodedAssetAddr, encodedAssetId } of encodedAssets) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
@@ -82,7 +86,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
           encodedAssetAddr,
           encodedAssetId,
           spender: depositor.address,
-          value: 100n,
+          value: perNoteAmount,
           depositAddr: addr,
         },
         {
