@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
 import { NocturneFrontendSDK } from "../sdk";
-import { getTokenDetails, parseToTokenUnits } from "../common";
+import { getTokenDetails, formatTokenAmountEvmRepr } from "../common";
 
 export interface DepositFormProps {
   sdk: NocturneFrontendSDK;
@@ -45,7 +45,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
 
     let value;
     try {
-      value = BigInt(amount);
+      value = Number(amount);
     } catch {
       alert("Invalid amount");
       return;
@@ -56,7 +56,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
       assetAddress,
       sdk.walletContract.provider
     );
-    const tokenUnitsValue = parseToTokenUnits(value, decimals);
+    const tokenUnitsValue = formatTokenAmountEvmRepr(value, decimals);
 
     await sdk.depositFunds(assetType, assetAddress, id, tokenUnitsValue);
   };

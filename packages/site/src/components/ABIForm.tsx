@@ -7,21 +7,14 @@ import {
   NocturneFrontendSDK,
   formatAbbreviatedAddress,
   BundlerOperationID,
+  formatTokenAmountUserRepr,
 } from "@nocturne-xyz/frontend-sdk";
-import {
-  Action,
-  Asset,
-  JoinSplitRequest,
-  OperationRequest,
-} from "@nocturne-xyz/sdk";
+import { Asset, OperationRequest } from "@nocturne-xyz/sdk";
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
 import { TxModal } from "../components/TxModal";
-
-export interface ExtendedAction extends Action {
-  signature: string;
-}
+import { ExtendedAction, ExtendedJoinSplitRequest } from "../types/display";
 
 export type ABIFormProps = {
   sdk: NocturneFrontendSDK;
@@ -37,7 +30,7 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
   );
   const [actions, setActions] = useState<ExtendedAction[]>([]);
   const [joinSplitRequests, setJoinSplitRequests] = useState<
-    JoinSplitRequest[]
+    ExtendedJoinSplitRequest[]
   >([]);
   const [refundAssets, setRefundAssets] = useState<Asset[]>([]);
   const [_state, dispatch] = useContext(MetaMaskContext);
@@ -71,7 +64,9 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
     setActions([...actions, action]);
   };
 
-  const handleJoinSplitRequest = (joinSplitRequest: JoinSplitRequest) => {
+  const handleJoinSplitRequest = (
+    joinSplitRequest: ExtendedJoinSplitRequest
+  ) => {
     setJoinSplitRequests([...joinSplitRequests, joinSplitRequest]);
   };
 
@@ -81,9 +76,9 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
 
   const submitOperation = async () => {
     const operationRequest: OperationRequest = {
-      joinSplitRequests,
+      joinSplitRequests: joinSplitRequests.map((j) => j.joinSplitRequest),
       refundAssets,
-      actions,
+      actions: actions.map((a) => a.action),
     };
 
     console.log("Operation request:", operationRequest);
@@ -162,8 +157,8 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {joinSplitRequests.map(({ asset, unwrapValue }) => (
-                    <tr key={asset.assetAddr}>
+                  {joinSplitRequests.map(({ joinSplitRequest, decimals }) => (
+                    <tr key={joinSplitRequest.asset.assetAddr}>
                       <td
                         style={{
                           textAlign: "left",
@@ -172,10 +167,15 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
                           paddingRight: "50px",
                         }}
                       >
-                        {formatAbbreviatedAddress(asset.assetAddr)}
+                        {formatAbbreviatedAddress(
+                          joinSplitRequest.asset.assetAddr
+                        )}
                       </td>
                       <td style={{ textAlign: "left" }}>
-                        {unwrapValue.toString()}
+                        {formatTokenAmountUserRepr(
+                          joinSplitRequest.unwrapValue,
+                          decimals
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -235,29 +235,27 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
                 </tr>
               </thead>
               <tbody>
-                {actions.map(
-                  ({ contractAddress, encodedFunction, signature }) => (
-                    <tr key={encodedFunction}>
-                      <td
-                        style={{
-                          textAlign: "left",
-                          color: "#ADD8E6",
-                          cursor: "pointer",
-                          paddingRight: "50px",
-                        }}
+                {actions.map(({ action, signature }) => (
+                  <tr key={action.encodedFunction}>
+                    <td
+                      style={{
+                        textAlign: "left",
+                        color: "#ADD8E6",
+                        cursor: "pointer",
+                        paddingRight: "50px",
+                      }}
+                    >
+                      {formatAbbreviatedAddress(contractAddress)}
+                    </td>
+                    <td style={{ textAlign: "left", overflow: "hidden" }}>
+                      <div
+                        style={{ maxWidth: "200px", wordWrap: "break-word" }}
                       >
-                        {formatAbbreviatedAddress(contractAddress)}
-                      </td>
-                      <td style={{ textAlign: "left", overflow: "hidden" }}>
-                        <div
-                          style={{ maxWidth: "200px", wordWrap: "break-word" }}
-                        >
-                          <p>{signature}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                )}
+                        <p>{signature}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           }

@@ -63,14 +63,18 @@ export async function getTokenDetails(
   }
 }
 
-export function formatDecimals(balance: bigint, decimals: number): string {
-  return Number.parseFloat(
-    (balance / BigInt(Math.pow(10, decimals))).toString()
-  ).toString();
+export function formatTokenAmountUserRepr(
+  balance: bigint,
+  decimals: number
+): number {
+  return Number(balance) / Math.pow(10, decimals);
 }
 
-export function parseToTokenUnits(amount: bigint, decimals: number): bigint {
-  return amount * BigInt(Math.pow(10, decimals));
+export function formatTokenAmountEvmRepr(
+  amount: number,
+  decimals: number
+): bigint {
+  return BigInt(amount * Math.pow(10, decimals));
 }
 
 export function formatAbbreviatedAddress(address: string): string {

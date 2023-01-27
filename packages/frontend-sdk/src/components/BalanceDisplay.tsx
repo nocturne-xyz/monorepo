@@ -2,7 +2,7 @@ import { Address, AssetWithBalance } from "@nocturne-xyz/sdk";
 import React, { useState, useEffect } from "react";
 import {
   formatAbbreviatedAddress,
-  formatDecimals,
+  formatTokenAmountUserRepr,
   getTokenDetails,
   TokenDetails,
 } from "../common";
@@ -82,7 +82,10 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
               {balance.abbreviatedAddress.toLowerCase()}
             </td>
             <td style={{ textAlign: "left" }}>
-              {formatDecimals(balance.balance, balance.tokenDetails.decimals)}
+              {formatTokenAmountUserRepr(
+                balance.balance,
+                balance.tokenDetails.decimals
+              ).toString()}
             </td>
           </tr>
         ))}
