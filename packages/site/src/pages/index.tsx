@@ -33,6 +33,7 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
   BundlerOperationID,
+  formatTokenAmountEvmRepr,
 } from "@nocturne-xyz/frontend-sdk";
 import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
@@ -54,16 +55,6 @@ const Container = styled.div`
     margin-bottom: 2rem;
     width: auto;
   }
-`;
-
-const Heading = styled.h1`
-  margin-top: 0;
-  margin-bottom: 2.4rem;
-  text-align: center;
-`;
-
-const Span = styled.span`
-  color: ${(props) => props.theme.colors.primary.default};
 `;
 
 const CardContainer = styled.div`
@@ -184,7 +175,7 @@ const Index = () => {
     };
     const joinSplitRequest: JoinSplitRequest = {
       asset,
-      unwrapValue: 25n,
+      unwrapValue: formatTokenAmountEvmRepr(2.5, 18),
     };
 
     const refundAssets = [asset];
@@ -193,7 +184,7 @@ const Index = () => {
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [TOKEN_ADDRESS, 25n]
+        [TOKEN_ADDRESS, formatTokenAmountEvmRepr(2.5, 18)]
       );
     const action: Action = {
       contractAddress: TOKEN_ADDRESS,

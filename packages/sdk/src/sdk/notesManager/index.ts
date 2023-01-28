@@ -41,6 +41,8 @@ export abstract class NotesManager {
     const ownedNotes = newNotes.filter((refund) => {
       return this.signer.testOwn(refund.owner);
     });
+    console.log("[Refunds] Fetched notes:", newNotes);
+    console.log("[Refunds] Owned notes:", ownedNotes);
     await this.storeNewNotesFromRefunds(ownedNotes);
     await this.postStoreNotesFromRefunds();
   }
@@ -67,14 +69,14 @@ export abstract class NotesManager {
         e.joinSplitTx.encodedAsset.encodedAssetId
       );
 
-      this.processNoteTransmission(
+      await this.processNoteTransmission(
         e.joinSplitTx.newNoteACommitment,
         e.joinSplitTx.newNoteATransmission,
         e.newNoteAIndex,
         asset
       );
 
-      this.processNoteTransmission(
+      await this.processNoteTransmission(
         e.joinSplitTx.newNoteBCommitment,
         e.joinSplitTx.newNoteBTransmission,
         e.newNoteBIndex,
@@ -102,6 +104,7 @@ export abstract class NotesManager {
         newNote.value > 0n &&
         NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
+        console.log("Storing new note:", newNote);
         await this.db.storeNote(newNote);
       }
     }
@@ -109,6 +112,7 @@ export abstract class NotesManager {
 
   async fetchAndApplyNewJoinSplits(): Promise<void> {
     const newJoinSplits = await this.fetchJoinSplits();
+    console.log("[JoinSplits] New joinsplits:", newJoinSplits);
     await this.applyNewJoinSplits(newJoinSplits);
     await this.postApplyJoinSplits();
   }

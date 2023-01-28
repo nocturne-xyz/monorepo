@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Check if bundler payout > 0 tokens and only call transfer if so
 - fix loop index bug in `extractJoinSplitProofsAndPis`
 - fix contract calculating opDigest differently from frontend
 - put forge deps install script into this package

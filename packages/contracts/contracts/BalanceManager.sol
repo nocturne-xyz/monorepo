@@ -190,16 +190,18 @@ contract BalanceManager is
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetAmount = op.maxGasAssetCost();
 
-        // Request reserved gasAssetAmount from vault.
-        /// @dev This is safe because _processJoinSplitTxsReservingFee is
-        /// guaranteed to have reserved gasAssetAmount since it didn't throw.
-        _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+        if (gasAssetAmount > 0) {
+            // Request reserved gasAssetAmount from vault.
+            /// @dev This is safe because _processJoinSplitTxsReservingFee is
+            /// guaranteed to have reserved gasAssetAmount since it didn't throw.
+            _vault.requestAsset(encodedGasAsset, gasAssetAmount);
 
-        uint256 bundlerPayout = WalletUtils.calculateBundlerGasAssetPayout(
-            op,
-            opResult
-        );
-        AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
+            uint256 bundlerPayout = WalletUtils.calculateBundlerGasAssetPayout(
+                op,
+                opResult
+            );
+            AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
+        }
     }
 
     /**
