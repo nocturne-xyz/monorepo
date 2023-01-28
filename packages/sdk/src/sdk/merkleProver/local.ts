@@ -43,9 +43,10 @@ export class LocalMerkleProver extends MerkleProver {
   static async fromDb(
     merkleAddress: Address,
     provider: ethers.providers.Provider,
-    db: MerkleDB
+    db: MerkleDB,
+    opts?: LocalMerkleProverOpts
   ): Promise<LocalMerkleProver> {
-    const self = new LocalMerkleProver(merkleAddress, provider, db);
+    const self = new LocalMerkleProver(merkleAddress, provider, db, opts);
 
     for await (const leaf of db.iterLeaves()) {
       self.localTree.insert(leaf);
