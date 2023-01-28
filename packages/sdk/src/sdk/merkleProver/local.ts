@@ -11,16 +11,22 @@ import { fetchInsertions } from "../../indexing";
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
+export interface LocalMerkleProverOpts {
+  startBlock?: number;
+}
+
 export class LocalMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
   protected contract: Wallet;
   protected provider: ethers.providers.Provider;
   protected db: MerkleDB;
+  protected startBlock: number;
 
   constructor(
     walletContractAddress: Address,
     provider: ethers.providers.Provider,
-    db: MerkleDB
+    db: MerkleDB,
+    opts?: LocalMerkleProverOpts
   ) {
     super();
 
@@ -31,6 +37,7 @@ export class LocalMerkleProver extends MerkleProver {
       this.provider
     );
     this.db = db;
+    this.startBlock = opts?.startBlock ?? DEFAULT_START_BLOCK;
   }
 
   static async fromDb(
@@ -63,7 +70,7 @@ export class LocalMerkleProver extends MerkleProver {
     // TODO: load default from network-specific config
     const nextBlockToIndex =
       (await this.db.kv.getNumber(MERKLE_NEXT_BLOCK_TO_INDEX)) ??
-      DEFAULT_START_BLOCK;
+      this.startBlock;
     const latestBlock = await this.provider.getBlockNumber();
 
     const newLeaves = await this.fetchNewLeaves(nextBlockToIndex, latestBlock);

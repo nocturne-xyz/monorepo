@@ -5,7 +5,14 @@ export interface ProxiedContract {
   implementationAddress: string;
 }
 
+export interface Network {
+  name: string;
+  chainId: number;
+}
+
 export interface NocturneDeployment {
+  network: Network;
+  startBlock: number;
   proxyAdminOwner: string;
   proxyAdmin: string;
   walletProxy: ProxiedContract;

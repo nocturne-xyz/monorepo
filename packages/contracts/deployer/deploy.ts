@@ -26,6 +26,9 @@ export async function deployNocturne(
     provider = ethers.providers.getDefaultProvider(rpcUrl);
   }
 
+  const { name, chainId } = await provider.getNetwork();
+  const startBlock = await provider.getBlockNumber();
+
   const deployer = new ethers.Wallet(deployerKey, provider);
 
   // Maybe deploy proxy admin
@@ -128,6 +131,11 @@ export async function deployNocturne(
   console.log('\nTransfered proxy admin ownership to:', proxyAdminOwner);
 
   return {
+    network: {
+      name,
+      chainId,
+    },
+    startBlock,
     proxyAdminOwner,
     proxyAdmin: proxyAdmin.address,
     walletProxy: {
