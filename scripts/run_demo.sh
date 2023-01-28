@@ -28,7 +28,8 @@ yarn start &
 SITE_PID=$!
 popd
 
-# start the snap
+# start the snap, we assume dev has hardcoded the snap RPC_URL to point to 
+# correct network (so as to not expose API keys in this script)
 pushd snap
 yarn install
 yarn build
@@ -38,14 +39,10 @@ popd
 
 sleep 3
 
-read BUNDLER_SUBMITTER_PRIVATE_KEY< <(grep -A1 "Account #15" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
-read SUBTREE_UPDATER_SUBMITTER_PRIVATE_KEY< <(grep -A1 "Account #16" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
-popd
-
 # bundler default config variables
 REDIS_URL="redis://redis:6379"
 REDIS_PASSWORD="baka"
-RPC_URL="http://host.docker.internal:8545"
+RPC_URL=<RPC_URL>
 BUNDLER_PORT="3000"
 
 # clear redis if it exists 
@@ -59,7 +56,7 @@ BUNDLER_PID=$!
 echo "Bundler running at PID: $BUNDLER_PID"
 
 # run subtree updater
-docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network http://host.docker.internal:8545 &> "$LOG_DIR/subtree-updater" &
+docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network "$RPC_URL" &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"
