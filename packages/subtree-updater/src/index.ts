@@ -181,9 +181,9 @@ export class SubtreeUpdater {
 
   // TODO: replace plain DB with new put/get numbers in KvDB
   private async getNextBlockToIndex(): Promise<number> {
-    const nextBlockToIndexsStr = await this.db.get(NEXT_BLOCK_TO_INDEX_KEY);
-    return nextBlockToIndexsStr
-      ? parseInt(nextBlockToIndexsStr)
+    const nextBlockToIndexStr = await this.db.get(NEXT_BLOCK_TO_INDEX_KEY);
+    return nextBlockToIndexStr
+      ? parseInt(nextBlockToIndexStr)
       : this.indexingStartBlock;
   }
 

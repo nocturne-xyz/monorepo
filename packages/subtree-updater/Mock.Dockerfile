@@ -10,8 +10,6 @@ COPY yarn.lock .
 COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
-COPY packages/circuits packages/circuits
-COPY circuit-artifacts circuit-artifacts
 
 RUN corepack enable
 RUN yarn install

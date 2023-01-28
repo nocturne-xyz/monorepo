@@ -47,12 +47,12 @@ export default async function main(): Promise<void> {
     .option(
       "--network <string>",
       "network to connect to",
-      "https://localhost:8545"
+      "https://localhost:8545" // TODO: this is an secret for env var
     )
     .option(
       "--indexing-start-block <number>",
       "block to start indexing at",
-      "0"
+      parseInt
     )
     .option("--dbPath <string>", "path to the store DB files", "./db");
 
@@ -77,7 +77,7 @@ export default async function main(): Promise<void> {
     throw new Error("SUBMITTER_SECRET_KEY env var not set");
   }
 
-  const provider = ethers.getDefaultProvider(network);
+  const provider = new ethers.providers.JsonRpcProvider(network);
   const signer = new ethers.Wallet(submitterSecretKey, provider);
 
   let prover;
