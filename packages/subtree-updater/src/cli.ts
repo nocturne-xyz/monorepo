@@ -23,6 +23,10 @@ export default async function main(): Promise<void> {
       "--vkey-path <string>",
       "path to `vkey.json`, the verification key for the subtree update circuit"
     )
+    .requiredOption(
+      "--interval <string>",
+      "polling interval for checking for state and attempting to submit proofs"
+    )
     .option(
       "--use-mock-prover",
       "use a mock prover instead of rapidsnark. This is useful for testing"
@@ -45,6 +49,11 @@ export default async function main(): Promise<void> {
       "network to connect to",
       "https://localhost:8545"
     )
+    .option(
+      "--indexing-start-block <number>",
+      "block to start indexing at",
+      "0"
+    )
     .option("--dbPath <string>", "path to the store DB files", "./db");
 
   program.parse();
@@ -59,6 +68,8 @@ export default async function main(): Promise<void> {
     witnessGeneratorPath,
     walletAddress,
     useMockProver,
+    interval,
+    indexingStartBlock,
   } = program.opts();
 
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
@@ -87,7 +98,14 @@ export default async function main(): Promise<void> {
     );
   }
 
-  const server = new SubtreeUpdateServer(prover, walletAddress, dbPath, signer);
+  const server = new SubtreeUpdateServer(
+    prover,
+    walletAddress,
+    dbPath,
+    signer,
+    interval,
+    { indexingStartBlock }
+  );
 
   await server.start();
 }

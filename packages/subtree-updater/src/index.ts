@@ -10,7 +10,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { RootDatabase, Database } from "lmdb";
 import { Wallet } from "@nocturne-xyz/contracts";
-import { SubtreeUpdateSubmitter, SyncSubtreeSubmitter } from "./submitter";
+import { SubtreeUpdateSubmitter } from "./submitter";
 import * as JSON from "bigint-json-serialization";
 
 export { SubtreeUpdateServer } from "./server";
@@ -37,6 +37,10 @@ function insertionKey(idx: number) {
   return `${INSERTION_PREFIX}${numberToStringPadded(idx, 64)}`;
 }
 
+export interface SubtreeUpdaterOpts {
+  indexingStartBlock?: number;
+}
+
 interface SubtreeUpdateBatch {
   batch: (Note | bigint)[];
   newRoot: bigint;
@@ -52,12 +56,14 @@ export class SubtreeUpdater {
   private insertions: (Note | bigint)[];
   private batches: SubtreeUpdateBatch[];
   private tree: BinaryPoseidonTree;
+  private indexingStartBlock: number;
 
   constructor(
     walletContract: Wallet,
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
-    submitter: SubtreeUpdateSubmitter = new SyncSubtreeSubmitter(walletContract)
+    submitter: SubtreeUpdateSubmitter,
+    opts?: SubtreeUpdaterOpts
   ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
@@ -68,6 +74,7 @@ export class SubtreeUpdater {
     this.tree = new BinaryPoseidonTree();
 
     this.submitter = submitter;
+    this.indexingStartBlock = opts?.indexingStartBlock ?? 0;
   }
 
   public async init(): Promise<void> {
@@ -172,15 +179,17 @@ export class SubtreeUpdater {
     return madeBatch;
   }
 
+  // TODO: replace plain DB with new put/get numbers in KvDB
   private async getNextBlockToIndex(): Promise<number> {
-    const nextBlockToIndexStr =
-      (await this.db.get(NEXT_BLOCK_TO_INDEX_KEY)) ?? "0";
-    return parseInt(nextBlockToIndexStr);
+    const nextBlockToIndexsStr = await this.db.get(NEXT_BLOCK_TO_INDEX_KEY);
+    return nextBlockToIndexsStr
+      ? parseInt(nextBlockToIndexsStr)
+      : this.indexingStartBlock;
   }
 
   private async getNextInsertionIndex(): Promise<number> {
-    const indexStr = (await this.db.get(NEXT_INSERTION_INDEX_KEY)) ?? "0";
-    return parseInt(indexStr);
+    const indexStr = await this.db.get(NEXT_INSERTION_INDEX_KEY);
+    return indexStr ? parseInt(indexStr) : this.indexingStartBlock;
   }
 
   private async getLastCommittedIndex(): Promise<number | undefined> {
