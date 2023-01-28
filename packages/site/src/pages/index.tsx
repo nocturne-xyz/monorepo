@@ -33,6 +33,7 @@ import {
   loadNocturneFrontendSDK,
   NocturneFrontendSDK,
   BundlerOperationID,
+  formatTokenAmountEvmRepr,
 } from "@nocturne-xyz/frontend-sdk";
 import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
@@ -174,7 +175,7 @@ const Index = () => {
     };
     const joinSplitRequest: JoinSplitRequest = {
       asset,
-      unwrapValue: 25_000_000_000n,
+      unwrapValue: formatTokenAmountEvmRepr(2.5, 18),
     };
 
     const refundAssets = [asset];

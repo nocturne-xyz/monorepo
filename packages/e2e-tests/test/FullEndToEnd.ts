@@ -228,9 +228,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await offchainChecks();
   }
 
-  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately, leaving one ${
-    2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL - ALICE_TO_BOB_PRIV_VAL
-  } left for Alice`, async () => {
+  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       wallet,
