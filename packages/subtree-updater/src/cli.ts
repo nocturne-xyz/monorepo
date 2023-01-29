@@ -23,7 +23,7 @@ export default async function main(): Promise<void> {
       "--vkey-path <string>",
       "path to `vkey.json`, the verification key for the subtree update circuit"
     )
-    .requiredOption(
+    .option(
       "--interval <number>",
       "polling interval for checking for state and attempting to submit proofs",
       parseInt
@@ -46,11 +46,6 @@ export default async function main(): Promise<void> {
       "./prover-tmp"
     )
     .option(
-      "--network <string>",
-      "network to connect to",
-      "https://localhost:8545" // TODO: this is an secret for env var
-    )
-    .option(
       "--indexing-start-block <number>",
       "block to start indexing at",
       parseInt
@@ -61,7 +56,6 @@ export default async function main(): Promise<void> {
 
   const {
     tmpDir,
-    network,
     dbPath,
     zkeyPath,
     vkeyPath,
@@ -73,12 +67,17 @@ export default async function main(): Promise<void> {
     indexingStartBlock,
   } = program.opts();
 
+  const rpcUrl = process.env.RPC_URL;
+  if (rpcUrl === undefined) {
+    throw new Error("RPC_URL env var not set");
+  }
+
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
   if (submitterSecretKey === undefined) {
     throw new Error("SUBMITTER_SECRET_KEY env var not set");
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(network);
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const signer = new ethers.Wallet(submitterSecretKey, provider);
 
   let prover;
