@@ -37,10 +37,6 @@ function insertionKey(idx: number) {
   return `${INSERTION_PREFIX}${numberToStringPadded(idx, 64)}`;
 }
 
-export interface SubtreeUpdaterOpts {
-  indexingStartBlock?: number;
-}
-
 interface SubtreeUpdateBatch {
   batch: (Note | bigint)[];
   newRoot: bigint;
@@ -63,7 +59,7 @@ export class SubtreeUpdater {
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
     submitter: SubtreeUpdateSubmitter,
-    opts?: SubtreeUpdaterOpts
+    indexingStartBlock: number = 0
   ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
@@ -75,7 +71,7 @@ export class SubtreeUpdater {
 
     this.submitter = submitter;
 
-    this.indexingStartBlock = opts?.indexingStartBlock ?? 0;
+    this.indexingStartBlock = indexingStartBlock;
     console.log("Indexing start block:", this.indexingStartBlock);
   }
 

@@ -16,7 +16,7 @@ export default async function main(): Promise<void> {
       "address of the wallet contract"
     )
     .requiredOption(
-      "--zkey-path <stirng>",
+      "--zkey-path <string>",
       "path to `subtreeupdate.zkey`, i.e. the proving key for the subtree update circuit"
     )
     .requiredOption(
@@ -24,8 +24,9 @@ export default async function main(): Promise<void> {
       "path to `vkey.json`, the verification key for the subtree update circuit"
     )
     .requiredOption(
-      "--interval <string>",
-      "polling interval for checking for state and attempting to submit proofs"
+      "--interval <number>",
+      "polling interval for checking for state and attempting to submit proofs",
+      parseInt
     )
     .option(
       "--use-mock-prover",
@@ -103,8 +104,7 @@ export default async function main(): Promise<void> {
     walletAddress,
     dbPath,
     signer,
-    interval,
-    { indexingStartBlock }
+    { indexingStartBlock, interval }
   );
 
   await server.start();
