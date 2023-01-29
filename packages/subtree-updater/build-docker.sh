@@ -22,20 +22,18 @@ if [ ! -d "$ROOT_DIR/circuit-artifacts/subtreeupdate/" ]; then
     popd
 fi
 
+if [ ! -z "$IS_MOCK" ]; then
+    echo "building mock subtree-updater"
+    docker build -t mock-subtree-updater -f ./packages/subtree-updater/Mock.Dockerfile .
+    exit 0
+fi
+
 if [[ $(uname -m) == 'arm64' ]]; then
 	echo "dected arm64, building using docker buildx..."
 
-    if [ -z "$IS_MOCK" ]; then
-        docker buildx build --platform linux/amd64 -t rapidsnark ./rapidsnark
-        docker buildx build --platform linux/amd64 -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
-    else 
-        docker buildx build --platform linux/amd64 -t mock-subtree-updater -f ./packages/subtree-updater/Mock.Dockerfile .
-    fi
+    docker buildx build --platform linux/amd64 -t rapidsnark ./rapidsnark
+    docker buildx build --platform linux/amd64 -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
 else
-    if [ -z "$IS_MOCK" ]; then
-        docker build -t rapidsnark ./rapidsnark
-        docker build -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
-    else 
-        docker build -t mock-subtree-updater -f ./packages/subtree-updater/Mock.Dockerfile .
-    fi
+    docker build -t rapidsnark ./rapidsnark
+    docker build -t subtree-updater -f ./packages/subtree-updater/Dockerfile .
 fi
