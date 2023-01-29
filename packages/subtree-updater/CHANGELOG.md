@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- change `build_docker.sh` to avoid `docker buildx` when building mock subtree updater
 - add `yarn build:mock:docker` script and corresponding functionality in `build_docker.sh`
 - create separate subtree updater dockerfile that doesn't use rapidsnark
 - change CLI to allow using mock subtree update prover
