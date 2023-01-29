@@ -9,11 +9,11 @@ import * as fs from 'fs';
   if (!proxyAdminOwner)
     throw new Error('Deploy script missing proxy admin owner address');
 
-  const mockSubtreeUpdateVerifier =
-    process.env.MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
+  const useMockSubtreeUpdateVerifier =
+    process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
 
   const deployment = await deployNocturne(network, proxyAdminOwner, {
-    mockSubtreeUpdateVerifier,
+    useMockSubtreeUpdateVerifier,
   });
   console.log(deployment);
 

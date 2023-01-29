@@ -24,6 +24,6 @@ export interface NocturneDeployment {
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
   provider?: any; // FIX: ts build within hh disallows ethers.providers.Provider
-  mockSubtreeUpdateVerifier?: boolean;
+  useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
 }

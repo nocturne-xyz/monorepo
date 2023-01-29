@@ -72,7 +72,7 @@ export async function deployNocturne(
   // Deploy SubtreeUpdateVerifier
   console.log('\nDeploying SubtreeUpdateVerifier');
   let SubtreeUpdateVerifier;
-  if (opts?.mockSubtreeUpdateVerifier) {
+  if (opts?.useMockSubtreeUpdateVerifier) {
     SubtreeUpdateVerifier = new TestSubtreeUpdateVerifier__factory(deployer);
   } else {
     SubtreeUpdateVerifier = new SubtreeUpdateVerifier__factory(deployer);
