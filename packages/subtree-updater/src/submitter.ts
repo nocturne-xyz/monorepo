@@ -1,5 +1,6 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
+import { Mutex } from "async-mutex";
 
 export interface SubtreeUpdateSubmitter {
   submitProof(
@@ -7,6 +8,7 @@ export interface SubtreeUpdateSubmitter {
     newRoot: bigint,
     subtreeIndex: number
   ): Promise<void>;
+  fillBatch(): Promise<void>;
   dropDB(): Promise<void>;
 }
 
@@ -15,18 +17,22 @@ export interface SubtreeUpdateSubmitter {
 export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   walletContract: Wallet;
 
+  // HACK: use a mutex to prevent nonces from colliding
+  mutex: Mutex;
+
   constructor(walletContract: Wallet) {
     this.walletContract = walletContract;
+    this.mutex = new Mutex();
   }
 
   async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
     try {
       console.log("submitting tx...");
-      const tx = await this.walletContract.applySubtreeUpdate(
+      const tx = await this.mutex.runExclusive(() => this.walletContract.applySubtreeUpdate(
         newRoot,
         solidityProof
-      );
+      ));
       await tx.wait();
       console.log("successfully updated root to", newRoot);
     } catch (err: any) {
@@ -38,6 +44,10 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
       }
       console.log("update already submitted by another agent");
     }
+  }
+
+  async fillBatch(): Promise<void> {
+    await this.mutex.runExclusive(() => this.walletContract.fillBatchWithZeros());
   }
 
   async dropDB(): Promise<void> {}

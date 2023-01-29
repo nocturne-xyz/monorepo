@@ -147,6 +147,10 @@ export class SubtreeUpdater {
     return await this.tryMakeBatches();
   }
 
+  public async fillBatch(): Promise<void> {
+    await this.submitter.fillBatch();
+  }
+
   public async dropDB(): Promise<void> {
     await this.submitter.dropDB();
     await this.db.drop();

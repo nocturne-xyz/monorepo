@@ -44,6 +44,7 @@
   "dependencies": {
     "@nocturne-xyz/contracts": "1.0.4-alpha",
     "@nocturne-xyz/sdk": "1.0.38-alpha",
+    "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^9.4.1",
     "dotenv": "^16.0.3",

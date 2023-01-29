@@ -33,6 +33,11 @@ export default async function main(): Promise<void> {
       "use a mock prover instead of rapidsnark. This is useful for testing"
     )
     .option(
+      "--fill-batches",
+      "every time updater polls, ensure the batch is full by filling it with zeros",
+      false
+    )
+    .option(
       "--prover-path <string>",
       "path to the rapidsnark prover exectuable. After building from the rapidsnark repo, this is typically `rapidsnark/build/prover`"
     )
@@ -65,6 +70,7 @@ export default async function main(): Promise<void> {
     useMockProver,
     interval,
     indexingStartBlock,
+    fillBatches,
   } = program.opts();
 
   const rpcUrl = process.env.RPC_URL;
@@ -94,7 +100,7 @@ export default async function main(): Promise<void> {
       witnessGeneratorPath,
       zkeyPath,
       vkeyPath,
-      tmpDir
+      tmpDir,
     );
   }
 

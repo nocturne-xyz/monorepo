@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add CLI option to ensure a batch is submitted every time the updater polls by filling with zeros
 - Add `interval` and `indexingStartBlock` as options to server
 - Remove circuit-artifacts download for mock updater
 - change `build_docker.sh` to avoid `docker buildx` when building mock subtree updater
