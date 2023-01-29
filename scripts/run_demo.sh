@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Goerli addresses
-WALLET_CONTRACT_ADDRESS="0xb958051f2b6E0C49B430A924830F511f079610E7"
-VAULT_CONTRACT_ADDRESS="0x46B8545D6Ec6D0abC212e6845B7d0b1c665417bc"
+WALLET_CONTRACT_ADDRESS="0x941eeF64234aBC3b0889dc686B12367928c5586d"
+VAULT_CONTRACT_ADDRESS="0x0CC803d8f7381125f2Bc7d7732a92BDc854bBC15"
 
 echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"
 echo "Vault contract address: $VAULT_CONTRACT_ADDRESS"
@@ -56,7 +56,7 @@ BUNDLER_PID=$!
 echo "Bundler running at PID: $BUNDLER_PID"
 
 # run subtree updater
-docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network "$RPC_URL" &> "$LOG_DIR/subtree-updater" &
+docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --interval 12000 --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --network "$RPC_URL" --indexing-start-block 8393146 &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"

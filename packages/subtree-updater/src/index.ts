@@ -74,7 +74,9 @@ export class SubtreeUpdater {
     this.tree = new BinaryPoseidonTree();
 
     this.submitter = submitter;
+
     this.indexingStartBlock = opts?.indexingStartBlock ?? 0;
+    console.log("Indexing start block:", this.indexingStartBlock);
   }
 
   public async init(): Promise<void> {
@@ -96,6 +98,10 @@ export class SubtreeUpdater {
     if (nextBlockToIndex > currentBlockNumber) {
       return false;
     }
+
+    console.log(
+      `Indexing. From: ${nextBlockToIndex}. To: ${currentBlockNumber}.`
+    );
 
     const [newInsertions, newCommits] = await Promise.all([
       fetchInsertions(

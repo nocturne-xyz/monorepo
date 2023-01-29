@@ -9,7 +9,9 @@ import * as fs from 'fs';
   if (!proxyAdminOwner)
     throw new Error('Deploy script missing proxy admin owner address');
 
-  const deployment = await deployNocturne(network, proxyAdminOwner);
+  const deployment = await deployNocturne(network, proxyAdminOwner, {
+    mockSubtreeUpdateVerifier: true,
+  });
   console.log(deployment);
 
   const deploysDir = `${__dirname}/../deploys/`;
