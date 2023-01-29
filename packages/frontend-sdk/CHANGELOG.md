@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `TransactionTracker` take `className` so we can use it with `styled-components`
 - Deposit form parses token amount in proper decimal amount
 - Add symbol/decimal fetching and display to balance display component
 - Abbreviate token addresses and show call sig instead of calldata for actions
