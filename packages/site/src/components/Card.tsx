@@ -2,13 +2,14 @@ import { ReactNode } from "react";
 import styled from "styled-components";
 
 type CardProps = {
-  content: {
+  content?: {
     title: string;
     description: string;
   };
   children: ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
+  className?: string;
 };
 
 const CardWrapper = styled.div<{ fullWidth?: boolean; disabled: boolean }>`
@@ -61,14 +62,32 @@ export const Card = ({
   disabled = false,
   fullWidth,
   children,
+  className,
 }: CardProps) => {
-  const { title, description } = content;
-  return (
-    <CardWrapper fullWidth={fullWidth} disabled={disabled}>
-      <CardBackground />
-      <Title>{title}</Title>
-      <Description>{description}</Description>
-      {children}
-    </CardWrapper>
-  );
+  if (content) {
+    const { title, description } = content;
+    return (
+      <CardWrapper
+        className={className}
+        fullWidth={fullWidth}
+        disabled={disabled}
+      >
+        <CardBackground />
+        <Title>{title}</Title>
+        <Description>{description}</Description>
+        {children}
+      </CardWrapper>
+    );
+  } else {
+    return (
+      <CardWrapper
+        className={className}
+        fullWidth={fullWidth}
+        disabled={disabled}
+      >
+        <CardBackground />
+        {children}
+      </CardWrapper>
+    );
+  }
 };
