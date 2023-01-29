@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add mutex to avoid nonce conflicts when filling batch (hack)
 - add CLI option to ensure a batch is submitted every time the updater polls by filling with zeros
 - Add `interval` and `indexingStartBlock` as options to server
 - Remove circuit-artifacts download for mock updater
