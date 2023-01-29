@@ -70,7 +70,7 @@ export class SubtreeUpdateServer {
             console.log("generating and submitting proof...");
             await this.updater.tryGenAndSubmitProofs();
             console.log("proof submitted!");
-          } else if (this.fillBatches) {
+          } else if (this.fillBatches && this.updater.batchNotEmptyOrFull()) {
             console.log("batch not yet full. filling it with zeros...");
             await this.updater.fillBatch();
             await poll();

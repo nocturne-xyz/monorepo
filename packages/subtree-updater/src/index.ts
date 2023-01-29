@@ -156,6 +156,10 @@ export class SubtreeUpdater {
     await this.db.drop();
   }
 
+  public batchNotEmptyOrFull(): boolean {
+    return this.insertions.length % BinaryPoseidonTree.BATCH_SIZE !== 0;
+  }
+
   private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
     const lastCommitedIndex = await this.getLastCommittedIndex();
     return lastCommitedIndex !== undefined && subtreeIndex <= lastCommitedIndex;
