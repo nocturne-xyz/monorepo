@@ -9,6 +9,7 @@ type CardProps = {
   children: ReactNode;
   disabled?: boolean;
   fullWidth?: boolean;
+  className?: string;
 };
 
 const CardWrapper = styled.div<{ fullWidth?: boolean; disabled: boolean }>`
@@ -61,11 +62,12 @@ export const Card = ({
   disabled = false,
   fullWidth,
   children,
+  className,
 }: CardProps) => {
   if (content) {
     const { title, description } = content;
     return (
-      <CardWrapper fullWidth={fullWidth} disabled={disabled}>
+      <CardWrapper className={className} fullWidth={fullWidth} disabled={disabled}>
         <CardBackground />
         <Title>{title}</Title>
         <Description>{description}</Description>
@@ -74,7 +76,7 @@ export const Card = ({
     );
   } else {
       return (
-        <CardWrapper fullWidth={fullWidth} disabled={disabled}>
+        <CardWrapper className={className} fullWidth={fullWidth} disabled={disabled}>
           <CardBackground />
           {children}
         </CardWrapper>
