@@ -29,6 +29,11 @@ export function mod_p(n: bigint): bigint {
   return ((n % SNARK_SCALAR_FIELD) + SNARK_SCALAR_FIELD) % SNARK_SCALAR_FIELD;
 }
 
+export function randomBigInt(numBytes: number): bigint {
+  const rand = randomBytes(numBytes);
+  return BigInt("0x" + rand.toString("hex"));
+}
+
 // Extended Euclidean algorithm
 export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
   if (b == 0n) {

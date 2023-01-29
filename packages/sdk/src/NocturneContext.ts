@@ -32,10 +32,9 @@ import {
   simulateOperation,
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { genNoteTransmission } from "./crypto/utils";
+import { genNoteTransmission, randomBigInt } from "./crypto/utils";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import randomBytes from "randombytes";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -202,8 +201,7 @@ export class NocturneContext {
     // Insert a dummy note if length of notes to use is odd
     if (notesToUse.length % 2 == 1) {
       const newAddr = NocturneAddressTrait.randomize(this.signer.address);
-      const rand = randomBytes(8);
-      const nonce = BigInt(rand.toString("hex"));
+      const nonce = randomBigInt(8);
       notesToUse.push({
         owner: newAddr,
         nonce,

@@ -15,6 +15,7 @@ import {
   getSubtreeUpdaterDelay,
 } from "./utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
+import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 
 const PER_SPEND_AMOUNT = 100n;
 const TEST_SERVER_POLL_INTERVAL = 1000;

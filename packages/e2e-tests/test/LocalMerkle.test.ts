@@ -16,6 +16,7 @@ import {
 import { setupNocturne } from "../deploy/deployNocturne";
 import { depositFunds, getSubtreeUpdateProver } from "./utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 
 describe("LocalMerkle", async () => {
   let deployer: ethers.Signer;
@@ -44,7 +45,8 @@ describe("LocalMerkle", async () => {
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    const submitter = new SyncSubtreeSubmitter(wallet);
+    updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
     await updater.init();
 
     localMerkle = new LocalMerkleProver(

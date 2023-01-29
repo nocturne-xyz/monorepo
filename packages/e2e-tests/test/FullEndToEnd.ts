@@ -37,6 +37,7 @@ import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
 import fetch from "node-fetch";
 import http from "http";
+import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 
 const BUNDLER_SERVER_PORT = 3000;
 const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
@@ -112,7 +113,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    updater = new SubtreeUpdater(wallet, serverDB, prover);
+    const submitter = new SyncSubtreeSubmitter(wallet);
+    updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
 
     redisServer = await RedisMemoryServer.create();
     const host = await redisServer.getHost();
