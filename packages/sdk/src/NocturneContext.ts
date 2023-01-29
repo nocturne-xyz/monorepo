@@ -201,7 +201,7 @@ export class NocturneContext {
     // Insert a dummy note if length of notes to use is odd
     if (notesToUse.length % 2 == 1) {
       const newAddr = NocturneAddressTrait.randomize(this.signer.address);
-      const nonce = randomBigInt(8);
+      const nonce = randomBigInt();
       notesToUse.push({
         owner: newAddr,
         nonce,

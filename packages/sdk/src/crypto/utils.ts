@@ -5,6 +5,8 @@ import randomBytes from "randombytes";
 import { babyjub, poseidon } from "circomlibjs";
 import { NoteTransmission, SNARK_SCALAR_FIELD } from "../commonTypes";
 
+const BIGINT_BYTES = 8;
+
 // Encode a babyjub point to field
 export function encodePoint(point: [bigint, bigint]): bigint {
   return point[0];
@@ -29,8 +31,8 @@ export function mod_p(n: bigint): bigint {
   return ((n % SNARK_SCALAR_FIELD) + SNARK_SCALAR_FIELD) % SNARK_SCALAR_FIELD;
 }
 
-export function randomBigInt(numBytes: number): bigint {
-  const rand = randomBytes(numBytes);
+export function randomBigInt(): bigint {
+  const rand = randomBytes(BIGINT_BYTES);
   return BigInt("0x" + rand.toString("hex"));
 }
 
