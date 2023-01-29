@@ -44,6 +44,8 @@ export class MerkleDB {
 
   private async *getLeavesIterator(): AsyncIterable<bigint> {
     const iterPrefix = await this.kv.iterPrefix(LEAVES_PREFIX);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for await (const [_key, value] of iterPrefix) {
       yield BigInt(value);
     }

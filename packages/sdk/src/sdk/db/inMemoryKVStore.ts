@@ -75,6 +75,7 @@ export class InMemoryKVStore implements DumpableKVStore {
   }
 
   iterRange(startKey: string, endKey: string): Promise<AsyncIterable<KV>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const cond = ([key, _value]: KV) => this.tree._compare(key, endKey) >= 0;
     return new Promise((resolve) =>
       resolve(this.iterRangeUntil(startKey, cond))
@@ -82,11 +83,9 @@ export class InMemoryKVStore implements DumpableKVStore {
   }
 
   iterPrefix(prefix: string): Promise<AsyncIterable<KV>> {
-    const startKey = prefix;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const cond = ([key, _value]: KV) => !key.startsWith(prefix);
-    return new Promise((resolve) =>
-      resolve(this.iterRangeUntil(startKey, cond))
-    );
+    return new Promise((resolve) => resolve(this.iterRangeUntil(prefix, cond)));
   }
 
   async putMany(kvs: KV[]): Promise<boolean> {
