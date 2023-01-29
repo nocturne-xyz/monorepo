@@ -29,10 +29,9 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
     const solidityProof = packToSolidityProof(proof);
     try {
       console.log("submitting tx...");
-      const tx = await this.mutex.runExclusive(() => this.walletContract.applySubtreeUpdate(
-        newRoot,
-        solidityProof
-      ));
+      const tx = await this.mutex.runExclusive(() =>
+        this.walletContract.applySubtreeUpdate(newRoot, solidityProof)
+      );
       await tx.wait();
       console.log("successfully updated root to", newRoot);
     } catch (err: any) {
@@ -47,7 +46,9 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   }
 
   async fillBatch(): Promise<void> {
-    await this.mutex.runExclusive(() => this.walletContract.fillBatchWithZeros());
+    await this.mutex.runExclusive(() =>
+      this.walletContract.fillBatchWithZeros()
+    );
   }
 
   async dropDB(): Promise<void> {}

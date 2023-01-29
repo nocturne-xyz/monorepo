@@ -100,7 +100,7 @@ export default async function main(): Promise<void> {
       witnessGeneratorPath,
       zkeyPath,
       vkeyPath,
-      tmpDir,
+      tmpDir
     );
   }
 

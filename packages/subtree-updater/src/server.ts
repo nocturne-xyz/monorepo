@@ -61,9 +61,6 @@ export class SubtreeUpdateServer {
         }
 
         try {
-          if (this.fillBatches) {
-          }
-
           console.log("polling for batch...");
           const filledBatch =
             await this.updater.pollInsertionsAndTryMakeBatch();
@@ -76,13 +73,13 @@ export class SubtreeUpdateServer {
           } else if (this.fillBatches) {
             console.log("batch not yet full. filling it with zeros...");
             await this.updater.fillBatch();
-            await poll();      
+            await poll();
           }
         } catch (err) {
           console.error("subtree update server received an error:", err);
           reject(err);
         }
-      }
+      };
       this.timer = setInterval(poll, this.interval);
     });
 
