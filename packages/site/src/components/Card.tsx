@@ -67,7 +67,11 @@ export const Card = ({
   if (content) {
     const { title, description } = content;
     return (
-      <CardWrapper className={className} fullWidth={fullWidth} disabled={disabled}>
+      <CardWrapper
+        className={className}
+        fullWidth={fullWidth}
+        disabled={disabled}
+      >
         <CardBackground />
         <Title>{title}</Title>
         <Description>{description}</Description>
@@ -75,11 +79,15 @@ export const Card = ({
       </CardWrapper>
     );
   } else {
-      return (
-        <CardWrapper className={className} fullWidth={fullWidth} disabled={disabled}>
-          <CardBackground />
-          {children}
-        </CardWrapper>
-      );
+    return (
+      <CardWrapper
+        className={className}
+        fullWidth={fullWidth}
+        disabled={disabled}
+      >
+        <CardBackground />
+        {children}
+      </CardWrapper>
+    );
   }
 };

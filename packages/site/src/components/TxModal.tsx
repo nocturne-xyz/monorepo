@@ -4,7 +4,7 @@ import SyncLoader from "react-spinners/SyncLoader";
 import { CiCircleCheck, CiCircleAlert } from "react-icons/ci";
 import { useEffect, useState } from "react";
 import { OperationStatus } from "@nocturne-xyz/sdk";
-import Popup from 'reactjs-popup';
+import Popup from "reactjs-popup";
 import styled from "styled-components";
 
 export interface TxModalProps {
@@ -20,10 +20,9 @@ const Modal = styled(Popup)`
   }
 `;
 
-const ModalCard =  styled(Card)`
+const ModalCard = styled(Card)`
   background: linear-gradient(to top, rgba(3, 27, 48, 1), rgba(3, 27, 48, 0.8));
 `;
-
 
 const GraphicContainer = styled.div`
   padding-top: 20px;
@@ -77,10 +76,7 @@ export const TxModal: React.FC<TxModalProps> = ({
   }
 
   return (
-    <Modal
-      open={isOpen}
-      onClose={handleClose}
-    >
+    <Modal open={isOpen} onClose={handleClose}>
       <ModalCard>
         <TxTracker
           bundlerEndpoint={bundlerEndpoint}
@@ -89,9 +85,7 @@ export const TxModal: React.FC<TxModalProps> = ({
           textStyles={{ color: "#FFFFFF" }}
           onComplete={onOperationComplete}
         />
-        <GraphicContainer>
-          {graphic}
-        </GraphicContainer>
+        <GraphicContainer>{graphic}</GraphicContainer>
       </ModalCard>
     </Modal>
   );
