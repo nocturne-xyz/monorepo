@@ -24,7 +24,7 @@ fi
 
 if [ ! -z "$IS_MOCK" ]; then
     echo "building mock subtree-updater"
-    docker build -t mock-subtree-updater-2 -f ./packages/subtree-updater/Mock.Dockerfile .
+    docker build -t mock-subtree-updater -f ./packages/subtree-updater/Mock.Dockerfile .
     exit 0
 fi
 
