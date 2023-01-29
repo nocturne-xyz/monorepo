@@ -1,8 +1,10 @@
 #!/bin/bash
 
-# NOTE: running this script assumes you have already populated .env files
-# in packages/bundler, packages/subtree-updater, and have filled the snap
-# submodule RPC_URL constant with the a goerli endpoint.
+# NOTE: Running this script assumes you have already deployed contracts to 
+# Goerli and have set the below WALLET_CONTRACT_ADDRESS, VAULT_CONTRACT_ADDRESS 
+# and START_BLOCK variables. It also assumes you have populated .env files in 
+# packages/bundler, packages/subtree-updater, and have filled the snap submodule 
+# RPC_URL constant with a Goerli endpoint.
 
 # Goerli addresses
 WALLET_CONTRACT_ADDRESS="0x941eeF64234aBC3b0889dc686B12367928c5586d"
