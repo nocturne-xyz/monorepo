@@ -56,10 +56,12 @@ export abstract class NotesManager {
       for (const oldNote of allNotes) {
         // TODO implement note indexing by nullifiers
         const oldNullifier = this.signer.createNullifier(oldNote);
+        console.log("Nullifier for old note:", oldNullifier);
         if (
           oldNullifier == e.oldNoteANullifier ||
           oldNullifier == e.oldNoteBNullifier
         ) {
+          console.log("Removing for old note with nf:", oldNullifier);
           await this.db.removeNote(oldNote);
         }
       }
