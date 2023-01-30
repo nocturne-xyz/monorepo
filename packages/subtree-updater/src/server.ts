@@ -11,6 +11,7 @@ const TWELVE_SECONDS = 12 * 1000;
 export interface SubtreeUpdaterServerOpts {
   indexingStartBlock?: number;
   interval?: number;
+  fillBatches?: boolean;
 }
 
 export class SubtreeUpdateServer {
@@ -19,6 +20,7 @@ export class SubtreeUpdateServer {
   private stopped: boolean;
   private prom?: Promise<void>;
   private timer?: NodeJS.Timeout;
+  private fillBatches: boolean;
 
   constructor(
     prover: SubtreeUpdateProver,
@@ -36,6 +38,7 @@ export class SubtreeUpdateServer {
     const submitter = new SyncSubtreeSubmitter(walletContract);
 
     this.interval = opts?.interval ?? TWELVE_SECONDS;
+    this.fillBatches = opts?.fillBatches ?? false;
     this.updater = new SubtreeUpdater(
       walletContract,
       rootDB,
@@ -53,7 +56,7 @@ export class SubtreeUpdateServer {
   public async start(): Promise<void> {
     this.stopped = false;
     const prom = new Promise<void>((resolve, reject) => {
-      this.timer = setInterval(async () => {
+      const poll = async () => {
         if (this.stopped) {
           resolve(undefined);
           return;
@@ -65,15 +68,21 @@ export class SubtreeUpdateServer {
             await this.updater.pollInsertionsAndTryMakeBatch();
 
           if (filledBatch) {
-            console.log("filled batch! generating and submitting proof");
+            console.log("filled batch!");
+            console.log("generating and submitting proof...");
             await this.updater.tryGenAndSubmitProofs();
-            console.log("proof submitted");
+            console.log("proof submitted!");
+          } else if (this.fillBatches && this.updater.batchNotEmptyOrFull()) {
+            console.log("batch not yet full. filling it with zeros...");
+            await this.updater.fillBatch();
+            await poll();
           }
         } catch (err) {
           console.error("subtree update server received an error:", err);
           reject(err);
         }
-      }, this.interval);
+      };
+      this.timer = setInterval(poll, this.interval);
     });
 
     this.prom = prom.finally(() => clearTimeout(this.timer));

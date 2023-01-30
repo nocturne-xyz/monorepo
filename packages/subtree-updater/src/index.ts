@@ -59,7 +59,7 @@ export class SubtreeUpdater {
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
     submitter: SubtreeUpdateSubmitter,
-    indexingStartBlock: number = 0
+    indexingStartBlock = 0
   ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
@@ -147,9 +147,17 @@ export class SubtreeUpdater {
     return await this.tryMakeBatches();
   }
 
+  public async fillBatch(): Promise<void> {
+    await this.submitter.fillBatch();
+  }
+
   public async dropDB(): Promise<void> {
     await this.submitter.dropDB();
     await this.db.drop();
+  }
+
+  public batchNotEmptyOrFull(): boolean {
+    return this.insertions.length % BinaryPoseidonTree.BATCH_SIZE !== 0;
   }
 
   private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
