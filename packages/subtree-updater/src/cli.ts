@@ -109,7 +109,7 @@ export default async function main(): Promise<void> {
     walletAddress,
     dbPath,
     signer,
-    { indexingStartBlock, interval }
+    { indexingStartBlock, interval, fillBatches }
   );
 
   await server.start();

@@ -11,6 +11,7 @@ const TWELVE_SECONDS = 12 * 1000;
 export interface SubtreeUpdaterServerOpts {
   indexingStartBlock?: number;
   interval?: number;
+  fillBatches?: boolean
 }
 
 export class SubtreeUpdateServer {
@@ -37,6 +38,7 @@ export class SubtreeUpdateServer {
     const submitter = new SyncSubtreeSubmitter(walletContract);
 
     this.interval = opts?.interval ?? TWELVE_SECONDS;
+    this.fillBatches = opts?.fillBatches ?? false;
     this.updater = new SubtreeUpdater(
       walletContract,
       rootDB,

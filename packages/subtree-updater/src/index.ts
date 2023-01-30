@@ -59,7 +59,7 @@ export class SubtreeUpdater {
     rootDB: RootDatabase,
     prover: SubtreeUpdateProver,
     submitter: SubtreeUpdateSubmitter,
-    indexingStartBlock: number = 0
+    indexingStartBlock = 0
   ) {
     this.walletContract = walletContract;
     this.db = rootDB.openDB<string, string>({ name: "insertions" });
