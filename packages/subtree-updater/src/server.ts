@@ -11,7 +11,7 @@ const TWELVE_SECONDS = 12 * 1000;
 export interface SubtreeUpdaterServerOpts {
   indexingStartBlock?: number;
   interval?: number;
-  fillBatches?: boolean
+  fillBatches?: boolean;
 }
 
 export class SubtreeUpdateServer {
