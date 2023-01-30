@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Fix bug where zeroed dummy notes always produce same NF by generating rand address and nonce
+- `LocalMerkleProver` and `LocalNotesManager` take optional start blocks as params
 - Fix unawaited promise when calling `processNoteTransmission` on handling new joinsplits
 - move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
 - remove nested hash for refund assets in `calculateOperationDigest`

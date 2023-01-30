@@ -16,12 +16,17 @@ export default async function main(): Promise<void> {
       "address of the wallet contract"
     )
     .requiredOption(
-      "--zkey-path <stirng>",
+      "--zkey-path <string>",
       "path to `subtreeupdate.zkey`, i.e. the proving key for the subtree update circuit"
     )
     .requiredOption(
       "--vkey-path <string>",
       "path to `vkey.json`, the verification key for the subtree update circuit"
+    )
+    .option(
+      "--interval <number>",
+      "polling interval for checking for state and attempting to submit proofs",
+      parseInt
     )
     .option(
       "--use-mock-prover",
@@ -41,9 +46,9 @@ export default async function main(): Promise<void> {
       "./prover-tmp"
     )
     .option(
-      "--network <string>",
-      "network to connect to",
-      "https://localhost:8545"
+      "--indexing-start-block <number>",
+      "block to start indexing at",
+      parseInt
     )
     .option("--dbPath <string>", "path to the store DB files", "./db");
 
@@ -51,7 +56,6 @@ export default async function main(): Promise<void> {
 
   const {
     tmpDir,
-    network,
     dbPath,
     zkeyPath,
     vkeyPath,
@@ -59,14 +63,21 @@ export default async function main(): Promise<void> {
     witnessGeneratorPath,
     walletAddress,
     useMockProver,
+    interval,
+    indexingStartBlock,
   } = program.opts();
+
+  const rpcUrl = process.env.RPC_URL;
+  if (rpcUrl === undefined) {
+    throw new Error("RPC_URL env var not set");
+  }
 
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
   if (submitterSecretKey === undefined) {
     throw new Error("SUBMITTER_SECRET_KEY env var not set");
   }
 
-  const provider = ethers.getDefaultProvider(network);
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const signer = new ethers.Wallet(submitterSecretKey, provider);
 
   let prover;
@@ -87,7 +98,13 @@ export default async function main(): Promise<void> {
     );
   }
 
-  const server = new SubtreeUpdateServer(prover, walletAddress, dbPath, signer);
+  const server = new SubtreeUpdateServer(
+    prover,
+    walletAddress,
+    dbPath,
+    signer,
+    { indexingStartBlock, interval }
+  );
 
   await server.start();
 }

@@ -62,7 +62,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       wallet.address,
       serverDBPath,
       serverSigner,
-      TEST_SERVER_POLL_INTERVAL
+      { interval: 1_000 }
     );
     return server;
   }

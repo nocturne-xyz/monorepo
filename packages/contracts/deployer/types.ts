@@ -5,7 +5,14 @@ export interface ProxiedContract {
   implementationAddress: string;
 }
 
+export interface Network {
+  name: string;
+  chainId: number;
+}
+
 export interface NocturneDeployment {
+  network: Network;
+  startBlock: number;
   proxyAdminOwner: string;
   proxyAdmin: string;
   walletProxy: ProxiedContract;
@@ -17,6 +24,6 @@ export interface NocturneDeployment {
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
   provider?: any; // FIX: ts build within hh disallows ethers.providers.Provider
-  mockSubtreeUpdateVerifier?: boolean;
+  useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
 }

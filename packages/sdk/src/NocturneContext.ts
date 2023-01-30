@@ -32,7 +32,7 @@ import {
   simulateOperation,
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { genNoteTransmission } from "./crypto/utils";
+import { genNoteTransmission, randomBigInt } from "./crypto/utils";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 
@@ -200,10 +200,11 @@ export class NocturneContext {
 
     // Insert a dummy note if length of notes to use is odd
     if (notesToUse.length % 2 == 1) {
-      const newAddr = this.signer.privkey.toCanonAddressStruct();
+      const newAddr = NocturneAddressTrait.randomize(this.signer.address);
+      const nonce = randomBigInt();
       notesToUse.push({
         owner: newAddr,
-        nonce: 0n,
+        nonce,
         asset: notesToUse[0].asset,
         value: 0n,
         merkleIndex: 0,

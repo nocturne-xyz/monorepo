@@ -95,7 +95,7 @@ const Playground = () => {
       if (!nocturneFrontendSDK) return;
       console.log("Syncing notes and leaves...");
       await Promise.all([syncNotes(), syncLeaves()]);
-    }, 7000);
+    }, 20_000);
 
     return () => clearTimeout(timeout);
   }, [nocturneFrontendSDK]);

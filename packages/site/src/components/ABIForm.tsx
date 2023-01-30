@@ -248,7 +248,7 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
                         paddingRight: "50px",
                       }}
                     >
-                      {formatAbbreviatedAddress(contractAddress)}
+                      {formatAbbreviatedAddress(action.contractAddress)}
                     </td>
                     <td style={{ textAlign: "left", overflow: "hidden" }}>
                       <div

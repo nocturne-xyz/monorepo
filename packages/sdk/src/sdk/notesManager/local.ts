@@ -15,26 +15,33 @@ const JOINSPLITS_LAST_INDEXED_BLOCK = "JOINSPLITS_LAST_INDEXED_BLOCK";
 const JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK =
   "JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK";
 
+export interface LocalNotesManagerOpts {
+  startBlock?: number;
+}
+
 export class LocalNotesManager extends NotesManager {
   walletContract: Wallet;
   provider: ethers.providers.Provider;
+  startBlock: number;
 
   constructor(
     db: NotesDB,
     signer: NocturneSigner,
     walletAddress: Address,
-    provider: ethers.providers.Provider
+    provider: ethers.providers.Provider,
+    opts?: LocalNotesManagerOpts
   ) {
     super(db, signer);
     this.provider = provider;
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
+    this.startBlock = opts?.startBlock ?? DEFAULT_START_BLOCK;
   }
 
   async fetchNotesFromRefunds(): Promise<IncludedNote[]> {
     // TODO: load default from network-specific config
     const lastSeen =
       (await this.db.kv.getNumber(REFUNDS_LAST_INDEXED_BLOCK)) ??
-      DEFAULT_START_BLOCK;
+      this.startBlock;
     const latestBlock = await this.provider.getBlockNumber();
 
     console.log("Fetching notes from refunds...");
@@ -70,7 +77,7 @@ export class LocalNotesManager extends NotesManager {
     // TODO: load default from network-specific config
     const lastSeen =
       (await this.db.kv.getNumber(JOINSPLITS_LAST_INDEXED_BLOCK)) ??
-      DEFAULT_START_BLOCK;
+      this.startBlock;
     const latestBlock = await this.provider.getBlockNumber();
 
     const newJoinSplits = await fetchJoinSplits(
