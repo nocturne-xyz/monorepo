@@ -41,7 +41,6 @@ export abstract class NotesManager {
     const ownedNotes = newNotes.filter((refund) => {
       return this.signer.testOwn(refund.owner);
     });
-    console.log("[Refunds] Fetched notes:", newNotes);
     console.log("[Refunds] Owned notes:", ownedNotes);
     await this.storeNewNotesFromRefunds(ownedNotes);
     await this.postStoreNotesFromRefunds();
@@ -77,12 +76,10 @@ export abstract class NotesManager {
       for (const oldNote of allNotesUpdated) {
         // TODO implement note indexing by nullifiers
         const oldNullifier = this.signer.createNullifier(oldNote);
-        console.log("Nullifier for old note:", oldNullifier);
         if (
           oldNullifier == e.oldNoteANullifier ||
           oldNullifier == e.oldNoteBNullifier
         ) {
-          console.log("Removing for old note with nf:", oldNullifier);
           await this.db.removeNote(oldNote);
         }
       }
@@ -108,7 +105,6 @@ export abstract class NotesManager {
         newNote.value > 0n &&
         NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
-        console.log("Storing new note:", newNote);
         await this.db.storeNote(newNote);
       }
     }
