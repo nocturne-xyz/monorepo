@@ -1,4 +1,4 @@
-export type KV = [string, string | number | bigint];
+export type KV = [string, string];
 
 export abstract class KVStore {
   /**
