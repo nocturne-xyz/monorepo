@@ -50,7 +50,6 @@ export abstract class NotesManager {
   private async applyNewJoinSplits(
     newJoinSplits: JoinSplitEvent[]
   ): Promise<void> {
-    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const e of newJoinSplits) {
       const asset = decodeAsset(
         e.joinSplitTx.encodedAsset.encodedAssetAddr,
@@ -72,9 +71,10 @@ export abstract class NotesManager {
       );
     }
 
+    const allNotesUpdated = [...(await this.db.getAllNotes()).values()].flat();
     for (const e of newJoinSplits) {
       // Delete nullified notes
-      for (const oldNote of allNotes) {
+      for (const oldNote of allNotesUpdated) {
         // TODO implement note indexing by nullifiers
         const oldNullifier = this.signer.createNullifier(oldNote);
         console.log("Nullifier for old note:", oldNullifier);
