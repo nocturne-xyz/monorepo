@@ -74,12 +74,12 @@ export default async function main(): Promise<void> {
   } = program.opts();
 
   const rpcUrl = process.env.RPC_URL;
-  if (rpcUrl === undefined) {
+  if (!rpcUrl) {
     throw new Error("RPC_URL env var not set");
   }
 
   const submitterSecretKey = process.env.SUBMITTER_SECRET_KEY;
-  if (submitterSecretKey === undefined) {
+  if (!submitterSecretKey) {
     throw new Error("SUBMITTER_SECRET_KEY env var not set");
   }
 

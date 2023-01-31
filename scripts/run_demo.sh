@@ -56,13 +56,13 @@ rm -r ./redis-data || "echo 'redis-data does not yet exist'"
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --build  &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --renew-anon-volumes --build  &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "Bundler running at PID: $BUNDLER_PID"
 
 # run subtree updater
-docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --indexing-start-block 8393146 &> "$LOG_DIR/subtree-updater" &
+docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate --indexing-start-block 8393146 &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"

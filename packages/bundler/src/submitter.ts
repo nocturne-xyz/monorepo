@@ -98,13 +98,15 @@ export class BundlerSubmitter {
         gasLimit: 1_000_000,
       }
     );
-    console.log("watiing for confirmation...");
+    console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
+
+    console.log("Matching events:", matchingEvents);
 
     const executedStatusTransactions = matchingEvents.map(({ args }) => {
       const digest = args.operationDigest.toBigInt();
