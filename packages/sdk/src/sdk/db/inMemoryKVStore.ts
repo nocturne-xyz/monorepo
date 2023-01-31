@@ -90,8 +90,20 @@ export class InMemoryKVStore implements DumpableKVStore {
   }
 
   async putMany(kvs: KV[]): Promise<boolean> {
-    for (const kv of kvs) {
-      this.tree.set(kv[0], kv[1]);
+    for (const [k, v] of kvs) {
+      switch (typeof v) {
+        case "string":
+          this.putString(k, v);
+          break;
+        case "number":
+          this.putNumber(k, v);
+          break;
+        case "bigint":
+          this.putBigInt(k, v);
+          break;
+        default:
+          throw new Error(`Unsupported type: ${typeof v}`); 
+      }
     }
     return true;
   }
