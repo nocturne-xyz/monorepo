@@ -52,20 +52,6 @@ export abstract class NotesManager {
   ): Promise<void> {
     const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const e of newJoinSplits) {
-      // Delete nullified notes
-      for (const oldNote of allNotes) {
-        // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(oldNote);
-        console.log("Nullifier for old note:", oldNullifier);
-        if (
-          oldNullifier == e.oldNoteANullifier ||
-          oldNullifier == e.oldNoteBNullifier
-        ) {
-          console.log("Removing for old note with nf:", oldNullifier);
-          await this.db.removeNote(oldNote);
-        }
-      }
-
       const asset = decodeAsset(
         e.joinSplitTx.encodedAsset.encodedAssetAddr,
         e.joinSplitTx.encodedAsset.encodedAssetId
@@ -84,6 +70,22 @@ export abstract class NotesManager {
         e.newNoteBIndex,
         asset
       );
+    }
+
+    for (const e of newJoinSplits) {
+      // Delete nullified notes
+      for (const oldNote of allNotes) {
+        // TODO implement note indexing by nullifiers
+        const oldNullifier = this.signer.createNullifier(oldNote);
+        console.log("Nullifier for old note:", oldNullifier);
+        if (
+          oldNullifier == e.oldNoteANullifier ||
+          oldNullifier == e.oldNoteBNullifier
+        ) {
+          console.log("Removing for old note with nf:", oldNullifier);
+          await this.db.removeNote(oldNote);
+        }
+      }
     }
   }
 
