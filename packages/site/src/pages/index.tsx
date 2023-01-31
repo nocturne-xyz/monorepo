@@ -19,7 +19,7 @@ import {
   GetAllBalancesButton,
   GenAndSubmitProofButton,
 } from "../components";
-import { bundlerEndpoint } from "../config";
+import { BUNDLER_ENDPOINT } from "../config";
 import {
   Action,
   Asset,
@@ -116,7 +116,7 @@ const Index = () => {
 
   useEffect(() => {
     loadNocturneFrontendSDK(
-      bundlerEndpoint,
+      BUNDLER_ENDPOINT,
       WALLET_CONTRACT_ADDRESS,
       VAULT_CONTRACT_ADDRESS
     ).then((sdk) => {
@@ -263,7 +263,7 @@ const Index = () => {
     <>
       <TxModal
         operationId={inFlightOperationID}
-        bundlerEndpoint={bundlerEndpoint}
+        bundlerEndpoint={BUNDLER_ENDPOINT}
         isOpen={txModalIsOpen}
         handleClose={handleCloseTxModal}
       />
