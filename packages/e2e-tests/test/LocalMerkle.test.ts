@@ -68,7 +68,7 @@ describe("LocalMerkle", async () => {
     await network.provider.send("hardhat_reset");
   });
 
-  it("Local merkle prover self syncs", async () => {
+  it("syncs root after subtree update", async () => {
     console.log("Depositing 2 notes");
     const ncs = await depositFunds(
       wallet,
@@ -79,21 +79,40 @@ describe("LocalMerkle", async () => {
       [100n, 100n]
     );
 
+    console.log("applying subtree update");
+    await applySubtreeUpdate();
+
     console.log("Fetching and storing leaves from events");
     await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count()).to.eql(2);
+    expect(localMerkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
 
     console.log("Ensure leaves match enqueued");
     expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
     expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);
+  });
 
-    console.log("applying subtree update");
-    await applySubtreeUpdate();
+  it("syncs uncommitted leaves, but doesnt add them to tree before subtree update", async () => {
 
-    console.log("local merkle prover picks up the zeros");
+    const emptyRoot = localMerkle.root();
+    console.log("Depositing 2 notes");
+    const ncs = await depositFunds(
+      wallet,
+      vault,
+      token,
+      alice,
+      nocturneContext.signer.address,
+      [100n, 100n]
+    );
+    
+    console.log("Fetching and storing leaves from events, but no subtree update");
     await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
-    expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
-    expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);
+
+    // tree should still be empty
+    expect(localMerkle.count()).to.eql(0); 
+    expect(localMerkle.root()).to.equal(emptyRoot);
+
+    // leaves shoud be stored in db
+    expect(BigInt(await localMerkle.db.getLeaf(0))).to.equal(ncs[0]);
+    expect(BigInt(await localMerkle.db.getLeaf(1))).to.equal(ncs[1]);
   });
 });
