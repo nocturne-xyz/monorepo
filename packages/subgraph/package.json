@@ -4,10 +4,10 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ sladuca/nocturne-0",
-    "create-local": "graph create --node http://localhost:8020/ sladuca/nocturne-0",
-    "remove-local": "graph remove --node http://localhost:8020/ sladuca/nocturne-0",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 sladuca/nocturne-0",
+    "deploy-hosted-service": "graph deploy --node https://api.thegraph.com/deploy/ sladuca/nocturne-test",
+    "create-local": "graph create --node http://localhost:8020/ sladuca/nocturne-test",
+    "remove-local": "graph remove --node http://localhost:8020/ sladuca/nocturne-test",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 sladuca/nocturne-test",
     "test": "graph test"
   },
   "dependencies": {
