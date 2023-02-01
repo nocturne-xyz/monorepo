@@ -1,25 +1,26 @@
-import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   InsertNoteCommitments,
   InsertNotes,
   JoinSplit,
   Refund,
   SubtreeUpdate,
-} from "../generated/Wallet/Wallet"
-import { EncodedNote, EncodedOrEncryptedNote, EncryptedNote, SubtreeCommit, TreeInsertion } from "../generated/schema"
-
+} from "../generated/Wallet/Wallet";
+import {
+  EncodedNote,
+  EncodedOrEncryptedNote,
+  EncryptedNote,
+  SubtreeCommit,
+  TreeInsertion,
+} from "../generated/schema";
 
 // assumes txIndex and logIndex are less than 2^32. in practice this is a pretty safe assumption (a block should never have billions of txs/log entries)
 function getTotalIndex(event: ethereum.Event): BigInt {
   const blockNumber = event.block.number;
-  const txIndex = event.transaction.index
+  const txIndex = event.transaction.index;
   const logIndex = event.logIndex;
 
-  return blockNumber
-    .leftShift(32)
-    .plus(txIndex)
-    .leftShift(32)
-    .plus(logIndex)
+  return blockNumber.leftShift(32).plus(txIndex).leftShift(32).plus(logIndex);
 }
 
 function getId(totalLogIndex: BigInt, index: number): Bytes {
@@ -53,8 +54,8 @@ export function handleInsertNotes(event: InsertNotes): void {
   for (let i = 0; i < notes.length; i++) {
     const noteValues = notes[i];
     const id = getId(totalLogIndex, i);
-    
-    const note = new EncodedNote(id)
+
+    const note = new EncodedNote(id);
     note.ownerH1 = noteValues.ownerH1;
     note.ownerH2 = noteValues.ownerH2;
     note.nonce = noteValues.nonce;
@@ -62,7 +63,7 @@ export function handleInsertNotes(event: InsertNotes): void {
     note.encodedAssetId = noteValues.encodedAssetId;
     note.value = noteValues.value;
     note.save();
-    
+
     const insertion = new TreeInsertion(id);
     insertion.note = id;
     insertion.save();
@@ -134,7 +135,7 @@ export function handleRefund(event: Refund): void {
   const encodedNote = new EncodedNote(id);
 
   const refundAddr = event.params.refundAddr;
-  
+
   encodedNote.ownerH1 = refundAddr.h1X;
   encodedNote.ownerH2 = refundAddr.h2X;
   encodedNote.nonce = event.params.nonce;
