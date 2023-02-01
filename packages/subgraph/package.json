@@ -9,8 +9,7 @@
     "remove-local": "graph remove --node http://localhost:8020/ sladuca/nocturne-test",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 sladuca/nocturne-test",
     "prettier:check": "prettier --check ./src",
-    "prettier:write": "prettier --write './src'",
-    "test": "graph test"
+    "prettier:write": "prettier --write './src'"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.37.7",
