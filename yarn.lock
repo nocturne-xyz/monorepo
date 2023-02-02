@@ -3728,7 +3728,6 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
     ffjavascript: 0.2.57
-    graphql: ^16.6.0
     graphql-request: ^5.1.0
     js-sha256: ^0.9.0
     mocha: ^10.1.0

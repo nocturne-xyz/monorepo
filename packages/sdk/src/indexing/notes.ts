@@ -6,8 +6,7 @@ import {
   RefundEvent as EthRefundEvent,
   JoinSplitEvent as EthJoinSplitEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import request from 'graphql-request';
-import { gql } from 'graphql';
+import { request, gql } from 'graphql-request';
 import { NoteTransmission, decodeAsset } from "../commonTypes";
 
 const blockNumberToId = (blockNumber: bigint) => "0x" + (blockNumber << 64n).toString(16).padStart(192, '0');
