@@ -6,13 +6,12 @@ import {
   RefundEvent as EthRefundEvent,
   JoinSplitEvent as EthJoinSplitEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { request, gql } from 'graphql-request';
 import { NoteTransmission, decodeAsset } from "../commonTypes";
 
 const blockNumberToId = (blockNumber: bigint) => "0x" + (blockNumber << 64n).toString(16).padStart(192, '0');
 const SUBGRAPH_ENDPOINT = "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne-test/0.0.6/gn";
 
-const fetchNotesQuery = gql`
+const fetchNotesQuery = `
   query fetchNotes($fromId: Bytes, $toId: Bytes) {
     encodedOrEncryptedNotes(first: 20, where: { id_gt: $fromId, id_lt: $toId }) {
       merkleIndex
@@ -44,13 +43,21 @@ export interface IncludedNoteOrNoteTransmission {
   noteOrNoteTransmission: IncludedNote | NoteTransmission;
 }
 
-export async function fetchNotes(contract: Wallet, from: number, to: number): Promise<IncludedNoteOrNoteTransmission[]> {
-  const data = await request(
+export async function fetchNotes(from: number, to: number): Promise<IncludedNoteOrNoteTransmission[]> {
+  const data = await fetch(
     SUBGRAPH_ENDPOINT,
-    fetchNotesQuery,
     {
-      fromId: blockNumberToId(BigInt(from)),
-      toId: blockNumberToId(BigInt(to)),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: fetchNotesQuery,
+        varialbes: {
+          fromId: blockNumberToId(BigInt(from)),
+          toId: blockNumberToId(BigInt(to)),
+        },
+      }),
     }
   );
   console.log(data);
@@ -64,7 +71,7 @@ export async function fetchNotesFromRefunds(
   to: number
 ): Promise<IncludedNote[]> {
 
-  await fetchNotes(contract, from, to);
+  await fetchNotes(from, to);
 
   const filter = contract.filters.Refund();
   let events: EthRefundEvent[] = await query(contract, filter, from, to);
