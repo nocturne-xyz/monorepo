@@ -24,11 +24,14 @@ function getTotalIndex(event: ethereum.Event): BigInt {
 }
 
 function getId(totalLogIndex: BigInt, index: number): Bytes {
-  const leafIndex = totalLogIndex
+  const idNum = totalLogIndex
     .leftShift(32)
     .plus(BigInt.fromI32(index as i32));
 
-  return Bytes.fromHexString(leafIndex.toHexString());
+  const without0x = idNum.toHexString().slice(2);
+  const padded = without0x.padStart(192, "0");
+
+  return Bytes.fromHexString("0x" + padded);
 }
 
 export function handleInsertNoteCommitments(
