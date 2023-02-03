@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix bug where bundler endpoint was not being passed in playground ABIForm
 - Fix actions display and display correct target addr per action
 - add styles for `TxModal`
 - Fix unwrap / spend amounts in `index.tsx`
