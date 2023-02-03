@@ -56,7 +56,7 @@ rm -r ./redis-data || "echo 'redis-data does not yet exist'"
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --renew-anon-volumes --build  &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --build  &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "Bundler running at PID: $BUNDLER_PID"
