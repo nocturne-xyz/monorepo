@@ -1,5 +1,4 @@
 import { NocturneDeployment, NocturneDeployOpts } from './types';
-import { upgrades, ethers } from 'hardhat';
 import * as dotenv from 'dotenv';
 import { ProxyAdmin__factory } from '../src/factories/ProxyAdmin__factory';
 import { Vault__factory } from '../src/factories/Vault__factory';
@@ -7,20 +6,23 @@ import { JoinSplitVerifier__factory } from '../src/factories/JoinSplitVerifier__
 import { TestSubtreeUpdateVerifier__factory } from '../src/factories/TestSubtreeUpdateVerifier__factory';
 import { SubtreeUpdateVerifier__factory } from '../src/factories/SubtreeUpdateVerifier__factory';
 import { Wallet__factory } from '../src/factories/Wallet__factory';
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 dotenv.config();
 
 export async function deployNocturne(
-  network: string,
+  hardhat: HardhatRuntimeEnvironment,
   proxyAdminOwner: string,
   opts?: NocturneDeployOpts,
 ): Promise<NocturneDeployment> {
+  const { upgrades, ethers } = hardhat;
+
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error('Deploy script missing deployer key');
 
   let provider = opts?.provider;
   if (!provider) {
-    const rpcUrlName = `${network.toUpperCase()}_RPC_URL`;
+    const rpcUrlName = `${hardhat.network.name.toUpperCase()}_RPC_URL`;
     const rpcUrl = process.env[rpcUrlName];
     if (!rpcUrl) throw new Error('Deploy script missing rpc url');
     provider = ethers.providers.getDefaultProvider(rpcUrl);

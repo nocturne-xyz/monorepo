@@ -13,7 +13,7 @@ site-dev-logs/
 MyLogFile.log
 **/MyLogFile.log
 
-**/.env
+**/**.env
 **/redis-data
 
 

@@ -1,10 +1,8 @@
 import { deployNocturne } from './deploy';
 import * as fs from 'fs';
+import hardhat from 'hardhat';
 
 (async () => {
-  const network = process.env.HARDHAT_NETWORK;
-  if (!network) throw new Error('Deploy script missing network');
-
   const proxyAdminOwner = process.env.PROXY_ADMIN_OWNER;
   if (!proxyAdminOwner)
     throw new Error('Deploy script missing proxy admin owner address');
@@ -12,7 +10,8 @@ import * as fs from 'fs';
   const useMockSubtreeUpdateVerifier =
     process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
 
-  const deployment = await deployNocturne(network, proxyAdminOwner, {
+  const network = hardhat.network.name;
+  const deployment = await deployNocturne(hardhat, proxyAdminOwner, {
     useMockSubtreeUpdateVerifier,
   });
   console.log(deployment);
