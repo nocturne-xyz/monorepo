@@ -9,5 +9,7 @@ db
 #Hardhat files
 cache
 artifacts
-
+contracts
+cache_hardhat
 deployments
+.openzeppelin

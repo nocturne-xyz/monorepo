@@ -2,6 +2,8 @@ import { deployNocturne } from './deploy';
 import * as fs from 'fs';
 import hardhat from 'hardhat';
 
+export { deployNocturne } from './deploy';
+
 (async () => {
   const proxyAdminOwner = process.env.PROXY_ADMIN_OWNER;
   if (!proxyAdminOwner)

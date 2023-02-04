@@ -32,6 +32,10 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  paths: {
+    sources: "./contracts",
+    cache: "./cache_hardhat",
+  },
 };
 
 export default config;

@@ -113,7 +113,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
-    const submitter = new SyncSubtreeSubmitter(wallet);
+    const submitter = new SyncSubtreeSubmitter(wallet.connect(deployer));
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
 
     redisServer = await RedisMemoryServer.create();
@@ -140,7 +140,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   async function applySubtreeUpdate() {
-    await wallet.fillBatchWithZeros();
+    await wallet.connect(deployer).fillBatchWithZeros();
     await updater.pollInsertionsAndTryMakeBatch();
     await updater.tryGenAndSubmitProofs();
   }
