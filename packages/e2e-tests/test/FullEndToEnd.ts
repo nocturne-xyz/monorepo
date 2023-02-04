@@ -109,7 +109,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextAlice,
       notesDBBob,
       nocturneContextBob,
-    } = await setupNocturne({ deployContracts: true }));
+    } = await setupNocturne());
 
     const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
     const prover = getSubtreeUpdateProver();
