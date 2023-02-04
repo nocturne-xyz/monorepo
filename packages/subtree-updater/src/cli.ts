@@ -115,6 +115,4 @@ export default async function main(): Promise<void> {
   await server.start();
 }
 
-(async () => {
-  await main();
-})();
+main().catch((e) => console.log(`Subtree updater exited with error: ${e}`));

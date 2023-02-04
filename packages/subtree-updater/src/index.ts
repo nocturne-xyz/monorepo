@@ -117,6 +117,7 @@ export class SubtreeUpdater {
     const lastCommit =
       newCommits.length > 0 ? newCommits[newCommits.length - 1] : undefined;
 
+    /* eslint-disable @typescript-eslint/no-floating-promises */
     const index = await this.getNextInsertionIndex();
     await this.db.transaction(() => {
       let keyIndex = index;
@@ -138,6 +139,7 @@ export class SubtreeUpdater {
       );
       this.db.put(NEXT_BLOCK_TO_INDEX_KEY, (currentBlockNumber + 1).toString());
     });
+    /* eslint-enable @typescript-eslint/no-floating-promises */
 
     this.insertions.push(...newInsertions);
     if (lastCommit !== undefined) {
