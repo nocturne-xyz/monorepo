@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix bug where joinsplits being processed in tandem with refunds was causing some refund notes to not be removed by joinsplits
 - Fix bug where zeroed dummy notes always produce same NF by generating rand address and nonce
 - `LocalMerkleProver` and `LocalNotesManager` take optional start blocks as params
 - Fix unawaited promise when calling `processNoteTransmission` on handling new joinsplits

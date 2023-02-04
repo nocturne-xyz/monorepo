@@ -58,7 +58,7 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
   useEffect(() => {
     const intervalId = setInterval(() => {
       fetchData();
-    }, 5000);
+    }, 7_000);
     return () => clearInterval(intervalId);
   }, []);
 

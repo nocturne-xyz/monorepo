@@ -41,7 +41,6 @@ export abstract class NotesManager {
     const ownedNotes = newNotes.filter((refund) => {
       return this.signer.testOwn(refund.owner);
     });
-    console.log("[Refunds] Fetched notes:", newNotes);
     console.log("[Refunds] Owned notes:", ownedNotes);
     await this.storeNewNotesFromRefunds(ownedNotes);
     await this.postStoreNotesFromRefunds();
@@ -50,20 +49,7 @@ export abstract class NotesManager {
   private async applyNewJoinSplits(
     newJoinSplits: JoinSplitEvent[]
   ): Promise<void> {
-    const allNotes = [...(await this.db.getAllNotes()).values()].flat();
     for (const e of newJoinSplits) {
-      // Delete nullified notes
-      for (const oldNote of allNotes) {
-        // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(oldNote);
-        if (
-          oldNullifier == e.oldNoteANullifier ||
-          oldNullifier == e.oldNoteBNullifier
-        ) {
-          await this.db.removeNote(oldNote);
-        }
-      }
-
       const asset = decodeAsset(
         e.joinSplitTx.encodedAsset.encodedAssetAddr,
         e.joinSplitTx.encodedAsset.encodedAssetId
@@ -82,6 +68,21 @@ export abstract class NotesManager {
         e.newNoteBIndex,
         asset
       );
+    }
+
+    const allNotesUpdated = [...(await this.db.getAllNotes()).values()].flat();
+    for (const e of newJoinSplits) {
+      // Delete nullified notes
+      for (const oldNote of allNotesUpdated) {
+        // TODO implement note indexing by nullifiers
+        const oldNullifier = this.signer.createNullifier(oldNote);
+        if (
+          oldNullifier == e.oldNoteANullifier ||
+          oldNullifier == e.oldNoteBNullifier
+        ) {
+          await this.db.removeNote(oldNote);
+        }
+      }
     }
   }
 
@@ -104,7 +105,6 @@ export abstract class NotesManager {
         newNote.value > 0n &&
         NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
-        console.log("Storing new note:", newNote);
         await this.db.storeNote(newNote);
       }
     }

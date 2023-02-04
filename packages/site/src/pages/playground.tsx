@@ -10,7 +10,7 @@ import {
   DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
 import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
-import { bundlerEndpoint } from "../config/bundler";
+import { BUNDLER_ENDPOINT } from "../config/bundler";
 
 const Container = styled.div`
   display: flex;
@@ -63,7 +63,7 @@ const Playground = () => {
 
   useEffect(() => {
     loadNocturneFrontendSDK(
-      bundlerEndpoint,
+      BUNDLER_ENDPOINT,
       WALLET_CONTRACT_ADDRESS,
       VAULT_CONTRACT_ADDRESS
     ).then((sdk) => {
@@ -152,7 +152,12 @@ const Playground = () => {
             }}
             fullWidth
           >
-            {nocturneFrontendSDK && <ABIForm sdk={nocturneFrontendSDK} />}
+            {nocturneFrontendSDK && (
+              <ABIForm
+                sdk={nocturneFrontendSDK}
+                bundlerEndpoint={BUNDLER_ENDPOINT}
+              />
+            )}
           </Card>
         </CardContainer>
       )}
