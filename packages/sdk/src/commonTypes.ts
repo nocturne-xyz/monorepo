@@ -193,7 +193,7 @@ export interface EncryptedNote {
   encryptedValue: bigint;
 }
 
-export interface BaseJoinSplitTx {
+export interface BaseJoinSplit {
   commitmentTreeRoot: bigint;
   nullifierA: bigint;
   nullifierB: bigint;
@@ -205,7 +205,7 @@ export interface BaseJoinSplitTx {
   newNoteBEncrypted: EncryptedNote;
 }
 
-export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
+export interface PreSignJoinSplit extends BaseJoinSplit {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -214,12 +214,12 @@ export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
   merkleInputB: MerkleProofInput;
 }
 
-export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
+export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
 }
 
-export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
+export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
@@ -234,15 +234,15 @@ export interface BaseOperation {
 }
 
 export interface PreSignOperation extends BaseOperation {
-  joinSplitTxs: PreSignJoinSplitTx[];
+  joinSplits: PreSignJoinSplit[];
 }
 
 export interface PreProofOperation extends BaseOperation {
-  joinSplitTxs: PreProofJoinSplitTx[];
+  joinSplits: PreProofJoinSplit[];
 }
 
 export interface ProvenOperation extends BaseOperation {
-  joinSplitTxs: ProvenJoinSplitTx[];
+  joinSplits: ProvenJoinSplit[];
 }
 
 export enum OperationStatus {

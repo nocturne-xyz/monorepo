@@ -132,36 +132,36 @@ contract BalanceManager is
     }
 
     /**
-      Process all joinSplitTxs and request all declared publicSpend from the
+      Process all joinSplits and request all declared publicSpend from the
       vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
       to request maxGasAssetCost from vault with the same encodedAsset as
-      joinSplitTxs[0].
+      joinSplits[0].
     */
-    function _processJoinSplitTxsReservingFee(Operation calldata op) internal {
+    function _processJoinSplitsReservingFee(Operation calldata op) internal {
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
         uint256 gasAssetToReserve = op.maxGasAssetCost();
 
-        uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Process nullifiers in the current joinSplitTx, will throw if
+            // Process nullifiers in the current joinSplit, will throw if
             // they are not fresh
-            _handleJoinSplit(op.joinSplitTxs[i]);
+            _handleJoinSplit(op.joinSplits[i]);
 
             // Defaults to requesting all publicSpend from vault
-            uint256 valueToTransfer = op.joinSplitTxs[i].publicSpend;
+            uint256 valueToTransfer = op.joinSplits[i].publicSpend;
             // If we still need to reserve more gas and the current
-            // `joinSplitTx` is spending the gasAsset, then reserve what we can
-            // from this `joinSplitTx`
+            // `joinSplit` is spending the gasAsset, then reserve what we can
+            // from this `joinSplit`
             if (
                 gasAssetToReserve > 0 &&
-                AssetUtils.eq(encodedGasAsset, op.joinSplitTxs[i].encodedAsset)
+                AssetUtils.eq(encodedGasAsset, op.joinSplits[i].encodedAsset)
             ) {
                 // We will reserve as much as we can, upto the public spend
                 // amount or the maximum amount to be reserved
                 uint256 gasPaymentThisJoinSplit = Utils.min(
-                    op.joinSplitTxs[i].publicSpend,
+                    op.joinSplits[i].publicSpend,
                     gasAssetToReserve
                 );
                 // Deduct gas payment from value to transfer to wallet
@@ -173,7 +173,7 @@ contract BalanceManager is
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
                 _vault.requestAsset(
-                    op.joinSplitTxs[i].encodedAsset,
+                    op.joinSplits[i].encodedAsset,
                     valueToTransfer
                 );
             }
@@ -192,7 +192,7 @@ contract BalanceManager is
 
         if (gasAssetAmount > 0) {
             // Request reserved gasAssetAmount from vault.
-            /// @dev This is safe because _processJoinSplitTxsReservingFee is
+            /// @dev This is safe because _processJoinSplitsReservingFee is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
             _vault.requestAsset(encodedGasAsset, gasAssetAmount);
 
@@ -211,7 +211,7 @@ contract BalanceManager is
     function _totalNumRefundsToHandle(
         Operation calldata op
     ) internal view returns (uint256) {
-        uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numJoinSplits = op.joinSplits.length;
         uint256 numRefundAssets = op.encodedRefundAssets.length;
         uint256 numReceived = _receivedAssets.length;
         return numJoinSplits + numRefundAssets + numReceived;
@@ -219,14 +219,14 @@ contract BalanceManager is
 
     /**
       Refund all current wallet assets back to refundAddr. The list of assets
-      to refund is specified in joinSplitTxs and the state variable
+      to refund is specified in joinSplits and the state variable
       _receivedAssets.
     */
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplitTxs.length;
+        uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
             _handleRefundForAsset(
-                op.joinSplitTxs[i].encodedAsset,
+                op.joinSplits[i].encodedAsset,
                 op.refundAddr
             );
         }

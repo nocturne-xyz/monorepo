@@ -11,8 +11,8 @@
 - factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`
 - add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`
-- factor contents of `NocturneContext.proveJoinSplitTx` into a standalone helper
-- Add `makeProvenJoinSplitTx` util function that removes additional fields `PreProofJoinSplitTx` has
+- factor contents of `NocturneContext.proveJoinSplit` into a standalone helper
+- Add `makeProvenJoinSplit` util function that removes additional fields `PreProofJoinSplit` has
 - Fix `NocturneContext.gatherMinimumNotes` bug by adding missing await for `this.ensureMinimumForAssetRequest` and updating test
 - Depend on nocturne fork of circomlibjs
 - Fix `decodeAsset` not padding out address with zeros
@@ -20,7 +20,7 @@
 - Use `randombytes` instead of node `crypto`
 - Use patched fork of `circomlibjs`
 - Avoid usage of `Buffer` in `sdk`.
-- Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one field `joinSplitTx.encodedAsset`
+- Merge `joinSplit.encodedAssetAddr` and `joinSplit.encodedAssetId` into one field `joinSplit.encodedAsset`
 - Add utility function to estimate `executionGasLimit` and `maxNumRefund`
 - Change note commitment to use encoded `asset` and `ID`
 - Add and `encode` and `decode` methods to `NoteTrait`

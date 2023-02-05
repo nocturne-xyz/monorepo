@@ -60,7 +60,7 @@ const actionsType = {
   type: "array",
   items: actionType,
 };
-const joinSplitTxType = {
+const joinSplitType = {
   type: "object",
   required: [
     "proof",
@@ -88,15 +88,15 @@ const joinSplitTxType = {
   },
   additionalProperties: false,
 };
-const joinSplitTxsType = {
+const joinSplitsType = {
   type: "array",
-  items: joinSplitTxType,
+  items: joinSplitType,
 };
 
 export const relaySchema = {
   type: "object",
   required: [
-    "joinSplitTxs",
+    "joinSplits",
     "refundAddr",
     "encodedRefundAssets",
     "actions",
@@ -106,7 +106,7 @@ export const relaySchema = {
     "gasPrice",
   ],
   properties: {
-    joinSplitTxs: joinSplitTxsType,
+    joinSplits: joinSplitsType,
     refundAddr: stealthAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,

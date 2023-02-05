@@ -34,12 +34,12 @@ function hashOperation(
     );
   }
 
-  let joinSplitTxsPayload = [] as any;
-  for (const joinsplit of op.joinSplitTxs) {
-    joinSplitTxsPayload = ethers.utils.solidityPack(
+  let joinSplitsPayload = [] as any;
+  for (const joinsplit of op.joinSplits) {
+    joinSplitsPayload = ethers.utils.solidityPack(
       ["bytes", "bytes32"],
       [
-        joinSplitTxsPayload,
+        joinSplitsPayload,
         ethers.utils.keccak256(
           ethers.utils.solidityPack(
             [
@@ -77,7 +77,7 @@ function hashOperation(
     ["bytes", "bytes", "bytes", "bytes", "uint256", "uint256", "uint256"],
     [
       actionPayload,
-      joinSplitTxsPayload,
+      joinSplitsPayload,
       refundAddrPayload,
       refundAssetsPayload,
       op.executionGasLimit,

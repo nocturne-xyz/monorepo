@@ -1,5 +1,5 @@
 export const VALID_PROVEN_OPERATION_OBJ = {
-  joinSplitTxs: [
+  joinSplits: [
     {
       proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
       commitmentTreeRoot: "0n",

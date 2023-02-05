@@ -41,7 +41,7 @@ struct EncryptedNote {
     uint256 encryptedValue;
 }
 
-struct JoinSplitTransaction {
+struct JoinSplit {
     uint256 commitmentTreeRoot;
     uint256 nullifierA;
     uint256 nullifierB;
@@ -81,7 +81,7 @@ struct Bundle {
 }
 
 struct Operation {
-    JoinSplitTransaction[] joinSplitTxs;
+    JoinSplit[] joinSplits;
     StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
@@ -125,7 +125,7 @@ library BundleLib {
     ) internal pure returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < self.operations.length; i++) {
-            total += self.operations[i].joinSplitTxs.length;
+            total += self.operations[i].joinSplits.length;
         }
         return total;
     }
@@ -135,7 +135,7 @@ library OperationLib {
     function gasAsset(
         Operation calldata self
     ) internal pure returns (EncodedAsset calldata) {
-        return self.joinSplitTxs[0].encodedAsset;
+        return self.joinSplits[0].encodedAsset;
     }
 
     function maxGasLimit(
@@ -143,7 +143,7 @@ library OperationLib {
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
-            (GAS_PER_VERIFICATION * self.joinSplitTxs.length) +
+            (GAS_PER_VERIFICATION * self.joinSplits.length) +
             (GAS_PER_REFUND_HANDLE * self.encodedRefundAssets.length) +
             (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
     }

@@ -33,7 +33,7 @@ library WalletUtils {
         // compute number of joinsplits in the bundle
         uint256 numJoinSplits = 0;
         for (uint256 i = 0; i < numOps; i++) {
-            numJoinSplits += ops[i].joinSplitTxs.length;
+            numJoinSplits += ops[i].joinSplits.length;
         }
 
         proofs = new Groth16.Proof[](numJoinSplits);
@@ -45,23 +45,23 @@ library WalletUtils {
         // Batch verify all the joinsplit proofs
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
-            uint256 numJoinSplitsForOp = op.joinSplitTxs.length;
+            uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                proofs[index] = Utils.proof8ToStruct(op.joinSplitTxs[j].proof);
+                proofs[index] = Utils.proof8ToStruct(op.joinSplits[j].proof);
                 allPis[index] = new uint256[](9);
-                allPis[index][0] = op.joinSplitTxs[j].newNoteACommitment;
-                allPis[index][1] = op.joinSplitTxs[j].newNoteBCommitment;
-                allPis[index][2] = op.joinSplitTxs[j].commitmentTreeRoot;
-                allPis[index][3] = op.joinSplitTxs[j].publicSpend;
-                allPis[index][4] = op.joinSplitTxs[j].nullifierA;
-                allPis[index][5] = op.joinSplitTxs[j].nullifierB;
+                allPis[index][0] = op.joinSplits[j].newNoteACommitment;
+                allPis[index][1] = op.joinSplits[j].newNoteBCommitment;
+                allPis[index][2] = op.joinSplits[j].commitmentTreeRoot;
+                allPis[index][3] = op.joinSplits[j].publicSpend;
+                allPis[index][4] = op.joinSplits[j].nullifierA;
+                allPis[index][5] = op.joinSplits[j].nullifierB;
                 allPis[index][6] = digests[i];
                 allPis[index][7] = op
-                    .joinSplitTxs[j]
+                    .joinSplits[j]
                     .encodedAsset
                     .encodedAssetAddr;
                 allPis[index][8] = op
-                    .joinSplitTxs[j]
+                    .joinSplits[j]
                     .encodedAsset
                     .encodedAssetId;
                 index++;
@@ -90,21 +90,21 @@ library WalletUtils {
             );
         }
 
-        bytes memory joinSplitTxsPayload;
-        uint256 numJoinSplits = op.joinSplitTxs.length;
+        bytes memory joinSplitsPayload;
+        uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            joinSplitTxsPayload = abi.encodePacked(
-                joinSplitTxsPayload,
+            joinSplitsPayload = abi.encodePacked(
+                joinSplitsPayload,
                 keccak256(
                     abi.encodePacked(
-                        op.joinSplitTxs[i].commitmentTreeRoot,
-                        op.joinSplitTxs[i].nullifierA,
-                        op.joinSplitTxs[i].nullifierB,
-                        op.joinSplitTxs[i].newNoteACommitment,
-                        op.joinSplitTxs[i].newNoteBCommitment,
-                        op.joinSplitTxs[i].publicSpend,
-                        op.joinSplitTxs[i].encodedAsset.encodedAssetAddr,
-                        op.joinSplitTxs[i].encodedAsset.encodedAssetId
+                        op.joinSplits[i].commitmentTreeRoot,
+                        op.joinSplits[i].nullifierA,
+                        op.joinSplits[i].nullifierB,
+                        op.joinSplits[i].newNoteACommitment,
+                        op.joinSplits[i].newNoteBCommitment,
+                        op.joinSplits[i].publicSpend,
+                        op.joinSplits[i].encodedAsset.encodedAssetAddr,
+                        op.joinSplits[i].encodedAsset.encodedAssetId
                     )
                 )
             );
@@ -128,7 +128,7 @@ library WalletUtils {
 
         bytes memory payload = abi.encodePacked(
             actionPayload,
-            joinSplitTxsPayload,
+            joinSplitsPayload,
             refundAddrPayload,
             refundAssetsPayload,
             op.executionGasLimit,
@@ -187,7 +187,7 @@ library WalletUtils {
                 callResults: callResults,
                 executionGas: 0,
                 verificationGas: 0,
-                numRefunds: op.joinSplitTxs.length +
+                numRefunds: op.joinSplits.length +
                     op.encodedRefundAssets.length
             });
     }
@@ -196,7 +196,7 @@ library WalletUtils {
         Operation calldata op,
         uint256 perJoinSplitGas
     ) internal pure returns (uint256) {
-        return perJoinSplitGas * op.joinSplitTxs.length;
+        return perJoinSplitGas * op.joinSplits.length;
     }
 
     function calculateBundlerGasAssetPayout(

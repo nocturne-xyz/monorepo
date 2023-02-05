@@ -38,7 +38,7 @@ export class NullifierDB {
 
   getAddNullifierTransactions(operation: ProvenOperation): RedisTransaction[] {
     const digest = calculateOperationDigest(operation).toString();
-    return operation.joinSplitTxs.flatMap(({ nullifierA, nullifierB }) => {
+    return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [
         this.getAddNullifierTransaction(nullifierA, digest),
         this.getAddNullifierTransaction(nullifierB, digest),

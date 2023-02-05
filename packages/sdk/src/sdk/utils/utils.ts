@@ -19,17 +19,17 @@ export function getJoinSplitRequestTotalValue(
 export function fakeProvenOperation(
   op: PreSignOperation | PreProofOperation | ProvenOperation
 ): ProvenOperation {
-  const provenJoinSplitTxs = op.joinSplitTxs.map((joinSplitTx) => {
+  const provenJoinSplits = op.joinSplits.map((joinSplit) => {
     return {
-      commitmentTreeRoot: joinSplitTx.commitmentTreeRoot,
-      nullifierA: joinSplitTx.nullifierA,
-      nullifierB: joinSplitTx.nullifierB,
-      newNoteACommitment: joinSplitTx.newNoteACommitment,
-      newNoteBCommitment: joinSplitTx.newNoteBCommitment,
-      encodedAsset: joinSplitTx.encodedAsset,
-      publicSpend: joinSplitTx.publicSpend,
-      newNoteAEncrypted: joinSplitTx.newNoteAEncrypted,
-      newNoteBEncrypted: joinSplitTx.newNoteBEncrypted,
+      commitmentTreeRoot: joinSplit.commitmentTreeRoot,
+      nullifierA: joinSplit.nullifierA,
+      nullifierB: joinSplit.nullifierB,
+      newNoteACommitment: joinSplit.newNoteACommitment,
+      newNoteBCommitment: joinSplit.newNoteBCommitment,
+      encodedAsset: joinSplit.encodedAsset,
+      publicSpend: joinSplit.publicSpend,
+      newNoteAEncrypted: joinSplit.newNoteAEncrypted,
+      newNoteBEncrypted: joinSplit.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
     };
   });
@@ -41,6 +41,6 @@ export function fakeProvenOperation(
     executionGasLimit: op.executionGasLimit,
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
-    joinSplitTxs: provenJoinSplitTxs,
+    joinSplits: provenJoinSplits,
   };
 }

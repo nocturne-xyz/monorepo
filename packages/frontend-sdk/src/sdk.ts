@@ -1,14 +1,14 @@
 import {
   OperationRequest,
   ProvenOperation,
-  ProvenJoinSplitTx,
+  ProvenJoinSplit,
   PreProofOperation,
   StealthAddress,
   AssetWithBalance,
   encodeAsset,
   AssetType,
   Address,
-  proveJoinSplitTx,
+  proveJoinSplit,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
@@ -143,9 +143,9 @@ export class NocturneFrontendSDK {
 
     console.log("PreProofOperation", preProofOperation);
 
-    const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
-      preProofOperation.joinSplitTxs.map((inputs) =>
-        proveJoinSplitTx(this.localProver, inputs)
+    const provenJoinSplitPromises: Promise<ProvenJoinSplit>[] =
+      preProofOperation.joinSplits.map((inputs) =>
+        proveJoinSplit(this.localProver, inputs)
       );
 
     const {
@@ -158,9 +158,9 @@ export class NocturneFrontendSDK {
       refundAddr,
     } = preProofOperation;
 
-    const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
+    const joinSplits = await Promise.all(provenJoinSplitPromises);
     return {
-      joinSplitTxs,
+      joinSplits,
       refundAddr,
       encodedRefundAssets,
       actions,
@@ -176,7 +176,7 @@ export class NocturneFrontendSDK {
     const opDigest = calculateOperationDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
-      operation.joinSplitTxs.map((joinSplit) => {
+      operation.joinSplits.map((joinSplit) => {
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
           newNoteBCommitment: joinSplit.newNoteBCommitment,

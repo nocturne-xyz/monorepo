@@ -4,7 +4,7 @@ import { NocturneSigner } from "../signer";
 import {
   decodeAsset,
   Asset,
-  BaseJoinSplitTx,
+  BaseJoinSplit,
   EncryptedNote,
 } from "../../commonTypes";
 
@@ -13,7 +13,7 @@ export interface JoinSplitEvent {
   oldNoteBNullifier: bigint;
   newNoteAIndex: number;
   newNoteBIndex: number;
-  joinSplitTx: BaseJoinSplitTx;
+  joinSplit: BaseJoinSplit;
 }
 
 export abstract class NotesManager {
@@ -51,20 +51,20 @@ export abstract class NotesManager {
   ): Promise<void> {
     for (const e of newJoinSplits) {
       const asset = decodeAsset(
-        e.joinSplitTx.encodedAsset.encodedAssetAddr,
-        e.joinSplitTx.encodedAsset.encodedAssetId
+        e.joinSplit.encodedAsset.encodedAssetAddr,
+        e.joinSplit.encodedAsset.encodedAssetId
       );
 
       await this.processEncryptedNote(
-        e.joinSplitTx.newNoteACommitment,
-        e.joinSplitTx.newNoteAEncrypted,
+        e.joinSplit.newNoteACommitment,
+        e.joinSplit.newNoteAEncrypted,
         e.newNoteAIndex,
         asset
       );
 
       await this.processEncryptedNote(
-        e.joinSplitTx.newNoteBCommitment,
-        e.joinSplitTx.newNoteBEncrypted,
+        e.joinSplit.newNoteBCommitment,
+        e.joinSplit.newNoteBEncrypted,
         e.newNoteBIndex,
         asset
       );

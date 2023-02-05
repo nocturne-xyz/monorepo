@@ -63,7 +63,7 @@ export async function fetchJoinSplits(
       oldNoteBNullifier,
       newNoteAIndex,
       newNoteBIndex,
-      joinSplitTx,
+      joinSplit,
     } = event.args;
     const {
       commitmentTreeRoot,
@@ -75,7 +75,7 @@ export async function fetchJoinSplits(
       newNoteBEncrypted,
       encodedAsset,
       publicSpend,
-    } = joinSplitTx;
+    } = joinSplit;
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
       newNoteAEncrypted;
@@ -106,7 +106,7 @@ export async function fetchJoinSplits(
       oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
       newNoteAIndex: newNoteAIndex.toNumber(),
       newNoteBIndex: newNoteBIndex.toNumber(),
-      joinSplitTx: {
+      joinSplit: {
         commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
         nullifierA: nullifierA.toBigInt(),
         nullifierB: nullifierB.toBigInt(),

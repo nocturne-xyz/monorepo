@@ -75,7 +75,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        JoinSplitTransaction joinSplitTx
+        JoinSplit joinSplit
     );
 
     event OperationProcessed(
@@ -271,11 +271,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedAssetId: uint256(0)
         });
 
-        JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
+        JoinSplit[] memory joinSplits = new JoinSplit[](
             args.numJoinSplits
         );
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
-            joinSplitTxs[i] = JoinSplitTransaction({
+            joinSplits[i] = JoinSplit({
                 commitmentTreeRoot: root,
                 nullifierA: uint256(2 * i),
                 nullifierB: uint256(2 * i + 1),
@@ -293,14 +293,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
         Operation memory op = Operation({
-            joinSplitTxs: joinSplitTxs,
+            joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
             verificationGasLimit: args.verificationGasLimit,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplitTxs.length
+            maxNumRefunds: joinSplits.length
         });
 
         return op;
@@ -354,11 +354,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Check joinsplit event
         vm.expectEmit(true, true, false, true);
         emit JoinSplit(
-            bundle.operations[0].joinSplitTxs[0].nullifierA,
-            bundle.operations[0].joinSplitTxs[0].nullifierB,
+            bundle.operations[0].joinSplits[0].nullifierA,
+            bundle.operations[0].joinSplits[0].nullifierB,
             16, // newNoteAIndex
             17, // newNoteBIndex
-            bundle.operations[0].joinSplitTxs[0]
+            bundle.operations[0].joinSplits[0]
         );
 
         // Check OperationProcessed event

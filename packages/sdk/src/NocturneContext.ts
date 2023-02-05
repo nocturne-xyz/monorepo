@@ -5,9 +5,9 @@ import {
   OperationRequest,
   packToSolidityProof,
   EncodedAsset,
-  PreSignJoinSplitTx,
-  PreProofJoinSplitTx,
-  ProvenJoinSplitTx,
+  PreSignJoinSplit,
+  PreProofJoinSplit,
+  ProvenJoinSplit,
   PreSignOperation,
   PreProofOperation,
   ProvenOperation,
@@ -99,13 +99,13 @@ export class NocturneContext {
       operationRequest
     );
 
-    const allProofPromises: Promise<ProvenJoinSplitTx>[] =
-      preProofOp.joinSplitTxs.map((tx) => {
-        return this.proveJoinSplitTx(tx);
+    const allProofPromises: Promise<ProvenJoinSplit>[] =
+      preProofOp.joinSplits.map((tx) => {
+        return this.proveJoinSplit(tx);
       });
 
     return {
-      joinSplitTxs: await Promise.all(allProofPromises),
+      joinSplits: await Promise.all(allProofPromises),
       refundAddr: preProofOp.refundAddr,
       encodedRefundAssets: preProofOp.encodedRefundAssets,
       actions: preProofOp.actions,
@@ -119,7 +119,7 @@ export class NocturneContext {
   /**
    *
    * Given `operationRequest`, gather the necessary notes and proof inputs to
-   * fulfill the operation's asset requests. Return the PreProofJoinSplitTx and
+   * fulfill the operation's asset requests. Return the PreProofJoinSplit and
    * proof inputs.
    *
    * @param operationRequest
@@ -134,14 +134,14 @@ export class NocturneContext {
     const opDigest = calculateOperationDigest(preSignOperation);
     const opSig = this.signer.sign(opDigest);
 
-    const preProofJoinSplitTxs: PreProofJoinSplitTx[] = await Promise.all(
-      preSignOperation.joinSplitTxs.map((tx) => {
-        return this.genPreProofJoinSplitTx(tx, opDigest, opSig);
+    const preProofJoinSplits: PreProofJoinSplit[] = await Promise.all(
+      preSignOperation.joinSplits.map((tx) => {
+        return this.genPreProofJoinSplit(tx, opDigest, opSig);
       })
     );
 
     return {
-      joinSplitTxs: preProofJoinSplitTxs,
+      joinSplits: preProofJoinSplits,
       refundAddr: preSignOperation.refundAddr,
       encodedRefundAssets: preSignOperation.encodedRefundAssets,
       actions: preSignOperation.actions,
@@ -167,20 +167,20 @@ export class NocturneContext {
   }
 
   /**
-   * Generate a `ProvenJoinSplitTx` from a `PreProofJoinSplitTx`
+   * Generate a `ProvenJoinSplit` from a `PreProofJoinSplit`
    */
-  protected async proveJoinSplitTx(
-    preProofJoinSplitTx: PreProofJoinSplitTx
-  ): Promise<ProvenJoinSplitTx> {
-    return await proveJoinSplitTx(this.prover, preProofJoinSplitTx);
+  protected async proveJoinSplit(
+    preProofJoinSplit: PreProofJoinSplit
+  ): Promise<ProvenJoinSplit> {
+    return await proveJoinSplit(this.prover, preProofJoinSplit);
   }
 
   /**
-   * Generate a sequence of joinSplitTx for a given joinSplitRequest.
+   * Generate a sequence of joinSplit for a given joinSplitRequest.
    */
-  async genPreSignJoinSplitTxs(
+  async genPreSignJoinSplits(
     joinSplitRequest: JoinSplitRequest
-  ): Promise<PreSignJoinSplitTx[]> {
+  ): Promise<PreSignJoinSplit[]> {
     let notesToUse = await this.gatherMinimumNotes(joinSplitRequest);
 
     const unwrapVal = joinSplitRequest.unwrapValue;
@@ -211,7 +211,7 @@ export class NocturneContext {
       });
     }
 
-    const preSignJoinSplitTxs: Promise<PreSignJoinSplitTx>[] = [];
+    const preSignJoinSplits: Promise<PreSignJoinSplit>[] = [];
 
     let noteA, noteB;
     let remainingPaymentVal = paymentVal;
@@ -237,8 +237,8 @@ export class NocturneContext {
           : remainingJoinSplitVal;
       remainingPaymentVal -= currentPaymentVal;
 
-      preSignJoinSplitTxs.push(
-        this.genPreSignJoinSplitTx(
+      preSignJoinSplits.push(
+        this.genPreSignJoinSplit(
           noteA,
           noteB,
           currentReturnVal,
@@ -247,25 +247,25 @@ export class NocturneContext {
         )
       );
     }
-    return Promise.all(preSignJoinSplitTxs);
+    return Promise.all(preSignJoinSplits);
   }
 
   /**
-   * Generate a single PreSignJoinSplitTx.
+   * Generate a single PreSignJoinSplit.
    *
    * @param oldNoteA, oldNoteB old notes to spend
    * @param returnVal value to be given back to the spender
    * @param paymentVal value of the confidential payment
    * @param receiver recipient of the confidential payment
-   * @return a PreSignJoinSplitTx
+   * @return a PreSignJoinSplit
    */
-  protected async genPreSignJoinSplitTx(
+  protected async genPreSignJoinSplit(
     oldNoteA: IncludedNote,
     oldNoteB: IncludedNote,
     returnVal: bigint,
     paymentVal = 0n,
     receiver?: CanonAddress
-  ): Promise<PreSignJoinSplitTx> {
+  ): Promise<PreSignJoinSplit> {
     const nullifierA = this.signer.createNullifier(oldNoteA);
     const nullifierB = this.signer.createNullifier(oldNoteB);
 
@@ -362,10 +362,10 @@ export class NocturneContext {
     executionGasLimit,
     maxNumRefunds,
   }: OperationRequest): Promise<PreSignOperation> {
-    const preSignJoinSplitTxs: PreSignJoinSplitTx[] = [];
+    const preSignJoinSplits: PreSignJoinSplit[] = [];
     for (const joinSplitRequest of joinSplitRequests) {
-      preSignJoinSplitTxs.push(
-        ...(await this.genPreSignJoinSplitTxs(joinSplitRequest))
+      preSignJoinSplits.push(
+        ...(await this.genPreSignJoinSplits(joinSplitRequest))
       );
     }
 
@@ -385,7 +385,7 @@ export class NocturneContext {
     }
 
     const op = {
-      joinSplitTxs: preSignJoinSplitTxs,
+      joinSplits: preSignJoinSplits,
       refundAddr,
       encodedRefundAssets,
       actions,
@@ -426,18 +426,18 @@ export class NocturneContext {
   }
 
   /**
-   * Format a PreProofJoinSplitTx from a preSignJoinSplitTx, an
+   * Format a PreProofJoinSplit from a preSignJoinSplit, an
    * operationDigest, and a signature
    *
-   * @param preSignJoinSplitTx
+   * @param preSignJoinSplit
    * @param opDigest: operation digest of the operation that the joinsplit is part of
    * @param opSig: signature of the opDigest
    */
-  protected async genPreProofJoinSplitTx(
-    preSignJoinSplitTx: PreSignJoinSplitTx,
+  protected async genPreProofJoinSplit(
+    preSignJoinSplit: PreSignJoinSplit,
     opDigest: bigint,
     opSig: NocturneSignature
-  ): Promise<PreProofJoinSplitTx> {
+  ): Promise<PreProofJoinSplit> {
     const {
       merkleInputA,
       merkleInputB,
@@ -445,8 +445,8 @@ export class NocturneContext {
       oldNoteB,
       newNoteA,
       newNoteB,
-      ...baseJoinSplitTx
-    } = preSignJoinSplitTx;
+      ...baseJoinSplit
+    } = preSignJoinSplit;
 
     const proofInputs: JoinSplitInputs = {
       vk: this.signer.privkey.vk,
@@ -465,7 +465,7 @@ export class NocturneContext {
     return {
       opDigest,
       proofInputs,
-      ...baseJoinSplitTx,
+      ...baseJoinSplit,
     };
   }
 
@@ -615,41 +615,41 @@ export class NocturneContext {
   }
 }
 
-export async function proveJoinSplitTx(
+export async function proveJoinSplit(
   prover: JoinSplitProver,
-  preProofJoinSplitTx: PreProofJoinSplitTx
-): Promise<ProvenJoinSplitTx> {
-  const { opDigest, proofInputs, ...baseJoinSplitTx } = preProofJoinSplitTx;
+  preProofJoinSplit: PreProofJoinSplit
+): Promise<ProvenJoinSplit> {
+  const { opDigest, proofInputs, ...baseJoinSplit } = preProofJoinSplit;
   const proof = await prover.proveJoinSplit(proofInputs);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
   if (
-    baseJoinSplitTx.newNoteACommitment !==
+    baseJoinSplit.newNoteACommitment !==
       BigInt(publicSignals.newNoteACommitment) ||
-    baseJoinSplitTx.newNoteBCommitment !==
+    baseJoinSplit.newNoteBCommitment !==
       BigInt(publicSignals.newNoteBCommitment) ||
-    baseJoinSplitTx.commitmentTreeRoot !==
+    baseJoinSplit.commitmentTreeRoot !==
       BigInt(publicSignals.commitmentTreeRoot) ||
-    baseJoinSplitTx.publicSpend !== BigInt(publicSignals.publicSpend) ||
-    baseJoinSplitTx.nullifierA !== BigInt(publicSignals.nullifierA) ||
-    baseJoinSplitTx.nullifierB !== BigInt(publicSignals.nullifierB) ||
-    baseJoinSplitTx.encodedAsset.encodedAssetAddr !==
+    baseJoinSplit.publicSpend !== BigInt(publicSignals.publicSpend) ||
+    baseJoinSplit.nullifierA !== BigInt(publicSignals.nullifierA) ||
+    baseJoinSplit.nullifierB !== BigInt(publicSignals.nullifierB) ||
+    baseJoinSplit.encodedAsset.encodedAssetAddr !==
       BigInt(publicSignals.encodedAssetAddr) ||
-    baseJoinSplitTx.encodedAsset.encodedAssetId !==
+    baseJoinSplit.encodedAsset.encodedAssetId !==
       BigInt(publicSignals.encodedAssetId) ||
     opDigest !== BigInt(publicSignals.opDigest)
   ) {
     console.error("from proof, got", publicSignals);
     console.error("from sdk, got", {
-      newNoteACommitment: baseJoinSplitTx.newNoteACommitment,
-      newNoteBCommitment: baseJoinSplitTx.newNoteBCommitment,
-      commitmentTreeRoot: baseJoinSplitTx.commitmentTreeRoot,
-      publicSpend: baseJoinSplitTx.publicSpend,
-      nullifierA: baseJoinSplitTx.nullifierA,
-      nullifierB: baseJoinSplitTx.nullifierB,
-      encodedAssetAddr: baseJoinSplitTx.encodedAsset.encodedAssetAddr,
-      encodedAssetId: baseJoinSplitTx.encodedAsset.encodedAssetId,
+      newNoteACommitment: baseJoinSplit.newNoteACommitment,
+      newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
+      commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
+      publicSpend: baseJoinSplit.publicSpend,
+      nullifierA: baseJoinSplit.nullifierA,
+      nullifierB: baseJoinSplit.nullifierB,
+      encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
+      encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
       opDigest,
     });
 
@@ -663,6 +663,6 @@ export async function proveJoinSplitTx(
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
-    ...baseJoinSplitTx,
+    ...baseJoinSplit,
   };
 }
