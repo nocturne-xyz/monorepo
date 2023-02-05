@@ -34,18 +34,23 @@ export class NocturneDeployer {
     }
 
     // Deploy vault proxy, un-initialized
+    console.log("\nDeploying proxied Vault");
     const proxiedVault = await this.deployProxiedContract(
       new Vault__factory(this.connectedSigner),
       proxyAdmin
     );
+    console.log("Deployed proxied Vault:", proxiedVault.proxyAddresses);
 
+    console.log("\nDeploying JoinSplitVerifier");
     const joinSplitVerifier = await new JoinSplitVerifier__factory(
       this.connectedSigner
     ).deploy();
+    console.log("\nDeploying SubtreeUpdateVerifier");
     const subtreeUpdateVerifier = await new SubtreeUpdateVerifier__factory(
       this.connectedSigner
     ).deploy();
 
+    console.log("\nDeploying proxied Wallet");
     const proxiedWallet = await this.deployProxiedContract(
       new Wallet__factory(this.connectedSigner),
       proxyAdmin,
@@ -55,7 +60,9 @@ export class NocturneDeployer {
         subtreeUpdateVerifier.address,
       ]
     );
+    console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
+    console.log("Initializing proxied Vault");
     await proxiedVault.contract.initialize(proxiedWallet.address);
 
     return {
