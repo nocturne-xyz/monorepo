@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Replace custom hardhat deploy scripts with deploy package deploy script
 - Deposit script funds with proper decimal-based amount using parseEther
 - Deposit funds script sends ETH to test eth addrs
 - Fill batch with zeros in deposit script

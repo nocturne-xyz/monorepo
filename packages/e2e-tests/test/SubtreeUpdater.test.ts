@@ -39,7 +39,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
-    const nocturneSetup = await setupNocturne({ deployContracts: true });
+    const nocturneSetup = await setupNocturne(deployer);
     alice = nocturneSetup.alice;
     vault = nocturneSetup.vault;
     wallet = nocturneSetup.wallet;

@@ -1,14 +1,10 @@
-import { ethers, deployments } from "hardhat";
+import { ethers } from "hardhat";
 import * as fs from "fs";
 import {
   Wallet__factory,
   Vault__factory,
-  JoinSplitVerifier__factory,
   Vault,
   Wallet,
-  SubtreeUpdateVerifier__factory,
-  TestSubtreeUpdateVerifier__factory,
-  TransparentUpgradeableProxy__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -23,8 +19,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { NocturneDeployer } from "@nocturne-xyz/deploy";
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
@@ -83,32 +78,22 @@ function setupNocturneContext(
   );
 }
 
-interface SetupNocturneOpts {
-  deployContracts: boolean;
-}
-
 export async function setupNocturne(
-  opts?: SetupNocturneOpts
+  signer: ethers.Signer
 ): Promise<NocturneSetup> {
-  if (opts?.deployContracts) {
-    await deployments.fixture(["NocturneContracts"]);
-  }
-
-  const vault = await ethers.getContract("Vault");
-  const wallet = await ethers.getContract("Wallet");
-  const joinSplitVerifier = await ethers.getContract("JoinSplitVerifier");
-  const subtreeUpdateVerifier = await ethers.getContract(
-    "SubtreeUpdateVerifier"
+  const deployer = new NocturneDeployer(signer);
+  const { walletProxy, vaultProxy } = await deployer.deployNocturne(
+    "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+    {
+      useMockSubtreeUpdateVerifier:
+        process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
+      provider: ethers.provider,
+    }
   );
 
-  // TODO: pass in proxy admin (currently deploys new one but we don't keep
-  // track of this info)
-  await wallet.initialize(
-    vault.address,
-    joinSplitVerifier.address,
-    subtreeUpdateVerifier.address
-  );
-  await vault.initialize(wallet.address);
+  const wallet = Wallet__factory.connect(walletProxy.proxy, signer);
+  const vault = Vault__factory.connect(vaultProxy.proxy, signer);
+
   const [_, alice, bob] = await ethers.getSigners();
 
   console.log("Create NocturneContextAlice");
@@ -148,69 +133,3 @@ export async function setupNocturne(
     nocturneContextBob,
   };
 }
-
-function getSubtreeUpdateContractFactory(): ethers.ContractFactory {
-  if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
-    return SubtreeUpdateVerifier__factory;
-  }
-
-  return TestSubtreeUpdateVerifier__factory;
-}
-
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  // @ts-ignore
-  const { deployments, getNamedAccounts } = hre;
-  const { deploy } = deployments;
-
-  const { owner } = await getNamedAccounts();
-
-  await deploy("Vault", {
-    from: owner,
-    contract: {
-      abi: Vault__factory.abi,
-      bytecode: Vault__factory.bytecode,
-    },
-    proxy: {
-      proxyContract: TransparentUpgradeableProxy__factory,
-    },
-    log: true,
-    deterministicDeployment: true,
-  });
-
-  await deploy("JoinSplitVerifier", {
-    from: owner,
-    contract: {
-      abi: JoinSplitVerifier__factory.abi,
-      bytecode: JoinSplitVerifier__factory.bytecode,
-    },
-    log: true,
-    deterministicDeployment: true,
-  });
-
-  const subtreeUpdateVerifierFactory = getSubtreeUpdateContractFactory();
-  await deploy("SubtreeUpdateVerifier", {
-    from: owner,
-    contract: {
-      abi: subtreeUpdateVerifierFactory.abi,
-      bytecode: subtreeUpdateVerifierFactory.bytecode,
-    },
-    log: true,
-    deterministicDeployment: true,
-  });
-
-  await deploy("Wallet", {
-    from: owner,
-    contract: {
-      abi: Wallet__factory.abi,
-      bytecode: Wallet__factory.bytecode,
-    },
-    proxy: {
-      proxyContract: TransparentUpgradeableProxy__factory,
-    },
-    log: true,
-    deterministicDeployment: true,
-  });
-};
-
-export default func;
-func.tags = ["NocturneContracts"];

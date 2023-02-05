@@ -2,7 +2,10 @@ import {
   JoinSplitVerifier__factory,
   ProxyAdmin,
   ProxyAdmin__factory,
+  SubtreeUpdateVerifier,
   SubtreeUpdateVerifier__factory,
+  TestSubtreeUpdateVerifier,
+  TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
   Vault__factory,
   Wallet__factory,
@@ -47,10 +50,20 @@ export class NocturneDeployer {
     const joinSplitVerifier = await new JoinSplitVerifier__factory(
       this.connectedSigner
     ).deploy();
+
+    let subtreeUpdateVerifier:
+      | SubtreeUpdateVerifier
+      | TestSubtreeUpdateVerifier;
     console.log("\nDeploying SubtreeUpdateVerifier");
-    const subtreeUpdateVerifier = await new SubtreeUpdateVerifier__factory(
-      this.connectedSigner
-    ).deploy();
+    if (opts?.useMockSubtreeUpdateVerifier) {
+      subtreeUpdateVerifier = await new TestSubtreeUpdateVerifier__factory(
+        this.connectedSigner
+      ).deploy();
+    } else {
+      subtreeUpdateVerifier = await new SubtreeUpdateVerifier__factory(
+        this.connectedSigner
+      ).deploy();
+    }
 
     console.log("\nDeploying proxied Wallet");
     const proxiedWallet = await this.deployProxiedContract(

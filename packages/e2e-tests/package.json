@@ -22,6 +22,7 @@
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/deploy": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",
     "@nocturne-xyz/subtree-updater": "workspace:^",

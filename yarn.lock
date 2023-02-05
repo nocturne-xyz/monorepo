@@ -3499,7 +3499,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/deploy@workspace:packages/deploy":
+"@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
   dependencies:
@@ -3527,6 +3527,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/bundler": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
