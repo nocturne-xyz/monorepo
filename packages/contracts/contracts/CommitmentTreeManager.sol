@@ -27,7 +27,7 @@ contract CommitmentTreeManager is Initializable {
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    event Refund(
+    event RefundProcessed(
         StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
@@ -36,7 +36,7 @@ contract CommitmentTreeManager is Initializable {
         uint128 merkleIndex
     );
 
-    event JoinSplit(
+    event JoinSplitProcessed(
         uint256 indexed oldNoteANullifier,
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
@@ -99,7 +99,7 @@ contract CommitmentTreeManager is Initializable {
         noteCommitments[1] = joinSplit.newNoteBCommitment;
         insertNoteCommitments(noteCommitments);
 
-        emit JoinSplit(
+        emit JoinSplitProcessed(
             joinSplit.nullifierA,
             joinSplit.nullifierB,
             newNoteIndexA,
@@ -179,7 +179,7 @@ contract CommitmentTreeManager is Initializable {
 
         insertNote(note);
 
-        emit Refund(
+        emit RefundProcessed(
             refundAddr,
             index,
             encodedAssetAddr,

@@ -61,7 +61,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 gasPrice;
     }
 
-    event Refund(
+    event RefundProcessed(
         StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
@@ -70,7 +70,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint128 merkleIndex
     );
 
-    event JoinSplit(
+    event JoinSplitProcessed(
         uint256 indexed oldNoteANullifier,
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
@@ -178,7 +178,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         for (uint256 i = 0; i < depositIterations; i++) {
             StealthAddress memory addr = defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
-            emit Refund(
+            emit RefundProcessed(
                 addr,
                 i,
                 uint256(uint160(address(token))),
@@ -353,7 +353,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Check joinsplit event
         vm.expectEmit(true, true, false, true);
-        emit JoinSplit(
+        emit JoinSplitProcessed(
             bundle.operations[0].joinSplits[0].nullifierA,
             bundle.operations[0].joinSplits[0].nullifierB,
             16, // newNoteAIndex
