@@ -13,7 +13,7 @@ import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
-import { OperationStatus, calculateOperationDigest } from "@nocturne-xyz/sdk";
+import { OperationStatus, computeOperationDigest } from "@nocturne-xyz/sdk";
 
 const BATCH_SIZE = 8;
 const MAX_BATCH_LATENCY_SECS = 5;
@@ -54,7 +54,7 @@ describe("BundlerBatcher", async () => {
       operationJson,
     };
 
-    const jobId = calculateOperationDigest(operation).toString();
+    const jobId = computeOperationDigest(operation).toString();
     await queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {
       jobId,
     });

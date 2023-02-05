@@ -89,7 +89,7 @@ function hashOperation(
   return ethers.utils.keccak256(payload);
 }
 
-export function calculateOperationDigest(
+export function computeOperationDigest(
   operation: PreSignOperation | PreProofOperation | ProvenOperation
 ): bigint {
   const operationHash = hashOperation(operation);

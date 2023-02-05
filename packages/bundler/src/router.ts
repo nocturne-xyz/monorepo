@@ -8,7 +8,7 @@ import {
 import { Request, Response } from "express";
 import {
   OperationStatus,
-  calculateOperationDigest,
+  computeOperationDigest,
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
 import { OperationValidator } from "./validator";
@@ -80,7 +80,7 @@ export class BundlerRouter {
   }
 
   private async postJob(operation: ProvenOperation): Promise<string> {
-    const jobId = calculateOperationDigest(operation).toString();
+    const jobId = computeOperationDigest(operation).toString();
     const operationJson = JSON.stringify(operation);
     const jobData: ProvenOperationJobData = {
       operationJson,

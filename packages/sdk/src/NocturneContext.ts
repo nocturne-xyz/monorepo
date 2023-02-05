@@ -18,7 +18,7 @@ import {
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { CanonAddress, StealthAddressTrait } from "./crypto/address";
-import { calculateOperationDigest } from "./contract/utils";
+import { computeOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
@@ -131,7 +131,7 @@ export class NocturneContext {
     const preSignOperation = await this.getPreSignOperation(operationRequest);
 
     // Sign the preSignOperation
-    const opDigest = calculateOperationDigest(preSignOperation);
+    const opDigest = computeOperationDigest(preSignOperation);
     const opSig = this.signer.sign(opDigest);
 
     const preProofJoinSplits: PreProofJoinSplit[] = await Promise.all(

@@ -2,7 +2,7 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import {
   Address,
-  calculateOperationDigest,
+  computeOperationDigest,
   ProvenOperation,
   OperationStatus,
 } from "@nocturne-xyz/sdk";
@@ -76,7 +76,7 @@ export class BundlerSubmitter {
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
-      const jobId = calculateOperationDigest(op).toString();
+      const jobId = computeOperationDigest(op).toString();
       return this.statusDB.getSetJobStatusTransaction(
         jobId,
         OperationStatus.IN_FLIGHT

@@ -20,7 +20,7 @@ import {
   OperationRequest,
   NotesDB,
   query,
-  calculateOperationDigest,
+  computeOperationDigest,
   AssetType,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../utils/deploy";
@@ -215,7 +215,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       bundlerSubmitterProm,
     ]);
 
-    const operationDigest = calculateOperationDigest(operation);
+    const operationDigest = computeOperationDigest(operation);
     var res = await fetch(
       `http://localhost:${BUNDLER_SERVER_PORT}/operations/${operationDigest}`,
       {

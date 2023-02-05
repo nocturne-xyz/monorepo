@@ -7,7 +7,7 @@
 - `DefaultMerkleProver` and `LocalNotesManager` take optional start blocks as params
 - Fix unawaited promise when calling `processEncryptedNote` on handling new joinsplits
 - move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
-- remove nested hash for refund assets in `calculateOperationDigest`
+- remove nested hash for refund assets in `computeOperationDigest`
 - factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`
 - add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`

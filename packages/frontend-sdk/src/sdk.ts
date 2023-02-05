@@ -13,7 +13,7 @@ import {
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
   VerifyingKey,
-  calculateOperationDigest,
+  computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import {
   DEFAULT_SNAP_ORIGIN,
@@ -173,7 +173,7 @@ export class NocturneFrontendSDK {
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     console.log("ProvenOperation", operation);
-    const opDigest = calculateOperationDigest(operation);
+    const opDigest = computeOperationDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
       operation.joinSplits.map((joinSplit) => {
