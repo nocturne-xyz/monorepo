@@ -17,7 +17,7 @@ import {
   DefaultMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
-import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import {
   checkNocturneDeploymentConfig,

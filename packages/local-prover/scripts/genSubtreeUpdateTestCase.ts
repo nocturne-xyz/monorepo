@@ -11,7 +11,7 @@ import {
   NoteTrait,
   subtreeUpdateInputsFromBatch,
 } from "@nocturne-xyz/sdk";
-import { LocalSubtreeUpdateProver } from "../src/subtreeUpdate";
+import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
@@ -69,7 +69,7 @@ const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
 console.log(inputs);
 
 async function prove() {
-  const prover = new LocalSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const prover = new WasmSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
   const proof = await prover.proveSubtreeUpdate(inputs);
   const json = JSON.stringify(proof);
   console.log(json);

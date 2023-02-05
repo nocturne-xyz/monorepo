@@ -20,7 +20,7 @@ import {
   getTokenContract,
   getWindowSigner,
 } from "./common";
-import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
@@ -32,7 +32,7 @@ const VKEY_PATH = "/joinSplitVkey.json";
 export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
-  localProver: LocalJoinSplitProver;
+  localProver: WasmJoinSplitProver;
   bundlerEndpoint: string;
   walletContract: Wallet;
   vaultContractAddress: Address;
@@ -45,7 +45,7 @@ export class NocturneFrontendSDK {
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
-    this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.localProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
     this.vaultContractAddress = vaultContractAddress;

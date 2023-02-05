@@ -8,7 +8,7 @@ import {
   VerifyingKey,
 } from "@nocturne-xyz/sdk";
 
-export class LocalJoinSplitProver implements JoinSplitProver {
+export class WasmJoinSplitProver implements JoinSplitProver {
   wasmPath: string;
   zkeyPath: string;
   vkey: VerifyingKey;
