@@ -186,7 +186,7 @@ export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
   };
 }
 
-export interface NoteTransmission {
+export interface EncryptedNote {
   owner: NocturneAddress;
   encappedKey: bigint;
   encryptedNonce: bigint;
@@ -201,8 +201,8 @@ export interface BaseJoinSplitTx {
   newNoteBCommitment: bigint;
   encodedAsset: EncodedAsset;
   publicSpend: bigint;
-  newNoteATransmission: NoteTransmission;
-  newNoteBTransmission: NoteTransmission;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
 }
 
 export interface PreSignJoinSplitTx extends BaseJoinSplitTx {

@@ -70,15 +70,15 @@ export async function fetchJoinSplits(
       nullifierA,
       nullifierB,
       newNoteACommitment,
-      newNoteATransmission,
+      newNoteAEncrypted,
       newNoteBCommitment,
-      newNoteBTransmission,
+      newNoteBEncrypted,
       encodedAsset,
       publicSpend,
     } = joinSplitTx;
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteATransmission;
+      newNoteAEncrypted;
     let { h1X, h1Y, h2X, h2Y } = owner;
     const newNoteAOwner = {
       h1X: h1X.toBigInt(),
@@ -90,7 +90,7 @@ export async function fetchJoinSplits(
     const encryptedNonceA = encryptedNonce.toBigInt();
     const encryptedValueA = encryptedValue.toBigInt();
     ({ owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteBTransmission);
+      newNoteBEncrypted);
     ({ h1X, h1Y, h2X, h2Y } = owner);
     const newNoteBOwner = {
       h1X: h1X.toBigInt(),
@@ -111,14 +111,14 @@ export async function fetchJoinSplits(
         nullifierA: nullifierA.toBigInt(),
         nullifierB: nullifierB.toBigInt(),
         newNoteACommitment: newNoteACommitment.toBigInt(),
-        newNoteATransmission: {
+        newNoteAEncrypted: {
           owner: newNoteAOwner,
           encappedKey: encappedKeyA,
           encryptedNonce: encryptedNonceA,
           encryptedValue: encryptedValueA,
         },
         newNoteBCommitment: newNoteBCommitment.toBigInt(),
-        newNoteBTransmission: {
+        newNoteBEncrypted: {
           owner: newNoteBOwner,
           encappedKey: encappedKeyB,
           encryptedNonce: encryptedNonceB,

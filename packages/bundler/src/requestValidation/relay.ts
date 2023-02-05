@@ -21,7 +21,7 @@ const nocturneAddressType = {
   },
   additionalProperties: false,
 };
-const noteTransmissionType = {
+const encryptedNoteType = {
   type: "object",
   required: ["owner", "encappedKey", "encryptedNonce", "encryptedValue"],
   properties: {
@@ -71,8 +71,8 @@ const joinSplitTxType = {
     "newNoteBCommitment",
     "encodedAsset",
     "publicSpend",
-    "newNoteATransmission",
-    "newNoteBTransmission",
+    "newNoteAEncrypted",
+    "newNoteBEncrypted",
   ],
   properties: {
     proof: solidityProofType,
@@ -83,8 +83,8 @@ const joinSplitTxType = {
     newNoteBCommitment: bigintType,
     encodedAsset: encodedAssetType,
     publicSpend: bigintType,
-    newNoteATransmission: noteTransmissionType,
-    newNoteBTransmission: noteTransmissionType,
+    newNoteAEncrypted: encryptedNoteType,
+    newNoteBEncrypted: encryptedNoteType,
   },
   additionalProperties: false,
 };

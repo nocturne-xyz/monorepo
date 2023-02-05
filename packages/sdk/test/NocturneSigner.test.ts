@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { NocturneAddressTrait } from "../src/crypto/address";
-import { genNoteTransmission } from "../src/crypto/utils";
+import { genEncryptedNote } from "../src/crypto/utils";
 import { encodeAsset, AssetType } from "../src/commonTypes";
 
 describe("NocturneSigner", () => {
@@ -61,9 +61,9 @@ describe("NocturneSigner", () => {
       value: 55n,
       asset,
     };
-    const noteTransmission = genNoteTransmission(addr, note);
-    const note2 = signer.getNoteFromNoteTransmission(
-      noteTransmission,
+    const encryptedNote = genEncryptedNote(addr, note);
+    const note2 = signer.getNoteFromEncryptedNote(
+      encryptedNote,
       2,
       asset
     );

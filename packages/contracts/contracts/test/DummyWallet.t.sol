@@ -243,7 +243,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         uint256 root = wallet.root();
-        NoteTransmission memory newNoteATransmission = NoteTransmission({
+        EncryptedNote memory newNoteAEncrypted = EncryptedNote({
             owner: NocturneAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
@@ -254,7 +254,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encryptedNonce: uint256(111),
             encryptedValue: uint256(111)
         });
-        NoteTransmission memory newNoteBTransmission = NoteTransmission({
+        EncryptedNote memory newNoteBEncrypted = EncryptedNote({
             owner: NocturneAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
@@ -280,9 +280,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
                 nullifierA: uint256(2 * i),
                 nullifierB: uint256(2 * i + 1),
                 newNoteACommitment: uint256(i),
-                newNoteATransmission: newNoteATransmission,
+                newNoteAEncrypted: newNoteAEncrypted,
                 newNoteBCommitment: uint256(i),
-                newNoteBTransmission: newNoteBTransmission,
+                newNoteBEncrypted: newNoteBEncrypted,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
                 publicSpend: args.publicSpendPerJoinSplit

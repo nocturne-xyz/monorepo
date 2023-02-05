@@ -5,7 +5,7 @@ import {
   decodeAsset,
   Asset,
   BaseJoinSplitTx,
-  NoteTransmission,
+  EncryptedNote,
 } from "../../commonTypes";
 
 export interface JoinSplitEvent {
@@ -55,16 +55,16 @@ export abstract class NotesManager {
         e.joinSplitTx.encodedAsset.encodedAssetId
       );
 
-      await this.processNoteTransmission(
+      await this.processEncryptedNote(
         e.joinSplitTx.newNoteACommitment,
-        e.joinSplitTx.newNoteATransmission,
+        e.joinSplitTx.newNoteAEncrypted,
         e.newNoteAIndex,
         asset
       );
 
-      await this.processNoteTransmission(
+      await this.processEncryptedNote(
         e.joinSplitTx.newNoteBCommitment,
-        e.joinSplitTx.newNoteBTransmission,
+        e.joinSplitTx.newNoteBEncrypted,
         e.newNoteBIndex,
         asset
       );
@@ -86,15 +86,15 @@ export abstract class NotesManager {
     }
   }
 
-  private async processNoteTransmission(
+  private async processEncryptedNote(
     newNoteCommitment: bigint,
-    newNoteTransmission: NoteTransmission,
+    newEncryptedNote: EncryptedNote,
     newNoteIndex: number,
     asset: Asset
   ): Promise<void> {
-    if (this.signer.testOwn(newNoteTransmission.owner)) {
-      const newNote = this.signer.getNoteFromNoteTransmission(
-        newNoteTransmission,
+    if (this.signer.testOwn(newEncryptedNote.owner)) {
+      const newNote = this.signer.getNoteFromEncryptedNote(
+        newEncryptedNote,
         newNoteIndex,
         asset
       );

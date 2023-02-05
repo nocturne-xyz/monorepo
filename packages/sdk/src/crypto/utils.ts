@@ -3,7 +3,7 @@ import { CanonAddress, NocturneAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
 import randomBytes from "randombytes";
 import { babyjub, poseidon } from "circomlibjs";
-import { NoteTransmission, SNARK_SCALAR_FIELD } from "../commonTypes";
+import { EncryptedNote, SNARK_SCALAR_FIELD } from "../commonTypes";
 
 const BIGINT_BYTES = 8;
 
@@ -50,10 +50,10 @@ export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
  * Generate note transmission for a receiver canonical address and
  * a note
  */
-export function genNoteTransmission(
+export function genEncryptedNote(
   addr: CanonAddress,
   note: Note
-): NoteTransmission {
+): EncryptedNote {
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
   const R = babyjub.mulPointEscalar(babyjub.Base8, r);

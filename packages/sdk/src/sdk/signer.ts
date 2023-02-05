@@ -9,7 +9,7 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { Asset, NoteTransmission } from "../commonTypes";
+import { Asset, EncryptedNote } from "../commonTypes";
 
 export interface NocturneSignature {
   c: bigint;
@@ -78,29 +78,29 @@ export class NocturneSigner {
    * Obtain the note from a note transmission. Assumes that the signer owns the
    * note transmission.
    *
-   * @param noteTransmission
+   * @param encryptedNote
    * @param asset, id, merkleIndex additional params from the joinsplit event
    * @return note
    */
-  getNoteFromNoteTransmission(
-    noteTransmission: NoteTransmission,
+  getNoteFromEncryptedNote(
+    encryptedNote: EncryptedNote,
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-    if (!this.testOwn(noteTransmission.owner)) {
+    if (!this.testOwn(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
     let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
     if (vkInv < babyjub.subOrder) {
       vkInv += babyjub.subOrder;
     }
-    const eR = decodePoint(noteTransmission.encappedKey);
+    const eR = decodePoint(encryptedNote.encappedKey);
     const R = babyjub.mulPointEscalar(eR, vkInv);
     const nonce = mod_p(
-      noteTransmission.encryptedNonce - BigInt(poseidon([encodePoint(R)]))
+      encryptedNote.encryptedNonce - BigInt(poseidon([encodePoint(R)]))
     );
     const value = mod_p(
-      noteTransmission.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n]))
+      encryptedNote.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n]))
     );
     return {
       owner: this.privkey.toCanonAddressStruct(),

@@ -32,7 +32,7 @@ import {
   simulateOperation,
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { genNoteTransmission, randomBigInt } from "./crypto/utils";
+import { genEncryptedNote, randomBigInt } from "./crypto/utils";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 
@@ -290,11 +290,11 @@ export class NocturneContext {
     const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
     const newNoteBCommitment = NoteTrait.toCommitment(newNoteB);
 
-    const newNoteATransmission = genNoteTransmission(
+    const newNoteAEncrypted = genEncryptedNote(
       this.signer.privkey.toCanonAddress(),
       newNoteA
     );
-    const newNoteBTransmission = genNoteTransmission(receiver, newNoteB);
+    const newNoteBEncrypted = genEncryptedNote(receiver, newNoteB);
     const publicSpend =
       oldNoteA.value + oldNoteB.value - returnVal - paymentVal;
 
@@ -330,9 +330,9 @@ export class NocturneContext {
       nullifierA,
       nullifierB,
       newNoteACommitment,
-      newNoteATransmission,
+      newNoteAEncrypted,
       newNoteBCommitment,
-      newNoteBTransmission,
+      newNoteBEncrypted,
       encodedAsset,
       publicSpend,
       oldNoteA,

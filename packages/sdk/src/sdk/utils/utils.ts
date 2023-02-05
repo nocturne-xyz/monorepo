@@ -28,8 +28,8 @@ export function fakeProvenOperation(
       newNoteBCommitment: joinSplitTx.newNoteBCommitment,
       encodedAsset: joinSplitTx.encodedAsset,
       publicSpend: joinSplitTx.publicSpend,
-      newNoteATransmission: joinSplitTx.newNoteATransmission,
-      newNoteBTransmission: joinSplitTx.newNoteBTransmission,
+      newNoteAEncrypted: joinSplitTx.newNoteAEncrypted,
+      newNoteBEncrypted: joinSplitTx.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
     };
   });

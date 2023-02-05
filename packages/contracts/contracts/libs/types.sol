@@ -34,7 +34,7 @@ struct EncodedNocturneAddress {
     uint256 h2X;
 }
 
-struct NoteTransmission {
+struct EncryptedNote {
     NocturneAddress owner;
     uint256 encappedKey;
     uint256 encryptedNonce;
@@ -50,8 +50,8 @@ struct JoinSplitTransaction {
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;
-    NoteTransmission newNoteATransmission;
-    NoteTransmission newNoteBTransmission;
+    EncryptedNote newNoteAEncrypted;
+    EncryptedNote newNoteBEncrypted;
 }
 
 struct EncodedNote {

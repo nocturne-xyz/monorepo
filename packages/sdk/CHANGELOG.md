@@ -5,7 +5,7 @@
 - Fix bug where joinsplits being processed in tandem with refunds was causing some refund notes to not be removed by joinsplits
 - Fix bug where zeroed dummy notes always produce same NF by generating rand address and nonce
 - `LocalMerkleProver` and `LocalNotesManager` take optional start blocks as params
-- Fix unawaited promise when calling `processNoteTransmission` on handling new joinsplits
+- Fix unawaited promise when calling `processEncryptedNote` on handling new joinsplits
 - move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
 - remove nested hash for refund assets in `calculateOperationDigest`
 - factor `proveJoiNSplitTx` into a separate function
