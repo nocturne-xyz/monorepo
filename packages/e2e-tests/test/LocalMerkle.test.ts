@@ -13,8 +13,8 @@ import {
   LocalMerkleProver,
   MerkleDB,
 } from "@nocturne-xyz/sdk";
-import { setupNocturne } from "../deploy/deployNocturne";
-import { depositFunds, getSubtreeUpdateProver } from "./utils";
+import { setupNocturne } from "../utils/deploy";
+import { depositFunds, getSubtreeUpdateProver } from "../utils/test";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 

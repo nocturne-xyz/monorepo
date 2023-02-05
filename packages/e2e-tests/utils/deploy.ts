@@ -19,7 +19,10 @@ import {
 } from "@nocturne-xyz/sdk";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 
-import { NocturneDeployer } from "@nocturne-xyz/deploy";
+import {
+  checkNocturneDeployment,
+  NocturneDeployer,
+} from "@nocturne-xyz/deploy";
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
@@ -45,45 +48,12 @@ export interface NocturneSetup {
   nocturneContextBob: NocturneContext;
 }
 
-function setupNocturneContext(
-  sk: bigint,
-  wallet: any,
-  notesDB: NotesDB,
-  merkleDB: MerkleDB
-): NocturneContext {
-  const nocturnePrivKey = new NocturnePrivKey(sk);
-  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-
-  const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
-  const merkleProver = new LocalMerkleProver(
-    wallet.address,
-    ethers.provider,
-    merkleDB
-  );
-
-  const notesManager = new LocalNotesManager(
-    notesDB,
-    nocturneSigner,
-    wallet.address,
-    ethers.provider
-  );
-  return new NocturneContext(
-    nocturneSigner,
-    prover,
-    wallet.provider,
-    wallet.address,
-    merkleProver,
-    notesManager,
-    notesDB
-  );
-}
-
 export async function setupNocturne(
   signer: ethers.Signer
 ): Promise<NocturneSetup> {
   const deployer = new NocturneDeployer(signer);
-  const { walletProxy, vaultProxy } = await deployer.deployNocturne(
-    "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+  const deployment = await deployer.deployNocturne(
+    "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6", // dummy
     {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
@@ -91,6 +61,9 @@ export async function setupNocturne(
     }
   );
 
+  await checkNocturneDeployment(deployment, ethers.provider);
+
+  const { walletProxy, vaultProxy } = deployment;
   const wallet = Wallet__factory.connect(walletProxy.proxy, signer);
   const vault = Vault__factory.connect(vaultProxy.proxy, signer);
 
@@ -132,4 +105,37 @@ export async function setupNocturne(
     merkleDBBob,
     nocturneContextBob,
   };
+}
+
+function setupNocturneContext(
+  sk: bigint,
+  wallet: any,
+  notesDB: NotesDB,
+  merkleDB: MerkleDB
+): NocturneContext {
+  const nocturnePrivKey = new NocturnePrivKey(sk);
+  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
+
+  const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const merkleProver = new LocalMerkleProver(
+    wallet.address,
+    ethers.provider,
+    merkleDB
+  );
+
+  const notesManager = new LocalNotesManager(
+    notesDB,
+    nocturneSigner,
+    wallet.address,
+    ethers.provider
+  );
+  return new NocturneContext(
+    nocturneSigner,
+    prover,
+    wallet.provider,
+    wallet.address,
+    merkleProver,
+    notesManager,
+    notesDB
+  );
 }

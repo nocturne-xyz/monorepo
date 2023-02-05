@@ -2,6 +2,7 @@ import { ethers } from "ethers";
 import { NocturneDeployer } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
+import { checkNocturneDeployment } from "../src/checks";
 
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
 
@@ -29,6 +30,8 @@ dotenv.config();
   });
 
   console.log(deployment);
+
+  await checkNocturneDeployment(deployment, provider);
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);

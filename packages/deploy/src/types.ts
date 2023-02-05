@@ -11,12 +11,12 @@ export interface Network {
 export interface NocturneDeployment {
   network: Network;
   startBlock: number;
-  proxyAdminOwner: string;
-  proxyAdmin: string;
+  proxyAdminOwner: Address;
+  proxyAdmin: Address;
   walletProxy: ProxyAddresses<any>;
   vaultProxy: ProxyAddresses<any>;
-  joinSplitVerifierAddress: string;
-  subtreeUpdateVerifierAddress: string;
+  joinSplitVerifier: Address;
+  subtreeUpdateVerifier: Address;
 }
 
 export interface NocturneDeployOpts {

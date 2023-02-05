@@ -90,8 +90,8 @@ export class NocturneDeployer {
       proxyAdmin: proxyAdmin.address,
       walletProxy: proxiedWallet.proxyAddresses,
       vaultProxy: proxiedVault.proxyAddresses,
-      joinSplitVerifierAddress: joinSplitVerifier.address,
-      subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
+      joinSplitVerifier: joinSplitVerifier.address,
+      subtreeUpdateVerifier: subtreeUpdateVerifier.address,
     };
   }
 

@@ -23,8 +23,8 @@ import {
   calculateOperationDigest,
   AssetType,
 } from "@nocturne-xyz/sdk";
-import { setupNocturne } from "../deploy/deployNocturne";
-import { depositFunds, sleep, getSubtreeUpdateProver } from "./utils";
+import { setupNocturne } from "../utils/deploy";
+import { depositFunds, sleep, getSubtreeUpdateProver } from "../utils/test";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import RedisMemoryServer from "redis-memory-server";
