@@ -44,8 +44,8 @@ yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit fa
 START_BLOCK=0
 
 # read config variables from logs
-read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/deploying "Wallet_Proxy" \(tx: 0x[0-9a-fA-F]+\)\.\.\.: deployed at (0x[0-9a-fA-F]+) with [0-9]+ gas/\1/p' $LOG_DIR/hh-node)
-read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/deploying "Vault_Proxy" \(tx: 0x[0-9a-fA-F]+\)\.\.\.: deployed at (0x[0-9a-fA-F]+) with [0-9]+ gas/\1/p' $LOG_DIR/hh-node)
+read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
+read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read BUNDLER_SUBMITTER_PRIVATE_KEY< <(grep -A1 "Account #15" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
@@ -67,13 +67,13 @@ echo "Subtree updater submitter private key: $SUBTREE_UPDATER_SUBMITTER_PRIVATE_
 # write bundler's .env file
 pushd packages/bundler
 cat > .env <<- EOM
-REDIS_URL="$REDIS_URL"
-REDIS_PASSWORD="$REDIS_PASSWORD"
+REDIS_URL=$REDIS_URL
+REDIS_PASSWORD=$REDIS_PASSWORD
 
-WALLET_ADDRESS="$WALLET_CONTRACT_ADDRESS"
+WALLET_ADDRESS=$WALLET_CONTRACT_ADDRESS
 MAX_LATENCY=5
 
-RPC_URL="$RPC_URL"
+RPC_URL=$RPC_URL
 TX_SIGNER_KEY="$BUNDLER_SUBMITTER_PRIVATE_KEY"
 EOM
 
@@ -90,7 +90,7 @@ echo "Bundler running at PID: $BUNDLER_PID"
 # write subtree updater's .env file
 pushd packages/subtree-updater
 cat > .env <<- EOM
-RPC_URL="$RPC_URL"
+RPC_URL=$RPC_URL
 SUBMITTER_SECRET_KEY=$SUBTREE_UPDATER_SUBMITTER_PRIVATE_KEY
 EOM
 popd
