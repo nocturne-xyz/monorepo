@@ -3,8 +3,8 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { query } from "../sdk/utils";
 import { JoinSplitEvent } from "../sdk/notesManager";
 import {
-  RefundEvent as EthRefundEvent,
-  JoinSplitEvent as EthJoinSplitEvent,
+  RefundProcessedEvent,
+  JoinSplitProcessedEvent 
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { decodeAsset } from "../commonTypes";
 
@@ -13,8 +13,8 @@ export async function fetchNotesFromRefunds(
   from: number,
   to: number
 ): Promise<IncludedNote[]> {
-  const filter = contract.filters.Refund();
-  let events: EthRefundEvent[] = await query(contract, filter, from, to);
+  const filter = contract.filters.RefundProcessed();
+  let events: RefundProcessedEvent[] = await query(contract, filter, from, to);
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
@@ -51,8 +51,8 @@ export async function fetchJoinSplits(
   from: number,
   to: number
 ): Promise<JoinSplitEvent[]> {
-  const filter = contract.filters.JoinSplit();
-  let events: EthJoinSplitEvent[] = await query(contract, filter, from, to);
+  const filter = contract.filters.JoinSplitProcessed();
+  let events: JoinSplitProcessedEvent[] = await query(contract, filter, from, to);
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
