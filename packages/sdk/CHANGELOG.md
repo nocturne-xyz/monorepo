@@ -4,15 +4,15 @@
 
 - Fix bug where joinsplits being processed in tandem with refunds was causing some refund notes to not be removed by joinsplits
 - Fix bug where zeroed dummy notes always produce same NF by generating rand address and nonce
-- `DefaultMerkleProver` and `LocalNotesManager` take optional start blocks as params
-- Fix unawaited promise when calling `processEncryptedNote` on handling new joinsplits
+- `LocalMerkleProver` and `LocalNotesManager` take optional start blocks as params
+- Fix unawaited promise when calling `processNoteTransmission` on handling new joinsplits
 - move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
-- remove nested hash for refund assets in `computeOperationDigest`
+- remove nested hash for refund assets in `calculateOperationDigest`
 - factor `proveJoiNSplitTx` into a separate function
 - add function `JoinSplitPublicSignalsToArray`
 - add function `unpackFromSolidityProof` to convert `SolidityProof -> BaseProof`
-- factor contents of `NocturneContext.proveJoinSplit` into a standalone helper
-- Add `makeProvenJoinSplit` util function that removes additional fields `PreProofJoinSplit` has
+- factor contents of `NocturneContext.proveJoinSplitTx` into a standalone helper
+- Add `makeProvenJoinSplitTx` util function that removes additional fields `PreProofJoinSplitTx` has
 - Fix `NocturneContext.gatherMinimumNotes` bug by adding missing await for `this.ensureMinimumForAssetRequest` and updating test
 - Depend on nocturne fork of circomlibjs
 - Fix `decodeAsset` not padding out address with zeros
@@ -20,7 +20,7 @@
 - Use `randombytes` instead of node `crypto`
 - Use patched fork of `circomlibjs`
 - Avoid usage of `Buffer` in `sdk`.
-- Merge `joinSplit.encodedAssetAddr` and `joinSplit.encodedAssetId` into one field `joinSplit.encodedAsset`
+- Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one field `joinSplitTx.encodedAsset`
 - Add utility function to estimate `executionGasLimit` and `maxNumRefund`
 - Change note commitment to use encoded `asset` and `ID`
 - Add and `encode` and `decode` methods to `NoteTrait`
@@ -30,7 +30,7 @@
   - implement `KVStore` with a new class `InMemoryKVStore` using a B+ Tree lib
   - split `NocturneDB` into `NotesDB` and `MerkleDB`
   - add tests
-  - integrate new DB interfaces into `DefaultMerkleProver`, `LocalNotesManager`, and `NocturneContext`
+  - integrate new DB interfaces into `LocalMerkleProver`, `LocalNotesManager`, and `NocturneContext`
 - Add util method for parsing events from tx receipt and break utils into `bits.ts` and `ethers.ts`
 - Bug fix, `packToSolidityProof` casts numbers to bigints
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes
@@ -62,11 +62,11 @@
 - Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `NocturneContext`
 - Add `NocturneLMDB` as local SDK `NocturneDB`
 - Add `LocalNotesManager` as local SDK `NotesManager`
-- Add `DefaultMerkleProver` as local SDK `MerkleProver`
+- Add `LocalMerkleProver` as local SDK `MerkleProver`
 - Have all packages follow `index.ts` --> `export *` structure
 - Rename spend transaction `value` to `valueToSpend`
 - Add `NocturneContext` object and add functionality for converting an asset request and desired operation to a `PostProofOperation` containing potentially several spend txs
 - Update `generateSpend2TestCase` script to write to `/fixtures`
-- Update `NocturneSigner` to derive `vk` from `sk` and use simplified 2 field `StealthAddress`
+- Update `NocturneSigner` to derive `vk` from `sk` and use simplified 2 field `NocturneAddress`
 - Move spend2 circuit prove/verify methods into sdk
 - Add babyjub classes and poseidon tree

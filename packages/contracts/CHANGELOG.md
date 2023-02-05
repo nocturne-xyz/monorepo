@@ -20,7 +20,7 @@
 - Changed to a custom implementation of ReentrancyGuard to properly reflect operation processing status
 - Fixed a bug that `_receivedAssets` is modified outside an operation
 - Fixed a bug that refunds in `encodedRefundAssets` are not processed
-- Merge `joinSplit.encodedAssetAddr` and `joinSplit.encodedAssetId` into one `joinSplit.encodedAsset`
+- Merge `joinSplitTx.encodedAssetAddr` and `joinSplitTx.encodedAssetId` into one `joinSplitTx.encodedAsset`
 - Make `performOperation` nonReentrant
 - Remove unnecessary `_nonce` state variable, use current tree size as nonce
 - Remove `opSuccess` and add `opProcessed`, which indicate internal error during processing
@@ -67,7 +67,7 @@
 - Start test suite for `PoseidonBatchBinaryMerkle`
 - Break up `BatchBinaryMerkle` lib into `BinaryMerkle` and `Queue`
 - Add `Refund` events to `CommitmentTreeManager`
-- Update `Spend2Verifier` to match simplified `StealthAddress` + vk/sk scheme
+- Update `Spend2Verifier` to match simplified `NocturneAddress` + vk/sk scheme
 - Rename `SpendTransaction.noteCommitment` to `newNoteCommitment` for clarity
 - Add tests for verifier contract
 - Make commitment tree and hash functions generic behind interfaces
