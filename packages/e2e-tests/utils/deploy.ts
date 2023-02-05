@@ -14,7 +14,7 @@ import {
   InMemoryKVStore,
   NotesDB,
   MerkleDB,
-  LocalMerkleProver,
+  DefaultMerkleProver,
   LocalNotesManager,
 } from "@nocturne-xyz/sdk";
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";

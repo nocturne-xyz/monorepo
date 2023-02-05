@@ -24,7 +24,7 @@ import {
   JoinSplitInputs,
   joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
-import { LocalMerkleProver, MerkleProver } from "./sdk/merkleProver";
+import { DefaultMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NotesDB } from "./sdk/db";
 import {
   NotesManager,
@@ -78,7 +78,7 @@ export class NocturneContext {
 
   async syncLeaves(): Promise<void> {
     if (this.merkleProver.isLocal()) {
-      await (this.merkleProver as LocalMerkleProver).fetchLeavesAndUpdate();
+      await (this.merkleProver as DefaultMerkleProver).fetchLeavesAndUpdate();
     } else {
       throw Error("Attempted to sync leaves for non-local merkle prover");
     }
