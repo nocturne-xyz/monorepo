@@ -28,7 +28,7 @@ contract CommitmentTreeManager is Initializable {
     uint256[50] private __GAP;
 
     event Refund(
-        NocturneAddress refundAddr,
+        StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -162,7 +162,7 @@ contract CommitmentTreeManager is Initializable {
     }
 
     function _handleRefundNote(
-        NocturneAddress memory refundAddr,
+        StealthAddress memory refundAddr,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value

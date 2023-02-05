@@ -3,8 +3,8 @@ import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
 import { Note, IncludedNote, NoteTrait } from "./note";
 import {
-  NocturneAddress,
-  NocturneAddressTrait,
+  StealthAddress,
+  StealthAddressTrait,
   CanonAddress,
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
@@ -18,7 +18,7 @@ export interface NocturneSignature {
 
 export class NocturneSigner {
   privkey: NocturnePrivKey;
-  address: NocturneAddress;
+  address: StealthAddress;
   canonAddress: CanonAddress;
 
   constructor(privkey: NocturnePrivKey) {
@@ -111,8 +111,8 @@ export class NocturneSigner {
     };
   }
 
-  testOwn(addr: NocturneAddress): boolean {
-    const points = NocturneAddressTrait.toPoints(addr);
+  testOwn(addr: StealthAddress): boolean {
+    const points = StealthAddressTrait.toPoints(addr);
     const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
     return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
   }

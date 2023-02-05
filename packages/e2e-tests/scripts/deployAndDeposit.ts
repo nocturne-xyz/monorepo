@@ -5,7 +5,7 @@ import {
   Asset,
   AssetType,
   encodeAsset,
-  NocturneAddressTrait,
+  StealthAddressTrait,
   CanonAddress,
   BinaryPoseidonTree,
 } from "@nocturne-xyz/sdk";
@@ -73,7 +73,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   // We will deposit to setup alice and test nocturne addrs
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
-    NocturneAddressTrait.fromCanonAddress
+    StealthAddressTrait.fromCanonAddress
   );
 
   const perNoteAmount = ethers.utils.parseEther("10.0");

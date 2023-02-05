@@ -1,1 +1,1 @@
-export const NocturneAddrPrefix = "0f";
+export const StealthAddrPrefix = "0f";

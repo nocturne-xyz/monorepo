@@ -1,6 +1,6 @@
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  NocturneAddress,
+  StealthAddress,
   NoteTrait,
   SubtreeUpdateProver,
   MockSubtreeUpdateProver,
@@ -31,7 +31,7 @@ export async function depositFunds(
   vault: Vault,
   token: SimpleERC20Token,
   eoa: ethers.Signer,
-  nocturneAddress: NocturneAddress,
+  stealthAddress: StealthAddress,
   amounts: bigint[],
   startNonce = 0
 ): Promise<bigint[]> {
@@ -54,11 +54,11 @@ export async function depositFunds(
       encodedAssetAddr,
       encodedAssetId,
       value: amounts[i],
-      depositAddr: nocturneAddress,
+      depositAddr: stealthAddress,
     });
 
     const note = {
-      owner: nocturneAddress,
+      owner: stealthAddress,
       nonce: BigInt(i + startNonce),
       asset,
       value: amounts[i],

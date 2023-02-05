@@ -17,7 +17,7 @@ import {
 } from "./commonTypes";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
-import { CanonAddress, NocturneAddressTrait } from "./crypto/address";
+import { CanonAddress, StealthAddressTrait } from "./crypto/address";
 import { calculateOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
@@ -200,7 +200,7 @@ export class NocturneContext {
 
     // Insert a dummy note if length of notes to use is odd
     if (notesToUse.length % 2 == 1) {
-      const newAddr = NocturneAddressTrait.randomize(this.signer.address);
+      const newAddr = StealthAddressTrait.randomize(this.signer.address);
       const nonce = randomBigInt();
       notesToUse.push({
         owner: newAddr,
@@ -275,13 +275,13 @@ export class NocturneContext {
     }
 
     const newNoteA: Note = {
-      owner: NocturneAddressTrait.fromCanonAddress(canonOwner),
+      owner: StealthAddressTrait.fromCanonAddress(canonOwner),
       nonce: this.signer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       value: returnVal,
     };
     const newNoteB: Note = {
-      owner: NocturneAddressTrait.fromCanonAddress(receiver),
+      owner: StealthAddressTrait.fromCanonAddress(receiver),
       nonce: this.signer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       value: paymentVal,
@@ -354,7 +354,7 @@ export class NocturneContext {
   protected async getPreSignOperation({
     joinSplitRequests,
     // Generate refund addr if needed
-    refundAddr = NocturneAddressTrait.randomize(this.signer.address),
+    refundAddr = StealthAddressTrait.randomize(this.signer.address),
     refundAssets,
     actions,
     gasPrice = 0n,

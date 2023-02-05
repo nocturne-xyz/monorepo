@@ -119,7 +119,7 @@ contract BalanceManager is
     }
 
     function _makeDeposit(Deposit calldata deposit) internal {
-        NocturneAddress calldata depositAddr = deposit.depositAddr;
+        StealthAddress calldata depositAddr = deposit.depositAddr;
 
         _handleRefundNote(
             depositAddr,
@@ -245,7 +245,7 @@ contract BalanceManager is
 
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
-        NocturneAddress memory refundAddr
+        StealthAddress memory refundAddr
     ) internal {
         uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
         if (value != 0) {

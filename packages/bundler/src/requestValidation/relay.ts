@@ -10,7 +10,7 @@ const solidityProofType = {
   minItems: 8,
   maxItems: 8,
 };
-const nocturneAddressType = {
+const stealthAddressType = {
   type: "object",
   required: ["h1X", "h1Y", "h2X", "h2Y"],
   properties: {
@@ -25,7 +25,7 @@ const encryptedNoteType = {
   type: "object",
   required: ["owner", "encappedKey", "encryptedNonce", "encryptedValue"],
   properties: {
-    owner: nocturneAddressType,
+    owner: stealthAddressType,
     encappedKey: bigintType,
     encryptedNonce: bigintType,
     encryptedValue: bigintType,
@@ -107,7 +107,7 @@ export const relaySchema = {
   ],
   properties: {
     joinSplitTxs: joinSplitTxsType,
-    refundAddr: nocturneAddressType,
+    refundAddr: stealthAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,
     verificationGasLimit: bigintType,

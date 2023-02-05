@@ -3,7 +3,7 @@ import {
   ProvenOperation,
   ProvenJoinSplitTx,
   PreProofOperation,
-  NocturneAddress,
+  StealthAddress,
   AssetWithBalance,
   encodeAsset,
   AssetType,
@@ -301,7 +301,7 @@ export class NocturneFrontendSDK {
   /**
    * Retrieve a freshly randomized address from the snap.
    */
-  protected async getRandomizedAddr(): Promise<NocturneAddress> {
+  protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
@@ -312,7 +312,7 @@ export class NocturneFrontendSDK {
       ],
     })) as string;
 
-    return JSON.parse(json) as NocturneAddress;
+    return JSON.parse(json) as StealthAddress;
   }
 }
 

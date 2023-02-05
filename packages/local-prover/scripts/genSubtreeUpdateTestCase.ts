@@ -30,7 +30,7 @@ const writeToFixture = process.argv[2] == "--writeFixture";
 // Instantiate nocturne keypair and addr
 const nocturnePrivKey = new NocturnePrivKey(sk);
 const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-const nocturneAddr = nocturneSigner.address;
+const stealthAddr = nocturneSigner.address;
 
 // start with empty tree
 const tree = new BinaryPoseidonTree();
@@ -40,7 +40,7 @@ const batch: (Note | bigint)[] = [
   ...Array(BinaryPoseidonTree.BATCH_SIZE).keys(),
 ].map((_) => {
   return {
-    owner: nocturneAddr,
+    owner: stealthAddr,
     nonce: 1n,
     asset: {
       assetType: AssetType.ERC20,

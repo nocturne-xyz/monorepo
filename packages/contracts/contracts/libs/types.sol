@@ -22,20 +22,20 @@ struct Signature {
     bytes32 s;
 }
 
-struct NocturneAddress {
+struct StealthAddress {
     uint256 h1X;
     uint256 h1Y;
     uint256 h2X;
     uint256 h2Y;
 }
 
-struct EncodedNocturneAddress {
+struct EncodedStealthAddress {
     uint256 h1X;
     uint256 h2X;
 }
 
 struct EncryptedNote {
-    NocturneAddress owner;
+    StealthAddress owner;
     uint256 encappedKey;
     uint256 encryptedNonce;
     uint256 encryptedValue;
@@ -82,7 +82,7 @@ struct Bundle {
 
 struct Operation {
     JoinSplitTransaction[] joinSplitTxs;
-    NocturneAddress refundAddr;
+    StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     uint256 verificationGasLimit;
@@ -116,7 +116,7 @@ struct Deposit {
     uint256 encodedAssetAddr;
     uint256 encodedAssetId;
     uint256 value;
-    NocturneAddress depositAddr;
+    StealthAddress depositAddr;
 }
 
 library BundleLib {

@@ -62,7 +62,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     }
 
     event Refund(
-        NocturneAddress refundAddr,
+        StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -117,13 +117,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         }
     }
 
-    function defaultNocturneAddress()
+    function defaultStealthAddress()
         internal
         pure
-        returns (NocturneAddress memory)
+        returns (StealthAddress memory)
     {
         return
-            NocturneAddress({
+            StealthAddress({
                 h1X: 1938477,
                 h1Y: 9104058,
                 h2X: 1032988,
@@ -143,7 +143,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address _asset,
         uint256 _value,
         uint256 _id,
-        NocturneAddress memory _depositAddr
+        StealthAddress memory _depositAddr
     ) public {
         _wallet.depositFunds(
             Deposit({
@@ -176,7 +176,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
-            NocturneAddress memory addr = defaultNocturneAddress();
+            StealthAddress memory addr = defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
             emit Refund(
                 addr,
@@ -244,7 +244,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         uint256 root = wallet.root();
         EncryptedNote memory newNoteAEncrypted = EncryptedNote({
-            owner: NocturneAddress({
+            owner: StealthAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
                 h2X: uint256(123),
@@ -255,7 +255,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encryptedValue: uint256(111)
         });
         EncryptedNote memory newNoteBEncrypted = EncryptedNote({
-            owner: NocturneAddress({
+            owner: StealthAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
                 h2X: uint256(123),
@@ -294,7 +294,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         actions[0] = transferAction;
         Operation memory op = Operation({
             joinSplitTxs: joinSplitTxs,
-            refundAddr: defaultNocturneAddress(),
+            refundAddr: defaultStealthAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
             verificationGasLimit: args.verificationGasLimit,

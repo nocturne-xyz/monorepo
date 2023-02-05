@@ -1,5 +1,5 @@
 import { Address, ProvenOperation } from "../commonTypes";
-import { NocturneAddress } from "../crypto/address";
+import { StealthAddress } from "../crypto/address";
 
 export interface Action {
   contractAddress: Address;
@@ -15,7 +15,7 @@ export interface Deposit {
   asset: Address;
   value: bigint;
   id: bigint;
-  depositAddr: NocturneAddress;
+  depositAddr: StealthAddress;
 }
 
 export interface OperationResult {

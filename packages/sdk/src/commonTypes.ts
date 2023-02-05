@@ -1,7 +1,7 @@
 import { utils } from "ethers";
 import { Action } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { CanonAddress, NocturneAddress } from "./crypto/address";
+import { CanonAddress, StealthAddress } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 
@@ -139,7 +139,7 @@ export interface JoinSplitRequest extends UnwrapRequest {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundAddr?: NocturneAddress;
+  refundAddr?: StealthAddress;
   refundAssets: Asset[];
   actions: Action[];
   verificationGasLimit?: bigint;
@@ -187,7 +187,7 @@ export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
 }
 
 export interface EncryptedNote {
-  owner: NocturneAddress;
+  owner: StealthAddress;
   encappedKey: bigint;
   encryptedNonce: bigint;
   encryptedValue: bigint;
@@ -224,7 +224,7 @@ export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
 }
 
 export interface BaseOperation {
-  refundAddr: NocturneAddress;
+  refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
   verificationGasLimit: bigint;
