@@ -12,9 +12,11 @@ import { ProxiedContract, ProxyKind, TransparentProxyAddresses } from "./proxy";
 import { Address, NocturneDeployment, NocturneDeployOpts } from "./types";
 
 export class NocturneDeployer {
-  connectedSigner: ethers.providers.JsonRpcSigner;
+  connectedSigner: ethers.Wallet;
 
-  constructor(connectedSigner: ethers.providers.JsonRpcSigner) {
+  constructor(connectedSigner: ethers.Wallet) {
+    if (!connectedSigner.provider)
+      throw new Error("Wallet must be connected to provider");
     this.connectedSigner = connectedSigner;
   }
 
@@ -91,7 +93,7 @@ export class NocturneDeployer {
     const implementation = await implementationFactory.deploy();
 
     // If no init args provided, then set init data to empty
-    let initData = "";
+    let initData = "0x";
     if (initArgs) {
       initData = implementation.interface.encodeFunctionData(
         "initialize",
