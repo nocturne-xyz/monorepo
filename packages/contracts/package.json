@@ -15,7 +15,6 @@
     "build:deps": "./install_deps.sh",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
-    "deploy": "hardhat run ./deployer/index.ts",
     "copy-definitions": "cp src/*.d.ts dist/src",
     "lint": "solhint contracts/*.sol",
     "lint:fix": "solhint --fix contracts/*.sol && yarn prettier --write",
