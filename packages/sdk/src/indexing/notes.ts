@@ -30,7 +30,7 @@ export async function fetchNotesFromRefunds(
     const { h1X, h1Y, h2X, h2Y } = refundAddr;
     const encodedAsset: EncodedAsset = {
       encodedAssetAddr: encodedAssetAddr.toBigInt(),
-      encodedAssetId: encodedAssetId.toBigInt()
+      encodedAssetId: encodedAssetId.toBigInt(),
     };
 
     return {

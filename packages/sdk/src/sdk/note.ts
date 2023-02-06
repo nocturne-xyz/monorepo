@@ -82,11 +82,12 @@ export class NoteTrait {
   }
 
   static decode(encodedNote: EncodedNote): Note {
-    const { owner, nonce, value, encodedAssetAddr, encodedAssetId } = encodedNote;
+    const { owner, nonce, value, encodedAssetAddr, encodedAssetId } =
+      encodedNote;
 
     const encodedAsset: EncodedAsset = {
       encodedAssetAddr,
-      encodedAssetId
+      encodedAssetId,
     };
 
     const asset = AssetTrait.decode(encodedAsset);

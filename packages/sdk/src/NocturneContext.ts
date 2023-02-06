@@ -366,7 +366,9 @@ export class NocturneContext {
       );
     }
 
-    const encodedRefundAssets: EncodedAsset[] = refundAssets.map(AssetTrait.encode);
+    const encodedRefundAssets: EncodedAsset[] = refundAssets.map(
+      AssetTrait.encode
+    );
 
     let simulationRequired = false;
     // Required field absent, need to estimate

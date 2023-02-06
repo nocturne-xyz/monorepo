@@ -68,7 +68,7 @@ export async function fetchInsertions(
       const encoddAsset: EncodedAsset = {
         encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
         encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-      }
+      };
 
       const asset = AssetTrait.decode(encoddAsset);
 

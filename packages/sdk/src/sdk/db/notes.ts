@@ -1,7 +1,4 @@
-import {
-  AllNotes,
-  NoteAssetKey,
-} from "../../commonTypes";
+import { AllNotes, NoteAssetKey } from "../../commonTypes";
 import { Asset, AssetTrait } from "../asset";
 import { IncludedNote, NoteTrait } from "../note";
 import * as JSON from "bigint-json-serialization";

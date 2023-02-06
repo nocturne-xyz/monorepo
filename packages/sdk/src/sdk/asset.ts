@@ -76,9 +76,7 @@ export class AssetTrait {
     return { encodedAssetAddr, encodedAssetId };
   }
 
-  static decode(
-    encodedAsset: EncodedAsset
-  ): Asset {
+  static decode(encodedAsset: EncodedAsset): Asset {
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
     const assetBits = encodedAssetBits.slice(96);
@@ -102,7 +100,10 @@ export class AssetTrait {
     }
 
     const idTop3 = encodedAssetBits.slice(3, 6);
-    const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0").slice(3);
+    const encodedIDBits = encodedAssetId
+      .toString(2)
+      .padStart(256, "0")
+      .slice(3);
     const id = BigInt(`0b${idTop3}${encodedIDBits}`);
 
     return {
