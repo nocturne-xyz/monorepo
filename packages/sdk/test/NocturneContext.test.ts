@@ -12,7 +12,7 @@ import {
   NotesDB,
   InMemoryKVStore,
   MockMerkleProver,
-  LocalNotesManager,
+  DefaultNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
@@ -76,7 +76,7 @@ describe("NocturneContext", () => {
     const merkleProver = new MockMerkleProver();
 
     const provider = getDefaultProvider();
-    const notesManager = new LocalNotesManager(
+    const notesManager = new DefaultNotesManager(
       notesDB,
       signer,
       "0xaaaa",

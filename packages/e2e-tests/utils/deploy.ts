@@ -15,7 +15,7 @@ import {
   NotesDB,
   MerkleDB,
   DefaultMerkleProver,
-  LocalNotesManager,
+  DefaultNotesManager,
 } from "@nocturne-xyz/sdk";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 

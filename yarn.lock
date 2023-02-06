@@ -3499,6 +3499,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/contracts@npm:^1.0.4-alpha":
+  version: 1.0.4-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.4-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.7.3
+    "@openzeppelin/contracts-upgradeable": 4.7.3
+  checksum: 9364cba1cd1eed910f2a9ab53ce394c7795c0470ea96623e18f01f538d8b5c7924e218be5816ceacf9acdfd26dd5445b9ca8ed8efafc69dab28ab24c945d3c35
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
@@ -3598,7 +3608,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.63-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.66-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3629,6 +3639,25 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/sdk@npm:1.0.63-alpha":
+  version: 1.0.63-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.63-alpha"
+  dependencies:
+    "@nocturne-xyz/contracts": ^1.0.4-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    circomlibjs: nocturne-xyz/circomlibjs
+    ethers: ^5.0.0
+    ffjavascript: 0.2.57
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: ca542cb671f1e423c114aaae4143774c53ccf0ae11874c2b7c2c8c9dd0ccefd70630976b3fcd38da1e7bf88367a407ff610f5f654f556ac243ea8f17c68f36c9
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local
@@ -3689,7 +3718,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.7-alpha
-    "@nocturne-xyz/sdk": 1.0.63-alpha
+    "@nocturne-xyz/sdk": 1.0.66-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
