@@ -1,5 +1,5 @@
 import { Contract, ethers } from "ethers";
-import { Address } from "./types";
+import { Address } from "./deployment";
 
 export enum ProxyKind {
   Transparent = "Transparent",

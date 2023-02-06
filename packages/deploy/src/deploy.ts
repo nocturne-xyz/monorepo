@@ -12,7 +12,14 @@ import {
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract, ProxyKind, TransparentProxyAddresses } from "./proxy";
-import { Address, NocturneDeployment, NocturneDeployOpts } from "./types";
+import { Address, NocturneDeployment } from "./deployment";
+
+export interface NocturneDeployOpts {
+  proxyAdmin?: ProxyAdmin;
+  provider?: any; // FIX: ts build within hh disallows ethers.providers.Provider
+  useMockSubtreeUpdateVerifier?: boolean;
+  confirmations?: number;
+}
 
 export class NocturneDeployer {
   connectedSigner: ethers.Wallet;

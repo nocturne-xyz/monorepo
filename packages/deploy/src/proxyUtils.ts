@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { Address } from "./types";
+import { Address } from "./deployment";
 
 export async function proxyImplementation(
   provider: ethers.providers.Provider,

@@ -1,6 +1,6 @@
 import { ProxyAdmin__factory, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { NocturneDeployment } from "./types";
+import { NocturneDeployment } from "./deployment";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assert } from "./utils";
 
