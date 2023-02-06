@@ -7,7 +7,7 @@ export interface Network {
   chainId: number;
 }
 
-export interface NocturneDeployment {
+export interface NocturneDeploymentConfig {
   network: Network;
   startBlock: number;
   proxyAdminOwner: Address;

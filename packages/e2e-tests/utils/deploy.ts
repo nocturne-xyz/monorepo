@@ -20,7 +20,7 @@ import {
 import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import {
-  checkNocturneDeployment,
+  checkNocturneDeploymentConfig,
   NocturneDeployer,
 } from "@nocturne-xyz/deploy";
 
@@ -61,7 +61,7 @@ export async function setupNocturne(
     }
   );
 
-  await checkNocturneDeployment(deployment, ethers.provider);
+  await checkNocturneDeploymentConfig(deployment, ethers.provider);
 
   const { walletProxy, vaultProxy } = deployment;
   const wallet = Wallet__factory.connect(walletProxy.proxy, signer);
