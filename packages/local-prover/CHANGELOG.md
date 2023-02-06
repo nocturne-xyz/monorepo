@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Rename 
+	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`
+	- `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
 - use `OperationStatus` from `@nocturne-xyz/sdk`
 - move `subtreeUpdateInputsFromBatch` to `sdk`
 - Remove `toJSON` and all `fromJSON` methods in favor of custom `bigint-json-serialization`
