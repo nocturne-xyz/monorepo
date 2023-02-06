@@ -118,5 +118,5 @@ export abstract class NotesManager {
   }
 }
 
-export { LocalNotesManager } from "./local";
+export { DefaultNotesManager as LocalNotesManager } from "./default";
 export { MockNotesManager } from "./mock";

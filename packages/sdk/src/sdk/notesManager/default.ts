@@ -15,11 +15,11 @@ const JOINSPLITS_LAST_INDEXED_BLOCK = "JOINSPLITS_LAST_INDEXED_BLOCK";
 const JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK =
   "JOINSPLITS_TENTATIVE_LAST_INDEXED_BLOCK";
 
-export interface LocalNotesManagerOpts {
+export interface DefaultNotesManagerOpts {
   startBlock?: number;
 }
 
-export class LocalNotesManager extends NotesManager {
+export class DefaultNotesManager extends NotesManager {
   walletContract: Wallet;
   provider: ethers.providers.Provider;
   startBlock: number;
@@ -29,7 +29,7 @@ export class LocalNotesManager extends NotesManager {
     signer: NocturneSigner,
     walletAddress: Address,
     provider: ethers.providers.Provider,
-    opts?: LocalNotesManagerOpts
+    opts?: DefaultNotesManagerOpts
   ) {
     super(db, signer);
     this.provider = provider;
