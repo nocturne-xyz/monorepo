@@ -4,7 +4,7 @@
 
 - Fix bug where joinsplits being processed in tandem with refunds was causing some refund notes to not be removed by joinsplits
 - Fix bug where zeroed dummy notes always produce same NF by generating rand address and nonce
-- `LocalMerkleProver` and `DefaultNotesManager` take optional start blocks as params
+- `LocalMerkleProver` and `LocalNotesManager` take optional start blocks as params
 - Fix unawaited promise when calling `processNoteTransmission` on handling new joinsplits
 - move `OperationStatus` to `commonTypes` from `@nocturne-xyz/bundler`
 - remove nested hash for refund assets in `calculateOperationDigest`
@@ -30,7 +30,7 @@
   - implement `KVStore` with a new class `InMemoryKVStore` using a B+ Tree lib
   - split `NocturneDB` into `NotesDB` and `MerkleDB`
   - add tests
-  - integrate new DB interfaces into `LocalMerkleProver`, `DefaultNotesManager`, and `NocturneContext`
+  - integrate new DB interfaces into `LocalMerkleProver`, `LocalNotesManager`, and `NocturneContext`
 - Add util method for parsing events from tx receipt and break utils into `bits.ts` and `ethers.ts`
 - Bug fix, `packToSolidityProof` casts numbers to bigints
 - Update `gatherMinimumNotes` logic to actually gather minimum number of notes
@@ -61,7 +61,7 @@
 - Add scripts to generate test cases for joinsplit circuit
 - Add `sdk` directory to include `db`, `merkleProver`, `notesManager` and wrap up that functionality in `NocturneContext`
 - Add `NocturneLMDB` as local SDK `NocturneDB`
-- Add `DefaultNotesManager` as local SDK `NotesManager`
+- Add `LocalNotesManager` as local SDK `NotesManager`
 - Add `LocalMerkleProver` as local SDK `MerkleProver`
 - Have all packages follow `index.ts` --> `export *` structure
 - Rename spend transaction `value` to `valueToSpend`
