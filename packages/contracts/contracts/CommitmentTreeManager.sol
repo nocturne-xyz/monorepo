@@ -65,9 +65,7 @@ contract CommitmentTreeManager is Initializable {
       @dev This function should be re-entry safe. Nullifiers must be marked
       used as soon as they are checked to be valid.
     */
-    function _handleJoinSplit(
-        JoinSplit calldata joinSplit
-    ) internal {
+    function _handleJoinSplit(JoinSplit calldata joinSplit) internal {
         // Check validity of both nullifiers
         require(
             _pastRoots[joinSplit.commitmentTreeRoot],

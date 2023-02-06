@@ -49,11 +49,7 @@ describe("LocalMerkle", async () => {
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
     await updater.init();
 
-    merkle = new DefaultMerkleProver(
-      wallet.address,
-      ethers.provider,
-      merkleDB
-    );
+    merkle = new DefaultMerkleProver(wallet.address, ethers.provider, merkleDB);
   });
 
   async function applySubtreeUpdate() {

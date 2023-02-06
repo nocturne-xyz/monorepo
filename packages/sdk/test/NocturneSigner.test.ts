@@ -62,11 +62,7 @@ describe("NocturneSigner", () => {
       asset,
     };
     const encryptedNote = genEncryptedNote(addr, note);
-    const note2 = signer.getNoteFromEncryptedNote(
-      encryptedNote,
-      2,
-      asset
-    );
+    const note2 = signer.getNoteFromEncryptedNote(encryptedNote, 2, asset);
     expect(note.nonce).to.equal(note2.nonce);
     expect(note.value).to.equal(note2.value);
   });

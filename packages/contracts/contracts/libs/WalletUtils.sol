@@ -60,10 +60,7 @@ library WalletUtils {
                     .joinSplits[j]
                     .encodedAsset
                     .encodedAssetAddr;
-                allPis[index][8] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetId;
+                allPis[index][8] = op.joinSplits[j].encodedAsset.encodedAssetId;
                 index++;
             }
         }
@@ -187,8 +184,7 @@ library WalletUtils {
                 callResults: callResults,
                 executionGas: 0,
                 verificationGas: 0,
-                numRefunds: op.joinSplits.length +
-                    op.encodedRefundAssets.length
+                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
             });
     }
 

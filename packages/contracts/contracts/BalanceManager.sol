@@ -225,10 +225,7 @@ contract BalanceManager is
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleRefundForAsset(
-                op.joinSplits[i].encodedAsset,
-                op.refundAddr
-            );
+            _handleRefundForAsset(op.joinSplits[i].encodedAsset, op.refundAddr);
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;

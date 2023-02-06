@@ -271,9 +271,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedAssetId: uint256(0)
         });
 
-        JoinSplit[] memory joinSplits = new JoinSplit[](
-            args.numJoinSplits
-        );
+        JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
             joinSplits[i] = JoinSplit({
                 commitmentTreeRoot: root,

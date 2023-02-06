@@ -4,7 +4,7 @@ import { query } from "../sdk/utils";
 import { JoinSplitEvent } from "../sdk/notesManager";
 import {
   RefundProcessedEvent,
-  JoinSplitProcessedEvent 
+  JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { decodeAsset } from "../commonTypes";
 
@@ -52,7 +52,12 @@ export async function fetchJoinSplits(
   to: number
 ): Promise<JoinSplitEvent[]> {
   const filter = contract.filters.JoinSplitProcessed();
-  let events: JoinSplitProcessedEvent[] = await query(contract, filter, from, to);
+  let events: JoinSplitProcessedEvent[] = await query(
+    contract,
+    filter,
+    from,
+    to
+  );
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
