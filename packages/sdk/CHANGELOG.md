@@ -6,7 +6,7 @@
   - `NoteTransmission` -> `EncryptedNote`
   - `NocturneAddress` -> `StealthAddress`
   - `LocalNotesManager` -> `DefaultNotesManager`
-  - `LocalMerkleProver` -> `DefaultMerkleProver`
+  - `LocalMerkleProver` -> `InMemoryMerkleProver`
   - `LocalJoinSplitProver` -> `WasmJoinSplitProver`
   - `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`
   - `JoinSplitTx` -> `JoinSplit`

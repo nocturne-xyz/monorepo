@@ -10,7 +10,7 @@ import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   BinaryPoseidonTree,
   NocturneContext,
-  DefaultMerkleProver,
+  InMemoryMerkleProver,
   MerkleDB,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../utils/deploy";
@@ -25,7 +25,7 @@ describe("LocalMerkle", async () => {
   let vault: Vault;
   let token: SimpleERC20Token;
   let merkleDB: MerkleDB;
-  let merkle: DefaultMerkleProver;
+  let merkle: InMemoryMerkleProver;
   let nocturneContext: NocturneContext;
   let updater: SubtreeUpdater;
 
@@ -49,7 +49,7 @@ describe("LocalMerkle", async () => {
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
     await updater.init();
 
-    merkle = new DefaultMerkleProver(wallet.address, ethers.provider, merkleDB);
+    merkle = new InMemoryMerkleProver(wallet.address, ethers.provider, merkleDB);
   });
 
   async function applySubtreeUpdate() {

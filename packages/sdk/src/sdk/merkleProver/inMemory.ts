@@ -11,11 +11,11 @@ import { fetchInsertions } from "../../indexing";
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";
 
-export interface DefaultMerkleProverOpts {
+export interface InMemoryMerkleProverOpts {
   startBlock?: number;
 }
 
-export class DefaultMerkleProver extends MerkleProver {
+export class InMemoryMerkleProver extends MerkleProver {
   readonly localTree: BinaryPoseidonTree;
   protected contract: Wallet;
   protected provider: ethers.providers.Provider;
@@ -26,7 +26,7 @@ export class DefaultMerkleProver extends MerkleProver {
     walletContractAddress: Address,
     provider: ethers.providers.Provider,
     db: MerkleDB,
-    opts?: DefaultMerkleProverOpts
+    opts?: InMemoryMerkleProverOpts
   ) {
     super();
 
@@ -44,9 +44,9 @@ export class DefaultMerkleProver extends MerkleProver {
     merkleAddress: Address,
     provider: ethers.providers.Provider,
     db: MerkleDB,
-    opts?: DefaultMerkleProverOpts
-  ): Promise<DefaultMerkleProver> {
-    const self = new DefaultMerkleProver(merkleAddress, provider, db, opts);
+    opts?: InMemoryMerkleProverOpts
+  ): Promise<InMemoryMerkleProver> {
+    const self = new InMemoryMerkleProver(merkleAddress, provider, db, opts);
 
     for await (const leaf of db.iterLeaves()) {
       self.localTree.insert(leaf);
