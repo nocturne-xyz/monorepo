@@ -6,7 +6,7 @@ import {
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { query } from "../sdk/utils";
 import { Note } from "../sdk/note";
-import { decodeAsset } from "../commonTypes";
+import { AssetTrait, EncodedAsset } from "../sdk/asset";
 
 interface OrderedInsertion {
   insertion: bigint | Note;
@@ -65,10 +65,12 @@ export async function fetchInsertions(
         h2Y: 0n,
       };
 
-      const asset = decodeAsset(
-        noteValues.encodedAssetAddr.toBigInt(),
-        noteValues.encodedAssetId.toBigInt()
-      );
+      const encoddAsset: EncodedAsset = {
+        encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
+        encodedAssetId: noteValues.encodedAssetId.toBigInt(),
+      }
+
+      const asset = AssetTrait.decode(encoddAsset);
 
       const note: Note = {
         owner,

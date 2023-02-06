@@ -9,7 +9,8 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { Asset, EncryptedNote } from "../commonTypes";
+import { EncryptedNote } from "../commonTypes";
+import { Asset } from "./asset";
 
 export interface NocturneSignature {
   c: bigint;

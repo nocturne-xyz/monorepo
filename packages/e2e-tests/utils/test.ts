@@ -4,7 +4,7 @@ import {
   NoteTrait,
   SubtreeUpdateProver,
   MockSubtreeUpdateProver,
-  encodeAsset,
+  AssetTrait,
   AssetType,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
@@ -45,7 +45,7 @@ export async function depositFunds(
     id: 0n,
   };
 
-  const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+  const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
 
   const commitments = [];
   for (let i = 0; i < amounts.length; i++) {

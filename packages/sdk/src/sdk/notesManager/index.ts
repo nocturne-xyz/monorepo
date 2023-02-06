@@ -1,9 +1,8 @@
 import { NotesDB } from "../db";
 import { IncludedNote, NoteTrait } from "../note";
 import { NocturneSigner } from "../signer";
+import { Asset, AssetTrait } from "../asset";
 import {
-  decodeAsset,
-  Asset,
   BaseJoinSplit,
   EncryptedNote,
 } from "../../commonTypes";
@@ -50,9 +49,8 @@ export abstract class NotesManager {
     newJoinSplits: JoinSplitEvent[]
   ): Promise<void> {
     for (const e of newJoinSplits) {
-      const asset = decodeAsset(
-        e.joinSplit.encodedAsset.encodedAssetAddr,
-        e.joinSplit.encodedAsset.encodedAssetId
+      const asset = AssetTrait.decode(
+        e.joinSplit.encodedAsset
       );
 
       await this.processEncryptedNote(

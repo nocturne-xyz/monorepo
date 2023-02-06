@@ -4,7 +4,7 @@ import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { StealthAddressTrait } from "../src/crypto/address";
 import { genEncryptedNote } from "../src/crypto/utils";
-import { encodeAsset, AssetType } from "../src/commonTypes";
+import { AssetTrait, AssetType } from "../src/sdk/asset";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
@@ -75,7 +75,7 @@ describe("NocturneSigner", () => {
       id: 1n,
     };
 
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+    const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
     const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
     const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0");
 
@@ -108,7 +108,7 @@ describe("NocturneSigner", () => {
     };
     const idBits = asset.id.toString(2).padStart(256, "0");
 
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+    const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
 
     const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
     const encodedIDBits = encodedAssetId.toString(2).padStart(256, "0");

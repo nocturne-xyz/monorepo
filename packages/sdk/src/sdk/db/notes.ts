@@ -1,9 +1,8 @@
 import {
   AllNotes,
-  Asset,
   NoteAssetKey,
-  parseAssetType,
 } from "../../commonTypes";
+import { Asset, AssetTrait } from "../asset";
 import { IncludedNote, NoteTrait } from "../note";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
@@ -63,7 +62,7 @@ export class NotesDB {
     }
 
     return {
-      assetType: parseAssetType(arr[1]),
+      assetType: AssetTrait.parseAssetType(arr[1]),
       assetAddr: arr[2],
       id: BigInt(arr[3]),
     };
