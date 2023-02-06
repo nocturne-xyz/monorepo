@@ -3,7 +3,7 @@ set -e
 
 # Make sure that the working directory is always the monorepo root
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
-ROOT_DIR="$SCRIPT_DIR/../../.."
+ROOT_DIR="$SCRIPT_DIR/../.."
 cd "$ROOT_DIR"
 
 echo "Installing forge deps..."
@@ -11,7 +11,7 @@ if [ -d "./lib/forge-std" ]; then
   if [ "$(ls -A ./lib/forge-std)" ]; then
     echo "forge deps already installed"
     echo "Skipping.."
-	exit 0
+	  exit 0
   else
     echo "Dep directory found, but it's empty"
     echo "Cleaning up and installing deps.."
@@ -19,4 +19,4 @@ if [ -d "./lib/forge-std" ]; then
   fi
 fi
 
-forge install foundry-rs/forge-std@be5c649 --no-git
+forge install foundry-rs/forge-std --no-git
