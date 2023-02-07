@@ -13,31 +13,6 @@ export type Address = string;
 export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
 export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
-export interface UnwrapRequest {
-  asset: Asset;
-  unwrapValue: bigint;
-}
-
-export interface PaymentIntent {
-  receiver: CanonAddress;
-  value: bigint;
-}
-
-// A joinsplit request is an unwrapRequest plus an optional payment
-export interface JoinSplitRequest extends UnwrapRequest {
-  paymentIntent?: PaymentIntent;
-}
-
-export interface OperationRequest {
-  joinSplitRequests: JoinSplitRequest[];
-  refundAddr?: StealthAddress;
-  refundAssets: Asset[];
-  actions: Action[];
-  verificationGasLimit?: bigint;
-  executionGasLimit?: bigint;
-  maxNumRefunds?: bigint;
-  gasPrice?: bigint;
-}
 
 export type SolidityProof = [
   bigint,
