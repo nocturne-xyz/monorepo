@@ -3,7 +3,7 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { JoinSplitRequest } from "../src/commonTypes";
+import { JoinSplitRequest } from "../src/sdk";
 import { Asset, AssetType } from "../src/sdk/asset";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
@@ -216,11 +216,11 @@ describe("NocturneContext", () => {
 
   it("Generate PreSignJoinSplits from JoinSplitRequest", async () => {
     const priv = NocturnePrivKey.genPriv();
-    const addr = priv.toCanonAddress();
+    const addr = new NocturneSigner(priv).address;
     const preSignJoinSplits = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 5n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 6n,
       },
@@ -230,7 +230,7 @@ describe("NocturneContext", () => {
     const preSignJoinSplits2 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 10n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 1n,
       },
@@ -240,7 +240,7 @@ describe("NocturneContext", () => {
     const preSignJoinSplits3 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 30n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 30n,
       },
