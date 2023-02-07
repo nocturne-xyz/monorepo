@@ -18,7 +18,7 @@ import { depositFunds, getSubtreeUpdateProver } from "../utils/test";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 
-describe("LocalMerkle", async () => {
+describe("InMemoryMerkle", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let wallet: Wallet;
@@ -68,7 +68,7 @@ describe("LocalMerkle", async () => {
     await network.provider.send("hardhat_reset");
   });
 
-  it("Local merkle prover self syncs", async () => {
+  it("self syncs", async () => {
     console.log("Depositing 2 notes");
     const ncs = await depositFunds(
       wallet,
