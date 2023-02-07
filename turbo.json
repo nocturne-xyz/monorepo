@@ -6,6 +6,9 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "@nocturne-xyz/deploy#build": {
+      "dependsOn": ["@nocturne-xyz/contracts#build"]
+    },
     "@nocturne-xyz/sdk#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
@@ -32,6 +35,7 @@
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
+        "@nocturne-xyz/deploy#build",
         "@nocturne-xyz/subtree-updater#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/bundler#build"

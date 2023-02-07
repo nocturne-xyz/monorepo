@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `deployer` directory in favor of `deploy` package
 - Deploy script takes mock subtree update verifier param as env var
 - Deploy script logs network info and start block
 - Check if bundler payout > 0 tokens and only call transfer if so

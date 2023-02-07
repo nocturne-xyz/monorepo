@@ -8,5 +8,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["deploy/**/*.ts", "test/**/*.ts"]
+  "include": ["test/**/*.ts", "scripts/**/*.ts", "utils/*.ts"]
 }

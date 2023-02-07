@@ -3499,12 +3499,35 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
+  dependencies:
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@types/chai": ^4.3.3
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    chai: ^4.3.6
+    chai-as-promised: ^7.1.1
+    dotenv: ^16.0.3
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    mocha: ^10.1.0
+    prettier: ^2.8.0
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/e2e-tests@workspace:packages/e2e-tests":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/e2e-tests@workspace:packages/e2e-tests"
   dependencies:
     "@nocturne-xyz/bundler": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
