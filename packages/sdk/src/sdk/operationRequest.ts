@@ -52,7 +52,10 @@ export class NocturneOpRequestBuilder {
 
   // add an action  to the operation
   // returns `this` so it's chainable
-  action(contractAddress: Address, encodedFunction: string): NocturneOpRequestBuilder {
+  action(
+    contractAddress: Address,
+    encodedFunction: string
+  ): NocturneOpRequestBuilder {
     const action: Action = {
       contractAddress,
       encodedFunction,

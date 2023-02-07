@@ -196,14 +196,17 @@ describe("NocturneContext", () => {
     const refundAsset: Asset = {
       assetType: AssetType.ERC20,
       assetAddr: "0x1245",
-      id: 0n
+      id: 0n,
     };
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
       .unwrap(asset, 40n)
       .refundAsset(refundAsset)
-      .action("0x1111", "0x6d6168616d000000000000000000000000000000000000000000000000000000")
+      .action(
+        "0x1111",
+        "0x6d6168616d000000000000000000000000000000000000000000000000000000"
+      )
       .gas(1_000_000n, 1_000_000n, 1n) // set gas and max num refunds to prevent simulation
       .maxNumRefunds(1n)
       .build();
@@ -263,13 +266,20 @@ describe("NocturneContext", () => {
 
   it("Generates PreProofOperation with a operation request", async () => {
     // Request to unwraps 15 tokens
-    const refundAsset: Asset = { assetType: AssetType.ERC20, assetAddr: "0x1245", id: 0n };
+    const refundAsset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x1245",
+      id: 0n,
+    };
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
       .unwrap(asset, 15n)
       .refundAsset(refundAsset)
-      .action("0x1111", "0x6d6168616d000000000000000000000000000000000000000000000000000000")
+      .action(
+        "0x1111",
+        "0x6d6168616d000000000000000000000000000000000000000000000000000000"
+      )
       .gas(1_000_000n, 1_000_000n, 1n) // set gas and maxNumRefunds to prevent simulation
       .maxNumRefunds(1n)
       .build();

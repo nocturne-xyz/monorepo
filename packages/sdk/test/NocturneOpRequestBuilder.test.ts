@@ -41,9 +41,7 @@ const plutocracy: Asset = {
 };
 
 function getDummyHex(bump: number): string {
-  const hex = utils.keccak256(
-    "0x" + bump.toString(16).padStart(64, "0")
-  );
+  const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));
   return hex;
 }
 
@@ -61,7 +59,7 @@ describe("NocturneOpRequestBuilder", () => {
         {
           contractAddress: "0x1234",
           encodedFunction: getDummyHex(0),
-        }
+        },
       ],
     };
 
@@ -94,7 +92,7 @@ describe("NocturneOpRequestBuilder", () => {
         {
           contractAddress: "0x1234",
           encodedFunction: getDummyHex(0),
-        }
+        },
       ],
     };
 
@@ -124,8 +122,8 @@ describe("NocturneOpRequestBuilder", () => {
       actions: [
         {
           contractAddress: "0x1234",
-          encodedFunction: getDummyHex(0)
-        }
+          encodedFunction: getDummyHex(0),
+        },
       ],
       refundAddr,
       verificationGasLimit: 10n,
@@ -160,7 +158,7 @@ describe("NocturneOpRequestBuilder", () => {
           payment: {
             receiver: receivers[0],
             value: 1n,
-          }
+          },
         },
         {
           asset: stablescam,
@@ -168,8 +166,8 @@ describe("NocturneOpRequestBuilder", () => {
           payment: {
             receiver: receivers[1],
             value: 2n,
-          }
-        }
+          },
+        },
       ],
       refundAssets: [],
       actions: [],
@@ -199,7 +197,10 @@ describe("NocturneOpRequestBuilder", () => {
     const receivers = _.range(3)
       .map((_) => NocturnePrivKey.genPriv())
       .map((priv) => priv.toCanonAddress());
-    const actions = _.range(2).map((i) => ({ contractAddress: "0x1234", encodedFunction: getDummyHex(i) }));
+    const actions = _.range(2).map((i) => ({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(i),
+    }));
     const expected: OperationRequest = {
       joinSplitRequests: [
         {

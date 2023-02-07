@@ -248,10 +248,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const builder = new NocturneOpRequestBuilder();
     const operationRequest = builder
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
-      .confidentialPayment(erc20Asset, ALICE_TO_BOB_PRIV_VAL, nocturneContextBob.signer.canonAddress)
+      .confidentialPayment(
+        erc20Asset,
+        ALICE_TO_BOB_PRIV_VAL,
+        nocturneContextBob.signer.canonAddress
+      )
       .action(erc20Token.address, encodedFunction)
-      .build()
-      
+      .build();
+
     console.log("Encode transfer erc20 action");
 
     const contractChecks = async () => {
@@ -312,11 +316,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
     };
 
-    await testE2E(
-      operationRequest,
-      contractChecks,
-      offchainChecks
-    );
+    await testE2E(operationRequest, contractChecks, offchainChecks);
   });
 
   it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
@@ -399,11 +399,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(erc1155NotesAlice.length).to.equal(1);
     };
 
-
-    await testE2E(
-      opRequest,
-      contractChecks,
-      offchainChecks
-    );
+    await testE2E(opRequest, contractChecks, offchainChecks);
   });
 });
