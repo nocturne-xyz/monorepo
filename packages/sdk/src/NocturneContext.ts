@@ -9,10 +9,7 @@ import {
   BLOCK_GAS_LIMIT,
   Address,
 } from "./commonTypes";
-import {
-  JoinSplitRequest,
-  OperationRequest,
-} from "./sdk/operationRequest";
+import { JoinSplitRequest, OperationRequest } from "./sdk/operationRequest";
 import { Asset, AssetWithBalance, EncodedAsset, AssetTrait } from "./sdk/asset";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";

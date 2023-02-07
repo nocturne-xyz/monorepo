@@ -13,7 +13,6 @@ export type Address = string;
 export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
 export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
-
 export type SolidityProof = [
   bigint,
   bigint,
