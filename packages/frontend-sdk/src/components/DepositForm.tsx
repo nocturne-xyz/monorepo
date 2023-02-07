@@ -1,4 +1,4 @@
-import { AssetType, parseAssetType } from "@nocturne-xyz/sdk";
+import { AssetType, AssetTrait } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
@@ -16,7 +16,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
   const [assetID, setAssetID] = useState("0");
 
   const handleAssetTypeChange = (event: any) => {
-    setAssetType(parseAssetType(event.target.value));
+    setAssetType(AssetTrait.parseAssetType(event.target.value));
   };
 
   const handleAssetIDChange = (event: any) => {
