@@ -122,12 +122,12 @@ export class NocturneOpRequestBuilder {
   // usually you want to just let the wallet estimate this instead.
   // returns `this` so it's chainable
   gas(
-    verificationGas: bigint,
-    executionGas: bigint,
+    verificationGasLimit: bigint,
+    executionGasLimit: bigint,
     gasPrice: bigint
   ): NocturneOpRequestBuilder {
-    this.op.verificationGasLimit = verificationGas;
-    this.op.executionGasLimit = executionGas;
+    this.op.verificationGasLimit = verificationGasLimit;
+    this.op.executionGasLimit = executionGasLimit;
     this.op.gasPrice = gasPrice;
     return this;
   }
