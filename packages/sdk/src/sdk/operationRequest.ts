@@ -50,7 +50,7 @@ export class NocturneOpRequestBuilder {
     this.joinSplitsAndPaymentsByAsset = new Map();
   }
 
-  // add an action `action` to the operation
+  // add an action  to the operation
   // returns `this` so it's chainable
   action(contractAddress: Address, encodedFunction: string): NocturneOpRequestBuilder {
     const action: Action = {
@@ -81,6 +81,8 @@ export class NocturneOpRequestBuilder {
     return this;
   }
 
+  // add a confidential payment to the operation
+  // returns `this` so it's chainable
   confidentialPayment(
     asset: Asset,
     amountUnits: bigint,
