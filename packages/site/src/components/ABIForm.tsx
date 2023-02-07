@@ -83,8 +83,8 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
       builder.unwrap(asset, unwrapValue);
     });
 
-    actions.forEach(({ action }) => {
-      builder.actionRaw(action);
+    actions.forEach(({ action: { contractAddress, encodedFunction } }) => {
+      builder.action(contractAddress, encodedFunction);
     });
 
     refundAssets.forEach((asset) => {

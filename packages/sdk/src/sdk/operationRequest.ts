@@ -61,12 +61,6 @@ export class NocturneOpRequestBuilder {
       encodedFunction,
     };
 
-    return this.actionRaw(action)
-  }
-
-  actionRaw(
-    action: Action
-  ): NocturneOpRequestBuilder {
     this.op.actions.push(action);
     return this;
   }
