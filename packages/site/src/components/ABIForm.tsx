@@ -79,9 +79,11 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
 
   const submitOperation = async () => {
     const builder = new NocturneOpRequestBuilder();
-    joinSplitRequests.map(j => j.joinSplitRequest).forEach(({ asset, unwrapValue }) => {
-      builder.unwrap(asset, unwrapValue);
-    });
+    joinSplitRequests
+      .map((j) => j.joinSplitRequest)
+      .forEach(({ asset, unwrapValue }) => {
+        builder.unwrap(asset, unwrapValue);
+      });
 
     actions.forEach(({ action: { contractAddress, encodedFunction } }) => {
       builder.action(contractAddress, encodedFunction);

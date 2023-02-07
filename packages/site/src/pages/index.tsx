@@ -176,14 +176,14 @@ const Index = () => {
         "transfer",
         [TOKEN_ADDRESS, formatTokenAmountEvmRepr(2.5, 18)]
       );
-      
+
     const amount = formatTokenAmountEvmRepr(2.5, 18);
     const builder = new NocturneOpRequestBuilder();
     const operationRequest = builder
-        .unwrap(asset, amount)
-        .action(TOKEN_ADDRESS, encodedFunction)
-        .refundAsset(asset)
-        .build();
+      .unwrap(asset, amount)
+      .action(TOKEN_ADDRESS, encodedFunction)
+      .refundAsset(asset)
+      .build();
 
     console.log("Operation request: ", operationRequest);
     try {
