@@ -26,15 +26,11 @@ export interface OperationRequest {
   gasPrice?: bigint;
 }
 
-interface ConfidentialPaymentWithAsset {
-  asset: Asset;
-  payment: ConfidentialPayment;
-}
+type JoinSplitsAndPaymentsForAsset = [JoinSplitRequest[], ConfidentialPayment[]];
 
 export class NocturneOpRequestBuilder {
   private op: OperationRequest
-  private joinSplitRequests: JoinSplitRequest[]
-  private confidentialPayments: ConfidentialPaymentWithAsset[]
+  private joinSplitsAndPaymentsByAsset: Map<Asset, JoinSplitsAndPaymentsForAsset>
 
   // constructor takes no parameters. `new NocturneOperationBuilder()`
 	constructor() {
@@ -44,8 +40,7 @@ export class NocturneOpRequestBuilder {
       actions: []
     }
 
-    this.joinSplitRequests = []
-    this.confidentialPayments = []
+    this.joinSplitsAndPaymentsByAsset = new Map()
   }
 
 	// add an action `action` to the operation
@@ -60,10 +55,15 @@ export class NocturneOpRequestBuilder {
 	// the caller to handle decimal conversions
 	// returns `this` so it's chainable
 	unwrap(asset: Asset, amountUnits: bigint): NocturneOpRequestBuilder {
-    this.joinSplitRequests.push({
+    const joinSplit: JoinSplitRequest = {
       asset,
       unwrapValue: amountUnits
-    });
+    }
+
+    const [joinSplits, payments] = this.joinSplitsAndPaymentsByAsset.get(asset) ?? [[], []]
+    joinSplits.push(joinSplit);
+    this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+
     return this
   }
 
@@ -73,10 +73,10 @@ export class NocturneOpRequestBuilder {
       receiver
     }
 
-    this.confidentialPayments.push({
-      asset,
-      payment
-    });
+    const [joinSplits, payments] = this.joinSplitsAndPaymentsByAsset.get(asset) ?? [[], []]
+    payments.push(payment);
+    this.joinSplitsAndPaymentsByAsset.set(asset, [joinSplits, payments]);
+
     return this
   }
 
@@ -116,14 +116,52 @@ export class NocturneOpRequestBuilder {
 
   // builds the `OperationRequest`.
 	// unwraps become `joinSplitRequest`s.
-  // If `consolidateJoinSplits` is set to `true`,
-  // joinsplit requests will be consolidated when possible.
-  // If `consolidateConfidentialPayments` is set to `true`,
-  // confidential payments will be consolidated when possible.
+  // all `confidentialPayment`s and joinSplits for the same asset are consolidated
   // if `refundAddr` was not called, the refund address will not be set.
 	// In the output, unwraps, actions, and refunds are guaranteed
 	// to appear in the order their corresponding methods were invoked
 	build(): OperationRequest {
-    // TODO
+    const joinSplitRequests = []
+
+    // consolidate joinSplits and payments for each asset
+    for (const [asset, [joinSplits, payments]] of this.joinSplitsAndPaymentsByAsset.entries()) {
+      // consolidate payments to the same receiver
+      const paymentsByReceiver = _.groupBy(payments, (p) => p.receiver.toString());
+      const consolidatedPayments = _.flatMap(paymentsByReceiver, (payments) => {
+        if (payments.length === 0) {
+          return []
+        }
+        const value = payments.reduce((acc, payment) => acc + payment.value, 0n);
+        const receiver = payments[0].receiver;
+        return [{ value, receiver }]
+      })
+
+      // assign each payment to a joinsplit. If there are not enough joinsplits, then create new ones
+      for (const payment of consolidatedPayments) {
+        const joinSplit = joinSplits.pop()
+        if (joinSplit) {
+          joinSplit.payment = payment
+          joinSplitRequests.push(joinSplit)
+        } else {
+          joinSplitRequests.push({
+            asset,
+            unwrapValue: 0n,
+            payment
+          })
+        }
+      }
+
+      // consolidate any remaining unassigned joinsplits
+      if (joinSplits.length > 0) {
+        const value = joinSplits.reduce((acc, joinSplit) => acc + joinSplit.unwrapValue, 0n);
+        joinSplitRequests.push({
+          asset,
+          unwrapValue: value
+        })
+      }
+    }
+
+    this.op.joinSplitRequests = joinSplitRequests
+    return this.op
   }
 }
