@@ -3,8 +3,8 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { query } from "../sdk/utils";
 import { JoinSplitEvent } from "../sdk/notesManager";
 import {
-  RefundEvent as EthRefundEvent,
-  JoinSplitEvent as EthJoinSplitEvent,
+  RefundProcessedEvent,
+  JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { decodeAsset } from "../commonTypes";
 
@@ -13,8 +13,8 @@ export async function fetchNotesFromRefunds(
   from: number,
   to: number
 ): Promise<IncludedNote[]> {
-  const filter = contract.filters.Refund();
-  let events: EthRefundEvent[] = await query(contract, filter, from, to);
+  const filter = contract.filters.RefundProcessed();
+  let events: RefundProcessedEvent[] = await query(contract, filter, from, to);
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
@@ -51,8 +51,13 @@ export async function fetchJoinSplits(
   from: number,
   to: number
 ): Promise<JoinSplitEvent[]> {
-  const filter = contract.filters.JoinSplit();
-  let events: EthJoinSplitEvent[] = await query(contract, filter, from, to);
+  const filter = contract.filters.JoinSplitProcessed();
+  let events: JoinSplitProcessedEvent[] = await query(
+    contract,
+    filter,
+    from,
+    to
+  );
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
@@ -63,22 +68,22 @@ export async function fetchJoinSplits(
       oldNoteBNullifier,
       newNoteAIndex,
       newNoteBIndex,
-      joinSplitTx,
+      joinSplit,
     } = event.args;
     const {
       commitmentTreeRoot,
       nullifierA,
       nullifierB,
       newNoteACommitment,
-      newNoteATransmission,
+      newNoteAEncrypted,
       newNoteBCommitment,
-      newNoteBTransmission,
+      newNoteBEncrypted,
       encodedAsset,
       publicSpend,
-    } = joinSplitTx;
+    } = joinSplit;
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     let { owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteATransmission;
+      newNoteAEncrypted;
     let { h1X, h1Y, h2X, h2Y } = owner;
     const newNoteAOwner = {
       h1X: h1X.toBigInt(),
@@ -90,7 +95,7 @@ export async function fetchJoinSplits(
     const encryptedNonceA = encryptedNonce.toBigInt();
     const encryptedValueA = encryptedValue.toBigInt();
     ({ owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteBTransmission);
+      newNoteBEncrypted);
     ({ h1X, h1Y, h2X, h2Y } = owner);
     const newNoteBOwner = {
       h1X: h1X.toBigInt(),
@@ -106,19 +111,19 @@ export async function fetchJoinSplits(
       oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
       newNoteAIndex: newNoteAIndex.toNumber(),
       newNoteBIndex: newNoteBIndex.toNumber(),
-      joinSplitTx: {
+      joinSplit: {
         commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
         nullifierA: nullifierA.toBigInt(),
         nullifierB: nullifierB.toBigInt(),
         newNoteACommitment: newNoteACommitment.toBigInt(),
-        newNoteATransmission: {
+        newNoteAEncrypted: {
           owner: newNoteAOwner,
           encappedKey: encappedKeyA,
           encryptedNonce: encryptedNonceA,
           encryptedValue: encryptedValueA,
         },
         newNoteBCommitment: newNoteBCommitment.toBigInt(),
-        newNoteBTransmission: {
+        newNoteBEncrypted: {
           owner: newNoteBOwner,
           encappedKey: encappedKeyB,
           encryptedNonce: encryptedNonceB,

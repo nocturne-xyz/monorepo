@@ -1,26 +1,26 @@
 import {
   OperationRequest,
   ProvenOperation,
-  ProvenJoinSplitTx,
+  ProvenJoinSplit,
   PreProofOperation,
-  NocturneAddress,
+  StealthAddress,
   AssetWithBalance,
   encodeAsset,
   AssetType,
   Address,
-  proveJoinSplitTx,
+  proveJoinSplit,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
   VerifyingKey,
-  calculateOperationDigest,
+  computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import {
   DEFAULT_SNAP_ORIGIN,
   getTokenContract,
   getWindowSigner,
 } from "./common";
-import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
@@ -32,7 +32,7 @@ const VKEY_PATH = "/joinSplitVkey.json";
 export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
-  localProver: LocalJoinSplitProver;
+  localProver: WasmJoinSplitProver;
   bundlerEndpoint: string;
   walletContract: Wallet;
   vaultContractAddress: Address;
@@ -45,7 +45,7 @@ export class NocturneFrontendSDK {
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
-    this.localProver = new LocalJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.localProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
     this.vaultContractAddress = vaultContractAddress;
@@ -143,9 +143,9 @@ export class NocturneFrontendSDK {
 
     console.log("PreProofOperation", preProofOperation);
 
-    const provenJoinSplitPromises: Promise<ProvenJoinSplitTx>[] =
-      preProofOperation.joinSplitTxs.map((inputs) =>
-        proveJoinSplitTx(this.localProver, inputs)
+    const provenJoinSplitPromises: Promise<ProvenJoinSplit>[] =
+      preProofOperation.joinSplits.map((inputs) =>
+        proveJoinSplit(this.localProver, inputs)
       );
 
     const {
@@ -158,9 +158,9 @@ export class NocturneFrontendSDK {
       refundAddr,
     } = preProofOperation;
 
-    const joinSplitTxs = await Promise.all(provenJoinSplitPromises);
+    const joinSplits = await Promise.all(provenJoinSplitPromises);
     return {
-      joinSplitTxs,
+      joinSplits,
       refundAddr,
       encodedRefundAssets,
       actions,
@@ -173,10 +173,10 @@ export class NocturneFrontendSDK {
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
     console.log("ProvenOperation", operation);
-    const opDigest = calculateOperationDigest(operation);
+    const opDigest = computeOperationDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
-      operation.joinSplitTxs.map((joinSplit) => {
+      operation.joinSplits.map((joinSplit) => {
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
           newNoteBCommitment: joinSplit.newNoteBCommitment,
@@ -301,7 +301,7 @@ export class NocturneFrontendSDK {
   /**
    * Retrieve a freshly randomized address from the snap.
    */
-  protected async getRandomizedAddr(): Promise<NocturneAddress> {
+  protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
@@ -312,7 +312,7 @@ export class NocturneFrontendSDK {
       ],
     })) as string;
 
-    return JSON.parse(json) as NocturneAddress;
+    return JSON.parse(json) as StealthAddress;
   }
 }
 

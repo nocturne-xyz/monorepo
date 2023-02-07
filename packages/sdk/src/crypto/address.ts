@@ -1,10 +1,10 @@
 import { babyjub, poseidon } from "circomlibjs";
-import { NocturneAddrPrefix } from "./common";
+import { StealthAddrPrefix } from "./common";
 import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
 import { Buffer } from "buffer";
 
-export interface NocturneAddress {
+export interface StealthAddress {
   h1X: bigint;
   h1Y: bigint;
   h2X: bigint;
@@ -18,15 +18,15 @@ export interface AddressPoints {
   h2: [bigint, bigint];
 }
 
-export class NocturneAddressTrait {
-  static toPoints(flattened: NocturneAddress): AddressPoints {
+export class StealthAddressTrait {
+  static toPoints(flattened: StealthAddress): AddressPoints {
     return {
       h1: [flattened.h1X, flattened.h1Y],
       h2: [flattened.h2X, flattened.h2Y],
     };
   }
 
-  static fromPoints(addressPoints: AddressPoints): NocturneAddress {
+  static fromPoints(addressPoints: AddressPoints): StealthAddress {
     const { h1, h2 } = addressPoints;
     return {
       h1X: h1[0],
@@ -36,39 +36,39 @@ export class NocturneAddressTrait {
     };
   }
 
-  static toString(address: NocturneAddress): string {
-    const { h1, h2 } = NocturneAddressTrait.toPoints(address);
+  static toString(address: StealthAddress): string {
+    const { h1, h2 } = StealthAddressTrait.toPoints(address);
     const b1 = Buffer.from(babyjub.packPoint(h1));
     const b2 = Buffer.from(babyjub.packPoint(h2));
     const b = Buffer.concat([b1, b2]);
-    return NocturneAddrPrefix + b.toString("base64");
+    return StealthAddrPrefix + b.toString("base64");
   }
 
-  static fromString(str: string): NocturneAddress {
-    const base64str = str.slice(NocturneAddrPrefix.length);
+  static fromString(str: string): StealthAddress {
+    const base64str = str.slice(StealthAddrPrefix.length);
     const b = Buffer.from(base64str, "base64");
     const b1 = b.subarray(0, 32);
     const b2 = b.subarray(32, 64);
     const h1 = babyjub.unpackPoint(b1) as [bigint, bigint];
     const h2 = babyjub.unpackPoint(b2) as [bigint, bigint];
-    return NocturneAddressTrait.fromPoints({ h1, h2 });
+    return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
-  static hash(address: NocturneAddress): bigint {
+  static hash(address: StealthAddress): bigint {
     const { h1X, h2X } = address;
     return BigInt(poseidon([h1X, h2X]));
   }
 
-  static randomize(address: NocturneAddress): NocturneAddress {
-    const points = NocturneAddressTrait.toPoints(address);
+  static randomize(address: StealthAddress): StealthAddress {
+    const points = StealthAddressTrait.toPoints(address);
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32);
     const h1 = babyjub.mulPointEscalar(points.h1, r);
     const h2 = babyjub.mulPointEscalar(points.h2, r);
-    return NocturneAddressTrait.fromPoints({ h1, h2 });
+    return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
-  static fromCanonAddress(canonAddr: CanonAddress): NocturneAddress {
+  static fromCanonAddress(canonAddr: CanonAddress): StealthAddress {
     return {
       h1X: BigInt(babyjub.Base8[0]),
       h1Y: BigInt(babyjub.Base8[1]),

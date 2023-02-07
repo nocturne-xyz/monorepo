@@ -2,7 +2,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import { poseidon } from "circomlibjs";
-import { LocalJoinSplitProver } from "../src/joinsplit";
+import { WasmJoinSplitProver } from "../src/joinsplit";
 import {
   BinaryPoseidonTree,
   NocturnePrivKey,
@@ -10,7 +10,7 @@ import {
   JoinSplitInputs,
   MerkleProofInput,
   EncodedNote,
-  NocturneAddressTrait,
+  StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -34,13 +34,13 @@ const sk = BigInt(
 const nocturnePrivKey = new NocturnePrivKey(sk);
 const vk = nocturnePrivKey.vk;
 const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-const nocturneAddrA = nocturneSigner.address;
-const nocturneAddrB = nocturneSigner.address;
+const stealthAddrA = nocturneSigner.address;
+const stealthAddrB = nocturneSigner.address;
 const spendPk = nocturneSigner.privkey.spendPk();
 
 // Two old notes: 100 + 50 = 150
 const oldNoteA: EncodedNote = {
-  owner: nocturneAddrA,
+  owner: stealthAddrA,
   nonce: 1n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -48,7 +48,7 @@ const oldNoteA: EncodedNote = {
 };
 console.log("OLD NOTE A: ", oldNoteA);
 
-const oldNoteAOwnerHash = NocturneAddressTrait.hash(nocturneAddrA);
+const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
 const oldNoteACommitment = poseidon([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
@@ -59,7 +59,7 @@ const oldNoteACommitment = poseidon([
 console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
 
 const oldNoteB: EncodedNote = {
-  owner: nocturneAddrB,
+  owner: stealthAddrB,
   nonce: 2n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -67,7 +67,7 @@ const oldNoteB: EncodedNote = {
 };
 console.log("OLD NOTE B: ", oldNoteB);
 
-const oldNoteBOwnerHash = NocturneAddressTrait.hash(nocturneAddrB);
+const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
 const oldNoteBCommitment = poseidon([
   oldNoteBOwnerHash,
   oldNoteB.nonce,
@@ -99,7 +99,7 @@ const merkleProofBInput: MerkleProofInput = {
 
 // New notes where 75 + 75 = 150
 const newNoteA: EncodedNote = {
-  owner: nocturneAddrB,
+  owner: stealthAddrB,
   nonce: 3n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -108,7 +108,7 @@ const newNoteA: EncodedNote = {
 console.log("NEW NOTE A: ", newNoteA);
 
 const newNoteB: EncodedNote = {
-  owner: nocturneAddrA,
+  owner: stealthAddrA,
   nonce: 4n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -155,7 +155,7 @@ const joinsplitInputs: JoinSplitInputs = {
 console.log(joinsplitInputs);
 
 (async () => {
-  const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const proof = await prover.proveJoinSplit(joinsplitInputs);
   if (!(await prover.verifyJoinSplitProof(proof))) {
     throw new Error("Proof invalid!");

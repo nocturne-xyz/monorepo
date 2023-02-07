@@ -1,5 +1,5 @@
 export const VALID_PROVEN_OPERATION_OBJ = {
-  joinSplitTxs: [
+  joinSplits: [
     {
       proof: ["0n", "0n", "0n", "0n", "0n", "0n", "0n", "0n"],
       commitmentTreeRoot: "0n",
@@ -12,7 +12,7 @@ export const VALID_PROVEN_OPERATION_OBJ = {
         encodedAssetId: "0n",
       },
       publicSpend: "0n",
-      newNoteATransmission: {
+      newNoteAEncrypted: {
         owner: {
           h1X: "0n",
           h1Y: "0n",
@@ -23,7 +23,7 @@ export const VALID_PROVEN_OPERATION_OBJ = {
         encryptedNonce: "0n",
         encryptedValue: "0n",
       },
-      newNoteBTransmission: {
+      newNoteBEncrypted: {
         owner: {
           h1X: "0n",
           h1Y: "0n",

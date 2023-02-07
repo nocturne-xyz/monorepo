@@ -1,11 +1,11 @@
-import { NocturneAddressTrait, NocturneAddress } from "../crypto/address";
+import { StealthAddressTrait, StealthAddress } from "../crypto/address";
 import { Asset, decodeAsset, encodeAsset } from "../commonTypes";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
 
 export interface Note {
-  owner: NocturneAddress;
+  owner: StealthAddress;
   nonce: bigint;
   asset: Asset;
   value: bigint;
@@ -16,7 +16,7 @@ export interface IncludedNote extends Note {
 }
 
 export interface EncodedNote {
-  owner: NocturneAddress;
+  owner: StealthAddress;
   nonce: bigint;
   encodedAssetAddr: EncodedAddr;
   encodedAssetId: EncodedId;
@@ -32,7 +32,7 @@ export class NoteTrait {
       NoteTrait.encode(note);
     return BigInt(
       poseidon([
-        NocturneAddressTrait.hash(owner),
+        StealthAddressTrait.hash(owner),
         nonce,
         encodedAssetAddr,
         encodedAssetId,

@@ -12,7 +12,7 @@ import {
   NotesDB,
   InMemoryKVStore,
   MockMerkleProver,
-  LocalNotesManager,
+  DefaultNotesManager,
 } from "../src/sdk";
 import { getDefaultProvider } from "ethers";
 
@@ -76,7 +76,7 @@ describe("NocturneContext", () => {
     const merkleProver = new MockMerkleProver();
 
     const provider = getDefaultProvider();
-    const notesManager = new LocalNotesManager(
+    const notesManager = new DefaultNotesManager(
       notesDB,
       signer,
       "0xaaaa",
@@ -210,13 +210,13 @@ describe("NocturneContext", () => {
       executionGasLimit: 1_000_000n,
       maxNumRefunds: 1n,
     });
-    expect(preProofOp.joinSplitTxs.length).to.equal(1);
+    expect(preProofOp.joinSplits.length).to.equal(1);
   });
 
-  it("Generate PreSignJoinSplitTxs from JoinSplitRequest", async () => {
+  it("Generate PreSignJoinSplits from JoinSplitRequest", async () => {
     const priv = NocturnePrivKey.genPriv();
     const addr = priv.toCanonAddress();
-    const preSignJoinSplitTxs = await nocturneContext.genPreSignJoinSplitTxs({
+    const preSignJoinSplits = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 5n,
       paymentIntent: {
@@ -224,9 +224,9 @@ describe("NocturneContext", () => {
         value: 6n,
       },
     });
-    expect(preSignJoinSplitTxs.length).to.equal(1);
+    expect(preSignJoinSplits.length).to.equal(1);
 
-    const preSignJoinSplitTxs2 = await nocturneContext.genPreSignJoinSplitTxs({
+    const preSignJoinSplits2 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 10n,
       paymentIntent: {
@@ -234,9 +234,9 @@ describe("NocturneContext", () => {
         value: 1n,
       },
     });
-    expect(preSignJoinSplitTxs2.length).to.equal(1);
+    expect(preSignJoinSplits2.length).to.equal(1);
 
-    const preSignJoinSplitTxs3 = await nocturneContext.genPreSignJoinSplitTxs({
+    const preSignJoinSplits3 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 30n,
       paymentIntent: {
@@ -244,7 +244,7 @@ describe("NocturneContext", () => {
         value: 30n,
       },
     });
-    expect(preSignJoinSplitTxs3.length).to.equal(1);
+    expect(preSignJoinSplits3.length).to.equal(1);
   });
 
   it("Generates PreProofOperation from a payment request", async () => {
@@ -258,7 +258,7 @@ describe("NocturneContext", () => {
       1n
     );
     const preProofOp = await nocturneContext.tryGetPreProofOperation(request);
-    expect(preProofOp.joinSplitTxs.length).to.equal(1);
+    expect(preProofOp.joinSplits.length).to.equal(1);
   });
 
   it("Generates PreProofOperation with a operation request", async () => {
@@ -282,6 +282,6 @@ describe("NocturneContext", () => {
       executionGasLimit: 1_000_000n,
       maxNumRefunds: 1n,
     });
-    expect(preProofOp.joinSplitTxs.length).to.equal(1);
+    expect(preProofOp.joinSplits.length).to.equal(1);
   });
 });

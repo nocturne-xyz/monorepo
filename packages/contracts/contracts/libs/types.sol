@@ -22,26 +22,26 @@ struct Signature {
     bytes32 s;
 }
 
-struct NocturneAddress {
+struct StealthAddress {
     uint256 h1X;
     uint256 h1Y;
     uint256 h2X;
     uint256 h2Y;
 }
 
-struct EncodedNocturneAddress {
+struct EncodedStealthAddress {
     uint256 h1X;
     uint256 h2X;
 }
 
-struct NoteTransmission {
-    NocturneAddress owner;
+struct EncryptedNote {
+    StealthAddress owner;
     uint256 encappedKey;
     uint256 encryptedNonce;
     uint256 encryptedValue;
 }
 
-struct JoinSplitTransaction {
+struct JoinSplit {
     uint256 commitmentTreeRoot;
     uint256 nullifierA;
     uint256 nullifierB;
@@ -50,8 +50,8 @@ struct JoinSplitTransaction {
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;
-    NoteTransmission newNoteATransmission;
-    NoteTransmission newNoteBTransmission;
+    EncryptedNote newNoteAEncrypted;
+    EncryptedNote newNoteBEncrypted;
 }
 
 struct EncodedNote {
@@ -81,8 +81,8 @@ struct Bundle {
 }
 
 struct Operation {
-    JoinSplitTransaction[] joinSplitTxs;
-    NocturneAddress refundAddr;
+    JoinSplit[] joinSplits;
+    StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     uint256 verificationGasLimit;
@@ -116,7 +116,7 @@ struct Deposit {
     uint256 encodedAssetAddr;
     uint256 encodedAssetId;
     uint256 value;
-    NocturneAddress depositAddr;
+    StealthAddress depositAddr;
 }
 
 library BundleLib {
@@ -125,7 +125,7 @@ library BundleLib {
     ) internal pure returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < self.operations.length; i++) {
-            total += self.operations[i].joinSplitTxs.length;
+            total += self.operations[i].joinSplits.length;
         }
         return total;
     }
@@ -135,7 +135,7 @@ library OperationLib {
     function gasAsset(
         Operation calldata self
     ) internal pure returns (EncodedAsset calldata) {
-        return self.joinSplitTxs[0].encodedAsset;
+        return self.joinSplits[0].encodedAsset;
     }
 
     function maxGasLimit(
@@ -143,7 +143,7 @@ library OperationLib {
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
-            (GAS_PER_VERIFICATION * self.joinSplitTxs.length) +
+            (GAS_PER_VERIFICATION * self.joinSplits.length) +
             (GAS_PER_REFUND_HANDLE * self.encodedRefundAssets.length) +
             (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
     }

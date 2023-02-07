@@ -4,8 +4,8 @@ import { NocturneSigner } from "../signer";
 import {
   decodeAsset,
   Asset,
-  BaseJoinSplitTx,
-  NoteTransmission,
+  BaseJoinSplit,
+  EncryptedNote,
 } from "../../commonTypes";
 
 export interface JoinSplitEvent {
@@ -13,7 +13,7 @@ export interface JoinSplitEvent {
   oldNoteBNullifier: bigint;
   newNoteAIndex: number;
   newNoteBIndex: number;
-  joinSplitTx: BaseJoinSplitTx;
+  joinSplit: BaseJoinSplit;
 }
 
 export abstract class NotesManager {
@@ -51,20 +51,20 @@ export abstract class NotesManager {
   ): Promise<void> {
     for (const e of newJoinSplits) {
       const asset = decodeAsset(
-        e.joinSplitTx.encodedAsset.encodedAssetAddr,
-        e.joinSplitTx.encodedAsset.encodedAssetId
+        e.joinSplit.encodedAsset.encodedAssetAddr,
+        e.joinSplit.encodedAsset.encodedAssetId
       );
 
-      await this.processNoteTransmission(
-        e.joinSplitTx.newNoteACommitment,
-        e.joinSplitTx.newNoteATransmission,
+      await this.processEncryptedNote(
+        e.joinSplit.newNoteACommitment,
+        e.joinSplit.newNoteAEncrypted,
         e.newNoteAIndex,
         asset
       );
 
-      await this.processNoteTransmission(
-        e.joinSplitTx.newNoteBCommitment,
-        e.joinSplitTx.newNoteBTransmission,
+      await this.processEncryptedNote(
+        e.joinSplit.newNoteBCommitment,
+        e.joinSplit.newNoteBEncrypted,
         e.newNoteBIndex,
         asset
       );
@@ -86,15 +86,15 @@ export abstract class NotesManager {
     }
   }
 
-  private async processNoteTransmission(
+  private async processEncryptedNote(
     newNoteCommitment: bigint,
-    newNoteTransmission: NoteTransmission,
+    newEncryptedNote: EncryptedNote,
     newNoteIndex: number,
     asset: Asset
   ): Promise<void> {
-    if (this.signer.testOwn(newNoteTransmission.owner)) {
-      const newNote = this.signer.getNoteFromNoteTransmission(
-        newNoteTransmission,
+    if (this.signer.testOwn(newEncryptedNote.owner)) {
+      const newNote = this.signer.getNoteFromEncryptedNote(
+        newEncryptedNote,
         newNoteIndex,
         asset
       );
@@ -118,5 +118,5 @@ export abstract class NotesManager {
   }
 }
 
-export { LocalNotesManager } from "./local";
+export { DefaultNotesManager } from "./default";
 export { MockNotesManager } from "./mock";

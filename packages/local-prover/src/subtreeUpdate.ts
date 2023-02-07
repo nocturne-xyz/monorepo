@@ -7,7 +7,7 @@ import {
 //@ts-ignore
 import * as snarkjs from "snarkjs";
 
-export class LocalSubtreeUpdateProver implements SubtreeUpdateProver {
+export class WasmSubtreeUpdateProver implements SubtreeUpdateProver {
   wasmPath: string;
   zkeyPath: string;
   vkey: any;

@@ -3418,8 +3418,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.4-alpha
-    "@nocturne-xyz/sdk": 1.0.47-alpha
+    "@nocturne-xyz/contracts": 1.0.7-alpha
+    "@nocturne-xyz/sdk": 1.0.63-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3468,7 +3468,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.4-alpha, @nocturne-xyz/contracts@^1.0.4-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.7-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3498,6 +3498,16 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/contracts@npm:^1.0.4-alpha":
+  version: 1.0.4-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.4-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.7.3
+    "@openzeppelin/contracts-upgradeable": 4.7.3
+  checksum: 9364cba1cd1eed910f2a9ab53ce394c7795c0470ea96623e18f01f538d8b5c7924e218be5816ceacf9acdfd26dd5445b9ca8ed8efafc69dab28ab24c945d3c35
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
@@ -3598,45 +3608,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.38-alpha":
-  version: 1.0.38-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.38-alpha"
-  dependencies:
-    "@nocturne-xyz/contracts": 1.0.4-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    circomlibjs: "github:nocturne-xyz/circomlibjs"
-    ethers: ^5.0.0
-    ffjavascript: 0.2.57
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: d1ddc75075f29bf1d2856a6123ebfb02c33650f20efab75580556f34d1da00afc8ed04a148013d486148f469dc9a8e5e33c006f6875037f1559fe0bb5e40b97f
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/sdk@npm:1.0.47-alpha":
-  version: 1.0.47-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.47-alpha"
-  dependencies:
-    "@nocturne-xyz/contracts": ^1.0.4-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    circomlibjs: nocturne-xyz/circomlibjs
-    ethers: ^5.0.0
-    ffjavascript: 0.2.57
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: dab11b94af20f65939e38aca1d04f5ee2c32d8c97a046569cf2404012afdc1aa9a4ebcbbfd5c48fbe72c2fef119c41536240667573e868f3286fd4f43ca63ba8
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.66-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3667,6 +3639,25 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/sdk@npm:1.0.63-alpha":
+  version: 1.0.63-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.63-alpha"
+  dependencies:
+    "@nocturne-xyz/contracts": ^1.0.4-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    circomlibjs: nocturne-xyz/circomlibjs
+    ethers: ^5.0.0
+    ffjavascript: 0.2.57
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: ca542cb671f1e423c114aaae4143774c53ccf0ae11874c2b7c2c8c9dd0ccefd70630976b3fcd38da1e7bf88367a407ff610f5f654f556ac243ea8f17c68f36c9
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local
@@ -3726,8 +3717,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.4-alpha
-    "@nocturne-xyz/sdk": 1.0.38-alpha
+    "@nocturne-xyz/contracts": 1.0.7-alpha
+    "@nocturne-xyz/sdk": 1.0.66-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -9167,7 +9158,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"circomlibjs@github:nocturne-xyz/circomlibjs, circomlibjs@nocturne-xyz/circomlibjs":
+circomlibjs@nocturne-xyz/circomlibjs:
   version: 0.0.8
   resolution: "circomlibjs@https://github.com/nocturne-xyz/circomlibjs.git#commit=d32b33e2f0b236a828be95111412a1c0381cf9e4"
   dependencies:
@@ -12117,7 +12108,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 

@@ -30,12 +30,12 @@ describe("rapidsnark subtree update prover", async () => {
   );
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-  const nocturneAddr = nocturneSigner.address;
+  const stealthAddr = nocturneSigner.address;
 
   let nonce = 0n;
   function dummyNote(): Note {
     return {
-      owner: nocturneAddr,
+      owner: stealthAddr,
       nonce: nonce++,
       asset: {
         assetType: AssetType.ERC20,

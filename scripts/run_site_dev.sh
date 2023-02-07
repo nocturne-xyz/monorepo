@@ -74,7 +74,7 @@ WALLET_ADDRESS=$WALLET_CONTRACT_ADDRESS
 MAX_LATENCY=5
 
 RPC_URL=$RPC_URL
-TX_SIGNER_KEY="$BUNDLER_SUBMITTER_PRIVATE_KEY"
+TX_SIGNER_KEY=$BUNDLER_SUBMITTER_PRIVATE_KEY
 EOM
 
 # clear redis if it exists 
@@ -96,7 +96,7 @@ EOM
 popd
 
 # run subtree updater
-docker run --platform=linux/amd64 --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
+docker run --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"

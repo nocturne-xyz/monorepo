@@ -27,8 +27,8 @@ contract CommitmentTreeManager is Initializable {
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    event Refund(
-        NocturneAddress refundAddr,
+    event RefundProcessed(
+        StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -36,12 +36,12 @@ contract CommitmentTreeManager is Initializable {
         uint128 merkleIndex
     );
 
-    event JoinSplit(
+    event JoinSplitProcessed(
         uint256 indexed oldNoteANullifier,
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        JoinSplitTransaction joinSplitTx
+        JoinSplit joinSplit
     );
 
     event InsertNoteCommitments(uint256[] commitments);
@@ -65,46 +65,44 @@ contract CommitmentTreeManager is Initializable {
       @dev This function should be re-entry safe. Nullifiers must be marked
       used as soon as they are checked to be valid.
     */
-    function _handleJoinSplit(
-        JoinSplitTransaction calldata joinSplitTx
-    ) internal {
+    function _handleJoinSplit(JoinSplit calldata joinSplit) internal {
         // Check validity of both nullifiers
         require(
-            _pastRoots[joinSplitTx.commitmentTreeRoot],
+            _pastRoots[joinSplit.commitmentTreeRoot],
             "Tree root not past root"
         );
         require(
-            !_nullifierSet[joinSplitTx.nullifierA],
+            !_nullifierSet[joinSplit.nullifierA],
             "Nullifier A already used"
         );
         require(
-            !_nullifierSet[joinSplitTx.nullifierB],
+            !_nullifierSet[joinSplit.nullifierB],
             "Nullifier B already used"
         );
         require(
-            joinSplitTx.nullifierA != joinSplitTx.nullifierB,
+            joinSplit.nullifierA != joinSplit.nullifierB,
             "2 nfs should !equal."
         );
 
         // Mark nullifiers as used
-        _nullifierSet[joinSplitTx.nullifierA] = true;
-        _nullifierSet[joinSplitTx.nullifierB] = true;
+        _nullifierSet[joinSplit.nullifierA] = true;
+        _nullifierSet[joinSplit.nullifierB] = true;
 
         // Compute newNote indices in the merkle tree
         uint128 newNoteIndexA = _merkle.getTotalCount();
         uint128 newNoteIndexB = newNoteIndexA + 1;
 
         uint256[] memory noteCommitments = new uint256[](2);
-        noteCommitments[0] = joinSplitTx.newNoteACommitment;
-        noteCommitments[1] = joinSplitTx.newNoteBCommitment;
+        noteCommitments[0] = joinSplit.newNoteACommitment;
+        noteCommitments[1] = joinSplit.newNoteBCommitment;
         insertNoteCommitments(noteCommitments);
 
-        emit JoinSplit(
-            joinSplitTx.nullifierA,
-            joinSplitTx.nullifierB,
+        emit JoinSplitProcessed(
+            joinSplit.nullifierA,
+            joinSplit.nullifierB,
             newNoteIndexA,
             newNoteIndexB,
-            joinSplitTx
+            joinSplit
         );
     }
 
@@ -162,7 +160,7 @@ contract CommitmentTreeManager is Initializable {
     }
 
     function _handleRefundNote(
-        NocturneAddress memory refundAddr,
+        StealthAddress memory refundAddr,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value
@@ -179,7 +177,7 @@ contract CommitmentTreeManager is Initializable {
 
         insertNote(note);
 
-        emit Refund(
+        emit RefundProcessed(
             refundAddr,
             index,
             encodedAssetAddr,

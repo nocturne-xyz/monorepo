@@ -10,7 +10,7 @@ import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   BinaryPoseidonTree,
   NocturneContext,
-  LocalMerkleProver,
+  InMemoryMerkleProver,
   MerkleDB,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../utils/deploy";
@@ -18,14 +18,14 @@ import { depositFunds, getSubtreeUpdateProver } from "../utils/test";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 
-describe("LocalMerkle", async () => {
+describe("InMemoryMerkle", async () => {
   let deployer: ethers.Signer;
   let alice: ethers.Signer;
   let wallet: Wallet;
   let vault: Vault;
   let token: SimpleERC20Token;
   let merkleDB: MerkleDB;
-  let localMerkle: LocalMerkleProver;
+  let merkle: InMemoryMerkleProver;
   let nocturneContext: NocturneContext;
   let updater: SubtreeUpdater;
 
@@ -43,13 +43,13 @@ describe("LocalMerkle", async () => {
     merkleDB = nocturneSetup.merkleDBAlice;
     nocturneContext = nocturneSetup.nocturneContextAlice;
 
-    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
+    const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
     const prover = getSubtreeUpdateProver();
     const submitter = new SyncSubtreeSubmitter(wallet);
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
     await updater.init();
 
-    localMerkle = new LocalMerkleProver(
+    merkle = new InMemoryMerkleProver(
       wallet.address,
       ethers.provider,
       merkleDB
@@ -68,7 +68,7 @@ describe("LocalMerkle", async () => {
     await network.provider.send("hardhat_reset");
   });
 
-  it("Local merkle prover self syncs", async () => {
+  it("self syncs", async () => {
     console.log("Depositing 2 notes");
     const ncs = await depositFunds(
       wallet,
@@ -80,20 +80,20 @@ describe("LocalMerkle", async () => {
     );
 
     console.log("Fetching and storing leaves from events");
-    await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count()).to.eql(2);
+    await merkle.fetchLeavesAndUpdate();
+    expect(merkle.count()).to.eql(2);
 
     console.log("Ensure leaves match enqueued");
-    expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
-    expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);
+    expect(BigInt((await merkle.getProof(0)).leaf)).to.equal(ncs[0]);
+    expect(BigInt((await merkle.getProof(1)).leaf)).to.equal(ncs[1]);
 
     console.log("applying subtree update");
     await applySubtreeUpdate();
 
-    console.log("local merkle prover picks up the zeros");
-    await localMerkle.fetchLeavesAndUpdate();
-    expect(localMerkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
-    expect(BigInt((await localMerkle.getProof(0)).leaf)).to.equal(ncs[0]);
-    expect(BigInt((await localMerkle.getProof(1)).leaf)).to.equal(ncs[1]);
+    console.log("merkle prover picks up the zeros");
+    await merkle.fetchLeavesAndUpdate();
+    expect(merkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
+    expect(BigInt((await merkle.getProof(0)).leaf)).to.equal(ncs[0]);
+    expect(BigInt((await merkle.getProof(1)).leaf)).to.equal(ncs[1]);
   });
 });

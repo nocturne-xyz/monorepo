@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update imports with SDK renames (see SDK changelog)
 - use `--max-latency` option for batcher in `docker-compose.yml`
 - move `OperationStatus` enum to `@nocturne-xyz/sdk`
 - use `node:18.12.1` in dockerfile

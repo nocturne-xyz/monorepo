@@ -1,7 +1,7 @@
 import { babyjub, poseidon } from "circomlibjs";
 import randomBytes from "randombytes";
 import { Scalar } from "ffjavascript";
-import { NocturneAddress, CanonAddress, NocturneAddressTrait } from "./address";
+import { StealthAddress, CanonAddress, StealthAddressTrait } from "./address";
 
 // TODO: rewrite Babyjub library to have constant time crypto
 export class NocturnePrivKey {
@@ -27,7 +27,7 @@ export class NocturnePrivKey {
     return addr;
   }
 
-  toCanonAddressStruct(): NocturneAddress {
+  toCanonAddressStruct(): StealthAddress {
     const canonAddr = this.toCanonAddress();
     return {
       h1X: babyjub.Base8[0],
@@ -37,12 +37,12 @@ export class NocturnePrivKey {
     };
   }
 
-  toAddress(): NocturneAddress {
+  toAddress(): StealthAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
     const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
     const h2 = babyjub.mulPointEscalar(h1, this.vk);
-    return NocturneAddressTrait.fromPoints({ h1, h2 });
+    return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
   spendPk(): [bigint, bigint] {

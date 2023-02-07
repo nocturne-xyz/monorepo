@@ -2,7 +2,7 @@ import { ethers, providers } from "ethers";
 import IORedis from "ioredis";
 import {
   Bundle,
-  calculateOperationDigest,
+  computeOperationDigest,
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
 import { Wallet__factory, Wallet } from "@nocturne-xyz/contracts";
@@ -49,7 +49,7 @@ export class OperationValidator {
 
     // Ensure no overlap in given operation
     console.log("Checking in-op conflicts");
-    operation.joinSplitTxs.forEach(({ nullifierA, nullifierB }) => {
+    operation.joinSplits.forEach(({ nullifierA, nullifierB }) => {
       if (opNfSet.has(nullifierA)) {
         return `Conflicting nullifier in operation: ${nullifierA}`;
       }
@@ -78,9 +78,9 @@ export class OperationValidator {
   ): Promise<ErrString | undefined> {
     console.log("submitting operation", operation);
 
-    const opDigest = calculateOperationDigest(operation);
+    const opDigest = computeOperationDigest(operation);
     console.log("with digest", opDigest);
-    console.log("with joinsplits", operation.joinSplitTxs);
+    console.log("with joinsplits", operation.joinSplits);
 
     const id = opDigest.toString();
     const bundle: Bundle = { operations: [operation] };

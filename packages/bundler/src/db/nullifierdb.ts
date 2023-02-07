@@ -1,4 +1,4 @@
-import { calculateOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
+import { computeOperationDigest, ProvenOperation } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 import { RedisTransaction } from ".";
 
@@ -37,8 +37,8 @@ export class NullifierDB {
   }
 
   getAddNullifierTransactions(operation: ProvenOperation): RedisTransaction[] {
-    const digest = calculateOperationDigest(operation).toString();
-    return operation.joinSplitTxs.flatMap(({ nullifierA, nullifierB }) => {
+    const digest = computeOperationDigest(operation).toString();
+    return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
       return [
         this.getAddNullifierTransaction(nullifierA, digest),
         this.getAddNullifierTransaction(nullifierB, digest),

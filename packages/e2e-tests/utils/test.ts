@@ -1,6 +1,6 @@
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  NocturneAddress,
+  StealthAddress,
   NoteTrait,
   SubtreeUpdateProver,
   MockSubtreeUpdateProver,
@@ -9,7 +9,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
-import { LocalSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
+import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import { ethers } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
@@ -31,7 +31,7 @@ export async function depositFunds(
   vault: Vault,
   token: SimpleERC20Token,
   eoa: ethers.Signer,
-  nocturneAddress: NocturneAddress,
+  stealthAddress: StealthAddress,
   amounts: bigint[],
   startNonce = 0
 ): Promise<bigint[]> {
@@ -54,11 +54,11 @@ export async function depositFunds(
       encodedAssetAddr,
       encodedAssetId,
       value: amounts[i],
-      depositAddr: nocturneAddress,
+      depositAddr: stealthAddress,
     });
 
     const note = {
-      owner: nocturneAddress,
+      owner: stealthAddress,
       nonce: BigInt(i + startNonce),
       asset,
       value: amounts[i],
@@ -87,7 +87,7 @@ export function getSubtreeUpdateProver(): SubtreeUpdateProver {
     );
   } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
     const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-    return new LocalSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
+    return new WasmSubtreeUpdateProver(WASM_PATH, ZKEY_PATH, VKEY);
   }
 
   return new MockSubtreeUpdateProver();

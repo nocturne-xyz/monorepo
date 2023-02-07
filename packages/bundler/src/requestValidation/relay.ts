@@ -10,7 +10,7 @@ const solidityProofType = {
   minItems: 8,
   maxItems: 8,
 };
-const nocturneAddressType = {
+const stealthAddressType = {
   type: "object",
   required: ["h1X", "h1Y", "h2X", "h2Y"],
   properties: {
@@ -21,11 +21,11 @@ const nocturneAddressType = {
   },
   additionalProperties: false,
 };
-const noteTransmissionType = {
+const encryptedNoteType = {
   type: "object",
   required: ["owner", "encappedKey", "encryptedNonce", "encryptedValue"],
   properties: {
-    owner: nocturneAddressType,
+    owner: stealthAddressType,
     encappedKey: bigintType,
     encryptedNonce: bigintType,
     encryptedValue: bigintType,
@@ -60,7 +60,7 @@ const actionsType = {
   type: "array",
   items: actionType,
 };
-const joinSplitTxType = {
+const joinSplitType = {
   type: "object",
   required: [
     "proof",
@@ -71,8 +71,8 @@ const joinSplitTxType = {
     "newNoteBCommitment",
     "encodedAsset",
     "publicSpend",
-    "newNoteATransmission",
-    "newNoteBTransmission",
+    "newNoteAEncrypted",
+    "newNoteBEncrypted",
   ],
   properties: {
     proof: solidityProofType,
@@ -83,20 +83,20 @@ const joinSplitTxType = {
     newNoteBCommitment: bigintType,
     encodedAsset: encodedAssetType,
     publicSpend: bigintType,
-    newNoteATransmission: noteTransmissionType,
-    newNoteBTransmission: noteTransmissionType,
+    newNoteAEncrypted: encryptedNoteType,
+    newNoteBEncrypted: encryptedNoteType,
   },
   additionalProperties: false,
 };
-const joinSplitTxsType = {
+const joinSplitsType = {
   type: "array",
-  items: joinSplitTxType,
+  items: joinSplitType,
 };
 
 export const relaySchema = {
   type: "object",
   required: [
-    "joinSplitTxs",
+    "joinSplits",
     "refundAddr",
     "encodedRefundAssets",
     "actions",
@@ -106,8 +106,8 @@ export const relaySchema = {
     "gasPrice",
   ],
   properties: {
-    joinSplitTxs: joinSplitTxsType,
-    refundAddr: nocturneAddressType,
+    joinSplits: joinSplitsType,
+    refundAddr: stealthAddressType,
     encodedRefundAssets: encodedRefundAssetsType,
     actions: actionsType,
     verificationGasLimit: bigintType,

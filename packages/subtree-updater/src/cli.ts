@@ -83,6 +83,7 @@ export default async function main(): Promise<void> {
     throw new Error("SUBMITTER_SECRET_KEY env var not set");
   }
 
+  console.log("rpcUrl", rpcUrl);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const signer = new ethers.Wallet(submitterSecretKey, provider);
 

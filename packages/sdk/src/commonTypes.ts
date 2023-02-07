@@ -1,7 +1,7 @@
 import { utils } from "ethers";
 import { Action } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
-import { CanonAddress, NocturneAddress } from "./crypto/address";
+import { CanonAddress, StealthAddress } from "./crypto/address";
 import { BaseProof, MerkleProofInput } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 
@@ -139,7 +139,7 @@ export interface JoinSplitRequest extends UnwrapRequest {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundAddr?: NocturneAddress;
+  refundAddr?: StealthAddress;
   refundAssets: Asset[];
   actions: Action[];
   verificationGasLimit?: bigint;
@@ -186,14 +186,14 @@ export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
   };
 }
 
-export interface NoteTransmission {
-  owner: NocturneAddress;
+export interface EncryptedNote {
+  owner: StealthAddress;
   encappedKey: bigint;
   encryptedNonce: bigint;
   encryptedValue: bigint;
 }
 
-export interface BaseJoinSplitTx {
+export interface BaseJoinSplit {
   commitmentTreeRoot: bigint;
   nullifierA: bigint;
   nullifierB: bigint;
@@ -201,11 +201,11 @@ export interface BaseJoinSplitTx {
   newNoteBCommitment: bigint;
   encodedAsset: EncodedAsset;
   publicSpend: bigint;
-  newNoteATransmission: NoteTransmission;
-  newNoteBTransmission: NoteTransmission;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
 }
 
-export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
+export interface PreSignJoinSplit extends BaseJoinSplit {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -214,17 +214,17 @@ export interface PreSignJoinSplitTx extends BaseJoinSplitTx {
   merkleInputB: MerkleProofInput;
 }
 
-export interface PreProofJoinSplitTx extends BaseJoinSplitTx {
+export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
 }
 
-export interface ProvenJoinSplitTx extends BaseJoinSplitTx {
+export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
 export interface BaseOperation {
-  refundAddr: NocturneAddress;
+  refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
   verificationGasLimit: bigint;
@@ -234,15 +234,15 @@ export interface BaseOperation {
 }
 
 export interface PreSignOperation extends BaseOperation {
-  joinSplitTxs: PreSignJoinSplitTx[];
+  joinSplits: PreSignJoinSplit[];
 }
 
 export interface PreProofOperation extends BaseOperation {
-  joinSplitTxs: PreProofJoinSplitTx[];
+  joinSplits: PreProofJoinSplit[];
 }
 
 export interface ProvenOperation extends BaseOperation {
-  joinSplitTxs: ProvenJoinSplitTx[];
+  joinSplits: ProvenJoinSplit[];
 }
 
 export enum OperationStatus {

@@ -14,10 +14,10 @@ import {
   InMemoryKVStore,
   NotesDB,
   MerkleDB,
-  LocalMerkleProver,
-  LocalNotesManager,
+  InMemoryMerkleProver,
+  DefaultNotesManager,
 } from "@nocturne-xyz/sdk";
-import { LocalJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import {
   checkNocturneDeploymentConfig,
@@ -116,14 +116,14 @@ function setupNocturneContext(
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
 
-  const prover = new LocalJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
-  const merkleProver = new LocalMerkleProver(
+  const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const merkleProver = new InMemoryMerkleProver(
     wallet.address,
     ethers.provider,
     merkleDB
   );
 
-  const notesManager = new LocalNotesManager(
+  const notesManager = new DefaultNotesManager(
     notesDB,
     nocturneSigner,
     wallet.address,

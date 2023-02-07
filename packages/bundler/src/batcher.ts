@@ -4,7 +4,7 @@ import { BatcherDB, StatusDB } from "./db";
 import { getRedis } from "./utils";
 import {
   OperationStatus,
-  calculateOperationDigest,
+  computeOperationDigest,
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
 import {
@@ -111,7 +111,7 @@ export class BundlerBatcher {
               batch.length
             );
             const setJobStatusTransactions = batch.map((op) => {
-              const jobId = calculateOperationDigest(op).toString();
+              const jobId = computeOperationDigest(op).toString();
               return this.statusDB.getSetJobStatusTransaction(
                 jobId,
                 OperationStatus.IN_BATCH

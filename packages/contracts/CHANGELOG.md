@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- Rename:
+  - `NoteTransmission` -> `EncryptedNote`
+  - `NocturneAddress` -> `StealthAddress`
+  - `JoinSplit` event -> `JoinSplitProcessed` event
+  - `Refund` event -> `RefundProcessed` event
+  - `JoinSplitTx` -> `JoinSplit`
 - Remove `deployer` directory in favor of `deploy` package
 - Deploy script takes mock subtree update verifier param as env var
 - Deploy script logs network info and start block

@@ -48,7 +48,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
 
       @dev The maximum gas cost of a call can be estimated without eth_estimateGas
       1. gas cost of `WalletUtils.computeOperationDigests` and
-      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplitTxs
+      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplits
       and overall size of op
       2. maxmimum gas cost of each processOperation can be estimated using op
       (refer to inline docs for `processOperation`)
@@ -108,7 +108,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
 
       @dev The gas cost of the call can be estimated in constant time given op:
       1. The gas cost before `executeOperation` can be bounded as a function of
-      op.joinSplitTxs.length
+      op.joinSplits.length
       2. `executeOperation` uses at most op.executionGasLimit
       3. The gas cost after `executeOperation` can be bounded as a function of
       op.maxNumRefunds
@@ -125,8 +125,8 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         returns (OperationResult memory opResult)
     {
         // Handle all joinsplit transctions.
-        /// @dev This reverts if nullifiers in op.joinSplitTxs are not fresh
-        _processJoinSplitTxsReservingFee(op);
+        /// @dev This reverts if nullifiers in op.joinSplits are not fresh
+        _processJoinSplitsReservingFee(op);
 
         try this.executeOperation{gas: op.executionGasLimit}(op) returns (
             OperationResult memory result

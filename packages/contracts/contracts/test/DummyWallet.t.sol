@@ -61,8 +61,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint256 gasPrice;
     }
 
-    event Refund(
-        NocturneAddress refundAddr,
+    event RefundProcessed(
+        StealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -70,12 +70,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         uint128 merkleIndex
     );
 
-    event JoinSplit(
+    event JoinSplitProcessed(
         uint256 indexed oldNoteANullifier,
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        JoinSplitTransaction joinSplitTx
+        JoinSplit joinSplit
     );
 
     event OperationProcessed(
@@ -117,13 +117,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         }
     }
 
-    function defaultNocturneAddress()
+    function defaultStealthAddress()
         internal
         pure
-        returns (NocturneAddress memory)
+        returns (StealthAddress memory)
     {
         return
-            NocturneAddress({
+            StealthAddress({
                 h1X: 1938477,
                 h1Y: 9104058,
                 h2X: 1032988,
@@ -143,7 +143,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         address _asset,
         uint256 _value,
         uint256 _id,
-        NocturneAddress memory _depositAddr
+        StealthAddress memory _depositAddr
     ) public {
         _wallet.depositFunds(
             Deposit({
@@ -176,9 +176,9 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
-            NocturneAddress memory addr = defaultNocturneAddress();
+            StealthAddress memory addr = defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
-            emit Refund(
+            emit RefundProcessed(
                 addr,
                 i,
                 uint256(uint160(address(token))),
@@ -243,8 +243,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         });
 
         uint256 root = wallet.root();
-        NoteTransmission memory newNoteATransmission = NoteTransmission({
-            owner: NocturneAddress({
+        EncryptedNote memory newNoteAEncrypted = EncryptedNote({
+            owner: StealthAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
                 h2X: uint256(123),
@@ -254,8 +254,8 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encryptedNonce: uint256(111),
             encryptedValue: uint256(111)
         });
-        NoteTransmission memory newNoteBTransmission = NoteTransmission({
-            owner: NocturneAddress({
+        EncryptedNote memory newNoteBEncrypted = EncryptedNote({
+            owner: StealthAddress({
                 h1X: uint256(123),
                 h1Y: uint256(123),
                 h2X: uint256(123),
@@ -271,18 +271,16 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encodedAssetId: uint256(0)
         });
 
-        JoinSplitTransaction[] memory joinSplitTxs = new JoinSplitTransaction[](
-            args.numJoinSplits
-        );
+        JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
-            joinSplitTxs[i] = JoinSplitTransaction({
+            joinSplits[i] = JoinSplit({
                 commitmentTreeRoot: root,
                 nullifierA: uint256(2 * i),
                 nullifierB: uint256(2 * i + 1),
                 newNoteACommitment: uint256(i),
-                newNoteATransmission: newNoteATransmission,
+                newNoteAEncrypted: newNoteAEncrypted,
                 newNoteBCommitment: uint256(i),
-                newNoteBTransmission: newNoteBTransmission,
+                newNoteBEncrypted: newNoteBEncrypted,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
                 publicSpend: args.publicSpendPerJoinSplit
@@ -293,14 +291,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
         Operation memory op = Operation({
-            joinSplitTxs: joinSplitTxs,
-            refundAddr: defaultNocturneAddress(),
+            joinSplits: joinSplits,
+            refundAddr: defaultStealthAddress(),
             encodedRefundAssets: encodedRefundAssets,
             actions: actions,
             verificationGasLimit: args.verificationGasLimit,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplitTxs.length
+            maxNumRefunds: joinSplits.length
         });
 
         return op;
@@ -353,12 +351,12 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         // Check joinsplit event
         vm.expectEmit(true, true, false, true);
-        emit JoinSplit(
-            bundle.operations[0].joinSplitTxs[0].nullifierA,
-            bundle.operations[0].joinSplitTxs[0].nullifierB,
+        emit JoinSplitProcessed(
+            bundle.operations[0].joinSplits[0].nullifierA,
+            bundle.operations[0].joinSplits[0].nullifierB,
             16, // newNoteAIndex
             17, // newNoteBIndex
-            bundle.operations[0].joinSplitTxs[0]
+            bundle.operations[0].joinSplits[0]
         );
 
         // Check OperationProcessed event
