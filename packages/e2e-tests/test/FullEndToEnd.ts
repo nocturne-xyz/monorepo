@@ -111,7 +111,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextBob,
     } = await setupNocturne(deployer));
 
-    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
+    const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
     const prover = getSubtreeUpdateProver();
     const submitter = new SyncSubtreeSubmitter(wallet);
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);

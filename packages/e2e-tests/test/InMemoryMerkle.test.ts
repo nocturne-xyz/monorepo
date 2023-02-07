@@ -43,7 +43,7 @@ describe("InMemoryMerkle", async () => {
     merkleDB = nocturneSetup.merkleDBAlice;
     nocturneContext = nocturneSetup.nocturneContextAlice;
 
-    const serverDB = open({ path: `${__dirname}/../db/localMerkleTestDB` });
+    const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
     const prover = getSubtreeUpdateProver();
     const submitter = new SyncSubtreeSubmitter(wallet);
     updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
@@ -90,7 +90,7 @@ describe("InMemoryMerkle", async () => {
     console.log("applying subtree update");
     await applySubtreeUpdate();
 
-    console.log("local merkle prover picks up the zeros");
+    console.log("merkle prover picks up the zeros");
     await merkle.fetchLeavesAndUpdate();
     expect(merkle.count()).to.eql(BinaryPoseidonTree.BATCH_SIZE);
     expect(BigInt((await merkle.getProof(0)).leaf)).to.equal(ncs[0]);
