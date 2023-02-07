@@ -2,6 +2,7 @@ import _ from "lodash";
 import { Action } from "../contract";
 import { CanonAddress, StealthAddress } from "../crypto";
 import { Asset } from "./asset";
+import { Address } from "../commonTypes";
 
 export interface ConfidentialPayment {
   value: bigint;
@@ -51,7 +52,12 @@ export class NocturneOpRequestBuilder {
 
   // add an action `action` to the operation
   // returns `this` so it's chainable
-  action(action: Action): NocturneOpRequestBuilder {
+  action(contractAddress: Address, encodedFunction: string): NocturneOpRequestBuilder {
+    const action: Action = {
+      contractAddress,
+      encodedFunction,
+    };
+
     this.op.actions.push(action);
     return this;
   }

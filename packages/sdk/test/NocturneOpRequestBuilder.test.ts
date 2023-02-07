@@ -8,7 +8,6 @@ import {
   NocturneOpRequestBuilder,
   OperationRequest,
 } from "../src/sdk";
-import { Action } from "../src/contract";
 import { NocturnePrivKey } from "../src/crypto";
 
 const shitcoin: Asset = {
@@ -41,14 +40,11 @@ const plutocracy: Asset = {
   id: 1n,
 };
 
-function getDummyAction(bump: number): Action {
-  const encodedFunction = utils.keccak256(
+function getDummyHex(bump: number): string {
+  const hex = utils.keccak256(
     "0x" + bump.toString(16).padStart(64, "0")
   );
-  return {
-    contractAddress: "0x1234",
-    encodedFunction,
-  };
+  return hex;
 }
 
 describe("NocturneOpRequestBuilder", () => {
@@ -61,12 +57,17 @@ describe("NocturneOpRequestBuilder", () => {
         },
       ],
       refundAssets: [shitcoin],
-      actions: [getDummyAction(0)],
+      actions: [
+        {
+          contractAddress: "0x1234",
+          encodedFunction: getDummyHex(0),
+        }
+      ],
     };
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
-      .action(getDummyAction(0))
+      .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .build();
@@ -89,12 +90,17 @@ describe("NocturneOpRequestBuilder", () => {
         },
       ],
       refundAssets: [shitcoin],
-      actions: [getDummyAction(0)],
+      actions: [
+        {
+          contractAddress: "0x1234",
+          encodedFunction: getDummyHex(0),
+        }
+      ],
     };
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
-      .action(getDummyAction(0))
+      .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
@@ -115,7 +121,12 @@ describe("NocturneOpRequestBuilder", () => {
         },
       ],
       refundAssets: [shitcoin],
-      actions: [getDummyAction(0)],
+      actions: [
+        {
+          contractAddress: "0x1234",
+          encodedFunction: getDummyHex(0)
+        }
+      ],
       refundAddr,
       verificationGasLimit: 10n,
       executionGasLimit: 20n,
@@ -125,13 +136,58 @@ describe("NocturneOpRequestBuilder", () => {
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
-      .action(getDummyAction(0))
+      .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .refundAddr(refundAddr)
       .gas(10n, 20n, 30n)
       .maxNumRefunds(1n)
       .build();
+
+    expect(opRequest).to.eql(expected);
+  });
+
+  it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
+    const receivers = _.range(2)
+      .map((_) => NocturnePrivKey.genPriv())
+      .map((priv) => priv.toCanonAddress());
+
+    const expected: OperationRequest = {
+      joinSplitRequests: [
+        {
+          asset: shitcoin,
+          unwrapValue: 0n,
+          payment: {
+            receiver: receivers[0],
+            value: 1n,
+          }
+        },
+        {
+          asset: stablescam,
+          unwrapValue: 0n,
+          payment: {
+            receiver: receivers[1],
+            value: 2n,
+          }
+        }
+      ],
+      refundAssets: [],
+      actions: [],
+    };
+
+    const builder = new NocturneOpRequestBuilder();
+    const opRequest = builder
+      .confidentialPayment(shitcoin, 1n, receivers[0])
+      .confidentialPayment(stablescam, 2n, receivers[1])
+      .build();
+
+    // joinSplitRequests may not necessarily be in the same order, sort them by asset
+    expected.joinSplitRequests.sort((a, b) =>
+      a.asset.assetAddr.localeCompare(b.asset.assetAddr)
+    );
+    opRequest.joinSplitRequests.sort((a, b) =>
+      a.asset.assetAddr.localeCompare(b.asset.assetAddr)
+    );
 
     expect(opRequest).to.eql(expected);
   });
@@ -143,6 +199,7 @@ describe("NocturneOpRequestBuilder", () => {
     const receivers = _.range(3)
       .map((_) => NocturnePrivKey.genPriv())
       .map((priv) => priv.toCanonAddress());
+    const actions = _.range(2).map((i) => ({ contractAddress: "0x1234", encodedFunction: getDummyHex(i) }));
     const expected: OperationRequest = {
       joinSplitRequests: [
         {
@@ -180,13 +237,13 @@ describe("NocturneOpRequestBuilder", () => {
       ],
       refundAssets: [shitcoin, ponzi, stablescam, plutocracy],
       refundAddr: refundAddr,
-      actions: [getDummyAction(0), getDummyAction(1)],
+      actions,
     };
 
     const builder = new NocturneOpRequestBuilder();
     const opRequest = builder
-      .action(getDummyAction(0))
-      .action(getDummyAction(1))
+      .action("0x1234", getDummyHex(0))
+      .action("0x1234", getDummyHex(1))
       .unwrap(shitcoin, 3n)
       .unwrap(ponzi, 69n)
       .unwrap(stablescam, 420n)
