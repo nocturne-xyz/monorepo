@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update imports for new `AssetTrait`
 - update imports with SDK renames (see SDK changelog)
 - make `TransactionTracker` take `className` so we can use it with `styled-components`
 - remove progress count from `TransactionTracker`
