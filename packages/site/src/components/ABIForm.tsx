@@ -9,7 +9,7 @@ import {
   BundlerOperationID,
   formatTokenAmountUserRepr,
 } from "@nocturne-xyz/frontend-sdk";
-import { Asset, OperationRequest } from "@nocturne-xyz/sdk";
+import { Asset, NocturneOpRequestBuilder } from "@nocturne-xyz/sdk";
 import { ABIUnwrapForm } from "./ABIUnwrapForm";
 import { ABIRefundAssetsForm } from "./ABIRefundAssetsForm";
 import { MetaMaskContext, MetamaskActions } from "../hooks";
@@ -78,11 +78,20 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
   };
 
   const submitOperation = async () => {
-    const operationRequest: OperationRequest = {
-      joinSplitRequests: joinSplitRequests.map((j) => j.joinSplitRequest),
-      refundAssets,
-      actions: actions.map((a) => a.action),
-    };
+    const builder = new NocturneOpRequestBuilder();
+    joinSplitRequests.map(j => j.joinSplitRequest).forEach(({ asset, unwrapValue }) => {
+      builder.unwrap(asset, unwrapValue);
+    });
+
+    actions.forEach(({ action }) => {
+      builder.actionRaw(action);
+    });
+
+    refundAssets.forEach((asset) => {
+      builder.refundAsset(asset);
+    });
+
+    const operationRequest = builder.build();
 
     console.log("Operation request:", operationRequest);
     try {

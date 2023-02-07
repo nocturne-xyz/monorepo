@@ -21,11 +21,9 @@ import {
 } from "../components";
 import { BUNDLER_ENDPOINT } from "../config";
 import {
-  Action,
   Asset,
   AssetType,
-  JoinSplitRequest,
-  OperationRequest,
+  NocturneOpRequestBuilder,
   computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
@@ -173,28 +171,19 @@ const Index = () => {
       id: ERC20_ID,
       assetType: AssetType.ERC20,
     };
-    const joinSplitRequest: JoinSplitRequest = {
-      asset,
-      unwrapValue: formatTokenAmountEvmRepr(2.5, 18),
-    };
-
-    const refundAssets = [asset];
-
-    console.log("Encoding transfer function data");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
         [TOKEN_ADDRESS, formatTokenAmountEvmRepr(2.5, 18)]
       );
-    const action: Action = {
-      contractAddress: TOKEN_ADDRESS,
-      encodedFunction: encodedFunction,
-    };
-    const operationRequest: OperationRequest = {
-      joinSplitRequests: [joinSplitRequest],
-      refundAssets,
-      actions: [action],
-    };
+      
+    const amount = formatTokenAmountEvmRepr(2.5, 18);
+    const builder = new NocturneOpRequestBuilder();
+    const operationRequest = builder
+        .unwrap(asset, amount)
+        .action(TOKEN_ADDRESS, encodedFunction)
+        .refundAsset(asset)
+        .build();
 
     console.log("Operation request: ", operationRequest);
     try {
