@@ -216,7 +216,7 @@ describe("NocturneContext", () => {
 
   it("Generate PreSignJoinSplits from JoinSplitRequest", async () => {
     const priv = NocturnePrivKey.genPriv();
-    const addr = new NocturneSigner(priv).address;
+    const addr = priv.toCanonAddress();
     const preSignJoinSplits = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 5n,

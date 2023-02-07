@@ -1,17 +1,17 @@
 import {
-  JoinSplitRequest,
   PreProofOperation,
   PreSignOperation,
   ProvenOperation,
   SolidityProof,
 } from "../../commonTypes";
+import { JoinSplitRequest } from "../operationRequest";
 
 export function getJoinSplitRequestTotalValue(
   joinSplitRequest: JoinSplitRequest
 ): bigint {
   let totalVal = joinSplitRequest.unwrapValue;
-  if (joinSplitRequest.paymentIntent !== undefined) {
-    totalVal += joinSplitRequest.paymentIntent.value;
+  if (joinSplitRequest.payment !== undefined) {
+    totalVal += joinSplitRequest.payment.value;
   }
   return totalVal;
 }

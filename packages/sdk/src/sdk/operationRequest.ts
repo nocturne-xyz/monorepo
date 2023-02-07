@@ -1,11 +1,11 @@
 import _ from "lodash";
 import { Action } from "../contract";
-import { StealthAddress } from "../crypto";
+import { CanonAddress, StealthAddress } from "../crypto";
 import { Asset } from "./asset";
 
 export interface ConfidentialPayment {
   value: bigint;
-  receiver: StealthAddress;
+  receiver: CanonAddress;
 }
 
 // A joinsplit request is an unwrapRequest plus an optional payment
@@ -22,8 +22,8 @@ export interface OperationRequest {
   actions: Action[];
   verificationGasLimit?: bigint;
   executionGasLimit?: bigint;
-  maxNumRefunds?: bigint;
   gasPrice?: bigint;
+  maxNumRefunds?: bigint;
 }
 
 type JoinSplitsAndPaymentsForAsset = [JoinSplitRequest[], ConfidentialPayment[]];
@@ -67,7 +67,7 @@ export class NocturneOpRequestBuilder {
     return this
   }
 
-  confidentialPayment(asset: Asset, amountUnits: bigint, receiver: StealthAddress): NocturneOpRequestBuilder {
+  confidentialPayment(asset: Asset, amountUnits: bigint, receiver: CanonAddress): NocturneOpRequestBuilder {
     const payment: ConfidentialPayment = {
       value: amountUnits,
       receiver
