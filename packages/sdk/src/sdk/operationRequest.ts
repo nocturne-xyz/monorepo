@@ -32,7 +32,7 @@ type JoinSplitsAndPaymentsForAsset = [
   ConfidentialPayment[]
 ];
 
-export class NocturneOpRequestBuilder {
+export class OperationRequestBuilder {
   private op: OperationRequest;
   private joinSplitsAndPaymentsByAsset: Map<
     Asset,
@@ -55,7 +55,7 @@ export class NocturneOpRequestBuilder {
   action(
     contractAddress: Address,
     encodedFunction: string
-  ): NocturneOpRequestBuilder {
+  ): OperationRequestBuilder {
     const action: Action = {
       contractAddress,
       encodedFunction,
@@ -69,7 +69,7 @@ export class NocturneOpRequestBuilder {
   // `ammountUnits` is the amount in EVM (uint256) representation. It is up to
   // the caller to handle decimal conversions
   // returns `this` so it's chainable
-  unwrap(asset: Asset, amountUnits: bigint): NocturneOpRequestBuilder {
+  unwrap(asset: Asset, amountUnits: bigint): OperationRequestBuilder {
     const joinSplit: JoinSplitRequest = {
       asset,
       unwrapValue: amountUnits,
@@ -90,7 +90,7 @@ export class NocturneOpRequestBuilder {
     asset: Asset,
     amountUnits: bigint,
     receiver: CanonAddress
-  ): NocturneOpRequestBuilder {
+  ): OperationRequestBuilder {
     const payment: ConfidentialPayment = {
       value: amountUnits,
       receiver,
@@ -106,7 +106,7 @@ export class NocturneOpRequestBuilder {
   }
 
   // indicates that the operation expects a refund of asset `Asset`.
-  refundAsset(asset: Asset): NocturneOpRequestBuilder {
+  refundAsset(asset: Asset): OperationRequestBuilder {
     this.op.refundAssets.push(asset);
     return this;
   }
@@ -114,7 +114,7 @@ export class NocturneOpRequestBuilder {
   // Set the stealth address `refundAddr` up-front.
   // if this is not set, the wallet will generate a new one
   // returns `this` so it's chainable
-  refundAddr(addr: StealthAddress): NocturneOpRequestBuilder {
+  refundAddr(addr: StealthAddress): OperationRequestBuilder {
     this.op.refundAddr = addr;
     return this;
   }
@@ -123,7 +123,7 @@ export class NocturneOpRequestBuilder {
   // if this is not set, the SDK will estimate it very naively.
   // if you can predict this up-front, setting it may save gas.
   // returns `this` so it's chainable
-  maxNumRefunds(maxNumRefunds: bigint): NocturneOpRequestBuilder {
+  maxNumRefunds(maxNumRefunds: bigint): OperationRequestBuilder {
     this.op.maxNumRefunds = maxNumRefunds;
     return this;
   }
@@ -136,7 +136,7 @@ export class NocturneOpRequestBuilder {
     verificationGasLimit: bigint,
     executionGasLimit: bigint,
     gasPrice: bigint
-  ): NocturneOpRequestBuilder {
+  ): OperationRequestBuilder {
     this.op.verificationGasLimit = verificationGasLimit;
     this.op.executionGasLimit = executionGasLimit;
     this.op.gasPrice = gasPrice;
