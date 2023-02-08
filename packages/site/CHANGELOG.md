@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use builder in index.ts
 - update imports with SDK renames (see SDK changelog)
 - Fix bug where bundler endpoint was not being passed in playground ABIForm
 - Fix actions display and display correct target addr per action

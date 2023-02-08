@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `NocturneOpRequestBuilder`
 - move `Asset` and related types / functions to new module `asset`
 - Rename:
   - `NoteTransmission` -> `EncryptedNote`
