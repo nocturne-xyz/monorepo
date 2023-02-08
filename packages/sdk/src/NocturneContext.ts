@@ -28,7 +28,7 @@ import {
   simulateOperation,
 } from "./sdk";
 import { MerkleProofInput } from "./proof";
-import { genEncryptedNote, randomBigInt } from "./crypto/utils";
+import { encryptNote, randomBigInt } from "./crypto/utils";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 
@@ -286,11 +286,11 @@ export class NocturneContext {
     const newNoteACommitment = NoteTrait.toCommitment(newNoteA);
     const newNoteBCommitment = NoteTrait.toCommitment(newNoteB);
 
-    const newNoteAEncrypted = genEncryptedNote(
+    const newNoteAEncrypted = encryptNote(
       this.signer.privkey.toCanonAddress(),
       newNoteA
     );
-    const newNoteBEncrypted = genEncryptedNote(receiver, newNoteB);
+    const newNoteBEncrypted = encryptNote(receiver, newNoteB);
     const publicSpend =
       oldNoteA.value + oldNoteB.value - returnVal - paymentVal;
 
@@ -335,8 +335,8 @@ export class NocturneContext {
       oldNoteB,
       newNoteA,
       newNoteB,
-      merkleInputA,
-      merkleInputB,
+      merkleProofA: merkleInputA,
+      merkleProofB: merkleInputB,
     };
   }
 
@@ -437,8 +437,8 @@ export class NocturneContext {
     opSig: NocturneSignature
   ): Promise<PreProofJoinSplit> {
     const {
-      merkleInputA,
-      merkleInputB,
+      merkleProofA: merkleInputA,
+      merkleProofB: merkleInputB,
       oldNoteA,
       oldNoteB,
       newNoteA,

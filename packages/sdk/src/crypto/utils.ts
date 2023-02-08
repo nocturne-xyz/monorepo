@@ -47,10 +47,9 @@ export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
 }
 
 /**
- * Generate note transmission for a receiver canonical address and
- * a note
+ * Encrypt a note sent to a given receiver's
  */
-export function genEncryptedNote(
+export function encryptNote(
   addr: CanonAddress,
   note: Note
 ): EncryptedNote {

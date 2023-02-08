@@ -68,6 +68,7 @@ export async function simulateOperation(
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
+  // ?: does this actually do anything if it's after `fakeProvenOperation` dummy provenOp?
   op.gasPrice = 0n;
 
   // Set dummy parameters which should not affect operation simulation

@@ -75,8 +75,8 @@ export interface PreSignJoinSplit extends BaseJoinSplit {
   oldNoteB: IncludedNote;
   newNoteA: Note;
   newNoteB: Note;
-  merkleInputA: MerkleProofInput;
-  merkleInputB: MerkleProofInput;
+  merkleProofA: MerkleProofInput;
+  merkleProofB: MerkleProofInput;
 }
 
 export interface PreProofJoinSplit extends BaseJoinSplit {
