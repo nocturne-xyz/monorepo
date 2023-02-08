@@ -3,7 +3,7 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { JoinSplitRequest, NocturneOpRequestBuilder } from "../src/sdk";
+import { JoinSplitRequest, OperationRequestBuilder } from "../src/sdk";
 import { Asset, AssetType } from "../src/sdk/asset";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
@@ -199,7 +199,7 @@ describe("NocturneContext", () => {
       id: 0n,
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .unwrap(asset, 40n)
       .refundAsset(refundAsset)
@@ -272,7 +272,7 @@ describe("NocturneContext", () => {
       id: 0n,
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .unwrap(asset, 15n)
       .refundAsset(refundAsset)

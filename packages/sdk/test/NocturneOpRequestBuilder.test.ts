@@ -5,7 +5,7 @@ import { utils } from "ethers";
 import {
   Asset,
   AssetType,
-  NocturneOpRequestBuilder,
+  OperationRequestBuilder,
   OperationRequest,
 } from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
@@ -45,7 +45,7 @@ function getDummyHex(bump: number): string {
   return hex;
 }
 
-describe("NocturneOpRequestBuilder", () => {
+describe("OperationRequestBuilder", () => {
   it("builds OperaionRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -63,7 +63,7 @@ describe("NocturneOpRequestBuilder", () => {
       ],
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -96,7 +96,7 @@ describe("NocturneOpRequestBuilder", () => {
       ],
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -132,7 +132,7 @@ describe("NocturneOpRequestBuilder", () => {
       maxNumRefunds: 1n,
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
@@ -173,7 +173,7 @@ describe("NocturneOpRequestBuilder", () => {
       actions: [],
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
@@ -241,7 +241,7 @@ describe("NocturneOpRequestBuilder", () => {
       actions,
     };
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const opRequest = builder
       .action("0x1234", getDummyHex(0))
       .action("0x1234", getDummyHex(1))

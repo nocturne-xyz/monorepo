@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- use `NocturneOpRequestBuilder` for e2e tests
+- use `OperationRequestBuilder` for e2e tests
 - update imports for new `AssetTrait`
 - update imports with SDK renames (see SDK changelog)
 - Replace custom hardhat deploy scripts with deploy package deploy script

@@ -23,7 +23,7 @@ import { BUNDLER_ENDPOINT } from "../config";
 import {
   Asset,
   AssetType,
-  NocturneOpRequestBuilder,
+  OperationRequestBuilder,
   computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
@@ -178,7 +178,7 @@ const Index = () => {
       );
 
     const amount = formatTokenAmountEvmRepr(2.5, 18);
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const operationRequest = builder
       .unwrap(asset, amount)
       .action(TOKEN_ADDRESS, encodedFunction)

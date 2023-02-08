@@ -20,7 +20,7 @@ import {
   query,
   computeOperationDigest,
   AssetType,
-  NocturneOpRequestBuilder,
+  OperationRequestBuilder,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../utils/deploy";
 import { depositFunds, sleep, getSubtreeUpdateProver } from "../utils/test";
@@ -245,7 +245,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         [bob.address, ALICE_TO_BOB_PUB_VAL]
       );
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     const operationRequest = builder
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
@@ -363,7 +363,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
       );
 
-    const builder = new NocturneOpRequestBuilder();
+    const builder = new OperationRequestBuilder();
     // unwrap 1 erc20 to satisfy gas token requirement
     const opRequest = builder
       .action(erc721Token.address, erc721EncodedFunction)
