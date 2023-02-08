@@ -206,8 +206,12 @@ describe("NocturneContext", () => {
       .action(
         "0x1111",
         "0x6d6168616d000000000000000000000000000000000000000000000000000000"
-      )
-      .gas(1_000_000n, 1_000_000n, 1n) // set gas and max num refunds to prevent simulation
+      ) 
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n
+      }) // set gas and max num refunds to prevent simulation
       .maxNumRefunds(1n)
       .build();
 
@@ -280,7 +284,11 @@ describe("NocturneContext", () => {
         "0x1111",
         "0x6d6168616d000000000000000000000000000000000000000000000000000000"
       )
-      .gas(1_000_000n, 1_000_000n, 1n) // set gas and maxNumRefunds to prevent simulation
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n
+      }) // set gas and maxNumRefunds to prevent simulation
       .maxNumRefunds(1n)
       .build();
 

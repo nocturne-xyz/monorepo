@@ -27,6 +27,12 @@ export interface OperationRequest {
   maxNumRefunds?: bigint;
 }
 
+export interface OperationGasParams {
+  verificationGasLimit: bigint;
+  executionGasLimit: bigint;
+  gasPrice: bigint;
+}
+
 type JoinSplitsAndPaymentsForAsset = [
   JoinSplitRequest[],
   ConfidentialPayment[]
@@ -133,10 +139,9 @@ export class OperationRequestBuilder {
   // usually you want to just let the wallet estimate this instead.
   // returns `this` so it's chainable
   gas(
-    verificationGasLimit: bigint,
-    executionGasLimit: bigint,
-    gasPrice: bigint
+    gasParams: OperationGasParams
   ): OperationRequestBuilder {
+    const { verificationGasLimit, executionGasLimit, gasPrice } = gasParams;
     this.op.verificationGasLimit = verificationGasLimit;
     this.op.executionGasLimit = executionGasLimit;
     this.op.gasPrice = gasPrice;

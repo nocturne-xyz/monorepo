@@ -138,7 +138,11 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .refundAddr(refundAddr)
-      .gas(10n, 20n, 30n)
+      .gas({
+        verificationGasLimit: 10n,
+        executionGasLimit: 20n,
+        gasPrice: 30n
+      })
       .maxNumRefunds(1n)
       .build();
 
