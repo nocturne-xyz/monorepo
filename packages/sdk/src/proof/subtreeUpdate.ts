@@ -6,7 +6,7 @@ import {
   NoteTrait,
   bigInt256ToFieldElems,
 } from "../sdk";
-import { encodeAsset } from "../commonTypes";
+import { AssetTrait } from "../sdk/asset";
 
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
@@ -91,7 +91,9 @@ export function subtreeUpdateInputsFromBatch(
       bitmap.push(1n);
       ownerH1s.push(note.owner.h1X);
       ownerH2s.push(note.owner.h2X);
-      const { encodedAssetAddr, encodedAssetId } = encodeAsset(note.asset);
+      const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(
+        note.asset
+      );
       nonces.push(note.nonce);
       encodedAssetAddrs.push(encodedAssetAddr);
       encodedAssetIds.push(encodedAssetId);

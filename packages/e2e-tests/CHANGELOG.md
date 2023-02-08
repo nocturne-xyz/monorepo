@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update imports for new `AssetTrait`
 - update imports with SDK renames (see SDK changelog)
 - Replace custom hardhat deploy scripts with deploy package deploy script
 - Deposit script funds with proper decimal-based amount using parseEther

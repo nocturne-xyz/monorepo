@@ -6,7 +6,7 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { decodeAsset } from "../commonTypes";
+import { AssetTrait, EncodedAsset } from "../sdk/asset";
 
 export async function fetchNotesFromRefunds(
   contract: Wallet,
@@ -28,6 +28,11 @@ export async function fetchNotesFromRefunds(
       merkleIndex,
     } = event.args;
     const { h1X, h1Y, h2X, h2Y } = refundAddr;
+    const encodedAsset: EncodedAsset = {
+      encodedAssetAddr: encodedAssetAddr.toBigInt(),
+      encodedAssetId: encodedAssetId.toBigInt(),
+    };
+
     return {
       owner: {
         h1X: h1X.toBigInt(),
@@ -36,10 +41,7 @@ export async function fetchNotesFromRefunds(
         h2Y: h2Y.toBigInt(),
       },
       nonce: nonce.toBigInt(),
-      asset: decodeAsset(
-        encodedAssetAddr.toBigInt(),
-        encodedAssetId.toBigInt()
-      ),
+      asset: AssetTrait.decode(encodedAsset),
       value: value.toBigInt(),
       merkleIndex: merkleIndex.toNumber(),
     };

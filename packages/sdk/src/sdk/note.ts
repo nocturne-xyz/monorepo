@@ -1,5 +1,5 @@
 import { StealthAddressTrait, StealthAddress } from "../crypto/address";
-import { Asset, decodeAsset, encodeAsset } from "../commonTypes";
+import { Asset, AssetTrait, EncodedAsset } from "../sdk/asset";
 import { poseidon } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
@@ -70,7 +70,7 @@ export class NoteTrait {
 
   static encode(note: Note): EncodedNote {
     const { owner, nonce, value } = note;
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset(note.asset);
+    const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(note.asset);
 
     return {
       owner,
@@ -82,11 +82,15 @@ export class NoteTrait {
   }
 
   static decode(encodedNote: EncodedNote): Note {
-    const { owner, nonce, value } = encodedNote;
-    const asset = decodeAsset(
-      encodedNote.encodedAssetAddr,
-      encodedNote.encodedAssetId
-    );
+    const { owner, nonce, value, encodedAssetAddr, encodedAssetId } =
+      encodedNote;
+
+    const encodedAsset: EncodedAsset = {
+      encodedAssetAddr,
+      encodedAssetId,
+    };
+
+    const asset = AssetTrait.decode(encodedAsset);
 
     return {
       owner,

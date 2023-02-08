@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `Asset` and related types / functions to new module `asset`
 - Rename:
   - `NoteTransmission` -> `EncryptedNote`
   - `NocturneAddress` -> `StealthAddress`

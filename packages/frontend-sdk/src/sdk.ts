@@ -5,7 +5,7 @@ import {
   PreProofOperation,
   StealthAddress,
   AssetWithBalance,
-  encodeAsset,
+  AssetTrait,
   AssetType,
   Address,
   proveJoinSplit,
@@ -104,7 +104,7 @@ export class NocturneFrontendSDK {
   ): Promise<ContractTransaction> {
     const spender = await this.walletContract.signer.getAddress();
     const depositAddr = await this.getRandomizedAddr();
-    const { encodedAssetAddr, encodedAssetId } = encodeAsset({
+    const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode({
       assetType,
       assetAddr: assetAddress,
       id: assetId,

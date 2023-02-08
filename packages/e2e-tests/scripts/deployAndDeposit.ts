@@ -2,12 +2,10 @@ import { setupNocturne } from "../utils/deploy";
 import { ethers } from "hardhat";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
-  Asset,
+  AssetTrait,
   AssetType,
-  encodeAsset,
   StealthAddressTrait,
   CanonAddress,
-  BinaryPoseidonTree,
 } from "@nocturne-xyz/sdk";
 
 // add MM Flask addresses here
@@ -69,7 +67,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       assetAddr: token.address,
       id: 0n,
     }))
-    .map(encodeAsset);
+    .map(AssetTrait.encode);
 
   // We will deposit to setup alice and test nocturne addrs
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(

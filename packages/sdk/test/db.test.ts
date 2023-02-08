@@ -2,7 +2,7 @@ import "mocha";
 import { expect } from "chai";
 import { NotesDB, InMemoryKVStore, MerkleDB, KV } from "../src/sdk/db";
 import { IncludedNote } from "../src/sdk/note";
-import { Asset, AssetType } from "../src/commonTypes";
+import { Asset, AssetType } from "../src/sdk/asset";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();

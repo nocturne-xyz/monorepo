@@ -1,20 +1,17 @@
 import {
   JoinSplitRequest,
-  Asset,
-  AssetWithBalance,
   OperationRequest,
   packToSolidityProof,
-  EncodedAsset,
   PreSignJoinSplit,
   PreProofJoinSplit,
   ProvenJoinSplit,
   PreSignOperation,
   PreProofOperation,
   ProvenOperation,
-  encodeAsset,
   BLOCK_GAS_LIMIT,
   Address,
 } from "./commonTypes";
+import { Asset, AssetWithBalance, EncodedAsset, AssetTrait } from "./sdk/asset";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
 import { CanonAddress, StealthAddressTrait } from "./crypto/address";
@@ -323,7 +320,7 @@ export class NocturneContext {
       // Note B is dummy. Any input works here
       merkleInputB = merkleInputA;
     }
-    const encodedAsset = encodeAsset(oldNoteA.asset);
+    const encodedAsset = AssetTrait.encode(oldNoteA.asset);
 
     return {
       commitmentTreeRoot: merkleProofA.root,
@@ -369,7 +366,9 @@ export class NocturneContext {
       );
     }
 
-    const encodedRefundAssets: EncodedAsset[] = refundAssets.map(encodeAsset);
+    const encodedRefundAssets: EncodedAsset[] = refundAssets.map(
+      AssetTrait.encode
+    );
 
     let simulationRequired = false;
     // Required field absent, need to estimate
