@@ -67,6 +67,7 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
       map.set(key, [item]);
     } else {
       collection.push(item);
+      map.set(key, collection);
     }
   });
 
