@@ -38,7 +38,7 @@ import { setupNocturne } from "../src/deploy";
 // import fetch from "node-fetch";
 // import http from "http";
 // import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
-import { ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
+import { ACTORS_TO_KEYS, ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
 import { startHardhatNetwork } from "../src/network";
 import Dockerode from "dockerode";
 import { ethers } from "ethers";
@@ -47,6 +47,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
+import { startSubtreeUpdater } from "../src/subtreeUpdater";
 
 // const BUNDLER_SERVER_PORT = 3000;
 // const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
@@ -71,10 +72,12 @@ import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 // const ERC1155_TOKEN_AMOUNT = 3n;
 
 const LOCALHOST_URL = "http://localhost:8545";
+const LOCALHOST_WITHIN_DOCKER_URL = "http://host.docker.internal:8545";
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let docker: Dockerode;
   let hhContainer: Dockerode.Container;
+  let subtreeUpdaterContainer: Dockerode.Container;
   let provider: ethers.providers.JsonRpcProvider;
   let alice: ethers.Signer;
   let bob: ethers.Signer;
@@ -111,6 +114,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Wallet:", wallet.address);
     console.log("Vault:", vault.address);
 
+    subtreeUpdaterContainer = await startSubtreeUpdater(
+      docker,
+      wallet.address,
+      {
+        rpcUrl: LOCALHOST_WITHIN_DOCKER_URL,
+        txSignerKey: ACTORS_TO_KEYS.subtreeUpdater,
+      }
+    );
+    subtreeUpdaterContainer;
+
     alice;
     bob;
     erc20Token;
@@ -125,6 +138,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   after(async () => {
     await hhContainer.stop();
     await hhContainer.remove();
+
+    await subtreeUpdaterContainer.stop();
+    await subtreeUpdaterContainer.remove();
   });
 
   it("Runs", async () => {});
