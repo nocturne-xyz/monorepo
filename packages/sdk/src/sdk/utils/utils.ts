@@ -44,3 +44,29 @@ export function fakeProvenOperation(
     joinSplits: provenJoinSplits,
   };
 }
+
+export function range(start: number, stop?: number, step?: number): number[] {
+  if (!stop) {
+    stop = start;
+    start = 0;
+  }
+
+  step ??= 1;
+
+  return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * (step as number));
+}
+
+export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
+  const map = new Map();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+    }
+  });
+
+  return Array.from(map.values());
+}

@@ -1,5 +1,4 @@
 import "mocha";
-import _ from "lodash";
 import { expect } from "chai";
 import { utils } from "ethers";
 import {
@@ -7,6 +6,7 @@ import {
   AssetType,
   OperationRequestBuilder,
   OperationRequest,
+  range,
 } from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
 
@@ -150,7 +150,7 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
-    const receivers = _.range(2)
+    const receivers = range(2)
       .map((_) => NocturnePrivKey.genPriv())
       .map((priv) => priv.toCanonAddress());
 
@@ -198,10 +198,10 @@ describe("OperationRequestBuilder", () => {
     const refundPriv = NocturnePrivKey.genPriv();
     const refundAddr = refundPriv.toAddress();
 
-    const receivers = _.range(3)
+    const receivers = range(3)
       .map((_) => NocturnePrivKey.genPriv())
       .map((priv) => priv.toCanonAddress());
-    const actions = _.range(2).map((i) => ({
+    const actions = range(2).map((i) => ({
       contractAddress: "0x1234",
       encodedFunction: getDummyHex(i),
     }));

@@ -1,8 +1,8 @@
-import _ from "lodash";
 import { Action } from "../contract";
 import { CanonAddress, StealthAddress } from "../crypto";
 import { Asset } from "./asset";
 import { Address } from "../commonTypes";
+import { groupBy } from "./utils";
 
 export interface ConfidentialPayment {
   value: bigint;
@@ -163,10 +163,10 @@ export class OperationRequestBuilder {
       [joinSplits, payments],
     ] of this.joinSplitsAndPaymentsByAsset.entries()) {
       // consolidate payments to the same receiver
-      const paymentsByReceiver = _.groupBy(payments, (p) =>
+      const paymentsByReceiver = groupBy(payments, (p) =>
         p.receiver.toString()
       );
-      const consolidatedPayments = _.flatMap(paymentsByReceiver, (payments) => {
+      const consolidatedPayments = paymentsByReceiver.flatMap((payments) => {
         if (payments.length === 0) {
           return [];
         }
@@ -178,7 +178,7 @@ export class OperationRequestBuilder {
         return [{ value, receiver }];
       });
 
-      // assign each payment to a joinsplit. If there are not enough joinsplits, then create new ones
+      // assign each payment to a joinsplit request. If there are not enough joinsplit requests, create new ones
       for (const payment of consolidatedPayments) {
         const joinSplit = joinSplits.pop();
         if (joinSplit) {
@@ -193,7 +193,7 @@ export class OperationRequestBuilder {
         }
       }
 
-      // consolidate any remaining unassigned joinsplits
+      // consolidate any remaining unassigned joinsplit requests
       if (joinSplits.length > 0) {
         const value = joinSplits.reduce(
           (acc, joinSplit) => acc + joinSplit.unwrapValue,
