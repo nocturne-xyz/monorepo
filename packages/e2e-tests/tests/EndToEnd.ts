@@ -174,7 +174,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const preProof = nocturneContextAlice.signOperation(preSign);
     const operation = await proveOperation(preProof, joinSplitProver);
 
-
     console.log("Process bundle");
     var res = await fetch(`http://localhost:3000/relay`, {
       method: "POST",

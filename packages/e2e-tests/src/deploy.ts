@@ -109,7 +109,7 @@ export async function setupNocturne(
     notesDBBob,
     merkleDBBob,
     nocturneContextBob,
-    joinSplitProver
+    joinSplitProver,
   };
 }
 

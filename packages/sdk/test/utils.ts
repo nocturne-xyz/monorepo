@@ -1,9 +1,19 @@
 import { getDefaultProvider, utils } from "ethers";
-import { Asset, AssetTrait, AssetType, InMemoryKVStore, MerkleProver, MockMerkleProver, NocturneSigner, NoteTrait, NotesDB, zip } from "../src/sdk";
+import {
+  Asset,
+  AssetTrait,
+  AssetType,
+  InMemoryKVStore,
+  MerkleProver,
+  MockMerkleProver,
+  NocturneSigner,
+  NoteTrait,
+  NotesDB,
+  zip,
+} from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { InMemoryMerkleProver, MerkleDB } from "../dist";
-
 
 export const shitcoin: Asset = {
   assetType: AssetType.ERC20,
@@ -77,10 +87,7 @@ export async function setup(
 
   const dummyWalletAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
-  const wallet = Wallet__factory.connect(
-    dummyWalletAddr,
-    provider
-  );
+  const wallet = Wallet__factory.connect(dummyWalletAddr, provider);
 
   let merkleProver: MerkleProver;
   if (mockMerkle) {
@@ -90,9 +97,12 @@ export async function setup(
     await Promise.all(
       notes.map(NoteTrait.toCommitment).map((leaf, i) => db.storeLeaf(i, leaf))
     );
-    merkleProver = await InMemoryMerkleProver.fromDb(dummyWalletAddr, provider, db);
+    merkleProver = await InMemoryMerkleProver.fromDb(
+      dummyWalletAddr,
+      provider,
+      db
+    );
   }
-
 
   return [notesDB, merkleProver, signer, wallet];
 }

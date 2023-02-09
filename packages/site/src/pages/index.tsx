@@ -187,8 +187,9 @@ const Index = () => {
 
     console.log("Operation request: ", operationRequest);
     try {
-      const provenOperation =
-        await nocturneFrontendSDK!.signAndProveOperation(operationRequest);
+      const provenOperation = await nocturneFrontendSDK!.signAndProveOperation(
+        operationRequest
+      );
 
       console.log(provenOperation);
       console.log(

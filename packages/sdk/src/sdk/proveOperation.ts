@@ -1,10 +1,18 @@
-import { PreProofJoinSplit, PreProofOperation, ProvenJoinSplit, ProvenOperation } from "../commonTypes";
+import {
+  PreProofJoinSplit,
+  PreProofOperation,
+  ProvenJoinSplit,
+  ProvenOperation,
+} from "../commonTypes";
 import { packToSolidityProof } from "../proof/utils";
 import { JoinSplitProver, joinSplitPublicSignalsFromArray } from "../proof";
 
-export async function proveOperation(op: PreProofOperation, prover: JoinSplitProver): Promise<ProvenOperation> {
+export async function proveOperation(
+  op: PreProofOperation,
+  prover: JoinSplitProver
+): Promise<ProvenOperation> {
   const joinSplits: ProvenJoinSplit[] = await Promise.all(
-    op.joinSplits.map(joinSplit => proveJoinSplit(prover, joinSplit))
+    op.joinSplits.map((joinSplit) => proveJoinSplit(prover, joinSplit))
   );
 
   const {

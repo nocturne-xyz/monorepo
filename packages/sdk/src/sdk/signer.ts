@@ -9,7 +9,13 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { EncryptedNote, PreProofJoinSplit, PreProofOperation, PreSignJoinSplit, PreSignOperation } from "../commonTypes";
+import {
+  EncryptedNote,
+  PreProofJoinSplit,
+  PreProofOperation,
+  PreSignJoinSplit,
+  PreSignOperation,
+} from "../commonTypes";
 import { Asset } from "./asset";
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
@@ -125,9 +131,19 @@ export class NocturneSigner {
     const opSig = this.sign(opDigest);
     const pk = this.privkey.spendPk();
 
-    const joinSplits: PreProofJoinSplit[] = op.joinSplits.map(joinSplit => makePreProofJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk));
+    const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
+      makePreProofJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk)
+    );
 
-    const { actions, refundAddr, encodedRefundAssets, verificationGasLimit, executionGasLimit, gasPrice, maxNumRefunds } = op;
+    const {
+      actions,
+      refundAddr,
+      encodedRefundAssets,
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
+    } = op;
 
     return {
       joinSplits,
@@ -143,40 +159,40 @@ export class NocturneSigner {
 }
 
 function makePreProofJoinSplit(
-    preSignJoinSplit: PreSignJoinSplit,
-    opDigest: bigint,
-    opSig: NocturneSignature,
-    vk: bigint,
-    spendPk: [bigint, bigint],
+  preSignJoinSplit: PreSignJoinSplit,
+  opDigest: bigint,
+  opSig: NocturneSignature,
+  vk: bigint,
+  spendPk: [bigint, bigint]
 ): PreProofJoinSplit {
-    const {
-      merkleProofA,
-      merkleProofB,
-      oldNoteA,
-      oldNoteB,
-      newNoteA,
-      newNoteB,
-      ...baseJoinSplit
-    } = preSignJoinSplit;
+  const {
+    merkleProofA,
+    merkleProofB,
+    oldNoteA,
+    oldNoteB,
+    newNoteA,
+    newNoteB,
+    ...baseJoinSplit
+  } = preSignJoinSplit;
 
-    const { c, z } = opSig;
+  const { c, z } = opSig;
 
-    const proofInputs: JoinSplitInputs = {
-      vk,
-      spendPk,
-      c,
-      z,
-      merkleProofA,
-      merkleProofB,
-      operationDigest: opDigest,
-      oldNoteA: NoteTrait.encode(oldNoteA),
-      oldNoteB: NoteTrait.encode(oldNoteB),
-      newNoteA: NoteTrait.encode(newNoteA),
-      newNoteB: NoteTrait.encode(newNoteB),
-    };
-    return {
-      opDigest,
-      proofInputs,
-      ...baseJoinSplit,
-    };
+  const proofInputs: JoinSplitInputs = {
+    vk,
+    spendPk,
+    c,
+    z,
+    merkleProofA,
+    merkleProofB,
+    operationDigest: opDigest,
+    oldNoteA: NoteTrait.encode(oldNoteA),
+    oldNoteB: NoteTrait.encode(oldNoteB),
+    newNoteA: NoteTrait.encode(newNoteA),
+    newNoteB: NoteTrait.encode(newNoteB),
+  };
+  return {
+    opDigest,
+    proofInputs,
+    ...baseJoinSplit,
+  };
 }

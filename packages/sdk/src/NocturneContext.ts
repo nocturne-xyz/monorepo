@@ -1,9 +1,5 @@
-import {
-  PreProofOperation,
-  Address,
-  PreSignOperation,
-} from "./commonTypes";
-import {  OperationRequest } from "./sdk/operationRequest";
+import { PreProofOperation, Address, PreSignOperation } from "./commonTypes";
+import { OperationRequest } from "./sdk/operationRequest";
 import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner } from "./sdk/signer";
 import { InMemoryMerkleProver, MerkleProver } from "./sdk/merkleProver";
@@ -12,7 +8,7 @@ import {
   AssetWithBalance,
   NotesManager,
   getJoinSplitRequestTotalValue,
-  prepareOperation 
+  prepareOperation,
 } from "./sdk";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
@@ -63,7 +59,9 @@ export class NocturneContext {
     }
   }
 
-  async prepareOperation(opRequest: OperationRequest): Promise<PreSignOperation> {
+  async prepareOperation(
+    opRequest: OperationRequest
+  ): Promise<PreSignOperation> {
     return await prepareOperation(
       opRequest,
       this.db,
@@ -94,7 +92,13 @@ export class NocturneContext {
   ): Promise<boolean> {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
-      if (!await hasEnoughBalance(requestedAmount, joinSplitRequest.asset, this.db)) {
+      if (
+        !(await hasEnoughBalance(
+          requestedAmount,
+          joinSplitRequest.asset,
+          this.db
+        ))
+      ) {
         return false;
       }
     }

@@ -27,7 +27,6 @@ import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
-
 type GasEstimationResult = {
   verificationGasLimit: bigint;
   executionGasLimit: bigint;
@@ -180,7 +179,7 @@ export async function gatherNotes(
   // check that the user has enough notes to cover the request
   const notes = await notesDB.getNotesFor(asset);
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
-  if (!await (hasEnoughBalance(requestedAmount, asset, notesDB))) {
+  if (!(await hasEnoughBalance(requestedAmount, asset, notesDB))) {
     throw new Error(
       `Attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
     );

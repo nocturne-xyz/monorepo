@@ -192,5 +192,5 @@ describe("NocturneSigner", () => {
     const sig: NocturneSignature = { c, z };
     const pk = signer.privkey.spendPk();
     expect(NocturneSigner.verify(pk, opDigest, sig)).to.equal(true);
-  })
+  });
 });

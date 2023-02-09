@@ -1,12 +1,15 @@
 import "mocha";
 import { expect } from "chai";
-import {
-  OperationRequestBuilder,
-  OperationRequest,
-  range,
-} from "../src/sdk";
+import { OperationRequestBuilder, OperationRequest, range } from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
-import { shitcoin, ponzi, stablescam, monkey, plutocracy, getDummyHex } from "./utils";
+import {
+  shitcoin,
+  ponzi,
+  stablescam,
+  monkey,
+  plutocracy,
+  getDummyHex,
+} from "./utils";
 
 describe("OperationRequestBuilder", () => {
   it("builds OperaionRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {

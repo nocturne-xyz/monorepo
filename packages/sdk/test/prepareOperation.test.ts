@@ -3,13 +3,21 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturnePrivKey, StealthAddressTrait } from "../src/crypto";
-import {
-  OperationRequestBuilder,
-  range,
-  sortNotesByValue,
-} from "../src/sdk";
+import { OperationRequestBuilder, range, sortNotesByValue } from "../src/sdk";
 import { gatherNotes, prepareOperation } from "../src/sdk/prepareOperation";
-import { stablescam, setup, shitcoin, encodedShitcoin, monkey, ponzi, plutocracy, encodedPonzi, encodedStablescam, encodedPlutocracy, getDummyHex } from "./utils";
+import {
+  stablescam,
+  setup,
+  shitcoin,
+  encodedShitcoin,
+  monkey,
+  ponzi,
+  plutocracy,
+  encodedPonzi,
+  encodedStablescam,
+  encodedPlutocracy,
+  getDummyHex,
+} from "./utils";
 
 chai.use(chaiAsPromised);
 
