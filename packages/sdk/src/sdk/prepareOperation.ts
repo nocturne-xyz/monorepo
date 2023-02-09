@@ -161,6 +161,17 @@ export async function prepareJoinSplits(
   return res;
 }
 
+export async function hasEnoughBalance(
+  requestedAmount: bigint,
+  asset: Asset,
+  notesDB: NotesDB
+): Promise<boolean> {
+  // check that the user has enough notes to cover the request
+  const notes = await notesDB.getNotesFor(asset);
+  const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+  return balance >= requestedAmount;
+}
+
 export async function gatherNotes(
   requestedAmount: bigint,
   asset: Asset,
@@ -169,7 +180,7 @@ export async function gatherNotes(
   // check that the user has enough notes to cover the request
   const notes = await notesDB.getNotesFor(asset);
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
-  if (balance < requestedAmount) {
+  if (!await (hasEnoughBalance(requestedAmount, asset, notesDB))) {
     throw new Error(
       `Attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
     );
