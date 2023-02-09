@@ -1,7 +1,8 @@
 import { getDefaultProvider, utils } from "ethers";
-import { Asset, AssetTrait, AssetType, InMemoryKVStore, MerkleProver, MockMerkleProver, NocturneSigner, NotesDB, zip } from "../src/sdk";
+import { Asset, AssetTrait, AssetType, InMemoryKVStore, MerkleProver, MockMerkleProver, NocturneSigner, NoteTrait, NotesDB, zip } from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { InMemoryMerkleProver, MerkleDB } from "../dist";
 
 
 export const shitcoin: Asset = {
@@ -44,16 +45,26 @@ export function getDummyHex(bump: number): string {
   return hex;
 }
 
+export interface TestSetupOpts {
+  mockMerkle: boolean;
+}
+
+export const defaultTestSetupOpts: TestSetupOpts = {
+  mockMerkle: true,
+};
+
 export async function setup(
   noteAmounts: bigint[],
-  assets: Asset[]
+  assets: Asset[],
+  opts: TestSetupOpts = defaultTestSetupOpts
 ): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
+  const { mockMerkle } = opts;
+
   const priv = new NocturnePrivKey(1n);
   const signer = new NocturneSigner(priv);
 
   const kv = new InMemoryKVStore();
   const notesDB = new NotesDB(kv);
-  const merkleProver = new MockMerkleProver();
 
   const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
     owner: signer.address,
@@ -64,11 +75,24 @@ export async function setup(
   }));
   await notesDB.storeNotes(notes);
 
+  const dummyWalletAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
   const wallet = Wallet__factory.connect(
-    "0xcd3b766ccdd6ae721141f452c550ca635964ce71",
+    dummyWalletAddr,
     provider
   );
+
+  let merkleProver: MerkleProver;
+  if (mockMerkle) {
+    merkleProver = new MockMerkleProver();
+  } else {
+    const db = new MerkleDB(kv);
+    await Promise.all(
+      notes.map(NoteTrait.toCommitment).map((leaf, i) => db.storeLeaf(i, leaf))
+    );
+    merkleProver = await InMemoryMerkleProver.fromDb(dummyWalletAddr, provider, db);
+  }
+
 
   return [notesDB, merkleProver, signer, wallet];
 }

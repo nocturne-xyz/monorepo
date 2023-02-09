@@ -174,7 +174,6 @@ function makePreProofJoinSplit(
       newNoteA: NoteTrait.encode(newNoteA),
       newNoteB: NoteTrait.encode(newNoteB),
     };
-
     return {
       opDigest,
       proofInputs,

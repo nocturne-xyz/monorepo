@@ -1,5 +1,4 @@
 import {
-  packToSolidityProof,
   PreSignJoinSplit,
   PreProofJoinSplit,
   ProvenJoinSplit,
@@ -18,7 +17,6 @@ import { computeOperationDigest } from "./contract/utils";
 import {
   JoinSplitProver,
   JoinSplitInputs,
-  joinSplitPublicSignalsFromArray,
 } from "./proof/joinsplit";
 import { InMemoryMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NotesDB } from "./sdk/db";
@@ -31,6 +29,7 @@ import { MerkleProofInput } from "./proof";
 import { encryptNote, randomBigInt } from "./crypto/utils";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
+import { proveJoinSplit } from "./sdk/proveOperation";
 
 export interface JoinSplitNotes {
   oldNoteA: IncludedNote;
@@ -613,54 +612,3 @@ export class NocturneContext {
   }
 }
 
-export async function proveJoinSplit(
-  prover: JoinSplitProver,
-  preProofJoinSplit: PreProofJoinSplit
-): Promise<ProvenJoinSplit> {
-  const { opDigest, proofInputs, ...baseJoinSplit } = preProofJoinSplit;
-  const proof = await prover.proveJoinSplit(proofInputs);
-
-  // Check that snarkjs output is consistent with our precomputed joinsplit values
-  const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
-  if (
-    baseJoinSplit.newNoteACommitment !==
-      BigInt(publicSignals.newNoteACommitment) ||
-    baseJoinSplit.newNoteBCommitment !==
-      BigInt(publicSignals.newNoteBCommitment) ||
-    baseJoinSplit.commitmentTreeRoot !==
-      BigInt(publicSignals.commitmentTreeRoot) ||
-    baseJoinSplit.publicSpend !== BigInt(publicSignals.publicSpend) ||
-    baseJoinSplit.nullifierA !== BigInt(publicSignals.nullifierA) ||
-    baseJoinSplit.nullifierB !== BigInt(publicSignals.nullifierB) ||
-    baseJoinSplit.encodedAsset.encodedAssetAddr !==
-      BigInt(publicSignals.encodedAssetAddr) ||
-    baseJoinSplit.encodedAsset.encodedAssetId !==
-      BigInt(publicSignals.encodedAssetId) ||
-    opDigest !== BigInt(publicSignals.opDigest)
-  ) {
-    console.error("from proof, got", publicSignals);
-    console.error("from sdk, got", {
-      newNoteACommitment: baseJoinSplit.newNoteACommitment,
-      newNoteBCommitment: baseJoinSplit.newNoteBCommitment,
-      commitmentTreeRoot: baseJoinSplit.commitmentTreeRoot,
-      publicSpend: baseJoinSplit.publicSpend,
-      nullifierA: baseJoinSplit.nullifierA,
-      nullifierB: baseJoinSplit.nullifierB,
-      encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
-      encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
-      opDigest,
-    });
-
-    throw new Error(
-      `SnarkJS generated public input differs from precomputed ones`
-    );
-  }
-
-  console.log("proofWithPis", proof);
-
-  const solidityProof = packToSolidityProof(proof.proof);
-  return {
-    proof: solidityProof,
-    ...baseJoinSplit,
-  };
-}
