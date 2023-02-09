@@ -42,7 +42,8 @@ export class NocturneDeployer {
     if (!proxyAdmin) {
       console.log("\nDeploying ProxyAdmin");
       proxyAdmin = await new ProxyAdmin__factory(this.connectedSigner).deploy();
-      await proxyAdmin.transferOwnership(proxyAdminOwner);
+      const tx = await proxyAdmin.transferOwnership(proxyAdminOwner);
+      await tx.wait(opts?.confirmations);
     }
 
     // Deploy vault proxy, un-initialized
@@ -57,6 +58,7 @@ export class NocturneDeployer {
     const joinSplitVerifier = await new JoinSplitVerifier__factory(
       this.connectedSigner
     ).deploy();
+    await joinSplitVerifier.deployTransaction.wait(opts?.confirmations);
 
     let subtreeUpdateVerifier:
       | SubtreeUpdateVerifier
@@ -71,6 +73,7 @@ export class NocturneDeployer {
         this.connectedSigner
       ).deploy();
     }
+    await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
     console.log("\nDeploying proxied Wallet");
     const proxiedWallet = await this.deployProxiedContract(
@@ -85,7 +88,10 @@ export class NocturneDeployer {
     console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
     console.log("Initializing proxied Vault");
-    await proxiedVault.contract.initialize(proxiedWallet.address);
+    const vaultInitTx = await proxiedVault.contract.initialize(
+      proxiedWallet.address
+    );
+    await vaultInitTx.wait(opts?.confirmations);
 
     return {
       network: {
@@ -108,7 +114,8 @@ export class NocturneDeployer {
   >(
     implementationFactory: F,
     proxyAdmin: ProxyAdmin,
-    initArgs?: Parameters<C["initialize"]>
+    initArgs?: Parameters<C["initialize"]>,
+    opts?: NocturneDeployOpts
   ): Promise<ProxiedContract<C, TransparentProxyAddresses>> {
     const implementation = await implementationFactory.deploy();
 
@@ -127,6 +134,7 @@ export class NocturneDeployer {
     const proxy = await new TransparentUpgradeableProxy__factory(
       this.connectedSigner
     ).deploy(...proxyConstructorArgs);
+    await proxy.deployTransaction.wait(opts?.confirmations);
 
     return new ProxiedContract<C, TransparentProxyAddresses>(
       implementation.attach(proxy.address) as C,
