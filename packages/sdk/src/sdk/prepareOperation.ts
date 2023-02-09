@@ -27,6 +27,7 @@ import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
+
 type GasEstimationResult = {
   verificationGasLimit: bigint;
   executionGasLimit: bigint;

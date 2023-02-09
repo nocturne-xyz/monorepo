@@ -2,8 +2,8 @@ import {
   PreProofOperation,
   PreSignOperation,
   ProvenOperation,
-  SolidityProof,
 } from "../../commonTypes";
+import { SolidityProof } from "../../proof";
 import { Note } from "../note";
 import { JoinSplitRequest } from "../operationRequest";
 

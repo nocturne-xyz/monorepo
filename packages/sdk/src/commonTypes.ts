@@ -1,7 +1,7 @@
 import { Action } from "./contract";
 import { JoinSplitInputs } from "./proof/joinsplit";
 import { StealthAddress } from "./crypto/address";
-import { BaseProof, MerkleProofInput } from "./proof";
+import { MerkleProofInput, SolidityProof } from "./proof";
 import { IncludedNote, Note } from "./sdk/note";
 import { EncodedAsset } from "./sdk/asset";
 
@@ -12,44 +12,6 @@ export const BLOCK_GAS_LIMIT = 30_000_000n;
 export type Address = string;
 export type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
 export type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
-
-export type SolidityProof = [
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint
-];
-
-export function packToSolidityProof(proof: BaseProof): SolidityProof {
-  return [
-    BigInt(proof.pi_a[0]),
-    BigInt(proof.pi_a[1]),
-    BigInt(proof.pi_b[0][1]),
-    BigInt(proof.pi_b[0][0]),
-    BigInt(proof.pi_b[1][1]),
-    BigInt(proof.pi_b[1][0]),
-    BigInt(proof.pi_c[0]),
-    BigInt(proof.pi_c[1]),
-  ];
-}
-
-export function unpackFromSolidityProof(proof: SolidityProof): BaseProof {
-  return {
-    pi_a: [proof[0], proof[1], 1n],
-    pi_b: [
-      [proof[3], proof[2]],
-      [proof[5], proof[4]],
-      [1n, 0n],
-    ],
-    pi_c: [proof[6], proof[7], 1n],
-    protocol: "groth16",
-    curve: "bn128",
-  };
-}
 
 export interface EncryptedNote {
   owner: StealthAddress;

@@ -1,4 +1,5 @@
-import { PreProofJoinSplit, PreProofOperation, ProvenJoinSplit, ProvenOperation, packToSolidityProof } from "../commonTypes";
+import { PreProofJoinSplit, PreProofOperation, ProvenJoinSplit, ProvenOperation } from "../commonTypes";
+import { packToSolidityProof } from "../proof/utils";
 import { JoinSplitProver, joinSplitPublicSignalsFromArray } from "../proof";
 
 export async function proveOperation(op: PreProofOperation, prover: JoinSplitProver): Promise<ProvenOperation> {

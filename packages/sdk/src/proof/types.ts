@@ -8,6 +8,17 @@ export interface BaseProof {
   curve?: any; // TODO: make this not optional
 }
 
+export type SolidityProof = [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+];
+
 export interface MerkleProofInput {
   path: bigint[];
   siblings: any[];
