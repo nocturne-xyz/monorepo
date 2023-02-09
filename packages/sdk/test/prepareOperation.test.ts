@@ -18,32 +18,32 @@ const shitcoin: Asset = {
 
 const encodedShitcoin = AssetTrait.encode(shitcoin);
 
-// const ponzi: Asset = {
-//   assetType: AssetType.ERC20,
-//   assetAddr: "0x456",
-//   id: 0n,
-// };
+const ponzi: Asset = {
+  assetType: AssetType.ERC20,
+  assetAddr: "0x456",
+  id: 0n,
+};
+const encodedPonzi = AssetTrait.encode(ponzi);
 
 const stablescam: Asset = {
   assetType: AssetType.ERC20,
   assetAddr: "0x789",
   id: 0n,
 };
-// const encodedStablescam = AssetTrait.encode(stablescam);
+const encodedStablescam = AssetTrait.encode(stablescam);
 
-// const monkey: Asset = {
-//   assetType: AssetType.ERC721,
-//   assetAddr: "0xabc",
-//   id: 1n,
-// };
-// const encodedMonkey = AssetTrait.encode(monkey);
+const monkey: Asset = {
+  assetType: AssetType.ERC721,
+  assetAddr: "0xabc",
+  id: 1n,
+};
 
-// const plutocracy: Asset = {
-//   assetType: AssetType.ERC1155,
-//   assetAddr: "0xdef",
-//   id: 1n,
-// };
-// const encodedPlutocracy = AssetTrait.encode(plutocracy);
+const plutocracy: Asset = {
+  assetType: AssetType.ERC1155,
+  assetAddr: "0xdef",
+  id: 1n,
+};
+const encodedPlutocracy = AssetTrait.encode(plutocracy);
 
 function getDummyHex(bump: number): string {
   const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));
@@ -132,18 +132,44 @@ describe("gatherNotes", () => {
 })
 
 describe("prepareOperation", async () => {
-  it("works for an operation request with 1 action, 1 payment, no params set", async () => {
+  it("works for an operation request with 1 action, 1 unrwap, 0 payments, no params set", async () => {
     const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
-    const receiverPriv = NocturnePrivKey.genPriv();
-    const receiver = receiverPriv.toCanonAddress();
-    const refundAddr = StealthAddressTrait.randomize(signer.address);
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
-      .refundAddr(refundAddr)
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      })
+      .build();
+      
+    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    expect(op).to.not.be.null;
+
+    expect(op.encodedRefundAssets.length).to.equal(1);
+    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+
+    expect(op.actions.length).to.equal(1);
+    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+
+    // expect to have 1 joinsplit
+    expect(op.joinSplits.length).to.equal(1);
+  });
+
+  it("works for an operation request with 1 action, 1 unwrap, 1 payment, no params set", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
+    const receiverPriv = NocturnePrivKey.genPriv();
+    const receiver = receiverPriv.toCanonAddress();
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action("0x1234", getDummyHex(0))
+      .unwrap(shitcoin, 3n)
+      .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         verificationGasLimit: 1_000_000n,
@@ -154,7 +180,6 @@ describe("prepareOperation", async () => {
 
     const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
     expect(op).to.not.be.null;
-    expect(op.refundAddr).to.eql(refundAddr);
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
@@ -164,6 +189,123 @@ describe("prepareOperation", async () => {
 
     // expect to have 1 joinsplit
     expect(op.joinSplits.length).to.equal(1);
+  });
+
+  it("works for an operation request with 1 action, 1 unwrap, 0 payments, all params set", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
+    const refundAddr = StealthAddressTrait.randomize(signer.address);
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action("0x1234", getDummyHex(0))
+      .unwrap(shitcoin, 3n)
+      .refundAsset(shitcoin)
+      .refundAddr(refundAddr)
+      .gas({
+        verificationGasLimit: 10n,
+        executionGasLimit: 20n,
+        gasPrice: 30n,
+      })
+      .maxNumRefunds(1n)
+      .build();
+
+    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    expect(op).to.not.be.null;
+   
+    expect(op.refundAddr).to.eql(refundAddr);
+    expect(op.verificationGasLimit).to.equal(10n);
+    expect(op.executionGasLimit).to.equal(20n);
+    expect(op.gasPrice).to.equal(30n);
+
+    expect(op.encodedRefundAssets.length).to.equal(1);
+    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+
+    expect(op.actions.length).to.equal(1);
+    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+
+    // expect to have 1 joinsplit
+    expect(op.joinSplits.length).to.equal(1);
+  });
+
+
+  it("works for an operation request with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, stablescam]);
+    const receivers = range(2)
+      .map((_) => NocturnePrivKey.genPriv())
+      .map((priv) => priv.toCanonAddress());
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .confidentialPayment(shitcoin, 1n, receivers[0])
+      .confidentialPayment(stablescam, 2n, receivers[1])
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      })
+      .build();
+
+    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    expect(op).to.not.be.null;
+
+    expect(op.encodedRefundAssets.length).to.equal(0);
+    expect(op.actions.length).to.equal(0);
+
+    // expect to have 2 joinsplits bc we have 2 payments for 2 different assets
+    expect(op.joinSplits.length).to.equal(2);
+  });
+
+
+  it("works for an operation request with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [1000n, 1000n, 1000n, 1n, 1000n],
+      [shitcoin, ponzi, stablescam, monkey, plutocracy]
+    );
+    const receivers = range(3)
+      .map((_) => NocturnePrivKey.genPriv())
+      .map((priv) => priv.toCanonAddress());
+    const refundAddr = StealthAddressTrait.randomize(signer.address);
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action("0x1234", getDummyHex(0))
+      .action("0x1234", getDummyHex(1))
+      .unwrap(shitcoin, 3n)
+      .unwrap(ponzi, 69n)
+      .unwrap(stablescam, 420n)
+      .unwrap(plutocracy, 100n)
+      .confidentialPayment(shitcoin, 1n, receivers[0])
+      .confidentialPayment(ponzi, 2n, receivers[1])
+      .confidentialPayment(monkey, 1n, receivers[2])
+      .refundAsset(shitcoin)
+      .refundAsset(ponzi)
+      .refundAsset(stablescam)
+      .refundAsset(plutocracy)
+      .refundAddr(refundAddr)
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      })
+      .build();
+
+    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    expect(op).to.not.be.null;
+
+    expect(op.refundAddr).to.eql(refundAddr);
+    expect(op.encodedRefundAssets.length).to.equal(4);
+    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+    expect(op.encodedRefundAssets[1]).to.eql(encodedPonzi);
+    expect(op.encodedRefundAssets[2]).to.eql(encodedStablescam);
+    expect(op.encodedRefundAssets[3]).to.eql(encodedPlutocracy);
+
+    expect(op.actions.length).to.equal(2);
+    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+    expect(op.actions[1]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(1)});
+
+    // expect to have 5 joinsplits bc we have 5 different assets
+    // and for each asset, there is at most 1 payment
+    expect(op.joinSplits.length).to.equal(5);
   })
 })
 
