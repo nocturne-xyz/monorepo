@@ -52,14 +52,12 @@ export async function prepareOperation(
   } = opRequest;
 
   // defaults
-  //
   // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-  //
   // `verificationGasLimit` and `executionGasLimit` are set via simulation if they are not provided.
   //  In that case, `maxNumRefunds` will be overwritten by the simulation result
-  refundAddr ??= StealthAddressTrait.randomize(signer.address);
-  maxNumRefunds ??= BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
-  gasPrice ??= 0n;
+  refundAddr = refundAddr ?? StealthAddressTrait.randomize(signer.address);
+  maxNumRefunds = maxNumRefunds ?? BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
+  gasPrice = gasPrice ?? 0n;
 
   // prepare joinSplits
   const joinSplitses = await Promise.all(
@@ -239,7 +237,7 @@ export async function makeJoinSplit(
 ): Promise<PreSignJoinSplit> {
   const sender = signer.privkey.toCanonAddress();
   // if receiver not given, assumme the sender is the receiver
-  receiver ??= sender;
+  receiver = receiver ?? sender;
 
   const encodedAsset = AssetTrait.encode(oldNoteA.asset);
 

@@ -52,7 +52,7 @@ export function range(start: number, stop?: number, step?: number): number[] {
     start = 0;
   }
 
-  step ??= 1;
+  step = step ?? 1;
 
   return Array(Math.ceil((stop - start) / step))
     .fill(start)
