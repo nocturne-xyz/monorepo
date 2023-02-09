@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "18.12.1"
+  },
   "scripts": {
     "test:unit": "echo \"Error: no test specified\" && exit 1",
-    "deploy_erc20": "node deployERC20.js"
+    "deploy_erc20": "node deployERC20.js",
+    "build:docker": "./build_docker.sh"
   },
   "author": "",
   "license": "ISC",

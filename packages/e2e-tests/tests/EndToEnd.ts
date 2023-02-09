@@ -41,6 +41,7 @@ import { setupNocturne } from "../src/deploy";
 import { ACTORS_TO_KEYS, ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
 import { startHardhatNetwork } from "../src/hardhat";
 import Dockerode from "dockerode";
+import * as compose from "docker-compose";
 import { ethers } from "ethers";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -48,6 +49,8 @@ import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+import { sleep } from "../src/utils";
 
 // const BUNDLER_SERVER_PORT = 3000;
 // const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
@@ -70,6 +73,8 @@ import { startSubtreeUpdater } from "../src/subtreeUpdater";
 // const ERC721_TOKEN_ID = 1n;
 // const ERC1155_TOKEN_ID = 2n;
 // const ERC1155_TOKEN_AMOUNT = 3n;
+
+const ROOT_DIR = findWorkspaceRoot()!;
 
 const LOCALHOST_URL = "http://localhost:8545";
 const LOCALHOST_WITHIN_DOCKER_URL = "http://host.docker.internal:8545";
@@ -123,6 +128,24 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       }
     );
     subtreeUpdaterContainer;
+
+    compose
+      .upAll({
+        cwd: `${ROOT_DIR}/packages/bundler`,
+        callback: (chunk: Buffer) => {
+          console.log("job in progres: ", chunk.toString());
+        },
+      })
+      .then(
+        () => {
+          console.log("job done");
+        },
+        (err) => {
+          console.log("something went wrong:", err.message);
+        }
+      );
+
+    await sleep(20_000);
 
     alice;
     bob;
