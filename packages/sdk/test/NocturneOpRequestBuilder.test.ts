@@ -252,7 +252,6 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 3n)
       .unwrap(ponzi, 69n)
       .unwrap(stablescam, 420n)
-      .unwrap(monkey, 1n)
       .unwrap(plutocracy, 100n)
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(ponzi, 2n, receivers[1])
