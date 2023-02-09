@@ -76,6 +76,14 @@ export class AssetTrait {
     return { encodedAssetAddr, encodedAssetId };
   }
 
+  static isSame(a: Asset, b: Asset): boolean {
+    return (
+      a.assetAddr === b.assetAddr &&
+      a.id === b.id &&
+      a.assetType === b.assetType
+    );
+  }
+
   static decode(encodedAsset: EncodedAsset): Asset {
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");

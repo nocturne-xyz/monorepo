@@ -1,17 +1,17 @@
 import {
-  JoinSplitRequest,
   PreProofOperation,
   PreSignOperation,
   ProvenOperation,
   SolidityProof,
 } from "../../commonTypes";
+import { JoinSplitRequest } from "../operationRequest";
 
 export function getJoinSplitRequestTotalValue(
   joinSplitRequest: JoinSplitRequest
 ): bigint {
   let totalVal = joinSplitRequest.unwrapValue;
-  if (joinSplitRequest.paymentIntent !== undefined) {
-    totalVal += joinSplitRequest.paymentIntent.value;
+  if (joinSplitRequest.payment !== undefined) {
+    totalVal += joinSplitRequest.payment.value;
   }
   return totalVal;
 }
@@ -43,4 +43,33 @@ export function fakeProvenOperation(
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
   };
+}
+
+export function range(start: number, stop?: number, step?: number): number[] {
+  if (!stop) {
+    stop = start;
+    start = 0;
+  }
+
+  step ??= 1;
+
+  return Array(Math.ceil((stop - start) / step))
+    .fill(start)
+    .map((x, i) => x + i * (step as number));
+}
+
+export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
+  const map = new Map();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+      map.set(key, collection);
+    }
+  });
+
+  return Array.from(map.values());
 }

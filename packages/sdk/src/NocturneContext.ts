@@ -1,6 +1,4 @@
 import {
-  JoinSplitRequest,
-  OperationRequest,
   packToSolidityProof,
   PreSignJoinSplit,
   PreProofJoinSplit,
@@ -11,6 +9,7 @@ import {
   BLOCK_GAS_LIMIT,
   Address,
 } from "./commonTypes";
+import { JoinSplitRequest, OperationRequest } from "./sdk/operationRequest";
 import { Asset, AssetWithBalance, EncodedAsset, AssetTrait } from "./sdk/asset";
 import { Note, IncludedNote, NoteTrait } from "./sdk/note";
 import { NocturneSigner, NocturneSignature } from "./sdk/signer";
@@ -181,11 +180,11 @@ export class NocturneContext {
     let notesToUse = await this.gatherMinimumNotes(joinSplitRequest);
 
     const unwrapVal = joinSplitRequest.unwrapValue;
-    const paymentVal = joinSplitRequest.paymentIntent
-      ? joinSplitRequest.paymentIntent.value
+    const paymentVal = joinSplitRequest.payment
+      ? joinSplitRequest.payment.value
       : 0n;
-    const receiver = joinSplitRequest.paymentIntent
-      ? joinSplitRequest.paymentIntent.receiver
+    const receiver = joinSplitRequest.payment
+      ? joinSplitRequest.payment.receiver
       : undefined;
 
     // Total value of notes in notesToUse
@@ -567,7 +566,7 @@ export class NocturneContext {
         {
           asset,
           unwrapValue: 0n,
-          paymentIntent: {
+          payment: {
             receiver,
             value,
           },

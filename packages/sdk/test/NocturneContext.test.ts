@@ -3,7 +3,7 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturneContext } from "../src/NocturneContext";
-import { JoinSplitRequest } from "../src/commonTypes";
+import { JoinSplitRequest, OperationRequestBuilder } from "../src/sdk";
 import { Asset, AssetType } from "../src/sdk/asset";
 import { IncludedNote } from "../src/sdk/note";
 import { NocturneSigner } from "../src/sdk/signer";
@@ -192,25 +192,31 @@ describe("NocturneContext", () => {
 
   it("Generates PreProofOperation", async () => {
     // Request 40 tokens, should generate two joinsplits
-    const assetRequest: JoinSplitRequest = {
-      asset,
-      unwrapValue: 40n,
+
+    const refundAsset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x1245",
+      id: 0n,
     };
-    const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      joinSplitRequests: [assetRequest],
-      refundAssets: [
-        { assetType: AssetType.ERC20, assetAddr: "0x1245", id: 0n },
-      ],
-      actions: [
-        {
-          contractAddress: "0x1111",
-          encodedFunction:
-            "0x6d6168616d000000000000000000000000000000000000000000000000000000",
-        },
-      ],
-      executionGasLimit: 1_000_000n,
-      maxNumRefunds: 1n,
-    });
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .unwrap(asset, 40n)
+      .refundAsset(refundAsset)
+      .action(
+        "0x1111",
+        "0x6d6168616d000000000000000000000000000000000000000000000000000000"
+      )
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      }) // set gas and max num refunds to prevent simulation
+      .maxNumRefunds(1n)
+      .build();
+
+    const preProofOp = await nocturneContext.tryGetPreProofOperation(opRequest);
+
     expect(preProofOp.joinSplits.length).to.equal(1);
   });
 
@@ -220,7 +226,7 @@ describe("NocturneContext", () => {
     const preSignJoinSplits = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 5n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 6n,
       },
@@ -230,7 +236,7 @@ describe("NocturneContext", () => {
     const preSignJoinSplits2 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 10n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 1n,
       },
@@ -240,7 +246,7 @@ describe("NocturneContext", () => {
     const preSignJoinSplits3 = await nocturneContext.genPreSignJoinSplits({
       asset,
       unwrapValue: 30n,
-      paymentIntent: {
+      payment: {
         receiver: addr,
         value: 30n,
       },
@@ -264,25 +270,29 @@ describe("NocturneContext", () => {
 
   it("Generates PreProofOperation with a operation request", async () => {
     // Request to unwraps 15 tokens
-    const assetRequest: JoinSplitRequest = {
-      asset,
-      unwrapValue: 15n,
+    const refundAsset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: "0x1245",
+      id: 0n,
     };
-    const preProofOp = await nocturneContext.tryGetPreProofOperation({
-      joinSplitRequests: [assetRequest],
-      refundAssets: [
-        { assetType: AssetType.ERC20, assetAddr: "0x1245", id: 0n },
-      ],
-      actions: [
-        {
-          contractAddress: "0x1111",
-          encodedFunction:
-            "0x6d6168616d000000000000000000000000000000000000000000000000000000",
-        },
-      ],
-      executionGasLimit: 1_000_000n,
-      maxNumRefunds: 1n,
-    });
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .unwrap(asset, 15n)
+      .refundAsset(refundAsset)
+      .action(
+        "0x1111",
+        "0x6d6168616d000000000000000000000000000000000000000000000000000000"
+      )
+      .gas({
+        verificationGasLimit: 1_000_000n,
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      }) // set gas and maxNumRefunds to prevent simulation
+      .maxNumRefunds(1n)
+      .build();
+
+    const preProofOp = await nocturneContext.tryGetPreProofOperation(opRequest);
     expect(preProofOp.joinSplits.length).to.equal(1);
   });
 });
