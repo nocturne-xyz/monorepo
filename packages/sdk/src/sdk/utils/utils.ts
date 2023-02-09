@@ -94,3 +94,7 @@ export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
     return Number(a.value - b.value);
   });
 }
+
+export function zip<T, U>(a: T[], b: U[]): [T, U][] {
+  return a.map((x, i) => [x, b[i]]);
+}

@@ -67,7 +67,7 @@ export async function prepareOperation(
 	return op;
 }
 
-async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, notesDB: NotesDB, merkle: MerkleProver, signer: NocturneSigner): Promise<PreSignJoinSplit[]> {
+export async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, notesDB: NotesDB, merkle: MerkleProver, signer: NocturneSigner): Promise<PreSignJoinSplit[]> {
   const notes = await gatherNotes(getJoinSplitRequestTotalValue(joinSplitRequest), joinSplitRequest.asset, notesDB);
   const totalNotesValue = notes.reduce((acc, note) => acc + note.value, 0n);
   const unwrapAmount = joinSplitRequest.unwrapValue;
@@ -173,7 +173,7 @@ export async function gatherNotes(
   return notesToUse;
 }
 
-async function makeJoinSplit(
+export async function makeJoinSplit(
   signer: NocturneSigner,
   merkle: MerkleProver,
   oldNoteA: IncludedNote,
