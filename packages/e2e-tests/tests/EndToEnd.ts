@@ -51,6 +51,8 @@ import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import { sleep } from "../src/utils";
+import * as envfile from "envfile";
+import * as fs from "fs";
 
 // const BUNDLER_SERVER_PORT = 3000;
 // const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
@@ -78,6 +80,12 @@ const ROOT_DIR = findWorkspaceRoot()!;
 
 const LOCALHOST_URL = "http://localhost:8545";
 const LOCALHOST_WITHIN_DOCKER_URL = "http://host.docker.internal:8545";
+
+const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/e2e-tests/.env.test`;
+const BUNDLER_COMPOSE_OPTS = {
+  cwd: `${ROOT_DIR}/packages/bundler`,
+  composeOptions: ["--env-file", `${BUNDLER_ENV_FILE_PATH}`],
+};
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let docker: Dockerode;
@@ -129,21 +137,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     );
     subtreeUpdaterContainer;
 
-    compose
-      .upAll({
-        cwd: `${ROOT_DIR}/packages/bundler`,
-        callback: (chunk: Buffer) => {
-          console.log("job in progres: ", chunk.toString());
-        },
-      })
-      .then(
-        () => {
-          console.log("job done");
-        },
-        (err) => {
-          console.log("something went wrong:", err.message);
-        }
-      );
+    const envFile = envfile.stringify({
+      REDIS_URL: "redis://redis:6379",
+      REDIS_PASSWORD: "baka",
+      WALLET_ADDRESS: `${wallet.address}`,
+      MAX_LATENCY: 5,
+      RPC_URL: `${LOCALHOST_WITHIN_DOCKER_URL}`,
+      TX_SIGNER_KEY: `${ACTORS_TO_KEYS.bundler}`,
+    });
+    fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
+    await compose.upAll(BUNDLER_COMPOSE_OPTS);
 
     await sleep(20_000);
 
@@ -164,6 +167,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     await subtreeUpdaterContainer.stop();
     await subtreeUpdaterContainer.remove();
+
+    await compose.down(BUNDLER_COMPOSE_OPTS);
+    await compose.kill(BUNDLER_COMPOSE_OPTS);
   });
 
   it("Runs", async () => {});
