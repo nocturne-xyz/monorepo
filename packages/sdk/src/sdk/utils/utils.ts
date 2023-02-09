@@ -53,7 +53,9 @@ export function range(start: number, stop?: number, step?: number): number[] {
 
   step ??= 1;
 
-  return Array(Math.ceil((stop - start) / step)).fill(start).map((x, y) => x + y * (step as number));
+  return Array(Math.ceil((stop - start) / step))
+    .fill(start)
+    .map((x, y) => x + y * (step as number));
 }
 
 export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {

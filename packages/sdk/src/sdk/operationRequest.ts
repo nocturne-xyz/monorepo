@@ -138,9 +138,7 @@ export class OperationRequestBuilder {
   // this is optional and not recommended.
   // usually you want to just let the wallet estimate this instead.
   // returns `this` so it's chainable
-  gas(
-    gasParams: OperationGasParams
-  ): OperationRequestBuilder {
+  gas(gasParams: OperationGasParams): OperationRequestBuilder {
     const { verificationGasLimit, executionGasLimit, gasPrice } = gasParams;
     this.op.verificationGasLimit = verificationGasLimit;
     this.op.executionGasLimit = executionGasLimit;

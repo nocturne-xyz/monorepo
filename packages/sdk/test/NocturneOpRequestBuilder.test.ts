@@ -141,7 +141,7 @@ describe("OperationRequestBuilder", () => {
       .gas({
         verificationGasLimit: 10n,
         executionGasLimit: 20n,
-        gasPrice: 30n
+        gasPrice: 30n,
       })
       .maxNumRefunds(1n)
       .build();
