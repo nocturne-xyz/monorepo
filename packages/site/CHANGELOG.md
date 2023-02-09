@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update callsites for updated frontend SDK
 - use builder in index.ts
 - update imports with SDK renames (see SDK changelog)
 - Fix bug where bundler endpoint was not being passed in playground ABIForm

@@ -1,19 +1,18 @@
 import {
   OperationRequest,
   ProvenOperation,
-  ProvenJoinSplit,
   PreProofOperation,
   StealthAddress,
   AssetWithBalance,
   AssetTrait,
   AssetType,
   Address,
-  proveJoinSplit,
   JoinSplitProofWithPublicSignals,
   unpackFromSolidityProof,
   joinSplitPublicSignalsToArray,
   VerifyingKey,
   computeOperationDigest,
+  proveOperation
 } from "@nocturne-xyz/sdk";
 import {
   DEFAULT_SNAP_ORIGIN,
@@ -134,41 +133,19 @@ export class NocturneFrontendSDK {
    *
    * @param operationRequest Operation request
    */
-  async generateProvenOperation(
+  async signAndProveOperation(
     operationRequest: OperationRequest
   ): Promise<ProvenOperation> {
-    const preProofOperation = await this.getJoinSplitInputsFromSnap(
+    const op = await this.requestSignOperation(
       operationRequest
     );
 
-    console.log("PreProofOperation", preProofOperation);
+    console.log("PreProofOperation", op);
+    return await this.proveOperation(op);
+  }
 
-    const provenJoinSplitPromises: Promise<ProvenJoinSplit>[] =
-      preProofOperation.joinSplits.map((inputs) =>
-        proveJoinSplit(this.localProver, inputs)
-      );
-
-    const {
-      encodedRefundAssets,
-      actions,
-      verificationGasLimit,
-      executionGasLimit,
-      gasPrice,
-      maxNumRefunds,
-      refundAddr,
-    } = preProofOperation;
-
-    const joinSplits = await Promise.all(provenJoinSplitPromises);
-    return {
-      joinSplits,
-      refundAddr,
-      encodedRefundAssets,
-      actions,
-      verificationGasLimit,
-      executionGasLimit,
-      gasPrice,
-      maxNumRefunds,
-    };
+  async proveOperation(op: PreProofOperation): Promise<ProvenOperation> {
+    return await proveOperation(op, this.localProver);
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
@@ -281,7 +258,7 @@ export class NocturneFrontendSDK {
    *
    * @param operationRequest Operation request
    */
-  protected async getJoinSplitInputsFromSnap(
+  protected async requestSignOperation(
     operationRequest: OperationRequest
   ): Promise<PreProofOperation> {
     const json = (await window.ethereum.request({

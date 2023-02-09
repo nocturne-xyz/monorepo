@@ -3628,7 +3628,6 @@ __metadata:
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
     "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/local-prover": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -3646,7 +3645,6 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
     ffjavascript: 0.2.57
-    find-yarn-workspace-root: ^2.0.0
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     prettier: ^2.8.0

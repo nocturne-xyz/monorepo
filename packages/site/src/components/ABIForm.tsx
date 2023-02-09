@@ -86,7 +86,7 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
 
     console.log("Operation request:", operationRequest);
     try {
-      const provenOperation = await sdk.generateProvenOperation(
+      const provenOperation = await sdk.signAndProveOperation(
         operationRequest
       );
       console.log("Proven operation:", provenOperation);
