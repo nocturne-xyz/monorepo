@@ -4,6 +4,7 @@ import {
   ProvenOperation,
   SolidityProof,
 } from "../../commonTypes";
+import { Note } from "../note";
 import { JoinSplitRequest } from "../operationRequest";
 
 export function getJoinSplitRequestTotalValue(
@@ -72,4 +73,24 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
   });
 
   return Array.from(map.values());
+}
+
+export function* iterChunks<T>(arr: T[], chunkSize: number): IterableIterator<T[]> {
+  let chunk = [];
+  let i = 0;
+  while (i < arr.length) {
+    chunk = arr.slice(i, i + chunkSize);
+    yield chunk;
+    arr = arr.slice(i + chunkSize);
+  }
+}
+
+export function min(a: bigint, b: bigint): bigint {
+  return a < b ? a : b;
+}
+
+export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
+  return notes.sort((a, b) => {
+    return Number(a.value - b.value);
+  });
 }

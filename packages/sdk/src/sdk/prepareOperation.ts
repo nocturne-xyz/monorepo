@@ -1,9 +1,9 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { Asset, AssetTrait, IncludedNote, JoinSplitRequest, MerkleProver, NocturneSigner, Note, NoteTrait, NotesDB, OperationRequest, getJoinSplitRequestTotalValue, simulateOperation } from "./sdk";
-import { BLOCK_GAS_LIMIT, PreSignJoinSplit, PreSignOperation } from "./commonTypes";
-import { CanonAddress, StealthAddressTrait } from "./crypto";
-import { encryptNote, randomBigInt } from "./crypto/utils";
-import { MerkleProofInput } from "./proof";
+import { Asset, AssetTrait, IncludedNote, JoinSplitRequest, MerkleProver, NocturneSigner, Note, NoteTrait, NotesDB, OperationRequest, getJoinSplitRequestTotalValue, iterChunks, min, simulateOperation, sortNotesByValue } from ".";
+import { BLOCK_GAS_LIMIT, PreSignJoinSplit, PreSignOperation } from "../commonTypes";
+import { CanonAddress, StealthAddressTrait } from "../crypto";
+import { encryptNote, randomBigInt } from "../crypto/utils";
+import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
@@ -117,7 +117,7 @@ async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, notesDB: No
   return res;
 }
 
-async function gatherNotes(
+export async function gatherNotes(
   requestedAmount: bigint,
   asset: Asset,
   notesDB: NotesDB
@@ -133,45 +133,39 @@ async function gatherNotes(
   }
 
   // Goal: want to utilize small notes so they don't pile up.
-  //       But we also don't want to use more than necessary
-  //       So we take the following approach:
+  //       But we also don't want to use too many notes because that will increase the gas cost.
+  //       So we take the following approach that strikes a good balance
   // 1. sort notes from small to large
   // 2. compute the sums of each sequence of notes starting from the smallest.
   //    Stop when the sum is >= to the requested amount.
   // 3. until we've gathered notes totalling at least the requested amount, repeat the following:
   //    a. find the smallest subsequence sum that is >= to the remaining amount to gather
   //    b. add the largest note of that subsequence to the set of notes to use.
-  //
-  // this will result in a set of notes that is as small as possible,
-  // but also overshoot the requested amount as much as possible.
 
   // 1. Sort notes from small to large
-  const sortedNotes = [...notes].sort((a, b) => {
-    return Number(a.value - b.value);
-  });
-
+  const sortedNotes = sortNotesByValue(notes);
 
   // 2. compute the subsequence sums
   const subsequenceSums: bigint[] = [];
-  let curr = sortedNotes[0].value;
-  let i = 0;
-  // note: don't need length check because we know the total value is >= requestedAmount
-  while (curr < requestedAmount) {
+  let curr = 0n;
+  for (const note of sortedNotes) {
+    curr += note.value;
     subsequenceSums.push(curr);
-    curr += sortedNotes[i++].value;
   }
 
   // 3. Construct the set of notes to use.
   const notesToUse: IncludedNote[] = [];
   let remainingAmount = requestedAmount;
-  let subSeqIndex = subsequenceSums.length;
+  let subseqIndex = subsequenceSums.length - 1;
   while (remainingAmount > 0n) {
 
     // find the index of smallest subsequence sum >= remaining amount to gather
     // the note at that index is the next note to add
-    while (subSeqIndex > 0 && subsequenceSums[--subSeqIndex] > remainingAmount) {}
+    while (subseqIndex > 0 && subsequenceSums[subseqIndex - 1] >= remainingAmount) {
+      subseqIndex--;
+    }
 
-    const note = sortedNotes[subSeqIndex];
+    const note = sortedNotes[subseqIndex];
     notesToUse.push(note);
     remainingAmount -= note.value;
   }
@@ -295,18 +289,4 @@ async function estimateGasForOperation(
     verificationGasLimit,
     maxNumRefunds,
   };
-}
-
-function* iterChunks<T>(arr: T[], chunkSize: number): IterableIterator<T[]> {
-  let chunk = [];
-  let i = 0;
-  while (i < arr.length) {
-    chunk = arr.slice(i, i + chunkSize);
-    yield chunk;
-    arr = arr.slice(i + chunkSize);
-  }
-}
-
-function min(a: bigint, b: bigint): bigint {
-  return a < b ? a : b;
 }

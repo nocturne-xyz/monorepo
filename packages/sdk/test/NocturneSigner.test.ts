@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { NocturneSigner } from "../src/sdk/signer";
 import { NocturnePrivKey } from "../src/crypto/privkey";
 import { StealthAddressTrait } from "../src/crypto/address";
-import { genEncryptedNote } from "../src/crypto/utils";
+import { encryptNote } from "../src/crypto/utils";
 import { AssetTrait, AssetType } from "../src/sdk/asset";
 
 describe("NocturneSigner", () => {
@@ -61,7 +61,7 @@ describe("NocturneSigner", () => {
       value: 55n,
       asset,
     };
-    const encryptedNote = genEncryptedNote(addr, note);
+    const encryptedNote = encryptNote(addr, note);
     const note2 = signer.getNoteFromEncryptedNote(encryptedNote, 2, asset);
     expect(note.nonce).to.equal(note2.nonce);
     expect(note.value).to.equal(note2.value);
