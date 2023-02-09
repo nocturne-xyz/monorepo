@@ -39,7 +39,7 @@ import { setupNocturne } from "../src/deploy";
 // import http from "http";
 // import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { ACTORS_TO_KEYS, ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
-import { startHardhatNetwork } from "../src/network";
+import { startHardhatNetwork } from "../src/hardhat";
 import Dockerode from "dockerode";
 import { ethers } from "ethers";
 import { Vault, Wallet } from "@nocturne-xyz/contracts";

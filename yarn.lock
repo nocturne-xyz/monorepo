@@ -3556,6 +3556,7 @@ __metadata:
     "@types/glob": ^8.0.0
     bigint-json-serialization: ^1.0.1
     circomlibjs: 0.0.8
+    docker-compose: ^0.23.19
     dockerode: ^3.3.4
     dotenv: ^16.0.3
     ethers: ^5.7.2
@@ -10730,6 +10731,15 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     path-type: ^4.0.0
   checksum: fa05e18324510d7283f55862f3161c6759a3f2f8dbce491a2fc14c8324c498286c54282c1f0e933cb930da8419b30679389499b919122952a4f8592362ef4615
+  languageName: node
+  linkType: hard
+
+"docker-compose@npm:^0.23.19":
+  version: 0.23.19
+  resolution: "docker-compose@npm:0.23.19"
+  dependencies:
+    yaml: ^1.10.2
+  checksum: 1704825954ec8645e4b099cc2641531955eef5a8a9729c885fab7067ae4d7935c663252e51b49878397e51cd5a3efcf2f13c8460e252aa39d14a0722c0bacfe5
   languageName: node
   linkType: hard
 
