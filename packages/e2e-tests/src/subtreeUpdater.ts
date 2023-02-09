@@ -8,13 +8,13 @@ const SUBTREE_UPDATER_IMAGE = "docker.io/library/mock-subtree-updater";
 const SUBTREE_UPDATER_NAME = "mock-subtree-updater";
 
 interface SubtreeUpdaterConfig {
+  walletAddress: string;
   rpcUrl: string;
   txSignerKey: string;
 }
 
 export async function startSubtreeUpdater(
   docker: Dockerode,
-  walletAddress: string,
   config: SubtreeUpdaterConfig
 ): Promise<Dockerode.Container> {
   const container = await docker.createContainer({
@@ -25,7 +25,7 @@ export async function startSubtreeUpdater(
       `--use-mock-prover`,
       `--fill-batches`,
       `--wallet-address`,
-      `${walletAddress}`,
+      `${config.walletAddress}`,
       `--zkey-path`,
       `${ROOT_DIR}/circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`,
       `--vkey-path`,
@@ -38,6 +38,6 @@ export async function startSubtreeUpdater(
   });
   await container.start();
   console.log("Started subtree updater");
-  await sleep(8_000);
+  await sleep(3_000);
   return container;
 }

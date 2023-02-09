@@ -31,6 +31,6 @@ export async function startHardhatNetwork(
     },
   });
   await container.start();
-  await sleep(8_000);
+  await sleep(3_000);
   return container;
 }

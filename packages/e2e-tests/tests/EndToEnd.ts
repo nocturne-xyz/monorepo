@@ -49,10 +49,8 @@ import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
-import findWorkspaceRoot from "find-yarn-workspace-root";
 import { sleep } from "../src/utils";
-import * as envfile from "envfile";
-import * as fs from "fs";
+import { BUNDLER_COMPOSE_OPTS, startBundler } from "../src/bundler";
 
 // const BUNDLER_SERVER_PORT = 3000;
 // const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
@@ -76,16 +74,11 @@ import * as fs from "fs";
 // const ERC1155_TOKEN_ID = 2n;
 // const ERC1155_TOKEN_AMOUNT = 3n;
 
-const ROOT_DIR = findWorkspaceRoot()!;
-
 const LOCALHOST_URL = "http://localhost:8545";
 const LOCALHOST_WITHIN_DOCKER_URL = "http://host.docker.internal:8545";
 
-const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/e2e-tests/.env.test`;
-const BUNDLER_COMPOSE_OPTS = {
-  cwd: `${ROOT_DIR}/packages/bundler`,
-  composeOptions: ["--env-file", `${BUNDLER_ENV_FILE_PATH}`],
-};
+const REDIS_URL = "redis://redis:6379";
+const REDIS_PASSWORD = "baka";
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let docker: Dockerode;
@@ -127,26 +120,21 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Wallet:", wallet.address);
     console.log("Vault:", vault.address);
 
-    subtreeUpdaterContainer = await startSubtreeUpdater(
-      docker,
-      wallet.address,
-      {
-        rpcUrl: LOCALHOST_WITHIN_DOCKER_URL,
-        txSignerKey: ACTORS_TO_KEYS.subtreeUpdater,
-      }
-    );
+    subtreeUpdaterContainer = await startSubtreeUpdater(docker, {
+      walletAddress: wallet.address,
+      rpcUrl: LOCALHOST_WITHIN_DOCKER_URL,
+      txSignerKey: ACTORS_TO_KEYS.subtreeUpdater,
+    });
     subtreeUpdaterContainer;
 
-    const envFile = envfile.stringify({
-      REDIS_URL: "redis://redis:6379",
-      REDIS_PASSWORD: "baka",
-      WALLET_ADDRESS: `${wallet.address}`,
-      MAX_LATENCY: 5,
-      RPC_URL: `${LOCALHOST_WITHIN_DOCKER_URL}`,
-      TX_SIGNER_KEY: `${ACTORS_TO_KEYS.bundler}`,
+    await startBundler({
+      redisUrl: REDIS_URL,
+      redisPassword: REDIS_PASSWORD,
+      walletAddress: wallet.address,
+      maxLatency: 5,
+      rpcUrl: LOCALHOST_WITHIN_DOCKER_URL,
+      txSignerKey: ACTORS_TO_KEYS.bundler,
     });
-    fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
-    await compose.upAll(BUNDLER_COMPOSE_OPTS);
 
     await sleep(20_000);
 
