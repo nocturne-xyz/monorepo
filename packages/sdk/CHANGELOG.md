@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- replace `NocturneContext.test.ts` with unit tests for each of the newly-split-out parts
+- disembowel `NocturneContext`, reducing it to a convencience wrapper for all private state
+- add new module / function `proveOperation` that separates the proving logic form `NocturneContext`
+- add method `signOperation` to `NocturneSigner`
+- add new module / function `prepareOperation` that separates `tryGetPreProofOperation` from `NocturneContext`
 - add `OperationRequestBuilder`
 - move `Asset` and related types / functions to new module `asset`
 - Rename:

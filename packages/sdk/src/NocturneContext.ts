@@ -74,4 +74,3 @@ export class NocturneContext {
     return this.signer.signOperation(preSignOperation);
   }
 }
-
