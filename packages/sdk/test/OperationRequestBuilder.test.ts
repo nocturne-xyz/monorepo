@@ -9,41 +9,7 @@ import {
   range,
 } from "../src/sdk";
 import { NocturnePrivKey } from "../src/crypto";
-
-const shitcoin: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x123",
-  id: 0n,
-};
-
-const ponzi: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x456",
-  id: 0n,
-};
-
-const stablescam: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x789",
-  id: 0n,
-};
-
-const monkey: Asset = {
-  assetType: AssetType.ERC721,
-  assetAddr: "0xabc",
-  id: 1n,
-};
-
-const plutocracy: Asset = {
-  assetType: AssetType.ERC1155,
-  assetAddr: "0xdef",
-  id: 1n,
-};
-
-function getDummyHex(bump: number): string {
-  const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));
-  return hex;
-}
+import { shitcoin, ponzi, stablescam, monkey, plutocracy, getDummyHex } from "./utils";
 
 describe("OperationRequestBuilder", () => {
   it("builds OperaionRequest with 1 action, 1 unwrap, 0 payments, no params set", () => {
