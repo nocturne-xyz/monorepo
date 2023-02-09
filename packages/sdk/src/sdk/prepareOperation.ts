@@ -31,7 +31,8 @@ export async function prepareOperation(
   refundAddr ??= StealthAddressTrait.randomize(signer.address);
   maxNumRefunds ??= BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
   gasPrice ??= 0n;
-  
+ 
+  // prepare joinSplits
   const joinSplitses = await Promise.all(
 		joinSplitRequests.map(
       (joinSplitRequest) => prepareJoinSplits(joinSplitRequest, notesDB, merkle, signer)
@@ -39,8 +40,10 @@ export async function prepareOperation(
   );
   const joinSplits = joinSplitses.flat();
 
+  // construct op.
+  // apply defaults for gas limits so that they're set in the case
+  // we need to simulate
 	const encodedRefundAssets = refundAssets.map(AssetTrait.encode)
-
 	const op: PreSignOperation = {
 		actions,
 		joinSplits,
