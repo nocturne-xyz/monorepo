@@ -49,10 +49,7 @@ export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
 /**
  * Encrypt a note sent to a given receiver's
  */
-export function encryptNote(
-  addr: CanonAddress,
-  note: Note
-): EncryptedNote {
+export function encryptNote(addr: CanonAddress, note: Note): EncryptedNote {
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
   const R = babyjub.mulPointEscalar(babyjub.Base8, r);

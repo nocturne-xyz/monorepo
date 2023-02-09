@@ -1,6 +1,26 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { Asset, AssetTrait, IncludedNote, JoinSplitRequest, MerkleProver, NocturneSigner, Note, NoteTrait, NotesDB, OperationRequest, getJoinSplitRequestTotalValue, iterChunks, min, simulateOperation, sortNotesByValue } from ".";
-import { BLOCK_GAS_LIMIT, PreSignJoinSplit, PreSignOperation } from "../commonTypes";
+import {
+  Asset,
+  AssetTrait,
+  IncludedNote,
+  JoinSplitRequest,
+  MerkleProver,
+  NocturneSigner,
+  Note,
+  NoteTrait,
+  NotesDB,
+  OperationRequest,
+  getJoinSplitRequestTotalValue,
+  iterChunks,
+  min,
+  simulateOperation,
+  sortNotesByValue,
+} from ".";
+import {
+  BLOCK_GAS_LIMIT,
+  PreSignJoinSplit,
+  PreSignOperation,
+} from "../commonTypes";
 import { CanonAddress, StealthAddressTrait } from "../crypto";
 import { encryptNote, randomBigInt } from "../crypto/utils";
 import { MerkleProofInput } from "../proof";
@@ -11,19 +31,28 @@ type GasEstimationResult = {
   verificationGasLimit: bigint;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
-}
+};
 
 export async function prepareOperation(
-	opRequest: OperationRequest,
-	notesDB: NotesDB,
-	merkle: MerkleProver,
-	signer: NocturneSigner,
-	walletContract: Wallet
+  opRequest: OperationRequest,
+  notesDB: NotesDB,
+  merkle: MerkleProver,
+  signer: NocturneSigner,
+  walletContract: Wallet
 ): Promise<PreSignOperation> {
-	let { joinSplitRequests, refundAssets, verificationGasLimit, executionGasLimit, gasPrice, actions, maxNumRefunds, refundAddr } = opRequest;
+  let {
+    joinSplitRequests,
+    refundAssets,
+    verificationGasLimit,
+    executionGasLimit,
+    gasPrice,
+    actions,
+    maxNumRefunds,
+    refundAddr,
+  } = opRequest;
 
   // defaults
-  // 
+  //
   // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
   //
   // `verificationGasLimit` and `executionGasLimit` are set via simulation if they are not provided.
@@ -31,11 +60,11 @@ export async function prepareOperation(
   refundAddr ??= StealthAddressTrait.randomize(signer.address);
   maxNumRefunds ??= BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
   gasPrice ??= 0n;
- 
+
   // prepare joinSplits
   const joinSplitses = await Promise.all(
-		joinSplitRequests.map(
-      (joinSplitRequest) => prepareJoinSplits(joinSplitRequest, notesDB, merkle, signer)
+    joinSplitRequests.map((joinSplitRequest) =>
+      prepareJoinSplits(joinSplitRequest, notesDB, merkle, signer)
     )
   );
   const joinSplits = joinSplitses.flat();
@@ -43,35 +72,46 @@ export async function prepareOperation(
   // construct op.
   // apply defaults for gas limits so that they're set in the case
   // we need to simulate
-	const encodedRefundAssets = refundAssets.map(AssetTrait.encode)
-	const op: PreSignOperation = {
-		actions,
-		joinSplits,
-		refundAddr,
-		encodedRefundAssets,
-		maxNumRefunds,
+  const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
+  const op: PreSignOperation = {
+    actions,
+    joinSplits,
+    refundAddr,
+    encodedRefundAssets,
+    maxNumRefunds,
 
-		gasPrice,
+    gasPrice,
     // if either of these are nullish, we will simulate and overwrite them (and `maxNumRefunds`)
-		verificationGasLimit: verificationGasLimit ?? DEFAULT_VERIFICATION_GAS_LIMIT,
-		executionGasLimit: executionGasLimit ?? BLOCK_GAS_LIMIT,
-  }
+    verificationGasLimit:
+      verificationGasLimit ?? DEFAULT_VERIFICATION_GAS_LIMIT,
+    executionGasLimit: executionGasLimit ?? BLOCK_GAS_LIMIT,
+  };
 
   // simulate if any of the gas limits are missing
-	const simulationRequired = !verificationGasLimit || !executionGasLimit;
+  const simulationRequired = !verificationGasLimit || !executionGasLimit;
   if (simulationRequired) {
-			// make simulateOperation also return gasPrice
-	    const { verificationGasLimit, executionGasLimit, maxNumRefunds } = await estimateGasForOperation(op, walletContract);
-			op.verificationGasLimit = verificationGasLimit;
-			op.executionGasLimit = executionGasLimit;
-      op.maxNumRefunds = maxNumRefunds;
+    // make simulateOperation also return gasPrice
+    const { verificationGasLimit, executionGasLimit, maxNumRefunds } =
+      await estimateGasForOperation(op, walletContract);
+    op.verificationGasLimit = verificationGasLimit;
+    op.executionGasLimit = executionGasLimit;
+    op.maxNumRefunds = maxNumRefunds;
   }
 
-	return op;
+  return op;
 }
 
-export async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, notesDB: NotesDB, merkle: MerkleProver, signer: NocturneSigner): Promise<PreSignJoinSplit[]> {
-  const notes = await gatherNotes(getJoinSplitRequestTotalValue(joinSplitRequest), joinSplitRequest.asset, notesDB);
+export async function prepareJoinSplits(
+  joinSplitRequest: JoinSplitRequest,
+  notesDB: NotesDB,
+  merkle: MerkleProver,
+  signer: NocturneSigner
+): Promise<PreSignJoinSplit[]> {
+  const notes = await gatherNotes(
+    getJoinSplitRequestTotalValue(joinSplitRequest),
+    joinSplitRequest.asset,
+    notesDB
+  );
   const totalNotesValue = notes.reduce((acc, note) => acc + note.value, 0n);
   const unwrapAmount = joinSplitRequest.unwrapValue;
   const paymentAmount = joinSplitRequest.payment?.value ?? 0n;
@@ -94,7 +134,7 @@ export async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, note
   // for each pair of notes, create a JoinSplit with the maximum possible value transfer
   const res = [];
   let remainingPayment = paymentAmount;
-  let remainingAmountLeftOver = amountLeftOver; 
+  let remainingAmountLeftOver = amountLeftOver;
   for (const [noteA, noteB] of iterChunks(notes, 2)) {
     const pairTotalValue = noteA.value + noteB.value;
     const amountLeftOver = min(remainingAmountLeftOver, pairTotalValue);
@@ -103,7 +143,7 @@ export async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, note
     const remainingPairValue = pairTotalValue - amountLeftOver;
     const paymentAmount = min(remainingPairValue, remainingPayment);
     remainingPayment -= paymentAmount;
-    
+
     const joinSplit = await makeJoinSplit(
       signer,
       merkle,
@@ -113,7 +153,7 @@ export async function prepareJoinSplits(joinSplitRequest: JoinSplitRequest, note
       paymentAmount,
       receiver
     );
-    
+
     res.push(joinSplit);
   }
 
@@ -125,7 +165,6 @@ export async function gatherNotes(
   asset: Asset,
   notesDB: NotesDB
 ): Promise<IncludedNote[]> {
-
   // check that the user has enough notes to cover the request
   const notes = await notesDB.getNotesFor(asset);
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
@@ -161,10 +200,12 @@ export async function gatherNotes(
   let remainingAmount = requestedAmount;
   let subseqIndex = subsequenceSums.length - 1;
   while (remainingAmount > 0n) {
-
     // find the index of smallest subsequence sum >= remaining amount to gather
     // the note at that index is the next note to add
-    while (subseqIndex > 0 && subsequenceSums[subseqIndex - 1] >= remainingAmount) {
+    while (
+      subseqIndex > 0 &&
+      subsequenceSums[subseqIndex - 1] >= remainingAmount
+    ) {
       subseqIndex--;
     }
 
@@ -193,8 +234,7 @@ export async function makeJoinSplit(
 
   // whatever isn't being sent to the receiver or ourselves is unwrapped and spent in cleartext (presumably as part of an action)
   const totalValue = oldNoteA.value + oldNoteB.value;
-  const publicSpend =
-    totalValue - amountLeftOver - paymentAmount;
+  const publicSpend = totalValue - amountLeftOver - paymentAmount;
 
   const nullifierA = signer.createNullifier(oldNoteA);
   const nullifierB = signer.createNullifier(oldNoteB);
@@ -204,8 +244,8 @@ export async function makeJoinSplit(
     owner: StealthAddressTrait.fromCanonAddress(sender),
     nonce: signer.generateNewNonce(nullifierA),
     asset: oldNoteA.asset,
-    value: amountLeftOver 
-  }
+    value: amountLeftOver,
+  };
   // the second note contains the confidential payment
   const newNoteB: Note = {
     owner: StealthAddressTrait.fromCanonAddress(receiver),
@@ -239,9 +279,9 @@ export async function makeJoinSplit(
     // ! merkle tree could be asynchronously updated between us getting the first and second merkle proofs
     // TODO: add a `merkle.getManyProofs` method that does it in one go
     if (membershipProof.root !== commitmentTreeRoot) {
-        throw Error(
-          "MerkleProver was updated between getting the first and second merkle proofs!"
-        );
+      throw Error(
+        "MerkleProver was updated between getting the first and second merkle proofs!"
+      );
     }
 
     merkleProofB = {
@@ -269,7 +309,7 @@ export async function makeJoinSplit(
     newNoteBCommitment,
     merkleProofA,
     merkleProofB,
-  }
+  };
 }
 
 async function estimateGasForOperation(

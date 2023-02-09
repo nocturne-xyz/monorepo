@@ -3,7 +3,20 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturnePrivKey, StealthAddressTrait } from "../src/crypto";
-import { Asset, AssetTrait, AssetType, InMemoryKVStore, MerkleProver, MockMerkleProver, NocturneSigner, NotesDB, OperationRequestBuilder, range, sortNotesByValue, zip } from "../src/sdk";
+import {
+  Asset,
+  AssetTrait,
+  AssetType,
+  InMemoryKVStore,
+  MerkleProver,
+  MockMerkleProver,
+  NocturneSigner,
+  NotesDB,
+  OperationRequestBuilder,
+  range,
+  sortNotesByValue,
+  zip,
+} from "../src/sdk";
 import { gatherNotes, prepareOperation } from "../src/sdk/prepareOperation";
 import { getDefaultProvider, utils } from "ethers";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
@@ -50,7 +63,10 @@ function getDummyHex(bump: number): string {
   return hex;
 }
 
-async function setup(noteAmounts: bigint[], assets: Asset[]): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
+async function setup(
+  noteAmounts: bigint[],
+  assets: Asset[]
+): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
   const priv = new NocturnePrivKey(1n);
   const signer = new NocturneSigner(priv);
 
@@ -78,17 +94,20 @@ async function setup(noteAmounts: bigint[], assets: Asset[]): Promise<[NotesDB, 
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
-    const [notesDB, , , ] = await setup([100n], [stablescam]);
+    const [notesDB, , ,] = await setup([100n], [stablescam]);
 
     // attempt request 1000 tokens, more than the user owns
     // expect to throw error
-    await expect(
-      gatherNotes(1000n, stablescam, notesDB)
-    ).to.be.rejectedWith("Attempted to spend more funds than owned");
+    await expect(gatherNotes(1000n, stablescam, notesDB)).to.be.rejectedWith(
+      "Attempted to spend more funds than owned"
+    );
   });
 
   it("gathers the minimum notes for amount < smallest note", async () => {
-    const [notesDB, , , ] = await setup([100n, 10n], range(2).map(_ => stablescam));
+    const [notesDB, , ,] = await setup(
+      [100n, 10n],
+      range(2).map((_) => stablescam)
+    );
 
     // expect to get one note - the 10 token note
     const notes = await gatherNotes(5n, stablescam, notesDB);
@@ -97,7 +116,10 @@ describe("gatherNotes", () => {
   });
 
   it("gathers the minimum amount of notes for amount requiring all notes", async () => {
-    const [notesDB, , , ] = await setup([30n, 20n, 10n], range(3).map(_ => stablescam));
+    const [notesDB, , ,] = await setup(
+      [30n, 20n, 10n],
+      range(3).map((_) => stablescam)
+    );
 
     // attempt to request 55 tokens
     // expect to get all three notes
@@ -111,7 +133,10 @@ describe("gatherNotes", () => {
   });
 
   it("gathers minimum amount of notes for a realistic-ish example", async () => {
-    const [notesdb, , , ] = await setup([1000n, 51n, 19n, 3n, 3n, 2n, 1n, 1n, 1n], range(9).map(_ => stablescam));
+    const [notesdb, , ,] = await setup(
+      [1000n, 51n, 19n, 3n, 3n, 2n, 1n, 1n, 1n],
+      range(9).map((_) => stablescam)
+    );
 
     // attempt to spend 23 tokens
     // expect to get 4 notes - 19, 2, 1, 1
@@ -128,12 +153,15 @@ describe("gatherNotes", () => {
 
     // check to ensure the 1 token notes are different
     expect(sortedNotes[0].nonce).to.not.equal(sortedNotes[1].nonce);
-  })
-})
+  });
+});
 
 describe("prepareOperation", async () => {
   it("works for an operation request with 1 action, 1 unrwap, 0 payments, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [100n, 10n],
+      [shitcoin, shitcoin]
+    );
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -146,22 +174,34 @@ describe("prepareOperation", async () => {
         gasPrice: 1n,
       })
       .build();
-      
-    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+
+    const op = await prepareOperation(
+      opRequest,
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract
+    );
     expect(op).to.not.be.null;
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
 
     expect(op.actions.length).to.equal(1);
-    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+    expect(op.actions[0]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(0),
+    });
 
     // expect to have 1 joinsplit
     expect(op.joinSplits.length).to.equal(1);
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 1 payment, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [100n, 10n],
+      [shitcoin, shitcoin]
+    );
     const receiverPriv = NocturnePrivKey.genPriv();
     const receiver = receiverPriv.toCanonAddress();
 
@@ -178,21 +218,33 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    const op = await prepareOperation(
+      opRequest,
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract
+    );
     expect(op).to.not.be.null;
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
 
     expect(op.actions.length).to.equal(1);
-    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+    expect(op.actions[0]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(0),
+    });
 
     // expect to have 1 joinsplit
     expect(op.joinSplits.length).to.equal(1);
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 0 payments, all params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, shitcoin]);
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [100n, 10n],
+      [shitcoin, shitcoin]
+    );
     const refundAddr = StealthAddressTrait.randomize(signer.address);
 
     const builder = new OperationRequestBuilder();
@@ -209,9 +261,15 @@ describe("prepareOperation", async () => {
       .maxNumRefunds(1n)
       .build();
 
-    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    const op = await prepareOperation(
+      opRequest,
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract
+    );
     expect(op).to.not.be.null;
-   
+
     expect(op.refundAddr).to.eql(refundAddr);
     expect(op.verificationGasLimit).to.equal(10n);
     expect(op.executionGasLimit).to.equal(20n);
@@ -221,15 +279,20 @@ describe("prepareOperation", async () => {
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
 
     expect(op.actions.length).to.equal(1);
-    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
+    expect(op.actions[0]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(0),
+    });
 
     // expect to have 1 joinsplit
     expect(op.joinSplits.length).to.equal(1);
   });
 
-
   it("works for an operation request with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup([100n, 10n], [shitcoin, stablescam]);
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [100n, 10n],
+      [shitcoin, stablescam]
+    );
     const receivers = range(2)
       .map((_) => NocturnePrivKey.genPriv())
       .map((priv) => priv.toCanonAddress());
@@ -245,7 +308,13 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    const op = await prepareOperation(
+      opRequest,
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract
+    );
     expect(op).to.not.be.null;
 
     expect(op.encodedRefundAssets.length).to.equal(0);
@@ -254,7 +323,6 @@ describe("prepareOperation", async () => {
     // expect to have 2 joinsplits bc we have 2 payments for 2 different assets
     expect(op.joinSplits.length).to.equal(2);
   });
-
 
   it("works for an operation request with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
     const [notesDB, merkleProver, signer, walletContract] = await setup(
@@ -289,7 +357,13 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await prepareOperation(opRequest, notesDB, merkleProver, signer, walletContract);
+    const op = await prepareOperation(
+      opRequest,
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract
+    );
     expect(op).to.not.be.null;
 
     expect(op.refundAddr).to.eql(refundAddr);
@@ -300,13 +374,19 @@ describe("prepareOperation", async () => {
     expect(op.encodedRefundAssets[3]).to.eql(encodedPlutocracy);
 
     expect(op.actions.length).to.equal(2);
-    expect(op.actions[0]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(0)});
-    expect(op.actions[1]).to.eql({ contractAddress: "0x1234", encodedFunction: getDummyHex(1)});
+    expect(op.actions[0]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(0),
+    });
+    expect(op.actions[1]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(1),
+    });
 
     // expect to have 5 joinsplits bc we have 5 different assets
     // and for each asset, there is at most 1 payment
     expect(op.joinSplits.length).to.equal(5);
-  })
-})
+  });
+});
 
 // TODO unit test for prepareJoinSplits that actually inspects the PreSignJoinSplits coming out

@@ -75,7 +75,10 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
   return Array.from(map.values());
 }
 
-export function* iterChunks<T>(arr: T[], chunkSize: number): IterableIterator<T[]> {
+export function* iterChunks<T>(
+  arr: T[],
+  chunkSize: number
+): IterableIterator<T[]> {
   let chunk = [];
   let i = 0;
   while (i < arr.length) {
