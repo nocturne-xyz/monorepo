@@ -9,8 +9,10 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { EncryptedNote } from "../commonTypes";
+import { EncryptedNote, PreProofJoinSplit, PreProofOperation, PreSignJoinSplit, PreSignOperation } from "../commonTypes";
 import { Asset } from "./asset";
+import { computeOperationDigest } from "../contract";
+import { JoinSplitInputs } from "../proof";
 
 export interface NocturneSignature {
   c: bigint;
@@ -117,4 +119,65 @@ export class NocturneSigner {
     const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
     return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
   }
+
+  signOperation(op: PreSignOperation): PreProofOperation {
+    const opDigest = computeOperationDigest(op);
+    const opSig = this.sign(opDigest);
+    const pk = this.privkey.spendPk();
+
+    const joinSplits: PreProofJoinSplit[] = op.joinSplits.map(joinSplit => makePreProofJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk));
+
+    const { actions, refundAddr, encodedRefundAssets, verificationGasLimit, executionGasLimit, gasPrice, maxNumRefunds } = op;
+
+    return {
+      joinSplits,
+      refundAddr,
+      encodedRefundAssets,
+      actions,
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
+    };
+  }
+}
+
+function makePreProofJoinSplit(
+    preSignJoinSplit: PreSignJoinSplit,
+    opDigest: bigint,
+    opSig: NocturneSignature,
+    vk: bigint,
+    spendPk: [bigint, bigint],
+): PreProofJoinSplit {
+    const {
+      merkleProofA,
+      merkleProofB,
+      oldNoteA,
+      oldNoteB,
+      newNoteA,
+      newNoteB,
+      ...baseJoinSplit
+    } = preSignJoinSplit;
+
+    const { c, z } = opSig;
+
+    const proofInputs: JoinSplitInputs = {
+      vk,
+      spendPk,
+      c,
+      z,
+      merkleProofA,
+      merkleProofB,
+      operationDigest: opDigest,
+      oldNoteA: NoteTrait.encode(oldNoteA),
+      oldNoteB: NoteTrait.encode(oldNoteB),
+      newNoteA: NoteTrait.encode(newNoteA),
+      newNoteB: NoteTrait.encode(newNoteB),
+    };
+
+    return {
+      opDigest,
+      proofInputs,
+      ...baseJoinSplit,
+    };
 }

@@ -437,8 +437,8 @@ export class NocturneContext {
     opSig: NocturneSignature
   ): Promise<PreProofJoinSplit> {
     const {
-      merkleProofA: merkleInputA,
-      merkleProofB: merkleInputB,
+      merkleProofA,
+      merkleProofB,
       oldNoteA,
       oldNoteB,
       newNoteA,
@@ -454,8 +454,8 @@ export class NocturneContext {
       z: opSig.z,
       oldNoteA: NoteTrait.encode(oldNoteA),
       oldNoteB: NoteTrait.encode(oldNoteB),
-      merkleProofA: merkleInputA,
-      merkleProofB: merkleInputB,
+      merkleProofA,
+      merkleProofB,
       newNoteA: NoteTrait.encode(newNoteA),
       newNoteB: NoteTrait.encode(newNoteB),
     };

@@ -4,93 +4,14 @@ import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { NocturnePrivKey, StealthAddressTrait } from "../src/crypto";
 import {
-  Asset,
-  AssetTrait,
-  AssetType,
-  InMemoryKVStore,
-  MerkleProver,
-  MockMerkleProver,
-  NocturneSigner,
-  NotesDB,
   OperationRequestBuilder,
   range,
   sortNotesByValue,
-  zip,
 } from "../src/sdk";
 import { gatherNotes, prepareOperation } from "../src/sdk/prepareOperation";
-import { getDefaultProvider, utils } from "ethers";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { stablescam, setup, shitcoin, encodedShitcoin, monkey, ponzi, plutocracy, encodedPonzi, encodedStablescam, encodedPlutocracy, getDummyHex } from "./utils";
 
 chai.use(chaiAsPromised);
-
-const shitcoin: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x123",
-  id: 0n,
-};
-
-const encodedShitcoin = AssetTrait.encode(shitcoin);
-
-const ponzi: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x456",
-  id: 0n,
-};
-const encodedPonzi = AssetTrait.encode(ponzi);
-
-const stablescam: Asset = {
-  assetType: AssetType.ERC20,
-  assetAddr: "0x789",
-  id: 0n,
-};
-const encodedStablescam = AssetTrait.encode(stablescam);
-
-const monkey: Asset = {
-  assetType: AssetType.ERC721,
-  assetAddr: "0xabc",
-  id: 1n,
-};
-
-const plutocracy: Asset = {
-  assetType: AssetType.ERC1155,
-  assetAddr: "0xdef",
-  id: 1n,
-};
-const encodedPlutocracy = AssetTrait.encode(plutocracy);
-
-function getDummyHex(bump: number): string {
-  const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));
-  return hex;
-}
-
-async function setup(
-  noteAmounts: bigint[],
-  assets: Asset[]
-): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
-  const priv = new NocturnePrivKey(1n);
-  const signer = new NocturneSigner(priv);
-
-  const kv = new InMemoryKVStore();
-  const notesDB = new NotesDB(kv);
-  const merkleProver = new MockMerkleProver();
-
-  const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
-    owner: signer.address,
-    nonce: BigInt(i),
-    asset: asset,
-    value: amount,
-    merkleIndex: i,
-  }));
-  await notesDB.storeNotes(notes);
-
-  const provider = getDefaultProvider();
-  const wallet = Wallet__factory.connect(
-    "0xcd3b766ccdd6ae721141f452c550ca635964ce71",
-    provider
-  );
-
-  return [notesDB, merkleProver, signer, wallet];
-}
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
@@ -183,6 +104,7 @@ describe("prepareOperation", async () => {
       walletContract
     );
     expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
@@ -226,6 +148,7 @@ describe("prepareOperation", async () => {
       walletContract
     );
     expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
@@ -269,6 +192,7 @@ describe("prepareOperation", async () => {
       walletContract
     );
     expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
 
     expect(op.refundAddr).to.eql(refundAddr);
     expect(op.verificationGasLimit).to.equal(10n);
@@ -316,6 +240,7 @@ describe("prepareOperation", async () => {
       walletContract
     );
     expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
 
     expect(op.encodedRefundAssets.length).to.equal(0);
     expect(op.actions.length).to.equal(0);
@@ -365,6 +290,7 @@ describe("prepareOperation", async () => {
       walletContract
     );
     expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
 
     expect(op.refundAddr).to.eql(refundAddr);
     expect(op.encodedRefundAssets.length).to.equal(4);
