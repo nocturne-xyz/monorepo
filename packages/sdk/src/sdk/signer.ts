@@ -64,7 +64,7 @@ export class NocturneSigner {
   }
 
   createNullifier(note: Note): bigint {
-    if (!this.testOwn(note.owner)) {
+    if (!this.isOwnAddress(note.owner)) {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
@@ -88,7 +88,7 @@ export class NocturneSigner {
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-    if (!this.testOwn(encryptedNote.owner)) {
+    if (!this.isOwnAddress(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
     let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
@@ -112,7 +112,7 @@ export class NocturneSigner {
     };
   }
 
-  testOwn(addr: StealthAddress): boolean {
+  isOwnAddress(addr: StealthAddress): boolean {
     const points = StealthAddressTrait.toPoints(addr);
     const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
     return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];

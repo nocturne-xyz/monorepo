@@ -35,7 +35,7 @@ export abstract class NotesManager {
   async fetchAndStoreNewNotesFromRefunds(): Promise<void> {
     const newNotes = await this.fetchNotesFromRefunds();
     const ownedNotes = newNotes.filter((refund) => {
-      return this.signer.testOwn(refund.owner);
+      return this.signer.isOwnAddress(refund.owner);
     });
     console.log("[Refunds] Owned notes:", ownedNotes);
     await this.storeNewNotesFromRefunds(ownedNotes);
@@ -85,7 +85,7 @@ export abstract class NotesManager {
     newNoteIndex: number,
     asset: Asset
   ): Promise<void> {
-    if (this.signer.testOwn(newEncryptedNote.owner)) {
+    if (this.signer.isOwnAddress(newEncryptedNote.owner)) {
       const newNote = this.signer.getNoteFromEncryptedNote(
         newEncryptedNote,
         newNoteIndex,
