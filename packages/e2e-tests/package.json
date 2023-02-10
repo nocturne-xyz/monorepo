@@ -11,8 +11,8 @@
   "scripts": {
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "build": "",
-    "prettier:check": "prettier --check ./test ./scripts ./utils",
-    "prettier:write": "prettier --write ./test ./scripts ./utils",
+    "prettier:check": "prettier --check ./tests ./src",
+    "prettier:write": "prettier --write ./tests ./src",
     "hh-node": "npx hardhat node",
     "test:e2e": "./prepare.sh && yarn test:e2e:no-prepare",
     "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 1000000 --exit",
