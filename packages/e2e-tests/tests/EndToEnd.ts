@@ -1,43 +1,6 @@
 import { expect } from "chai";
-// import { ethers, network, config } from "hardhat";
-// import { open } from "lmdb";
-// import {
-//   SimpleERC20Token__factory,
-//   SimpleERC721Token__factory,
-//   SimpleERC1155Token__factory,
-//   Vault,
-//   Wallet,
-// } from "@nocturne-xyz/contracts";
-// import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-// import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
-// import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
-
-// import {
-//   Action,
-//   NocturneContext,
-//   Asset,
-//   JoinSplitRequest,
-//   OperationRequest,
-//   NotesDB,
-//   query,
-//   computeOperationDigest,
-//   AssetType,
-// } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../src/deploy";
-// import { depositFunds, sleep, getSubtreeUpdateProver } from "../utils/test";
-// import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
-// import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
-// import RedisMemoryServer from "redis-memory-server";
-// import {
-//   BundlerBatcher,
-//   BundlerServer,
-//   BundlerSubmitter,
-// } from "@nocturne-xyz/bundler";
-// import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
-// import fetch from "node-fetch";
-// import http from "http";
-// import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { ACTORS_TO_KEYS, ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
 import { startHardhatNetwork } from "../src/hardhat";
 import Dockerode from "dockerode";
@@ -69,16 +32,6 @@ import { sleep } from "../src/utils";
 import { BUNDLER_COMPOSE_OPTS, startBundler } from "../src/bundler";
 import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
-
-// const BUNDLER_SERVER_PORT = 3000;
-// const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
-// const BUNDLER_BATCH_SIZE = 2;
-
-// const accounts = config.networks.hardhat.accounts;
-// const BUNDLER_PRIVKEY = ethers.Wallet.fromMnemonic(
-//   accounts.mnemonic,
-//   accounts.path + `/${1}`
-// ).privateKey;
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
@@ -117,9 +70,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   beforeEach(async () => {
     docker = new Dockerode();
-
     hhContainer = await startHardhatNetwork(docker, {
-      blockTime: 1000,
+      blockTime: 3_000,
       keys: KEY_LIST(),
     });
 
@@ -161,17 +113,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       rpcUrl: HH_FROM_DOCKER_URL,
       txSignerKey: ACTORS_TO_KEYS.bundler,
     });
-
-    hhContainer;
-    aliceEoa;
-    bobEoa;
-    erc20Token;
-    erc721Token;
-    erc1155Token;
-    notesDBAlice;
-    nocturneContextAlice;
-    notesDBBob;
-    nocturneContextBob;
   });
 
   afterEach(async () => {
