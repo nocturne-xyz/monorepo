@@ -56,7 +56,9 @@ export async function prepareOperation(
   // `verificationGasLimit` and `executionGasLimit` are set via simulation if they are not provided.
   //  In that case, `maxNumRefunds` will be overwritten by the simulation result
   refundAddr = refundAddr ?? StealthAddressTrait.randomize(signer.address);
-  maxNumRefunds = maxNumRefunds ?? BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
+  maxNumRefunds =
+    maxNumRefunds ??
+    BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
   gasPrice = gasPrice ?? 0n;
 
   // prepare joinSplits
