@@ -17,6 +17,8 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdat
 const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
+const MOCK_SUBTREE_UPDATER_DELAY = 2100;
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -39,4 +41,17 @@ export function getSubtreeUpdateProver(): SubtreeUpdateProver {
   }
 
   return new MockSubtreeUpdateProver();
+}
+
+export function getSubtreeUpdaterDelay(): number {
+  if (
+    process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true" &&
+    process.env.USE_RAPIDSNARK === "true"
+  ) {
+    return MOCK_SUBTREE_UPDATER_DELAY + 8000;
+  } else if (process.env.ACTUALLY_PROVE_SUBTREE_UPDATE === "true") {
+    return MOCK_SUBTREE_UPDATER_DELAY + 60000;
+  }
+
+  return MOCK_SUBTREE_UPDATER_DELAY;
 }
