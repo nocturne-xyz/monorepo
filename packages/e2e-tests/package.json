@@ -14,8 +14,8 @@
     "prettier:check": "prettier --check ./test ./scripts ./utils",
     "prettier:write": "prettier --write ./test ./scripts ./utils",
     "hh-node": "npx hardhat node",
-    "test:e2e": "yarn setup-rapidsnark && npx hardhat test",
-    "test:refactor": "./prepare.sh && mocha --require ts-node/register tests/** --timeout 1000000 --exit",
+    "test:e2e": "./prepare.sh && yarn test:e2e:no-prepare",
+    "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 1000000 --exit",
     "test:hh-node": "npx hardhat test --network localhost",
     "hh-node-deposit": "npx hardhat run ./scripts/deployAndDeposit.ts --network localhost",
     "clean": "rm -rf .turbo cache artifacts db"
