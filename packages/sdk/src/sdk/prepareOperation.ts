@@ -41,14 +41,17 @@ export async function prepareOperation(
   walletContract: Wallet
 ): Promise<PreSignOperation> {
   let {
+    refundAddr,
+    maxNumRefunds,
+    gasPrice
+  } = opRequest;
+
+  const {
     joinSplitRequests,
     refundAssets,
     verificationGasLimit,
     executionGasLimit,
-    gasPrice,
     actions,
-    maxNumRefunds,
-    refundAddr,
   } = opRequest;
 
   // defaults
