@@ -8,7 +8,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 
-export async function depositErc20(
+export async function depositFunds(
   wallet: Wallet,
   vault: Vault,
   token: SimpleERC20Token,

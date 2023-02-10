@@ -44,7 +44,9 @@ import Dockerode from "dockerode";
 import * as compose from "docker-compose";
 import { ethers } from "ethers";
 import {
+  SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
+  SimpleERC721Token__factory,
   Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
@@ -65,7 +67,7 @@ import {
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";
 import { BUNDLER_COMPOSE_OPTS, startBundler } from "../src/bundler";
-import { depositErc20 } from "../src/deposit";
+import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 
 // const BUNDLER_SERVER_PORT = 3000;
@@ -86,9 +88,9 @@ const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
 const ERC20_TOKEN_ID = 0n;
-// const ERC721_TOKEN_ID = 1n;
-// const ERC1155_TOKEN_ID = 2n;
-// const ERC1155_TOKEN_AMOUNT = 3n;
+const ERC721_TOKEN_ID = 1n;
+const ERC1155_TOKEN_ID = 2n;
+const ERC1155_TOKEN_AMOUNT = 3n;
 
 const HH_URL = "http://localhost:8545";
 const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
@@ -134,9 +136,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextBob,
     } = await setupNocturne(deployer));
 
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
-    erc20Token = await tokenFactory.deploy();
+    erc20Token = await new SimpleERC20Token__factory(deployer).deploy();
     console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
+    erc721Token = await new SimpleERC721Token__factory(deployer).deploy();
+    console.log("ERC721 token deployed at: ", erc721Token.address);
+    erc1155Token = await new SimpleERC1155Token__factory(deployer).deploy();
+    console.log("ERC1155 token deployed at: ", erc1155Token.address);
 
     console.log("Wallet:", wallet.address);
     console.log("Vault:", vault.address);
@@ -169,13 +174,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     nocturneContextBob;
   });
 
-  after(async () => {
-    await hhContainer.stop();
-    await hhContainer.remove();
+  afterEach(async () => {
     await subtreeUpdaterContainer.stop();
     await subtreeUpdaterContainer.remove();
     await compose.down(BUNDLER_COMPOSE_OPTS);
-    await compose.kill(BUNDLER_COMPOSE_OPTS);
+    await hhContainer.stop();
+    await hhContainer.remove();
   });
 
   async function testE2E(
@@ -238,13 +242,15 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       )}`
     );
 
+    await sleep(5_000);
+
     await contractChecks();
     await offchainChecks();
   }
 
-  it("Runs", async () => {
+  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("Deposit funds and commit note commitments");
-    await depositErc20(
+    await depositFunds(
       wallet,
       vault,
       erc20Token,
@@ -252,7 +258,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextAlice.signer.address,
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
-    await sleep(15_000);
+    await sleep(10_000);
 
     const erc20Asset: Asset = {
       assetType: AssetType.ERC20,
@@ -342,6 +348,105 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       [joinSplitRequest],
       [],
       [transferAction],
+      contractChecks,
+      offchainChecks
+    );
+  });
+
+  it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
+    console.log("Deposit funds and commit note commitments");
+    await depositFunds(
+      wallet,
+      vault,
+      erc20Token,
+      aliceEoa,
+      nocturneContextAlice.signer.address,
+      [PER_NOTE_AMOUNT]
+    );
+    await sleep(15_000);
+
+    console.log("Encode reserve erc721 action");
+    const erc721Asset: Asset = {
+      assetType: AssetType.ERC721,
+      assetAddr: erc721Token.address,
+      id: ERC721_TOKEN_ID,
+    };
+
+    console.log("Encode reserve erc1155 action");
+    const erc1155Asset: Asset = {
+      assetType: AssetType.ERC1155,
+      assetAddr: erc1155Token.address,
+      id: ERC1155_TOKEN_ID,
+    };
+
+    const erc721EncodedFunction =
+      SimpleERC721Token__factory.createInterface().encodeFunctionData(
+        "reserveToken",
+        // mint a ERC721 token directly to the wallet contract
+        [wallet.address, ERC721_TOKEN_ID]
+      );
+    const erc721Action: Action = {
+      contractAddress: erc721Token.address,
+      encodedFunction: erc721EncodedFunction,
+    };
+
+    const erc1155EncodedFunction =
+      SimpleERC1155Token__factory.createInterface().encodeFunctionData(
+        "reserveTokens",
+        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
+        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+      );
+    const erc1155Action: Action = {
+      contractAddress: erc1155Token.address,
+      encodedFunction: erc1155EncodedFunction,
+    };
+
+    const contractChecks = async () => {
+      console.log("Check for OperationProcessed event");
+      const latestBlock = await provider.getBlockNumber();
+      const events: OperationProcessedEvent[] = await query(
+        wallet,
+        wallet.filters.OperationProcessed(),
+        0,
+        latestBlock
+      );
+
+      expect(events[0].args.opProcessed).to.equal(true);
+      expect(events[0].args.callSuccesses[0]).to.equal(true);
+      expect(events[0].args.callSuccesses[1]).to.equal(true);
+    };
+
+    const offchainChecks = async () => {
+      console.log("Alice: Sync SDK notes manager post-operation");
+      await nocturneContextAlice.syncNotes();
+
+      // Alice should have a note for minted ERC721 token
+      const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
+      expect(erc721NotesAlice.length).to.equal(1);
+
+      // Alice should have a note for minted ERC1155 token
+      const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
+      expect(erc1155NotesAlice.length).to.equal(1);
+    };
+
+    const erc20Asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: erc20Token.address,
+      id: ERC20_TOKEN_ID,
+    };
+
+    // TODO: This is dummy gas token, needed to ensure contract has a
+    // gas token joinsplit. In future PR, we need to have SDK auto-find
+    // gas joinsplit.
+    const joinSplitRequest: JoinSplitRequest = {
+      asset: erc20Asset,
+      unwrapValue: 1n,
+    };
+
+    await testE2E(
+      [joinSplitRequest],
+      [],
+      [erc721Action, erc1155Action],
       contractChecks,
       offchainChecks
     );

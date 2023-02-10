@@ -13,14 +13,15 @@ import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 
 import {
+  Action,
   NocturneContext,
   Asset,
+  JoinSplitRequest,
   OperationRequest,
   NotesDB,
   query,
   computeOperationDigest,
   AssetType,
-  OperationRequestBuilder,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../utils/deploy";
 import { depositFunds, sleep, getSubtreeUpdateProver } from "../utils/test";
@@ -156,7 +157,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   async function testE2E(
-    operationRequest: OperationRequest,
+    joinSplitRequests: JoinSplitRequest[],
+    refundAssets: Asset[],
+    actions: Action[],
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>
   ): Promise<void> {
@@ -183,7 +186,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Bob: Sync SDK merkle prover");
     await nocturneContextBob.syncLeaves();
 
-    operationRequest.gasPrice = 0n;
+    const operationRequest: OperationRequest = {
+      joinSplitRequests,
+      refundAssets,
+      actions,
+      gasPrice: 0n,
+    };
 
     console.log("Create post-proof operation with NocturneContext");
     const operation = await nocturneContextAlice.tryCreateProvenOperation(
@@ -239,24 +247,25 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       id: ERC20_TOKEN_ID,
     };
 
+    const joinSplitRequest: JoinSplitRequest = {
+      asset: erc20Asset,
+      unwrapValue: ALICE_UNWRAP_VAL,
+      paymentIntent: {
+        receiver: nocturneContextBob.signer.canonAddress,
+        value: ALICE_TO_BOB_PRIV_VAL,
+      },
+    };
+
+    console.log("Encode transfer erc20 action");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
         [bob.address, ALICE_TO_BOB_PUB_VAL]
       );
-
-    const builder = new OperationRequestBuilder();
-    const operationRequest = builder
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
-      .confidentialPayment(
-        erc20Asset,
-        ALICE_TO_BOB_PRIV_VAL,
-        nocturneContextBob.signer.canonAddress
-      )
-      .action(erc20Token.address, encodedFunction)
-      .build();
-
-    console.log("Encode transfer erc20 action");
+    const transferAction: Action = {
+      contractAddress: erc20Token.address,
+      encodedFunction: encodedFunction,
+    };
 
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
@@ -316,7 +325,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
     };
 
-    await testE2E(operationRequest, contractChecks, offchainChecks);
+    await testE2E(
+      [joinSplitRequest],
+      [],
+      [transferAction],
+      contractChecks,
+      offchainChecks
+    );
   });
 
   it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
@@ -330,20 +345,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       [PER_NOTE_AMOUNT]
     );
 
-    const erc20Asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: erc20Token.address,
-      id: ERC20_TOKEN_ID,
-    };
-
-    console.log("Encode transfer erc721 action");
+    console.log("Encode reserve erc721 action");
     const erc721Asset: Asset = {
       assetType: AssetType.ERC721,
       assetAddr: erc721Token.address,
       id: ERC721_TOKEN_ID,
     };
 
-    console.log("Encode transfer erc1155 action");
+    console.log("Encode reserve erc1155 action");
     const erc1155Asset: Asset = {
       assetType: AssetType.ERC1155,
       assetAddr: erc1155Token.address,
@@ -356,20 +365,21 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         // mint a ERC721 token directly to the wallet contract
         [wallet.address, ERC721_TOKEN_ID]
       );
+    const erc721Action: Action = {
+      contractAddress: erc721Token.address,
+      encodedFunction: erc721EncodedFunction,
+    };
+
     const erc1155EncodedFunction =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
         [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
       );
-
-    const builder = new OperationRequestBuilder();
-    // unwrap 1 erc20 to satisfy gas token requirement
-    const opRequest = builder
-      .action(erc721Token.address, erc721EncodedFunction)
-      .action(erc1155Token.address, erc1155EncodedFunction)
-      .unwrap(erc20Asset, 1n)
-      .build();
+    const erc1155Action: Action = {
+      contractAddress: erc1155Token.address,
+      encodedFunction: erc1155EncodedFunction,
+    };
 
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
@@ -399,6 +409,26 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(erc1155NotesAlice.length).to.equal(1);
     };
 
-    await testE2E(opRequest, contractChecks, offchainChecks);
+    const erc20Asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: erc20Token.address,
+      id: ERC20_TOKEN_ID,
+    };
+
+    // TODO: This is dummy gas token, needed to ensure contract has a
+    // gas token joinsplit. In future PR, we need to have SDK auto-find
+    // gas joinsplit.
+    const joinSplitRequest: JoinSplitRequest = {
+      asset: erc20Asset,
+      unwrapValue: 1n,
+    };
+
+    await testE2E(
+      [joinSplitRequest],
+      [],
+      [erc721Action, erc1155Action],
+      contractChecks,
+      offchainChecks
+    );
   });
 });
