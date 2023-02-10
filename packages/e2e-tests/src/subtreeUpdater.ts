@@ -4,8 +4,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
-const SUBTREE_UPDATER_IMAGE = "docker.io/library/mock-subtree-updater";
-const SUBTREE_UPDATER_NAME = "mock-subtree-updater";
+const SUBTREE_UPDATER_IMAGE = "mock-subtree-updater";
 
 interface SubtreeUpdaterConfig {
   walletAddress: string;
@@ -19,7 +18,7 @@ export async function startSubtreeUpdater(
 ): Promise<Dockerode.Container> {
   const container = await docker.createContainer({
     Image: SUBTREE_UPDATER_IMAGE,
-    name: SUBTREE_UPDATER_NAME,
+    name: SUBTREE_UPDATER_IMAGE,
     Env: [`RPC_URL=${config.rpcUrl}`, `TX_SIGNER_KEY=${config.txSignerKey}`],
     Cmd: [
       `--use-mock-prover`,
