@@ -15,7 +15,7 @@ const accounts = [
   balance: String(10 ** 20), // 100 ETH
 }));
 
-let blockTime = 1000;
+let blockTime = 3_000;
 if (process.env.BLOCK_TIME) {
   try {
     blockTime = parseInt(process.env.BLOCK_TIME);

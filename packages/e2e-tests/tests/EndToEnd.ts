@@ -157,6 +157,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       txSignerKey: ACTORS_TO_KEYS.bundler,
     });
 
+    hhContainer;
     aliceEoa;
     bobEoa;
     erc20Token;
@@ -171,10 +172,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   after(async () => {
     await hhContainer.stop();
     await hhContainer.remove();
-
     await subtreeUpdaterContainer.stop();
     await subtreeUpdaterContainer.remove();
-
     await compose.down(BUNDLER_COMPOSE_OPTS);
     await compose.kill(BUNDLER_COMPOSE_OPTS);
   });
@@ -223,8 +222,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     });
     console.log("Bundler server response: ", await res.json());
 
-    console.log("Sleeping for 30s while bundler submits...");
-    await sleep(30_000);
+    console.log("Sleeping for 20s while bundler submits...");
+    await sleep(20_000);
 
     const operationDigest = computeOperationDigest(operation);
     var res = await fetch(
@@ -253,7 +252,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextAlice.signer.address,
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
-    await sleep(10_000);
+    await sleep(15_000);
 
     const erc20Asset: Asset = {
       assetType: AssetType.ERC20,

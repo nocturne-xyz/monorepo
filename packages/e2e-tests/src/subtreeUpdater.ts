@@ -34,6 +34,8 @@ export async function startSubtreeUpdater(
       `${ROOT_DIR}/rapidsnark/build/prover`,
       `--witness-generator-path`,
       `${ROOT_DIR}/circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate`,
+      `--interval`,
+      `${10_000}`,
     ],
   });
   await container.start();

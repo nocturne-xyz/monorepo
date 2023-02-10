@@ -9,9 +9,7 @@ const ROOT_DIR = findWorkspaceRoot()!;
 const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
 export const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: `${ROOT_DIR}/packages/bundler`,
-  composeOptions: [["--env-file", `${BUNDLER_ENV_FILE_PATH}`]],
   commandOptions: [["--build"]],
-  env: process.env,
 };
 
 interface BundlerConfig {
@@ -42,7 +40,8 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
     TX_SIGNER_KEY: txSignerKey,
   });
 
-  console.log("ENV:", envFile);
+  // TODO: figure out how to not override bundler/.env
+  console.log("Writing to bundler env file:\n", envFile);
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
   await sleep(3_000);
