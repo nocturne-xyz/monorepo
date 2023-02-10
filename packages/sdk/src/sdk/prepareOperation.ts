@@ -177,8 +177,8 @@ export async function gatherNotes(
 ): Promise<IncludedNote[]> {
   // check that the user has enough notes to cover the request
   const notes = await notesDB.getNotesFor(asset);
-  if (!(await hasEnoughBalance(requestedAmount, asset, notesDB))) {
-    const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+  const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+  if (balance < requestedAmount) {
     throw new Error(
       `Attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
     );
