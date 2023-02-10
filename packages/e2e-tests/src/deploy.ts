@@ -37,8 +37,8 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
 export interface NocturneSetup {
-  alice: ethers.Signer;
-  bob: ethers.Signer;
+  aliceEoa: ethers.Signer;
+  bobEoa: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
   notesDBAlice: NotesDB;
@@ -101,8 +101,8 @@ export async function setupNocturne(
   console.log("Wallet address:", wallet.address);
   console.log("Vault address:", vault.address);
   return {
-    alice: signers.alice,
-    bob: signers.bob,
+    aliceEoa: signers.alice,
+    bobEoa: signers.bob,
     vault,
     wallet,
     notesDBAlice,

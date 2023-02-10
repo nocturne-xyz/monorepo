@@ -6,10 +6,12 @@ import * as compose from "docker-compose";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
-const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/e2e-tests/.env.test`;
-export const BUNDLER_COMPOSE_OPTS = {
+const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
+export const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: `${ROOT_DIR}/packages/bundler`,
-  composeOptions: ["--env-file", `${BUNDLER_ENV_FILE_PATH}`],
+  composeOptions: [["--env-file", `${BUNDLER_ENV_FILE_PATH}`]],
+  commandOptions: [["--build"]],
+  env: process.env,
 };
 
 interface BundlerConfig {
@@ -39,6 +41,8 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
     RPC_URL: rpcUrl,
     TX_SIGNER_KEY: txSignerKey,
   });
+
+  console.log("ENV:", envFile);
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
   await sleep(3_000);

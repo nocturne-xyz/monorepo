@@ -15,7 +15,7 @@
     "prettier:write": "prettier --write ./test ./scripts ./utils",
     "hh-node": "npx hardhat node",
     "test:e2e": "yarn setup-rapidsnark && npx hardhat test",
-    "test:refactor": "mocha --require ts-node/register tests/** --timeout 100000 --exit",
+    "test:refactor": "mocha --require ts-node/register tests/** --timeout 1000000 --exit",
     "test:hh-node": "npx hardhat test --network localhost",
     "hh-node-deposit": "npx hardhat run ./scripts/deployAndDeposit.ts --network localhost",
     "clean": "rm -rf .turbo cache artifacts db"
