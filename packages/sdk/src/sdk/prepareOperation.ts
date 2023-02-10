@@ -40,11 +40,7 @@ export async function prepareOperation(
   signer: NocturneSigner,
   walletContract: Wallet
 ): Promise<PreSignOperation> {
-  let {
-    refundAddr,
-    maxNumRefunds,
-    gasPrice
-  } = opRequest;
+  let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
 
   const {
     joinSplitRequests,
