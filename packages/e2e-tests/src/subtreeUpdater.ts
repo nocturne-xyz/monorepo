@@ -34,7 +34,7 @@ export async function startSubtreeUpdater(
       `--witness-generator-path`,
       `${ROOT_DIR}/circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate`,
       `--interval`,
-      `${10_000}`,
+      `${8_000}`,
     ],
   });
   await container.start();

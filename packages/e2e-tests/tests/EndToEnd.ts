@@ -103,7 +103,18 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       rpcUrl: HH_FROM_DOCKER_URL,
       txSignerKey: ACTORS_TO_KEYS.subtreeUpdater,
     });
-    subtreeUpdaterContainer;
+
+    subtreeUpdaterContainer.logs(
+      { follow: true, stdout: true, stderr: true },
+      (err, stream) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        stream!.pipe(process.stdout);
+      }
+    );
 
     await startBundler({
       redisUrl: REDIS_URL,
