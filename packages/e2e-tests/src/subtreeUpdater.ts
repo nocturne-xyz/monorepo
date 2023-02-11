@@ -36,6 +36,9 @@ export async function startSubtreeUpdater(
       `--interval`,
       `${8_000}`,
     ],
+    HostConfig: {
+      ExtraHosts: ["host.docker.internal:host-gateway"],
+    },
   });
   await container.start();
   console.log("Started subtree updater");

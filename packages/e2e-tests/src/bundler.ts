@@ -6,9 +6,10 @@ import * as compose from "docker-compose";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
+export const BUNDLER_COMPOSE_CWD = `${ROOT_DIR}/packages/bundler`;
 const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
-export const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
-  cwd: `${ROOT_DIR}/packages/bundler`,
+const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
+  cwd: BUNDLER_COMPOSE_CWD,
   commandOptions: [["--build"]],
 };
 

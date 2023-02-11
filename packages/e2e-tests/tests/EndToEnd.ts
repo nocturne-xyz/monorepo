@@ -29,7 +29,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";
-import { BUNDLER_COMPOSE_OPTS, startBundler } from "../src/bundler";
+import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
 import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 
@@ -129,7 +129,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   afterEach(async () => {
     await subtreeUpdaterContainer.stop();
     await subtreeUpdaterContainer.remove();
-    await compose.down(BUNDLER_COMPOSE_OPTS);
+    await compose.down({
+      cwd: BUNDLER_COMPOSE_CWD,
+      commandOptions: [["-v"]],
+    });
     await hhContainer.stop();
     await hhContainer.remove();
   });
