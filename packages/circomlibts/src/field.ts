@@ -1,3 +1,5 @@
+import { uint8ArrayToHex } from "./utils";
+
 export type FieldElement = bigint;
 
 export const BN254ScalarField = makeField(
@@ -9,6 +11,9 @@ export const BN254ScalarField = makeField(
 export const BabyJubjubScalarField = BN254ScalarField;
 
 export interface Field {
+  numBits(): number;
+  fromBytes(bytes: Uint8Array): FieldElement;
+
   zero(): FieldElement;
   one(): FieldElement;
 
@@ -22,8 +27,6 @@ export interface Field {
   neg(lhs: FieldElement): FieldElement;
 
   mul(lhs: FieldElement, rhs: FieldElement): FieldElement;
-  mulNonnative(lhs: FieldElement, rhs: bigint): FieldElement;
-
   div(lhs: FieldElement, rhs: FieldElement): FieldElement;
   divOrZero(lhs: FieldElement, rhs: FieldElement): FieldElement;
   inv(lhs: FieldElement): FieldElement;
@@ -46,6 +49,15 @@ export function makeField(
   const twoAdicSubgroupCofactor = (modulus - 1n) / twoAdicSubgroupOrder;
 
   return {
+    numBits(): number{
+      return modulus.toString(2).length;
+    },
+
+    fromBytes(bytes: Uint8Array): FieldElement {
+      const nonCanonical = BigInt("0x" + uint8ArrayToHex(bytes));
+      return this.reduce(nonCanonical);
+    },
+
     zero(): FieldElement {
       return 0n;
     },
@@ -65,9 +77,11 @@ export function makeField(
     },
 
     sub(lhs: FieldElement, rhs: FieldElement): FieldElement {
-      const diff = lhs - rhs;
-      const diffUnderflow = diff + modulus;
-      return diff < 0n ? diffUnderflow : diff;
+      if (lhs >= rhs) {
+        return lhs - rhs;
+      } else {
+        return modulus - rhs + lhs;
+      }
     },
 
     neg(lhs: FieldElement): FieldElement {
@@ -75,10 +89,6 @@ export function makeField(
     },
 
     mul(lhs: FieldElement, rhs: FieldElement): FieldElement {
-      return (lhs * rhs) % modulus;
-    },
-
-    mulNonnative(lhs: FieldElement, rhs: bigint): FieldElement {
       return (lhs * rhs) % modulus;
     },
 
@@ -117,7 +127,7 @@ export function makeField(
 
       let t = 0n;
       let r = modulus;
-      let newt = 0n;
+      let newt = 1n;
       let newr = lhs;
       while (newr) {
         const q = r / newr;
@@ -162,12 +172,12 @@ export function makeField(
         case 0n:
           return 0n;
         // Legendre symbol is -1 - `this.value` is a quadratic nonresidue, sqrt does not exist
-        case -1n:
+        case modulus - 1n:
           return undefined;
         // Legendre symbol is 1 - `this.value` is a nonzero quadratic residue, sqrt exists
         // use tonelli-shanks algorithm to compute it
         case 1n:
-          let m = twoAdicSubgroupOrder;
+          let m = twoAdicity;
           let c = this.pow(nonQR, twoAdicSubgroupCofactor);
           let t = this.pow(lhs, twoAdicSubgroupCofactor);
           let r = this.pow(lhs, (twoAdicSubgroupCofactor + 1n) / 2n);
@@ -176,7 +186,7 @@ export function makeField(
             if (t === 0n) return 0n;
             if (t === 1n) return r;
 
-            let i = 1n;
+            let i = 0n;
             let curr = t;
             while (curr !== 1n) {
               curr = this.square(curr);
@@ -185,8 +195,9 @@ export function makeField(
 
             // i is guaranteed to be < m if lhs is a quadratic residue.
             // and its guaranteed to be one since we already chcked legende symbol
+            if (i >= m) throw new Error("unreachable - i >= m");
 
-            let b = this.pow(c, 1n << (m - i - 1n));
+            let b = this.pow(c, this.pow(2n, (this.sub(this.sub(m, i), 1n))));
             m = i;
             c = this.square(b);
             t = this.mul(t, c);
@@ -194,7 +205,7 @@ export function makeField(
           }
         default:
           throw new Error(
-            "unreachable - Invalid legendre symbol (did you set the correct field parameters?)"
+            `unreachable - Invalid legendre symbol ${legendre} (did you set the correct field parameters?)`
           );
       }
     },

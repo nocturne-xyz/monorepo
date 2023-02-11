@@ -23,7 +23,7 @@ const N_ROUNDS_P = [
 
 const pow5 = (a: FieldElement) => F.mul(a, F.square(F.square(a)));
 
-function poseidon(inputs: FieldElement[]) {
+export function poseidonBN(inputs: FieldElement[]) {
   assert(inputs.length > 0);
   assert(inputs.length <= N_ROUNDS_P.length);
 
