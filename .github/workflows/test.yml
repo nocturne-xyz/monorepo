@@ -17,7 +17,18 @@ jobs:
           version: nightly
       - name: Install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
-
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Restore node_modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
       - run: |
           yarn install --immutable
       - run: |
@@ -28,7 +39,19 @@ jobs:
           yarn build
       - run: |
           yarn test:unit
+      - name: Download Docker images
+        if: steps.upload_docker_images.outputs.artifacts.length > 0
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-images
       - run: |
           yarn test:e2e
+      - name: Upload Docker images
+        if: success()
+        id: upload_docker_images
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-images
+          path: path/to/docker/images
       - run: |
           yarn test:ci
