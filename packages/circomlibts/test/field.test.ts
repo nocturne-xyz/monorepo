@@ -2,19 +2,11 @@ import "mocha";
 import { expect } from "chai";
 
 import { ZqField } from "ffjavascript";
-import { BN254ScalarField, Field, FieldElement } from "../src/field"
-import * as crypto from "crypto";
-import { range } from "./utils";
+import { BN254ScalarField } from "../src/field"
+import { range, randomFieldElement } from "./utils";
 
 const p = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 const CircomF = new ZqField(p);
-
-
-function randomFieldElement(F: Field): FieldElement {
-  const numBytes = (F.numBits() + 7) / 8;
-  const bytes = crypto.randomBytes(numBytes);
-  return F.fromBytes(bytes);
-}
 
 describe("BN Field", () => {
   it("addition matches ffjavascript", () => {
