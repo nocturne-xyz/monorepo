@@ -131,7 +131,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await subtreeUpdaterContainer.remove();
     await compose.down({
       cwd: BUNDLER_COMPOSE_CWD,
-      commandOptions: [["-v"]],
+      commandOptions: [["--volumes"]],
     });
     await hhContainer.stop();
     await hhContainer.remove();
