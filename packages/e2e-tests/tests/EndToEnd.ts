@@ -199,7 +199,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextAlice.signer.address,
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
-    await sleep(10_000);
+    await sleep(15_000);
 
     const erc20Asset: Asset = {
       assetType: AssetType.ERC20,

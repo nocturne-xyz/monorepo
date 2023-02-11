@@ -40,7 +40,8 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
     TX_SIGNER_KEY: txSignerKey,
   });
 
-  // TODO: figure out how to not override bundler/.env
+  // TODO: figure out how to NOT override bundler/.env, using --env-file didn't
+  // work
   console.log("Writing to bundler env file:\n", envFile);
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
