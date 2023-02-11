@@ -37,3 +37,6 @@ services:
     command: "run submitter --wallet-address ${WALLET_ADDRESS}"
     extra_hosts:
       - host.docker.internal:host-gateway
+
+volumes:
+  redis-data:
