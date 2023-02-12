@@ -25,6 +25,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build hardhat
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./packages/e2e-tests/hardhat/Dockerfile
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Build subtree updater
         uses: docker/build-push-action@v4
         with:
