@@ -25,6 +25,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
       - name: Build hardhat
         uses: docker/build-push-action@v4
         with:
@@ -47,14 +54,6 @@ jobs:
         run: |
           # Build the images using docker-compose
           docker compose -f ./packages/bundler/docker-compose.yml build
-
-          # Get a list of all the images built by docker-compose
-          IMAGE_NAMES=$(docker images --format '{{.Repository}}:{{.Tag}}')
-
-          # Build and cache each image individually
-          for IMAGE_NAME in $IMAGE_NAMES; do
-            docker push --cache-to type=local,dest=/tmp/.buildx-cache-new,reference=$IMAGE_NAME $IMAGE_NAME
-          done
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
