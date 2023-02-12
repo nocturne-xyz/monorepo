@@ -17,7 +17,8 @@ jobs:
           version: nightly
       - name: Install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
-      - run: |
+      - name: Yarn install
+        run: |
           yarn install --immutable
       - name: Cache node_modules
         uses: actions/cache@v2
@@ -26,6 +27,7 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
+          if: steps.restore-node-modules.outputs.cache-hit != 'true'
       - name: Restore node_modules
         uses: actions/cache@v2
         with:

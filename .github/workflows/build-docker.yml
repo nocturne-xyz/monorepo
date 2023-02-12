@@ -53,7 +53,6 @@ jobs:
 
           # Build and cache each image individually
           for IMAGE_NAME in $IMAGE_NAMES; do
-            docker build --cache-from $IMAGE_NAME -t $IMAGE_NAME ./packages/bundler
             docker push --cache-to type=local,dest=/tmp/.buildx-cache-new,reference=$IMAGE_NAME $IMAGE_NAME
           done
       - name: Move cache
