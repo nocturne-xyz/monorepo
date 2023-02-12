@@ -1,6 +1,7 @@
 FROM node:18
 WORKDIR /app
 
+# Local to hardhat subdirectory
 COPY package.json .
 COPY package-lock.json .
 

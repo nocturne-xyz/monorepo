@@ -28,7 +28,7 @@ jobs:
       - name: Build hardhat
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./packages/e2e-tests/hardhat
           file: ./packages/e2e-tests/hardhat/Dockerfile
           push: false
           tags: ${{ steps.meta.outputs.tags }}
@@ -43,6 +43,19 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Build and cache images with docker-compose
+        run: |
+          # Build the images using docker-compose
+          docker compose -f ./packages/bundler/docker-compose.yml build
+
+          # Get a list of all the images built by docker-compose
+          IMAGE_NAMES=$(docker images --format '{{.Repository}}:{{.Tag}}')
+
+          # Build and cache each image individually
+          for IMAGE_NAME in $IMAGE_NAMES; do
+            docker build --cache-from $IMAGE_NAME -t $IMAGE_NAME ./packages/bundler
+            docker push --cache-to type=local,dest=/tmp/.buildx-cache-new,reference=$IMAGE_NAME $IMAGE_NAME
+          done
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
