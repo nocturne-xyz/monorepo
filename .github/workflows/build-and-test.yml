@@ -33,13 +33,18 @@ jobs:
         with:
           path: ~/.cache/yarn
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-      - run: |
+      - name: Yarn lint
+        run: |
           yarn lint
-      - run: |
+      - name: Yarn prettier
+        run: |
           yarn prettier:check
-      - run: |
+      - name: Yarn build
+        run: |
           yarn build
-      - run: |
+      - name: Yarn test:unit
+        run: |
           yarn test:unit
-      - run: |
+      - name: Yarn test:ci
+        run: |
           yarn test:ci
