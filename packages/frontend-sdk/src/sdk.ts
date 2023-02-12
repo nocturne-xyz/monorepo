@@ -12,7 +12,7 @@ import {
   joinSplitPublicSignalsToArray,
   VerifyingKey,
   computeOperationDigest,
-  proveOperation
+  proveOperation,
 } from "@nocturne-xyz/sdk";
 import {
   DEFAULT_SNAP_ORIGIN,

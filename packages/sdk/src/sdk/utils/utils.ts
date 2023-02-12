@@ -49,7 +49,7 @@ export function fakeProvenOperation(
 export function range(
   start: number,
   stop?: number,
-  step: number = 1
+  step = 1
 ): number[] {
   if (!stop) {
     stop = start;
@@ -82,7 +82,7 @@ export function* iterChunks<T>(
   chunkSize: number
 ): IterableIterator<T[]> {
   let chunk = [];
-  let i = 0;
+  const i = 0;
   while (i < arr.length) {
     chunk = arr.slice(i, i + chunkSize);
     yield chunk;
