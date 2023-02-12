@@ -27,6 +27,17 @@ import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
+export async function hasEnoughBalance(
+  requestedAmount: bigint,
+  asset: Asset,
+  notesDB: NotesDB
+): Promise<boolean> {
+  // check that the user has enough notes to cover the request
+  const notes = await notesDB.getNotesFor(asset);
+  const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+  return balance >= requestedAmount;
+}
+
 export async function prepareOperation(
   opRequest: OperationRequest,
   notesDB: NotesDB,
@@ -44,14 +55,14 @@ export async function prepareOperation(
     executionGasLimit,
   } = opRequest;
 
-
-
   // prepare joinSplits
-  const joinSplits = (await Promise.all(
-    joinSplitRequests.map((joinSplitRequest) =>
-      prepareJoinSplits(joinSplitRequest, notesDB, merkle, signer)
+  const joinSplits = (
+    await Promise.all(
+      joinSplitRequests.map((joinSplitRequest) =>
+        prepareJoinSplits(joinSplitRequest, notesDB, merkle, signer)
+      )
     )
-  )).flat();
+  ).flat();
   const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
 
   // defaults
@@ -59,8 +70,8 @@ export async function prepareOperation(
   refundAddr = refundAddr ?? StealthAddressTrait.randomize(signer.address);
   gasPrice = gasPrice ?? 0n;
   maxNumRefunds =
-      maxNumRefunds ??
-      BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
+    maxNumRefunds ??
+    BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
 
   // construct op.
   let op: Partial<PreSignOperation> = {
@@ -104,18 +115,14 @@ export async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
-  return await getJoinSplitsFromNotes(signer, merkle, notes, paymentAmount, amountToReturn, receiver);
-}
-
-export async function hasEnoughBalance(
-  requestedAmount: bigint,
-  asset: Asset,
-  notesDB: NotesDB
-): Promise<boolean> {
-  // check that the user has enough notes to cover the request
-  const notes = await notesDB.getNotesFor(asset);
-  const balance = notes.reduce((acc, note) => acc + note.value, 0n);
-  return balance >= requestedAmount;
+  return await getJoinSplitsFromNotes(
+    signer,
+    merkle,
+    notes,
+    paymentAmount,
+    amountToReturn,
+    receiver
+  );
 }
 
 export async function gatherNotes(
@@ -181,7 +188,7 @@ async function getJoinSplitsFromNotes(
   notes: IncludedNote[],
   paymentAmount: bigint,
   amountLeftOver: bigint,
-  receiver?: CanonAddress,
+  receiver?: CanonAddress
 ): Promise<PreSignJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
@@ -202,10 +209,10 @@ async function getJoinSplitsFromNotes(
   let remainingAmountLeftOver = amountLeftOver;
   for (const [noteA, noteB] of iterChunks(notes, 2)) {
     const pairTotalValue = noteA.value + noteB.value;
-    const amountLeftOver = min(remainingAmountLeftOver, pairTotalValue);
-    remainingAmountLeftOver -= amountLeftOver;
+    const amountToReturn = min(remainingAmountLeftOver, pairTotalValue);
+    remainingAmountLeftOver -= amountToReturn;
 
-    const remainingPairValue = pairTotalValue - amountLeftOver;
+    const remainingPairValue = pairTotalValue - amountToReturn;
     const paymentAmount = min(remainingPairValue, remainingPayment);
     remainingPayment -= paymentAmount;
 
@@ -214,8 +221,8 @@ async function getJoinSplitsFromNotes(
       merkle,
       noteA,
       noteB,
-      amountLeftOver,
       paymentAmount,
+      amountToReturn,
       receiver
     );
 
@@ -254,7 +261,7 @@ async function makeJoinSplit(
     asset: oldNoteA.asset,
     value: amountToReturn,
   };
-  
+
   // the second note contains the confidential payment
   const newNoteB: Note = {
     owner: StealthAddressTrait.fromCanonAddress(receiver),
@@ -325,18 +332,22 @@ async function getGasEstimatedOperation(
   op: Partial<PreSignOperation>,
   walletContract: Wallet
 ): Promise<PreSignOperation> {
-  op.verificationGasLimit = op.verificationGasLimit ?? DEFAULT_VERIFICATION_GAS_LIMIT;
+  op.verificationGasLimit =
+    op.verificationGasLimit ?? DEFAULT_VERIFICATION_GAS_LIMIT;
   op.executionGasLimit = op.executionGasLimit ?? BLOCK_GAS_LIMIT;
   op.gasPrice = op.gasPrice ?? 0n;
 
   console.log("Simulating op");
-  const result = await simulateOperation(op as PreSignOperation, walletContract);
+  const result = await simulateOperation(
+    op as PreSignOperation,
+    walletContract
+  );
   if (!result.opProcessed) {
     throw Error("Cannot estimate gas with Error: " + result.failureReason);
   }
   // Give 20% over-estimate
   op.executionGasLimit = (result.executionGas * 12n) / 10n;
-  op.gasPrice = (result.verificationGas + 12n) / 10n;
+  op.verificationGasLimit = (result.verificationGas + 12n) / 10n;
 
   // since we're simulating, we can get the number of refunds while we're at it
   op.maxNumRefunds = result.numRefunds;

@@ -39,9 +39,9 @@ export async function proveOperation(
 
 export async function proveJoinSplit(
   prover: JoinSplitProver,
-  preProofJoinSplit: SignedJoinSplit
+  signedJoinSplit: SignedJoinSplit
 ): Promise<ProvenJoinSplit> {
-  const { opDigest, proofInputs, ...baseJoinSplit } = preProofJoinSplit;
+  const { opDigest, proofInputs, ...baseJoinSplit } = signedJoinSplit;
   const proof = await prover.proveJoinSplit(proofInputs);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values

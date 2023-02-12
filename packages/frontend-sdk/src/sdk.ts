@@ -1,7 +1,7 @@
 import {
   OperationRequest,
   ProvenOperation,
-  PreProofOperation,
+  SignedOperation,
   StealthAddress,
   AssetWithBalance,
   AssetTrait,
@@ -140,11 +140,11 @@ export class NocturneFrontendSDK {
       operationRequest
     );
 
-    console.log("PreProofOperation", op);
+    console.log("SignedOperation", op);
     return await this.proveOperation(op);
   }
 
-  async proveOperation(op: PreProofOperation): Promise<ProvenOperation> {
+  async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
     return await proveOperation(op, this.localProver);
   }
 
@@ -253,14 +253,14 @@ export class NocturneFrontendSDK {
   }
 
   /**
-   * Retrieve a `PreProofOperation` from the snap given an `OperationRequest`.
+   * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.
    *
    * @param operationRequest Operation request
    */
   protected async requestSignOperation(
     operationRequest: OperationRequest
-  ): Promise<PreProofOperation> {
+  ): Promise<SignedOperation> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: [
@@ -272,7 +272,7 @@ export class NocturneFrontendSDK {
       ],
     })) as string;
 
-    return JSON.parse(json) as PreProofOperation;
+    return JSON.parse(json) as SignedOperation;
   }
 
   /**
