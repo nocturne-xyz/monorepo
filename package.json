@@ -21,7 +21,8 @@
     "test:e2e": "yarn turbo run test:e2e --filter=@nocturne-xyz/e2e-tests",
     "test:unit": "yarn turbo run test:unit",
     "test:ci": "yarn turbo run test:ci --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
-    "dev:site": "scripts/run_site_dev.sh"
+    "dev:site": "scripts/run_site_dev.sh",
+    "e2e-tests": "yarn workspace @nocturne-xyz/e2e-tests"
   },
   "devDependencies": {
     "turbo": "1.6.3"
