@@ -26,7 +26,6 @@ import {
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
-import { ACTORS_TO_WALLETS } from "./keys";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -37,8 +36,6 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
 export interface NocturneSetup {
-  aliceEoa: ethers.Signer;
-  bobEoa: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
   notesDBAlice: NotesDB;
@@ -96,13 +93,9 @@ export async function setupNocturne(
     connectedSigner.provider
   );
 
-  const signers = ACTORS_TO_WALLETS(connectedSigner.provider);
-
   console.log("Wallet address:", wallet.address);
   console.log("Vault address:", vault.address);
   return {
-    aliceEoa: signers.alice,
-    bobEoa: signers.bob,
     vault,
     wallet,
     notesDBAlice,

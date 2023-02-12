@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { setupNocturne } from "../src/deploy";
 import * as JSON from "bigint-json-serialization";
-import { ACTORS_TO_KEYS, ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
+import { KEYS_TO_WALLETS, KEYS } from "../src/keys";
 import { startHardhatNetwork } from "../src/hardhat";
 import Dockerode from "dockerode";
 import * as compose from "docker-compose";
@@ -55,9 +55,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let docker: Dockerode;
   let hhContainer: Dockerode.Container;
   let subtreeUpdaterContainer: Dockerode.Container;
+
   let provider: ethers.providers.JsonRpcProvider;
-  let aliceEoa: ethers.Signer;
-  let bobEoa: ethers.Signer;
+  let deployerEoa: ethers.Wallet;
+  let aliceEoa: ethers.Wallet;
+  let bobEoa: ethers.Wallet;
+  let subtreeUpdaterEoa: ethers.Wallet;
+  let bundlerEoa: ethers.Wallet;
+
   let vault: Vault;
   let wallet: Wallet;
   let erc20Token: SimpleERC20Token;
@@ -72,36 +77,33 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     docker = new Dockerode();
     hhContainer = await startHardhatNetwork(docker, {
       blockTime: 3_000,
-      keys: KEY_LIST(),
+      keys: KEYS,
     });
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
-    const deployer = ACTORS_TO_WALLETS(provider).deployer;
+    [deployerEoa, aliceEoa, bobEoa, subtreeUpdaterEoa, bundlerEoa] =
+      KEYS_TO_WALLETS(provider);
+
     ({
-      aliceEoa,
-      bobEoa,
       vault,
       wallet,
       notesDBAlice,
       nocturneContextAlice,
       notesDBBob,
       nocturneContextBob,
-    } = await setupNocturne(deployer));
+    } = await setupNocturne(deployerEoa));
 
-    erc20Token = await new SimpleERC20Token__factory(deployer).deploy();
+    erc20Token = await new SimpleERC20Token__factory(deployerEoa).deploy();
     console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
-    erc721Token = await new SimpleERC721Token__factory(deployer).deploy();
+    erc721Token = await new SimpleERC721Token__factory(deployerEoa).deploy();
     console.log("ERC721 token deployed at: ", erc721Token.address);
-    erc1155Token = await new SimpleERC1155Token__factory(deployer).deploy();
+    erc1155Token = await new SimpleERC1155Token__factory(deployerEoa).deploy();
     console.log("ERC1155 token deployed at: ", erc1155Token.address);
-
-    console.log("Wallet:", wallet.address);
-    console.log("Vault:", vault.address);
 
     subtreeUpdaterContainer = await startSubtreeUpdater(docker, {
       walletAddress: wallet.address,
       rpcUrl: HH_FROM_DOCKER_URL,
-      txSignerKey: ACTORS_TO_KEYS.subtreeUpdater,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
     });
 
     subtreeUpdaterContainer.logs(
@@ -122,7 +124,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       walletAddress: wallet.address,
       maxLatency: 1,
       rpcUrl: HH_FROM_DOCKER_URL,
-      txSignerKey: ACTORS_TO_KEYS.bundler,
+      txSignerKey: bundlerEoa.privateKey,
     });
   });
 

@@ -19,7 +19,7 @@ import { getSubtreeUpdateProver, sleep } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import Dockerode from "dockerode";
-import { ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
+import { KEYS, KEYS_TO_WALLETS } from "../src/keys";
 import { startHardhatNetwork } from "../src/hardhat";
 
 const HH_URL = "http://localhost:8545";
@@ -27,8 +27,11 @@ const HH_URL = "http://localhost:8545";
 describe("InMemoryMerkle", async () => {
   let docker: Dockerode;
   let hhContainer: Dockerode.Container;
+
   let provider: ethers.providers.Provider;
-  let aliceEoa: ethers.Signer;
+  let deployerEoa: ethers.Wallet;
+  let aliceEoa: ethers.Wallet;
+
   let wallet: Wallet;
   let vault: Vault;
   let token: SimpleERC20Token;
@@ -41,15 +44,15 @@ describe("InMemoryMerkle", async () => {
     docker = new Dockerode();
     hhContainer = await startHardhatNetwork(docker, {
       blockTime: 3_000,
-      keys: KEY_LIST(),
+      keys: KEYS,
     });
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
-    const deployer = ACTORS_TO_WALLETS(provider).deployer;
-    ({ aliceEoa, vault, wallet, nocturneContextAlice, merkleDBAlice } =
-      await setupNocturne(deployer));
+    [deployerEoa, aliceEoa] = KEYS_TO_WALLETS(provider);
+    ({ vault, wallet, nocturneContextAlice, merkleDBAlice } =
+      await setupNocturne(deployerEoa));
 
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 

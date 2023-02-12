@@ -14,7 +14,7 @@ import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 import Dockerode from "dockerode";
 import { startHardhatNetwork } from "../src/hardhat";
-import { ACTORS_TO_WALLETS, KEY_LIST } from "../src/keys";
+import { KEYS, KEYS_TO_WALLETS } from "../src/keys";
 import { depositFunds } from "../src/deposit";
 
 const PER_SPEND_AMOUNT = 100n;
@@ -23,12 +23,15 @@ const HH_URL = "http://localhost:8545";
 describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let docker: Dockerode;
   let hhContainer: Dockerode.Container;
+
   let provider: ethers.providers.Provider;
-  let aliceEoa: ethers.Signer;
+  let deployerEoa: ethers.Wallet;
+  let aliceEoa: ethers.Wallet;
+  let subtreeUpdaterEoa: ethers.Wallet;
+
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
-  let serverSigner: ethers.Signer;
   let nocturneContextAlice: NocturneContext;
   let server: SubtreeUpdateServer;
   let notesDBAlice: NotesDB;
@@ -37,17 +40,15 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     docker = new Dockerode();
     hhContainer = await startHardhatNetwork(docker, {
       blockTime: 3_000,
-      keys: KEY_LIST(),
+      keys: KEYS,
     });
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
-    const etherWallets = ACTORS_TO_WALLETS(provider);
-    const deployer = etherWallets.deployer;
-    serverSigner = etherWallets.subtreeUpdater;
-    ({ aliceEoa, vault, wallet, nocturneContextAlice, notesDBAlice } =
-      await setupNocturne(deployer));
+    [deployerEoa, aliceEoa, subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
+    ({ vault, wallet, nocturneContextAlice, notesDBAlice } =
+      await setupNocturne(deployerEoa));
 
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
 
@@ -65,7 +66,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       prover,
       wallet.address,
       serverDBPath,
-      serverSigner,
+      subtreeUpdaterEoa,
       { interval: 1_000 }
     );
     return server;
