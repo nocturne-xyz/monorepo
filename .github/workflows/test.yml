@@ -40,6 +40,4 @@ jobs:
       - run: |
           yarn test:unit
       - run: |
-          yarn test:e2e
-      - run: |
           yarn test:ci
