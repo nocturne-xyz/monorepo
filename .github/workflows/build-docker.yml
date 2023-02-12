@@ -1,12 +1,7 @@
 name: Build and Cache Docker
-on:
-  push:
-    paths:
-      - "packages/e2e-tests/**"
-      - ".github/workflows/e2e-tests.yml"
-
+on: [push]
 jobs:
-  build-and-test:
+  build-docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
