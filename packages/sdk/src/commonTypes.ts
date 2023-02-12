@@ -41,7 +41,7 @@ export interface PreSignJoinSplit extends BaseJoinSplit {
   merkleProofB: MerkleProofInput;
 }
 
-export interface PreProofJoinSplit extends BaseJoinSplit {
+export interface SignedJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
 }
@@ -64,8 +64,8 @@ export interface PreSignOperation extends BaseOperation {
   joinSplits: PreSignJoinSplit[];
 }
 
-export interface PreProofOperation extends BaseOperation {
-  joinSplits: PreProofJoinSplit[];
+export interface SignedOperation extends BaseOperation {
+  joinSplits: SignedJoinSplit[];
 }
 
 export interface ProvenOperation extends BaseOperation {

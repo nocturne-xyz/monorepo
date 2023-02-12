@@ -1,5 +1,5 @@
 import {
-  PreProofOperation,
+  SignedOperation,
   PreSignOperation,
   ProvenOperation,
 } from "../../commonTypes";
@@ -18,7 +18,7 @@ export function getJoinSplitRequestTotalValue(
 }
 
 export function fakeProvenOperation(
-  op: PreSignOperation | PreProofOperation | ProvenOperation
+  op: PreSignOperation | SignedOperation | ProvenOperation
 ): ProvenOperation {
   const provenJoinSplits = op.joinSplits.map((joinSplit) => {
     return {
@@ -46,13 +46,11 @@ export function fakeProvenOperation(
   };
 }
 
-export function range(start: number, stop?: number, step?: number): number[] {
+export function range(start: number, stop?: number, step: number = 1): number[] {
   if (!stop) {
     stop = start;
     start = 0;
   }
-
-  step = step ?? 1;
 
   return Array(Math.ceil((stop - start) / step))
     .fill(start)

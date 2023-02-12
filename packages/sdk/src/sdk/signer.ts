@@ -11,8 +11,8 @@ import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
 import {
   EncryptedNote,
-  PreProofJoinSplit,
-  PreProofOperation,
+  SignedJoinSplit,
+  SignedOperation,
   PreSignJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
@@ -126,12 +126,12 @@ export class NocturneSigner {
     return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
   }
 
-  signOperation(op: PreSignOperation): PreProofOperation {
+  signOperation(op: PreSignOperation): SignedOperation {
     const opDigest = computeOperationDigest(op);
     const opSig = this.sign(opDigest);
     const pk = this.privkey.spendPk();
 
-    const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
+    const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
       makePreProofJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk)
     );
 
@@ -164,7 +164,7 @@ function makePreProofJoinSplit(
   opSig: NocturneSignature,
   vk: bigint,
   spendPk: [bigint, bigint]
-): PreProofJoinSplit {
+): SignedJoinSplit {
   const {
     merkleProofA,
     merkleProofB,

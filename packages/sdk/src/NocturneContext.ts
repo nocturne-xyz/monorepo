@@ -1,6 +1,5 @@
-import { PreProofOperation, Address, PreSignOperation } from "./commonTypes";
+import { SignedOperation, Address, PreSignOperation } from "./commonTypes";
 import { OperationRequest } from "./sdk/operationRequest";
-import { Note, IncludedNote } from "./sdk/note";
 import { NocturneSigner } from "./sdk/signer";
 import { InMemoryMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NotesDB } from "./sdk/db";
@@ -13,13 +12,6 @@ import {
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { hasEnoughBalance } from "./sdk/prepareOperation";
-
-export interface JoinSplitNotes {
-  oldNoteA: IncludedNote;
-  oldNoteB: IncludedNote;
-  newNoteA: Note;
-  newNoteB: Note;
-}
 
 export class NocturneContext {
   readonly signer: NocturneSigner;
@@ -71,7 +63,7 @@ export class NocturneContext {
     );
   }
 
-  signOperation(preSignOperation: PreSignOperation): PreProofOperation {
+  signOperation(preSignOperation: PreSignOperation): SignedOperation {
     return this.signer.signOperation(preSignOperation);
   }
 

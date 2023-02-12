@@ -4,7 +4,7 @@ import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
 import { EventFragment, Result } from "ethers/lib/utils";
 import { fakeProvenOperation } from ".";
 import {
-  PreProofOperation,
+  SignedOperation,
   PreSignOperation,
   ProvenOperation,
 } from "../../commonTypes";
@@ -53,7 +53,7 @@ export function parseEventsFromContractReceipt(
  * @param wallet an ethers instance of the wallet contract
  */
 export async function simulateOperation(
-  op: PreSignOperation | PreProofOperation | ProvenOperation,
+  op: PreSignOperation | SignedOperation | ProvenOperation,
   wallet: Wallet
 ): Promise<OperationResult> {
   // We need to do staticCall, which fails if wallet is connected a signer
