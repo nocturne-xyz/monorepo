@@ -159,7 +159,7 @@ export class NocturneSigner {
 }
 
 function makeSignedJoinSplit(
-  PreProofJoinSplit: PreProofJoinSplit,
+  preProofJoinSplit: PreProofJoinSplit,
   opDigest: bigint,
   opSig: NocturneSignature,
   vk: bigint,
@@ -173,7 +173,7 @@ function makeSignedJoinSplit(
     newNoteA,
     newNoteB,
     ...baseJoinSplit
-  } = PreProofJoinSplit;
+  } = preProofJoinSplit;
 
   const { c, z } = opSig;
 
