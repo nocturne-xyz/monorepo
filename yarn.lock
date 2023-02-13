@@ -3475,7 +3475,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.7-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.7-alpha, @nocturne-xyz/contracts@^1.0.7-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3613,7 +3613,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.70-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@npm:1.0.70-alpha":
+  version: 1.0.70-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.70-alpha"
+  dependencies:
+    "@nocturne-xyz/contracts": ^1.0.7-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    circomlibjs: nocturne-xyz/circomlibjs
+    ethers: ^5.0.0
+    ffjavascript: 0.2.57
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 68ffa20fa0e168540930d543ef5ac5d2ef5f526b084585a8f4d2926eed5fbfbff28c19b7291ae7bb30ad2a1454cf28501b1b62a92463b9cdc0545a90500b2023
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:

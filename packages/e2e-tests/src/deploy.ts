@@ -26,7 +26,6 @@ import {
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
-import * as fs from "fs";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 // eslint-disable-next-line

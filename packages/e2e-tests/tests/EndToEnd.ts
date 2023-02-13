@@ -169,7 +169,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     console.log("Create post-proof operation with NocturneContext");
     const preSign = await nocturneContextAlice.prepareOperation(
-      operationRequest
+      opRequest 
     );
     const signed = nocturneContextAlice.signOperation(preSign);
     const operation = await proveOperation(signed, joinSplitProver);
