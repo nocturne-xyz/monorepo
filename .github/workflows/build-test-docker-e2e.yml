@@ -1,4 +1,4 @@
-name: Build and Cache Docker
+name: Build/Cache Docker + E2E Tests
 on: [push]
 jobs:
   build-docker:
@@ -58,3 +58,19 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+      - name: Yarn install
+        run: |
+          yarn install --immutable
+      - name: Yarn build
+        run: |
+          yarn build
+      - name: Yarn test:e2e
+        run: |
+          yarn test:e2e
