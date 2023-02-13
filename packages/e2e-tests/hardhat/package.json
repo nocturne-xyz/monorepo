@@ -8,7 +8,6 @@
   },
   "scripts": {
     "test:unit": "echo \"Error: no test specified\" && exit 1",
-    "deploy_erc20": "node deployERC20.js",
     "build:docker": "./build_docker.sh"
   },
   "author": "",
