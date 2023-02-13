@@ -46,11 +46,7 @@ export function fakeProvenOperation(
   };
 }
 
-export function range(
-  start: number,
-  stop?: number,
-  step = 1
-): number[] {
+export function range(start: number, stop?: number, step = 1): number[] {
   if (!stop) {
     stop = start;
     start = 0;
