@@ -1,4 +1,4 @@
-import { setupNocturne } from "../utils/deploy";
+import { setupNocturne } from "../src/deploy";
 import { ethers } from "hardhat";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {

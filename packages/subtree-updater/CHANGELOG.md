@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Rename `SUBMITTER_SECRET_KEY` to `TX_SIGNER_KEY`
+- Add separate script for building mock docker
 - update imports with SDK renames (see SDK changelog)
 - add mutex to avoid nonce conflicts when filling batch (hack)
 - add CLI option to ensure a batch is submitted every time the updater polls by filling with zeros

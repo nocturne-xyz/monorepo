@@ -69,7 +69,9 @@ export class BundlerSubmitter {
       { connection: this.redis, autorun: false }
     );
 
-    console.log("Submitter running...");
+    console.log(
+      `Submitter running. Wallet contract: ${this.walletContract.address}.`
+    );
     await worker.run();
   }
 
@@ -94,9 +96,7 @@ export class BundlerSubmitter {
     // Hardcode gas limit to skip eth_estimateGas
     const tx = await this.walletContract.processBundle(
       { operations },
-      {
-        gasLimit: 1_000_000,
-      }
+      { gasLimit: 1_000_000 }
     );
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);

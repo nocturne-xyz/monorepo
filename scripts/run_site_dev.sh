@@ -49,7 +49,7 @@ read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read BUNDLER_SUBMITTER_PRIVATE_KEY< <(grep -A1 "Account #15" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
-read SUBTREE_UPDATER_SUBMITTER_PRIVATE_KEY< <(grep -A1 "Account #16" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
+read SUBTREE_UPDATER_TX_SIGNER_KEY< <(grep -A1 "Account #16" $LOG_DIR/hh-node | grep "Private Key:" | sed -nr 's/Private Key: (0x[0-9a-fA-F]+)/\1/p')
 popd
 
 # bundler default config variables
@@ -62,7 +62,7 @@ echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"
 echo "Vault contract address: $VAULT_CONTRACT_ADDRESS"
 echo "Token contract addresses: $TOKEN_CONTRACT_ADDR1, $TOKEN_CONTRACT_ADDR2"
 echo "Bundler submitter private key: $BUNDLER_SUBMITTER_PRIVATE_KEY"
-echo "Subtree updater submitter private key: $SUBTREE_UPDATER_SUBMITTER_PRIVATE_KEY"
+echo "Subtree updater submitter private key: $SUBTREE_UPDATER_TX_SIGNER_KEY"
 
 # write bundler's .env file
 pushd packages/bundler
@@ -91,7 +91,7 @@ echo "Bundler running at PID: $BUNDLER_PID"
 pushd packages/subtree-updater
 cat > .env <<- EOM
 RPC_URL=$RPC_URL
-SUBMITTER_SECRET_KEY=$SUBTREE_UPDATER_SUBMITTER_PRIVATE_KEY
+TX_SIGNER_KEY=$SUBTREE_UPDATER_TX_SIGNER_KEY
 EOM
 popd
 

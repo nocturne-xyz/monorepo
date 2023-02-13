@@ -1,21 +1,12 @@
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  StealthAddress,
-  NoteTrait,
-  SubtreeUpdateProver,
   MockSubtreeUpdateProver,
-  AssetTrait,
-  AssetType,
+  SubtreeUpdateProver,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
-import { Vault, Wallet } from "@nocturne-xyz/contracts";
-import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
-import { ethers } from "hardhat";
-import * as fs from "fs";
-import * as path from "path";
 import findWorkspaceRoot from "find-yarn-workspace-root";
-
-const MOCK_SUBTREE_UPDATER_DELAY = 2100;
+import * as path from "path";
+import * as fs from "fs";
+import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -26,48 +17,7 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/subtreeupdat
 const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
-export async function depositFunds(
-  wallet: Wallet,
-  vault: Vault,
-  token: SimpleERC20Token,
-  eoa: ethers.Signer,
-  stealthAddress: StealthAddress,
-  amounts: bigint[],
-  startNonce = 0
-): Promise<bigint[]> {
-  const total = amounts.reduce((sum, a) => sum + a);
-  token.reserveTokens(eoa.address, total);
-  await token.connect(eoa).approve(vault.address, total);
-
-  const asset = {
-    assetType: AssetType.ERC20,
-    assetAddr: token.address,
-    id: 0n,
-  };
-
-  const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
-
-  const commitments = [];
-  for (let i = 0; i < amounts.length; i++) {
-    await wallet.connect(eoa).depositFunds({
-      spender: eoa.address as string,
-      encodedAssetAddr,
-      encodedAssetId,
-      value: amounts[i],
-      depositAddr: stealthAddress,
-    });
-
-    const note = {
-      owner: stealthAddress,
-      nonce: BigInt(i + startNonce),
-      asset,
-      value: amounts[i],
-    };
-    commitments.push(NoteTrait.toCommitment(note));
-  }
-
-  return commitments;
-}
+const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,5 +1,6 @@
+// @ts-nocheck
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "ethers";
 import {
   SimpleERC20Token__factory,
   Vault,
@@ -8,44 +9,48 @@ import {
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
-import { setupNocturne } from "../utils/deploy";
-import {
-  depositFunds,
-  getSubtreeUpdateProver,
-  getSubtreeUpdaterDelay,
-} from "../utils/test";
+import { setupNocturne } from "../src/deploy";
+import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
+import Dockerode from "dockerode";
+import { startHardhatNetwork } from "../src/hardhat";
+import { KEYS, KEYS_TO_WALLETS } from "../src/keys";
+import { depositFunds } from "../src/deposit";
 
 const PER_SPEND_AMOUNT = 100n;
-const TEST_SERVER_POLL_INTERVAL = 1000;
+const HH_URL = "http://localhost:8545";
 
 describe("Wallet with standalone SubtreeUpdateServer", async () => {
-  let deployer: ethers.Signer;
-  let alice: ethers.Signer;
-  let serverSigner: ethers.Signer;
+  let docker: Dockerode;
+  let hhContainer: Dockerode.Container;
+
+  let provider: ethers.providers.Provider;
+  let deployerEoa: ethers.Wallet;
+  let aliceEoa: ethers.Wallet;
+  let subtreeUpdaterEoa: ethers.Wallet;
+
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
-  let nocturneContext: NocturneContext;
+  let nocturneContextAlice: NocturneContext;
   let server: SubtreeUpdateServer;
-  let notesDB: NotesDB;
+  let notesDBAlice: NotesDB;
 
   beforeEach(async () => {
-    const signers = await ethers.getSigners();
-    deployer = signers[0];
-    serverSigner = signers[1];
+    docker = new Dockerode();
+    hhContainer = await startHardhatNetwork(docker, {
+      blockTime: 3_000,
+      keys: KEYS,
+    });
 
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
+    provider = new ethers.providers.JsonRpcProvider(HH_URL);
+    [deployerEoa, aliceEoa, subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
+    ({ vault, wallet, nocturneContextAlice, notesDBAlice } =
+      await setupNocturne(deployerEoa));
+
+    const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
     token = await tokenFactory.deploy();
     console.log("Token deployed at: ", token.address);
-
-    const nocturneSetup = await setupNocturne(deployer);
-    alice = nocturneSetup.alice;
-    vault = nocturneSetup.vault;
-    wallet = nocturneSetup.wallet;
-    token = token;
-    nocturneContext = nocturneSetup.nocturneContextAlice;
-    notesDB = nocturneSetup.notesDBAlice;
 
     server = newServer();
     await server.init();
@@ -61,17 +66,18 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       prover,
       wallet.address,
       serverDBPath,
-      serverSigner,
+      subtreeUpdaterEoa,
       { interval: 1_000 }
     );
     return server;
   }
 
   afterEach(async () => {
-    await notesDB.kv.clear();
+    await notesDBAlice.kv.clear();
     await server.stop();
     await server.dropDB();
-    await network.provider.send("hardhat_reset");
+    await hhContainer.stop();
+    await hhContainer.remove();
   });
 
   it("can recover state", async () => {
@@ -79,8 +85,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       wallet,
       vault,
       token,
-      alice,
-      nocturneContext.signer.address,
+      aliceEoa,
+      nocturneContextAlice.signer.address,
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 

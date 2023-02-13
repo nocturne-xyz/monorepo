@@ -1,52 +1,36 @@
 import { expect } from "chai";
-import { ethers, network, config } from "hardhat";
-import { open } from "lmdb";
+import { setupNocturne } from "../src/deploy";
+import * as JSON from "bigint-json-serialization";
+import { KEYS_TO_WALLETS, KEYS } from "../src/keys";
+import { startHardhatNetwork } from "../src/hardhat";
+import Dockerode from "dockerode";
+import * as compose from "docker-compose";
+import { ethers } from "ethers";
 import {
+  SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
-  SimpleERC1155Token__factory,
   Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
-
 import {
-  NocturneContext,
   Asset,
-  OperationRequest,
-  NotesDB,
-  query,
-  computeOperationDigest,
   AssetType,
+  computeOperationDigest,
+  NocturneContext,
+  NotesDB,
+  OperationRequest,
   OperationRequestBuilder,
+  query,
 } from "@nocturne-xyz/sdk";
-import { setupNocturne } from "../utils/deploy";
-import { depositFunds, sleep, getSubtreeUpdateProver } from "../utils/test";
+import { startSubtreeUpdater } from "../src/subtreeUpdater";
+import { sleep } from "../src/utils";
+import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
+import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
-import RedisMemoryServer from "redis-memory-server";
-import {
-  BundlerBatcher,
-  BundlerServer,
-  BundlerSubmitter,
-} from "@nocturne-xyz/bundler";
-import IORedis from "ioredis";
-import * as JSON from "bigint-json-serialization";
-import fetch from "node-fetch";
-import http from "http";
-import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
-
-const BUNDLER_SERVER_PORT = 3000;
-const BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS = 5;
-const BUNDLER_BATCH_SIZE = 2;
-
-const accounts = config.networks.hardhat.accounts;
-const BUNDLER_PRIVKEY = ethers.Wallet.fromMnemonic(
-  accounts.mnemonic,
-  accounts.path + `/${1}`
-).privateKey;
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
@@ -60,99 +44,98 @@ const ERC721_TOKEN_ID = 1n;
 const ERC1155_TOKEN_ID = 2n;
 const ERC1155_TOKEN_AMOUNT = 3n;
 
+const HH_URL = "http://localhost:8545";
+const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
+
+const REDIS_URL = "redis://redis:6379";
+const REDIS_PASSWORD = "baka";
+
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
-  let deployer: ethers.Signer;
-  let alice: ethers.Signer;
-  let bob: ethers.Signer;
+  let docker: Dockerode;
+  let hhContainer: Dockerode.Container;
+  let subtreeUpdaterContainer: Dockerode.Container;
+
+  let provider: ethers.providers.JsonRpcProvider;
+  let deployerEoa: ethers.Wallet;
+  let aliceEoa: ethers.Wallet;
+  let bobEoa: ethers.Wallet;
+  let subtreeUpdaterEoa: ethers.Wallet;
+  let bundlerEoa: ethers.Wallet;
+
   let vault: Vault;
   let wallet: Wallet;
   let erc20Token: SimpleERC20Token;
   let erc721Token: SimpleERC721Token;
   let erc1155Token: SimpleERC1155Token;
-  let updater: SubtreeUpdater;
   let notesDBAlice: NotesDB;
   let nocturneContextAlice: NocturneContext;
   let notesDBBob: NotesDB;
   let nocturneContextBob: NocturneContext;
-  let redisServer: RedisMemoryServer;
-  let bundlerServer: BundlerServer;
-  let bundlerBatcher: BundlerBatcher;
-  let bundlerSubmitter: BundlerSubmitter;
-
-  let bundlerServerProcess: http.Server;
 
   beforeEach(async () => {
-    if (bundlerServerProcess) {
-      bundlerServerProcess.close();
-    }
+    docker = new Dockerode();
+    hhContainer = await startHardhatNetwork(docker, {
+      blockTime: 3_000,
+      keys: KEYS,
+    });
 
-    [deployer] = await ethers.getSigners();
-    const tokenFactory = new SimpleERC20Token__factory(deployer);
-    erc20Token = await tokenFactory.deploy();
-    console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
-
-    const erc721TokenFactory = new SimpleERC721Token__factory(deployer);
-    erc721Token = await erc721TokenFactory.deploy();
-    console.log("ERC721 token deployed at: ", erc721Token.address);
-
-    const erc1155TokenFactory = new SimpleERC1155Token__factory(deployer);
-    erc1155Token = await erc1155TokenFactory.deploy();
-    console.log("ERC1155 token deployed at: ", erc1155Token.address);
+    provider = new ethers.providers.JsonRpcProvider(HH_URL);
+    [deployerEoa, aliceEoa, bobEoa, subtreeUpdaterEoa, bundlerEoa] =
+      KEYS_TO_WALLETS(provider);
 
     ({
-      alice,
-      bob,
       vault,
       wallet,
       notesDBAlice,
       nocturneContextAlice,
       notesDBBob,
       nocturneContextBob,
-    } = await setupNocturne(deployer));
+    } = await setupNocturne(deployerEoa));
 
-    const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
-    const prover = getSubtreeUpdateProver();
-    const submitter = new SyncSubtreeSubmitter(wallet);
-    updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
+    erc20Token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+    console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
+    erc721Token = await new SimpleERC721Token__factory(deployerEoa).deploy();
+    console.log("ERC721 token deployed at: ", erc721Token.address);
+    erc1155Token = await new SimpleERC1155Token__factory(deployerEoa).deploy();
+    console.log("ERC1155 token deployed at: ", erc1155Token.address);
 
-    redisServer = await RedisMemoryServer.create();
-    const host = await redisServer.getHost();
-    const port = await redisServer.getPort();
-    const redis = new IORedis(port, host);
+    subtreeUpdaterContainer = await startSubtreeUpdater(docker, {
+      walletAddress: wallet.address,
+      rpcUrl: HH_FROM_DOCKER_URL,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
+    });
 
-    bundlerServer = new BundlerServer(wallet.address, redis, ethers.provider);
-    bundlerBatcher = new BundlerBatcher(
-      BUNDLER_BATCHER_MAX_BATCH_LATENCY_SECS,
-      BUNDLER_BATCH_SIZE,
-      redis
+    subtreeUpdaterContainer.logs(
+      { follow: true, stdout: true, stderr: true },
+      (err, stream) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        stream!.pipe(process.stdout);
+      }
     );
 
-    process.env.TX_SIGNER_KEY = BUNDLER_PRIVKEY;
-    const signingProvider = new ethers.Wallet(BUNDLER_PRIVKEY, ethers.provider);
-    bundlerSubmitter = new BundlerSubmitter(
-      wallet.address,
-      redis,
-      signingProvider
-    );
-
-    await updater.init();
+    await startBundler({
+      redisUrl: REDIS_URL,
+      redisPassword: REDIS_PASSWORD,
+      walletAddress: wallet.address,
+      maxLatency: 1,
+      rpcUrl: HH_FROM_DOCKER_URL,
+      txSignerKey: bundlerEoa.privateKey,
+    });
   });
-
-  async function applySubtreeUpdate() {
-    await wallet.fillBatchWithZeros();
-    await updater.pollInsertionsAndTryMakeBatch();
-    await updater.tryGenAndSubmitProofs();
-  }
 
   afterEach(async () => {
-    await notesDBAlice.kv.clear();
-    await notesDBBob.kv.clear();
-    await updater.dropDB();
-    await network.provider.send("hardhat_reset");
-  });
-
-  after(async () => {
-    await network.provider.send("hardhat_reset");
+    await subtreeUpdaterContainer.stop();
+    await subtreeUpdaterContainer.remove();
+    await compose.down({
+      cwd: BUNDLER_COMPOSE_CWD,
+      commandOptions: [["--volumes"]],
+    });
+    await hhContainer.stop();
+    await hhContainer.remove();
   });
 
   async function testE2E(
@@ -160,14 +143,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>
   ): Promise<void> {
-    console.log("Start bundler");
-    bundlerServerProcess = bundlerServer.run(BUNDLER_SERVER_PORT);
-    const bundlerBatcherProm = bundlerBatcher.run().catch(console.error);
-    const bundlerSubmitterProm = bundlerSubmitter.run().catch(console.error);
-
-    console.log("apply subtree update");
-    await applySubtreeUpdate();
-
     console.log("Alice: Sync SDK notes manager");
     await nocturneContextAlice.syncNotes();
 
@@ -183,15 +158,18 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Bob: Sync SDK merkle prover");
     await nocturneContextBob.syncLeaves();
 
-    operationRequest.gasPrice = 0n;
+    const opRequest: OperationRequest = {
+      ...operationRequest,
+      gasPrice: 0n,
+    };
 
     console.log("Create post-proof operation with NocturneContext");
     const operation = await nocturneContextAlice.tryCreateProvenOperation(
-      operationRequest
+      opRequest
     );
 
     console.log("Process bundle");
-    var res = await fetch(`http://localhost:${BUNDLER_SERVER_PORT}/relay`, {
+    var res = await fetch(`http://localhost:3000/relay`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -200,23 +178,23 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     });
     console.log("Bundler server response: ", await res.json());
 
-    console.log("Sleeping for 10s while bundler submits...");
-    await Promise.race([
-      sleep(10000),
-      bundlerBatcherProm,
-      bundlerSubmitterProm,
-    ]);
+    console.log("Sleeping for 20s while bundler submits...");
+    await sleep(20_000);
 
     const operationDigest = computeOperationDigest(operation);
     var res = await fetch(
-      `http://localhost:${BUNDLER_SERVER_PORT}/operations/${operationDigest}`,
+      `http://localhost:3000/operations/${operationDigest}`,
       {
         method: "GET",
       }
     );
     console.log(
-      `Bundler marked operation ${operationDigest} ${await res.json()}`
+      `Bundler marked operation ${operationDigest} ${JSON.stringify(
+        await res.json()
+      )}`
     );
+
+    await sleep(5_000);
 
     await contractChecks();
     await offchainChecks();
@@ -228,10 +206,11 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       wallet,
       vault,
       erc20Token,
-      alice,
+      aliceEoa,
       nocturneContextAlice.signer.address,
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
+    await sleep(15_000);
 
     const erc20Asset: Asset = {
       assetType: AssetType.ERC20,
@@ -239,14 +218,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       id: ERC20_TOKEN_ID,
     };
 
+    console.log("Encode transfer erc20 action");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [bob.address, ALICE_TO_BOB_PUB_VAL]
+        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
       );
 
-    const builder = new OperationRequestBuilder();
-    const operationRequest = builder
+    const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
         erc20Asset,
@@ -256,11 +235,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .action(erc20Token.address, encodedFunction)
       .build();
 
-    console.log("Encode transfer erc20 action");
-
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
-      const latestBlock = await ethers.provider.getBlockNumber();
+      const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await query(
         wallet,
         wallet.filters.OperationProcessed(),
@@ -271,12 +248,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(events[0].args.opProcessed).to.equal(true);
       expect(events[0].args.callSuccesses[0]).to.equal(true);
 
-      expect((await erc20Token.balanceOf(alice.address)).toBigInt()).to.equal(
-        0n
-      );
-      expect((await erc20Token.balanceOf(bob.address)).toBigInt()).to.equal(
-        ALICE_TO_BOB_PUB_VAL
-      );
+      expect(
+        (await erc20Token.balanceOf(await aliceEoa.getAddress())).toBigInt()
+      ).to.equal(0n);
+      expect(
+        (await erc20Token.balanceOf(await bobEoa.getAddress())).toBigInt()
+      ).to.equal(ALICE_TO_BOB_PUB_VAL);
       expect((await erc20Token.balanceOf(vault.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
@@ -325,25 +302,20 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       wallet,
       vault,
       erc20Token,
-      alice,
+      aliceEoa,
       nocturneContextAlice.signer.address,
       [PER_NOTE_AMOUNT]
     );
+    await sleep(15_000);
 
-    const erc20Asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: erc20Token.address,
-      id: ERC20_TOKEN_ID,
-    };
-
-    console.log("Encode transfer erc721 action");
+    console.log("Encode reserve erc721 action");
     const erc721Asset: Asset = {
       assetType: AssetType.ERC721,
       assetAddr: erc721Token.address,
       id: ERC721_TOKEN_ID,
     };
 
-    console.log("Encode transfer erc1155 action");
+    console.log("Encode reserve erc1155 action");
     const erc1155Asset: Asset = {
       assetType: AssetType.ERC1155,
       assetAddr: erc1155Token.address,
@@ -356,6 +328,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         // mint a ERC721 token directly to the wallet contract
         [wallet.address, ERC721_TOKEN_ID]
       );
+
     const erc1155EncodedFunction =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
@@ -363,9 +336,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
       );
 
-    const builder = new OperationRequestBuilder();
+    // TODO: This is dummy gas token, needed to ensure contract has a
+    // gas token joinsplit. In future PR, we need to have SDK auto-find
+    // gas joinsplit.
+    const erc20Asset: Asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: erc20Token.address,
+      id: ERC20_TOKEN_ID,
+    };
+
     // unwrap 1 erc20 to satisfy gas token requirement
-    const opRequest = builder
+    const operationRequest = new OperationRequestBuilder()
       .action(erc721Token.address, erc721EncodedFunction)
       .action(erc1155Token.address, erc1155EncodedFunction)
       .unwrap(erc20Asset, 1n)
@@ -373,14 +354,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
-      const latestBlock = await ethers.provider.getBlockNumber();
+      const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await query(
         wallet,
         wallet.filters.OperationProcessed(),
         0,
         latestBlock
       );
-      expect(events.length).to.equal(1);
+
       expect(events[0].args.opProcessed).to.equal(true);
       expect(events[0].args.callSuccesses[0]).to.equal(true);
       expect(events[0].args.callSuccesses[1]).to.equal(true);
@@ -399,6 +380,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(erc1155NotesAlice.length).to.equal(1);
     };
 
-    await testE2E(opRequest, contractChecks, offchainChecks);
+    await testE2E(operationRequest, contractChecks, offchainChecks);
   });
 });

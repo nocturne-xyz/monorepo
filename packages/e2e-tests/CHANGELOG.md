@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Replace in memory instantiation of hardhat, subtree updater, and bundler with dockerized versions in test cases
+- Add `src` to include functions previously in `utils` + actor instantiation functions (ones that use dockerode or docker-compose)
+- Remove `utils` folder
+- Add `hardhat` sub-package
 - use `OperationRequestBuilder` for e2e tests
 - update imports for new `AssetTrait`
 - update imports with SDK renames (see SDK changelog)

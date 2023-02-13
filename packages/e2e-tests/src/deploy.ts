@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
 import * as fs from "fs";
 import {
   Wallet__factory,
@@ -36,8 +36,6 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
 export interface NocturneSetup {
-  alice: ethers.Signer;
-  bob: ethers.Signer;
   vault: Vault;
   wallet: Wallet;
   notesDBAlice: NotesDB;
@@ -49,25 +47,27 @@ export interface NocturneSetup {
 }
 
 export async function setupNocturne(
-  signer: ethers.Signer
+  connectedSigner: ethers.Wallet
 ): Promise<NocturneSetup> {
-  const deployer = new NocturneDeployer(signer);
+  if (!connectedSigner.provider) {
+    throw new Error("Signer must be connected");
+  }
+
+  const deployer = new NocturneDeployer(connectedSigner);
   const deployment = await deployer.deployNocturne(
     "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6", // dummy
     {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
-      provider: ethers.provider,
+      confirmations: 1,
     }
   );
 
-  await checkNocturneDeploymentConfig(deployment, ethers.provider);
+  await checkNocturneDeploymentConfig(deployment, connectedSigner.provider);
 
   const { walletProxy, vaultProxy } = deployment;
-  const wallet = Wallet__factory.connect(walletProxy.proxy, signer);
-  const vault = Vault__factory.connect(vaultProxy.proxy, signer);
-
-  const [_, alice, bob] = await ethers.getSigners();
+  const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
+  const vault = Vault__factory.connect(vaultProxy.proxy, connectedSigner);
 
   console.log("Create NocturneContextAlice");
   const aliceKV = new InMemoryKVStore();
@@ -77,7 +77,8 @@ export async function setupNocturne(
     3n,
     wallet,
     notesDBAlice,
-    merkleDBAlice
+    merkleDBAlice,
+    connectedSigner.provider
   );
 
   console.log("Create NocturneContextBob");
@@ -88,14 +89,13 @@ export async function setupNocturne(
     5n,
     wallet,
     notesDBBob,
-    merkleDBBob
+    merkleDBBob,
+    connectedSigner.provider
   );
 
   console.log("Wallet address:", wallet.address);
   console.log("Vault address:", vault.address);
   return {
-    alice,
-    bob,
     vault,
     wallet,
     notesDBAlice,
@@ -111,7 +111,8 @@ function setupNocturneContext(
   sk: bigint,
   wallet: any,
   notesDB: NotesDB,
-  merkleDB: MerkleDB
+  merkleDB: MerkleDB,
+  provider: ethers.providers.Provider
 ): NocturneContext {
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
@@ -119,7 +120,7 @@ function setupNocturneContext(
   const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new InMemoryMerkleProver(
     wallet.address,
-    ethers.provider,
+    provider,
     merkleDB
   );
 
@@ -127,7 +128,7 @@ function setupNocturneContext(
     notesDB,
     nocturneSigner,
     wallet.address,
-    ethers.provider
+    provider
   );
   return new NocturneContext(
     nocturneSigner,

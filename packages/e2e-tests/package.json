@@ -11,10 +11,11 @@
   "scripts": {
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "build": "",
-    "prettier:check": "prettier --check ./test ./scripts ./utils",
-    "prettier:write": "prettier --write ./test ./scripts ./utils",
+    "prettier:check": "prettier --check ./tests ./src",
+    "prettier:write": "prettier --write ./tests ./src",
     "hh-node": "npx hardhat node",
-    "test:e2e": "yarn setup-rapidsnark && npx hardhat test",
+    "test:e2e": "./prepare.sh && yarn test:e2e:no-prepare",
+    "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 1000000 --exit",
     "test:hh-node": "npx hardhat test --network localhost",
     "hh-node-deposit": "npx hardhat run ./scripts/deployAndDeposit.ts --network localhost",
     "clean": "rm -rf .turbo cache artifacts db"
@@ -30,15 +31,23 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.13",
     "@openzeppelin/hardhat-upgrades": "^1.22.1",
+    "@types/chai": "^4.3.3",
+    "@types/dockerode": "^3.3.14",
     "@types/glob": "^8.0.0",
+    "@types/mocha": "^10.0.0",
     "bigint-json-serialization": "^1.0.1",
+    "chai": "^4.3.6",
     "circomlibjs": "0.0.8",
+    "docker-compose": "^0.23.19",
+    "dockerode": "^3.3.4",
+    "dotenv": "^16.0.3",
+    "envfile": "^6.18.0",
+    "ethers": "^5.7.2",
     "find-yarn-workspace-root": "^2.0.0",
     "hardhat": "^2.12.0",
     "hardhat-deploy": "^0.11.18",
     "hardhat-ethernal": "^3.1.0",
-    "ioredis": "^5.2.4",
-    "prettier": "^2.8.0",
-    "redis-memory-server": "^0.6.0"
+    "mocha": "^10.1.0",
+    "prettier": "^2.8.0"
   }
 }
