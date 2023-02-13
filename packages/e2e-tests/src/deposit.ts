@@ -2,7 +2,7 @@ import { Vault, Wallet } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
   AssetType,
-  encodeAsset,
+  AssetTrait,
   NoteTrait,
   StealthAddress,
 } from "@nocturne-xyz/sdk";
@@ -28,7 +28,7 @@ export async function depositFunds(
     id: 0n,
   };
 
-  const { encodedAssetAddr, encodedAssetId } = encodeAsset(asset);
+  const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
 
   const commitments: bigint[] = [];
   for (let i = 0; i < amounts.length; i++) {

@@ -226,7 +226,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const joinSplitRequest: JoinSplitRequest = {
       asset: erc20Asset,
       unwrapValue: ALICE_UNWRAP_VAL,
-      paymentIntent: {
+      payment: {
         receiver: nocturneContextBob.signer.canonAddress,
         value: ALICE_TO_BOB_PRIV_VAL,
       },
