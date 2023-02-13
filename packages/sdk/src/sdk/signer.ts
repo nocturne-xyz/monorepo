@@ -13,7 +13,7 @@ import {
   EncryptedNote,
   SignedJoinSplit,
   SignedOperation,
-  PreSignJoinSplit,
+  PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
 import { Asset } from "./asset";
@@ -159,7 +159,7 @@ export class NocturneSigner {
 }
 
 function makeSignedJoinSplit(
-  preSignJoinSplit: PreSignJoinSplit,
+  PreProofJoinSplit: PreProofJoinSplit,
   opDigest: bigint,
   opSig: NocturneSignature,
   vk: bigint,
@@ -173,7 +173,7 @@ function makeSignedJoinSplit(
     newNoteA,
     newNoteB,
     ...baseJoinSplit
-  } = preSignJoinSplit;
+  } = PreProofJoinSplit;
 
   const { c, z } = opSig;
 

@@ -18,7 +18,7 @@ import {
 } from ".";
 import {
   BLOCK_GAS_LIMIT,
-  PreSignJoinSplit,
+  PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
 import { CanonAddress, StealthAddressTrait } from "../crypto";
@@ -101,7 +101,7 @@ export async function prepareJoinSplits(
   notesDB: NotesDB,
   merkle: MerkleProver,
   signer: NocturneSigner
-): Promise<PreSignJoinSplit[]> {
+): Promise<PreProofJoinSplit[]> {
   const notes = await gatherNotes(
     getJoinSplitRequestTotalValue(joinSplitRequest),
     joinSplitRequest.asset,
@@ -189,7 +189,7 @@ async function getJoinSplitsFromNotes(
   paymentAmount: bigint,
   amountLeftOver: bigint,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit[]> {
+): Promise<PreProofJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
     const newAddr = StealthAddressTrait.randomize(signer.address);
@@ -240,7 +240,7 @@ async function makeJoinSplit(
   paymentAmount: bigint,
   amountToReturn: bigint,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit> {
+): Promise<PreProofJoinSplit> {
   const sender = signer.privkey.toCanonAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;

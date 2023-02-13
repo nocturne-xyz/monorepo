@@ -32,7 +32,7 @@ export interface BaseJoinSplit {
   newNoteBEncrypted: EncryptedNote;
 }
 
-export interface PreSignJoinSplit extends BaseJoinSplit {
+export interface PreProofJoinSplit extends BaseJoinSplit {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -61,7 +61,7 @@ export interface BaseOperation {
 }
 
 export interface PreSignOperation extends BaseOperation {
-  joinSplits: PreSignJoinSplit[];
+  joinSplits: PreProofJoinSplit[];
 }
 
 export interface SignedOperation extends BaseOperation {

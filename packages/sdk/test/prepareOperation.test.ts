@@ -323,4 +323,4 @@ describe("prepareOperation", async () => {
   });
 });
 
-// TODO unit test for prepareJoinSplits that actually inspects the PreSignJoinSplits coming out
+// TODO unit test for prepareJoinSplits that actually inspects the PreProofJoinSplits coming out
