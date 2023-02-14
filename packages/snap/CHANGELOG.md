@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix SK being derived in wrong field
+- move to monorepo
 - Bump SDK to 1.0.70-alpha
 - Bump SDK to 1.0.66-alpha
 - Bump SDK to 1.0.60-alpha to include joinsplit processing after refund processing fix
