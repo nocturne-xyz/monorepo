@@ -76,6 +76,7 @@ EOM
 
 # clear redis if it exists 
 rm -r ./redis-data || echo 'redis-data does not yet exist'
+mkdir ./redis-data
 popd
 
 # run bundler
