@@ -1,5 +1,5 @@
 import { setupNocturne } from "../src/deploy";
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
 import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
@@ -7,6 +7,9 @@ import {
   StealthAddressTrait,
   CanonAddress,
 } from "@nocturne-xyz/sdk";
+import { KEYS_TO_WALLETS } from "../src/keys";
+
+const HH_URL = "http://localhost:8545";
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [
@@ -28,9 +31,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
 (async () => {
   console.log("Post deploy setup");
-  const [depositor] = await ethers.getSigners();
-  const { wallet, vault } = await setupNocturne(depositor);
-  const tokenFactory = new SimpleERC20Token__factory(depositor);
+  const provider = new ethers.providers.JsonRpcProvider(HH_URL);
+  const [deployer] = KEYS_TO_WALLETS(provider);
+  const { wallet, vault } = await setupNocturne(deployer);
+  const tokenFactory = new SimpleERC20Token__factory(deployer);
   const tokens = await Promise.all(
     Array(2)
       .fill(0)
@@ -46,19 +50,19 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
       console.log(`Sending ETH and tokens to ${addr}`);
-      await depositor.sendTransaction({
+      await deployer.sendTransaction({
         to: addr,
         value: ethers.utils.parseEther("10.0"),
       });
       await token.reserveTokens(addr, ethers.utils.parseEther("10.0"));
     }
 
-    // Reserve and approve tokens for nocturne addr depositor
+    // Reserve and approve tokens for nocturne addr deployer
     const reserveAmount = ethers.utils.parseEther("100.0");
     await token
-      .connect(depositor)
-      .reserveTokens(depositor.address, reserveAmount);
-    await token.connect(depositor).approve(vault.address, reserveAmount);
+      .connect(deployer)
+      .reserveTokens(deployer.address, reserveAmount);
+    await token.connect(deployer).approve(vault.address, reserveAmount);
   }
 
   const encodedAssets = tokens
@@ -79,11 +83,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
-      await wallet.connect(depositor).depositFunds(
+      await wallet.connect(deployer).depositFunds(
         {
           encodedAssetAddr,
           encodedAssetId,
-          spender: depositor.address,
+          spender: deployer.address,
           value: perNoteAmount,
           depositAddr: addr,
         },
@@ -94,5 +98,5 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     }
   }
 
-  await wallet.connect(depositor).fillBatchWithZeros();
+  await wallet.connect(deployer).fillBatchWithZeros();
 })();
