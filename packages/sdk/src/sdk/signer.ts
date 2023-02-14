@@ -9,8 +9,16 @@ import {
 } from "../crypto/address";
 import { NocturnePrivKey } from "../crypto/privkey";
 import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
-import { EncryptedNote } from "../commonTypes";
+import {
+  EncryptedNote,
+  SignedJoinSplit,
+  SignedOperation,
+  PreProofJoinSplit,
+  PreSignOperation,
+} from "../commonTypes";
 import { Asset } from "./asset";
+import { computeOperationDigest } from "../contract";
+import { JoinSplitInputs } from "../proof";
 
 export interface NocturneSignature {
   c: bigint;
@@ -64,7 +72,7 @@ export class NocturneSigner {
   }
 
   createNullifier(note: Note): bigint {
-    if (!this.testOwn(note.owner)) {
+    if (!this.isOwnAddress(note.owner)) {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
@@ -88,7 +96,7 @@ export class NocturneSigner {
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-    if (!this.testOwn(encryptedNote.owner)) {
+    if (!this.isOwnAddress(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
     let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
@@ -112,9 +120,79 @@ export class NocturneSigner {
     };
   }
 
-  testOwn(addr: StealthAddress): boolean {
+  isOwnAddress(addr: StealthAddress): boolean {
     const points = StealthAddressTrait.toPoints(addr);
     const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
     return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
   }
+
+  signOperation(op: PreSignOperation): SignedOperation {
+    const opDigest = computeOperationDigest(op);
+    const opSig = this.sign(opDigest);
+    const pk = this.privkey.spendPk();
+
+    const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
+      makeSignedJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk)
+    );
+
+    const {
+      actions,
+      refundAddr,
+      encodedRefundAssets,
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
+    } = op;
+
+    return {
+      joinSplits,
+      refundAddr,
+      encodedRefundAssets,
+      actions,
+      verificationGasLimit,
+      executionGasLimit,
+      gasPrice,
+      maxNumRefunds,
+    };
+  }
+}
+
+function makeSignedJoinSplit(
+  preProofJoinSplit: PreProofJoinSplit,
+  opDigest: bigint,
+  opSig: NocturneSignature,
+  vk: bigint,
+  spendPk: [bigint, bigint]
+): SignedJoinSplit {
+  const {
+    merkleProofA,
+    merkleProofB,
+    oldNoteA,
+    oldNoteB,
+    newNoteA,
+    newNoteB,
+    ...baseJoinSplit
+  } = preProofJoinSplit;
+
+  const { c, z } = opSig;
+
+  const proofInputs: JoinSplitInputs = {
+    vk,
+    spendPk,
+    c,
+    z,
+    merkleProofA,
+    merkleProofB,
+    operationDigest: opDigest,
+    oldNoteA: NoteTrait.encode(oldNoteA),
+    oldNoteB: NoteTrait.encode(oldNoteB),
+    newNoteA: NoteTrait.encode(newNoteA),
+    newNoteB: NoteTrait.encode(newNoteB),
+  };
+  return {
+    opDigest,
+    proofInputs,
+    ...baseJoinSplit,
+  };
 }

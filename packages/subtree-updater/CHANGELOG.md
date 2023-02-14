@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `packToSolidityProof`, `unpackFromSolidityProof`, and `SolidityProof` into `proof/utils`
 - Rename `SUBMITTER_SECRET_KEY` to `TX_SIGNER_KEY`
 - Add separate script for building mock docker
 - update imports with SDK renames (see SDK changelog)

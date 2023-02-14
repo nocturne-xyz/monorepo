@@ -47,13 +47,9 @@ export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
 }
 
 /**
- * Generate note transmission for a receiver canonical address and
- * a note
+ * Encrypt a note sent to a given receiver's
  */
-export function genEncryptedNote(
-  addr: CanonAddress,
-  note: Note
-): EncryptedNote {
+export function encryptNote(addr: CanonAddress, note: Note): EncryptedNote {
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
   const R = babyjub.mulPointEscalar(babyjub.Base8, r);

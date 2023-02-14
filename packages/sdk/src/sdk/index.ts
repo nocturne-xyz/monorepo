@@ -6,3 +6,5 @@ export * from "./asset";
 export * from "./signer";
 export * from "./operationRequest";
 export * from "./utils";
+export * from "./proveOperation";
+export { prepareOperation } from "./prepareOperation";

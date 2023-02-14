@@ -2,12 +2,12 @@ import { ethers } from "ethers";
 import {
   SNARK_SCALAR_FIELD,
   PreSignOperation,
-  PreProofOperation,
+  SignedOperation,
   ProvenOperation,
 } from "../commonTypes";
 
 function hashOperation(
-  op: PreSignOperation | PreProofOperation | ProvenOperation
+  op: PreSignOperation | SignedOperation | ProvenOperation
 ): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let actionPayload = [] as any;
@@ -90,7 +90,7 @@ function hashOperation(
 }
 
 export function computeOperationDigest(
-  operation: PreSignOperation | PreProofOperation | ProvenOperation
+  operation: PreSignOperation | SignedOperation | ProvenOperation
 ): bigint {
   const operationHash = hashOperation(operation);
   return BigInt(operationHash) % SNARK_SCALAR_FIELD;

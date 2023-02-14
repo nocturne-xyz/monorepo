@@ -1,9 +1,10 @@
 import {
-  PreProofOperation,
+  SignedOperation,
   PreSignOperation,
   ProvenOperation,
-  SolidityProof,
 } from "../../commonTypes";
+import { SolidityProof } from "../../proof";
+import { Note } from "../note";
 import { JoinSplitRequest } from "../operationRequest";
 
 export function getJoinSplitRequestTotalValue(
@@ -17,7 +18,7 @@ export function getJoinSplitRequestTotalValue(
 }
 
 export function fakeProvenOperation(
-  op: PreSignOperation | PreProofOperation | ProvenOperation
+  op: PreSignOperation | SignedOperation | ProvenOperation
 ): ProvenOperation {
   const provenJoinSplits = op.joinSplits.map((joinSplit) => {
     return {
@@ -45,13 +46,11 @@ export function fakeProvenOperation(
   };
 }
 
-export function range(start: number, stop?: number, step?: number): number[] {
+export function range(start: number, stop?: number, step = 1): number[] {
   if (!stop) {
     stop = start;
     start = 0;
   }
-
-  step ??= 1;
 
   return Array(Math.ceil((stop - start) / step))
     .fill(start)
@@ -72,4 +71,31 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
   });
 
   return Array.from(map.values());
+}
+
+export function* iterChunks<T>(
+  arr: T[],
+  chunkSize: number
+): IterableIterator<T[]> {
+  let chunk = [];
+  const i = 0;
+  while (i < arr.length) {
+    chunk = arr.slice(i, i + chunkSize);
+    yield chunk;
+    arr = arr.slice(i + chunkSize);
+  }
+}
+
+export function min(a: bigint, b: bigint): bigint {
+  return a < b ? a : b;
+}
+
+export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
+  return notes.sort((a, b) => {
+    return Number(a.value - b.value);
+  });
+}
+
+export function zip<T, U>(a: T[], b: U[]): [T, U][] {
+  return a.map((x, i) => [x, b[i]]);
 }

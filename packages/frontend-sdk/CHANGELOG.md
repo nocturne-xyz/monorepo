@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- rename methods to make intended usage clearer
+- update imports for new decoupled `NocturneContext` functionality
 - update imports for new `AssetTrait`
 - update imports with SDK renames (see SDK changelog)
 - make `TransactionTracker` take `className` so we can use it with `styled-components`

@@ -16,8 +16,8 @@ import {
   MerkleDB,
   InMemoryMerkleProver,
   DefaultNotesManager,
+  JoinSplitProver,
 } from "@nocturne-xyz/sdk";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 import {
   checkNocturneDeploymentConfig,
@@ -26,6 +26,7 @@ import {
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -44,6 +45,7 @@ export interface NocturneSetup {
   notesDBBob: NotesDB;
   merkleDBBob: MerkleDB;
   nocturneContextBob: NocturneContext;
+  joinSplitProver: JoinSplitProver;
 }
 
 export async function setupNocturne(
@@ -93,6 +95,8 @@ export async function setupNocturne(
     connectedSigner.provider
   );
 
+  const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+
   console.log("Wallet address:", wallet.address);
   console.log("Vault address:", vault.address);
   return {
@@ -104,6 +108,7 @@ export async function setupNocturne(
     notesDBBob,
     merkleDBBob,
     nocturneContextBob,
+    joinSplitProver,
   };
 }
 
@@ -117,7 +122,6 @@ function setupNocturneContext(
   const nocturnePrivKey = new NocturnePrivKey(sk);
   const nocturneSigner = new NocturneSigner(nocturnePrivKey);
 
-  const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
   const merkleProver = new InMemoryMerkleProver(
     wallet.address,
     provider,
@@ -132,7 +136,6 @@ function setupNocturneContext(
   );
   return new NocturneContext(
     nocturneSigner,
-    prover,
     wallet.provider,
     wallet.address,
     merkleProver,

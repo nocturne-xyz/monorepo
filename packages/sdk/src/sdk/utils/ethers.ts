@@ -4,7 +4,7 @@ import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
 import { EventFragment, Result } from "ethers/lib/utils";
 import { fakeProvenOperation } from ".";
 import {
-  PreProofOperation,
+  SignedOperation,
   PreSignOperation,
   ProvenOperation,
 } from "../../commonTypes";
@@ -53,7 +53,7 @@ export function parseEventsFromContractReceipt(
  * @param wallet an ethers instance of the wallet contract
  */
 export async function simulateOperation(
-  op: PreSignOperation | PreProofOperation | ProvenOperation,
+  op: PreSignOperation | SignedOperation | ProvenOperation,
   wallet: Wallet
 ): Promise<OperationResult> {
   // We need to do staticCall, which fails if wallet is connected a signer
@@ -68,6 +68,7 @@ export async function simulateOperation(
 
   // Set gasPrice to 0 so that gas payment does not interfere with amount of
   // assets unwrapped pre gas estimation
+  // ?: does this actually do anything if it's after `fakeProvenOperation` dummy provenOp?
   op.gasPrice = 0n;
 
   // Set dummy parameters which should not affect operation simulation
