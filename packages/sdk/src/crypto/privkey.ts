@@ -1,7 +1,10 @@
-import { babyjub, poseidon } from "circomlibjs";
+import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Scalar } from "ffjavascript";
 import { StealthAddress, CanonAddress, StealthAddressTrait } from "./address";
+
+const Fr = BabyJubJub.ScalarField;
+
+export type SpendPk = AffinePoint<bigint>;
 
 // TODO: rewrite Babyjub library to have constant time crypto
 export class NocturnePrivKey {
@@ -10,42 +13,42 @@ export class NocturnePrivKey {
 
   constructor(sk: bigint) {
     this.sk = sk;
-    const spendPk = babyjub.mulPointEscalar(babyjub.Base8, this.sk);
+    const spendPk = BabyJubJub.scalarMul(BabyJubJub.BasePoint, this.sk);
     const spendPkNonce = BigInt(1);
-    this.vk = poseidon([spendPk[0], spendPk[1], spendPkNonce]);
+    this.vk = poseidonBN([spendPk.x, spendPk.y, spendPkNonce]);
   }
 
   static genPriv(): NocturnePrivKey {
     // TODO make sk acutally uniformly distributed
     const sk_buf = randomBytes(Math.floor(256 / 8));
-    const sk = Scalar.fromRprBE(sk_buf, 0, 32) % babyjub.subOrder;
+    const sk = Fr.fromBytes(sk_buf);
     return new NocturnePrivKey(BigInt(sk));
   }
 
   toCanonAddress(): CanonAddress {
-    const addr = babyjub.mulPointEscalar(babyjub.Base8, this.vk);
+    const addr = BabyJubJub.scalarMul(BabyJubJub.BasePoint, this.vk);
     return addr;
   }
 
   toCanonAddressStruct(): StealthAddress {
     const canonAddr = this.toCanonAddress();
     return {
-      h1X: babyjub.Base8[0],
-      h1Y: babyjub.Base8[1],
-      h2X: canonAddr[0],
-      h2Y: canonAddr[1],
+      h1X: BabyJubJub.BasePoint.x,
+      h1Y: BabyJubJub.BasePoint.y,
+      h2X: canonAddr.x,
+      h2Y: canonAddr.y,
     };
   }
 
   toAddress(): StealthAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
-    const h1 = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const h2 = babyjub.mulPointEscalar(h1, this.vk);
+    const r = Fr.fromBytes(r_buf);
+    const h1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
+    const h2 = BabyJubJub.scalarMul(h1, this.vk);
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
-  spendPk(): [bigint, bigint] {
-    return babyjub.mulPointEscalar(babyjub.Base8, this.sk);
+  spendPk(): SpendPk {
+    return BabyJubJub.scalarMul(BabyJubJub.BasePoint, this.sk);
   }
 }

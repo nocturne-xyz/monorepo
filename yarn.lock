@@ -2898,6 +2898,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/circuit-utils@npm:^0.1.11":
+  version: 0.1.12
+  resolution: "@nocturne-xyz/circuit-utils@npm:0.1.12"
+  checksum: 57ac8a50cbb1f840abe2a69080ff71119c0e80737445ec6569c82b8ca51452d316037fd402c913dd011219fed585aecc74c868d3001f9b059f05eccb73244aa6
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/circuits@workspace:packages/circuits":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/circuits@workspace:packages/circuits"
@@ -3068,6 +3075,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.11
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3082,11 +3090,9 @@ __metadata:
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
-    circomlibjs: nocturne-xyz/circomlibjs
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ethers: ^5.0.0
-    ffjavascript: 0.2.57
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     prettier: ^2.8.0
@@ -11504,7 +11510,7 @@ circomlibjs@nocturne-xyz/circomlibjs:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
