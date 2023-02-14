@@ -8,19 +8,21 @@ import {
   OperationRequest,
   NotesDB,
   MerkleDB,
-  SNARK_SCALAR_FIELD,
 } from "@nocturne-xyz/sdk";
+import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
 import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 
-const WALLET_ADDRESS = "0xfA34985567851A7A1f748f1CdDb2e06715a83216";
+const WALLET_ADDRESS = "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853";
 const START_BLOCK = 0;
 // const RPC_URL =
 //   "https://eth-goerli.g.alchemy.com/v2/meBVzK1NR_VyKM7wVmOHj1hAbakk4esk";
 const RPC_URL = "http://127.0.0.1:8545/";
+
+const Fr = BabyJubJub.ScalarField;
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -41,7 +43,7 @@ async function getNocturnePrivKeyFromBIP44(): Promise<NocturnePrivKey> {
   });
   const addressKeyDeriver = await getBIP44AddressKeyDeriver(nocturneNode);
   const keyNode = await addressKeyDeriver(0);
-  const sk = BigInt(keyNode.privateKey) % SNARK_SCALAR_FIELD;
+  const sk = Fr.reduce(BigInt(keyNode.privateKey));
   const nocturnePrivKey = new NocturnePrivKey(sk);
   return nocturnePrivKey;
 }
