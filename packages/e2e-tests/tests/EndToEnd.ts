@@ -140,9 +140,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     });
     await hhContainer.stop();
     await hhContainer.remove();
-
-    // Delete redis-data folder so next test has clean run
-    await docker.getVolume("redis-data").remove();
   });
 
   async function testE2E(
