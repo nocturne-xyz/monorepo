@@ -1,6 +1,6 @@
 import { StealthAddressTrait, StealthAddress } from "../crypto/address";
 import { Asset, AssetTrait, EncodedAsset } from "../sdk/asset";
-import { poseidon } from "circomlibjs";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
 
@@ -31,7 +31,7 @@ export class NoteTrait {
     const { owner, nonce, encodedAssetAddr, encodedAssetId, value } =
       NoteTrait.encode(note);
     return BigInt(
-      poseidon([
+      poseidonBN([
         StealthAddressTrait.hash(owner),
         nonce,
         encodedAssetAddr,

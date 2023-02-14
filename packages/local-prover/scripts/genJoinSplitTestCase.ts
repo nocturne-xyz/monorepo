@@ -1,7 +1,7 @@
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
-import { poseidon } from "circomlibjs";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { WasmJoinSplitProver } from "../src/joinsplit";
 import {
   BinaryPoseidonTree,
@@ -49,7 +49,7 @@ const oldNoteA: EncodedNote = {
 console.log("OLD NOTE A: ", oldNoteA);
 
 const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
-const oldNoteACommitment = poseidon([
+const oldNoteACommitment = poseidonBN([
   oldNoteAOwnerHash,
   oldNoteA.nonce,
   oldNoteA.encodedAssetAddr,
@@ -68,7 +68,7 @@ const oldNoteB: EncodedNote = {
 console.log("OLD NOTE B: ", oldNoteB);
 
 const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
-const oldNoteBCommitment = poseidon([
+const oldNoteBCommitment = poseidonBN([
   oldNoteBOwnerHash,
   oldNoteB.nonce,
   oldNoteB.encodedAssetAddr,
@@ -116,7 +116,7 @@ const newNoteB: EncodedNote = {
 };
 console.log("NEW NOTE B: ", newNoteB);
 
-const newNoteACommitment = poseidon([
+const newNoteACommitment = poseidonBN([
   oldNoteAOwnerHash,
   newNoteA.nonce,
   newNoteA.encodedAssetAddr,
@@ -125,7 +125,7 @@ const newNoteACommitment = poseidon([
 ]);
 console.log("NEW NOTE COMMITMENT A: ", newNoteACommitment);
 
-const newNoteBCommitment = poseidon([
+const newNoteBCommitment = poseidonBN([
   oldNoteBOwnerHash,
   newNoteB.nonce,
   newNoteB.encodedAssetAddr,
@@ -141,7 +141,7 @@ console.log(opSig);
 
 const joinsplitInputs: JoinSplitInputs = {
   vk,
-  spendPk,
+  spendPk: [spendPk.x, spendPk.y],
   operationDigest,
   c: opSig.c,
   z: opSig.z,

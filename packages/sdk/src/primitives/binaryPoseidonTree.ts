@@ -3,7 +3,7 @@ import {
   Node,
   MerkleProof,
 } from "@zk-kit/incremental-merkle-tree";
-import { poseidon } from "circomlibjs";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 
 export class BinaryPoseidonTree {
   static readonly R = 28;
@@ -16,7 +16,7 @@ export class BinaryPoseidonTree {
 
   constructor() {
     this.tree = new IncrementalMerkleTree(
-      poseidon,
+      poseidonBN,
       BinaryPoseidonTree.DEPTH,
       BigInt(0)
     );
