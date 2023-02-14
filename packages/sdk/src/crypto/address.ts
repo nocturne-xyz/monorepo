@@ -1,4 +1,8 @@
-import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
 import { assert } from "../sdk";
 
@@ -56,8 +60,8 @@ export class StealthAddressTrait {
     const h1 = BabyJubJub.fromString(h1Str);
     const h2 = BabyJubJub.fromString(h2Str);
 
-    assert(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup")
-    assert(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup")
+    assert(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup");
+    assert(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup");
 
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }

@@ -1,7 +1,11 @@
 import { CanonAddress, StealthAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
 import randomBytes from "randombytes";
-import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import { EncryptedNote } from "../commonTypes";
 import { assert } from "../sdk";
 
@@ -45,12 +49,15 @@ export function encryptNote(addr: CanonAddress, note: Note): EncryptedNote {
   const r = Fr.fromBytes(r_buf);
   const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
 
-  const encryptedNonce = F.add(poseidonBN([encodePoint(R)]), F.reduce(note.nonce));
+  const encryptedNonce = F.add(
+    poseidonBN([encodePoint(R)]),
+    F.reduce(note.nonce)
+  );
   const encryptedValue = F.add(
     poseidonBN([F.reduce(encodePoint(R) + F.One)]),
     F.reduce(note.value)
   );
-  
+
   return {
     owner: StealthAddressTrait.randomize(note.owner),
     encappedKey: encodePoint(BabyJubJub.scalarMul(addr, r)),

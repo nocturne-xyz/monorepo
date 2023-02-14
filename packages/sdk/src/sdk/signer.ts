@@ -55,15 +55,11 @@ export class NocturneSigner {
 
     return {
       c,
-      z
+      z,
     };
   }
 
-  static verify(
-    pk: SpendPk,
-    m: bigint,
-    sig: NocturneSignature
-  ): boolean {
+  static verify(pk: SpendPk, m: bigint, sig: NocturneSignature): boolean {
     const c = sig.c;
     const z = sig.z;
     const Z = BabyJubJub.scalarMul(BabyJubJub.BasePoint, z);
@@ -98,7 +94,6 @@ export class NocturneSigner {
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-
     if (!this.isOwnAddress(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
@@ -111,9 +106,7 @@ export class NocturneSigner {
     const R = BabyJubJub.scalarMul(eR, vkInv);
     const nonce = F.sub(
       F.reduce(encryptedNote.encryptedNonce),
-      F.reduce(
-        poseidonBN([encodePoint(R)])
-      )
+      F.reduce(poseidonBN([encodePoint(R)]))
     );
 
     const value = F.sub(
@@ -174,7 +167,7 @@ function makeSignedJoinSplit(
   opDigest: bigint,
   opSig: NocturneSignature,
   vk: bigint,
-  spendPk: SpendPk,
+  spendPk: SpendPk
 ): SignedJoinSplit {
   const {
     merkleProofA,
