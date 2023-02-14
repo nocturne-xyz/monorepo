@@ -1,7 +1,7 @@
 name: Build/Cache Docker + E2E Tests
 on: [push]
 jobs:
-  build-docker:
+  build-and-test-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

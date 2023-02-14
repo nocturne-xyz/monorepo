@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Change `docker-compose.yml` to have redis `volumes: ./redis-data:/data` to `volumes: /redis-data` (volumes finally mount on docker env instead of host machine)
 - update imports with SDK renames (see SDK changelog)
 - use `--max-latency` option for batcher in `docker-compose.yml`
 - move `OperationStatus` enum to `@nocturne-xyz/sdk`
