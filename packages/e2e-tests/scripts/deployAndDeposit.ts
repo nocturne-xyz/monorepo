@@ -8,6 +8,7 @@ import {
   CanonAddress,
 } from "@nocturne-xyz/sdk";
 import { KEYS_TO_WALLETS } from "../src/keys";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 const HH_URL = "http://localhost:8545";
 
@@ -35,16 +36,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const [deployer] = KEYS_TO_WALLETS(provider);
   const { wallet, vault } = await setupNocturne(deployer);
   const tokenFactory = new SimpleERC20Token__factory(deployer);
-  const tokens = await Promise.all(
-    Array(2)
-      .fill(0)
-      .map(async (_, i) => {
-        const token = await tokenFactory.deploy();
-        console.log(`Token ${i + 1} deployed at: ${token.address}`);
-
-        return token;
-      })
-  );
+  const tokens: SimpleERC20Token[] = [];
+  for (let i = 0; i < 2; i++) {
+    const token = await tokenFactory.deploy();
+    await token.deployed();
+    console.log(`Token ${i + 1} deployed at: ${token.address}`);
+    tokens.push(token);
+  }
 
   for (const token of tokens) {
     // Reserve tokens to eth addresses

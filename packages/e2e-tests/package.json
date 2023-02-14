@@ -17,7 +17,6 @@
     "prepare": "./prepare.sh",
     "test:e2e": "yarn prepare && yarn test:e2e:no-prepare",
     "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 10000000 --exit",
-    "test:hh-node": "npx hardhat test --network localhost",
     "hh-node-deposit": "npx ts-node ./scripts/deployAndDeposit.ts",
     "clean": "rm -rf .turbo cache artifacts db"
   },

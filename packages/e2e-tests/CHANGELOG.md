@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Change deposit script token deployment to be sequential (nonce conflicts)
 - Replace in memory instantiation of hardhat, subtree updater, and bundler with dockerized versions in test cases
 - Add `src` to include functions previously in `utils` + actor instantiation functions (ones that use dockerode or docker-compose)
 - Remove `utils` folder
