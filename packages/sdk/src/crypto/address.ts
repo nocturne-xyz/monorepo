@@ -45,24 +45,16 @@ export class StealthAddressTrait {
   }
 
   static fromString(str: string): StealthAddress {
-    console.log("str", str)
     const parsed = JSON.parse(str);
-    console.log("parsed", parsed)
     assert(Array.isArray(parsed), "StealthAddress must be an array");
     assert(parsed.length === 2, "StealthAddress must have 2 elements");
     const [h1Str, h2Str] = parsed;
-
-    console.log("h1Str", h1Str);
-    console.log("h2Str", h2Str);
 
     assert(typeof h1Str === "string", "StealthAddress h1 must be a string");
     assert(typeof h2Str === "string", "StealthAddress h2 must be a string");
 
     const h1 = BabyJubJub.fromString(h1Str);
     const h2 = BabyJubJub.fromString(h2Str);
-
-    console.log("h1", h1)
-    console.log("h2", h2)
 
     assert(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup")
     assert(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup")

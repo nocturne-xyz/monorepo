@@ -21,7 +21,7 @@
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
-    "@nocturne-xyz/circuit-utils": "^0.1.11",
+    "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",

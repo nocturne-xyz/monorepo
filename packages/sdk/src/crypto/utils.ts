@@ -25,8 +25,6 @@ export function decodePoint(x: bigint): AffinePoint<bigint> {
   assert(y !== undefined, "invalid point encoding");
 
   let point: AffinePoint<bigint> = { x, y: y! };
-  // console.log("point", point);
-  
   if (!BabyJubJub.isInSubgroup(point)) {
     point = BabyJubJub.neg(point);
   }

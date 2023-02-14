@@ -2898,7 +2898,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/circuit-utils@npm:^0.1.11":
+"@nocturne-xyz/circuit-utils@npm:^0.1.12":
   version: 0.1.12
   resolution: "@nocturne-xyz/circuit-utils@npm:0.1.12"
   checksum: 57ac8a50cbb1f840abe2a69080ff71119c0e80737445ec6569c82b8ca51452d316037fd402c913dd011219fed585aecc74c868d3001f9b059f05eccb73244aa6
@@ -3075,7 +3075,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.11
+    "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3

@@ -48,7 +48,7 @@ export class NocturneSigner {
     const c = poseidonBN([R.x, R.y, m]);
 
     // eslint-disable-next-line
-    let z = Fr.sub(r, this.privkey.sk);
+    let z = Fr.reduce(r - (this.privkey.sk as any) * c);
     if (z < 0) {
       z += BabyJubJub.PrimeSubgroupOrder;
     }
