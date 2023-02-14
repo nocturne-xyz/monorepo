@@ -33,10 +33,6 @@ import { sleep } from "../src/utils";
 import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
 import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import * as fs from "fs";
-import findWorkspaceRoot from "find-yarn-workspace-root";
-
-const ROOT_DIR = findWorkspaceRoot()!;
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
@@ -146,9 +142,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await hhContainer.remove();
 
     // Delete redis-data folder so next test has clean run
-    fs.rmdirSync(`${ROOT_DIR}/packages/bundler/redis-data`, {
-      recursive: true,
-    });
+    await docker.getVolume("redis-data").remove();
   });
 
   async function testE2E(
