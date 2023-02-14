@@ -37,9 +37,7 @@ popd
 
 # start the snap, we assume dev has hardcoded the snap RPC_URL to point to 
 # correct network (so as to not expose API keys in this script)
-pushd snap
-yarn install
-yarn build
+pushd packages/snap
 yarn start &
 SNAP_PID=$!
 popd
@@ -67,7 +65,7 @@ SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"
 
-SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
+SNAP_INDEX_TS="$SCRIPT_DIR/../packages/snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 
