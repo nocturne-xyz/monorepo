@@ -1,13 +1,5 @@
-# Sample Hardhat Project
+# E2E Tests
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+## Usage
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+To run e2e tests, you must first build the docker images for hardhat, the bundler, and the subtree updater. Building the docker images is all handled by running `yarn prepare`. Subsequently, you can run `yarn test:e2e:no-prepare` to run the e2e tests. If you'd like to prepare and run e2e tests in one command, run `yarn test:e2e`.
