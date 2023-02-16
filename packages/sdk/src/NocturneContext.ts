@@ -1,6 +1,6 @@
 import { SignedOperation, Address, PreSignOperation } from "./commonTypes";
 import { OperationRequest } from "./sdk/operationRequest";
-import { NocturneSigner } from "./sdk/signer";
+import { NocturneSigner } from "./crypto/signer";
 import { InMemoryMerkleProver, MerkleProver } from "./sdk/merkleProver";
 import { NotesDB } from "./sdk/db";
 import {

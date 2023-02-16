@@ -18,13 +18,10 @@ export interface IncludedNote extends Note {
 export interface EncodedNote {
   owner: StealthAddress;
   nonce: bigint;
-  encodedAssetAddr: EncodedAddr;
-  encodedAssetId: EncodedId;
+  encodedAssetAddr: bigint;
+  encodedAssetId: bigint;
   value: bigint;
 }
-
-export type EncodedAddr = bigint;
-export type EncodedId = bigint;
 
 export class NoteTrait {
   static toCommitment(note: Note): bigint {

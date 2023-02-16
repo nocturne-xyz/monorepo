@@ -37,7 +37,7 @@ export async function proveOperation(
   };
 }
 
-export async function proveJoinSplit(
+async function proveJoinSplit(
   prover: JoinSplitProver,
   signedJoinSplit: SignedJoinSplit
 ): Promise<ProvenJoinSplit> {

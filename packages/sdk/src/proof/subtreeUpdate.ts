@@ -133,7 +133,7 @@ export function subtreeUpdateInputsFromBatch(
   };
 }
 
-export function encodePathAndHash(
+function encodePathAndHash(
   idx: bigint,
   accumulatorHashHi: bigint
 ): bigint {

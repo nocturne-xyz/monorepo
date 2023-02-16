@@ -2,9 +2,9 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { NocturnePrivKey, StealthAddressTrait } from "../src/crypto";
-import { OperationRequestBuilder, range, sortNotesByValue } from "../src/sdk";
-import { gatherNotes, prepareOperation } from "../src/sdk/prepareOperation";
+import { StealthAddressTrait, NocturneSigner } from "../src/crypto";
+import { OperationRequestBuilder, range, prepareOperation } from "../src/sdk";
+import { __private } from "../src/sdk/prepareOperation";
 import {
   stablescam,
   setup,
@@ -18,6 +18,8 @@ import {
   encodedPlutocracy,
   getDummyHex,
 } from "./utils";
+
+const { gatherNotes, sortNotesByValue } = __private;
 
 chai.use(chaiAsPromised);
 
@@ -132,8 +134,9 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const receiverPriv = NocturnePrivKey.genPriv();
-    const receiver = receiverPriv.toCanonAddress();
+
+    const receiverSigner = NocturneSigner.genRandom();
+    const receiver = receiverSigner.getCanonicalAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -226,8 +229,8 @@ describe("prepareOperation", async () => {
       [shitcoin, stablescam]
     );
     const receivers = range(2)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
+      .map((_) => NocturneSigner.genRandom())
+      .map((signer) => signer.getCanonicalAddress());
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -263,8 +266,8 @@ describe("prepareOperation", async () => {
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const receivers = range(3)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
+      .map((_) => NocturneSigner.genRandom())
+      .map((signer) => signer.getCanonicalAddress());
     const refundAddr = StealthAddressTrait.randomize(signer.address);
 
     const builder = new OperationRequestBuilder();

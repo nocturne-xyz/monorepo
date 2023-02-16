@@ -125,7 +125,7 @@ export async function prepareJoinSplits(
   );
 }
 
-export async function gatherNotes(
+async function gatherNotes(
   requestedAmount: bigint,
   asset: Asset,
   notesDB: NotesDB
@@ -241,7 +241,7 @@ async function makeJoinSplit(
   amountToReturn: bigint,
   receiver?: CanonAddress
 ): Promise<PreProofJoinSplit> {
-  const sender = signer.privkey.toCanonAddress();
+  const sender = signer.privkey.getCanonicalAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;
 
@@ -353,4 +353,15 @@ async function getGasEstimatedOperation(
   op.maxNumRefunds = result.numRefunds;
 
   return op as PreSignOperation;
+}
+
+function sortNotesByValue<T extends Note>(notes: T[]): T[] {
+  return notes.sort((a, b) => {
+    return Number(a.value - b.value);
+  });
+}
+
+export const __private = {
+  sortNotesByValue,
+  gatherNotes
 }

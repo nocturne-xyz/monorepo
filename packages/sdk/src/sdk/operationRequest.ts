@@ -4,10 +4,6 @@ import { Asset } from "./asset";
 import { Address } from "../commonTypes";
 import { groupBy } from "./utils";
 
-export interface ConfidentialPayment {
-  value: bigint;
-  receiver: CanonAddress;
-}
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -37,6 +33,11 @@ type JoinSplitsAndPaymentsForAsset = [
   JoinSplitRequest[],
   ConfidentialPayment[]
 ];
+
+interface ConfidentialPayment {
+  value: bigint;
+  receiver: CanonAddress;
+}
 
 export class OperationRequestBuilder {
   private op: OperationRequest;

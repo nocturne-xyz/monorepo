@@ -12,23 +12,6 @@ import { OperationResult } from "../../contract/types";
 
 const CHUNK_SIZE = 2000;
 
-export async function largeQueryInChunks<T extends Result>(
-  contract: BaseContract,
-  filter: EventFilter,
-  from: number,
-  to: number
-): Promise<TypedEvent<T>[]> {
-  const events: TypedEvent<T>[] = [];
-  do {
-    const finalTo = Math.min(from + CHUNK_SIZE, to);
-    const rangeEvents = await contract.queryFilter(filter, from, finalTo);
-    from = finalTo;
-    events.push(...(rangeEvents as TypedEvent<T>[]));
-  } while (from < to);
-
-  return events;
-}
-
 export async function query<T extends Result, C extends BaseContract>(
   contract: C,
   filter: EventFilter,
@@ -100,4 +83,21 @@ export async function simulateOperation(
     executionGas: executionGas.toBigInt(),
     numRefunds: numRefunds.toBigInt(),
   };
+}
+
+async function largeQueryInChunks<T extends Result>(
+  contract: BaseContract,
+  filter: EventFilter,
+  from: number,
+  to: number
+): Promise<TypedEvent<T>[]> {
+  const events: TypedEvent<T>[] = [];
+  do {
+    const finalTo = Math.min(from + CHUNK_SIZE, to);
+    const rangeEvents = await contract.queryFilter(filter, from, finalTo);
+    from = finalTo;
+    events.push(...(rangeEvents as TypedEvent<T>[]));
+  } while (from < to);
+
+  return events;
 }

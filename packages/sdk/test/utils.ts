@@ -6,12 +6,11 @@ import {
   InMemoryKVStore,
   MerkleProver,
   MockMerkleProver,
-  NocturneSigner,
   NoteTrait,
   NotesDB,
   zip,
 } from "../src/sdk";
-import { NocturnePrivKey } from "../src/crypto";
+import { NocturneSigner } from "../src/crypto";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { InMemoryMerkleProver, MerkleDB } from "../dist";
 
@@ -70,14 +69,13 @@ export async function setup(
 ): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
   const { mockMerkle } = opts;
 
-  const priv = new NocturnePrivKey(1n);
-  const signer = new NocturneSigner(priv);
+  const signer = new NocturneSigner(1n);
 
   const kv = new InMemoryKVStore();
   const notesDB = new NotesDB(kv);
 
   const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
-    owner: signer.address,
+    owner: signer.getRandomStealthAddress(),
     nonce: BigInt(i),
     asset: asset,
     value: amount,

@@ -1,7 +1,7 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { Address } from "../../commonTypes";
-import { BinaryPoseidonTree } from "../../primitives/binaryPoseidonTree";
+import { BinaryPoseidonTree } from "../../binaryPoseidonTree";
 import { MerkleDB } from "../db";
 import { MerkleProver } from "./abstract";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";

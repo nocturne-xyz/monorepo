@@ -1,15 +1,3 @@
-// splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
-export function splitBigint256ToLimbs(
-  n: bigint,
-  lowerBits: number
-): [bigint, bigint] {
-  n = BigInt.asUintN(256, n);
-
-  const hi = n >> BigInt(lowerBits);
-  const lo = n & ((1n << BigInt(lowerBits)) - 1n);
-  return [hi, lo];
-}
-
 // splits bigint256 into two limbs, where the lower limb has 253 bits and the upper limb has only 3.
 export function bigInt256ToFieldElems(n: bigint): [bigint, bigint] {
   return splitBigint256ToLimbs(n, 253);
@@ -25,7 +13,19 @@ export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
   return res;
 }
 
-export function bigintToBuf(bn: bigint): Uint8Array {
+// splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
+function splitBigint256ToLimbs(
+  n: bigint,
+  lowerBits: number
+): [bigint, bigint] {
+  n = BigInt.asUintN(256, n);
+
+  const hi = n >> BigInt(lowerBits);
+  const lo = n & ((1n << BigInt(lowerBits)) - 1n);
+  return [hi, lo];
+}
+
+function bigintToBuf(bn: bigint): Uint8Array {
   let hex = BigInt(bn).toString(16);
   if (hex.length % 2) {
     hex = "0" + hex;

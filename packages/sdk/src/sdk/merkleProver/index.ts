@@ -1,3 +1,3 @@
 export { MerkleProver } from "./abstract";
-export { InMemoryMerkleProver } from "./inMemory";
+export { InMemoryMerkleProver, InMemoryMerkleProverOpts } from "./inMemory";
 export { MockMerkleProver } from "./mock";
