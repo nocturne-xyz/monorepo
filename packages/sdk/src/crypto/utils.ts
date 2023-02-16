@@ -7,7 +7,7 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import { EncryptedNote } from "../commonTypes";
-import { assert } from "../sdk";
+import { assertOrErr } from "../sdk";
 
 const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;
@@ -26,7 +26,7 @@ export function decodePoint(x: bigint): AffinePoint<bigint> {
   const dx2 = F.mul(BabyJubJub.D, x2);
   const y2 = F.div(F.sub(ax2, F.One), F.sub(dx2, F.One));
   const y = F.sqrt(y2);
-  assert(y !== undefined, "invalid point encoding");
+  assertOrErr(y !== undefined, "invalid point encoding");
 
   let point: AffinePoint<bigint> = { x, y: y! };
   if (!BabyJubJub.isInSubgroup(point)) {

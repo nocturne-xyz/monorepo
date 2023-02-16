@@ -4,7 +4,8 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { assert } from "../sdk";
+import { assertOrErr } from "../sdk";
+import * as JSON from "bigint-json-serialization";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -50,18 +51,18 @@ export class StealthAddressTrait {
 
   static fromString(str: string): StealthAddress {
     const parsed = JSON.parse(str);
-    assert(Array.isArray(parsed), "StealthAddress must be an array");
-    assert(parsed.length === 2, "StealthAddress must have 2 elements");
+    assertOrErr(Array.isArray(parsed), "StealthAddress must be an array");
+    assertOrErr(parsed.length === 2, "StealthAddress must have 2 elements");
     const [h1Str, h2Str] = parsed;
 
-    assert(typeof h1Str === "string", "StealthAddress h1 must be a string");
-    assert(typeof h2Str === "string", "StealthAddress h2 must be a string");
+    assertOrErr(typeof h1Str === "string", "StealthAddress h1 must be a string");
+    assertOrErr(typeof h2Str === "string", "StealthAddress h2 must be a string");
 
     const h1 = BabyJubJub.fromString(h1Str);
     const h2 = BabyJubJub.fromString(h2Str);
 
-    assert(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup");
-    assert(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup");
+    assertOrErr(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup");
+    assertOrErr(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup");
 
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }

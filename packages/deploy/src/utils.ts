@@ -1,4 +1,4 @@
-export function assert(condition: boolean, error?: string): void {
+export function assertOrErr(condition: boolean, error?: string): void {
   if (!condition) {
     throw new Error(error);
   }
