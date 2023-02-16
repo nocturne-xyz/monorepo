@@ -8,7 +8,6 @@ import {
 } from "@nocturne-xyz/contracts";
 
 import {
-  NocturnePrivKey,
   NocturneSigner,
   NocturneContext,
   InMemoryKVStore,
@@ -119,8 +118,7 @@ function setupNocturneContext(
   merkleDB: MerkleDB,
   provider: ethers.providers.Provider
 ): NocturneContext {
-  const nocturnePrivKey = new NocturnePrivKey(sk);
-  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
+  const nocturneSigner = new NocturneSigner(sk);
 
   const merkleProver = new InMemoryMerkleProver(
     wallet.address,
