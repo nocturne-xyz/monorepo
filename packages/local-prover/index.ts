@@ -1,2 +1,2 @@
-export * from "./src/joinsplit";
-export * from "./src/subtreeUpdate";
+export { WasmJoinSplitProver } from "./src/joinsplit";
+export { WasmSubtreeUpdateProver } from "./src/subtreeUpdate";
