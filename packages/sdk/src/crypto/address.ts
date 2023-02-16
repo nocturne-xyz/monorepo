@@ -55,14 +55,26 @@ export class StealthAddressTrait {
     assertOrErr(parsed.length === 2, "StealthAddress must have 2 elements");
     const [h1Str, h2Str] = parsed;
 
-    assertOrErr(typeof h1Str === "string", "StealthAddress h1 must be a string");
-    assertOrErr(typeof h2Str === "string", "StealthAddress h2 must be a string");
+    assertOrErr(
+      typeof h1Str === "string",
+      "StealthAddress h1 must be a string"
+    );
+    assertOrErr(
+      typeof h2Str === "string",
+      "StealthAddress h2 must be a string"
+    );
 
     const h1 = BabyJubJub.fromString(h1Str);
     const h2 = BabyJubJub.fromString(h2Str);
 
-    assertOrErr(BabyJubJub.isInSubgroup(h1), "StealthAddress h1 is not in subgroup");
-    assertOrErr(BabyJubJub.isInSubgroup(h2), "StealthAddress h2 is not in subgroup");
+    assertOrErr(
+      BabyJubJub.isInSubgroup(h1),
+      "StealthAddress h1 is not in subgroup"
+    );
+    assertOrErr(
+      BabyJubJub.isInSubgroup(h2),
+      "StealthAddress h2 is not in subgroup"
+    );
 
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }
