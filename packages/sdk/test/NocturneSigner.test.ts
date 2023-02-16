@@ -183,7 +183,7 @@ describe("NocturneSigner", () => {
     expect(opDigest).to.not.be.null;
 
     const sig: NocturneSignature = { c, z };
-    const pk = signer.privkey.spendPk();
+    const pk = signer.spendPk
     expect(NocturneSigner.verify(pk, opDigest, sig)).to.equal(true);
   });
 });

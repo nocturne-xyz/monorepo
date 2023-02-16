@@ -32,9 +32,9 @@ const sk = BigInt(
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
 const vk = nocturneSigner.vk;
-const stealthAddrA = nocturneSigner.address;
-const stealthAddrB = nocturneSigner.address;
-const spendPk = nocturneSigner.privkey.spendPk();
+const stealthAddrA = nocturneSigner.getRandomStealthAddress();
+const stealthAddrB = nocturneSigner.getRandomStealthAddress();
+const spendPk = nocturneSigner.spendPk;
 
 // Two old notes: 100 + 50 = 150
 const oldNoteA: EncodedNote = {

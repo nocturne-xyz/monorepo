@@ -153,7 +153,7 @@ export class NocturneSigner {
   signOperation(op: PreSignOperation): SignedOperation {
     const opDigest = computeOperationDigest(op);
     const opSig = this.sign(opDigest);
-    const pk = this.spendPk();
+    const pk = this.spendPk;
 
     const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
       makeSignedJoinSplit(joinSplit, opDigest, opSig, this.vk, pk)

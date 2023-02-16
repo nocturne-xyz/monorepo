@@ -2,7 +2,7 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { StealthAddressTrait, NocturneSigner } from "../src/crypto";
+import { NocturneSigner } from "../src/crypto";
 import { OperationRequestBuilder, range, prepareOperation } from "../src/sdk";
 import { __private } from "../src/sdk/prepareOperation";
 import {
@@ -179,7 +179,7 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const refundAddr = StealthAddressTrait.randomize(signer.address);
+    const refundAddr = signer.getRandomStealthAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -268,7 +268,7 @@ describe("prepareOperation", async () => {
     const receivers = range(3)
       .map((_) => NocturneSigner.genRandom())
       .map((signer) => signer.getCanonicalAddress());
-    const refundAddr = StealthAddressTrait.randomize(signer.address);
+    const refundAddr = signer.getRandomStealthAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder

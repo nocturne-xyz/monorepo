@@ -1,5 +1,5 @@
 import { BaseProof } from "./types";
-import { BinaryPoseidonTree } from "../primitives";
+import { BinaryPoseidonTree } from "../binaryPoseidonTree";
 import {
   bigintToBEPadded,
   Note,

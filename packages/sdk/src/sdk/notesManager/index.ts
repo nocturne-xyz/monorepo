@@ -4,9 +4,6 @@ import { NocturneSigner } from "../../crypto/signer";
 import { Asset, AssetTrait } from "../asset";
 import { BaseJoinSplit, EncryptedNote } from "../../commonTypes";
 
-export { DefaultNotesManager } from "./default";
-export { MockNotesManager } from "./mock";
-
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
   oldNoteBNullifier: bigint;
@@ -113,3 +110,6 @@ export abstract class NotesManager {
     await this.postApplyJoinSplits();
   }
 }
+
+export { DefaultNotesManager } from "./default";
+export { MockNotesManager } from "./mock";

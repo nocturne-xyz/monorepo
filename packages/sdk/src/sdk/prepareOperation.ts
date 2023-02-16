@@ -3,9 +3,7 @@ import {
   Asset,
   AssetTrait,
   IncludedNote,
-  JoinSplitRequest,
   MerkleProver,
-  NocturneSigner,
   Note,
   NoteTrait,
   NotesDB,
@@ -14,15 +12,14 @@ import {
   iterChunks,
   min,
   simulateOperation,
-  sortNotesByValue,
 } from ".";
+import { JoinSplitRequest } from "./operationRequest";
 import {
   BLOCK_GAS_LIMIT,
   PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
-import { CanonAddress, StealthAddressTrait } from "../crypto";
-import { encryptNote, randomBigInt } from "../crypto/utils";
+import { NocturneSigner, CanonAddress, StealthAddressTrait, encryptNote, randomBigInt } from "../crypto";
 import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
@@ -67,7 +64,7 @@ export async function prepareOperation(
 
   // defaults
   // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-  refundAddr = refundAddr ?? StealthAddressTrait.randomize(signer.address);
+  refundAddr = refundAddr ?? signer.getRandomStealthAddress();
   gasPrice = gasPrice ?? 0n;
   maxNumRefunds =
     maxNumRefunds ??
@@ -192,7 +189,7 @@ async function getJoinSplitsFromNotes(
 ): Promise<PreProofJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
-    const newAddr = StealthAddressTrait.randomize(signer.address);
+    const newAddr = signer.getRandomStealthAddress();
     const nonce = randomBigInt();
     notes.push({
       owner: newAddr,
@@ -241,7 +238,7 @@ async function makeJoinSplit(
   amountToReturn: bigint,
   receiver?: CanonAddress
 ): Promise<PreProofJoinSplit> {
-  const sender = signer.privkey.getCanonicalAddress();
+  const sender = signer.getCanonicalAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;
 

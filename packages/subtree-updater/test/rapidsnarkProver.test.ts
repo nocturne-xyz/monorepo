@@ -4,7 +4,6 @@ import { expect } from "chai";
 import * as path from "path";
 import {
   Note,
-  NocturnePrivKey,
   NocturneSigner,
   BinaryPoseidonTree,
   NoteTrait,
@@ -28,9 +27,8 @@ describe("rapidsnark subtree update prover", async () => {
   const sk = BigInt(
     "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
   );
-  const nocturnePrivKey = new NocturnePrivKey(sk);
-  const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-  const stealthAddr = nocturneSigner.address;
+  const nocturneSigner = new NocturneSigner(sk);
+  const stealthAddr = nocturneSigner.getRandomStealthAddress();
 
   let nonce = 0n;
   function dummyNote(): Note {

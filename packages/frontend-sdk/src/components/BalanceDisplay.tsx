@@ -5,7 +5,7 @@ import {
   formatTokenAmountUserRepr,
   getTokenDetails,
   TokenDetails,
-} from "../common";
+} from "../utils";
 import { NocturneFrontendSDK } from "../sdk";
 
 export interface AssetBalancesDisplayProps {
