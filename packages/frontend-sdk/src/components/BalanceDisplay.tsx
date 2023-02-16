@@ -8,7 +8,7 @@ import {
 } from "../common";
 import { NocturneFrontendSDK } from "../sdk";
 
-interface AssetBalancesDisplayProps {
+export interface AssetBalancesDisplayProps {
   frontendSDK?: NocturneFrontendSDK;
 }
 
@@ -93,5 +93,3 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
     </table>
   );
 };
-
-export default AssetBalancesDisplay;
