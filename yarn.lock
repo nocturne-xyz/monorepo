@@ -3092,7 +3092,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.7-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.7-alpha, @nocturne-xyz/contracts@^1.0.7-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3225,7 +3225,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.73-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@npm:1.0.73-alpha":
+  version: 1.0.73-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.73-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/contracts": ^1.0.7-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.0.0
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 4392be19d9263b5ee65891098c2fd38552a94f0436493fa1a5b9db32a030a526c942ffbfc8febf84fc63d96b82e95fe4026c95b27c14098f9b599bca2a332b21
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -12048,7 +12066,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
