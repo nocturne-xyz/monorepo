@@ -139,6 +139,5 @@ export async function fetchJoinSplits(
       },
     };
   });
-
   return newJoinSplits;
 }

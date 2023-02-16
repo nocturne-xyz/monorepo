@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.71-alpha",
+  "version": "1.0.73-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,14 +21,13 @@
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
+    "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
-    "circomlibjs": "nocturne-xyz/circomlibjs",
     "ethers": "^5.0.0",
-    "ffjavascript": "0.2.57",
     "js-sha256": "^0.9.0",
     "randombytes": "^2.1.0",
     "sorted-btree": "^1.8.1"

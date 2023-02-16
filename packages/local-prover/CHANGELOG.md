@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use `poseidonBN` from `@nocturne-xyz/circuit-utils`
 - Rename 
 	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`
 	- `LocalSubtreeUpdateProver` -> `WasmSubtreeUpdateProver`

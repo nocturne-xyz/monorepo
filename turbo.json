@@ -28,6 +28,9 @@
         "@nocturne-xyz/frontend-sdk#build"
       ]
     },
+    "@nocturne-xyz/snap#build": {
+      "dependsOn": ["@nocturne-xyz/sdk#build"]
+    },
     "@nocturne-xyz/local-prover#build": {
       "dependsOn": ["@nocturne-xyz/sdk#build"]
     },

@@ -1,14 +1,13 @@
-import { babyjub, poseidon } from "circomlibjs";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Scalar } from "ffjavascript";
 import { Note, IncludedNote, NoteTrait } from "./note";
 import {
   StealthAddress,
   StealthAddressTrait,
   CanonAddress,
 } from "../crypto/address";
-import { NocturnePrivKey } from "../crypto/privkey";
-import { egcd, encodePoint, decodePoint, mod_p } from "../crypto/utils";
+import { NocturnePrivKey, SpendPk } from "../crypto/privkey";
+import { encodePoint, decodePoint } from "../crypto/utils";
 import {
   EncryptedNote,
   SignedJoinSplit,
@@ -19,6 +18,9 @@ import {
 import { Asset } from "./asset";
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
+
+const F = BabyJubJub.BaseField;
+const Fr = BabyJubJub.ScalarField;
 
 export interface NocturneSignature {
   c: bigint;
@@ -41,33 +43,29 @@ export class NocturneSigner {
   sign(m: bigint): NocturneSignature {
     // TODO: make this deterministic
     const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
-    const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-    const c = poseidon([R[0], R[1], m]);
+    const r = Fr.fromBytes(r_buf);
+    const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
+    const c = poseidonBN([R.x, R.y, m]);
 
     // eslint-disable-next-line
-    let z = (r - (this.privkey.sk as any) * c) % babyjub.subOrder;
+    let z = Fr.reduce(r - (this.privkey.sk as any) * c);
     if (z < 0) {
-      z += babyjub.subOrder;
+      z += BabyJubJub.PrimeSubgroupOrder;
     }
 
     return {
-      c: BigInt(c),
-      z: BigInt(z),
+      c,
+      z,
     };
   }
 
-  static verify(
-    pk: [bigint, bigint],
-    m: bigint,
-    sig: NocturneSignature
-  ): boolean {
+  static verify(pk: SpendPk, m: bigint, sig: NocturneSignature): boolean {
     const c = sig.c;
     const z = sig.z;
-    const Z = babyjub.mulPointEscalar(babyjub.Base8, z);
-    const P = babyjub.mulPointEscalar(pk, c);
-    const R = babyjub.addPoint(Z, P);
-    const cp = poseidon([R[0], R[1], m]);
+    const Z = BabyJubJub.scalarMul(BabyJubJub.BasePoint, z);
+    const P = BabyJubJub.scalarMul(pk, c);
+    const R = BabyJubJub.add(Z, P);
+    const cp = poseidonBN([R.x, R.y, m]);
     return c == cp;
   }
 
@@ -76,11 +74,11 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidon([NoteTrait.toCommitment(note), this.privkey.vk]));
+    return BigInt(poseidonBN([NoteTrait.toCommitment(note), this.privkey.vk]));
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {
-    return poseidon([this.privkey.vk, oldNullifier]);
+    return poseidonBN([this.privkey.vk, oldNullifier]);
   }
 
   /**
@@ -99,18 +97,23 @@ export class NocturneSigner {
     if (!this.isOwnAddress(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
-    let [vkInv, ,] = egcd(this.privkey.vk, babyjub.subOrder);
-    if (vkInv < babyjub.subOrder) {
-      vkInv += babyjub.subOrder;
+    let vkInv = Fr.inv(this.privkey.vk);
+    if (vkInv < BabyJubJub.PrimeSubgroupOrder) {
+      vkInv += BabyJubJub.PrimeSubgroupOrder;
     }
+
     const eR = decodePoint(encryptedNote.encappedKey);
-    const R = babyjub.mulPointEscalar(eR, vkInv);
-    const nonce = mod_p(
-      encryptedNote.encryptedNonce - BigInt(poseidon([encodePoint(R)]))
+    const R = BabyJubJub.scalarMul(eR, vkInv);
+    const nonce = F.sub(
+      F.reduce(encryptedNote.encryptedNonce),
+      F.reduce(poseidonBN([encodePoint(R)]))
     );
-    const value = mod_p(
-      encryptedNote.encryptedValue - BigInt(poseidon([encodePoint(R) + 1n]))
+
+    const value = F.sub(
+      F.reduce(encryptedNote.encryptedValue),
+      F.reduce(poseidonBN([F.reduce(encodePoint(R) + 1n)]))
     );
+
     return {
       owner: this.privkey.toCanonAddressStruct(),
       nonce,
@@ -122,8 +125,9 @@ export class NocturneSigner {
 
   isOwnAddress(addr: StealthAddress): boolean {
     const points = StealthAddressTrait.toPoints(addr);
-    const H2prime = babyjub.mulPointEscalar(points.h1, this.privkey.vk);
-    return points.h2[0] === H2prime[0] && points.h2[1] === H2prime[1];
+    const h2Prime = BabyJubJub.scalarMul(points.h1, this.privkey.vk);
+
+    return BabyJubJub.eq(points.h2, h2Prime);
   }
 
   signOperation(op: PreSignOperation): SignedOperation {
@@ -163,7 +167,7 @@ function makeSignedJoinSplit(
   opDigest: bigint,
   opSig: NocturneSignature,
   vk: bigint,
-  spendPk: [bigint, bigint]
+  spendPk: SpendPk
 ): SignedJoinSplit {
   const {
     merkleProofA,
@@ -179,7 +183,7 @@ function makeSignedJoinSplit(
 
   const proofInputs: JoinSplitInputs = {
     vk,
-    spendPk,
+    spendPk: [spendPk.x, spendPk.y],
     c,
     z,
     merkleProofA,

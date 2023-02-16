@@ -1,34 +1,39 @@
-import { Scalar } from "ffjavascript";
 import { CanonAddress, StealthAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
 import randomBytes from "randombytes";
-import { babyjub, poseidon } from "circomlibjs";
-import { EncryptedNote, SNARK_SCALAR_FIELD } from "../commonTypes";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
+import { EncryptedNote } from "../commonTypes";
+import { assertOrErr } from "../sdk";
+
+const F = BabyJubJub.BaseField;
+const Fr = BabyJubJub.ScalarField;
 
 const BIGINT_BYTES = 8;
 
 // Encode a babyjub point to field
-export function encodePoint(point: [bigint, bigint]): bigint {
-  return point[0];
+export function encodePoint(point: AffinePoint<bigint>): bigint {
+  return point.x;
 }
 
 // Decode a babyjub point (on prime order subgroup) from an encoding
-export function decodePoint(x: bigint): [bigint, bigint] {
-  const F = babyjub.F;
-  const x2 = F.mul(F.e(x), F.e(x));
-  const ax2 = F.mul(babyjub.A, x2);
-  const dx2 = F.mul(babyjub.D, x2);
-  const y2 = F.div(F.sub(ax2, F.one), F.sub(dx2, F.one));
+export function decodePoint(x: bigint): AffinePoint<bigint> {
+  const x2 = F.mul(F.reduce(x), F.reduce(x));
+  const ax2 = F.mul(BabyJubJub.A, x2);
+  const dx2 = F.mul(BabyJubJub.D, x2);
+  const y2 = F.div(F.sub(ax2, F.One), F.sub(dx2, F.One));
   const y = F.sqrt(y2);
-  let point: [bigint, bigint] = [BigInt(x), BigInt(y)];
-  if (!babyjub.inSubgroup(point)) {
-    point = [point[0], mod_p(-point[1])];
-  }
-  return point;
-}
+  assertOrErr(y !== undefined, "invalid point encoding");
 
-export function mod_p(n: bigint): bigint {
-  return ((n % SNARK_SCALAR_FIELD) + SNARK_SCALAR_FIELD) % SNARK_SCALAR_FIELD;
+  let point: AffinePoint<bigint> = { x, y: y! };
+  if (!BabyJubJub.isInSubgroup(point)) {
+    point = BabyJubJub.neg(point);
+  }
+
+  return point;
 }
 
 export function randomBigInt(): bigint {
@@ -36,30 +41,26 @@ export function randomBigInt(): bigint {
   return BigInt("0x" + rand.toString("hex"));
 }
 
-// Extended Euclidean algorithm
-export function egcd(a: bigint, b: bigint): [bigint, bigint, bigint] {
-  if (b == 0n) {
-    return [1n, 0n, a];
-  } else {
-    const [x, y, d] = egcd(b, a % b);
-    return [y, x - y * (a / b), d];
-  }
-}
-
 /**
  * Encrypt a note sent to a given receiver's
  */
 export function encryptNote(addr: CanonAddress, note: Note): EncryptedNote {
   const r_buf = randomBytes(Math.floor(256 / 8));
-  const r = Scalar.fromRprBE(r_buf, 0, 32) % babyjub.subOrder;
-  const R = babyjub.mulPointEscalar(babyjub.Base8, r);
-  const encryptedNonce = mod_p(BigInt(poseidon([encodePoint(R)])) + note.nonce);
-  const encryptedValue = mod_p(
-    BigInt(poseidon([encodePoint(R) + 1n])) + note.value
+  const r = Fr.fromBytes(r_buf);
+  const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
+
+  const encryptedNonce = F.add(
+    poseidonBN([encodePoint(R)]),
+    F.reduce(note.nonce)
   );
+  const encryptedValue = F.add(
+    poseidonBN([F.reduce(encodePoint(R) + F.One)]),
+    F.reduce(note.value)
+  );
+
   return {
     owner: StealthAddressTrait.randomize(note.owner),
-    encappedKey: encodePoint(babyjub.mulPointEscalar(addr, r)),
+    encappedKey: encodePoint(BabyJubJub.scalarMul(addr, r)),
     encryptedNonce,
     encryptedValue,
   };

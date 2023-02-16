@@ -16,15 +16,12 @@ trap 'trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 
 # start the site
 pushd packages/site
-yarn build
 yarn start &
 SITE_PID=$!
 popd
 
 # start the snap
-pushd snap
-yarn install
-yarn build
+pushd packages/snap
 yarn start &
 SNAP_PID=$!
 popd
@@ -79,6 +76,7 @@ EOM
 
 # clear redis if it exists 
 rm -r ./redis-data || echo 'redis-data does not yet exist'
+mkdir ./redis-data
 popd
 
 # run bundler
@@ -101,7 +99,7 @@ SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"
 
-SNAP_INDEX_TS="$SCRIPT_DIR/../snap/src/index.ts"
+SNAP_INDEX_TS="$SCRIPT_DIR/../packages/snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 

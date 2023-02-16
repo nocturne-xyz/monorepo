@@ -92,6 +92,7 @@ export async function fetchInsertions(
     (a, b) =>
       a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx
   );
+
   return insertions.map(({ insertion }) => insertion);
 }
 

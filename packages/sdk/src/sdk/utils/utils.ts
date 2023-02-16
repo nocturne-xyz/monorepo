@@ -99,3 +99,7 @@ export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
 export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
 }
+
+export function assertOrErr(cond: boolean, msg?: string): void {
+  if (!cond) throw new Error(msg);
+}

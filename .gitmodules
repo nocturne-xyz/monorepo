@@ -11,7 +11,3 @@
 	path = rapidsnark
 	url = https://github.com/nocturne-xyz/rapidsnark.git
 	ignore = dirty
-[submodule "snap"]
-	path = snap
-	url = git@github.com:nocturne-xyz/snap.git
-	ignore = dirty

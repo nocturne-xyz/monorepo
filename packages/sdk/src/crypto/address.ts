@@ -1,8 +1,13 @@
-import { babyjub, poseidon } from "circomlibjs";
-import { StealthAddrPrefix } from "./common";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Scalar } from "ffjavascript";
-import { Buffer } from "buffer";
+import { assertOrErr } from "../sdk";
+import * as JSON from "bigint-json-serialization";
+
+const Fr = BabyJubJub.ScalarField;
 
 export interface StealthAddress {
   h1X: bigint;
@@ -11,69 +16,90 @@ export interface StealthAddress {
   h2Y: bigint;
 }
 
-export type CanonAddress = [bigint, bigint];
+export type CanonAddress = AffinePoint<bigint>;
 
 export interface AddressPoints {
-  h1: [bigint, bigint];
-  h2: [bigint, bigint];
+  h1: AffinePoint<bigint>;
+  h2: AffinePoint<bigint>;
 }
 
 export class StealthAddressTrait {
   static toPoints(flattened: StealthAddress): AddressPoints {
     return {
-      h1: [flattened.h1X, flattened.h1Y],
-      h2: [flattened.h2X, flattened.h2Y],
+      h1: { x: flattened.h1X, y: flattened.h1Y },
+      h2: { x: flattened.h2X, y: flattened.h2Y },
     };
   }
 
   static fromPoints(addressPoints: AddressPoints): StealthAddress {
     const { h1, h2 } = addressPoints;
     return {
-      h1X: h1[0],
-      h1Y: h1[1],
-      h2X: h2[0],
-      h2Y: h2[1],
+      h1X: h1.x,
+      h1Y: h1.y,
+      h2X: h2.x,
+      h2Y: h2.y,
     };
   }
 
   static toString(address: StealthAddress): string {
     const { h1, h2 } = StealthAddressTrait.toPoints(address);
-    const b1 = Buffer.from(babyjub.packPoint(h1));
-    const b2 = Buffer.from(babyjub.packPoint(h2));
-    const b = Buffer.concat([b1, b2]);
-    return StealthAddrPrefix + b.toString("base64");
+    const h1Str = BabyJubJub.toString(h1);
+    const h2Str = BabyJubJub.toString(h2);
+
+    return JSON.stringify([h1Str, h2Str]);
   }
 
   static fromString(str: string): StealthAddress {
-    const base64str = str.slice(StealthAddrPrefix.length);
-    const b = Buffer.from(base64str, "base64");
-    const b1 = b.subarray(0, 32);
-    const b2 = b.subarray(32, 64);
-    const h1 = babyjub.unpackPoint(b1) as [bigint, bigint];
-    const h2 = babyjub.unpackPoint(b2) as [bigint, bigint];
+    const parsed = JSON.parse(str);
+    assertOrErr(Array.isArray(parsed), "StealthAddress must be an array");
+    assertOrErr(parsed.length === 2, "StealthAddress must have 2 elements");
+    const [h1Str, h2Str] = parsed;
+
+    assertOrErr(
+      typeof h1Str === "string",
+      "StealthAddress h1 must be a string"
+    );
+    assertOrErr(
+      typeof h2Str === "string",
+      "StealthAddress h2 must be a string"
+    );
+
+    const h1 = BabyJubJub.fromString(h1Str);
+    const h2 = BabyJubJub.fromString(h2Str);
+
+    assertOrErr(
+      BabyJubJub.isInSubgroup(h1),
+      "StealthAddress h1 is not in subgroup"
+    );
+    assertOrErr(
+      BabyJubJub.isInSubgroup(h2),
+      "StealthAddress h2 is not in subgroup"
+    );
+
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
   static hash(address: StealthAddress): bigint {
     const { h1X, h2X } = address;
-    return BigInt(poseidon([h1X, h2X]));
+    return BigInt(poseidonBN([h1X, h2X]));
   }
 
   static randomize(address: StealthAddress): StealthAddress {
     const points = StealthAddressTrait.toPoints(address);
     const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Scalar.fromRprBE(r_buf, 0, 32);
-    const h1 = babyjub.mulPointEscalar(points.h1, r);
-    const h2 = babyjub.mulPointEscalar(points.h2, r);
+    const r = Fr.fromBytes(r_buf);
+
+    const h1 = BabyJubJub.scalarMul(points.h1, r);
+    const h2 = BabyJubJub.scalarMul(points.h2, r);
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
   static fromCanonAddress(canonAddr: CanonAddress): StealthAddress {
     return {
-      h1X: BigInt(babyjub.Base8[0]),
-      h1Y: BigInt(babyjub.Base8[1]),
-      h2X: BigInt(canonAddr[0]),
-      h2Y: BigInt(canonAddr[1]),
+      h1X: BigInt(BabyJubJub.BasePoint.x),
+      h1Y: BigInt(BabyJubJub.BasePoint.y),
+      h2X: BigInt(canonAddr.x),
+      h2Y: BigInt(canonAddr.y),
     };
   }
 }

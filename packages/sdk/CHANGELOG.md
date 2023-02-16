@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- replace `circomlibjs` and `ffjavascript` with `@nocturne-xyz/circuit-utils`
 - replace `NocturneContext.test.ts` with unit tests for each of the newly-split-out parts
 - disembowel `NocturneContext`, reducing it to a convencience wrapper for all private state
 - add new module / function `proveOperation` that separates the proving logic form `NocturneContext`
