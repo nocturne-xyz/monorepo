@@ -1,7 +1,11 @@
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "../crypto";
 import { Note } from "../sdk/note";
 import { EncryptedNote } from "../commonTypes";
-import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
 import { Asset, assertOrErr } from "../sdk";
 
@@ -12,13 +16,13 @@ const Fr = BabyJubJub.ScalarField;
  * Encrypt a note to be decrypted by a given receiver
  * @param receiver the receiver's canon address
  * @param note the note to be encrypted
- * 
+ *
  * @returns the encrypted note
- * 
+ *
  * @remarks
  * The viewing key corresponding to the receiver's canonical address is the decryption key
  */
- export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
+export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
   const r_buf = randomBytes(Math.floor(256 / 8));
   const r = Fr.fromBytes(r_buf);
   const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
@@ -40,42 +44,46 @@ const Fr = BabyJubJub.ScalarField;
   };
 }
 
-
 /**
  * Decrypt a note with the given viewing key
  * @param owner the owner of the note
  * @param vk the viewing key to decrypt the note with
- * 
+ *
  * @returns the decrypted note
- * 
+ *
  * @remarks
  * `vk` need not be the viewing key corresponding to the owner's canonical address. The decryption process
  * will work as long as `encryptedNote` was encrypted with `vk`'s corresponding `CanonicalAddress`
  */
-export function decryptNote(owner: StealthAddress, vk: bigint, encryptedNote: EncryptedNote, asset: Asset): Note {
-    let vkInv = Fr.inv(vk);
-    if (vkInv < BabyJubJub.PrimeSubgroupOrder) {
-      vkInv += BabyJubJub.PrimeSubgroupOrder;
-    }
+export function decryptNote(
+  owner: StealthAddress,
+  vk: bigint,
+  encryptedNote: EncryptedNote,
+  asset: Asset
+): Note {
+  let vkInv = Fr.inv(vk);
+  if (vkInv < BabyJubJub.PrimeSubgroupOrder) {
+    vkInv += BabyJubJub.PrimeSubgroupOrder;
+  }
 
-    const eR = decodePoint(encryptedNote.encappedKey);
-    const R = BabyJubJub.scalarMul(eR, vkInv);
-    const nonce = F.sub(
-      F.reduce(encryptedNote.encryptedNonce),
-      F.reduce(poseidonBN([encodePoint(R)]))
-    );
+  const eR = decodePoint(encryptedNote.encappedKey);
+  const R = BabyJubJub.scalarMul(eR, vkInv);
+  const nonce = F.sub(
+    F.reduce(encryptedNote.encryptedNonce),
+    F.reduce(poseidonBN([encodePoint(R)]))
+  );
 
-    const value = F.sub(
-      F.reduce(encryptedNote.encryptedValue),
-      F.reduce(poseidonBN([F.reduce(encodePoint(R) + 1n)]))
-    );
+  const value = F.sub(
+    F.reduce(encryptedNote.encryptedValue),
+    F.reduce(poseidonBN([F.reduce(encodePoint(R) + 1n)]))
+  );
 
-    return {
-      owner,
-      nonce,
-      asset,
-      value,
-    }
+  return {
+    owner,
+    nonce,
+    asset,
+    value,
+  };
 }
 
 // Encode a Baby Jubjub point to the base field

@@ -1,17 +1,35 @@
 import "mocha";
 import { expect } from "chai";
-import { NocturneSigner, NocturneSignature, StealthAddressTrait, encryptNote } from "../src/crypto";
+import {
+  NocturneSigner,
+  NocturneSignature,
+  StealthAddressTrait,
+  encryptNote,
+} from "../src/crypto";
 import { shitcoin, setup, getDummyHex } from "./utils";
-import { OperationRequestBuilder, AssetTrait, AssetType, prepareOperation } from "../src/sdk";
+import {
+  OperationRequestBuilder,
+  AssetTrait,
+  AssetType,
+  prepareOperation,
+} from "../src/sdk";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
     const signer1 = NocturneSigner.genRandom();
     const signer2 = NocturneSigner.genRandom();
-    expect(signer1.isOwnAddress(signer1.getRandomStealthAddress())).to.equal(true);
-    expect(signer1.isOwnAddress(signer2.getRandomStealthAddress())).to.equal(false);
-    expect(signer2.isOwnAddress(signer2.getRandomStealthAddress())).to.equal(true);
-    expect(signer2.isOwnAddress(signer1.getRandomStealthAddress())).to.equal(false);
+    expect(signer1.isOwnAddress(signer1.getRandomStealthAddress())).to.equal(
+      true
+    );
+    expect(signer1.isOwnAddress(signer2.getRandomStealthAddress())).to.equal(
+      false
+    );
+    expect(signer2.isOwnAddress(signer2.getRandomStealthAddress())).to.equal(
+      true
+    );
+    expect(signer2.isOwnAddress(signer1.getRandomStealthAddress())).to.equal(
+      false
+    );
   });
 
   it("Test rerand", () => {
@@ -183,7 +201,7 @@ describe("NocturneSigner", () => {
     expect(opDigest).to.not.be.null;
 
     const sig: NocturneSignature = { c, z };
-    const pk = signer.spendPk
+    const pk = signer.spendPk;
     expect(NocturneSigner.verify(pk, opDigest, sig)).to.equal(true);
   });
 });

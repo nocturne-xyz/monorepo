@@ -1,11 +1,11 @@
-import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
 import { Note, IncludedNote, NoteTrait } from "../sdk/note";
-import {
-  StealthAddress,
-  StealthAddressTrait,
-  CanonAddress,
-} from "./address";
+import { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
 import {
   EncryptedNote,
   SignedJoinSplit,
@@ -134,10 +134,10 @@ export class NocturneSigner {
       this.getCanonicalStealthAddress(),
       this.vk,
       encryptedNote,
-      asset 
+      asset
     );
 
-    return { 
+    return {
       ...note,
       merkleIndex,
     };

@@ -14,10 +14,7 @@ export function bigintToBEPadded(n: bigint, numBytes: number): number[] {
 }
 
 // splits bigint256 into two limbs, where the lower limb has `lowerBits` bits
-function splitBigint256ToLimbs(
-  n: bigint,
-  lowerBits: number
-): [bigint, bigint] {
+function splitBigint256ToLimbs(n: bigint, lowerBits: number): [bigint, bigint] {
   n = BigInt.asUintN(256, n);
 
   const hi = n >> BigInt(lowerBits);

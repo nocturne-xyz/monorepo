@@ -133,10 +133,7 @@ export function subtreeUpdateInputsFromBatch(
   };
 }
 
-function encodePathAndHash(
-  idx: bigint,
-  accumulatorHashHi: bigint
-): bigint {
+function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
   idx = BigInt.asUintN(256, idx);
   accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
 

@@ -4,7 +4,6 @@ import { Asset } from "./asset";
 import { Address } from "../commonTypes";
 import { groupBy } from "./utils";
 
-
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
   asset: Asset;

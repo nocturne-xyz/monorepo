@@ -6,10 +6,7 @@ import { NocturneSigner } from "../../crypto/signer";
 
 export class MockNotesManager extends NotesManager {
   constructor() {
-    super(
-      new NotesDB(new InMemoryKVStore()),
-      new NocturneSigner(1n)
-    );
+    super(new NotesDB(new InMemoryKVStore()), new NocturneSigner(1n));
   }
 
   protected async fetchNotesFromRefunds(): Promise<IncludedNote[]> {

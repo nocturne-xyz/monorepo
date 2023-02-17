@@ -19,7 +19,13 @@ import {
   PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
-import { NocturneSigner, CanonAddress, StealthAddressTrait, encryptNote, randomBigInt } from "../crypto";
+import {
+  NocturneSigner,
+  CanonAddress,
+  StealthAddressTrait,
+  encryptNote,
+  randomBigInt,
+} from "../crypto";
 import { MerkleProofInput } from "../proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
@@ -360,5 +366,5 @@ function sortNotesByValue<T extends Note>(notes: T[]): T[] {
 
 export const __private = {
   sortNotesByValue,
-  gatherNotes
-}
+  gatherNotes,
+};
