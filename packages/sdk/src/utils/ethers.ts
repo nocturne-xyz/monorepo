@@ -7,8 +7,8 @@ import {
   SignedOperation,
   PreSignOperation,
   ProvenOperation,
-} from "../../commonTypes";
-import { OperationResult } from "../../contract";
+} from "../commonTypes";
+import { OperationResult } from "../contract";
 
 const CHUNK_SIZE = 2000;
 

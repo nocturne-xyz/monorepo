@@ -1,5 +1,7 @@
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
-import { Note, Asset, assertOrErr } from "../sdk";
+import { Note } from "../note";
+import { Asset } from "../asset";
+import { assertOrErr } from "../utils";
 import { EncryptedNote } from "../commonTypes";
 import {
   AffinePoint,

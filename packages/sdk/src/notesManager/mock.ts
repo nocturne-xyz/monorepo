@@ -2,7 +2,7 @@
 import { NotesManager, JoinSplitEvent } from ".";
 import { NotesDB, InMemoryKVStore } from "../db";
 import { IncludedNote } from "../note";
-import { NocturneSigner } from "../../crypto/signer";
+import { NocturneSigner } from "../crypto";
 
 export class MockNotesManager extends NotesManager {
   constructor() {

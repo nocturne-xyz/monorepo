@@ -9,10 +9,11 @@ import {
   NoteTrait,
   NotesDB,
   zip,
-} from "../src/sdk";
-import { NocturneSigner } from "../src/crypto";
+  NocturneSigner,
+  MerkleDB,
+  InMemoryMerkleProver
+} from "../src";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { InMemoryMerkleProver, MerkleDB } from "../dist";
 
 export const shitcoin: Asset = {
   assetType: AssetType.ERC20,

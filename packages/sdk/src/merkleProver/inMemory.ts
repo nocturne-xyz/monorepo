@@ -1,12 +1,12 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { ethers } from "ethers";
-import { Address } from "../../commonTypes";
-import { BinaryPoseidonTree } from "../../binaryPoseidonTree";
+import { Address } from "../commonTypes";
+import { BinaryPoseidonTree } from "../binaryPoseidonTree";
 import { MerkleDB } from "../db";
 import { MerkleProver } from "./abstract";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { NoteTrait } from "../note";
-import { fetchInsertions } from "../../indexing";
+import { fetchInsertions } from "../indexing";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";

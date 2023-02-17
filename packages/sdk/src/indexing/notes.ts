@@ -1,12 +1,12 @@
-import { IncludedNote } from "../sdk";
 import { Wallet } from "@nocturne-xyz/contracts";
-import { query } from "../sdk/utils";
-import { JoinSplitEvent } from "../sdk/notesManager";
 import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { AssetTrait, EncodedAsset } from "../sdk/asset";
+import { IncludedNote } from "../note";
+import { query } from "../utils";
+import { JoinSplitEvent } from "../notesManager";
+import { AssetTrait, EncodedAsset } from "../asset";
 
 export async function fetchNotesFromRefunds(
   contract: Wallet,

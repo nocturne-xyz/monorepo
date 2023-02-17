@@ -12,7 +12,7 @@ import {
   AssetTrait,
   AssetType,
   prepareOperation,
-} from "../src/sdk";
+} from "../src";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {

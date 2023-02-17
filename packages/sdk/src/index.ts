@@ -1,6 +1,10 @@
+export * from "./contract";
+export * from "./crypto"
 export * from "./db";
-export * from "./notesManager";
+export * from "./indexing";
 export * from "./merkleProver";
+export * from "./notesManager";
+export * from "./proof";
 export * from "./utils";
 
 export { Note, IncludedNote, EncodedNote, NoteTrait } from "./note";

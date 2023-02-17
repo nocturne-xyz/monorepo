@@ -1,12 +1,10 @@
 import { BaseProof } from "./types";
 import { BinaryPoseidonTree } from "../binaryPoseidonTree";
+import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
+import { Note, NoteTrait } from "../note";
 import {
-  bigintToBEPadded,
-  Note,
-  NoteTrait,
-  bigInt256ToFieldElems,
   AssetTrait,
-} from "../sdk";
+} from "../asset";
 
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";

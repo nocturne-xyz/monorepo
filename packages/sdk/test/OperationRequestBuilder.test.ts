@@ -1,7 +1,6 @@
 import "mocha";
 import { expect } from "chai";
-import { OperationRequestBuilder, OperationRequest, range } from "../src/sdk";
-import { NocturneSigner } from "../src/crypto";
+import { OperationRequestBuilder, OperationRequest, range, NocturneSigner } from "../src";
 import {
   shitcoin,
   ponzi,

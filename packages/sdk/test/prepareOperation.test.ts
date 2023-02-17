@@ -2,9 +2,8 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { NocturneSigner } from "../src/crypto";
-import { OperationRequestBuilder, range, prepareOperation } from "../src/sdk";
-import { __private } from "../src/sdk/prepareOperation";
+import { NocturneSigner, OperationRequestBuilder, range, prepareOperation } from "../src";
+import { __private } from "../src/prepareOperation";
 import {
   stablescam,
   setup,

@@ -2,8 +2,8 @@ import {
   SignedOperation,
   PreSignOperation,
   ProvenOperation,
-} from "../../commonTypes";
-import { SolidityProof } from "../../proof";
+} from "../commonTypes";
+import { SolidityProof } from "../proof";
 import { JoinSplitRequest } from "../operationRequest";
 
 export function getJoinSplitRequestTotalValue(

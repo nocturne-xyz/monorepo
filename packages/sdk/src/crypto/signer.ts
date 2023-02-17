@@ -4,7 +4,8 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Note, IncludedNote, NoteTrait, Asset } from "../sdk";
+import { Note, IncludedNote, NoteTrait } from "../note";
+import { Asset } from "../asset";
 import { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
 import {
   EncryptedNote,

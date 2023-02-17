@@ -1,16 +1,12 @@
 import { SignedOperation, Address, PreSignOperation } from "./commonTypes";
 import { NocturneSigner } from "./crypto";
-import {
-  AssetWithBalance,
-  NotesManager,
-  getJoinSplitRequestTotalValue,
-  prepareOperation,
-  OperationRequest,
-  InMemoryMerkleProver,
-  MerkleProver,
-  hasEnoughBalance,
-  NotesDB,
-} from "./sdk";
+import { AssetWithBalance } from "./asset";
+import { NotesManager } from "./notesManager";
+import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
+import { getJoinSplitRequestTotalValue } from "./utils";
+import { prepareOperation, hasEnoughBalance } from "./prepareOperation";
+import { OperationRequest } from "./operationRequest";
+import { NotesDB } from "./db";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 

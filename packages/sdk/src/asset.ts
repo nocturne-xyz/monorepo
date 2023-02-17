@@ -1,5 +1,5 @@
 import { utils } from "ethers";
-import { Address } from "../commonTypes";
+import { Address } from "./commonTypes";
 
 export enum AssetType {
   ERC20,

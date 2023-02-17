@@ -1,6 +1,6 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { NotesDB } from "./db";
-import { OperationRequest } from "./operationRequest";
+import { OperationRequest, JoinSplitRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import { Note, NoteTrait, IncludedNote } from "./note";
 import { Asset, AssetTrait } from "./asset";
@@ -10,20 +10,19 @@ import {
   getJoinSplitRequestTotalValue,
   simulateOperation,
 } from "./utils";
-import { JoinSplitRequest } from "./operationRequest";
 import {
   BLOCK_GAS_LIMIT,
   PreProofJoinSplit,
   PreSignOperation,
-} from "../commonTypes";
+} from "./commonTypes";
 import {
   NocturneSigner,
   CanonAddress,
   StealthAddressTrait,
   encryptNote,
   randomBigInt,
-} from "../crypto";
-import { MerkleProofInput } from "../proof";
+} from "./crypto";
+import { MerkleProofInput } from "./proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
