@@ -211,7 +211,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       erc20Token,
       aliceEoa,
-      nocturneContextAlice.signer.address,
+      nocturneContextAlice.signer.getRandomStealthAddress(),
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
     await sleep(15_000);
@@ -234,7 +234,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL,
-        nocturneContextBob.signer.canonAddress
+        nocturneContextBob.signer.getCanonicalAddress()
       )
       .action(erc20Token.address, encodedFunction)
       .build();
@@ -307,7 +307,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       erc20Token,
       aliceEoa,
-      nocturneContextAlice.signer.address,
+      nocturneContextAlice.signer.getCanonicalStealthAddress(),
       [PER_NOTE_AMOUNT]
     );
     await sleep(15_000);
