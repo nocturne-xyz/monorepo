@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 import {IWallet} from "../interfaces/IWallet.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {Pairing} from "../libs/Pairing.sol";
-import "../libs/types.sol";
+import "../libs/Types.sol";
 
 // helpers for converting to/from field elems, uint256s, and/or bytes, and hashing them
 library Utils {

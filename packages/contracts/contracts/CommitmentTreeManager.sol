@@ -10,7 +10,7 @@ import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import "./libs/types.sol";
+import "./libs/Types.sol";
 
 contract CommitmentTreeManager is Initializable {
     using OffchainMerkleTree for OffchainMerkleTreeData;

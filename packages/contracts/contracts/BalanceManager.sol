@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgrad
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
-import "./libs/types.sol";
+import "./libs/Types.sol";
 import "./NocturneReentrancyGuard.sol";
 
 contract BalanceManager is

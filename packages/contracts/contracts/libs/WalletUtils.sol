@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
-import "../libs/types.sol";
+import "../libs/Types.sol";
 
 // Helpers for Wallet.sol
 library WalletUtils {

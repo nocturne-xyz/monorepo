@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {Utils} from "../libs/Utils.sol";
-import "../libs/types.sol";
+import "../libs/Types.sol";
 
 library AssetUtils {
     function _decodeAsset(

@@ -23,7 +23,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
-import "../libs/types.sol";
+import "../libs/Types.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
