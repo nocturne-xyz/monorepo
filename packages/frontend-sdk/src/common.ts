@@ -9,7 +9,7 @@ export interface TokenDetails {
   symbol: string;
 }
 
-export const DEFAULT_SNAP_ORIGIN =
+export const SNAP_ID =
   process.env.REACT_APP_SNAP_ORIGIN ?? `local:http://localhost:8080`;
 
 export async function getWindowSigner(): Promise<ethers.Signer> {

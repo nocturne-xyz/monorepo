@@ -3,9 +3,11 @@ import { InMemoryKVStore, KV, KVStore } from "@nocturne-xyz/sdk";
 export class SnapKvStore implements KVStore {
   async getState(): Promise<InMemoryKVStore> {
     const kv = new InMemoryKVStore();
-    const maybeState = await wallet.request({
+    const maybeState = await snap.request({
       method: "snap_manageState",
-      params: ["get"],
+      params: {
+        operation: "get",
+      },
     });
     await kv.loadFromDump((maybeState as Record<string, any>) ?? {});
     return kv;
@@ -13,9 +15,12 @@ export class SnapKvStore implements KVStore {
 
   async flushToDisk(kv: InMemoryKVStore): Promise<boolean> {
     const state = await kv.dump();
-    await wallet.request({
+    await snap.request({
       method: "snap_manageState",
-      params: ["update", state],
+      params: {
+        operation: "update",
+        newState: state,
+      },
     });
     return true;
   }
