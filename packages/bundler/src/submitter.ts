@@ -5,7 +5,7 @@ import {
   computeOperationDigest,
   ProvenOperation,
   OperationStatus,
-  parseEventsFromContractReceipt
+  parseEventsFromContractReceipt,
 } from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
