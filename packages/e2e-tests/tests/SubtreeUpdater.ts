@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { expect } from "chai";
 import { ethers } from "ethers";
 import {
@@ -86,7 +85,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.address,
+      nocturneContextAlice.signer.getRandomStealthAddress(),
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
@@ -95,9 +94,13 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     await sleep(getSubtreeUpdaterDelay());
     await server.stop();
 
+    // @ts-ignore
     const root = server.updater.tree.root();
+    // @ts-ignore
     const nextBlockToIndex = server.updater.nextBlockToIndex;
+    // @ts-ignore
     const insertionIndex = server.updater.index;
+    // @ts-ignore
     const insertions = server.updater.insertions;
 
     // simulate restrart
@@ -105,9 +108,13 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     server = newServer();
     await server.init();
 
+    // @ts-ignore
     const recoveredRoot = server.updater.tree.root();
+    // @ts-ignore
     const recoveredNextBlockToIndex = server.updater.nextBlockToIndex;
+    // @ts-ignore
     const recoveredInsertionIndex = server.updater.index;
+    // @ts-ignore
     const recoveredInsertions = server.updater.insertions;
 
     expect(recoveredRoot).to.equal(root);
