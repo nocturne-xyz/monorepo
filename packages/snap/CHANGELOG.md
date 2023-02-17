@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- adapt to breaking changes in MM Flask
 - fix SK being derived in wrong field
 - move to monorepo
 - Bump SDK to 1.0.70-alpha
