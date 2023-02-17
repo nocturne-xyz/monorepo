@@ -207,7 +207,9 @@ export class NocturneFrontendSDK {
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
-        method: "nocturne_getAllBalances",
+        request: {
+          method: "nocturne_getAllBalances",
+        }
       },
     })) as string;
 
