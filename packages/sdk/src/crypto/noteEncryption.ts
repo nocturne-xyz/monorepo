@@ -1,5 +1,5 @@
-import { CanonAddress, StealthAddress, StealthAddressTrait } from "../crypto";
-import { Note } from "../sdk/note";
+import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
+import { Note, Asset, assertOrErr } from "../sdk";
 import { EncryptedNote } from "../commonTypes";
 import {
   AffinePoint,
@@ -7,7 +7,6 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Asset, assertOrErr } from "../sdk";
 
 const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;

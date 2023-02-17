@@ -1,10 +1,8 @@
 import {
   NocturneContext,
-  NocturnePrivKey,
   NocturneSigner,
   InMemoryMerkleProver,
   DefaultNotesManager,
-  StealthAddressTrait,
   OperationRequest,
   NotesDB,
   MerkleDB,
@@ -34,8 +32,8 @@ const getMessage = (originString: string): string => `Hello, ${originString}!`;
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
 
-async function getNocturnePrivKeyFromBIP44(): Promise<NocturnePrivKey> {
-  const nocturneNode = await snap.request({
+async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
+  const nocturneNode = await wallet.request({
     method: "snap_getBip44Entropy",
     params: {
       coinType: NOCTURNE_BIP44_COINTYPE,
@@ -45,8 +43,8 @@ async function getNocturnePrivKeyFromBIP44(): Promise<NocturnePrivKey> {
     nocturneNode as any
   );
   const keyNode = await addressKeyDeriver(0);
-  const sk = Fr.reduce(BigInt(keyNode.privateKey as any));
-  const nocturnePrivKey = new NocturnePrivKey(sk);
+  const sk = Fr.reduce(BigInt(keyNode.privateKey as string));
+  const nocturnePrivKey = new NocturneSigner(sk);
   return nocturnePrivKey;
 }
 
@@ -70,13 +68,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const merkleDB = new MerkleDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
-  const nocturnePrivKey = await getNocturnePrivKeyFromBIP44();
+  const signer = await getNocturneSignerFromBIP44();
   console.log(
     "Snap Nocturne Canonical Address: ",
-    nocturnePrivKey.toCanonAddress()
+    signer.getCanonicalAddress()
   );
-
-  const signer = new NocturneSigner(nocturnePrivKey);
 
   const notesManager = new DefaultNotesManager(
     notesDB,
@@ -118,9 +114,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "nocturne_getRandomizedAddr":
-      return JSON.stringify(
-        StealthAddressTrait.randomize(context.signer.address)
-      );
+      return JSON.stringify(signer.getRandomStealthAddress());
     case "nocturne_getAllBalances":
       return JSON.stringify(await context.getAllAssetBalances());
     case "nocturne_syncNotes":

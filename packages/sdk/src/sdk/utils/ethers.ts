@@ -2,13 +2,13 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { TypedEvent } from "@nocturne-xyz/contracts/dist/src/common";
 import { BaseContract, ContractReceipt, Event, EventFilter } from "ethers";
 import { EventFragment, Result } from "ethers/lib/utils";
-import { fakeProvenOperation } from ".";
+import { fakeProvenOperation } from "./utils";
 import {
   SignedOperation,
   PreSignOperation,
   ProvenOperation,
 } from "../../commonTypes";
-import { OperationResult } from "../../contract/types";
+import { OperationResult } from "../../contract";
 
 const CHUNK_SIZE = 2000;
 

@@ -17,4 +17,4 @@ export {
   OperationRequestBuilder,
 } from "./operationRequest";
 export { proveOperation } from "./proveOperation";
-export { prepareOperation } from "./prepareOperation";
+export { prepareOperation, hasEnoughBalance } from "./prepareOperation";

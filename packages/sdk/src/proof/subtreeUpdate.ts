@@ -5,8 +5,8 @@ import {
   Note,
   NoteTrait,
   bigInt256ToFieldElems,
+  AssetTrait
 } from "../sdk";
-import { AssetTrait } from "../sdk/asset";
 
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";

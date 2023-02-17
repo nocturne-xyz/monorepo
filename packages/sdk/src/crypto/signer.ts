@@ -4,7 +4,7 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { Note, IncludedNote, NoteTrait } from "../sdk/note";
+import { Note, IncludedNote, NoteTrait, Asset } from "../sdk";
 import { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
 import {
   EncryptedNote,
@@ -13,7 +13,6 @@ import {
   PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
-import { Asset } from "../sdk/asset";
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
 import { decryptNote } from "./noteEncryption";
