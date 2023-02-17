@@ -5,7 +5,7 @@ import {
   Note,
   NoteTrait,
   bigInt256ToFieldElems,
-  AssetTrait
+  AssetTrait,
 } from "../sdk";
 
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";

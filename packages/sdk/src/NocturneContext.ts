@@ -5,7 +5,11 @@ import {
   NotesManager,
   getJoinSplitRequestTotalValue,
   prepareOperation,
-  OperationRequest, InMemoryMerkleProver, MerkleProver, hasEnoughBalance, NotesDB
+  OperationRequest,
+  InMemoryMerkleProver,
+  MerkleProver,
+  hasEnoughBalance,
+  NotesDB,
 } from "./sdk";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";

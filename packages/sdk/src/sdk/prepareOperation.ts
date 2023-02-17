@@ -2,19 +2,14 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { NotesDB } from "./db";
 import { OperationRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
-import {
-  Note, NoteTrait, IncludedNote, 
-} from "./note";
-import {
-  Asset,
-  AssetTrait
-} from "./asset";
+import { Note, NoteTrait, IncludedNote } from "./note";
+import { Asset, AssetTrait } from "./asset";
 import {
   min,
   iterChunks,
   getJoinSplitRequestTotalValue,
   simulateOperation,
-} from "./utils"
+} from "./utils";
 import { JoinSplitRequest } from "./operationRequest";
 import {
   BLOCK_GAS_LIMIT,

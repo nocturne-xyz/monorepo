@@ -4,7 +4,11 @@ import {
   ProvenJoinSplit,
   ProvenOperation,
 } from "../commonTypes";
-import { JoinSplitProver, joinSplitPublicSignalsFromArray, packToSolidityProof } from "../proof";
+import {
+  JoinSplitProver,
+  joinSplitPublicSignalsFromArray,
+  packToSolidityProof,
+} from "../proof";
 
 export async function proveOperation(
   op: SignedOperation,
