@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - adapt to breaking changes in MM Flask
 - rename methods to make intended usage clearer
 - update imports for new decoupled `NocturneContext` functionality

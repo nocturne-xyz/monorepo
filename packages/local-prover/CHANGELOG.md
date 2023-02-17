@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - use `poseidonBN` from `@nocturne-xyz/circuit-utils`
 - Rename 
 	- `LocalJoinSplitProver` -> `WasmJoinSplitProver`

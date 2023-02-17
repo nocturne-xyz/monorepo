@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- clean up module hierarchy, remove unnecessary exports, and make exports explicit
+- merge `NocturnePrivKey` and `NocturneSigner`
 - replace `circomlibjs` and `ffjavascript` with `@nocturne-xyz/circuit-utils`
 - replace `NocturneContext.test.ts` with unit tests for each of the newly-split-out parts
 - disembowel `NocturneContext`, reducing it to a convencience wrapper for all private state
