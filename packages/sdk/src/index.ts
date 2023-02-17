@@ -1,5 +1,5 @@
 export * from "./contract";
-export * from "./crypto"
+export * from "./crypto";
 export * from "./db";
 export * from "./indexing";
 export * from "./merkleProver";

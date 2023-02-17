@@ -11,7 +11,7 @@ import {
   zip,
   NocturneSigner,
   MerkleDB,
-  InMemoryMerkleProver
+  InMemoryMerkleProver,
 } from "../src";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 
