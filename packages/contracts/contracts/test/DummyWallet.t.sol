@@ -304,27 +304,6 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         return op;
     }
 
-    function testPoseidon() public {
-        console.log(
-            new PoseidonHasherT3(poseidonT3).hash([uint256(0), uint256(1)])
-        );
-        console.log(
-            new PoseidonHasherT4(poseidonT4).hash(
-                [uint256(0), uint256(1), uint256(2)]
-            )
-        );
-        console.log(
-            new PoseidonHasherT5(poseidonT5).hash(
-                [uint256(0), uint256(1), uint256(2), uint256(3)]
-            )
-        );
-        console.log(
-            new PoseidonHasherT6(poseidonT6).hash(
-                [uint256(0), uint256(1), uint256(2), uint256(3), uint256(4)]
-            )
-        );
-    }
-
     function testDummyTransferSingleJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
