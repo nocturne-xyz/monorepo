@@ -16,4 +16,8 @@ contract TestBalanceManager is BalanceManager {
     function makeDeposit(Deposit calldata deposit) public {
         _makeDeposit(deposit);
     }
+
+    function processJoinSplitsReservingFee(Operation calldata op) public {
+        _processJoinSplitsReservingFee(op);
+    }
 }

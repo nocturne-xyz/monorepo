@@ -159,20 +159,19 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     function reserveAndDepositFunds(
         address recipient,
         SimpleERC20Token token,
-        uint256 reserveAmount,
-        uint256 depositAmount
+        uint256 amount
     ) internal {
-        token.reserveTokens(recipient, reserveAmount);
+        token.reserveTokens(recipient, amount);
 
         vm.prank(recipient);
-        token.approve(address(vault), depositAmount);
+        token.approve(address(vault), amount);
 
         uint256[] memory batch = new uint256[](16);
 
-        uint256 remainder = depositAmount % PER_DEPOSIT_AMOUNT;
+        uint256 remainder = amount % PER_DEPOSIT_AMOUNT;
         uint256 depositIterations = remainder == 0
-            ? depositAmount / PER_DEPOSIT_AMOUNT
-            : depositAmount / PER_DEPOSIT_AMOUNT + 1;
+            ? amount / PER_DEPOSIT_AMOUNT
+            : amount / PER_DEPOSIT_AMOUNT + 1;
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
@@ -306,7 +305,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
     function testDummyTransferSingleJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 8 gwei);
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -325,7 +324,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check joinsplit event
@@ -363,13 +362,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
         assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
     }
 
     function testDummyTransferThreeJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 8 gwei);
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -388,7 +387,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
@@ -415,13 +414,13 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertLe(token.balanceOf(address(vault)), uint256(2 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(6 gwei));
     }
 
     function testDummyTransferSixJoinSplit() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 20 gwei, 16 gwei);
+        reserveAndDepositFunds(ALICE, token, 16 gwei);
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
@@ -440,7 +439,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(16 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(4 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
@@ -467,14 +466,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertLe(token.balanceOf(address(vault)), uint256(6 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(4 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(10 gwei));
     }
 
     // Ill-formatted operation should not be processed
     function testProcessesFailingOperation() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 8 gwei);
 
         // Create transaction to withdraw 1500 tokens and send to Bob (more than
         // alice has)
@@ -494,7 +493,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
@@ -521,14 +520,14 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
         assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
     // Test failing calls
     function testProcessesFailingAction() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 10 gwei, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 8 gwei);
 
         // Create transaction to withdraw 15 gwei tokens and send to Bob (more than
         // alice has)
@@ -548,7 +547,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         // Check OperationProcessed event
@@ -576,7 +575,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
         assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
-        assertEq(token.balanceOf(address(ALICE)), uint256(2 gwei));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 }
