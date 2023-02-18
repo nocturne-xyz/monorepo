@@ -14,11 +14,11 @@ import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} 
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {TestJoinSplitVerifier} from "./utils/TestJoinSplitVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
+import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
-import {TestBalanceManager} from "./utils/TestBalanceManager.sol";
+import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";

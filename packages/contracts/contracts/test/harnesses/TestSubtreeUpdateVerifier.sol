@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import "./Pairing.sol";
+import "../utils/Pairing.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
 import {Groth16} from "../../libs/Groth16.sol";
 
