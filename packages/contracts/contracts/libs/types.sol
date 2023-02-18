@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
-uint256 constant GAS_PER_VERIFICATION = 200000;
-uint256 constant GAS_PER_REFUND_HANDLE = 0;
-uint256 constant GAS_PER_REFUND_TREE = 0;
+uint256 constant GAS_PER_JOINSPLIT_VERIFY = 100_000;
+uint256 constant GAS_PER_JOINSPLIT_HANDLE = 70_000;
+uint256 constant GAS_PER_REFUND_TREE = 30_000;
+uint256 constant GAS_PER_REFUND_HANDLE = 50_000;
 
 enum AssetType {
     ERC20,
@@ -143,9 +144,10 @@ library OperationLib {
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
-            (GAS_PER_VERIFICATION * self.joinSplits.length) +
-            (GAS_PER_REFUND_HANDLE * self.encodedRefundAssets.length) +
-            (GAS_PER_REFUND_TREE * self.encodedRefundAssets.length);
+            ((GAS_PER_JOINSPLIT_VERIFY + GAS_PER_JOINSPLIT_HANDLE) *
+                self.joinSplits.length) +
+            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
+                self.maxNumRefunds);
     }
 
     function maxGasAssetCost(

@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
+import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
@@ -25,15 +26,16 @@ import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
 import "../libs/Types.sol";
 
-contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
+contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     using stdJson for string;
     using TreeTestLib for TreeTest;
+    using OperationLib for Operation;
 
-    uint256 constant DEFAULT_GAS_LIMIT = 800000;
+    uint256 constant DEFAULT_GAS_LIMIT = 500_000;
     uint256 constant ERC20_ID = 1;
 
     address constant ALICE = address(1);
@@ -264,5 +266,126 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
         // Post-deposit state
         assertEq(balanceManager.totalCount(), 1);
         assertEq(token.balanceOf(address(vault)), depositAmount);
+    }
+
+    function testProcessJoinSplitsNotEnoughFundsOwned() public {
+        uint256 perNoteAmount = 6 gwei;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Only reserves + deposits 6 gwei of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 1);
+
+        // Attempts to unwrap 12 gwei of token (exceeds owned)
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: perNoteAmount,
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 0
+            })
+        );
+
+        // Expect revert for processing joinsplits
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
+    function testProcessJoinSplitsGasPriceZero() public {
+        uint256 perNoteAmount = 6 gwei;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 12 gwei of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+
+        // Unwrap 12 gwei of token (alice has sufficient balance)
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: perNoteAmount,
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 0
+            })
+        );
+
+        // Balance manager took up 12 gwei of token
+        assertEq(token.balanceOf(address(balanceManager)), 0);
+        balanceManager.processJoinSplitsReservingFee(op);
+        assertEq(token.balanceOf(address(balanceManager)), 12 gwei);
+    }
+
+    function testProcessJoinSplitsReservingFeeSingleFeeNote() public {
+        uint256 perNoteAmount = 6 gwei;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 12 gwei of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+
+        // Unwrap 12 gwei of token (alice has sufficient balance)
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: perNoteAmount, // only transfer 6 gwei, other 6 for fee
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 50
+            })
+        );
+
+        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
+        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+
+        // Balance manager took up 12 gwei of token
+        assertEq(token.balanceOf(address(balanceManager)), 0);
+        balanceManager.processJoinSplitsReservingFee(op);
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            12 gwei - feeReserved
+        );
+        assertEq(token.balanceOf(address(vault)), feeReserved);
+    }
+
+    function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
+        uint256 perNoteAmount = 40_000_000;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 120M of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 3);
+
+        // Unwrap 12 gwei of token (alice has sufficient balance)
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: perNoteAmount, // only transfer 6 gwei, other 6 for fee
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 3,
+                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 3,
+                gasPrice: 50
+            })
+        );
+
+        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
+        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+
+        // Balance manager took up 12 gwei of token
+        assertEq(token.balanceOf(address(balanceManager)), 0);
+        balanceManager.processJoinSplitsReservingFee(op);
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (3 * perNoteAmount) - feeReserved
+        );
+        assertEq(token.balanceOf(address(vault)), feeReserved);
     }
 }
