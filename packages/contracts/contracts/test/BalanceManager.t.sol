@@ -269,13 +269,13 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     }
 
     function testProcessJoinSplitsNotEnoughFundsOwned() public {
-        uint256 perNoteAmount = 6 gwei;
+        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
-        // Only reserves + deposits 6 gwei of token
+        // Only reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 1);
 
-        // Attempts to unwrap 12 gwei of token (exceeds owned)
+        // Attempts to unwrap 100M of token (exceeds owned)
         Operation memory op = formatTransferOperation(
             TransferOperationArgs({
                 token: token,
@@ -295,13 +295,13 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     }
 
     function testProcessJoinSplitsGasPriceZero() public {
-        uint256 perNoteAmount = 6 gwei;
+        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 12 gwei of token
+        // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
-        // Unwrap 12 gwei of token (alice has sufficient balance)
+        // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = formatTransferOperation(
             TransferOperationArgs({
                 token: token,
@@ -315,25 +315,25 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             })
         );
 
-        // Balance manager took up 12 gwei of token
+        // Balance manager took up 100M of token
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
-        assertEq(token.balanceOf(address(balanceManager)), 12 gwei);
+        assertEq(token.balanceOf(address(balanceManager)), 100_000_000);
     }
 
     function testProcessJoinSplitsReservingFeeSingleFeeNote() public {
-        uint256 perNoteAmount = 6 gwei;
+        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 12 gwei of token
+        // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
-        // Unwrap 12 gwei of token (alice has sufficient balance)
+        // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount, // only transfer 6 gwei, other 6 for fee
+                amount: perNoteAmount, // only transfer 50M, other 50M for fee
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -345,29 +345,29 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
         uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
 
-        // Balance manager took up 12 gwei of token
+        // Balance manager took up 50M, left 50M for bundler
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            12 gwei - feeReserved
+            (2 * perNoteAmount) - feeReserved
         );
         assertEq(token.balanceOf(address(vault)), feeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
-        uint256 perNoteAmount = 40_000_000;
+        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposits 120M of token
+        // Reserves + deposits 150M of token
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 3);
 
-        // Unwrap 12 gwei of token (alice has sufficient balance)
+        // Unwrap 150M of token (alice has sufficient balance)
         Operation memory op = formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount, // only transfer 6 gwei, other 6 for fee
+                amount: perNoteAmount,
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 3,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
@@ -379,7 +379,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
 
-        // Balance manager took up 12 gwei of token
+        // Balance manager took up 150M - 62.5M
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
