@@ -44,4 +44,8 @@ contract TestBalanceManager is BalanceManager {
     ) public pure returns (uint256) {
         return WalletUtils.calculateBundlerGasAssetPayout(op, opResult);
     }
+
+    function handleAllRefunds(Operation calldata op) public {
+        _handleAllRefunds(op);
+    }
 }

@@ -60,6 +60,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         uint256 amount;
         uint256 publicSpendPerJoinSplit;
         uint256 numJoinSplits;
+        EncodedAsset[] encodedRefundAssets;
         uint256 verificationGasLimit;
         uint256 executionGasLimit;
         uint256 gasPrice;
@@ -249,7 +250,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             verificationGasLimit: args.verificationGasLimit,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length
+            maxNumRefunds: joinSplits.length + encodedRefundAssets.length
         });
 
         return op;
@@ -300,6 +301,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
                 amount: perNoteAmount,
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
@@ -326,6 +328,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
                 amount: perNoteAmount,
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
@@ -353,6 +356,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
                 amount: perNoteAmount, // only transfer 50M, other 50M for fee
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 50
@@ -387,6 +391,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
                 amount: perNoteAmount,
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 3,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 3,
                 gasPrice: 50
@@ -421,6 +426,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
                 amount: perNoteAmount, // only transfer 50M, other 50M for fee
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 50
@@ -458,4 +464,68 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
 
         // TODO: pay out subtree updater
     }
+
+    function testHandleRefundJoinSplitsSingleAsset() public {
+        uint256 perNoteAmount = 50_000_000;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 100M of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+
+        // Unwrap 100M of token
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: 0, // not transferring anything, want to refund all
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 0 // not paying bundler anything, refund all
+            })
+        );
+
+        // Take up 100M tokens
+        balanceManager.processJoinSplitsReservingFee(op);
+        assertEq(token.balanceOf(address(balanceManager)), (2 * perNoteAmount));
+        assertEq(token.balanceOf(address(vault)), 0);
+
+        balanceManager.handleAllRefunds(op);
+        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(vault)), (2 * perNoteAmount));
+    }
+
+    // function testHandleRefundJoinSplitsSingleAsset() public {
+    //     uint256 perNoteAmount = 50_000_000;
+    //     SimpleERC20Token token = ERC20s[0];
+
+    //     // Reserves + deposits 100M of token
+    //     reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+
+    //     // Unwrap 100M of token
+    //     Operation memory op = formatTransferOperation(
+    //         TransferOperationArgs({
+    //             token: token,
+    //             recipient: BOB,
+    //             amount: 0, // not transferring anything, want to refund all
+    //             publicSpendPerJoinSplit: perNoteAmount,
+    //             numJoinSplits: 2,
+    //             encodedRefundAssets: new EncodedAsset[](0),
+    //             executionGasLimit: DEFAULT_GAS_LIMIT,
+    //             verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+    //             gasPrice: 0 // not paying bundler anything, refund all
+    //         })
+    //     );
+
+    //     // Take up 100M tokens
+    //     balanceManager.processJoinSplitsReservingFee(op);
+    // }
+
+    // // Refund joinsplit
+    // Refund refund asset
+
+    // Override __BalanceManager_init to mock operation stage
+    // Refund received assets (erc721/1155)
 }
