@@ -20,6 +20,7 @@ import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {WalletUtils} from "../libs/WalletUtils.sol";
 import {Vault} from "../Vault.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
+import "./utils/NocturneUtils.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
@@ -59,18 +60,6 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
     SimpleERC1155Token[3] ERC1155s;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
-
-    struct TransferOperationArgs {
-        SimpleERC20Token token;
-        address recipient;
-        uint256 amount;
-        uint256 publicSpendPerJoinSplit;
-        uint256 numJoinSplits;
-        EncodedAsset[] encodedRefundAssets;
-        uint256 verificationGasLimit;
-        uint256 executionGasLimit;
-        uint256 gasPrice;
-    }
 
     event RefundProcessed(
         StealthAddress refundAddr,
@@ -129,43 +118,6 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         }
     }
 
-    function defaultStealthAddress()
-        internal
-        pure
-        returns (StealthAddress memory)
-    {
-        return
-            StealthAddress({
-                h1X: 1938477,
-                h1Y: 9104058,
-                h2X: 1032988,
-                h2Y: 1032988
-            });
-    }
-
-    function dummyProof() internal pure returns (uint256[8] memory _values) {
-        for (uint256 i = 0; i < 8; i++) {
-            _values[i] = uint256(4757829);
-        }
-    }
-
-    function formatDeposit(
-        address spender,
-        address asset,
-        uint256 value,
-        uint256 id,
-        StealthAddress memory depositAddr
-    ) public pure returns (Deposit memory) {
-        return
-            Deposit({
-                spender: spender,
-                encodedAssetAddr: uint256(uint160(asset)),
-                encodedAssetId: id,
-                value: value,
-                depositAddr: depositAddr
-            });
-    }
-
     function reserveAndDepositFunds(
         address recipient,
         SimpleERC20Token token,
@@ -173,8 +125,8 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
     ) internal {
         token.reserveTokens(recipient, amount);
 
-        StealthAddress memory addr = defaultStealthAddress();
-        Deposit memory deposit = formatDeposit(
+        StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
+        Deposit memory deposit = NocturneUtils.formatDeposit(
             recipient,
             address(token),
             amount,
@@ -187,95 +139,6 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
 
         vm.prank(recipient);
         balanceManager.makeDeposit(deposit);
-    }
-
-    function formatTransferOperation(
-        TransferOperationArgs memory args
-    ) internal view returns (Operation memory) {
-        Action memory transferAction = Action({
-            contractAddress: address(args.token),
-            encodedFunction: abi.encodeWithSelector(
-                args.token.transfer.selector,
-                args.recipient,
-                args.amount
-            )
-        });
-
-        uint256 root = balanceManager.root();
-        EncryptedNote memory newNoteAEncrypted = EncryptedNote({
-            owner: StealthAddress({
-                h1X: uint256(123),
-                h1Y: uint256(123),
-                h2X: uint256(123),
-                h2Y: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
-        EncryptedNote memory newNoteBEncrypted = EncryptedNote({
-            owner: StealthAddress({
-                h1X: uint256(123),
-                h1Y: uint256(123),
-                h2X: uint256(123),
-                h2Y: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
-
-        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(args.token),
-            ERC20_ID
-        );
-
-        JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
-        for (uint256 i = 0; i < args.numJoinSplits; i++) {
-            joinSplits[i] = JoinSplit({
-                commitmentTreeRoot: root,
-                nullifierA: uint256(2 * i),
-                nullifierB: uint256(2 * i + 1),
-                newNoteACommitment: uint256(i),
-                newNoteAEncrypted: newNoteAEncrypted,
-                newNoteBCommitment: uint256(i),
-                newNoteBEncrypted: newNoteBEncrypted,
-                proof: dummyProof(),
-                encodedAsset: encodedAsset,
-                publicSpend: args.publicSpendPerJoinSplit
-            });
-        }
-
-        Action[] memory actions = new Action[](1);
-        actions[0] = transferAction;
-        Operation memory op = Operation({
-            joinSplits: joinSplits,
-            refundAddr: defaultStealthAddress(),
-            encodedRefundAssets: args.encodedRefundAssets,
-            actions: actions,
-            verificationGasLimit: args.verificationGasLimit,
-            executionGasLimit: args.executionGasLimit,
-            gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
-        });
-
-        return op;
-    }
-
-    function formatOperationResult(
-        Operation memory op
-    ) public pure returns (OperationResult memory result) {
-        return
-            OperationResult({
-                opProcessed: true,
-                failureReason: "",
-                callSuccesses: new bool[](0),
-                callResults: new bytes[](0),
-                executionGas: op.executionGasLimit,
-                verificationGas: op.verificationGasLimit,
-                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
-            });
     }
 
     function testOnErc721ReceivedEnteredExecute() public {
@@ -417,11 +280,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 1);
 
         // Attempts to unwrap 100M of token (exceeds owned)
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: perNoteAmount,
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -444,11 +308,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: perNoteAmount,
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -472,11 +337,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: perNoteAmount, // only transfer 50M, other 50M for fee
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -507,11 +373,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 3);
 
         // Unwrap 150M of token (alice has sufficient balance)
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: perNoteAmount,
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -542,11 +409,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: perNoteAmount, // only transfer 50M, other 50M for fee
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -568,7 +436,9 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         );
 
         // Bundler payout ends up 40M of the 50M reserved (other 10M for updater)
-        OperationResult memory opResult = formatOperationResult(op);
+        OperationResult memory opResult = NocturneUtils.formatOperationResult(
+            op
+        );
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
             op,
             opResult
@@ -596,11 +466,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
 
         // Unwrap 100M of token
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 0, // not transferring anything, want to refund all
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -634,11 +505,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
         );
 
         // Dummy operation, we're only interested in refundAssets
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: joinSplitToken,
                 recipient: BOB,
                 amount: 0,
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
@@ -665,11 +537,12 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
 
         // Dummy operation, we only care about the received assets which we setup
         // manually
-        Operation memory op = formatTransferOperation(
+        Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: joinSplitToken,
                 recipient: BOB,
                 amount: 0,
+                root: balanceManager.root(),
                 publicSpendPerJoinSplit: perNoteAmount,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
