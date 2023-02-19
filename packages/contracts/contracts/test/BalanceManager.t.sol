@@ -38,7 +38,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     using OperationLib for Operation;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
-    uint256 constant ERC20_ID = 1;
+    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
@@ -219,10 +219,11 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             encryptedValue: uint256(111)
         });
 
-        EncodedAsset memory encodedAsset = EncodedAsset({
-            encodedAssetAddr: uint256(uint160(address(args.token))),
-            encodedAssetId: uint256(0)
-        });
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(args.token),
+            ERC20_ID
+        );
 
         JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
@@ -507,12 +508,11 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
 
         // Refund asset
         EncodedAsset[] memory refundAssets = new EncodedAsset[](1);
-        refundAssets[0] = EncodedAsset({
-            encodedAssetAddr: uint256(uint160(address(refundToken))),
-            encodedAssetId: uint256(0)
-        });
-
-        console.log("Refund asset", address(refundToken));
+        refundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(refundToken),
+            ERC20_ID
+        );
 
         // Dummy operation, we're only interested in refundAssets
         Operation memory op = formatTransferOperation(

@@ -23,6 +23,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
+import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
 
 contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
@@ -34,7 +35,7 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
 
     uint256 constant DEFAULT_GAS_LIMIT = 800000;
-    uint256 constant ERC20_ID = 1;
+    uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
@@ -265,10 +266,11 @@ contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
             encryptedValue: uint256(111)
         });
 
-        EncodedAsset memory encodedAsset = EncodedAsset({
-            encodedAssetAddr: uint256(uint160(address(args.token))),
-            encodedAssetId: uint256(0)
-        });
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(args.token),
+            ERC20_ID
+        );
 
         JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
