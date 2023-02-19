@@ -664,7 +664,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token joinSplitToken = ERC20s[0];
 
-        // Dummy operation, we only care about the received asset which we setup
+        // Dummy operation, we only care about the received assets which we setup
         // manually
         Operation memory op = formatTransferOperation(
             TransferOperationArgs({
@@ -680,9 +680,12 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             })
         );
 
-        // Token balance manager will receive
+        // Token balance manager will receive erc721 + erc1155
         SimpleERC721Token erc721 = ERC721s[0];
-        uint256 tokenId = 1;
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+        uint256 erc721Id = 1;
+        uint256 erc1155Id = 2;
+        uint256 erc1155Amount = 100;
 
         // Override reentrancy guard so balance manager can receive token
         vm.store(
@@ -693,18 +696,39 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
 
         // Mint and send token to balance manager
         assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, tokenId);
+        erc721.reserveToken(ALICE, erc721Id);
+        erc1155.reserveTokens(ALICE, erc1155Id, erc1155Amount);
         vm.prank(ALICE);
-        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
-        assertEq(balanceManager.receivedAssetsLength(), 1);
+        erc721.safeTransferFrom(ALICE, address(balanceManager), erc721Id);
+        vm.prank(ALICE);
+        erc1155.safeTransferFrom(
+            ALICE,
+            address(balanceManager),
+            erc1155Id,
+            erc1155Amount,
+            bytes("")
+        );
+        assertEq(balanceManager.receivedAssetsLength(), 2);
 
-        // Ensure balance manager gave vault the token
+        // Pre-refund balances
         assertEq(erc721.balanceOf(address(balanceManager)), 1);
         assertEq(erc721.balanceOf(address(vault)), 0);
-        assertEq(erc721.ownerOf(tokenId), address(balanceManager));
+        assertEq(erc721.ownerOf(erc721Id), address(balanceManager));
+
+        assertEq(
+            erc1155.balanceOf(address(balanceManager), erc1155Id),
+            erc1155Amount
+        );
+        assertEq(erc1155.balanceOf(address(vault), erc1155Id), 0);
+
         balanceManager.handleAllRefunds(op);
+
+        // Post-refund balances (vault owns what balance manager had)
         assertEq(erc721.balanceOf(address(balanceManager)), 0);
         assertEq(erc721.balanceOf(address(vault)), 1);
-        assertEq(erc721.ownerOf(tokenId), address(vault));
+        assertEq(erc721.ownerOf(erc721Id), address(vault));
+
+        assertEq(erc1155.balanceOf(address(balanceManager), erc1155Id), 0);
+        assertEq(erc1155.balanceOf(address(vault), erc1155Id), erc1155Amount);
     }
 }
