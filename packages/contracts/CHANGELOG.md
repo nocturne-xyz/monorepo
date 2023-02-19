@@ -9,6 +9,7 @@
 - Add storage GAP to `NocturneReentrancyGuard`
 - Remove `poseidonTest` from `Wallet.t.sol`
 - Delete old `gasTesting` files
+- Move the Simple ERC tokens to `test`
 - Rename `libs/types.sol` to uppercase `Types.sol`
 - Rename:
   - `NoteTransmission` -> `EncryptedNote`
