@@ -16,6 +16,7 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
+import "./utils/NocturneUtils.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
@@ -50,17 +51,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
     SimpleERC721Token[3] ERC721s;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
-
-    struct TransferOperationArgs {
-        SimpleERC20Token token;
-        address recipient;
-        uint256 amount;
-        uint256 publicSpendPerJoinSplit;
-        uint256 numJoinSplits;
-        uint256 verificationGasLimit;
-        uint256 executionGasLimit;
-        uint256 gasPrice;
-    }
 
     event RefundProcessed(
         StealthAddress refundAddr,
@@ -118,26 +108,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         }
     }
 
-    function defaultStealthAddress()
-        internal
-        pure
-        returns (StealthAddress memory)
-    {
-        return
-            StealthAddress({
-                h1X: 1938477,
-                h1Y: 9104058,
-                h2X: 1032988,
-                h2Y: 1032988
-            });
-    }
-
-    function dummyProof() internal pure returns (uint256[8] memory _values) {
-        for (uint256 i = 0; i < 8; i++) {
-            _values[i] = uint256(4757829);
-        }
-    }
-
     function depositFunds(
         Wallet _wallet,
         address _spender,
@@ -176,7 +146,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
-            StealthAddress memory addr = defaultStealthAddress();
+            StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
             emit RefundProcessed(
                 addr,
@@ -227,82 +197,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         // fill the tree batch
         wallet.fillBatchWithZeros();
 
-        wallet.applySubtreeUpdate(root, dummyProof());
-    }
-
-    function formatTransferOperation(
-        TransferOperationArgs memory args
-    ) internal view returns (Operation memory) {
-        Action memory transferAction = Action({
-            contractAddress: address(args.token),
-            encodedFunction: abi.encodeWithSelector(
-                args.token.transfer.selector,
-                args.recipient,
-                args.amount
-            )
-        });
-
-        uint256 root = wallet.root();
-        EncryptedNote memory newNoteAEncrypted = EncryptedNote({
-            owner: StealthAddress({
-                h1X: uint256(123),
-                h1Y: uint256(123),
-                h2X: uint256(123),
-                h2Y: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
-        EncryptedNote memory newNoteBEncrypted = EncryptedNote({
-            owner: StealthAddress({
-                h1X: uint256(123),
-                h1Y: uint256(123),
-                h2X: uint256(123),
-                h2Y: uint256(123)
-            }),
-            encappedKey: uint256(111),
-            encryptedNonce: uint256(111),
-            encryptedValue: uint256(111)
-        });
-
-        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(args.token),
-            ERC20_ID
-        );
-
-        JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
-        for (uint256 i = 0; i < args.numJoinSplits; i++) {
-            joinSplits[i] = JoinSplit({
-                commitmentTreeRoot: root,
-                nullifierA: uint256(2 * i),
-                nullifierB: uint256(2 * i + 1),
-                newNoteACommitment: uint256(i),
-                newNoteAEncrypted: newNoteAEncrypted,
-                newNoteBCommitment: uint256(i),
-                newNoteBEncrypted: newNoteBEncrypted,
-                proof: dummyProof(),
-                encodedAsset: encodedAsset,
-                publicSpend: args.publicSpendPerJoinSplit
-            });
-        }
-
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
-        Action[] memory actions = new Action[](1);
-        actions[0] = transferAction;
-        Operation memory op = Operation({
-            joinSplits: joinSplits,
-            refundAddr: defaultStealthAddress(),
-            encodedRefundAssets: encodedRefundAssets,
-            actions: actions,
-            verificationGasLimit: args.verificationGasLimit,
-            executionGasLimit: args.executionGasLimit,
-            gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length
-        });
-
-        return op;
+        wallet.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
     function testDummyTransferSingleJoinSplit() public {
@@ -311,13 +206,15 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = formatTransferOperation(
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 1 gwei,
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 2 gwei,
                 numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0
@@ -374,13 +271,15 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = formatTransferOperation(
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 6 gwei,
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 2 gwei,
                 numJoinSplits: 3,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0
@@ -426,13 +325,15 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 50 tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = formatTransferOperation(
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 10 gwei,
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 2 gwei,
-                numJoinSplits: 5,
+                numJoinSplits: 6,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0
@@ -480,13 +381,15 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create transaction to withdraw 1500 tokens and send to Bob (more than
         // alice has)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = formatTransferOperation(
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 1 gwei,
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 15 gwei,
                 numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 1000
@@ -534,13 +437,15 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create transaction to withdraw 15 gwei tokens and send to Bob (more than
         // alice has)
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = formatTransferOperation(
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
                 amount: 15 gwei,
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 2 gwei,
                 numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 1000

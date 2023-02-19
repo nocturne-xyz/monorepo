@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Break shared utils for Wallet and BalanceManager into `NocturneUtils` test lib
 - Add separate `BalanceManager` unit tests (`BalanceManager.t.sol`)
 - Move designated test contracts into `test/harnesses` folder
 - Granularize in-contract gas estimate by separating joinsplit cost into verification + handling in `Types.sol`
