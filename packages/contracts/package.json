@@ -21,7 +21,8 @@
     "test:coverage": "FOUNDRY_PROFILE=contracts forge coverage",
     "test:coverage:report": "FOUNDRY_PROFILE=contracts forge coverage --report lcov",
     "test:gas-report": "yarn test:unit --gas-report",
-    "test:unit": "FOUNDRY_PROFILE=contracts forge test"
+    "test:unit": "FOUNDRY_PROFILE=contracts forge test",
+    "inspect:storage-layout": "./storage_inspect,sh"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.7.3",
