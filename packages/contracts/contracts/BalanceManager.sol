@@ -77,7 +77,8 @@ contract BalanceManager is
                 AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
         }
-        // Accept the transfer when _operation_stage != _NOT_ENTERED
+
+        // ENTERED_PROCESS is ok because this is when vault funds wallet
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -105,7 +106,8 @@ contract BalanceManager is
                 );
             }
         }
-        // Accept the transfer when _operation_stage != _NOT_ENTERED
+
+        // ENTERED_PROCESS is ok because this is when vault funds wallet
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
