@@ -7,9 +7,9 @@ CONTRACTS_DIR=./contracts
 OUTPUT_FILE=.all-storage-layouts
 echo "" > "$OUTPUT_FILE"
 
-echo "=======================" > "$file"
-echo "👁️ STORAGE LAYOUT SNAPSHOT 👁️ ">> "$file"
-echo "=======================" >> "$file"
+echo "=======================" > "$OUTPUT_FILE"
+echo "👁️ STORAGE LAYOUT SNAPSHOT 👁️ ">> "$OUTPUT_FILE"
+echo "=======================" >> "$OUTPUT_FILE"
 
 # Loop through each contract in the directory
 for CONTRACT in "$CONTRACTS_DIR"/*.sol; do

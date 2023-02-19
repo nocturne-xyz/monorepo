@@ -1,4 +1,6 @@
-
+=======================
+👁️ STORAGE LAYOUT SNAPSHOT 👁️ 
+=======================
 =======================
  ➡ BalanceManager
 +--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------+
@@ -20,11 +22,13 @@
 |--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------|
 | _operationStage    | uint256                       | 75   | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 |--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------|
-| _vault             | contract IVault               | 76   | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| __GAP              | uint256[50]                   | 76   | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 |--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------|
-| _receivedAssets    | struct EncodedAsset[]         | 77   | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _vault             | contract IVault               | 126  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 |--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------|
-| __GAP              | uint256[50]                   | 78   | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _receivedAssets    | struct EncodedAsset[]         | 127  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+|--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------|
+| __GAP              | uint256[50]                   | 128  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 +--------------------+-------------------------------+------+--------+-------+----------------------------------------------------------------+
 =======================
  ➡ CommitmentTreeManager
@@ -53,15 +57,17 @@
 +------+------+------+--------+-------+----------+
 =======================
  ➡ NocturneReentrancyGuard
-+-----------------+---------+------+--------+-------+----------------------------------------------------------------------------------+
-| Name            | Type    | Slot | Offset | Bytes | Contract                                                                         |
-+======================================================================================================================================+
-| _initialized    | uint8   | 0    | 0      | 1     | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
-|-----------------+---------+------+--------+-------+----------------------------------------------------------------------------------|
-| _initializing   | bool    | 0    | 1      | 1     | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
-|-----------------+---------+------+--------+-------+----------------------------------------------------------------------------------|
-| _operationStage | uint256 | 1    | 0      | 32    | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
-+-----------------+---------+------+--------+-------+----------------------------------------------------------------------------------+
++-----------------+-------------+------+--------+-------+----------------------------------------------------------------------------------+
+| Name            | Type        | Slot | Offset | Bytes | Contract                                                                         |
++==========================================================================================================================================+
+| _initialized    | uint8       | 0    | 0      | 1     | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
+|-----------------+-------------+------+--------+-------+----------------------------------------------------------------------------------|
+| _initializing   | bool        | 0    | 1      | 1     | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
+|-----------------+-------------+------+--------+-------+----------------------------------------------------------------------------------|
+| _operationStage | uint256     | 1    | 0      | 32    | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
+|-----------------+-------------+------+--------+-------+----------------------------------------------------------------------------------|
+| __GAP           | uint256[50] | 2    | 0      | 1600  | packages/contracts/contracts/NocturneReentrancyGuard.sol:NocturneReentrancyGuard |
++-----------------+-------------+------+--------+-------+----------------------------------------------------------------------------------+
 =======================
  ➡ PoseidonHashers
 =======================
@@ -104,11 +110,13 @@
 |--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
 | _operationStage    | uint256                       | 75   | 0      | 32    | packages/contracts/contracts/Wallet.sol:Wallet |
 |--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
-| _vault             | contract IVault               | 76   | 0      | 20    | packages/contracts/contracts/Wallet.sol:Wallet |
+| __GAP              | uint256[50]                   | 76   | 0      | 1600  | packages/contracts/contracts/Wallet.sol:Wallet |
 |--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
-| _receivedAssets    | struct EncodedAsset[]         | 77   | 0      | 32    | packages/contracts/contracts/Wallet.sol:Wallet |
+| _vault             | contract IVault               | 126  | 0      | 20    | packages/contracts/contracts/Wallet.sol:Wallet |
 |--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
-| __GAP              | uint256[50]                   | 78   | 0      | 1600  | packages/contracts/contracts/Wallet.sol:Wallet |
+| _receivedAssets    | struct EncodedAsset[]         | 127  | 0      | 32    | packages/contracts/contracts/Wallet.sol:Wallet |
 |--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
 | __GAP              | uint256[50]                   | 128  | 0      | 1600  | packages/contracts/contracts/Wallet.sol:Wallet |
+|--------------------+-------------------------------+------+--------+-------+------------------------------------------------|
+| __GAP              | uint256[50]                   | 178  | 0      | 1600  | packages/contracts/contracts/Wallet.sol:Wallet |
 +--------------------+-------------------------------+------+--------+-------+------------------------------------------------+
