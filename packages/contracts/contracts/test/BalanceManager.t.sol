@@ -317,11 +317,6 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         // Token balance manager will receive
         SimpleERC721Token erc721 = ERC721s[0];
         uint256 tokenId = 1;
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            tokenId
-        );
 
         // Expect safeTransferFrom to fail because balance stage = NOT_ENTERED
         assertEq(balanceManager.receivedAssetsLength(), 0);
@@ -329,6 +324,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
         erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+        assertEq(balanceManager.receivedAssetsLength(), 0);
     }
 
     function testOnErc1155ReceivedEnteredExecute() public {
@@ -373,6 +369,30 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         );
         assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
         assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
+    }
+
+    function testOnErc1155ReceivedNotEntered() public {
+        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
+
+        // Token balance manager will attempt to receive
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+        uint256 tokenId = 1;
+
+        uint256 tokenAmount = 100;
+
+        // Mint but transfer attempt will revert
+        assertEq(balanceManager.receivedAssetsLength(), 0);
+        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
+        vm.prank(ALICE);
+        vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
+        erc1155.safeTransferFrom(
+            ALICE,
+            address(balanceManager),
+            tokenId,
+            tokenAmount,
+            bytes("")
+        );
+        assertEq(balanceManager.receivedAssetsLength(), 0);
     }
 
     function testMakeDeposit() public {
