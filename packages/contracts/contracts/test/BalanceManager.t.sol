@@ -17,6 +17,7 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
+import {WalletUtils} from "../libs/WalletUtils.sol";
 import {Vault} from "../Vault.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
@@ -40,6 +41,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
+    address constant BUNDLER = address(3);
     uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
 
     TestBalanceManager balanceManager;
@@ -253,6 +255,21 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         return op;
     }
 
+    function formatOperationResult(
+        Operation memory op
+    ) public pure returns (OperationResult memory result) {
+        return
+            OperationResult({
+                opProcessed: true,
+                failureReason: "",
+                callSuccesses: new bool[](0),
+                callResults: new bytes[](0),
+                executionGas: op.executionGasLimit,
+                verificationGas: op.verificationGasLimit,
+                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
+            });
+    }
+
     function testMakeDeposit() public {
         SimpleERC20Token token = ERC20s[0];
         uint256 depositAmount = 10;
@@ -387,5 +404,58 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             (3 * perNoteAmount) - feeReserved
         );
         assertEq(token.balanceOf(address(vault)), feeReserved);
+    }
+
+    function testProcessJoinSplitsReservingFeeAndPayBundler() public {
+        uint256 perNoteAmount = 50_000_000;
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 100M of token
+        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+
+        // Unwrap 100M of token (alice has sufficient balance)
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: perNoteAmount, // only transfer 50M, other 50M for fee
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 50
+            })
+        );
+
+        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
+        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+
+        // Take up 100M tokens
+        assertEq(token.balanceOf(address(balanceManager)), 0);
+        balanceManager.processJoinSplitsReservingFee(op);
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (2 * perNoteAmount) - feeReserved
+        );
+
+        // Bundler payout ends up 40M of the 50M reserved (other 10M for updater)
+        OperationResult memory opResult = formatOperationResult(op);
+        uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
+
+        balanceManager.gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            BUNDLER
+        );
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (2 * perNoteAmount) - onlyBundlerFee
+        );
+        assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
+
+        // TODO: pay out subtree updater
     }
 }

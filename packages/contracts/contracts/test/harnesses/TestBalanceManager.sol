@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
+import "../../libs/WalletUtils.sol";
 import {BalanceManager} from "../../BalanceManager.sol";
 
 contract TestBalanceManager is BalanceManager {
@@ -23,9 +24,24 @@ contract TestBalanceManager is BalanceManager {
         _processJoinSplitsReservingFee(op);
     }
 
+    function gatherReservedGasAssetAndPayBundler(
+        Operation calldata op,
+        OperationResult memory opResult,
+        address bundler
+    ) public {
+        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
+    }
+
     function calculateOpGasAssetCost(
         Operation calldata op
     ) public pure returns (uint256) {
         return op.maxGasAssetCost();
+    }
+
+    function calculateBundlerGasAssetPayout(
+        Operation calldata op,
+        OperationResult memory opResult
+    ) public pure returns (uint256) {
+        return WalletUtils.calculateBundlerGasAssetPayout(op, opResult);
     }
 }
