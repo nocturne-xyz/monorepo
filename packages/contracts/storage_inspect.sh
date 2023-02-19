@@ -4,12 +4,12 @@
 CONTRACTS_DIR=./contracts
 
 # Create a new file to hold all of the storage layouts
-OUTPUT_FILE=.all-storage-layouts
+OUTPUT_FILE=.storage-layouts
 echo "" > "$OUTPUT_FILE"
 
-echo "=======================" > "$OUTPUT_FILE"
+echo "============================" > "$OUTPUT_FILE"
 echo "👁️ STORAGE LAYOUT SNAPSHOT 👁️ ">> "$OUTPUT_FILE"
-echo "=======================" >> "$OUTPUT_FILE"
+echo "============================" >> "$OUTPUT_FILE"
 
 # Loop through each contract in the directory
 for CONTRACT in "$CONTRACTS_DIR"/*.sol; do
