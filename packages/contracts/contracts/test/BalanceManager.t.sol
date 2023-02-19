@@ -276,6 +276,58 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             });
     }
 
+    function testOnErc721ReceivedEnteredExecute() public {
+        // Override reentrancy guard so balance manager can receive token
+        vm.store(
+            address(balanceManager),
+            bytes32(OPERATION_STAGE_STORAGE_SLOT),
+            bytes32(ENTERED_EXECUTE_OPERATION)
+        );
+
+        // Token balance manager will receive
+        SimpleERC721Token erc721 = ERC721s[0];
+        uint256 tokenId = 1;
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC721,
+            address(erc721),
+            tokenId
+        );
+
+        // Mint and send token to balance manager
+        assertEq(balanceManager.receivedAssetsLength(), 0);
+        erc721.reserveToken(ALICE, tokenId);
+        vm.prank(ALICE);
+        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+
+        // Ensure token was received
+        assertEq(balanceManager.receivedAssetsLength(), 1);
+        EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
+            0
+        );
+        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
+        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
+    }
+
+    function testOnErc721ReceivedNotEntered() public {
+        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
+
+        // Token balance manager will receive
+        SimpleERC721Token erc721 = ERC721s[0];
+        uint256 tokenId = 1;
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC721,
+            address(erc721),
+            tokenId
+        );
+
+        // Expect safeTransferFrom to fail because balance stage = NOT_ENTERED
+        assertEq(balanceManager.receivedAssetsLength(), 0);
+        erc721.reserveToken(ALICE, tokenId);
+        vm.prank(ALICE);
+        vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
+        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+    }
+
     function testMakeDeposit() public {
         SimpleERC20Token token = ERC20s[0];
         uint256 depositAmount = 10;
