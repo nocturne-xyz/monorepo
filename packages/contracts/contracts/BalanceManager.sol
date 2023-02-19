@@ -211,10 +211,10 @@ contract BalanceManager is
     function _totalNumRefundsToHandle(
         Operation calldata op
     ) internal view returns (uint256) {
-        uint256 numJoinSplits = op.joinSplits.length;
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
-        uint256 numReceived = _receivedAssets.length;
-        return numJoinSplits + numRefundAssets + numReceived;
+        return
+            op.joinSplits.length +
+            op.encodedRefundAssets.length +
+            _receivedAssets.length;
     }
 
     /**
