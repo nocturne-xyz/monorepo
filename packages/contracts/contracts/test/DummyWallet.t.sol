@@ -19,14 +19,14 @@ import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
-import {TestUtils} from "./utils/TestUtils.sol";
+import {ParseUtils} from "./utils/ParseUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
 
-contract DummyWalletTest is Test, TestUtils, PoseidonDeployer {
+contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;

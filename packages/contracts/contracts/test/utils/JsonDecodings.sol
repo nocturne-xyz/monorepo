@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import {TestUtils} from "./TestUtils.sol";
+import {ParseUtils} from "./ParseUtils.sol";
 
 struct JoinSplitProofWithPublicSignals {
     uint256[9] publicSignals;
@@ -30,7 +30,7 @@ struct BaseProof {
     string protocol;
 }
 
-contract JsonDecodings is Test, TestUtils {
+contract JsonDecodings is Test, ParseUtils {
     using stdJson for string;
 
     function loadFixtureJson(

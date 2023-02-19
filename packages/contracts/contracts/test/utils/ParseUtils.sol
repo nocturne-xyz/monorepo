@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-contract TestUtils {
+contract ParseUtils {
     // Convert an hexadecimal character to their value
     function fromHexChar(uint8 c) public pure returns (uint8) {
         if (bytes1(c) >= bytes1("0") && bytes1(c) <= bytes1("9")) {
