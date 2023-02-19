@@ -25,6 +25,7 @@ import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {Utils} from "../libs/Utils.sol";
+import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
 
 contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
@@ -239,18 +240,17 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
             });
         }
 
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
         Action[] memory actions = new Action[](1);
         actions[0] = transferAction;
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
-            encodedRefundAssets: encodedRefundAssets,
+            encodedRefundAssets: args.encodedRefundAssets,
             actions: actions,
             verificationGasLimit: args.verificationGasLimit,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length + encodedRefundAssets.length
+            maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
         });
 
         return op;
@@ -465,7 +465,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         // TODO: pay out subtree updater
     }
 
-    function testHandleRefundJoinSplitsSingleAsset() public {
+    function testHandleRefundsJoinSplitsSingleAsset() public {
         uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
@@ -497,31 +497,48 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(vault)), (2 * perNoteAmount));
     }
 
-    // function testHandleRefundJoinSplitsSingleAsset() public {
-    //     uint256 perNoteAmount = 50_000_000;
-    //     SimpleERC20Token token = ERC20s[0];
+    function testHandleRefundsRefundAssetsSingleAsset() public {
+        uint256 perNoteAmount = 50_000_000;
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        SimpleERC20Token refundToken = ERC20s[1];
 
-    //     // Reserves + deposits 100M of token
-    //     reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+        // Reserves + deposits 100M of token
+        reserveAndDepositFunds(ALICE, joinSplitToken, perNoteAmount * 2);
 
-    //     // Unwrap 100M of token
-    //     Operation memory op = formatTransferOperation(
-    //         TransferOperationArgs({
-    //             token: token,
-    //             recipient: BOB,
-    //             amount: 0, // not transferring anything, want to refund all
-    //             publicSpendPerJoinSplit: perNoteAmount,
-    //             numJoinSplits: 2,
-    //             encodedRefundAssets: new EncodedAsset[](0),
-    //             executionGasLimit: DEFAULT_GAS_LIMIT,
-    //             verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
-    //             gasPrice: 0 // not paying bundler anything, refund all
-    //         })
-    //     );
+        // Refund asset
+        EncodedAsset[] memory refundAssets = new EncodedAsset[](1);
+        refundAssets[0] = EncodedAsset({
+            encodedAssetAddr: uint256(uint160(address(refundToken))),
+            encodedAssetId: uint256(0)
+        });
 
-    //     // Take up 100M tokens
-    //     balanceManager.processJoinSplitsReservingFee(op);
-    // }
+        console.log("Refund asset", address(refundToken));
+
+        // Dummy operation, we're only interested in refundAssets
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: joinSplitToken,
+                recipient: BOB,
+                amount: 0,
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                encodedRefundAssets: refundAssets,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 0
+            })
+        );
+
+        // Send refund tokens to balance manager
+        uint256 refundAmount = 10_000_000;
+        refundToken.reserveTokens(ALICE, refundAmount);
+        vm.prank(ALICE);
+        refundToken.transfer(address(balanceManager), refundAmount);
+
+        balanceManager.handleAllRefunds(op);
+        assertEq(refundToken.balanceOf(address(balanceManager)), 0);
+        assertEq(refundToken.balanceOf(address(vault)), refundAmount);
+    }
 
     // // Refund joinsplit
     // Refund refund asset
