@@ -45,6 +45,10 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     address constant BUNDLER = address(3);
     uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
 
+    // Check storage layout file
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 75;
+    uint256 constant ENTERED_EXECUTE_OPERATION = 3;
+
     TestBalanceManager balanceManager;
     Vault vault;
     TreeTest treeTest;
@@ -503,9 +507,6 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         SimpleERC20Token refundToken = ERC20s[1];
 
-        // Reserves + deposits 100M of token
-        reserveAndDepositFunds(ALICE, joinSplitToken, perNoteAmount * 2);
-
         // Refund asset
         EncodedAsset[] memory refundAssets = new EncodedAsset[](1);
         refundAssets[0] = AssetUtils.encodeAsset(
@@ -540,9 +541,51 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         assertEq(refundToken.balanceOf(address(vault)), refundAmount);
     }
 
-    // // Refund joinsplit
-    // Refund refund asset
+    function testHandleRefundsReceivedAssets() public {
+        uint256 perNoteAmount = 50_000_000;
+        SimpleERC20Token joinSplitToken = ERC20s[0];
 
-    // Override __BalanceManager_init to mock operation stage
-    // Refund received assets (erc721/1155)
+        // Dummy operation, we only care about the received asset which we setup
+        // manually
+        Operation memory op = formatTransferOperation(
+            TransferOperationArgs({
+                token: joinSplitToken,
+                recipient: BOB,
+                amount: 0,
+                publicSpendPerJoinSplit: perNoteAmount,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
+                gasPrice: 0
+            })
+        );
+
+        // Token balance manager will receive
+        SimpleERC721Token erc721 = ERC721s[0];
+        uint256 tokenId = 1;
+
+        // Override reentrancy guard so balance manager can receive token
+        vm.store(
+            address(balanceManager),
+            bytes32(OPERATION_STAGE_STORAGE_SLOT),
+            bytes32(ENTERED_EXECUTE_OPERATION)
+        );
+
+        // Mint and send token to balance manager
+        assertEq(balanceManager.receivedAssetsLength(), 0);
+        erc721.reserveToken(ALICE, tokenId);
+        vm.prank(ALICE);
+        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+        assertEq(balanceManager.receivedAssetsLength(), 1);
+
+        // Ensure balance manager gave vault the token
+        assertEq(erc721.balanceOf(address(balanceManager)), 1);
+        assertEq(erc721.balanceOf(address(vault)), 0);
+        assertEq(erc721.ownerOf(tokenId), address(balanceManager));
+        balanceManager.handleAllRefunds(op);
+        assertEq(erc721.balanceOf(address(balanceManager)), 0);
+        assertEq(erc721.balanceOf(address(vault)), 1);
+        assertEq(erc721.ownerOf(tokenId), address(vault));
+    }
 }
