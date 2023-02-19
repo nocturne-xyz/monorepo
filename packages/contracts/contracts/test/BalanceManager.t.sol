@@ -24,6 +24,7 @@ import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {TestUtils} from "./utils/TestUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {Utils} from "../libs/Utils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
@@ -56,6 +57,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
+    SimpleERC1155Token[3] ERC1155s;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
 
@@ -124,6 +126,7 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
+            ERC1155s[i] = new SimpleERC1155Token();
         }
     }
 
@@ -326,6 +329,50 @@ contract BalanceManagerTest is Test, TestUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
         erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+    }
+
+    function testOnErc1155ReceivedEnteredExecute() public {
+        // Override reentrancy guard so balance manager can receive token
+        vm.store(
+            address(balanceManager),
+            bytes32(OPERATION_STAGE_STORAGE_SLOT),
+            bytes32(ENTERED_EXECUTE_OPERATION)
+        );
+
+        // Token balance manager will receive
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+        uint256 tokenId = 1;
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC1155,
+            address(erc1155),
+            tokenId
+        );
+
+        // Mint and send token to balance manager
+        uint256 tokenAmount = 100;
+        assertEq(erc1155.balanceOf(address(balanceManager), tokenId), 0);
+        assertEq(balanceManager.receivedAssetsLength(), 0);
+        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
+        vm.prank(ALICE);
+        erc1155.safeTransferFrom(
+            ALICE,
+            address(balanceManager),
+            tokenId,
+            tokenAmount,
+            bytes("")
+        );
+
+        // Ensure tokens were received
+        assertEq(
+            erc1155.balanceOf(address(balanceManager), tokenId),
+            tokenAmount
+        );
+        assertEq(balanceManager.receivedAssetsLength(), 1);
+        EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
+            0
+        );
+        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
+        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
     }
 
     function testMakeDeposit() public {
