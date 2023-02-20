@@ -28,7 +28,7 @@ const writeToFixture = process.argv[2] == "--writeFixture";
 
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
-const stealthAddr = nocturneSigner.getRandomStealthAddress();
+const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
 const tree = new BinaryPoseidonTree();

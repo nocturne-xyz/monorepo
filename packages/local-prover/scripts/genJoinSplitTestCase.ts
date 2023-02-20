@@ -32,8 +32,8 @@ const sk = BigInt(
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
 const vk = nocturneSigner.vk;
-const stealthAddrA = nocturneSigner.getRandomStealthAddress();
-const stealthAddrB = nocturneSigner.getRandomStealthAddress();
+const stealthAddrA = nocturneSigner.generateRandomStealthAddress();
+const stealthAddrB = nocturneSigner.generateRandomStealthAddress();
 const spendPk = nocturneSigner.spendPk;
 
 // Two old notes: 100 + 50 = 150
