@@ -21,14 +21,18 @@ describe("NocturneSigner", () => {
     const sk2 = generateRandomSigningKey();
     const signer1 = new NocturneSigner(sk1);
     const signer2 = new NocturneSigner(sk2);
-    expect(signer1.isOwnAddress(signer1.generateRandomStealthAddress())).to.equal(true);
-    expect(signer1.isOwnAddress(signer2.generateRandomStealthAddress())).to.equal(
-      false
-    );
-    expect(signer2.isOwnAddress(signer2.generateRandomStealthAddress())).to.equal(true);
-    expect(signer2.isOwnAddress(signer1.generateRandomStealthAddress())).to.equal(
-      false
-    );
+    expect(
+      signer1.isOwnAddress(signer1.generateRandomStealthAddress())
+    ).to.equal(true);
+    expect(
+      signer1.isOwnAddress(signer2.generateRandomStealthAddress())
+    ).to.equal(false);
+    expect(
+      signer2.isOwnAddress(signer2.generateRandomStealthAddress())
+    ).to.equal(true);
+    expect(
+      signer2.isOwnAddress(signer1.generateRandomStealthAddress())
+    ).to.equal(false);
   });
 
   it("Test rerand", () => {

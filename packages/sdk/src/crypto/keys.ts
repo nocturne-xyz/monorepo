@@ -1,4 +1,8 @@
-import { AffinePoint, BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
+import {
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
 
 const Fr = BabyJubJub.ScalarField;

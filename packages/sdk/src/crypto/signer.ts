@@ -17,7 +17,12 @@ import {
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
 import { decryptNote } from "./noteEncryption";
-import { SpendingKey, ViewingKey, spendPkFromFromSk, vkFromSpendPk } from "./keys";
+import {
+  SpendingKey,
+  ViewingKey,
+  spendPkFromFromSk,
+  vkFromSpendPk,
+} from "./keys";
 
 const Fr = BabyJubJub.ScalarField;
 
