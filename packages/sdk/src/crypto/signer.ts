@@ -27,6 +27,11 @@ export interface NocturneSignature {
   z: bigint;
 }
 
+export function randomSigningKey(): bigint {
+  const sk_buf = randomBytes(Math.floor(256 / 8));
+  return Fr.fromBytes(sk_buf);
+}
+
 export class NocturneSigner {
   vk: bigint;
   sk: bigint;
@@ -36,13 +41,6 @@ export class NocturneSigner {
     this.sk = sk;
     this.spendPk = spendPkFromFromSk(sk);
     this.vk = vkFromSpendPk(this.spendPk)
-  }
-
-  static genRandom(): NocturneSigner {
-    // TODO make sk acutally uniformly distributed
-    const sk_buf = randomBytes(Math.floor(256 / 8));
-    const sk = Fr.fromBytes(sk_buf);
-    return new NocturneSigner(sk);
   }
 
   canonicalAddress(): CanonAddress {
