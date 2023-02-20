@@ -16,14 +16,12 @@ export interface OperationRequest {
   refundAddr?: StealthAddress;
   refundAssets: Asset[];
   actions: Action[];
-  verificationGasLimit?: bigint;
   executionGasLimit?: bigint;
   gasPrice?: bigint;
   maxNumRefunds?: bigint;
 }
 
 export interface OperationGasParams {
-  verificationGasLimit: bigint;
   executionGasLimit: bigint;
   gasPrice: bigint;
 }
@@ -139,8 +137,7 @@ export class OperationRequestBuilder {
   // usually you want to just let the wallet estimate this instead.
   // returns `this` so it's chainable
   gas(gasParams: OperationGasParams): OperationRequestBuilder {
-    const { verificationGasLimit, executionGasLimit, gasPrice } = gasParams;
-    this.op.verificationGasLimit = verificationGasLimit;
+    const { executionGasLimit, gasPrice } = gasParams;
     this.op.executionGasLimit = executionGasLimit;
     this.op.gasPrice = gasPrice;
     return this;

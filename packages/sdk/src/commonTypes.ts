@@ -53,7 +53,6 @@ export interface BaseOperation {
   refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
-  verificationGasLimit: bigint;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;

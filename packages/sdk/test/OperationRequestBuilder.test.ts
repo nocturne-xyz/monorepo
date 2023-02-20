@@ -100,7 +100,6 @@ describe("OperationRequestBuilder", () => {
         },
       ],
       refundAddr,
-      verificationGasLimit: 10n,
       executionGasLimit: 20n,
       gasPrice: 30n,
       maxNumRefunds: 1n,
@@ -113,7 +112,6 @@ describe("OperationRequestBuilder", () => {
       .refundAsset(shitcoin)
       .refundAddr(refundAddr)
       .gas({
-        verificationGasLimit: 10n,
         executionGasLimit: 20n,
         gasPrice: 30n,
       })

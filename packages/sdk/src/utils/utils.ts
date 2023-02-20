@@ -37,7 +37,6 @@ export function fakeProvenOperation(
     refundAddr: op.refundAddr,
     encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
-    verificationGasLimit: op.verificationGasLimit,
     executionGasLimit: op.executionGasLimit,
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,

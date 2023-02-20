@@ -46,13 +46,8 @@ export async function prepareOperation(
 ): Promise<PreSignOperation> {
   let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
 
-  const {
-    actions,
-    joinSplitRequests,
-    refundAssets,
-    verificationGasLimit,
-    executionGasLimit,
-  } = opRequest;
+  const { actions, joinSplitRequests, refundAssets, executionGasLimit } =
+    opRequest;
 
   // prepare joinSplits
   const joinSplits = (
@@ -81,13 +76,12 @@ export async function prepareOperation(
     maxNumRefunds,
     gasPrice,
 
-    // these may be undefined
-    verificationGasLimit,
+    // this may be undefined
     executionGasLimit,
   };
 
   // simulate if either of the gas limits are undefined
-  const simulationRequired = !verificationGasLimit || !executionGasLimit;
+  const simulationRequired = !executionGasLimit;
   if (simulationRequired) {
     op = await getGasEstimatedOperation(op, walletContract);
   }
@@ -331,8 +325,6 @@ async function getGasEstimatedOperation(
   op: Partial<PreSignOperation>,
   walletContract: Wallet
 ): Promise<PreSignOperation> {
-  op.verificationGasLimit =
-    op.verificationGasLimit ?? DEFAULT_VERIFICATION_GAS_LIMIT;
   op.executionGasLimit = op.executionGasLimit ?? BLOCK_GAS_LIMIT;
   op.gasPrice = op.gasPrice ?? 0n;
 
@@ -346,7 +338,6 @@ async function getGasEstimatedOperation(
   }
   // Give 20% over-estimate
   op.executionGasLimit = (result.executionGas * 12n) / 10n;
-  op.verificationGasLimit = (result.verificationGas + 12n) / 10n;
 
   // since we're simulating, we can get the number of refunds while we're at it
   op.maxNumRefunds = result.numRefunds;

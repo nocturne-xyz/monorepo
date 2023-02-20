@@ -388,7 +388,7 @@ contract BalanceManagerTest is Test {
 
         // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
         // 50 * (500k + (2 * 170k) + (2 * 50k)) = 47M
-        // NOTE: verification gas defaults to amount provided in op because formatDummyOperationResult just uses numJoinSplits * GAS_PER_JOINSPLIT_VERIFY
+        // NOTE: verification gas defaults to numJoinSplits * GAS_PER_JOINSPLIT_VERIFY formatDummyOperationResult defaults to this
         OperationResult memory opResult = NocturneUtils
             .formatDummyOperationResult(op);
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(

@@ -105,7 +105,6 @@ describe("prepareOperation", async () => {
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .gas({
-        verificationGasLimit: 1_000_000n,
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
@@ -151,7 +150,6 @@ describe("prepareOperation", async () => {
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
-        verificationGasLimit: 1_000_000n,
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
@@ -194,7 +192,6 @@ describe("prepareOperation", async () => {
       .refundAsset(shitcoin)
       .refundAddr(refundAddr)
       .gas({
-        verificationGasLimit: 10n,
         executionGasLimit: 20n,
         gasPrice: 30n,
       })
@@ -212,7 +209,6 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.undefined;
 
     expect(op.refundAddr).to.eql(refundAddr);
-    expect(op.verificationGasLimit).to.equal(10n);
     expect(op.executionGasLimit).to.equal(20n);
     expect(op.gasPrice).to.equal(30n);
 
@@ -244,7 +240,6 @@ describe("prepareOperation", async () => {
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
       .gas({
-        verificationGasLimit: 1_000_000n,
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
@@ -296,7 +291,6 @@ describe("prepareOperation", async () => {
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
       .gas({
-        verificationGasLimit: 1_000_000n,
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
