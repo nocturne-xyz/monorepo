@@ -71,7 +71,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const signer = await getNocturneSignerFromBIP44();
   console.log(
     "Snap Nocturne Canonical Address: ",
-    signer.getCanonicalAddress()
+    signer.canonicalAddress()
   );
 
   const notesManager = new DefaultNotesManager(
@@ -114,7 +114,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "nocturne_getRandomizedAddr":
-      return JSON.stringify(signer.getRandomStealthAddress());
+      return JSON.stringify(signer.randomStealthAddress());
     case "nocturne_getAllBalances":
       return JSON.stringify(await context.getAllAssetBalances());
     case "nocturne_syncNotes":

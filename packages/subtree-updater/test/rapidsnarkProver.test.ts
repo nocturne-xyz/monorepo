@@ -28,7 +28,7 @@ describe("rapidsnark subtree update prover", async () => {
     "0x38156abe7fe2fd433dc9df969286b96666489bac508612d0e16593e944c4f69f"
   );
   const nocturneSigner = new NocturneSigner(sk);
-  const stealthAddr = nocturneSigner.getRandomStealthAddress();
+  const stealthAddr = nocturneSigner.randomStealthAddress();
 
   let nonce = 0n;
   function dummyNote(): Note {

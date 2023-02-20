@@ -5,6 +5,7 @@ import {
   OperationRequest,
   range,
   NocturneSigner,
+  randomSigningKey,
 } from "../src";
 import {
   shitcoin,
@@ -44,8 +45,9 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
-    const signer = NocturneSigner.genRandom();
-    const receiver = signer.getCanonicalAddress();
+    const sk = randomSigningKey();
+    const signer = new NocturneSigner(sk);
+    const receiver = signer.canonicalAddress();
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -79,8 +81,9 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
-    const signer = NocturneSigner.genRandom();
-    const refundAddr = signer.getRandomStealthAddress();
+    const sk = randomSigningKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.randomStealthAddress();
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -122,8 +125,9 @@ describe("OperationRequestBuilder", () => {
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
     const receivers = range(2)
-      .map((_) => NocturneSigner.genRandom())
-      .map((signer) => signer.getCanonicalAddress());
+      .map((_) => randomSigningKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -166,12 +170,15 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
-    const signer = NocturneSigner.genRandom();
-    const refundAddr = signer.getRandomStealthAddress();
+    const sk = randomSigningKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.randomStealthAddress();
 
     const receivers = range(3)
-      .map((_) => NocturneSigner.genRandom())
-      .map((signer) => signer.getCanonicalAddress());
+      .map((_) => randomSigningKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
+
     const actions = range(2).map((i) => ({
       contractAddress: "0x1234",
       encodedFunction: getDummyHex(i),

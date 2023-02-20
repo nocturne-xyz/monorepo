@@ -14,7 +14,12 @@ export async function fetchNotesFromRefunds(
   to: number
 ): Promise<IncludedNote[]> {
   const filter = contract.filters.RefundProcessed();
-  let events: RefundProcessedEvent[] = await queryEvents(contract, filter, from, to);
+  let events: RefundProcessedEvent[] = await queryEvents(
+    contract,
+    filter,
+    from,
+    to
+  );
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 

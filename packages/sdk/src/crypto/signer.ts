@@ -40,7 +40,7 @@ export class NocturneSigner {
   constructor(sk: bigint) {
     this.sk = sk;
     this.spendPk = spendPkFromFromSk(sk);
-    this.vk = vkFromSpendPk(this.spendPk)
+    this.vk = vkFromSpendPk(this.spendPk);
   }
 
   canonicalAddress(): CanonAddress {

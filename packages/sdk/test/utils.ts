@@ -76,7 +76,7 @@ export async function setup(
   const notesDB = new NotesDB(kv);
 
   const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
-    owner: signer.getRandomStealthAddress(),
+    owner: signer.randomStealthAddress(),
     nonce: BigInt(i),
     asset: asset,
     value: amount,
