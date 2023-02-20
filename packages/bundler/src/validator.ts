@@ -49,7 +49,7 @@ export class OperationValidator {
 
     // Ensure no overlap in given operation
     console.log("Checking in-op conflicts");
-    operation.joinSplits.forEach(({ nullifierA, nullifierB }) => {
+    for (const { nullifierA, nullifierB } of operation.joinSplits) {
       if (opNfSet.has(nullifierA)) {
         return `Conflicting nullifier in operation: ${nullifierA}`;
       }
@@ -59,7 +59,7 @@ export class OperationValidator {
         return `Conflicting nullifier in operation: ${nullifierB}`;
       }
       opNfSet.add(nullifierB);
-    });
+    }
 
     // Ensure no overlap with other nfs already in queue
     console.log("Checking in-queue conflicts");
