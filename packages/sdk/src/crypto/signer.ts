@@ -150,7 +150,7 @@ export class NocturneSigner {
     const pk = this.spendPk;
 
     const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
-      makeSignedJoinSplit(joinSplit, opDigest, opSig, this.vk, pk)
+      makePreProofJoinSplit(joinSplit, opDigest, opSig, this.vk, pk)
     );
 
     const {
@@ -176,7 +176,7 @@ export class NocturneSigner {
   }
 }
 
-function makeSignedJoinSplit(
+function makePreProofJoinSplit(
   preProofJoinSplit: PreProofJoinSplit,
   opDigest: bigint,
   opSig: NocturneSignature,
