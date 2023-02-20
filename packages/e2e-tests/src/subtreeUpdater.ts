@@ -1,5 +1,6 @@
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
+import { v4 as uuidv4 } from "uuid";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -18,7 +19,7 @@ export async function startSubtreeUpdater(
 ): Promise<Dockerode.Container> {
   const container = await docker.createContainer({
     Image: SUBTREE_UPDATER_IMAGE,
-    name: SUBTREE_UPDATER_IMAGE,
+    name: `${SUBTREE_UPDATER_IMAGE}-${uuidv4()}`,
     Env: [`RPC_URL=${config.rpcUrl}`, `TX_SIGNER_KEY=${config.txSignerKey}`],
     Cmd: [
       `--use-mock-prover`,

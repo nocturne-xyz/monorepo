@@ -3159,6 +3159,7 @@ __metadata:
     "@types/dockerode": ^3.3.14
     "@types/glob": ^8.0.0
     "@types/mocha": ^10.0.0
+    "@types/uuid": ^9.0.0
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
     docker-compose: ^0.23.19
@@ -3169,6 +3170,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     mocha: ^10.1.0
     prettier: ^2.8.0
+    uuid: ^9.0.0
   languageName: unknown
   linkType: soft
 
@@ -5459,6 +5461,13 @@ __metadata:
   version: 1.11.4
   resolution: "@types/underscore@npm:1.11.4"
   checksum: db9f8486bc851b732259e51f42d62aad1ae2158be5724612dc125ece5f5d61c51447f9dea28284c2a0f79cb95e788d01cb5ce97709880019213e69fab0dd1696
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "@types/uuid@npm:9.0.0"
+  checksum: 59ae56d9547c8758588659da2a2b4c97cce79c2aae1798c892bb29452ef08e87859dea2ec3a66bfa88d0d2153147520be2b1893be920f9f0bc9c53a3207ea6aa
   languageName: node
   linkType: hard
 
@@ -12039,7 +12048,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 

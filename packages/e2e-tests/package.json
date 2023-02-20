@@ -31,6 +31,7 @@
     "@types/dockerode": "^3.3.14",
     "@types/glob": "^8.0.0",
     "@types/mocha": "^10.0.0",
+    "@types/uuid": "^9.0.0",
     "bigint-json-serialization": "^1.0.1",
     "chai": "^4.3.6",
     "docker-compose": "^0.23.19",
@@ -40,6 +41,7 @@
     "ethers": "^5.7.2",
     "find-yarn-workspace-root": "^2.0.0",
     "mocha": "^10.1.0",
-    "prettier": "^2.8.0"
+    "prettier": "^2.8.0",
+    "uuid": "^9.0.0"
   }
 }
