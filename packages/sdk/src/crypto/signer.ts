@@ -49,13 +49,13 @@ export class NocturneSigner {
     return new NocturneSigner(sk);
   }
 
-  getCanonicalAddress(): CanonAddress {
+  canonicalAddress(): CanonAddress {
     const addr = BabyJubJub.scalarMul(BabyJubJub.BasePoint, this.vk);
     return addr;
   }
 
-  getCanonicalStealthAddress(): StealthAddress {
-    const canonAddr = this.getCanonicalAddress();
+  canonicalStealthAddress(): StealthAddress {
+    const canonAddr = this.canonicalAddress();
     return {
       h1X: BabyJubJub.BasePoint.x,
       h1Y: BabyJubJub.BasePoint.y,
@@ -64,7 +64,7 @@ export class NocturneSigner {
     };
   }
 
-  getRandomStealthAddress(): StealthAddress {
+  randomStealthAddress(): StealthAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Fr.fromBytes(r_buf);
     const h1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
@@ -131,7 +131,7 @@ export class NocturneSigner {
     }
 
     const note = decryptNote(
-      this.getCanonicalStealthAddress(),
+      this.canonicalStealthAddress(),
       this.vk,
       encryptedNote,
       asset

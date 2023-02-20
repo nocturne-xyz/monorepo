@@ -84,7 +84,7 @@ describe("InMemoryMerkle", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.getRandomStealthAddress(),
+      nocturneContextAlice.signer.randomStealthAddress(),
       [100n, 100n]
     );
 

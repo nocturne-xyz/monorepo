@@ -66,7 +66,7 @@ export async function prepareOperation(
 
   // defaults
   // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-  refundAddr = refundAddr ?? signer.getRandomStealthAddress();
+  refundAddr = refundAddr ?? signer.randomStealthAddress();
   gasPrice = gasPrice ?? 0n;
   maxNumRefunds =
     maxNumRefunds ??
@@ -191,7 +191,7 @@ async function getJoinSplitsFromNotes(
 ): Promise<PreProofJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
-    const newAddr = signer.getRandomStealthAddress();
+    const newAddr = signer.randomStealthAddress();
     const nonce = randomBigInt();
     notes.push({
       owner: newAddr,
@@ -240,7 +240,7 @@ async function makeJoinSplit(
   amountToReturn: bigint,
   receiver?: CanonAddress
 ): Promise<PreProofJoinSplit> {
-  const sender = signer.getCanonicalAddress();
+  const sender = signer.canonicalAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;
 
