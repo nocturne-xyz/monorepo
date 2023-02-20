@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgrad
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
-import "./libs/types.sol";
+import "./libs/Types.sol";
 import "./NocturneReentrancyGuard.sol";
 
 contract BalanceManager is
@@ -77,7 +77,8 @@ contract BalanceManager is
                 AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
         }
-        // Accept the transfer when _operation_stage != _NOT_ENTERED
+
+        // ENTERED_PROCESS is ok because this is when vault funds wallet
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -105,7 +106,8 @@ contract BalanceManager is
                 );
             }
         }
-        // Accept the transfer when _operation_stage != _NOT_ENTERED
+
+        // ENTERED_PROCESS is ok because this is when vault funds wallet
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
@@ -211,10 +213,10 @@ contract BalanceManager is
     function _totalNumRefundsToHandle(
         Operation calldata op
     ) internal view returns (uint256) {
-        uint256 numJoinSplits = op.joinSplits.length;
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
-        uint256 numReceived = _receivedAssets.length;
-        return numJoinSplits + numRefundAssets + numReceived;
+        return
+            op.joinSplits.length +
+            op.encodedRefundAssets.length +
+            _receivedAssets.length;
     }
 
     /**

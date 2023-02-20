@@ -11,6 +11,9 @@ contract NocturneReentrancyGuard is Initializable {
 
     uint256 private _operationStage;
 
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
     function __NocturneReentrancyGuard_init() internal onlyInitializing {
         _operationStage = NOT_ENTERED;
     }

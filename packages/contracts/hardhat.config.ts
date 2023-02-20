@@ -22,7 +22,10 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
     return paths.filter(
       (p) =>
         (!p.endsWith('.t.sol') && !p.includes('test')) ||
-        p.includes('TestSubtreeUpdateVerifier'),
+        p.includes('TestSubtreeUpdateVerifier') ||
+        p.includes('SimpleERC20Token') ||
+        p.includes('SimpleERC721Token') ||
+        p.includes('SimpleERC1155Token'),
     );
   },
 );

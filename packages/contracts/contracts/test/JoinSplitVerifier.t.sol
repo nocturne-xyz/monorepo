@@ -7,13 +7,13 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
-import {TestUtils} from "./utils/TestUtils.sol";
+import {ParseUtils} from "./utils/ParseUtils.sol";
 import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
 import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
 
-contract TestJoinSplitVerifier is Test, TestUtils, JsonDecodings {
+contract TestJoinSplitVerifier is Test, ParseUtils, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";

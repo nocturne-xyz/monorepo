@@ -4,9 +4,9 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import {TestUtils} from "./TestUtils.sol";
+import {ParseUtils} from "./ParseUtils.sol";
 
-contract PoseidonDeployer is Test, TestUtils {
+contract PoseidonDeployer is Test, ParseUtils {
     address poseidonT3;
     address poseidonT4;
     address poseidonT5;

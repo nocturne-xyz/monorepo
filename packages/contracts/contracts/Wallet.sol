@@ -6,7 +6,7 @@ import "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
 import "./libs/WalletUtils.sol";
-import "./libs/types.sol";
+import "./libs/Types.sol";
 import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library

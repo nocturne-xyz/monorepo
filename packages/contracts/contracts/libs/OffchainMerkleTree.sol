@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Groth16} from "../libs/Groth16.sol";
-import "../libs/types.sol";
+import "../libs/Types.sol";
 import {IWallet} from "../interfaces/IWallet.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {Utils} from "./Utils.sol";

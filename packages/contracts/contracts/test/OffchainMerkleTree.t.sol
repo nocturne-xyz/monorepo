@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {TestUtils} from "./utils/TestUtils.sol";
+import {ParseUtils} from "./utils/ParseUtils.sol";
 import {TreeUtils} from "../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
@@ -10,10 +10,10 @@ import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {PoseidonHasherT3, PoseidonHasherT6} from "../PoseidonHashers.sol";
 import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
-import {TestSubtreeUpdateVerifier} from "./utils/TestSubtreeUpdateVerifier.sol";
-import "../libs/types.sol";
+import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
+import "../libs/Types.sol";
 
-contract TestOffchainMerkleTree is Test, TestUtils, PoseidonDeployer {
+contract TestOffchainMerkleTree is Test, ParseUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
     using OffchainMerkleTree for OffchainMerkleTreeData;
 

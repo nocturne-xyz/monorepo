@@ -2,6 +2,16 @@
 
 ### Unreleased
 
+- Break shared utils for Wallet and BalanceManager into `NocturneUtils` test lib
+- Add separate `BalanceManager` unit tests (`BalanceManager.t.sol`)
+- Move designated test contracts into `test/harnesses` folder
+- Granularize in-contract gas estimate by separating joinsplit cost into verification + handling in `Types.sol`
+- Add script for producing `.storage-layouts` file + commit `.storage-layouts` file
+- Add storage GAP to `NocturneReentrancyGuard`
+- Remove `poseidonTest` from `Wallet.t.sol`
+- Delete old `gasTesting` files
+- Move the Simple ERC tokens to `test`
+- Rename `libs/types.sol` to uppercase `Types.sol`
 - Rename:
   - `NoteTransmission` -> `EncryptedNote`
   - `NocturneAddress` -> `StealthAddress`

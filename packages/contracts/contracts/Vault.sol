@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgrad
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import {AssetUtils} from "./libs/AssetUtils.sol";
-import "./libs/types.sol";
+import "./libs/Types.sol";
 
 contract Vault is
     IVault,

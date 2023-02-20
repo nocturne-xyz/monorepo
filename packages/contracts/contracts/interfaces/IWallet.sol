@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "../libs/types.sol";
+import "../libs/Types.sol";
 
 interface IWallet {
     function processBundle(

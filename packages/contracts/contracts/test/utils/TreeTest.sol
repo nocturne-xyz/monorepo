@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 import {IHasherT3, IHasherT6} from "../../interfaces/IHasher.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
-import "../../libs/types.sol";
+import "../../libs/Types.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {

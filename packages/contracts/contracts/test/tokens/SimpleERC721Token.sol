@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol";
 
 contract SimpleERC721Token is ERC721, Ownable {
     constructor() ERC721("Simple", "Simple") {}
