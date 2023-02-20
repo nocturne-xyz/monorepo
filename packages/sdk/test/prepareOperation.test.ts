@@ -7,7 +7,7 @@ import {
   OperationRequestBuilder,
   range,
   prepareOperation,
-  generateRandomSigningKey,
+  generateRandomSpendingKey,
 } from "../src";
 import { __private } from "../src/prepareOperation";
 import {
@@ -140,7 +140,7 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin]
     );
 
-    const receiverSk = generateRandomSigningKey();
+    const receiverSk = generateRandomSpendingKey();
     const receiverSigner = new NocturneSigner(receiverSk);
     const receiver = receiverSigner.canonicalAddress();
 
@@ -235,7 +235,7 @@ describe("prepareOperation", async () => {
       [shitcoin, stablescam]
     );
     const receivers = range(2)
-      .map((_) => generateRandomSigningKey())
+      .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
@@ -273,7 +273,7 @@ describe("prepareOperation", async () => {
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const receivers = range(3)
-      .map((_) => generateRandomSigningKey())
+      .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 

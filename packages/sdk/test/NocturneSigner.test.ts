@@ -5,7 +5,7 @@ import {
   NocturneSignature,
   StealthAddressTrait,
   encryptNote,
-  generateRandomSigningKey,
+  generateRandomSpendingKey,
 } from "../src/crypto";
 import { shitcoin, setup, getDummyHex } from "./utils";
 import {
@@ -17,8 +17,8 @@ import {
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
-    const sk1 = generateRandomSigningKey();
-    const sk2 = generateRandomSigningKey();
+    const sk1 = generateRandomSpendingKey();
+    const sk2 = generateRandomSpendingKey();
     const signer1 = new NocturneSigner(sk1);
     const signer2 = new NocturneSigner(sk2);
     expect(
@@ -36,8 +36,8 @@ describe("NocturneSigner", () => {
   });
 
   it("Test rerand", () => {
-    const sk1 = generateRandomSigningKey();
-    const sk2 = generateRandomSigningKey();
+    const sk1 = generateRandomSpendingKey();
+    const sk2 = generateRandomSpendingKey();
     const signer1 = new NocturneSigner(sk1);
     const signer2 = new NocturneSigner(sk2);
 
@@ -51,7 +51,7 @@ describe("NocturneSigner", () => {
   });
 
   it("Test address (de)serialization", () => {
-    const sk = generateRandomSigningKey();
+    const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const addr = signer.generateRandomStealthAddress();
     const str = StealthAddressTrait.toString(addr);
@@ -59,7 +59,7 @@ describe("NocturneSigner", () => {
   });
 
   it("Test Sign / verify", () => {
-    const sk = generateRandomSigningKey();
+    const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const pk = signer.spendPk;
     const m = 123n;
@@ -68,7 +68,7 @@ describe("NocturneSigner", () => {
   });
 
   it("Test note transmission", () => {
-    const sk = generateRandomSigningKey();
+    const sk = generateRandomSpendingKey();
     const signer = new NocturneSigner(sk);
     const addr = signer.canonicalAddress();
     const asset = {
@@ -160,7 +160,7 @@ describe("NocturneSigner", () => {
       [shitcoin, shitcoin]
     );
 
-    const receiverSk = generateRandomSigningKey();
+    const receiverSk = generateRandomSpendingKey();
     const receiverSigner = new NocturneSigner(receiverSk);
     const receiver = receiverSigner.canonicalAddress();
 

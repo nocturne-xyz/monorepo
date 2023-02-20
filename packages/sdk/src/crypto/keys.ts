@@ -11,7 +11,7 @@ export type SpendPk = AffinePoint<bigint>;
 export type SpendingKey = bigint;
 export type ViewingKey = bigint;
 
-export function generateRandomSigningKey(): bigint {
+export function generateRandomSpendingKey(): bigint {
   const sk_buf = randomBytes(Math.floor(256 / 8));
   return Fr.fromBytes(sk_buf);
 }
