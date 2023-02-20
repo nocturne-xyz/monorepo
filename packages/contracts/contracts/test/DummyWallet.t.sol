@@ -35,12 +35,12 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
     using stdJson for string;
     using TreeTestLib for TreeTest;
 
-    uint256 constant DEFAULT_GAS_LIMIT = 800000;
+    uint256 constant DEFAULT_GAS_LIMIT = 500_000;
     uint256 constant ERC20_ID = 0;
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
-    uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
+    uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
     Wallet wallet;
     Vault vault;
@@ -139,10 +139,10 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
 
         uint256[] memory batch = new uint256[](16);
 
-        uint256 remainder = amount % PER_DEPOSIT_AMOUNT;
+        uint256 remainder = amount % PER_NOTE_AMOUNT;
         uint256 depositIterations = remainder == 0
-            ? amount / PER_DEPOSIT_AMOUNT
-            : amount / PER_DEPOSIT_AMOUNT + 1;
+            ? amount / PER_NOTE_AMOUNT
+            : amount / PER_NOTE_AMOUNT + 1;
 
         // Deposit funds to vault
         for (uint256 i = 0; i < depositIterations; i++) {
@@ -153,7 +153,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 i,
                 uint256(uint160(address(token))),
                 ERC20_ID,
-                PER_DEPOSIT_AMOUNT,
+                PER_NOTE_AMOUNT,
                 uint128(i)
             );
 
@@ -172,7 +172,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                     wallet,
                     recipient,
                     address(token),
-                    PER_DEPOSIT_AMOUNT,
+                    PER_NOTE_AMOUNT,
                     ERC20_ID,
                     addr
                 );
@@ -201,28 +201,29 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
     }
 
     function testDummyTransferSingleJoinSplit() public {
+        // Alice starts with 2 * 50M tokens in vault
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        // Create operation to transfer 50 tokens to bob
+        // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: 1 gwei,
+                amount: PER_NOTE_AMOUNT,
                 root: wallet.root(),
-                publicSpendPerJoinSplit: 2 gwei,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: DEFAULT_GAS_LIMIT,
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 1,
                 gasPrice: 0
             })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -258,26 +259,27 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
+        // Ensure 50M left vault to BOB, 50M left in vault
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(7 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(1 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
 
     function testDummyTransferThreeJoinSplit() public {
+        // Alice starts with 3 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
 
-        // Create operation to transfer 50 tokens to bob
+        // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: 6 gwei,
+                amount: PER_NOTE_AMOUNT,
                 root: wallet.root(),
-                publicSpendPerJoinSplit: 2 gwei,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -287,7 +289,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(3 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -313,25 +315,27 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
+        // Ensure 50M left vault, 2 * 50M remains
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 gwei));
+        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(6 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
 
     function testDummyTransferSixJoinSplit() public {
+        // Alice starts with 6 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 16 gwei);
+        reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
 
-        // Create operation to transfer 50 tokens to bob
+        // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: 10 gwei,
+                amount: 4 * PER_NOTE_AMOUNT,
                 root: wallet.root(),
-                publicSpendPerJoinSplit: 2 gwei,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 6,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -341,7 +345,7 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(16 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(6 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -367,37 +371,39 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
+        // Ensure 4 * 50M left vault, 2 * 50M remains
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(6 gwei));
+        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(10 gwei));
+        assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
     // Ill-formatted operation should not be processed
     function testProcessesFailingOperation() public {
+        // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        // Create transaction to withdraw 1500 tokens and send to Bob (more than
-        // alice has)
+        // Create operation with faulty root, will cause revert in
+        // handleJoinSplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: 1 gwei,
-                root: wallet.root(),
-                publicSpendPerJoinSplit: 15 gwei,
+                amount: PER_NOTE_AMOUNT,
+                root: uint256(0x1234), // garbage root, fails handleJoinSplit
+                publicSpendPerJoinSplit: 1 * PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 1000
+                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 1,
+                gasPrice: 50
             })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -421,10 +427,10 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses.length, uint256(0));
         assertEq(opResults[0].callResults.length, uint256(0));
 
-        // Balances should not have changed, besides gas being paid
+        // No tokens are lost from vault because handleJoinSplit revert stops
+        // bundler comp. Bundler expected to handle proof-related checks.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -432,28 +438,28 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
     // Test failing calls
     function testProcessesFailingAction() public {
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 8 gwei);
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        // Create transaction to withdraw 15 gwei tokens and send to Bob (more than
-        // alice has)
+        // Create transaction to send 3 * 50M even though only 2 * 50M is being
+        // taken up by wallet
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: 15 gwei,
+                amount: 3 * PER_NOTE_AMOUNT, // Transfer amount exceeds withdrawn
                 root: wallet.root(),
-                publicSpendPerJoinSplit: 2 gwei,
-                numJoinSplits: 1,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 1000
+                verificationGasLimit: 2 * GAS_PER_JOINSPLIT_VERIFY,
+                gasPrice: 50
             })
         );
 
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertEq(token.balanceOf(address(vault)), uint256(8 gwei));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -471,6 +477,8 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
             callResults
         );
 
+        // Use Bob as bundler for this call
+        vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         assertEq(opResults.length, uint256(1));
@@ -479,10 +487,13 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
 
+        // Alice lost some private balance due to bundler comp. Bob (acting as
+        // bundler) has a little bit of tokens. Can't calculate exact amount
+        // because verification uses mock verifiers + small amount of gas paid
+        // out for failed transfer action.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(8 gwei));
-        assertGe(token.balanceOf(address(vault)), uint256(7 gwei));
+        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(0));
+        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 }

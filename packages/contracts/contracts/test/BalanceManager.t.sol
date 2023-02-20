@@ -402,7 +402,6 @@ contract BalanceManagerTest is Test {
             op,
             opResult
         );
-        console.log("OnlyBundlerFee", onlyBundlerFee);
 
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
@@ -437,7 +436,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
-                gasPrice: 0 // not paying bundler anything, refund all
+                gasPrice: 0 // don't reserve any gas, wallet takes up all
             })
         );
 
@@ -446,6 +445,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(balanceManager)), (2 * perNoteAmount));
         assertEq(token.balanceOf(address(vault)), 0);
 
+        // Expect all 100M to be refunded to vault
         balanceManager.handleAllRefunds(op);
         assertEq(token.balanceOf(address(balanceManager)), 0);
         assertEq(token.balanceOf(address(vault)), (2 * perNoteAmount));
@@ -486,6 +486,7 @@ contract BalanceManagerTest is Test {
         vm.prank(ALICE);
         refundToken.transfer(address(balanceManager), refundAmount);
 
+        // Expect all refund tokens to be refunded to vault
         balanceManager.handleAllRefunds(op);
         assertEq(refundToken.balanceOf(address(balanceManager)), 0);
         assertEq(refundToken.balanceOf(address(vault)), refundAmount);
