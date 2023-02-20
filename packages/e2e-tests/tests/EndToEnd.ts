@@ -24,7 +24,7 @@ import {
   NotesDB,
   OperationRequest,
   OperationRequestBuilder,
-  query,
+  queryEvents,
   JoinSplitProver,
   proveOperation,
 } from "@nocturne-xyz/sdk";
@@ -242,7 +242,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
-      const events: OperationProcessedEvent[] = await query(
+      const events: OperationProcessedEvent[] = await queryEvents(
         wallet,
         wallet.filters.OperationProcessed(),
         0,
@@ -359,7 +359,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
-      const events: OperationProcessedEvent[] = await query(
+      const events: OperationProcessedEvent[] = await queryEvents(
         wallet,
         wallet.filters.OperationProcessed(),
         0,

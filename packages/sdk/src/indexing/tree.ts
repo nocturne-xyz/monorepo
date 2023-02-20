@@ -4,7 +4,7 @@ import {
   InsertNotesEvent,
   SubtreeUpdateEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { query } from "../utils";
+import { queryEvents } from "../utils";
 import { Note } from "../note";
 import { AssetTrait, EncodedAsset } from "../asset";
 
@@ -22,13 +22,13 @@ export async function fetchInsertions(
   to: number
 ): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
-  const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = query(
+  const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = queryEvents(
     contract,
     contract.filters.InsertNoteCommitments(),
     from,
     to
   );
-  const noteEventsProm: Promise<InsertNotesEvent[]> = query(
+  const noteEventsProm: Promise<InsertNotesEvent[]> = queryEvents(
     contract,
     contract.filters.InsertNotes(),
     from,
@@ -108,7 +108,7 @@ export async function fetchSubtreeUpdateCommits(
   to: number
 ): Promise<SubtreeUpdateCommit[]> {
   const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
-  let events: SubtreeUpdateEvent[] = await query(
+  let events: SubtreeUpdateEvent[] = await queryEvents(
     contract,
     subtreeUpdateEventsFilter,
     from,

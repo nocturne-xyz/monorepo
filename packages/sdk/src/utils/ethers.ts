@@ -12,7 +12,7 @@ import { OperationResult } from "../contract";
 
 const CHUNK_SIZE = 2000;
 
-export async function query<T extends Result, C extends BaseContract>(
+export async function queryEvents<T extends Result, C extends BaseContract>(
   contract: C,
   filter: EventFilter,
   from: number,

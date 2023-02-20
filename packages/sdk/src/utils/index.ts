@@ -1,6 +1,6 @@
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {
-  query,
+  queryEvents,
   parseEventsFromContractReceipt,
   simulateOperation,
 } from "./ethers";
