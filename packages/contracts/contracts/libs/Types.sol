@@ -86,7 +86,6 @@ struct Operation {
     StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
-    uint256 verificationGasLimit;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
