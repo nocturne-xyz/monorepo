@@ -308,16 +308,16 @@ contract BalanceManagerTest is Test {
         );
 
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
         // Balance manager took up 50M, left 50M for bundler
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * perNoteAmount) - feeReserved
+            (2 * perNoteAmount) - totalFeeReserved
         );
-        assertEq(token.balanceOf(address(vault)), feeReserved);
+        assertEq(token.balanceOf(address(vault)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
@@ -344,16 +344,16 @@ contract BalanceManagerTest is Test {
         );
 
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
-        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
         // Balance manager took up 150M - 62.5M
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (3 * perNoteAmount) - feeReserved
+            (3 * perNoteAmount) - totalFeeReserved
         );
-        assertEq(token.balanceOf(address(vault)), feeReserved);
+        assertEq(token.balanceOf(address(vault)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeAndPayBundler() public {
@@ -379,25 +379,30 @@ contract BalanceManagerTest is Test {
             })
         );
 
+        // 50 * (executionGas + (2 * estJoinSplitGas) + (2 * refundGas))
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 feeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
         // Take up 100M tokens
         assertEq(token.balanceOf(address(balanceManager)), 0);
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * perNoteAmount) - feeReserved
+            (2 * perNoteAmount) - totalFeeReserved
         );
 
-        // Bundler payout ends up 40M of the 50M reserved (other 10M for updater)
-        OperationResult memory opResult = NocturneUtils.formatOperationResult(
-            op
-        );
+        // Only bundler fee: 50 * (executionGas + verificationGas +
+        // handleJoinSplitGas + handleRefundGas)
+        // 50 * (500k + (2 * 100k) + (2 * 70k) + (2 * 50k)) = 47M
+        // NOTE: verification gas defaults to amount provided in op because
+        // formatDummyOperationResult just passes through verificationGas value
+        OperationResult memory opResult = NocturneUtils
+            .formatDummyOperationResult(op);
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
             op,
             opResult
         );
+        console.log("OnlyBundlerFee", onlyBundlerFee);
 
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,

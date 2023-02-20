@@ -138,7 +138,7 @@ library NocturneUtils {
         return op;
     }
 
-    function formatOperationResult(
+    function formatDummyOperationResult(
         Operation memory op
     ) internal pure returns (OperationResult memory result) {
         return

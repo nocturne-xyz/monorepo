@@ -199,12 +199,15 @@ library WalletUtils {
         Operation calldata op,
         OperationResult memory opResult
     ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
         uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
 
         return
             op.gasPrice *
-            (opResult.executionGas +
-                opResult.verificationGas +
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
                 handleRefundGas);
     }
 }
