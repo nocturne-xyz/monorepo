@@ -34,12 +34,8 @@ export class NocturneSigner {
 
   constructor(sk: bigint) {
     this.sk = sk;
-
-    const spendPK = BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
-    const spendPKNonce = BigInt(1);
-    this.vk = poseidonBN([spendPK.x, spendPK.y, spendPKNonce]);
-
-    this.spendPk = BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
+    this.spendPk = spendPkFromFromSk(sk);
+    this.vk = vkFromSpendPk(this.spendPk)
   }
 
   static genRandom(): NocturneSigner {
@@ -219,4 +215,13 @@ function makeSignedJoinSplit(
     proofInputs,
     ...baseJoinSplit,
   };
+}
+
+function spendPkFromFromSk(sk: bigint): SpendPk {
+  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
+}
+
+function vkFromSpendPk(spendPk: SpendPk): bigint {
+  const nonce = 1n;
+  return poseidonBN([spendPk.x, spendPk.y, nonce]);
 }
