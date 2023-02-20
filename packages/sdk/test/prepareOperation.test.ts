@@ -236,7 +236,7 @@ describe("prepareOperation", async () => {
     );
     const receivers = range(2)
       .map((_) => randomSigningKey())
-      .map(sk => new NocturneSigner(sk))
+      .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
     const builder = new OperationRequestBuilder();
@@ -274,7 +274,7 @@ describe("prepareOperation", async () => {
     );
     const receivers = range(3)
       .map((_) => randomSigningKey())
-      .map(sk => new NocturneSigner(sk))
+      .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
     const refundAddr = signer.randomStealthAddress();

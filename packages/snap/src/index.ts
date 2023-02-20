@@ -69,10 +69,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
   const signer = await getNocturneSignerFromBIP44();
-  console.log(
-    "Snap Nocturne Canonical Address: ",
-    signer.canonicalAddress()
-  );
+  console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
   const notesManager = new DefaultNotesManager(
     notesDB,
