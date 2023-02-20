@@ -3,7 +3,6 @@ export { encryptNote } from "./noteEncryption";
 export {
   NocturneSigner,
   NocturneSignature,
-  SpendPk,
-  randomSigningKey,
 } from "./signer";
+export { generateRandomSigningKey, spendPkFromFromSk, vkFromSpendPk, SpendPk, SpendingKey, ViewingKey } from "./keys";
 export { randomBigInt } from "./utils";

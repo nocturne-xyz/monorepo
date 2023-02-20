@@ -17,6 +17,7 @@ import {
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
 import { decryptNote } from "./noteEncryption";
+import { SpendingKey, ViewingKey, spendPkFromFromSk, vkFromSpendPk } from "./keys";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -27,17 +28,12 @@ export interface NocturneSignature {
   z: bigint;
 }
 
-export function randomSigningKey(): bigint {
-  const sk_buf = randomBytes(Math.floor(256 / 8));
-  return Fr.fromBytes(sk_buf);
-}
-
 export class NocturneSigner {
-  vk: bigint;
-  sk: bigint;
+  vk: ViewingKey;
+  sk: SpendingKey;
   spendPk: SpendPk;
 
-  constructor(sk: bigint) {
+  constructor(sk: SpendingKey) {
     this.sk = sk;
     this.spendPk = spendPkFromFromSk(sk);
     this.vk = vkFromSpendPk(this.spendPk);
@@ -58,7 +54,7 @@ export class NocturneSigner {
     };
   }
 
-  randomStealthAddress(): StealthAddress {
+  generateRandomStealthAddress(): StealthAddress {
     const r_buf = randomBytes(Math.floor(256 / 8));
     const r = Fr.fromBytes(r_buf);
     const h1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
@@ -213,13 +209,4 @@ function makePreProofJoinSplit(
     proofInputs,
     ...baseJoinSplit,
   };
-}
-
-function spendPkFromFromSk(sk: bigint): SpendPk {
-  return BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
-}
-
-function vkFromSpendPk(spendPk: SpendPk): bigint {
-  const nonce = 1n;
-  return poseidonBN([spendPk.x, spendPk.y, nonce]);
 }

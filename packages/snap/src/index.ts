@@ -111,7 +111,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         ],
       });
     case "nocturne_getRandomizedAddr":
-      return JSON.stringify(signer.randomStealthAddress());
+      return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
       return JSON.stringify(await context.getAllAssetBalances());
     case "nocturne_syncNotes":

@@ -211,7 +211,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       erc20Token,
       aliceEoa,
-      nocturneContextAlice.signer.randomStealthAddress(),
+      nocturneContextAlice.signer.generateRandomStealthAddress(),
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
     await sleep(15_000);

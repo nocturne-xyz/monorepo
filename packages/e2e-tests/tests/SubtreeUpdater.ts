@@ -85,7 +85,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.randomStealthAddress(),
+      nocturneContextAlice.signer.generateRandomStealthAddress(),
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 

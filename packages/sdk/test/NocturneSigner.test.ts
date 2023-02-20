@@ -5,7 +5,7 @@ import {
   NocturneSignature,
   StealthAddressTrait,
   encryptNote,
-  randomSigningKey,
+  generateRandomSigningKey,
 } from "../src/crypto";
 import { shitcoin, setup, getDummyHex } from "./utils";
 import {
@@ -17,27 +17,27 @@ import {
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
-    const sk1 = randomSigningKey();
-    const sk2 = randomSigningKey();
+    const sk1 = generateRandomSigningKey();
+    const sk2 = generateRandomSigningKey();
     const signer1 = new NocturneSigner(sk1);
     const signer2 = new NocturneSigner(sk2);
-    expect(signer1.isOwnAddress(signer1.randomStealthAddress())).to.equal(true);
-    expect(signer1.isOwnAddress(signer2.randomStealthAddress())).to.equal(
+    expect(signer1.isOwnAddress(signer1.generateRandomStealthAddress())).to.equal(true);
+    expect(signer1.isOwnAddress(signer2.generateRandomStealthAddress())).to.equal(
       false
     );
-    expect(signer2.isOwnAddress(signer2.randomStealthAddress())).to.equal(true);
-    expect(signer2.isOwnAddress(signer1.randomStealthAddress())).to.equal(
+    expect(signer2.isOwnAddress(signer2.generateRandomStealthAddress())).to.equal(true);
+    expect(signer2.isOwnAddress(signer1.generateRandomStealthAddress())).to.equal(
       false
     );
   });
 
   it("Test rerand", () => {
-    const sk1 = randomSigningKey();
-    const sk2 = randomSigningKey();
+    const sk1 = generateRandomSigningKey();
+    const sk2 = generateRandomSigningKey();
     const signer1 = new NocturneSigner(sk1);
     const signer2 = new NocturneSigner(sk2);
 
-    const addr1 = signer1.randomStealthAddress();
+    const addr1 = signer1.generateRandomStealthAddress();
     const addr2 = StealthAddressTrait.randomize(addr1);
 
     expect(signer1.isOwnAddress(addr1)).to.equal(true);
@@ -47,15 +47,15 @@ describe("NocturneSigner", () => {
   });
 
   it("Test address (de)serialization", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
-    const addr = signer.randomStealthAddress();
+    const addr = signer.generateRandomStealthAddress();
     const str = StealthAddressTrait.toString(addr);
     expect(StealthAddressTrait.fromString(str)).to.eql(addr);
   });
 
   it("Test Sign / verify", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
     const pk = signer.spendPk;
     const m = 123n;
@@ -64,7 +64,7 @@ describe("NocturneSigner", () => {
   });
 
   it("Test note transmission", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
     const addr = signer.canonicalAddress();
     const asset = {
@@ -73,7 +73,7 @@ describe("NocturneSigner", () => {
       id: 1n,
     };
     const note = {
-      owner: signer.randomStealthAddress(),
+      owner: signer.generateRandomStealthAddress(),
       nonce: 33n,
       value: 55n,
       asset,
@@ -156,7 +156,7 @@ describe("NocturneSigner", () => {
       [shitcoin, shitcoin]
     );
 
-    const receiverSk = randomSigningKey();
+    const receiverSk = generateRandomSigningKey();
     const receiverSigner = new NocturneSigner(receiverSk);
     const receiver = receiverSigner.canonicalAddress();
 

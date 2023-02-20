@@ -5,7 +5,7 @@ import {
   OperationRequest,
   range,
   NocturneSigner,
-  randomSigningKey,
+  generateRandomSigningKey,
 } from "../src";
 import {
   shitcoin,
@@ -45,7 +45,7 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
     const receiver = signer.canonicalAddress();
 
@@ -81,9 +81,9 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
-    const refundAddr = signer.randomStealthAddress();
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -125,7 +125,7 @@ describe("OperationRequestBuilder", () => {
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
     const receivers = range(2)
-      .map((_) => randomSigningKey())
+      .map((_) => generateRandomSigningKey())
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
@@ -170,12 +170,12 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
-    const sk = randomSigningKey();
+    const sk = generateRandomSigningKey();
     const signer = new NocturneSigner(sk);
-    const refundAddr = signer.randomStealthAddress();
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const receivers = range(3)
-      .map((_) => randomSigningKey())
+      .map((_) => generateRandomSigningKey())
       .map((sk) => new NocturneSigner(sk))
       .map((signer) => signer.canonicalAddress());
 
