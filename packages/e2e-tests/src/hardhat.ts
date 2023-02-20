@@ -1,5 +1,6 @@
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
+import { v4 as uuidv4 } from "uuid";
 
 const HH_IMAGE = "hardhat";
 
@@ -14,7 +15,7 @@ export async function startHardhatNetwork(
 ): Promise<Dockerode.Container> {
   const container = await docker.createContainer({
     Image: HH_IMAGE,
-    name: HH_IMAGE,
+    name: `${HH_IMAGE}-${uuidv4()}`,
     Env: [
       `BLOCK_TIME=${config.blockTime}`,
       ...config.keys.map((key: string, index: number) => {

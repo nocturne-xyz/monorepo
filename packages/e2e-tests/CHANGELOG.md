@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Container names use uuid for randomness to avoid conflicts in CI
 - Have `hh-node` and `hh-node-deposit` commands use dockerized hardhat
 - Change deposit script token deployment to be sequential (nonce conflicts)
 - Replace in memory instantiation of hardhat, subtree updater, and bundler with dockerized versions in test cases
