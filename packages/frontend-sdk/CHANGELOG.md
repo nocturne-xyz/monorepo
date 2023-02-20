@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- adapt to breaking changes in MM Flask
 - rename methods to make intended usage clearer
 - update imports for new decoupled `NocturneContext` functionality
 - update imports for new `AssetTrait`

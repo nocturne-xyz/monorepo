@@ -1,4 +1,4 @@
-import { defaultSnapOrigin } from "../config";
+import { SNAP_ID } from "../config";
 import { GetSnapsResponse, Snap } from "../types";
 
 /**
@@ -19,20 +19,15 @@ export const getSnaps = async (): Promise<GetSnapsResponse> => {
  * @param params - The params to pass with the snap to connect.
  */
 export const connectSnap = async (
-  snapId: string = defaultSnapOrigin,
   params: Record<"version" | string, unknown> = {}
 ) => {
   await window.ethereum.request({
-    method: "wallet_enable",
-    params: [
-      {
-        wallet_snap: {
-          [snapId]: {
-            ...params,
-          },
-        },
+    method: "wallet_requestSnaps",
+    params: {
+      [SNAP_ID]: {
+        ...params,
       },
-    ],
+    },
   });
 };
 
@@ -47,8 +42,7 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
     const snaps = await getSnaps();
 
     return Object.values(snaps).find(
-      (snap) =>
-        snap.id === defaultSnapOrigin && (!version || snap.version === version)
+      (snap) => snap.id === SNAP_ID && (!version || snap.version === version)
     );
   } catch (e) {
     console.log("Failed to obtain installed snap", e);
@@ -59,12 +53,12 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 export const clearDb = async () => {
   await window.ethereum.request({
     method: "wallet_invokeSnap",
-    params: [
-      defaultSnapOrigin,
-      {
+    params: {
+      snapId: SNAP_ID,
+      request: {
         method: "nocturne_clearDb",
       },
-    ],
+    },
   });
 };
 

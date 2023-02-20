@@ -14,11 +14,7 @@ import {
   computeOperationDigest,
   proveOperation,
 } from "@nocturne-xyz/sdk";
-import {
-  DEFAULT_SNAP_ORIGIN,
-  getTokenContract,
-  getWindowSigner,
-} from "./common";
+import { SNAP_ID, getTokenContract, getWindowSigner } from "./common";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
@@ -136,9 +132,7 @@ export class NocturneFrontendSDK {
   async signAndProveOperation(
     operationRequest: OperationRequest
   ): Promise<ProvenOperation> {
-    const op = await this.requestSignOperation(
-      operationRequest
-    );
+    const op = await this.requestSignOperation(operationRequest);
 
     console.log("SignedOperation", op);
     return await this.proveOperation(op);
@@ -211,12 +205,12 @@ export class NocturneFrontendSDK {
   async getAllBalances(): Promise<AssetWithBalance[]> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
-      params: [
-        DEFAULT_SNAP_ORIGIN,
-        {
+      params: {
+        snapId: SNAP_ID,
+        request: {
           method: "nocturne_getAllBalances",
-        },
-      ],
+        }
+      },
     })) as string;
 
     return JSON.parse(json) as AssetWithBalance[];
@@ -228,12 +222,12 @@ export class NocturneFrontendSDK {
   async syncNotes(): Promise<void> {
     await window.ethereum.request({
       method: "wallet_invokeSnap",
-      params: [
-        DEFAULT_SNAP_ORIGIN,
-        {
+      params: {
+        snapId: SNAP_ID,
+        request: {
           method: "nocturne_syncNotes",
         },
-      ],
+      },
     });
   }
 
@@ -243,12 +237,12 @@ export class NocturneFrontendSDK {
   async syncLeaves(): Promise<void> {
     await window.ethereum.request({
       method: "wallet_invokeSnap",
-      params: [
-        DEFAULT_SNAP_ORIGIN,
-        {
+      params: {
+        snapId: SNAP_ID,
+        request: {
           method: "nocturne_syncLeaves",
         },
-      ],
+      },
     });
   }
 
@@ -263,13 +257,13 @@ export class NocturneFrontendSDK {
   ): Promise<SignedOperation> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
-      params: [
-        DEFAULT_SNAP_ORIGIN,
-        {
-          method: "nocturne_getJoinSplitInputs",
+      params: {
+        snapId: SNAP_ID,
+        request: {
+          method: "nocturne_signOperation",
           params: { operationRequest: JSON.stringify(operationRequest) },
         },
-      ],
+      },
     })) as string;
 
     return JSON.parse(json) as SignedOperation;
@@ -281,12 +275,12 @@ export class NocturneFrontendSDK {
   protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
-      params: [
-        DEFAULT_SNAP_ORIGIN,
-        {
+      params: {
+        snapId: SNAP_ID,
+        request: {
           method: "nocturne_getRandomizedAddr",
         },
-      ],
+      },
     })) as string;
 
     return JSON.parse(json) as StealthAddress;
