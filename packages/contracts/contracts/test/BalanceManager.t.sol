@@ -10,13 +10,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../PoseidonHashers.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
-import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
-import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
-import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import {WalletUtils} from "../libs/WalletUtils.sol";
 import {Vault} from "../Vault.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
@@ -29,13 +24,9 @@ import {Utils} from "../libs/Utils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
 
-contract BalanceManagerTest is Test, PoseidonDeployer {
+contract BalanceManagerTest is Test {
     using OffchainMerkleTree for OffchainMerkleTreeData;
-    uint256 public constant SNARK_SCALAR_FIELD =
-        21888242871839275222246405745257275088548364400416034343698204186575808495617;
-
     using stdJson for string;
-    using TreeTestLib for TreeTest;
     using OperationLib for Operation;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
@@ -52,44 +43,13 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
 
     TestBalanceManager balanceManager;
     Vault vault;
-    TreeTest treeTest;
     IJoinSplitVerifier joinSplitVerifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
     SimpleERC1155Token[3] ERC1155s;
-    IHasherT3 hasherT3;
-    IHasherT6 hasherT6;
-
-    event RefundProcessed(
-        StealthAddress refundAddr,
-        uint256 nonce,
-        uint256 encodedAssetAddr,
-        uint256 encodedAssetId,
-        uint256 value,
-        uint128 merkleIndex
-    );
-
-    event JoinSplitProcessed(
-        uint256 indexed oldNoteANullifier,
-        uint256 indexed oldNoteBNullifier,
-        uint128 newNoteAIndex,
-        uint128 newNoteBIndex,
-        JoinSplit joinSplit
-    );
-
-    event OperationProcessed(
-        uint256 indexed operationDigest,
-        bool indexed opProcessed,
-        string failureReason,
-        bool[] callSuccesses,
-        bytes[] callResults
-    );
 
     function setUp() public virtual {
-        // Deploy poseidon hasher libraries
-        deployPoseidon3Through6();
-
         // Instantiate vault, joinSplitVerifier, tree, and balanceManager
         vault = new Vault();
         joinSplitVerifier = new TestJoinSplitVerifier();
@@ -102,11 +62,6 @@ contract BalanceManagerTest is Test, PoseidonDeployer {
             address(joinSplitVerifier),
             address(subtreeUpdateVerifier)
         );
-
-        hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
-        hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
-
-        treeTest.initialize(hasherT3, hasherT6);
 
         vault.initialize(address(balanceManager));
 
