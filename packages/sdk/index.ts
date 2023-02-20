@@ -7,6 +7,7 @@ export * from "./src/notesManager";
 export * from "./src/proof";
 export * from "./src/utils"
 export * from "./src/commonTypes";
+export * from "./src/primitives";
 
 export { Note, IncludedNote, EncodedNote, NoteTrait } from "./src/note";
 export {
@@ -23,6 +24,5 @@ export {
 } from "./src/operationRequest";
 export { proveOperation } from "./src/proveOperation";
 export { prepareOperation, hasEnoughBalance } from "./src/prepareOperation";
-export { BinaryPoseidonTree } from "./src/binaryPoseidonTree";
 export { NocturneContext } from "./src/NocturneContext";
 

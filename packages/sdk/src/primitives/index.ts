@@ -1,0 +1,1 @@
+export { BinaryPoseidonTree } from "./binaryPoseidonTree";
