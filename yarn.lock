@@ -3036,7 +3036,7 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.8-alpha
-    "@nocturne-xyz/sdk": 1.0.74-alpha
+    "@nocturne-xyz/sdk": 1.0.76-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3122,16 +3122,6 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
-
-"@nocturne-xyz/contracts@npm:^1.0.7-alpha":
-  version: 1.0.7-alpha
-  resolution: "@nocturne-xyz/contracts@npm:1.0.7-alpha"
-  dependencies:
-    "@openzeppelin/contracts": 4.7.3
-    "@openzeppelin/contracts-upgradeable": 4.7.3
-  checksum: c8cdb9c18aeabe8cc4c74127d9ab99203f00db771781c6c966cc6bda97db8e80ec3cd474e372c13e273581a887e86a757690a1029abb631dfa42c6b14753501b
-  languageName: node
-  linkType: hard
 
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
@@ -3235,25 +3225,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@npm:1.0.74-alpha":
-  version: 1.0.74-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.74-alpha"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/contracts": ^1.0.7-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.0.0
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: 56de16a9f5ccaceb9e9b937cd1b57c076a28313cdd3605d385e2b6975877b17be48fc02ac9d00466467c0cb32fd19e87eaa3325408c8e8d2f1c63def7fe6d166
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.76-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3379,7 +3351,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.8-alpha
-    "@nocturne-xyz/sdk": 1.0.74-alpha
+    "@nocturne-xyz/sdk": 1.0.76-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2

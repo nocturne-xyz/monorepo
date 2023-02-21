@@ -34,6 +34,7 @@ export async function hasEnoughBalance(
   // check that the user has enough notes to cover the request
   const notes = await notesDB.getNotesFor(asset);
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+  console.log(`Have: ${balance}. Requested: ${requestedAmount}`);
   return balance >= requestedAmount;
 }
 
