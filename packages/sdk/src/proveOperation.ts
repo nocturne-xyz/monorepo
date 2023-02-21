@@ -3,9 +3,12 @@ import {
   SignedOperation,
   ProvenJoinSplit,
   ProvenOperation,
-} from "../commonTypes";
-import { packToSolidityProof } from "../proof/utils";
-import { JoinSplitProver, joinSplitPublicSignalsFromArray } from "../proof";
+} from "./commonTypes";
+import {
+  JoinSplitProver,
+  joinSplitPublicSignalsFromArray,
+  packToSolidityProof,
+} from "./proof";
 
 export async function proveOperation(
   op: SignedOperation,
@@ -37,7 +40,7 @@ export async function proveOperation(
   };
 }
 
-export async function proveJoinSplit(
+async function proveJoinSplit(
   prover: JoinSplitProver,
   signedJoinSplit: SignedJoinSplit
 ): Promise<ProvenJoinSplit> {

@@ -1,4 +1,4 @@
-import { EncodedNote } from "../sdk";
+import { EncodedNote } from "../note";
 import { BaseProof, MerkleProofInput } from "./types";
 
 export interface JoinSplitProver {

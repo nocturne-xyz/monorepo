@@ -1,12 +1,12 @@
-import { IncludedNote } from "../sdk";
 import { Wallet } from "@nocturne-xyz/contracts";
-import { query } from "../sdk/utils";
-import { JoinSplitEvent } from "../sdk/notesManager";
 import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { AssetTrait, EncodedAsset } from "../sdk/asset";
+import { IncludedNote } from "../note";
+import { queryEvents } from "../utils";
+import { JoinSplitEvent } from "../notesManager";
+import { AssetTrait, EncodedAsset } from "../asset";
 
 export async function fetchNotesFromRefunds(
   contract: Wallet,
@@ -14,7 +14,12 @@ export async function fetchNotesFromRefunds(
   to: number
 ): Promise<IncludedNote[]> {
   const filter = contract.filters.RefundProcessed();
-  let events: RefundProcessedEvent[] = await query(contract, filter, from, to);
+  let events: RefundProcessedEvent[] = await queryEvents(
+    contract,
+    filter,
+    from,
+    to
+  );
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
@@ -54,7 +59,7 @@ export async function fetchJoinSplits(
   to: number
 ): Promise<JoinSplitEvent[]> {
   const filter = contract.filters.JoinSplitProcessed();
-  let events: JoinSplitProcessedEvent[] = await query(
+  let events: JoinSplitProcessedEvent[] = await queryEvents(
     contract,
     filter,
     from,

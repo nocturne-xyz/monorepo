@@ -1,65 +1,83 @@
 import "mocha";
 import { expect } from "chai";
-import { NocturneSigner } from "../src/sdk/signer";
-import { NocturnePrivKey } from "../src/crypto/privkey";
-import { StealthAddressTrait } from "../src/crypto/address";
-import { encryptNote } from "../src/crypto/utils";
-import { AssetTrait, AssetType } from "../src/sdk/asset";
+import {
+  NocturneSigner,
+  NocturneSignature,
+  StealthAddressTrait,
+  encryptNote,
+  generateRandomSpendingKey,
+} from "../src/crypto";
 import { shitcoin, setup, getDummyHex } from "./utils";
-import { NocturneSignature, OperationRequestBuilder } from "../src/sdk";
-import { prepareOperation } from "../src/sdk/prepareOperation";
+import {
+  OperationRequestBuilder,
+  AssetTrait,
+  AssetType,
+  prepareOperation,
+} from "../src";
 
 describe("NocturneSigner", () => {
   it("View key should work", () => {
-    const priv1 = NocturnePrivKey.genPriv();
-    const signer1 = new NocturneSigner(priv1);
-    const priv2 = NocturnePrivKey.genPriv();
-    const signer2 = new NocturneSigner(priv2);
-    expect(signer1.isOwnAddress(signer1.address)).to.equal(true);
-    expect(signer1.isOwnAddress(signer2.address)).to.equal(false);
-    expect(signer2.isOwnAddress(signer2.address)).to.equal(true);
-    expect(signer2.isOwnAddress(signer1.address)).to.equal(false);
+    const sk1 = generateRandomSpendingKey();
+    const sk2 = generateRandomSpendingKey();
+    const signer1 = new NocturneSigner(sk1);
+    const signer2 = new NocturneSigner(sk2);
+    expect(
+      signer1.isOwnAddress(signer1.generateRandomStealthAddress())
+    ).to.equal(true);
+    expect(
+      signer1.isOwnAddress(signer2.generateRandomStealthAddress())
+    ).to.equal(false);
+    expect(
+      signer2.isOwnAddress(signer2.generateRandomStealthAddress())
+    ).to.equal(true);
+    expect(
+      signer2.isOwnAddress(signer1.generateRandomStealthAddress())
+    ).to.equal(false);
   });
 
   it("Test rerand", () => {
-    const priv1 = NocturnePrivKey.genPriv();
-    const signer1 = new NocturneSigner(priv1);
-    const rerandAddr1 = StealthAddressTrait.randomize(signer1.address);
-    const priv2 = NocturnePrivKey.genPriv();
-    const signer2 = new NocturneSigner(priv2);
-    expect(signer1.isOwnAddress(signer1.address)).to.equal(true);
-    expect(signer1.isOwnAddress(rerandAddr1)).to.equal(true);
-    expect(signer2.isOwnAddress(signer1.address)).to.equal(false);
-    expect(signer2.isOwnAddress(rerandAddr1)).to.equal(false);
+    const sk1 = generateRandomSpendingKey();
+    const sk2 = generateRandomSpendingKey();
+    const signer1 = new NocturneSigner(sk1);
+    const signer2 = new NocturneSigner(sk2);
+
+    const addr1 = signer1.generateRandomStealthAddress();
+    const addr2 = StealthAddressTrait.randomize(addr1);
+
+    expect(signer1.isOwnAddress(addr1)).to.equal(true);
+    expect(signer1.isOwnAddress(addr2)).to.equal(true);
+    expect(signer2.isOwnAddress(addr1)).to.equal(false);
+    expect(signer2.isOwnAddress(addr2)).to.equal(false);
   });
 
   it("Test address (de)serialization", () => {
-    const priv = NocturnePrivKey.genPriv();
-    const addr = priv.toAddress();
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const addr = signer.generateRandomStealthAddress();
     const str = StealthAddressTrait.toString(addr);
     expect(StealthAddressTrait.fromString(str)).to.eql(addr);
   });
 
   it("Test Sign / verify", () => {
-    const priv = NocturnePrivKey.genPriv();
-    const pk = priv.spendPk();
-    const signer = new NocturneSigner(priv);
-    const m = BigInt(123);
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const pk = signer.spendPk;
+    const m = 123n;
     const sig = signer.sign(m);
     expect(NocturneSigner.verify(pk, m, sig)).to.equal(true);
   });
 
   it("Test note transmission", () => {
-    const priv = NocturnePrivKey.genPriv();
-    const signer = new NocturneSigner(priv);
-    const addr = priv.toCanonAddress();
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const addr = signer.canonicalAddress();
     const asset = {
       assetType: AssetType.ERC20,
       assetAddr: "0x123",
       id: 1n,
     };
     const note = {
-      owner: priv.toAddress(),
+      owner: signer.generateRandomStealthAddress(),
       nonce: 33n,
       value: 55n,
       asset,
@@ -103,7 +121,7 @@ describe("NocturneSigner", () => {
   });
 
   it("Test asset and id encoding with big id", async () => {
-    // small id
+    // big id
     const asset = {
       assetType: AssetType.ERC20,
       assetAddr: "0x123",
@@ -141,8 +159,10 @@ describe("NocturneSigner", () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const receiverPriv = NocturnePrivKey.genPriv();
-    const receiver = receiverPriv.toCanonAddress();
+
+    const receiverSk = generateRandomSpendingKey();
+    const receiverSigner = new NocturneSigner(receiverSk);
+    const receiver = receiverSigner.canonicalAddress();
 
     // make operation request and prepare it
     const builder = new OperationRequestBuilder();
@@ -190,7 +210,7 @@ describe("NocturneSigner", () => {
     expect(opDigest).to.not.be.null;
 
     const sig: NocturneSignature = { c, z };
-    const pk = signer.privkey.spendPk();
+    const pk = signer.spendPk;
     expect(NocturneSigner.verify(pk, opDigest, sig)).to.equal(true);
   });
 });

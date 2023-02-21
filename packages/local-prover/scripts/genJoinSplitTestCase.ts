@@ -5,7 +5,6 @@ import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { WasmJoinSplitProver } from "../src/joinsplit";
 import {
   BinaryPoseidonTree,
-  NocturnePrivKey,
   NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
@@ -31,12 +30,11 @@ const sk = BigInt(
 );
 
 // Instantiate nocturne keypair and addr
-const nocturnePrivKey = new NocturnePrivKey(sk);
-const vk = nocturnePrivKey.vk;
-const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-const stealthAddrA = nocturneSigner.address;
-const stealthAddrB = nocturneSigner.address;
-const spendPk = nocturneSigner.privkey.spendPk();
+const nocturneSigner = new NocturneSigner(sk);
+const vk = nocturneSigner.vk;
+const stealthAddrA = nocturneSigner.generateRandomStealthAddress();
+const stealthAddrB = nocturneSigner.generateRandomStealthAddress();
+const spendPk = nocturneSigner.spendPk;
 
 // Two old notes: 100 + 50 = 150
 const oldNoteA: EncodedNote = {

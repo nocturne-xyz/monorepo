@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
 import { NocturneFrontendSDK } from "../sdk";
-import { getTokenDetails, formatTokenAmountEvmRepr } from "../common";
+import { getTokenDetails, formatTokenAmountEvmRepr } from "../utils";
 
 export interface DepositFormProps {
   sdk: NocturneFrontendSDK;

@@ -1,3 +1,3 @@
 export * from "./src/sdk";
-export * from "./src/common";
+export * from "./src/utils";
 export * from "./src/components";

@@ -14,7 +14,7 @@ import {
   computeOperationDigest,
   proveOperation,
 } from "@nocturne-xyz/sdk";
-import { SNAP_ID, getTokenContract, getWindowSigner } from "./common";
+import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";

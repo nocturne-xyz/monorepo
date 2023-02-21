@@ -1,1 +1,1 @@
-export * from "./binaryPoseidonTree";
+export { BinaryPoseidonTree } from "./binaryPoseidonTree";

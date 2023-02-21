@@ -2,9 +2,14 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { NocturnePrivKey, StealthAddressTrait } from "../src/crypto";
-import { OperationRequestBuilder, range, sortNotesByValue } from "../src/sdk";
-import { gatherNotes, prepareOperation } from "../src/sdk/prepareOperation";
+import {
+  NocturneSigner,
+  OperationRequestBuilder,
+  range,
+  prepareOperation,
+  generateRandomSpendingKey,
+} from "../src";
+import { __private } from "../src/prepareOperation";
 import {
   stablescam,
   setup,
@@ -18,6 +23,8 @@ import {
   encodedPlutocracy,
   getDummyHex,
 } from "./utils";
+
+const { gatherNotes, sortNotesByValue } = __private;
 
 chai.use(chaiAsPromised);
 
@@ -132,8 +139,10 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const receiverPriv = NocturnePrivKey.genPriv();
-    const receiver = receiverPriv.toCanonAddress();
+
+    const receiverSk = generateRandomSpendingKey();
+    const receiverSigner = new NocturneSigner(receiverSk);
+    const receiver = receiverSigner.canonicalAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -176,7 +185,7 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const refundAddr = StealthAddressTrait.randomize(signer.address);
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -226,8 +235,9 @@ describe("prepareOperation", async () => {
       [shitcoin, stablescam]
     );
     const receivers = range(2)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
+      .map((_) => generateRandomSpendingKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -263,9 +273,11 @@ describe("prepareOperation", async () => {
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const receivers = range(3)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
-    const refundAddr = StealthAddressTrait.randomize(signer.address);
+      .map((_) => generateRandomSpendingKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
+
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder

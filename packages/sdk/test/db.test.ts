@@ -1,8 +1,14 @@
 import "mocha";
 import { expect } from "chai";
-import { NotesDB, InMemoryKVStore, MerkleDB, KV } from "../src/sdk/db";
-import { IncludedNote } from "../src/sdk/note";
-import { Asset, AssetType } from "../src/sdk/asset";
+import {
+  NotesDB,
+  InMemoryKVStore,
+  MerkleDB,
+  KV,
+  IncludedNote,
+  Asset,
+  AssetType,
+} from "../src";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();

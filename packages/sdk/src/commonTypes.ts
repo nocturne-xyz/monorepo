@@ -1,9 +1,8 @@
 import { Action } from "./contract";
-import { JoinSplitInputs } from "./proof/joinsplit";
-import { StealthAddress } from "./crypto/address";
-import { MerkleProofInput, SolidityProof } from "./proof";
-import { IncludedNote, Note } from "./sdk/note";
-import { EncodedAsset } from "./sdk/asset";
+import { StealthAddress } from "./crypto";
+import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "./proof";
+import { IncludedNote, Note } from "./note";
+import { EncodedAsset } from "./asset";
 
 export const SNARK_SCALAR_FIELD =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;

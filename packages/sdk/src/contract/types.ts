@@ -1,5 +1,5 @@
 import { Address, ProvenOperation } from "../commonTypes";
-import { StealthAddress } from "../crypto/address";
+import { StealthAddress } from "../crypto";
 
 export interface Action {
   contractAddress: Address;

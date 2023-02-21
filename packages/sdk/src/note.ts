@@ -1,5 +1,5 @@
-import { StealthAddressTrait, StealthAddress } from "../crypto/address";
-import { Asset, AssetTrait, EncodedAsset } from "../sdk/asset";
+import { StealthAddressTrait, StealthAddress } from "./crypto";
+import { Asset, AssetTrait, EncodedAsset } from "./asset";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "./utils";
@@ -18,13 +18,10 @@ export interface IncludedNote extends Note {
 export interface EncodedNote {
   owner: StealthAddress;
   nonce: bigint;
-  encodedAssetAddr: EncodedAddr;
-  encodedAssetId: EncodedId;
+  encodedAssetAddr: bigint;
+  encodedAssetId: bigint;
   value: bigint;
 }
-
-export type EncodedAddr = bigint;
-export type EncodedId = bigint;
 
 export class NoteTrait {
   static toCommitment(note: Note): bigint {

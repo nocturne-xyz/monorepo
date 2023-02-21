@@ -1,2 +1,2 @@
-export * from "./tree";
-export * from "./notes";
+export { fetchInsertions, fetchSubtreeUpdateCommits } from "./tree";
+export { fetchJoinSplits, fetchNotesFromRefunds } from "./notes";

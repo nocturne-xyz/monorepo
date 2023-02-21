@@ -1,13 +1,12 @@
-import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
-import randomBytes from "randombytes";
-import { Note, IncludedNote, NoteTrait } from "./note";
 import {
-  StealthAddress,
-  StealthAddressTrait,
-  CanonAddress,
-} from "../crypto/address";
-import { NocturnePrivKey, SpendPk } from "../crypto/privkey";
-import { encodePoint, decodePoint } from "../crypto/utils";
+  AffinePoint,
+  BabyJubJub,
+  poseidonBN,
+} from "@nocturne-xyz/circuit-utils";
+import randomBytes from "randombytes";
+import { Note, IncludedNote, NoteTrait } from "../note";
+import { Asset } from "../asset";
+import { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
 import {
   EncryptedNote,
   SignedJoinSplit,
@@ -15,12 +14,19 @@ import {
   PreProofJoinSplit,
   PreSignOperation,
 } from "../commonTypes";
-import { Asset } from "./asset";
 import { computeOperationDigest } from "../contract";
 import { JoinSplitInputs } from "../proof";
+import { decryptNote } from "./noteEncryption";
+import {
+  SpendingKey,
+  ViewingKey,
+  spendPkFromFromSk,
+  vkFromSpendPk,
+} from "./keys";
 
-const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;
+
+export type SpendPk = AffinePoint<bigint>;
 
 export interface NocturneSignature {
   c: bigint;
@@ -28,16 +34,37 @@ export interface NocturneSignature {
 }
 
 export class NocturneSigner {
-  privkey: NocturnePrivKey;
-  address: StealthAddress;
-  canonAddress: CanonAddress;
+  vk: ViewingKey;
+  sk: SpendingKey;
+  spendPk: SpendPk;
 
-  constructor(privkey: NocturnePrivKey) {
-    const address = privkey.toAddress();
+  constructor(sk: SpendingKey) {
+    this.sk = sk;
+    this.spendPk = spendPkFromFromSk(sk);
+    this.vk = vkFromSpendPk(this.spendPk);
+  }
 
-    this.privkey = privkey;
-    this.canonAddress = privkey.toCanonAddress();
-    this.address = address;
+  canonicalAddress(): CanonAddress {
+    const addr = BabyJubJub.scalarMul(BabyJubJub.BasePoint, this.vk);
+    return addr;
+  }
+
+  canonicalStealthAddress(): StealthAddress {
+    const canonAddr = this.canonicalAddress();
+    return {
+      h1X: BabyJubJub.BasePoint.x,
+      h1Y: BabyJubJub.BasePoint.y,
+      h2X: canonAddr.x,
+      h2Y: canonAddr.y,
+    };
+  }
+
+  generateRandomStealthAddress(): StealthAddress {
+    const r_buf = randomBytes(Math.floor(256 / 8));
+    const r = Fr.fromBytes(r_buf);
+    const h1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
+    const h2 = BabyJubJub.scalarMul(h1, this.vk);
+    return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
   sign(m: bigint): NocturneSignature {
@@ -48,7 +75,7 @@ export class NocturneSigner {
     const c = poseidonBN([R.x, R.y, m]);
 
     // eslint-disable-next-line
-    let z = Fr.reduce(r - (this.privkey.sk as any) * c);
+    let z = Fr.reduce(r - (this.sk as any) * c);
     if (z < 0) {
       z += BabyJubJub.PrimeSubgroupOrder;
     }
@@ -74,11 +101,11 @@ export class NocturneSigner {
       throw Error("Attempted to create nullifier for note you do not own");
     }
 
-    return BigInt(poseidonBN([NoteTrait.toCommitment(note), this.privkey.vk]));
+    return poseidonBN([NoteTrait.toCommitment(note), this.vk]);
   }
 
   generateNewNonce(oldNullifier: bigint): bigint {
-    return poseidonBN([this.privkey.vk, oldNullifier]);
+    return poseidonBN([this.vk, oldNullifier]);
   }
 
   /**
@@ -97,35 +124,23 @@ export class NocturneSigner {
     if (!this.isOwnAddress(encryptedNote.owner)) {
       throw Error("Cannot decrypt a note that is not owned by signer.");
     }
-    let vkInv = Fr.inv(this.privkey.vk);
-    if (vkInv < BabyJubJub.PrimeSubgroupOrder) {
-      vkInv += BabyJubJub.PrimeSubgroupOrder;
-    }
 
-    const eR = decodePoint(encryptedNote.encappedKey);
-    const R = BabyJubJub.scalarMul(eR, vkInv);
-    const nonce = F.sub(
-      F.reduce(encryptedNote.encryptedNonce),
-      F.reduce(poseidonBN([encodePoint(R)]))
-    );
-
-    const value = F.sub(
-      F.reduce(encryptedNote.encryptedValue),
-      F.reduce(poseidonBN([F.reduce(encodePoint(R) + 1n)]))
+    const note = decryptNote(
+      this.canonicalStealthAddress(),
+      this.vk,
+      encryptedNote,
+      asset
     );
 
     return {
-      owner: this.privkey.toCanonAddressStruct(),
-      nonce,
-      asset,
-      value,
+      ...note,
       merkleIndex,
     };
   }
 
   isOwnAddress(addr: StealthAddress): boolean {
     const points = StealthAddressTrait.toPoints(addr);
-    const h2Prime = BabyJubJub.scalarMul(points.h1, this.privkey.vk);
+    const h2Prime = BabyJubJub.scalarMul(points.h1, this.vk);
 
     return BabyJubJub.eq(points.h2, h2Prime);
   }
@@ -133,10 +148,10 @@ export class NocturneSigner {
   signOperation(op: PreSignOperation): SignedOperation {
     const opDigest = computeOperationDigest(op);
     const opSig = this.sign(opDigest);
-    const pk = this.privkey.spendPk();
+    const pk = this.spendPk;
 
     const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
-      makeSignedJoinSplit(joinSplit, opDigest, opSig, this.privkey.vk, pk)
+      makePreProofJoinSplit(joinSplit, opDigest, opSig, this.vk, pk)
     );
 
     const {
@@ -162,7 +177,7 @@ export class NocturneSigner {
   }
 }
 
-function makeSignedJoinSplit(
+function makePreProofJoinSplit(
   preProofJoinSplit: PreProofJoinSplit,
   opDigest: bigint,
   opSig: NocturneSignature,

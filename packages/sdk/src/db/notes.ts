@@ -1,10 +1,10 @@
-import { AllNotes, NoteAssetKey } from "../../commonTypes";
+import { AllNotes, NoteAssetKey } from "../commonTypes";
 import { Asset, AssetTrait } from "../asset";
 import { IncludedNote, NoteTrait } from "../note";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
 
-export const NOTES_PREFIX = "NOTES";
+const NOTES_PREFIX = "NOTES";
 
 export class NotesDB {
   public kv: KVStore;

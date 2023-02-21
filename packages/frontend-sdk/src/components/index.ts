@@ -1,3 +1,3 @@
-export * from "./BalanceDisplay";
-export * from "./TransactionTracker";
-export * from "./DepositForm";
+export { AssetBalancesDisplay, AssetBalancesDisplayProps } from "./BalanceDisplay";
+export { TransactionTracker, TransactionTrackerProps } from "./TransactionTracker";
+export { DepositForm, DepositFormProps } from "./DepositForm";

@@ -1,7 +1,12 @@
 import "mocha";
 import { expect } from "chai";
-import { OperationRequestBuilder, OperationRequest, range } from "../src/sdk";
-import { NocturnePrivKey } from "../src/crypto";
+import {
+  OperationRequestBuilder,
+  OperationRequest,
+  range,
+  NocturneSigner,
+  generateRandomSpendingKey,
+} from "../src";
 import {
   shitcoin,
   ponzi,
@@ -40,8 +45,10 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 1 action, 1 unwrap, 1 payment, no params set", () => {
-    const receiverPriv = NocturnePrivKey.genPriv();
-    const receiver = receiverPriv.toCanonAddress();
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const receiver = signer.canonicalAddress();
+
     const expected: OperationRequest = {
       joinSplitRequests: [
         {
@@ -74,8 +81,9 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperationRuqestion with 1 action, 1 unwrap, 0 payments, all params set", () => {
-    const refundPriv = NocturnePrivKey.genPriv();
-    const refundAddr = refundPriv.toAddress();
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -117,8 +125,9 @@ describe("OperationRequestBuilder", () => {
 
   it("builds operation with 0 actions, 0 unwraps, 2 payments, no params set", () => {
     const receivers = range(2)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
+      .map((_) => generateRandomSpendingKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
 
     const expected: OperationRequest = {
       joinSplitRequests: [
@@ -161,12 +170,15 @@ describe("OperationRequestBuilder", () => {
   });
 
   it("builds OperaionRequest with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", () => {
-    const refundPriv = NocturnePrivKey.genPriv();
-    const refundAddr = refundPriv.toAddress();
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.generateRandomStealthAddress();
 
     const receivers = range(3)
-      .map((_) => NocturnePrivKey.genPriv())
-      .map((priv) => priv.toCanonAddress());
+      .map((_) => generateRandomSpendingKey())
+      .map((sk) => new NocturneSigner(sk))
+      .map((signer) => signer.canonicalAddress());
+
     const actions = range(2).map((i) => ({
       contractAddress: "0x1234",
       encodedFunction: getDummyHex(i),

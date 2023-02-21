@@ -104,5 +104,3 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
     </div>
   );
 };
-
-export default TransactionTracker;

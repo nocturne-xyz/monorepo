@@ -5,10 +5,10 @@ import {
   formatTokenAmountUserRepr,
   getTokenDetails,
   TokenDetails,
-} from "../common";
+} from "../utils";
 import { NocturneFrontendSDK } from "../sdk";
 
-interface AssetBalancesDisplayProps {
+export interface AssetBalancesDisplayProps {
   frontendSDK?: NocturneFrontendSDK;
 }
 
@@ -93,5 +93,3 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
     </table>
   );
 };
-
-export default AssetBalancesDisplay;

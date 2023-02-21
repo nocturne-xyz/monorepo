@@ -1,12 +1,8 @@
 import { BaseProof } from "./types";
 import { BinaryPoseidonTree } from "../primitives";
-import {
-  bigintToBEPadded,
-  Note,
-  NoteTrait,
-  bigInt256ToFieldElems,
-} from "../sdk";
-import { AssetTrait } from "../sdk/asset";
+import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
+import { Note, NoteTrait } from "../note";
+import { AssetTrait } from "../asset";
 
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
@@ -133,10 +129,7 @@ export function subtreeUpdateInputsFromBatch(
   };
 }
 
-export function encodePathAndHash(
-  idx: bigint,
-  accumulatorHashHi: bigint
-): bigint {
+function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
   idx = BigInt.asUintN(256, idx);
   accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
 

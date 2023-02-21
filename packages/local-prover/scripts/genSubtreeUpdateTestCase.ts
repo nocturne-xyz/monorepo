@@ -5,7 +5,6 @@ import * as fs from "fs";
 import {
   AssetType,
   BinaryPoseidonTree,
-  NocturnePrivKey,
   NocturneSigner,
   Note,
   NoteTrait,
@@ -28,9 +27,8 @@ const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH, "utf8"));
 const writeToFixture = process.argv[2] == "--writeFixture";
 
 // Instantiate nocturne keypair and addr
-const nocturnePrivKey = new NocturnePrivKey(sk);
-const nocturneSigner = new NocturneSigner(nocturnePrivKey);
-const stealthAddr = nocturneSigner.address;
+const nocturneSigner = new NocturneSigner(sk);
+const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
 const tree = new BinaryPoseidonTree();
