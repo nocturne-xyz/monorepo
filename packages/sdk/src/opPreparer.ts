@@ -50,12 +50,8 @@ export class OpPreparer {
   ): Promise<PreSignOperation> {
     let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
 
-    const {
-      actions,
-      joinSplitRequests,
-      refundAssets,
-      executionGasLimit,
-    } = opRequest;
+    const { actions, joinSplitRequests, refundAssets, executionGasLimit } =
+      opRequest;
 
     // prepare joinSplits
     const joinSplits = (
