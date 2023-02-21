@@ -15,7 +15,7 @@ export function range(start: number, stop?: number, step = 1): number[] {
 
 export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
   const map = new Map();
-  list.forEach((item) => {
+  for (const item of list) {
     const key = keyGetter(item);
     const collection = map.get(key);
     if (!collection) {
@@ -24,7 +24,7 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
       collection.push(item);
       map.set(key, collection);
     }
-  });
+  }
 
   return Array.from(map.values());
 }
