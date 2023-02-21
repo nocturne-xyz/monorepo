@@ -200,6 +200,24 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         wallet.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
+    function testDepositNotMsgSender() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        vm.prank(ALICE);
+        token.approve(address(vault), PER_NOTE_AMOUNT);
+
+        vm.prank(BOB); // prank with BOB not ALICE
+        vm.expectRevert("Spender must be the sender");
+        depositFunds(
+            wallet,
+            ALICE,
+            address(token),
+            PER_NOTE_AMOUNT,
+            ERC20_ID,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
     function testDummyTransferSingleJoinSplit() public {
         // Alice starts with 2 * 50M tokens in vault
         SimpleERC20Token token = ERC20s[0];
