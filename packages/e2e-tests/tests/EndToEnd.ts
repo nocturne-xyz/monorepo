@@ -26,7 +26,7 @@ import {
   OperationRequestBuilder,
   queryEvents,
   JoinSplitProver,
-  proveOperation,
+  OpProver
 } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";
@@ -74,6 +74,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let notesDBBob: NotesDB;
   let nocturneContextBob: NocturneContext;
   let joinSplitProver: JoinSplitProver;
+  let opProver: OpProver
 
   beforeEach(async () => {
     docker = new Dockerode();
@@ -95,6 +96,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneContextBob,
       joinSplitProver,
     } = await setupNocturne(deployerEoa));
+    opProver = new OpProver(joinSplitProver)
 
     erc20Token = await new SimpleERC20Token__factory(deployerEoa).deploy();
     console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
@@ -170,7 +172,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Create post-proof operation with NocturneContext");
     const preSign = await nocturneContextAlice.prepareOperation(opRequest);
     const signed = nocturneContextAlice.signOperation(preSign);
-    const operation = await proveOperation(signed, joinSplitProver);
+    const operation = await opProver.proveOperation(signed);
 
     console.log("Process bundle");
     var res = await fetch(`http://localhost:3000/relay`, {

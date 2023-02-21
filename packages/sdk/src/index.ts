@@ -23,6 +23,7 @@ export {
   OperationRequestBuilder,
 } from "./operationRequest";
 
+export { NocturneContext } from "./NocturneContext";
 export { OpPreparer } from "./opPreparer";
 export { OpSigner } from "./opSigner";
 export { OpProver } from "./opProver";
