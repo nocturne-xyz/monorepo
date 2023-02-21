@@ -62,7 +62,9 @@ export async function simulateOperation(
     provenOp,
     verificationGasForOp,
     bundler,
-    { from: wallet.address }
+    {
+      from: wallet.address,
+    }
   );
   const {
     opProcessed,

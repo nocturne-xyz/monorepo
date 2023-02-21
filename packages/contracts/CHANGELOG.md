@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `verificationGasLimit` from `Operation`
 - Break shared utils for Wallet and BalanceManager into `NocturneUtils` test lib
 - Add separate `BalanceManager` unit tests (`BalanceManager.t.sol`)
 - Move designated test contracts into `test/harnesses` folder

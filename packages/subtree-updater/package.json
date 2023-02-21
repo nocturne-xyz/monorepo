@@ -24,8 +24,8 @@
   },
   "packageManager": "yarn@3.2.0",
   "dependencies": {
-    "@nocturne-xyz/contracts": "1.0.7-alpha",
-    "@nocturne-xyz/sdk": "1.0.74-alpha",
+    "@nocturne-xyz/contracts": "1.0.8-alpha",
+    "@nocturne-xyz/sdk": "1.0.76-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^9.4.1",

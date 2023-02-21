@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.74-alpha",
+  "version": "1.0.76-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -217,7 +217,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 1,
                 gasPrice: 0
             })
         );
@@ -283,7 +282,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0
             })
         );
@@ -339,7 +337,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 6,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0
             })
         );
@@ -397,7 +394,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 1,
                 gasPrice: 50
             })
         );
@@ -453,7 +449,6 @@ contract DummyWalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: 2 * GAS_PER_JOINSPLIT_VERIFY,
                 gasPrice: 50
             })
         );

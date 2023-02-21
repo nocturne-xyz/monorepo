@@ -37,7 +37,7 @@ import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
-const TOKEN_ADDRESS = "0xD4adf5B95f19ab6C6f028C325a379a45DD725BAA";
+const TOKEN_ADDRESS = "0x66a15edcC3b50a663e72F1457FFd49b9AE284dDc";
 
 const Container = styled.div`
   display: flex;
@@ -171,13 +171,13 @@ const Index = () => {
       id: ERC20_ID,
       assetType: AssetType.ERC20,
     };
+    const amount = formatTokenAmountEvmRepr(2.5, 18);
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
-        [TOKEN_ADDRESS, formatTokenAmountEvmRepr(2.5, 18)]
+        [TOKEN_ADDRESS, amount]
       );
 
-    const amount = formatTokenAmountEvmRepr(2.5, 18);
     const builder = new OperationRequestBuilder();
     const operationRequest = builder
       .unwrap(asset, amount)

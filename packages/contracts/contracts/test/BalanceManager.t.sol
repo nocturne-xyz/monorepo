@@ -245,7 +245,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
             })
         );
@@ -273,7 +272,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
             })
         );
@@ -302,7 +300,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 50
             })
         );
@@ -338,7 +335,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 3,
                 gasPrice: 50
             })
         );
@@ -374,7 +370,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 50
             })
         );
@@ -391,11 +386,9 @@ contract BalanceManagerTest is Test {
             (2 * perNoteAmount) - totalFeeReserved
         );
 
-        // Only bundler fee: 50 * (executionGas + verificationGas +
-        // handleJoinSplitGas + handleRefundGas)
-        // 50 * (500k + (2 * 100k) + (2 * 70k) + (2 * 50k)) = 47M
-        // NOTE: verification gas defaults to amount provided in op because
-        // formatDummyOperationResult just passes through verificationGas value
+        // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
+        // 50 * (500k + (2 * 170k) + (2 * 50k)) = 47M
+        // NOTE: verification gas defaults to numJoinSplits * GAS_PER_JOINSPLIT_VERIFY formatDummyOperationResult defaults to this
         OperationResult memory opResult = NocturneUtils
             .formatDummyOperationResult(op);
         uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
@@ -435,7 +428,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0 // don't reserve any gas, wallet takes up all
             })
         );
@@ -475,7 +467,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
             })
         );
@@ -508,7 +499,6 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                verificationGasLimit: GAS_PER_JOINSPLIT_VERIFY * 2,
                 gasPrice: 0
             })
         );

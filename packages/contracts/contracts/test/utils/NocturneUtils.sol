@@ -13,7 +13,6 @@ struct TransferOperationArgs {
     uint256 publicSpendPerJoinSplit;
     uint256 numJoinSplits;
     EncodedAsset[] encodedRefundAssets;
-    uint256 verificationGasLimit;
     uint256 executionGasLimit;
     uint256 gasPrice;
 }
@@ -129,7 +128,6 @@ library NocturneUtils {
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
             actions: actions,
-            verificationGasLimit: args.verificationGasLimit,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
@@ -148,7 +146,8 @@ library NocturneUtils {
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),
                 executionGas: op.executionGasLimit,
-                verificationGas: op.verificationGasLimit,
+                verificationGas: op.joinSplits.length *
+                    GAS_PER_JOINSPLIT_VERIFY,
                 numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
             });
     }

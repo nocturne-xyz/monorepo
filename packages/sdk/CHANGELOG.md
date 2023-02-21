@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `verificationGasLimit` from `Operation`
 - clean module hierarchy:
   - flatten `sdk` submodule
   - remove unnecessary exports
