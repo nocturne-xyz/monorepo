@@ -2,9 +2,9 @@ import { NocturneSignature, NocturneSigner } from "./crypto";
 import { NoteTrait } from "./note";
 import { computeOperationDigest } from "./contract";
 import {
-  PreProofJoinSplit,
+  PreSignJoinSplit,
   PreSignOperation,
-  SignedJoinSplit,
+  PreProofJoinSplit,
   SignedOperation,
 } from "./commonTypes";
 import { JoinSplitInputs } from "./proof";
@@ -20,7 +20,7 @@ export class OpSigner {
     const opDigest = computeOperationDigest(op);
     const opSig = this.signer.sign(opDigest);
 
-    const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
+    const joinSplits: PreProofJoinSplit[] = op.joinSplits.map((joinSplit) =>
       this.makePreProofJoinSplit(joinSplit, opDigest, opSig)
     );
 
@@ -28,7 +28,6 @@ export class OpSigner {
       actions,
       refundAddr,
       encodedRefundAssets,
-      verificationGasLimit,
       executionGasLimit,
       gasPrice,
       maxNumRefunds,
@@ -39,7 +38,6 @@ export class OpSigner {
       refundAddr,
       encodedRefundAssets,
       actions,
-      verificationGasLimit,
       executionGasLimit,
       gasPrice,
       maxNumRefunds,
@@ -47,10 +45,10 @@ export class OpSigner {
   }
 
   private makePreProofJoinSplit(
-    preProofJoinSplit: PreProofJoinSplit,
+    preProofJoinSplit: PreSignJoinSplit,
     opDigest: bigint,
     opSig: NocturneSignature
-  ): SignedJoinSplit {
+  ): PreProofJoinSplit {
     const {
       merkleProofA,
       merkleProofB,

@@ -1,5 +1,5 @@
 import {
-  SignedJoinSplit,
+  PreProofJoinSplit,
   SignedOperation,
   ProvenJoinSplit,
   ProvenOperation,
@@ -43,7 +43,7 @@ export class OpProver {
   }
 
   private async proveJoinSplit(
-    signedJoinSplit: SignedJoinSplit
+    signedJoinSplit: PreProofJoinSplit
   ): Promise<ProvenJoinSplit> {
     const { opDigest, proofInputs, ...baseJoinSplit } = signedJoinSplit;
     const proof = await this.prover.proveJoinSplit(proofInputs);

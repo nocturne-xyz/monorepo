@@ -12,7 +12,7 @@ import {
 } from "./utils";
 import {
   BLOCK_GAS_LIMIT,
-  PreProofJoinSplit,
+  PreSignJoinSplit,
   PreSignOperation,
 } from "./commonTypes";
 import {
@@ -95,7 +95,7 @@ export class OpPreparer {
 
   private async prepareJoinSplits(
     joinSplitRequest: JoinSplitRequest
-  ): Promise<PreProofJoinSplit[]> {
+  ): Promise<PreSignJoinSplit[]> {
     const notes = await this.gatherNotes(
       getJoinSplitRequestTotalValue(joinSplitRequest),
       joinSplitRequest.asset
@@ -177,7 +177,7 @@ export class OpPreparer {
     paymentAmount: bigint,
     amountLeftOver: bigint,
     receiver?: CanonAddress
-  ): Promise<PreProofJoinSplit[]> {
+  ): Promise<PreSignJoinSplit[]> {
     // add a dummy note if there are an odd number of notes.
     if (notes.length % 2 == 1) {
       const newAddr = this.signer.generateRandomStealthAddress();
@@ -224,7 +224,7 @@ export class OpPreparer {
     paymentAmount: bigint,
     amountToReturn: bigint,
     receiver?: CanonAddress
-  ): Promise<PreProofJoinSplit> {
+  ): Promise<PreSignJoinSplit> {
     const sender = this.signer.canonicalAddress();
     // if receiver not given, assumme the sender is the receiver
     receiver = receiver ?? sender;

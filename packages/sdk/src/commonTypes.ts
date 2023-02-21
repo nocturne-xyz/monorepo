@@ -31,7 +31,7 @@ export interface BaseJoinSplit {
   newNoteBEncrypted: EncryptedNote;
 }
 
-export interface PreProofJoinSplit extends BaseJoinSplit {
+export interface PreSignJoinSplit extends BaseJoinSplit {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -40,7 +40,7 @@ export interface PreProofJoinSplit extends BaseJoinSplit {
   merkleProofB: MerkleProofInput;
 }
 
-export interface SignedJoinSplit extends BaseJoinSplit {
+export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
 }
@@ -59,11 +59,11 @@ export interface BaseOperation {
 }
 
 export interface PreSignOperation extends BaseOperation {
-  joinSplits: PreProofJoinSplit[];
+  joinSplits: PreSignJoinSplit[];
 }
 
 export interface SignedOperation extends BaseOperation {
-  joinSplits: SignedJoinSplit[];
+  joinSplits: PreProofJoinSplit[];
 }
 
 export interface ProvenOperation extends BaseOperation {

@@ -34,7 +34,6 @@ describe("OpSigner", () => {
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
-        verificationGasLimit: 1_000_000n,
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
       })
