@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- move `signOperation` to a new class `OpSigner`
+- replace `proveOperation` with `OpProver`
+- replace `prepareOperation` with `OpPreparer` 
 - Remove `verificationGasLimit` from `Operation`
 - clean module hierarchy:
   - flatten `sdk` submodule
