@@ -6,6 +6,8 @@ export * from "./merkleProver";
 export * from "./notesManager";
 export * from "./proof";
 export * from "./utils";
+export * from "./primitives";
+export * from "./commonTypes";
 
 export { Note, IncludedNote, EncodedNote, NoteTrait } from "./note";
 export {
@@ -20,5 +22,7 @@ export {
   OperationGasParams,
   OperationRequestBuilder,
 } from "./operationRequest";
-export { proveOperation } from "./proveOperation";
-export { prepareOperation, hasEnoughBalance } from "./prepareOperation";
+
+export { OpPreparer } from "./opPreparer";
+export { OpSigner } from "./opSigner";
+export { OpProver } from "./opProver";
