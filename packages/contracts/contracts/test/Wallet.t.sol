@@ -109,14 +109,13 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
     }
 
     function depositFunds(
-        Wallet _wallet,
         address _spender,
         address _asset,
         uint256 _value,
         uint256 _id,
         StealthAddress memory _depositAddr
     ) public {
-        _wallet.depositFunds(
+        wallet.depositFunds(
             Deposit({
                 spender: _spender,
                 encodedAssetAddr: uint256(uint160(_asset)),
@@ -160,7 +159,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             vm.prank(recipient);
             if (i == depositIterations - 1 && remainder != 0) {
                 depositFunds(
-                    wallet,
                     recipient,
                     address(token),
                     remainder,
@@ -169,7 +167,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 );
             } else {
                 depositFunds(
-                    wallet,
                     recipient,
                     address(token),
                     PER_NOTE_AMOUNT,
@@ -209,7 +206,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         vm.prank(BOB); // prank with BOB not ALICE
         vm.expectRevert("Spender must be the sender");
         depositFunds(
-            wallet,
             ALICE,
             address(token),
             PER_NOTE_AMOUNT,
