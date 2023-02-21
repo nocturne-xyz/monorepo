@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix regression where key derivation was still using `wallet` keyword instead of `snap`
 - adapt to breaking changes in MM Flask
 - fix SK being derived in wrong field
 - move to monorepo
