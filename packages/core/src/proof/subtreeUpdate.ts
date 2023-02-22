@@ -1,6 +1,9 @@
 import { BaseProof } from "./types";
 import { BinaryPoseidonTree } from "../binaryPoseidonTree";
-import { bigintToBEPadded, bigInt256ToFieldElems } from "@nocturne-xyz/base-utils";
+import {
+  bigintToBEPadded,
+  bigInt256ToFieldElems,
+} from "@nocturne-xyz/base-utils";
 import { Note, NoteTrait } from "../note";
 import { AssetTrait } from "../asset";
 
