@@ -12,7 +12,7 @@
     "@nocturne-xyz/sdk#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/utils#build"
+        "@nocturne-xyz/base-utils#build"
       ]
     },
     "@nocturne-xyz/bundler#build": {

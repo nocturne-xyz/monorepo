@@ -3380,9 +3380,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/utils@workspace:packages/utils":
+"@nocturne-xyz/base-utils@workspace:packages/utils":
   version: 0.0.0-use.local
-  resolution: "@nocturne-xyz/utils@workspace:packages/utils"
+  resolution: "@nocturne-xyz/base-utils@workspace:packages/utils"
   dependencies:
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
