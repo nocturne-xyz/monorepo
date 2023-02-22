@@ -13,3 +13,4 @@ export {
   min,
   assertOrErr,
 } from "./functional";
+export { sortNotesByValue } from "./utils";

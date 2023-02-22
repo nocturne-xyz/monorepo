@@ -4,11 +4,12 @@ import { AssetWithBalance } from "./asset";
 import { NotesManager } from "./notesManager";
 import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
 import { getJoinSplitRequestTotalValue } from "./utils";
-import { prepareOperation, hasEnoughBalance } from "./prepareOperation";
+import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
 import { NotesDB } from "./db";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
+import { OpSigner } from "./opSigner";
 
 export class NocturneContext {
   readonly signer: NocturneSigner;
@@ -16,6 +17,9 @@ export class NocturneContext {
   protected notesManager: NotesManager;
   protected walletContract: Wallet;
   readonly db: NotesDB;
+
+  private opPreparer: OpPreparer;
+  private opSigner: OpSigner;
 
   constructor(
     signer: NocturneSigner,
@@ -33,6 +37,15 @@ export class NocturneContext {
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;
+
+    this.opPreparer = new OpPreparer(
+      this.db,
+      this.merkleProver,
+      this.signer,
+      this.walletContract
+    );
+
+    this.opSigner = new OpSigner(this.signer);
   }
 
   async syncNotes(): Promise<void> {
@@ -51,17 +64,11 @@ export class NocturneContext {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    return await prepareOperation(
-      opRequest,
-      this.db,
-      this.merkleProver,
-      this.signer,
-      this.walletContract
-    );
+    return await this.opPreparer.prepareOperation(opRequest);
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {
-    return this.signer.signOperation(preSignOperation);
+    return this.opSigner.signOperation(preSignOperation);
   }
 
   async getAllAssetBalances(): Promise<AssetWithBalance[]> {
@@ -81,13 +88,10 @@ export class NocturneContext {
   ): Promise<boolean> {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
-      if (
-        !(await hasEnoughBalance(
-          requestedAmount,
-          joinSplitRequest.asset,
-          this.db
-        ))
-      ) {
+      // check that the user has enough notes to cover the request
+      const notes = await this.db.getNotesFor(joinSplitRequest.asset);
+      const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+      if (balance < requestedAmount) {
         return false;
       }
     }

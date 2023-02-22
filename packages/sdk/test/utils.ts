@@ -20,7 +20,6 @@ export const shitcoin: Asset = {
   assetAddr: "0x123",
   id: 0n,
 };
-
 export const encodedShitcoin = AssetTrait.encode(shitcoin);
 
 export const ponzi: Asset = {

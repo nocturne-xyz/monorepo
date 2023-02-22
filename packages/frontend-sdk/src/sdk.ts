@@ -12,7 +12,7 @@ import {
   joinSplitPublicSignalsToArray,
   VerifyingKey,
   computeOperationDigest,
-  proveOperation,
+  OpProver
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -27,7 +27,8 @@ const VKEY_PATH = "/joinSplitVkey.json";
 export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
-  localProver: WasmJoinSplitProver;
+  joinSplitProver: WasmJoinSplitProver;
+  opProver: OpProver;
   bundlerEndpoint: string;
   walletContract: Wallet;
   vaultContractAddress: Address;
@@ -40,7 +41,9 @@ export class NocturneFrontendSDK {
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
-    this.localProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.opProver = new OpProver(this.joinSplitProver);
+
     this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
     this.vaultContractAddress = vaultContractAddress;
@@ -139,7 +142,7 @@ export class NocturneFrontendSDK {
   }
 
   async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
-    return await proveOperation(op, this.localProver);
+    return await this.opProver.proveOperation(op);
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
@@ -167,7 +170,7 @@ export class NocturneFrontendSDK {
 
     const results = await Promise.all(
       proofsWithPublicInputs.map(async (proofWithPis) => {
-        return await this.localProver.verifyJoinSplitProof(proofWithPis);
+        return await this.joinSplitProver.verifyJoinSplitProof(proofWithPis);
       })
     );
 

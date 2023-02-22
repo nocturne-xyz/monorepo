@@ -7,15 +7,7 @@ import randomBytes from "randombytes";
 import { Note, IncludedNote, NoteTrait } from "../note";
 import { Asset } from "../asset";
 import { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
-import {
-  EncryptedNote,
-  SignedJoinSplit,
-  SignedOperation,
-  PreProofJoinSplit,
-  PreSignOperation,
-} from "../commonTypes";
-import { computeOperationDigest } from "../contract";
-import { JoinSplitInputs } from "../proof";
+import { EncryptedNote } from "../commonTypes";
 import { decryptNote } from "./noteEncryption";
 import {
   SpendingKey,
@@ -144,72 +136,4 @@ export class NocturneSigner {
 
     return BabyJubJub.eq(points.h2, h2Prime);
   }
-
-  signOperation(op: PreSignOperation): SignedOperation {
-    const opDigest = computeOperationDigest(op);
-    const opSig = this.sign(opDigest);
-    const pk = this.spendPk;
-
-    const joinSplits: SignedJoinSplit[] = op.joinSplits.map((joinSplit) =>
-      makePreProofJoinSplit(joinSplit, opDigest, opSig, this.vk, pk)
-    );
-
-    const {
-      actions,
-      refundAddr,
-      encodedRefundAssets,
-      executionGasLimit,
-      gasPrice,
-      maxNumRefunds,
-    } = op;
-
-    return {
-      joinSplits,
-      refundAddr,
-      encodedRefundAssets,
-      actions,
-      executionGasLimit,
-      gasPrice,
-      maxNumRefunds,
-    };
-  }
-}
-
-function makePreProofJoinSplit(
-  preProofJoinSplit: PreProofJoinSplit,
-  opDigest: bigint,
-  opSig: NocturneSignature,
-  vk: bigint,
-  spendPk: SpendPk
-): SignedJoinSplit {
-  const {
-    merkleProofA,
-    merkleProofB,
-    oldNoteA,
-    oldNoteB,
-    newNoteA,
-    newNoteB,
-    ...baseJoinSplit
-  } = preProofJoinSplit;
-
-  const { c, z } = opSig;
-
-  const proofInputs: JoinSplitInputs = {
-    vk,
-    spendPk: [spendPk.x, spendPk.y],
-    c,
-    z,
-    merkleProofA,
-    merkleProofB,
-    operationDigest: opDigest,
-    oldNoteA: NoteTrait.encode(oldNoteA),
-    oldNoteB: NoteTrait.encode(oldNoteB),
-    newNoteA: NoteTrait.encode(newNoteA),
-    newNoteB: NoteTrait.encode(newNoteB),
-  };
-  return {
-    opDigest,
-    proofInputs,
-    ...baseJoinSplit,
-  };
 }
