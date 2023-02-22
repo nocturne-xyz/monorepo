@@ -233,17 +233,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -261,17 +264,21 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT, // only transfer 50M, other 50M for fee
+        // Only transfer 50M, other 50M for fee
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -296,17 +303,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
 
         // Unwrap 150M of token (alice has sufficient balance)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -331,17 +341,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT, // only transfer 50M, other 50M for fee
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -389,17 +402,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
         // Unwrap 150M of token (alice has sufficient balance)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -421,17 +437,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         // Attempts to unwrap 100M of token (exceeds owned)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -448,17 +467,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         // Bad root joinsplit failure type
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
             })
         );
@@ -475,17 +497,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         // Already used nullifiers failure type
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
             })
         );
@@ -502,17 +527,20 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
         // Matching nullifiers failure type
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
             })
         );
@@ -529,17 +557,16 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: 0, // not transferring anything, want to refund all
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0, // don't reserve any gas, wallet takes up all
+                action: NocturneUtils.formatTransferAction(token, BOB, 0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -571,17 +598,16 @@ contract BalanceManagerTest is Test {
         );
 
         // Dummy operation, we're only interested in refundAssets
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: joinSplitToken,
-                recipient: BOB,
-                amount: 0,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: joinSplitToken,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(refundToken, BOB, 0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -603,17 +629,20 @@ contract BalanceManagerTest is Test {
 
         // Dummy operation, we only care about the received assets which we setup
         // manually
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: joinSplitToken,
-                recipient: BOB,
-                amount: 0,
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: joinSplitToken,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    joinSplitToken,
+                    BOB,
+                    0
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );

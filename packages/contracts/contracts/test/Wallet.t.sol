@@ -222,17 +222,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -288,17 +291,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -344,17 +350,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: 4 * PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 6,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    4 * PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -395,7 +404,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
     function testProcessFailingOperationReentrancyProcessBundle() public {
         ReentrantCaller reentrantCaller = new ReentrantCaller(
-            _wallet,
+            wallet,
             ERC20s[0]
         );
     }
@@ -408,17 +417,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create operation with faulty root, will cause revert in
         // handleJoinSplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: 1 * PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
             })
         );
@@ -465,17 +477,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create operation with two joinsplits where 1st uses NF included in
         // 2nd joinsplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
             })
         );
@@ -522,17 +537,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create operation with two joinsplits where 1st uses NF included in
         // 2nd joinsplit
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: PER_NOTE_AMOUNT,
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
             })
         );
@@ -579,17 +597,20 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
         // taken up by wallet
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
-        bundle.operations[0] = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: 3 * PER_NOTE_AMOUNT, // Transfer amount exceeds withdrawn
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    3 * PER_NOTE_AMOUNT
+                ), // Transfer amount exceeds withdrawn
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );

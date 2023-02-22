@@ -12,16 +12,15 @@ enum JoinSplitsFailureType {
     MATCHING_NFS
 }
 
-struct TransferOperationArgs {
-    SimpleERC20Token token;
+struct FormatOperationArgs {
+    SimpleERC20Token joinSplitToken;
     uint256 root;
-    address recipient;
-    uint256 amount;
     uint256 publicSpendPerJoinSplit;
     uint256 numJoinSplits;
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
     uint256 gasPrice;
+    Action action;
     JoinSplitsFailureType joinSplitsFailureType;
 }
 
@@ -71,8 +70,24 @@ library NocturneUtils {
             });
     }
 
-    function formatTransferOperation(
-        TransferOperationArgs memory args
+    function formatTransferAction(
+        SimpleERC20Token token,
+        address recipient,
+        uint256 amount
+    ) public pure returns (Action memory) {
+        return
+            Action({
+                contractAddress: address(token),
+                encodedFunction: abi.encodeWithSelector(
+                    token.transfer.selector,
+                    recipient,
+                    amount
+                )
+            });
+    }
+
+    function formatOperation(
+        FormatOperationArgs memory args
     ) internal pure returns (Operation memory) {
         JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
         if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
@@ -83,15 +98,6 @@ library NocturneUtils {
                 "Must specify at least 2 joinsplits for ALREADY_USED_NF failure type"
             );
         }
-
-        Action memory transferAction = Action({
-            contractAddress: address(args.token),
-            encodedFunction: abi.encodeWithSelector(
-                args.token.transfer.selector,
-                args.recipient,
-                args.amount
-            )
-        });
 
         uint256 root = args.root;
         EncryptedNote memory newNoteAEncrypted = EncryptedNote({
@@ -119,7 +125,7 @@ library NocturneUtils {
 
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(args.token),
+            address(args.joinSplitToken),
             ERC20_ID
         );
 
@@ -162,7 +168,7 @@ library NocturneUtils {
         }
 
         Action[] memory actions = new Action[](1);
-        actions[0] = transferAction;
+        actions[0] = args.action;
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
