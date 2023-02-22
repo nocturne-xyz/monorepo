@@ -45,7 +45,3 @@ export function* iterChunks<T>(
 export function min(a: bigint, b: bigint): bigint {
   return a < b ? a : b;
 }
-
-export function assertOrErr(cond: boolean, msg?: string): void {
-  if (!cond) throw new Error(msg);
-}
