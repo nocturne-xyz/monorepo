@@ -61,5 +61,8 @@
     {
       "path": "./packages/snap"
     },
+    {
+      "path": "./packages/utils"
+    },
   ]
 }
