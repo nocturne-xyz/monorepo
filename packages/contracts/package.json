@@ -8,9 +8,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build:hardhat": "yarn build:deps && yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
+    "build:hardhat": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
     "build:foundry": "FOUNDRY_PROFILE=contracts forge build --sizes",
-    "build": "yarn build:foundry && yarn build:hardhat",
+    "build": "yarn build:deps && yarn build:foundry && yarn build:hardhat",
     "build:deps": "./install_deps.sh",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
