@@ -392,7 +392,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    // Ill-formatted operation should not be processed
     function testProcessesFailingOperationBadRoot() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
@@ -406,13 +405,13 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 token: token,
                 recipient: BOB,
                 amount: PER_NOTE_AMOUNT,
-                root: uint256(0x1234), // garbage root, fails handleJoinSplit
+                root: wallet.root(),
                 publicSpendPerJoinSplit: 1 * PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
             })
         );
 
@@ -440,6 +439,121 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].callSuccesses.length, uint256(0));
         assertEq(opResults[0].callResults.length, uint256(0));
+        assertEq(opResults[0].failureReason, "Tree root not past root");
+
+        // No tokens are lost from vault because handleJoinSplit revert stops
+        // bundler comp. Bundler expected to handle proof-related checks.
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+    }
+
+    function testProcessesFailingOperationAlreadyUsedNullifier() public {
+        // Alice starts with 2 * 50M in vault
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create operation with two joinsplits where 1st uses NF included in
+        // 2nd joinsplit
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
+            })
+        );
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](0);
+        bytes[] memory callResults = new bytes[](0);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+        assertEq(opResults[0].failureReason, "Nullifier B already used");
+
+        // No tokens are lost from vault because handleJoinSplit revert stops
+        // bundler comp. Bundler expected to handle proof-related checks.
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+    }
+
+    function testProcessesFailingOperationMatchingNullifiers() public {
+        // Alice starts with 2 * 50M in vault
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create operation with two joinsplits where 1st uses NF included in
+        // 2nd joinsplit
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
+            })
+        );
+
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](0);
+        bytes[] memory callResults = new bytes[](0);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+        assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from vault because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
