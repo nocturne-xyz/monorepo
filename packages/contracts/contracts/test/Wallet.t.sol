@@ -390,7 +390,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
     }
 
     // Ill-formatted operation should not be processed
-    function testProcessesFailingOperation() public {
+    function testProcessesFailingOperationBadRoot() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);

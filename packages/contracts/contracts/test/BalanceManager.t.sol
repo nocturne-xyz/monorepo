@@ -35,7 +35,7 @@ contract BalanceManagerTest is Test {
     address constant ALICE = address(1);
     address constant BOB = address(2);
     address constant BUNDLER = address(3);
-    uint256 constant PER_DEPOSIT_AMOUNT = uint256(1 gwei);
+    uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 75;
@@ -227,48 +227,20 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(vault)), depositAmount);
     }
 
-    function testProcessJoinSplitsNotEnoughFundsOwned() public {
-        uint256 perNoteAmount = 50_000_000;
-        SimpleERC20Token token = ERC20s[0];
-
-        // Only reserves + deposits 50M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 1);
-
-        // Attempts to unwrap 100M of token (exceeds owned)
-        Operation memory op = NocturneUtils.formatTransferOperation(
-            TransferOperationArgs({
-                token: token,
-                recipient: BOB,
-                amount: perNoteAmount,
-                root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
-                numJoinSplits: 2,
-                encodedRefundAssets: new EncodedAsset[](0),
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
-            })
-        );
-
-        // Expect revert for processing joinsplits
-        vm.expectRevert("ERC20: transfer amount exceeds balance");
-        balanceManager.processJoinSplitsReservingFee(op);
-    }
-
     function testProcessJoinSplitsGasPriceZero() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount,
+                amount: PER_NOTE_AMOUNT,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -283,20 +255,19 @@ contract BalanceManagerTest is Test {
     }
 
     function testProcessJoinSplitsReservingFeeSingleFeeNote() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount, // only transfer 50M, other 50M for fee
+                amount: PER_NOTE_AMOUNT, // only transfer 50M, other 50M for fee
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -312,26 +283,25 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * perNoteAmount) - totalFeeReserved
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved
         );
         assertEq(token.balanceOf(address(vault)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 150M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 3);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
 
         // Unwrap 150M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount,
+                amount: PER_NOTE_AMOUNT,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
@@ -347,26 +317,25 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (3 * perNoteAmount) - totalFeeReserved
+            (3 * PER_NOTE_AMOUNT) - totalFeeReserved
         );
         assertEq(token.balanceOf(address(vault)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeAndPayBundler() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatTransferOperation(
             TransferOperationArgs({
                 token: token,
                 recipient: BOB,
-                amount: perNoteAmount, // only transfer 50M, other 50M for fee
+                amount: PER_NOTE_AMOUNT, // only transfer 50M, other 50M for fee
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -383,7 +352,7 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * perNoteAmount) - totalFeeReserved
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved
         );
 
         // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
@@ -403,19 +372,75 @@ contract BalanceManagerTest is Test {
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * perNoteAmount) - onlyBundlerFee
+            (2 * PER_NOTE_AMOUNT) - onlyBundlerFee
         );
         assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
 
         // TODO: pay out subtree updater
     }
 
+    function testProcessJoinSplitsReservingFeeNotEnoughForFee() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        // Unwrap 150M of token (alice has sufficient balance)
+        Operation memory op = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
+                numJoinSplits: 3,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                gasPrice: 50
+            })
+        );
+
+        // Gas cost: 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
+        // NOTE: we only deposited 50M
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
+        assertGe(totalFeeReserved, PER_NOTE_AMOUNT);
+
+        // Expect revert due to not having enough to pay fee
+        vm.expectRevert("Too few gas tokens");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
+    function testProcessJoinSplitsNotEnoughFundsOwned() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Only reserves + deposits 50M of token
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
+
+        // Attempts to unwrap 100M of token (exceeds owned)
+        Operation memory op = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0
+            })
+        );
+
+        // Expect revert for processing joinsplits
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
     function testHandleRefundsJoinSplitsSingleAsset() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
-        reserveAndDepositFunds(ALICE, token, perNoteAmount * 2);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
         // Unwrap 100M of token
         Operation memory op = NocturneUtils.formatTransferOperation(
@@ -424,7 +449,7 @@ contract BalanceManagerTest is Test {
                 recipient: BOB,
                 amount: 0, // not transferring anything, want to refund all
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -434,17 +459,19 @@ contract BalanceManagerTest is Test {
 
         // Take up 100M tokens
         balanceManager.processJoinSplitsReservingFee(op);
-        assertEq(token.balanceOf(address(balanceManager)), (2 * perNoteAmount));
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (2 * PER_NOTE_AMOUNT)
+        );
         assertEq(token.balanceOf(address(vault)), 0);
 
         // Expect all 100M to be refunded to vault
         balanceManager.handleAllRefunds(op);
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        assertEq(token.balanceOf(address(vault)), (2 * perNoteAmount));
+        assertEq(token.balanceOf(address(vault)), (2 * PER_NOTE_AMOUNT));
     }
 
     function testHandleRefundsRefundAssetsSingleAsset() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token joinSplitToken = ERC20s[0];
         SimpleERC20Token refundToken = ERC20s[1];
 
@@ -463,7 +490,7 @@ contract BalanceManagerTest is Test {
                 recipient: BOB,
                 amount: 0,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -484,7 +511,6 @@ contract BalanceManagerTest is Test {
     }
 
     function testHandleRefundsReceivedAssets() public {
-        uint256 perNoteAmount = 50_000_000;
         SimpleERC20Token joinSplitToken = ERC20s[0];
 
         // Dummy operation, we only care about the received assets which we setup
@@ -495,7 +521,7 @@ contract BalanceManagerTest is Test {
                 recipient: BOB,
                 amount: 0,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: perNoteAmount,
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
