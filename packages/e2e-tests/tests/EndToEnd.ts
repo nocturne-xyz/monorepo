@@ -24,9 +24,9 @@ import {
   NotesDB,
   OperationRequest,
   OperationRequestBuilder,
-  queryEvents,
   JoinSplitProver,
   OpProver,
+  queryEvents,
 } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";

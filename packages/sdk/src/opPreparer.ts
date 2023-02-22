@@ -4,13 +4,9 @@ import { OperationRequest, JoinSplitRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import { Note, NoteTrait, IncludedNote } from "./note";
 import { Asset, AssetTrait } from "./asset";
-import {
-  min,
-  iterChunks,
-  getJoinSplitRequestTotalValue,
-  simulateOperation,
-  sortNotesByValue,
-} from "./utils";
+import { OpSimulator } from "./opSimulator";
+import { sortNotesByValue } from "./utils";
+import { min, iterChunks } from "@nocturne-xyz/base-utils";
 import {
   BLOCK_GAS_LIMIT,
   PreSignJoinSplit,
@@ -31,7 +27,7 @@ export class OpPreparer {
   private readonly notesDB: NotesDB;
   private readonly merkle: MerkleProver;
   private readonly signer: NocturneSigner;
-  private readonly walletContract: Wallet;
+  private readonly simulator: OpSimulator;
 
   constructor(
     notesDB: NotesDB,
@@ -42,8 +38,25 @@ export class OpPreparer {
     this.notesDB = notesDB;
     this.merkle = merkle;
     this.signer = signer;
-    this.walletContract = walletContract;
+    this.simulator = new OpSimulator(walletContract);
   }
+
+  async hasEnoughBalanceForOperationRequest(
+    opRequest: OperationRequest
+  ): Promise<boolean> {
+    for (const joinSplitRequest of opRequest.joinSplitRequests) {
+      const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
+      // check that the user has enough notes to cover the request
+      const notes = await this.notesDB.getNotesFor(joinSplitRequest.asset);
+      const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+      if (balance < requestedAmount) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
@@ -318,9 +331,8 @@ export class OpPreparer {
     op.gasPrice = op.gasPrice ?? 0n;
 
     console.log("Simulating op");
-    const result = await simulateOperation(
-      op as PreSignOperation,
-      this.walletContract
+    const result = await this.simulator.simulateOperation(
+      op as PreSignOperation
     );
     if (!result.opProcessed) {
       throw Error("Cannot estimate gas with Error: " + result.failureReason);
@@ -333,4 +345,14 @@ export class OpPreparer {
 
     return op as PreSignOperation;
   }
+}
+
+function getJoinSplitRequestTotalValue(
+  joinSplitRequest: JoinSplitRequest
+): bigint {
+  let totalVal = joinSplitRequest.unwrapValue;
+  if (joinSplitRequest.payment !== undefined) {
+    totalVal += joinSplitRequest.payment.value;
+  }
+  return totalVal;
 }

@@ -1,7 +1,7 @@
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
 import { Note } from "../note";
 import { Asset } from "../asset";
-import { assertOrErr } from "../utils";
+import { assertOrErr } from "@nocturne-xyz/base-utils";
 import { EncryptedNote } from "../commonTypes";
 import {
   AffinePoint,

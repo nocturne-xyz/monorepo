@@ -21,6 +21,7 @@
     "prettier:write": "prettier --write ./src ./test"
   },
   "dependencies": {
+    "@nocturne-xyz/base-utils": "workspace:^",
     "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",

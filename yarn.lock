@@ -3031,7 +3031,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/base-utils@workspace:packages/base-utils":
+"@nocturne-xyz/base-utils@workspace:^, @nocturne-xyz/base-utils@workspace:packages/base-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/base-utils@workspace:packages/base-utils"
   dependencies:
@@ -3248,6 +3248,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
+    "@nocturne-xyz/base-utils": "workspace:^"
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1

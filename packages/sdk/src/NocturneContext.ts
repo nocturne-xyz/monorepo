@@ -3,7 +3,6 @@ import { NocturneSigner } from "./crypto";
 import { AssetWithBalance } from "./asset";
 import { NotesManager } from "./notesManager";
 import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
-import { getJoinSplitRequestTotalValue } from "./utils";
 import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
 import { NotesDB } from "./db";
@@ -86,16 +85,6 @@ export class NocturneContext {
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
-    for (const joinSplitRequest of opRequest.joinSplitRequests) {
-      const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
-      // check that the user has enough notes to cover the request
-      const notes = await this.db.getNotesFor(joinSplitRequest.asset);
-      const balance = notes.reduce((acc, note) => acc + note.value, 0n);
-      if (balance < requestedAmount) {
-        return false;
-      }
-    }
-
-    return true;
+    return this.opPreparer.hasEnoughBalanceForOperationRequest(opRequest);
   }
 }

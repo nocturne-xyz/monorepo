@@ -1,5 +1,5 @@
 import { KVStore } from "./kvStore";
-import { numberToStringPadded } from "./utils";
+import { numberToStringPadded } from "@nocturne-xyz/base-utils";
 
 export const LEAVES_PREFIX = "LEAVES";
 
