@@ -392,7 +392,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    function testProcessesFailingOperationBadRoot() public {
+    // function testProcessFailingOperationReentrantAction() public {
+
+    // }
+
+    function testProcessFailingOperationBadRoot() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -449,7 +453,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
-    function testProcessesFailingOperationAlreadyUsedNullifier() public {
+    function testProcessFailingOperationAlreadyUsedNullifier() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -506,7 +510,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
-    function testProcessesFailingOperationMatchingNullifiers() public {
+    function testProcessFailingOperationMatchingNullifiers() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -564,7 +568,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
     }
 
     // Test failing calls
-    function testProcessesFailingAction() public {
+    function testProcessFailingAction() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 

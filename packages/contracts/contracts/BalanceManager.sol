@@ -46,12 +46,15 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        uint256 stage = reentrancyGuardStage();
+
+        // Must reject the transfer outside of an operation processing
+        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
             );
@@ -67,12 +70,15 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        uint256 stage = reentrancyGuardStage();
+
+        // Must reject the transfer outside of an operation processing
+        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
@@ -89,12 +95,15 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        uint256 stage = reentrancyGuardStage();
+
+        // Must reject the transfer outside of an operation processing
+        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             uint256 numIds = ids.length;
             for (uint256 i = 0; i < numIds; i++) {
                 _receivedAssets.push(

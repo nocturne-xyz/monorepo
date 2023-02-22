@@ -55,7 +55,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     */
     function processBundle(
         Bundle calldata bundle
-    ) external override returns (OperationResult[] memory) {
+    ) external override processBundleGuard returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
@@ -97,7 +97,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     /**
       @dev This function will only be message-called from `processBundle` and
       can only be entered once inside an Evm transaction. It will message-call
-      `executeOperation`.
+      `executeActions`.
 
       @param op an Operation
       @param bundler address of the bundler that provided the bundle
@@ -107,10 +107,10 @@ contract Wallet is IWallet, BalanceManager, Versioned {
       It is expected of `processBundle` to catch this error.
 
       @dev The gas cost of the call can be estimated in constant time given op:
-      1. The gas cost before `executeOperation` can be bounded as a function of
+      1. The gas cost before `executeActions` can be bounded as a function of
       op.joinSplits.length
-      2. `executeOperation` uses at most op.executionGasLimit
-      3. The gas cost after `executeOperation` can be bounded as a function of
+      2. `executeActions` uses at most op.executionGasLimit
+      3. The gas cost after `executeActions` can be bounded as a function of
       op.maxNumRefunds
       The bundler should estimate the gas cost functions in 1 and 3 offchain.
     */
@@ -128,7 +128,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op);
 
-        try this.executeOperation{gas: op.executionGasLimit}(op) returns (
+        try this.executeActions{gas: op.executionGasLimit}(op) returns (
             OperationResult memory result
         ) {
             opResult = result;
@@ -154,12 +154,12 @@ contract Wallet is IWallet, BalanceManager, Versioned {
       @dev This function will only be message-called from `processOperation`.
       The call gas given is the execution gas specified by the operation.
     */
-    function executeOperation(
+    function executeActions(
         Operation calldata op
     )
         external
         onlyThis
-        executeOperationGuard
+        executeActionsGuard
         returns (OperationResult memory opResult)
     {
         uint256 preExecutionGas = gasleft();
@@ -181,7 +181,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         }
 
         // Ensure number of refunds didn't exceed max specified in op.
-        // If it did, executeOperation is reverts and all action state changes
+        // If it did, executeActions is reverts and all action state changes
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");

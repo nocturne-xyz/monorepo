@@ -38,7 +38,7 @@ contract BalanceManagerTest is Test {
 
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 75;
-    uint256 constant ENTERED_EXECUTE_OPERATION = 3;
+    uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
 
     TestBalanceManager balanceManager;
     Vault vault;
@@ -100,7 +100,7 @@ contract BalanceManagerTest is Test {
         vm.store(
             address(balanceManager),
             bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_OPERATION)
+            bytes32(ENTERED_EXECUTE_ACTIONS)
         );
 
         // Token balance manager will receive
@@ -148,7 +148,7 @@ contract BalanceManagerTest is Test {
         vm.store(
             address(balanceManager),
             bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_OPERATION)
+            bytes32(ENTERED_EXECUTE_ACTIONS)
         );
 
         // Token balance manager will receive
@@ -629,7 +629,7 @@ contract BalanceManagerTest is Test {
         vm.store(
             address(balanceManager),
             bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_OPERATION)
+            bytes32(ENTERED_EXECUTE_ACTIONS)
         );
 
         // Mint and send token to balance manager
