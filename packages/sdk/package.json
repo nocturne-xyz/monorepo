@@ -24,6 +24,7 @@
     "@nocturne-xyz/base-utils": "workspace:^",
     "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/primitives": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",

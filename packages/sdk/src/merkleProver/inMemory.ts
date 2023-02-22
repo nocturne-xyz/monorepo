@@ -1,11 +1,13 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { ethers } from "ethers";
-import { Address } from "../commonTypes";
-import { BinaryPoseidonTree } from "../primitives";
+import {
+  Address,
+  NoteTrait,
+  BinaryPoseidonTree,
+} from "@nocturne-xyz/primitives";
 import { MerkleDB } from "../db";
 import { MerkleProver } from "./abstract";
-import { NoteTrait } from "../note";
 import { fetchInsertions } from "../indexing";
 
 const DEFAULT_START_BLOCK = 0;

@@ -3,12 +3,10 @@ import {
   SignedOperation,
   ProvenJoinSplit,
   ProvenOperation,
-} from "./commonTypes";
-import {
   JoinSplitProver,
   joinSplitPublicSignalsFromArray,
   packToSolidityProof,
-} from "./proof";
+} from "@nocturne-xyz/primitives";
 
 export class OpProver {
   private readonly prover: JoinSplitProver;

@@ -1,8 +1,13 @@
 import { NotesDB } from "../db";
-import { IncludedNote, NoteTrait } from "../note";
-import { NocturneSigner } from "../crypto";
-import { Asset, AssetTrait } from "../asset";
-import { BaseJoinSplit, EncryptedNote } from "../commonTypes";
+import {
+  IncludedNote,
+  NoteTrait,
+  NocturneSigner,
+  Asset,
+  AssetTrait,
+  BaseJoinSplit,
+  EncryptedNote,
+} from "@nocturne-xyz/primitives";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;

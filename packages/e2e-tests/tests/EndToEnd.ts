@@ -17,17 +17,19 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import {
-  Asset,
-  AssetType,
-  computeOperationDigest,
   NocturneContext,
   NotesDB,
   OperationRequest,
   OperationRequestBuilder,
-  JoinSplitProver,
   OpProver,
   queryEvents,
 } from "@nocturne-xyz/sdk";
+import {
+  Asset,
+  AssetType,
+  computeOperationDigest,
+  JoinSplitProver,
+} from "@nocturne-xyz/primitives";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";
 import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
