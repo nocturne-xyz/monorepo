@@ -9,6 +9,7 @@ import {
   iterChunks,
   getJoinSplitRequestTotalValue,
   simulateOperation,
+  sortNotesByValue,
 } from "./utils";
 import {
   BLOCK_GAS_LIMIT,
@@ -25,8 +26,6 @@ import {
 import { MerkleProofInput } from "./proof";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
-
-export const __private = { sortNotesByValue };
 
 export class OpPreparer {
   private readonly notesDB: NotesDB;
@@ -334,10 +333,4 @@ export class OpPreparer {
 
     return op as PreSignOperation;
   }
-}
-
-function sortNotesByValue<T extends Note>(notes: T[]): T[] {
-  return notes.sort((a, b) => {
-    return Number(a.value - b.value);
-  });
 }

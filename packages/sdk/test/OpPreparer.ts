@@ -8,7 +8,8 @@ import {
   range,
   generateRandomSpendingKey,
 } from "../src";
-import { OpPreparer, __private } from "../src/opPreparer";
+import { OpPreparer } from "../src/opPreparer";
+import { sortNotesByValue } from "../src/utils";
 import {
   stablescam,
   setup,
@@ -24,8 +25,6 @@ import {
 } from "./utils";
 
 chai.use(chaiAsPromised);
-
-const { sortNotesByValue } = __private;
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {

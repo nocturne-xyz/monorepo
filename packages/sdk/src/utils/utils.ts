@@ -5,6 +5,7 @@ import {
 } from "../commonTypes";
 import { SolidityProof } from "../proof";
 import { JoinSplitRequest } from "../operationRequest";
+import { Note } from "../note";
 
 export function getJoinSplitRequestTotalValue(
   joinSplitRequest: JoinSplitRequest
@@ -42,4 +43,10 @@ export function fakeProvenOperation(
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
   };
+}
+
+export function sortNotesByValue<T extends Note>(notes: T[]): T[] {
+  return notes.sort((a, b) => {
+    return Number(a.value - b.value);
+  });
 }
