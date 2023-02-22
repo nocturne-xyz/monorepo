@@ -37,7 +37,7 @@ contract NocturneReentrancyGuard is Initializable {
 
         _;
 
-        _operationStage = NOT_ENTERED;
+        _operationStage = ENTERED_PROCESS_BUNDLE;
     }
 
     modifier executeActionsGuard() {
