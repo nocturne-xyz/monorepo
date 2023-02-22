@@ -3031,6 +3031,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nocturne-xyz/base-utils@workspace:packages/base-utils":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/base-utils@workspace:packages/base-utils"
+  dependencies:
+    "@types/chai": ^4.3.3
+    "@types/mocha": ^10.0.0
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    chai: ^4.3.6
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    mocha: ^10.1.0
+    prettier: ^2.8.0
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
+
 "@nocturne-xyz/bundler@workspace:^, @nocturne-xyz/bundler@workspace:packages/bundler":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
