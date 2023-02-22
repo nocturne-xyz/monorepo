@@ -16,7 +16,6 @@ import {WalletUtils} from "../libs/WalletUtils.sol";
 import {Vault} from "../Vault.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
 import "./utils/NocturneUtils.sol";
-import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
@@ -244,7 +243,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -271,7 +271,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -305,7 +306,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -339,7 +341,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -396,7 +399,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -427,12 +431,94 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
         // Expect revert for processing joinsplits
         vm.expectRevert("ERC20: transfer amount exceeds balance");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
+    function testProcessJoinSplitsBadRoot() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 50M of token
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
+
+        // Bad root joinsplit failure type
+        Operation memory op = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
+            })
+        );
+
+        // Expect revert for processing joinsplits
+        vm.expectRevert("Tree root not past root");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
+    function testProcessJoinSplitsAlreadyUsedNullifier() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 50M of token
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
+
+        // Already used nullifiers failure type
+        Operation memory op = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
+            })
+        );
+
+        // Expect revert for processing joinsplits
+        vm.expectRevert("Nullifier B already used");
+        balanceManager.processJoinSplitsReservingFee(op);
+    }
+
+    function testProcessJoinSplitsMatchingNullifiers() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 50M of token
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
+
+        // Matching nullifiers failure type
+        Operation memory op = NocturneUtils.formatTransferOperation(
+            TransferOperationArgs({
+                token: token,
+                recipient: BOB,
+                amount: PER_NOTE_AMOUNT,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
+            })
+        );
+
+        // Expect revert for processing joinsplits
+        vm.expectRevert("2 nfs should !equal");
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
@@ -453,7 +539,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0 // don't reserve any gas, wallet takes up all
+                gasPrice: 0, // don't reserve any gas, wallet takes up all
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -494,7 +581,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -525,7 +613,8 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 

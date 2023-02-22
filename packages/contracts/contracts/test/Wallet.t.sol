@@ -231,7 +231,8 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -296,7 +297,8 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -351,7 +353,8 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 6,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 0
+                gasPrice: 0,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -408,7 +411,8 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
@@ -463,7 +467,8 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                gasPrice: 50
+                gasPrice: 50,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 

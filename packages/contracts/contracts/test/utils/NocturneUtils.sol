@@ -5,6 +5,13 @@ import "../../libs/Types.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 
+enum JoinSplitsFailureType {
+    NONE,
+    BAD_ROOT,
+    ALREADY_USED_NF,
+    MATCHING_NFS
+}
+
 struct TransferOperationArgs {
     SimpleERC20Token token;
     uint256 root;
@@ -15,6 +22,7 @@ struct TransferOperationArgs {
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
     uint256 gasPrice;
+    JoinSplitsFailureType joinSplitsFailureType;
 }
 
 library NocturneUtils {
@@ -66,6 +74,16 @@ library NocturneUtils {
     function formatTransferOperation(
         TransferOperationArgs memory args
     ) internal pure returns (Operation memory) {
+        JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
+        if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
+            args.root = 0x12345; // fill with garbage root
+        } else if (joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF) {
+            require(
+                args.numJoinSplits >= 2,
+                "Must specify at least 2 joinsplits for ALREADY_USED_NF failure type"
+            );
+        }
+
         Action memory transferAction = Action({
             contractAddress: address(args.token),
             encodedFunction: abi.encodeWithSelector(
@@ -105,12 +123,34 @@ library NocturneUtils {
             ERC20_ID
         );
 
+        // Setup joinsplits depending on failure type
         JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
+            uint256 nullifierA = 0;
+            uint256 nullifierB = 0;
+            if (joinSplitsFailure == JoinSplitsFailureType.MATCHING_NFS) {
+                nullifierA = uint256(2 * 0x1234);
+                nullifierB = uint256(2 * 0x1234);
+            } else if (
+                joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF &&
+                i + 2 == args.numJoinSplits
+            ) {
+                nullifierA = uint256(2 * 0x1234); // Matches last NF B
+                nullifierB = uint256(2 * i + 1);
+            } else if (
+                joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF &&
+                i + 1 == args.numJoinSplits
+            ) {
+                nullifierA = uint256(2 * i);
+                nullifierB = uint256(2 * 0x1234); // Matches 2nd to last NF A
+            } else {
+                nullifierA = uint256(2 * i);
+                nullifierB = uint256(2 * i + 1);
+            }
             joinSplits[i] = JoinSplit({
                 commitmentTreeRoot: root,
-                nullifierA: uint256(2 * i),
-                nullifierB: uint256(2 * i + 1),
+                nullifierA: nullifierA,
+                nullifierB: nullifierB,
                 newNoteACommitment: uint256(i),
                 newNoteAEncrypted: newNoteAEncrypted,
                 newNoteBCommitment: uint256(i),
