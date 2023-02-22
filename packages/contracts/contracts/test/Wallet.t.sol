@@ -15,6 +15,7 @@ import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
+import {ReentrantCaller} from "./utils/ReentrantCaller.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import "./utils/NocturneUtils.sol";
 import {Vault} from "../Vault.sol";
@@ -392,9 +393,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    // function testProcessFailingOperationReentrantAction() public {
-
-    // }
+    function testProcessFailingOperationReentrancyProcessBundle() public {
+        ReentrantCaller reentrantCaller = new ReentrantCaller(
+            _wallet,
+            ERC20s[0]
+        );
+    }
 
     function testProcessFailingOperationBadRoot() public {
         // Alice starts with 2 * 50M in vault
