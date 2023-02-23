@@ -77,7 +77,7 @@ export class NocturneContext {
   async getAllAssetBalances(): Promise<AssetWithBalance[]> {
     const notes = await this.db.getAllNotes();
     return Array.from(notes.entries()).map(([assetString, notes]) => {
-      const asset = NotesDB.parseAssetFromNoteAssetKey(assetString);
+      const asset = NotesDB.parseAssetKey(assetString);
       const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,

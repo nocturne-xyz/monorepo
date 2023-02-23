@@ -88,9 +88,27 @@ export class InMemoryKVStore implements DumpableKVStore {
     return new Promise((resolve) => resolve(this.iterRangeUntil(prefix, cond)));
   }
 
+  async getMany(keys: string[]): Promise<KV[]> {
+    const result: KV[] = [];
+    for (const key of keys) {
+      const value = await this.getString(key);
+      if (value !== undefined) {
+        result.push([key, value]);
+      }
+    }
+    return result;
+  }
+
   async putMany(kvs: KV[]): Promise<boolean> {
-    for (const kv of kvs) {
-      this.tree.set(kv[0], kv[1]);
+    for (const [key, value] of kvs) {
+      this.tree.set(key, value);
+    }
+    return true;
+  }
+
+  async removeMany(keys: string[]): Promise<boolean> {
+    for (const key of keys) {
+      this.tree.delete(key);
     }
     return true;
   }

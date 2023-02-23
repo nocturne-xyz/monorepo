@@ -270,7 +270,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const offchainChecks = async () => {
       console.log("Alice: Sync SDK notes manager post-operation");
       await nocturneContextAlice.syncNotes();
-      const updatedNotesAlice = await notesDBAlice.getNotesFor(erc20Asset)!;
+      const updatedNotesAlice = await notesDBAlice.getNotesForAsset(
+        erc20Asset
+      )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
       expect(nonZeroNotesAlice.length).to.equal(2);
@@ -292,7 +294,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       console.log("Bob: Sync SDK notes manager post-operation");
       await nocturneContextBob.syncNotes();
-      const updatedNotesBob = await notesDBBob.getNotesFor(erc20Asset)!;
+      const updatedNotesBob = await notesDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -380,11 +382,15 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       await nocturneContextAlice.syncNotes();
 
       // Alice should have a note for minted ERC721 token
-      const erc721NotesAlice = await notesDBAlice.getNotesFor(erc721Asset)!;
+      const erc721NotesAlice = await notesDBAlice.getNotesForAsset(
+        erc721Asset
+      )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
-      const erc1155NotesAlice = await notesDBAlice.getNotesFor(erc1155Asset)!;
+      const erc1155NotesAlice = await notesDBAlice.getNotesForAsset(
+        erc1155Asset
+      )!;
       expect(erc1155NotesAlice.length).to.equal(1);
     };
 

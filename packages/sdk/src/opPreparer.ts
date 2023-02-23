@@ -48,7 +48,7 @@ export class OpPreparer {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
       // check that the user has enough notes to cover the request
-      const notes = await this.notesDB.getNotesFor(joinSplitRequest.asset);
+      const notes = await this.notesDB.getNotesForAsset(joinSplitRequest.asset);
       const balance = notes.reduce((acc, note) => acc + note.value, 0n);
       if (balance < requestedAmount) {
         return false;
@@ -134,7 +134,7 @@ export class OpPreparer {
     asset: Asset
   ): Promise<IncludedNote[]> {
     // check that the user has enough notes to cover the request
-    const notes = await this.notesDB.getNotesFor(asset);
+    const notes = await this.notesDB.getNotesForAsset(asset);
     const balance = notes.reduce((acc, note) => acc + note.value, 0n);
     if (balance < requestedAmount) {
       throw new Error(
