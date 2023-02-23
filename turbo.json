@@ -9,6 +9,9 @@
     "@nocturne-xyz/deploy#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
+    "@nocturne-xyz/primitives#build": {
+      "dependsOn": ["@nocturne-xyz/base-utils#build"]
+    },
     "@nocturne-xyz/sdk#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",

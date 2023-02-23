@@ -64,5 +64,8 @@
     {
       "path": "./packages/utils"
     },
+    {
+      "path": "./packages/primitives"
+    },
   ]
 }
