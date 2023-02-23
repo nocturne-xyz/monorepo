@@ -966,31 +966,103 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         wallet.executeActions(op);
     }
 
-    // function testProcessBundleSuccessfulErc20Refunds() public {
-    //     SimpleERC20Token token = ERC20s[0];
-    //     reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+    function testProcessBundleSuccessfulErc20Refunds() public {
+        SimpleERC20Token tokenIn = ERC20s[0];
+        reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
 
-    //     TokenSwapper swapper = new TokenSwapper();
-    //     Operation memory op = NocturneUtils.formatOperation(
-    //         FormatOperationArgs({
-    //             joinSplitToken: token,
-    //             root: wallet.root(),
-    //             publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-    //             numJoinSplits: 1,
-    //             encodedRefundAssets: new EncodedAsset[](0),
-    //             executionGasLimit: DEFAULT_GAS_LIMIT,
-    //             gasPrice: 0,
-    //             action: Action({
-    //                 contractAddress: address(swapper),
-    //                 encodedFunction: abi.encodeWithSelector(
-    //                     swapper.swap.selector,
-    //                     SwapRequest({
+        TokenSwapper swapper = new TokenSwapper();
 
-    //                     })
-    //                 )
-    //             }),
-    //             joinSplitsFailureType: JoinSplitsFailureType.NONE
-    //         })
-    //     );
-    // }
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(tokenIn),
+            encodedFunction: abi.encodeWithSelector(
+                tokenIn.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20 tokens back
+        SimpleERC20Token tokenOut = ERC20s[1];
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(wallet),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(tokenIn),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT,
+                    erc20Out: address(tokenOut),
+                    erc20OutAmount: PER_NOTE_AMOUNT,
+                    erc721Out: address(0x0),
+                    erc721OutId: 0,
+                    erc1155Out: address(0x0),
+                    erc1155OutId: 0,
+                    erc1155OutAmount: 0
+                })
+            )
+        });
+
+        // Encode tokenOut as refund asset
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(tokenOut),
+            ERC20_ID
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: tokenIn,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: encodedRefundAssets,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                actions: actions,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in vault
+        assertEq(tokenIn.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
+        assertEq(tokenOut.balanceOf(address(vault)), uint256(0));
+        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        callSuccesses[0] = true;
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(2));
+        assertEq(opResults[0].callSuccesses[0], true);
+        assertEq(opResults[0].callSuccesses[1], true);
+        assertEq(opResults[0].callResults.length, uint256(2));
+
+        // Ensure 50M tokensIn in swapper, 50M tokensOut in vault
+        assertEq(tokenIn.balanceOf(address(vault)), uint256(0));
+        assertEq(tokenOut.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
+        assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
+    }
 }
