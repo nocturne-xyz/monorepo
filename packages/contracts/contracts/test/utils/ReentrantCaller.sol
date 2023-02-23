@@ -27,6 +27,7 @@ contract ReentrantCaller {
                     numJoinSplits: 6,
                     encodedRefundAssets: new EncodedAsset[](0),
                     executionGasLimit: DEFAULT_GAS_LIMIT,
+                    maxNumRefunds: 1,
                     gasPrice: 50,
                     actions: NocturneUtils.formatSingleTransferActionArray(
                         _token,

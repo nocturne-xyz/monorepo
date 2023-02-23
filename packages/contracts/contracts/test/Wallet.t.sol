@@ -25,6 +25,7 @@ import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
 import {ParseUtils} from "./utils/ParseUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
 import {Utils} from "../libs/Utils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
@@ -51,6 +52,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
+    SimpleERC1155Token[3] ERC1155s;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
 
@@ -107,6 +109,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
+            ERC1155s[i] = new SimpleERC1155Token();
         }
     }
 
@@ -231,6 +234,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -300,6 +304,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 3,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -359,6 +364,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 6,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 6,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -419,6 +425,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -479,6 +486,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -539,6 +547,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -611,6 +620,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
@@ -671,6 +681,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -702,6 +713,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
@@ -762,6 +774,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -793,6 +806,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
@@ -853,6 +867,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -920,6 +935,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -949,6 +965,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -966,7 +983,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         wallet.executeActions(op);
     }
 
-    function testProcessBundleSuccessfulErc20Refunds() public {
+    function testProcessBundleSuccessfulAllRefunds() public {
         SimpleERC20Token tokenIn = ERC20s[0];
         reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
 
@@ -984,8 +1001,14 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             )
         });
 
-        // Call swapper.swap, asking for erc20 tokens back
-        SimpleERC20Token tokenOut = ERC20s[1];
+        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        SimpleERC20Token erc20Out = ERC20s[1];
+        SimpleERC721Token erc721Out = ERC721s[1];
+        SimpleERC1155Token erc1155Out = ERC1155s[1];
+
+        uint256 erc721OutId = 0x1;
+        uint256 erc1155OutId = 0x2;
+
         actions[1] = Action({
             contractAddress: address(swapper),
             encodedFunction: abi.encodeWithSelector(
@@ -998,22 +1021,22 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                         ERC20_ID
                     ),
                     assetInAmount: PER_NOTE_AMOUNT,
-                    erc20Out: address(tokenOut),
+                    erc20Out: address(erc20Out),
                     erc20OutAmount: PER_NOTE_AMOUNT,
-                    erc721Out: address(0x0),
-                    erc721OutId: 0,
-                    erc1155Out: address(0x0),
-                    erc1155OutId: 0,
-                    erc1155OutAmount: 0
+                    erc721Out: address(erc721Out),
+                    erc721OutId: erc721OutId,
+                    erc1155Out: address(erc1155Out),
+                    erc1155OutId: erc1155OutId,
+                    erc1155OutAmount: PER_NOTE_AMOUNT
                 })
             )
         });
 
-        // Encode tokenOut as refund asset
+        // Encode erc20Out as refund asset
         EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
         encodedRefundAssets[0] = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(tokenOut),
+            address(erc20Out),
             ERC20_ID
         );
 
@@ -1026,15 +1049,21 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 numJoinSplits: 1,
                 encodedRefundAssets: encodedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
-        // Ensure 50M tokensIn in vault
+        // Ensure 50M tokensIn in vault and nothing else, swapper has 0 erc20In tokens
         assertEq(tokenIn.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
-        assertEq(tokenOut.balanceOf(address(vault)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(vault)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(vault)), uint256(0));
+        assertEq(
+            erc1155Out.balanceOf(address(vault), erc1155OutId),
+            uint256(0)
+        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         // Check OperationProcessed event
@@ -1053,6 +1082,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // Check operation result
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(2));
@@ -1060,9 +1090,16 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[1], true);
         assertEq(opResults[0].callResults.length, uint256(2));
 
-        // Ensure 50M tokensIn in swapper, 50M tokensOut in vault
+        // Ensure 50M tokensIn in swapper, and all types of refund tokens back
+        // in vault
         assertEq(tokenIn.balanceOf(address(vault)), uint256(0));
-        assertEq(tokenOut.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc721Out.balanceOf(address(vault)), uint256(1));
+        assertEq(erc721Out.ownerOf(erc721OutId), address(vault));
+        assertEq(
+            erc1155Out.balanceOf(address(vault), erc1155OutId),
+            PER_NOTE_AMOUNT
+        );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
     }
 }

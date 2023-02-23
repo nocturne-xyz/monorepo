@@ -6,6 +6,9 @@ import "./NocturneUtils.sol";
 import "../../libs/Types.sol";
 import "../tokens/ISimpleToken.sol";
 
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+
 struct SwapRequest {
     address assetInOwner;
     EncodedAsset encodedAssetIn;
@@ -19,7 +22,7 @@ struct SwapRequest {
     uint256 erc1155OutAmount;
 }
 
-contract TokenSwapper {
+contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
     function swap(SwapRequest memory request) public {
         AssetUtils.transferAssetFrom(
             request.encodedAssetIn,
@@ -62,5 +65,42 @@ contract TokenSwapper {
                 ""
             );
         }
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            (interfaceId == type(IERC721Receiver).interfaceId) ||
+            (interfaceId == type(IERC1155Receiver).interfaceId);
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256, // id
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256, // id
+        uint256, // value
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata, // ids
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 }

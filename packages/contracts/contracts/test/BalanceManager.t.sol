@@ -241,6 +241,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -273,6 +274,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -311,6 +313,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -349,6 +352,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -410,6 +414,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -445,6 +450,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -475,6 +481,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -505,6 +512,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -535,6 +543,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -565,6 +574,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0, // don't reserve any gas, wallet takes up all
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
@@ -610,6 +620,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     refundToken,
@@ -645,6 +656,7 @@ contract BalanceManagerTest is Test {
                 numJoinSplits: 2,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     joinSplitToken,

@@ -19,6 +19,7 @@ struct FormatOperationArgs {
     uint256 numJoinSplits;
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
+    uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
     JoinSplitsFailureType joinSplitsFailureType;
@@ -184,7 +185,7 @@ library NocturneUtils {
             actions: args.actions,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
+            maxNumRefunds: args.maxNumRefunds
         });
 
         return op;
