@@ -134,16 +134,18 @@ contract Wallet is
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op);
 
+        uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
             OperationResult memory result
         ) {
             opResult = result;
-        } catch (bytes memory result) {
-            // TODO: properly process this failure case
-            // TODO: properly set opResult.executionGas
-            opResult = WalletUtils.unsuccessfulOperation(op, result);
+        } catch (bytes memory reason) {
+            opResult = WalletUtils.failOperationWithReason(
+                WalletUtils.getRevertMsg(reason)
+            );
         }
         opResult.verificationGas = verificationGasForOp;
+        opResult.executionGas = preExecutionGas - gasleft();
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
@@ -168,8 +170,6 @@ contract Wallet is
         executeActionsGuard
         returns (OperationResult memory opResult)
     {
-        uint256 preExecutionGas = gasleft();
-
         uint256 numActions = op.actions.length;
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
@@ -193,8 +193,6 @@ contract Wallet is
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
 
         opResult.numRefunds = numRefundsToHandle;
-
-        opResult.executionGas = preExecutionGas - gasleft();
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions

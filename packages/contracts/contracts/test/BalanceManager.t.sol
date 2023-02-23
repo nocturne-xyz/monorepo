@@ -428,7 +428,7 @@ contract BalanceManagerTest is Test {
         // Gas cost: 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         // NOTE: we only deposited 50M
         uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
-        assertGe(totalFeeReserved, PER_NOTE_AMOUNT);
+        assertGt(totalFeeReserved, PER_NOTE_AMOUNT);
 
         // Expect revert due to not having enough to pay fee
         vm.expectRevert("Too few gas tokens");

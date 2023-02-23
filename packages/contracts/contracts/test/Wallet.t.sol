@@ -344,7 +344,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Ensure 50M left vault, 2 * 50M remains
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
@@ -404,12 +404,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
 
         // Ensure 4 * 50M left vault, 2 * 50M remains
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
 
-    function testProcessFailingOperationBadRoot() public {
+    function testProcessBundleFailureBadRoot() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -470,7 +470,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
-    function testProcessFailingOperationAlreadyUsedNullifier() public {
+    function testProcessBundleFailureAlreadyUsedNullifier() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -531,7 +531,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
-    function testProcessFailingOperationMatchingNullifiers() public {
+    function testProcessBundleFailureMatchingNullifiers() public {
         // Alice starts with 2 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -592,7 +592,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
 
-    function testProcessFailingActionReentrancyProcessBundle() public {
+    function testProcessBundleFailureReentrancyIntoProcessBundle() public {
         // Alice starts with 2 * 50M tokens in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -660,12 +660,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // because verification uses mock verifiers + small amount of gas paid
         // out for failed transfer action.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertLt(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 
-    function testProcessFailingActionReentrancyProcessOperationWalletCaller()
+    function testProcessBundleFailureReentrancyProcessOperationWalletCaller()
         public
     {
         // Alice starts with 2 * 50M tokens in vault
@@ -753,12 +753,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // because verification uses mock verifiers + small amount of gas paid
         // out for failed transfer action.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertLt(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 
-    function testProcessFailingActionReentrancyExecuteActionsWalletCaller()
+    function testProcessBundleFailureReentrancyExecuteActionsWalletCaller()
         public
     {
         // Alice starts with 2 * 50M tokens in vault
@@ -846,13 +846,13 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // because verification uses mock verifiers + small amount of gas paid
         // out for failed transfer action.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertLt(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 
     // Test failing calls
-    function testProcessFailingActionTransferNotEnoughFunds() public {
+    function testProcessBundleFailureTransferNotEnoughFundsInAction() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -918,9 +918,9 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // because verification uses mock verifiers + small amount of gas paid
         // out for failed transfer action.
         assertEq(token.balanceOf(address(wallet)), uint256(0));
-        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertLt(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 
     function testProcessOperationNotWalletCaller() public {
@@ -1101,5 +1101,133 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             PER_NOTE_AMOUNT
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
+    }
+
+    function testProcessBundleFailureTooManyRefunds() public {
+        SimpleERC20Token tokenIn = ERC20s[0];
+        reserveAndDepositFunds(ALICE, tokenIn, 2 * PER_NOTE_AMOUNT);
+
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(tokenIn),
+            encodedFunction: abi.encodeWithSelector(
+                tokenIn.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        SimpleERC20Token erc20Out = ERC20s[1];
+        SimpleERC721Token erc721Out = ERC721s[1];
+        SimpleERC1155Token erc1155Out = ERC1155s[1];
+
+        uint256 erc721OutId = 0x1;
+        uint256 erc1155OutId = 0x2;
+
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(wallet),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(tokenIn),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT,
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT,
+                    erc721Out: address(erc721Out),
+                    erc721OutId: erc721OutId,
+                    erc1155Out: address(erc1155Out),
+                    erc1155OutId: erc1155OutId,
+                    erc1155OutAmount: PER_NOTE_AMOUNT
+                })
+            )
+        });
+
+        // Encode erc20Out as refund asset
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(erc20Out),
+            ERC20_ID
+        );
+
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: tokenIn,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: encodedRefundAssets,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1, // should be 4 refund assets, 1 too few
+                gasPrice: 50,
+                actions: actions,
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Ensure 50M tokensIn in vault and nothing else, swapper has 0 erc20In tokens
+        assertEq(
+            tokenIn.balanceOf(address(vault)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(erc20Out.balanceOf(address(vault)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(vault)), uint256(0));
+        assertEq(
+            erc1155Out.balanceOf(address(vault), erc1155OutId),
+            uint256(0)
+        );
+        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
+
+        // Check OperationProcessed event emits processed = false
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        vm.prank(BOB);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // Check operation failed due to too many refunds
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].failureReason),
+                "Too many refunds"
+            )
+        );
+
+        // Vault lost some tokenIn to BOB due to bundler gas fee, but otherwise
+        // no state changes
+        assertLt(
+            tokenIn.balanceOf(address(vault)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertGt(tokenIn.balanceOf(BOB), 0);
+        assertEq(erc20Out.balanceOf(address(vault)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(vault)), uint256(0));
+        assertEq(
+            erc1155Out.balanceOf(address(vault), erc1155OutId),
+            uint256(0)
+        );
+        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
     }
 }
