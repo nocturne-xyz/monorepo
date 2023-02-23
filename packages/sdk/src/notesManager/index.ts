@@ -34,7 +34,11 @@ export abstract class NotesManager {
   private async storeNewNotesFromRefunds(
     newNotesFromRefunds: IncludedNote[]
   ): Promise<void> {
-    await this.db.storeNotes(newNotesFromRefunds);
+    const withNullifiers = newNotesFromRefunds.map((note) => ({
+      ...note,
+      nullifier: this.viewer.createNullifier(note),
+    }));
+    await this.db.storeNotesAndCommitments(withNullifiers);
   }
 
   async fetchAndStoreNewNotesFromRefunds(): Promise<void> {
@@ -50,6 +54,7 @@ export abstract class NotesManager {
   private async applyNewJoinSplits(
     newJoinSplits: JoinSplitEvent[]
   ): Promise<void> {
+    const nullifiers = [];
     for (const e of newJoinSplits) {
       const asset = AssetTrait.decode(e.joinSplit.encodedAsset);
 
@@ -66,22 +71,11 @@ export abstract class NotesManager {
         e.newNoteBIndex,
         asset
       );
+
+      nullifiers.push(e.joinSplit.nullifierA, e.joinSplit.nullifierB);
     }
 
-    const allNotesUpdated = [...(await this.db.getAllNotes()).values()].flat();
-    for (const e of newJoinSplits) {
-      // Delete nullified notes
-      for (const oldNote of allNotesUpdated) {
-        // TODO implement note indexing by nullifiers
-        const oldNullifier = this.viewer.createNullifier(oldNote);
-        if (
-          oldNullifier == e.oldNoteANullifier ||
-          oldNullifier == e.oldNoteBNullifier
-        ) {
-          await this.db.removeNote(oldNote);
-        }
-      }
-    }
+    await this.db.removeNotesByNullifier(nullifiers);
   }
 
   private async processEncryptedNote(
@@ -103,7 +97,13 @@ export abstract class NotesManager {
         newNote.value > 0n &&
         NoteTrait.toCommitment(newNote) == newNoteCommitment
       ) {
-        await this.db.storeNote(newNote);
+        // temporary kludge until we get rid of `NotesManager` in the next few PRs
+        const nullifier = this.viewer.createNullifier(newNote);
+        const newNoteWithNullifier = NoteTrait.toIncludedNoteWithNullifier(
+          newNote,
+          nullifier
+        );
+        await this.db.storeNotesAndCommitments([newNoteWithNullifier]);
       }
     }
   }

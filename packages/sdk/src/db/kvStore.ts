@@ -96,11 +96,25 @@ export abstract class KVStore {
   abstract iterPrefix(prefix: string): Promise<AsyncIterable<KV>>;
 
   /**
+   * atomically get a batch of keys from the KV store
+   * @param keys keys to get
+   * @return key-value pairs corresponding to the keys that were found
+   */
+  abstract getMany(keys: string[]): Promise<KV[]>;
+
+  /**
    * atomically put a batch of key-value pairs into the KV store
    * @param kvs key-value pairs to put
    * @return true if successful, false otherwise
    */
   abstract putMany(kvs: KV[]): Promise<boolean>;
+
+  /**
+   * atomically remove a batch of keys from the KV store
+   * @param keys keys to remove
+   * @return true if successful, false otherwise
+   */
+  abstract removeMany(keys: string[]): Promise<boolean>;
 
   /**
    * Clear entire KV store.

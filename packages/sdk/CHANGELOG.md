@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- fix db tests
+- make `NotesManager` use `removeNotesByNullifier` instead of looping through the entire DB
+- re-implement `NotesDB` to index notes by `merkleIndex`, `nullifier`, and `asset`. 
+- rename `getNotesFor` -> `getNotesForAsset`
 - make `OpPreparer` and `NotesManager` use `NocturneViewer` instead of `NocturneSigner`
 - move  `crypto`, `proof`, `note`, `asset`, and `binaryPoseidonTree`, and `commonTypes` to new package `@nocturne-xyz/primitives`
 - move `utils` module to its own package

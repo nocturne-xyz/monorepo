@@ -8,6 +8,11 @@ import {
   IncludedNote,
   Asset,
   AssetType,
+  zip,
+  NocturneViewer,
+  range,
+  NoteTrait,
+  groupBy,
 } from "../src";
 
 describe("InMemoryKVStore", async () => {
@@ -81,6 +86,36 @@ describe("InMemoryKVStore", async () => {
     expect(i).to.equal(prefixVals.length - 1);
   });
 
+  it("performs batch ops", async () => {
+    const kvs: KV[] = [
+      ["a", "1"],
+      ["b", "2"],
+      ["c", "3"],
+      ["d", "4"],
+      ["e", "5"],
+    ];
+
+    await kv.putMany(kvs);
+
+    for (const [key, value] of kvs) {
+      const val = await kv.getString(key);
+      expect(val).to.eql(value);
+    }
+
+    const gotKvs = await kv.getMany(kvs.map(([k, _]) => k));
+    for (const [[k, v], [key, value]] of zip(kvs, gotKvs)) {
+      expect(k).to.eql(key);
+      expect(v).to.eql(value);
+    }
+
+    await kv.removeMany(kvs.map(([k, _]) => k));
+
+    for (const [key, _] of kvs) {
+      const val = await kv.getString(key);
+      expect(val).to.be.undefined;
+    }
+  });
+
   it("dumps", async () => {
     const kvs: KV[] = [
       ["a", "1"],
@@ -125,6 +160,7 @@ describe("InMemoryKVStore", async () => {
 describe("NotesDB", async () => {
   const kv = new InMemoryKVStore();
   const db = new NotesDB(kv);
+  const viewer = new NocturneViewer(1n);
 
   afterEach(async () => {
     await db.kv.clear();
@@ -134,91 +170,47 @@ describe("NotesDB", async () => {
     await db.kv.close();
   });
 
-  it("Stores, gets, and removes notes", async () => {
+  it("Stores a batch of notes/commitments", async () => {
     const asset: Asset = {
       assetType: AssetType.ERC20,
       assetAddr: "0x1234",
       id: 1234n,
     };
-    const note: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
+
+    const owner = viewer.generateRandomStealthAddress();
+    // half notes, half commitments
+    const notes: IncludedNote[] = range(20).map((i) => ({
+      owner,
+      nonce: BigInt(i),
       asset,
       value: 100n,
-      merkleIndex: 6,
-    };
+      merkleIndex: i,
+    }));
 
-    await db.storeNote(note);
+    const [toBeNotes, toBeCommitmetns] = groupBy(notes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
 
-    const map = await db.getAllNotes();
-    const notesArray = map.get(NotesDB.formatNoteAssetKey(asset))!;
-    expect(notesArray).to.not.be.undefined;
-    expect(notesArray[0]).to.eql(note);
+    const nullifiers = toBeNotes.map((n) => viewer.createNullifier(n));
+    const notesWithNullfiers = zip(toBeNotes, nullifiers).map(([n, nf]) =>
+      NoteTrait.toIncludedNoteWithNullifier(n, nf)
+    );
+    const notesOrCommitments = [
+      ...notesWithNullfiers,
+      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
 
-    await db.removeNote(note);
-    const newMap = await db.getAllNotes();
-    expect(newMap.get(NotesDB.formatNoteAssetKey(asset))).to.eql(undefined);
-  });
-
-  it("Stores, gets, and removes multiple notes for same asset", async () => {
-    const asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: "0x1234",
-      id: 1234n,
-    };
-    const noteOne: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
-      asset,
-      value: 100n,
-      merkleIndex: 6,
-    };
-
-    const noteTwo: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
-      asset,
-      value: 150n,
-      merkleIndex: 7,
-    };
-
-    await db.storeNote(noteOne);
-    await db.storeNote(noteTwo);
+    await db.storeNotesAndCommitments(notesOrCommitments);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NotesDB.formatNoteAssetKey(asset))!;
+    const assetKey = NotesDB.formatAssetKey(asset);
+    const notesArray = map.get(assetKey)!;
     expect(notesArray).to.not.be.undefined;
-    expect(notesArray.length).to.equal(2);
-    expect(notesArray).to.deep.include(noteOne);
-    expect(notesArray).to.deep.include(noteTwo);
+    expect(notesArray).to.eql(toBeNotes);
 
-    const notesForAsset = await db.getNotesFor(asset);
-    expect(notesForAsset).to.not.be.undefined;
-    expect(notesForAsset.length).to.equal(2);
-    expect(notesForAsset).to.deep.include(noteOne);
-    expect(notesForAsset).to.deep.include(noteTwo);
-
-    await db.removeNote(noteOne);
+    await db.removeNotesByNullifier(nullifiers);
     const newMap = await db.getAllNotes();
-    const newNotesArray = newMap.get(NotesDB.formatNoteAssetKey(asset))!;
-    expect(notesArray).to.not.be.undefined;
-    expect(newNotesArray.length).to.eql(1);
-    expect(newNotesArray[0]).to.eql(noteTwo);
+    expect(newMap.get(assetKey)).to.eql(undefined);
   });
 });
 
