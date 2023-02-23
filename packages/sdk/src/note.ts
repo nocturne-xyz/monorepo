@@ -2,7 +2,7 @@ import { StealthAddressTrait, StealthAddress } from "./crypto";
 import { Asset, AssetTrait, EncodedAsset } from "./asset";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { sha256 } from "js-sha256";
-import { bigintToBEPadded } from "./utils";
+import { bigintToBEPadded } from "@nocturne-xyz/base-utils";
 
 export interface Note {
   owner: StealthAddress;

@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- move `utils` module to its own package
+- move `ethers` utils into `indexing` module
+- create `OpSimulator`
 - move `signOperation` to a new class `OpSigner`
 - replace `proveOperation` with `OpProver`
 - replace `prepareOperation` with `OpPreparer` 

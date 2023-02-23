@@ -2,7 +2,7 @@ export { StealthAddress, StealthAddressTrait, CanonAddress } from "./address";
 export { encryptNote } from "./noteEncryption";
 export { NocturneSigner, NocturneSignature } from "./signer";
 export {
-  generateRandomSpendingKey as generateRandomSpendingKey,
+  generateRandomSpendingKey,
   spendPkFromFromSk,
   vkFromSpendPk,
   SpendPk,

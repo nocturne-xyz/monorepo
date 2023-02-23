@@ -1,3 +1,5 @@
+export * from "@nocturne-xyz/base-utils";
+
 export * from "./contract";
 export * from "./crypto";
 export * from "./db";
@@ -5,7 +7,6 @@ export * from "./indexing";
 export * from "./merkleProver";
 export * from "./notesManager";
 export * from "./proof";
-export * from "./utils";
 export * from "./primitives";
 export * from "./commonTypes";
 

@@ -4,7 +4,7 @@ import {
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { IncludedNote } from "../note";
-import { queryEvents } from "../utils";
+import { queryEvents } from "./utils";
 import { JoinSplitEvent } from "../notesManager";
 import { AssetTrait, EncodedAsset } from "../asset";
 

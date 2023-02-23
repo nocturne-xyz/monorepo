@@ -49,7 +49,7 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
 }
 
-export interface BaseOperation {
+interface BaseOperation {
   refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
@@ -69,6 +69,8 @@ export interface SignedOperation extends BaseOperation {
 export interface ProvenOperation extends BaseOperation {
   joinSplits: ProvenJoinSplit[];
 }
+
+export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 
 export enum OperationStatus {
   QUEUED = "QUEUED",
