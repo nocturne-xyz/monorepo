@@ -94,6 +94,18 @@ export class SnapKvStore implements KVStore {
     return true;
   }
 
+  async getMany(keys: string[]): Promise<KV[]> {
+    const kv = await this.getState();
+    return await kv.getMany(keys);
+  }
+
+  async removeMany(keys: string[]): Promise<boolean> {
+    const kv = await this.getState();
+    await kv.removeMany(keys);
+    await this.flushToDisk(kv);
+    return true;
+  }
+
   async clear(): Promise<void> {
     const kv = new InMemoryKVStore();
     await this.flushToDisk(kv);
