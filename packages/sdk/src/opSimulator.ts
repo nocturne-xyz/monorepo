@@ -1,7 +1,10 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { Operation, ProvenOperation } from "./commonTypes";
-import { OperationResult } from "./contract";
-import { SolidityProof } from "./proof";
+import {
+  Operation,
+  ProvenOperation,
+  OperationResult,
+  SolidityProof,
+} from "@nocturne-xyz/primitives";
 
 export class OpSimulator {
   private readonly wallet: Wallet;

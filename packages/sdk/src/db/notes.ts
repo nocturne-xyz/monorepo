@@ -1,8 +1,14 @@
-import { AllNotes, NoteAssetKey } from "../commonTypes";
-import { Asset, AssetTrait } from "../asset";
-import { IncludedNote, NoteTrait } from "../note";
+import {
+  Asset,
+  AssetTrait,
+  IncludedNote,
+  NoteTrait,
+} from "@nocturne-xyz/primitives";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
+
+type NoteAssetKey = string; // Takes form of NOTES_<address>_<id>
+type AllNotes = Map<NoteAssetKey, IncludedNote[]>;
 
 const NOTES_PREFIX = "NOTES";
 

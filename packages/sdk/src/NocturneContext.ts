@@ -1,6 +1,10 @@
-import { SignedOperation, Address, PreSignOperation } from "./commonTypes";
-import { NocturneSigner } from "./crypto";
-import { AssetWithBalance } from "./asset";
+import {
+  SignedOperation,
+  Address,
+  PreSignOperation,
+  AssetWithBalance,
+  NocturneSigner,
+} from "@nocturne-xyz/primitives";
 import { NotesManager } from "./notesManager";
 import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";

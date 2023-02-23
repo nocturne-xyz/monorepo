@@ -4,10 +4,10 @@ import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import {
   NocturneSigner,
-  OperationRequestBuilder,
-  range,
   generateRandomSpendingKey,
-} from "../src";
+} from "@nocturne-xyz/primitives";
+import { range } from "@nocturne-xyz/base-utils";
+import { OperationRequestBuilder } from "../src";
 import { OpPreparer } from "../src/opPreparer";
 import { sortNotesByValue } from "../src/utils";
 import {

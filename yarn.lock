@@ -3244,7 +3244,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/primitives@workspace:packages/primitives":
+"@nocturne-xyz/primitives@workspace:^, @nocturne-xyz/primitives@workspace:packages/primitives":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/primitives@workspace:packages/primitives"
   dependencies:
@@ -3278,6 +3278,7 @@ __metadata:
     "@nocturne-xyz/base-utils": "workspace:^"
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/primitives": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5

@@ -1,10 +1,12 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { Address } from "../commonTypes";
+import {
+  Address,
+  IncludedNote,
+  NocturneSigner,
+} from "@nocturne-xyz/primitives";
 import { NotesDB } from "../db";
 import { NotesManager, JoinSplitEvent } from ".";
-import { NocturneSigner } from "../crypto";
-import { IncludedNote } from "../note";
 import { fetchJoinSplits, fetchNotesFromRefunds } from "../indexing";
 
 const DEFAULT_START_BLOCK = 0;

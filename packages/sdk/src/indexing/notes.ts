@@ -3,10 +3,13 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { IncludedNote } from "../note";
+import {
+  IncludedNote,
+  AssetTrait,
+  EncodedAsset,
+} from "@nocturne-xyz/primitives";
 import { queryEvents } from "./utils";
 import { JoinSplitEvent } from "../notesManager";
-import { AssetTrait, EncodedAsset } from "../asset";
 
 export async function fetchNotesFromRefunds(
   contract: Wallet,
