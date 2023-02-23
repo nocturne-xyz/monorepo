@@ -651,6 +651,180 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
 
+    function testProcessFailingActionReentrancyProcessOperationWalletCaller()
+        public
+    {
+        // Alice starts with 2 * 50M tokens in vault
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create internal op that is used when wallet calls itself
+        Operation memory internalOp = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Nest internal op into action where wallet call itself via
+        // processOperation
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 50,
+                action: Action({
+                    contractAddress: address(wallet),
+                    encodedFunction: abi.encodeWithSelector(
+                        wallet.processOperation.selector,
+                        internalOp
+                    )
+                }),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](0);
+        bytes[] memory callResults = new bytes[](0);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true, // op processed = true, as internal revert happened in action
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        // Op was processed but call result has reentry failure message
+        vm.prank(BOB);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], false);
+        assertEq(opResults[0].callResults.length, uint256(1));
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].callResults[0]),
+                "Reentry into processOperation"
+            )
+        );
+
+        // Alice lost some private balance due to bundler comp. Bob (acting as
+        // bundler) has a little bit of tokens. Can't calculate exact amount
+        // because verification uses mock verifiers + small amount of gas paid
+        // out for failed transfer action.
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+    }
+
+    function testProcessFailingActionReentrancyExecuteActionsWalletCaller()
+        public
+    {
+        // Alice starts with 2 * 50M tokens in vault
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create internal op that is used when wallet calls itself
+        Operation memory internalOp = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Nest internal op into action where wallet call itself via
+        // executeActions
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 50,
+                action: Action({
+                    contractAddress: address(wallet),
+                    encodedFunction: abi.encodeWithSelector(
+                        wallet.executeActions.selector,
+                        internalOp
+                    )
+                }),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Check OperationProcessed event
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](0);
+        bytes[] memory callResults = new bytes[](0);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            true, // op processed = true, as internal revert happened in action
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        // Op was processed but call result has reentry failure message
+        vm.prank(BOB);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(1));
+        assertEq(opResults[0].callSuccesses[0], false);
+        assertEq(opResults[0].callResults.length, uint256(1));
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].callResults[0]),
+                "Reentry into executeActions"
+            )
+        );
+
+        // Alice lost some private balance due to bundler comp. Bob (acting as
+        // bundler) has a little bit of tokens. Can't calculate exact amount
+        // because verification uses mock verifiers + small amount of gas paid
+        // out for failed transfer action.
+        assertEq(token.balanceOf(address(wallet)), uint256(0));
+        assertLe(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+    }
+
     // Test failing calls
     function testProcessFailingActionTransferNotEnoughFunds() public {
         SimpleERC20Token token = ERC20s[0];
