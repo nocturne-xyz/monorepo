@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add more tests for new `NotesDB` impl
 - fix db tests
 - make `NotesManager` use `removeNotesByNullifier` instead of looping through the entire DB
 - re-implement `NotesDB` to index notes by `merkleIndex`, `nullifier`, and `asset`. 
