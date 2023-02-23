@@ -22,20 +22,6 @@ struct SwapRequest {
 }
 
 contract TokenSwapper {
-    SimpleERC20Token _erc20;
-    SimpleERC721Token _erc721;
-    SimpleERC1155Token _erc1155;
-
-    constructor(
-        SimpleERC20Token erc20,
-        SimpleERC721Token erc721,
-        SimpleERC1155Token erc1155
-    ) {
-        _erc20 = erc20;
-        _erc721 = erc721;
-        _erc1155 = erc1155;
-    }
-
     function swap(SwapRequest memory request) public {
         AssetUtils.transferAssetFrom(
             request.encodedAssetIn,

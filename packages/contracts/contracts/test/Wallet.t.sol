@@ -16,6 +16,7 @@ import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
 import {ReentrantCaller} from "./utils/ReentrantCaller.sol";
+import {TokenSwapper, SwapRequest} from "./utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import "./utils/NocturneUtils.sol";
 import {Vault} from "../Vault.sol";
@@ -231,7 +232,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -300,7 +301,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -359,7 +360,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     4 * PER_NOTE_AMOUNT
@@ -419,7 +420,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -479,7 +480,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -539,7 +540,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -593,6 +594,14 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         );
 
         // Encode action that calls reentrant contract
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(reentrantCaller),
+            encodedFunction: abi.encodeWithSelector(
+                reentrantCaller.reentrantProcessBundle.selector
+            )
+        });
+
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -603,12 +612,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: Action({
-                    contractAddress: address(reentrantCaller),
-                    encodedFunction: abi.encodeWithSelector(
-                        reentrantCaller.reentrantProcessBundle.selector
-                    )
-                }),
+                actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -668,7 +672,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -676,6 +680,16 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
+
+        // Encode action for wallet to call itself processOperation
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(wallet),
+            encodedFunction: abi.encodeWithSelector(
+                wallet.processOperation.selector,
+                internalOp
+            )
+        });
 
         // Nest internal op into action where wallet call itself via
         // processOperation
@@ -689,13 +703,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: Action({
-                    contractAddress: address(wallet),
-                    encodedFunction: abi.encodeWithSelector(
-                        wallet.processOperation.selector,
-                        internalOp
-                    )
-                }),
+                actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -755,7 +763,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -763,6 +771,16 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
+
+        // Encode action for wallet to call itself executeActions
+        Action[] memory actions = new Action[](1);
+        actions[0] = Action({
+            contractAddress: address(wallet),
+            encodedFunction: abi.encodeWithSelector(
+                wallet.executeActions.selector,
+                internalOp
+            )
+        });
 
         // Nest internal op into action where wallet call itself via
         // executeActions
@@ -776,13 +794,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: Action({
-                    contractAddress: address(wallet),
-                    encodedFunction: abi.encodeWithSelector(
-                        wallet.executeActions.selector,
-                        internalOp
-                    )
-                }),
+                actions: actions,
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -842,7 +854,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     3 * PER_NOTE_AMOUNT
@@ -909,7 +921,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -922,7 +934,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // wallet
         vm.prank(ALICE);
         vm.expectRevert("Only the Wallet can call this");
-        OperationResult memory opResult = wallet.processOperation(op, 0, ALICE);
+        wallet.processOperation(op, 0, ALICE);
     }
 
     function testExecuteActionsNotWalletCaller() public {
@@ -938,7 +950,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -951,6 +963,34 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // wallet
         vm.prank(ALICE);
         vm.expectRevert("Only the Wallet can call this");
-        OperationResult memory opResult = wallet.executeActions(op);
+        wallet.executeActions(op);
     }
+
+    // function testProcessBundleSuccessfulErc20Refunds() public {
+    //     SimpleERC20Token token = ERC20s[0];
+    //     reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+    //     TokenSwapper swapper = new TokenSwapper();
+    //     Operation memory op = NocturneUtils.formatOperation(
+    //         FormatOperationArgs({
+    //             joinSplitToken: token,
+    //             root: wallet.root(),
+    //             publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+    //             numJoinSplits: 1,
+    //             encodedRefundAssets: new EncodedAsset[](0),
+    //             executionGasLimit: DEFAULT_GAS_LIMIT,
+    //             gasPrice: 0,
+    //             action: Action({
+    //                 contractAddress: address(swapper),
+    //                 encodedFunction: abi.encodeWithSelector(
+    //                     swapper.swap.selector,
+    //                     SwapRequest({
+
+    //                     })
+    //                 )
+    //             }),
+    //             joinSplitsFailureType: JoinSplitsFailureType.NONE
+    //         })
+    //     );
+    // }
 }

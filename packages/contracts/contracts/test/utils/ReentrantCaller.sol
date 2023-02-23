@@ -28,7 +28,7 @@ contract ReentrantCaller {
                     encodedRefundAssets: new EncodedAsset[](0),
                     executionGasLimit: DEFAULT_GAS_LIMIT,
                     gasPrice: 50,
-                    action: NocturneUtils.formatTransferAction(
+                    actions: NocturneUtils.formatSingleTransferActionArray(
                         _token,
                         address(0x0),
                         PER_NOTE_AMOUNT

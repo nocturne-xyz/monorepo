@@ -242,7 +242,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -274,7 +274,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -312,7 +312,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -350,7 +350,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -411,7 +411,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 gasPrice: 50,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -446,7 +446,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -476,7 +476,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -506,7 +506,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -536,7 +536,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
                     PER_NOTE_AMOUNT
@@ -566,7 +566,11 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0, // don't reserve any gas, wallet takes up all
-                action: NocturneUtils.formatTransferAction(token, BOB, 0),
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    0
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -607,7 +611,11 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(refundToken, BOB, 0),
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    refundToken,
+                    BOB,
+                    0
+                ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -638,7 +646,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasPrice: 0,
-                action: NocturneUtils.formatTransferAction(
+                actions: NocturneUtils.formatSingleTransferActionArray(
                     joinSplitToken,
                     BOB,
                     0

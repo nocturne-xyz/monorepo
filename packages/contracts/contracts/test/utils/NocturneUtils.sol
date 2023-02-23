@@ -20,7 +20,7 @@ struct FormatOperationArgs {
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
     uint256 gasPrice;
-    Action action;
+    Action[] actions;
     JoinSplitsFailureType joinSplitsFailureType;
 }
 
@@ -68,6 +68,16 @@ library NocturneUtils {
                 value: value,
                 depositAddr: depositAddr
             });
+    }
+
+    function formatSingleTransferActionArray(
+        SimpleERC20Token token,
+        address recipient,
+        uint256 amount
+    ) public pure returns (Action[] memory) {
+        Action[] memory actions = new Action[](1);
+        actions[0] = formatTransferAction(token, recipient, amount);
+        return actions;
     }
 
     function formatTransferAction(
@@ -167,13 +177,11 @@ library NocturneUtils {
             });
         }
 
-        Action[] memory actions = new Action[](1);
-        actions[0] = args.action;
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
-            actions: actions,
+            actions: args.actions,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
