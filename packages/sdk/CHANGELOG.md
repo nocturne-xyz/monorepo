@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `OpPreparer` and `NotesManager` use `NocturneViewer` instead of `NocturneSigner`
 - move  `crypto`, `proof`, `note`, `asset`, and `binaryPoseidonTree`, and `commonTypes` to new package `@nocturne-xyz/primitives`
 - move `utils` module to its own package
 - move `ethers` utils into `indexing` module
