@@ -637,7 +637,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
-                "Reentry into processBundle"
+                "ReentrancyGuard: reentrant call"
             )
         );
 

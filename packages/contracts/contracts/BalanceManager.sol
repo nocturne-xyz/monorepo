@@ -13,13 +13,13 @@ import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/Types.sol";
-import "./NocturneReentrancyGuard.sol";
+import "./OperationReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
     CommitmentTreeManager,
-    NocturneReentrancyGuard
+    OperationReentrancyGuard
 {
     using OperationLib for Operation;
 
@@ -35,7 +35,7 @@ contract BalanceManager is
         address joinSplitVerifier,
         address subtreeUpdateVerifier
     ) public onlyInitializing {
-        __NocturneReentrancyGuard_init();
+        __OperationReentrancyGuard_init();
         __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _vault = IVault(vault);
     }
@@ -49,7 +49,7 @@ contract BalanceManager is
         uint256 stage = reentrancyGuardStage();
 
         // Must reject the transfer outside of an operation processing
-        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
+        if (stage == NO_OPERATION_ENTERED) {
             return 0;
         }
 
@@ -73,7 +73,7 @@ contract BalanceManager is
         uint256 stage = reentrancyGuardStage();
 
         // Must reject the transfer outside of an operation processing
-        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
+        if (stage == NO_OPERATION_ENTERED) {
             return 0;
         }
 
@@ -98,7 +98,7 @@ contract BalanceManager is
         uint256 stage = reentrancyGuardStage();
 
         // Must reject the transfer outside of an operation processing
-        if (stage == NOT_ENTERED || stage == ENTERED_PROCESS_BUNDLE) {
+        if (stage == NO_OPERATION_ENTERED) {
             return 0;
         }
 

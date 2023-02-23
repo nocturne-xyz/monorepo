@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
@@ -10,7 +11,12 @@ import "./libs/Types.sol";
 import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library
-contract Wallet is IWallet, BalanceManager, Versioned {
+contract Wallet is
+    IWallet,
+    BalanceManager,
+    Versioned,
+    ReentrancyGuardUpgradeable
+{
     using OperationLib for Operation;
 
     // gap for upgrade safety
@@ -55,7 +61,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     */
     function processBundle(
         Bundle calldata bundle
-    ) external override processBundleGuard returns (OperationResult[] memory) {
+    ) external override nonReentrant returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 

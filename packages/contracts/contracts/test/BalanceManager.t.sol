@@ -38,7 +38,7 @@ contract BalanceManagerTest is Test {
 
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 75;
-    uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
+    uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
 
     TestBalanceManager balanceManager;
     Vault vault;
