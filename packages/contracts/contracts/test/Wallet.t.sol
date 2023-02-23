@@ -895,4 +895,62 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGe(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
     }
+
+    function testProcessOperationNotWalletCaller() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Attempt to call processOperation directly without ALICE as caller not
+        // wallet
+        vm.prank(ALICE);
+        vm.expectRevert("Only the Wallet can call this");
+        OperationResult memory opResult = wallet.processOperation(op, 0, ALICE);
+    }
+
+    function testExecuteActionsNotWalletCaller() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasPrice: 0,
+                action: NocturneUtils.formatTransferAction(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Attempt to call executeActions directly without ALICE as caller not
+        // wallet
+        vm.prank(ALICE);
+        vm.expectRevert("Only the Wallet can call this");
+        OperationResult memory opResult = wallet.executeActions(op);
+    }
 }
