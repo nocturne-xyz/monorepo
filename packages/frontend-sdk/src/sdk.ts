@@ -12,7 +12,7 @@ import {
   joinSplitPublicSignalsToArray,
   VerifyingKey,
   computeOperationDigest,
-  OpProver
+  OpProver,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -212,7 +212,7 @@ export class NocturneFrontendSDK {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_getAllBalances",
-        }
+        },
       },
     })) as string;
 

@@ -15,6 +15,15 @@ export interface IncludedNote extends Note {
   merkleIndex: number;
 }
 
+export interface IncludedNoteWithNullifier extends IncludedNote {
+  nullifier: bigint;
+}
+
+export interface IncludedNoteCommitment {
+  noteCommitment: bigint;
+  merkleIndex: number;
+}
+
 export interface EncodedNote {
   owner: StealthAddress;
   nonce: bigint;
@@ -24,7 +33,7 @@ export interface EncodedNote {
 }
 
 export class NoteTrait {
-  static toCommitment(note: Note): bigint {
+  static toCommitment<N extends Note>(note: N): bigint {
     const { owner, nonce, encodedAssetAddr, encodedAssetId, value } =
       NoteTrait.encode(note);
     return BigInt(
@@ -38,7 +47,24 @@ export class NoteTrait {
     );
   }
 
-  static sha256(note: Note): number[] {
+  static toIncludedCommitment<N extends IncludedNote>(
+    includedNote: N
+  ): IncludedNoteCommitment {
+    const { merkleIndex } = includedNote;
+    const noteCommitment = NoteTrait.toCommitment(includedNote);
+    return { noteCommitment, merkleIndex };
+  }
+
+  static isNoteNotCommitment<N extends Note>(
+    noteOrCommitment: N | IncludedNoteCommitment | bigint
+  ): boolean {
+    return (
+      typeof noteOrCommitment === "object" &&
+      Object.hasOwn(noteOrCommitment, "owner")
+    );
+  }
+
+  static sha256<N extends Note>(note: N): number[] {
     const noteInput = NoteTrait.encode(note);
     const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
     const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
@@ -58,14 +84,25 @@ export class NoteTrait {
     return sha256.array(preimage);
   }
 
-  static toIncludedNote(
-    { owner, nonce, asset, value }: Note,
+  static toIncludedNote<N extends Note>(
+    { owner, nonce, asset, value }: N,
     merkleIndex: number
   ): IncludedNote {
     return { owner, nonce, asset, value, merkleIndex };
   }
 
-  static encode(note: Note): EncodedNote {
+  static toIncludedNoteWithNullifier<N extends IncludedNote>(
+    { owner, nonce, asset, value, merkleIndex }: N,
+    nullifier: bigint
+  ): IncludedNoteWithNullifier {
+    return { owner, nonce, asset, value, merkleIndex, nullifier };
+  }
+
+  static toNote<N extends Note>({ owner, nonce, asset, value }: N): Note {
+    return { owner, nonce, asset, value };
+  }
+
+  static encode<N extends Note>(note: N): EncodedNote {
     const { owner, nonce, value } = note;
     const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(note.asset);
 
