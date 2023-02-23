@@ -55,12 +55,12 @@ export class NoteTrait {
     return { noteCommitment, merkleIndex };
   }
 
-  static isNoteNotCommitment<N extends Note>(
+  static isCommitment<N extends Note>(
     noteOrCommitment: N | IncludedNoteCommitment | bigint
   ): boolean {
     return (
-      typeof noteOrCommitment === "object" &&
-      Object.hasOwn(noteOrCommitment, "owner")
+      typeof noteOrCommitment === "bigint" ||
+      Object.hasOwn(noteOrCommitment, "noteCommitment")
     );
   }
 

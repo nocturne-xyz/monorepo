@@ -5,10 +5,11 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   IncludedNoteCommitment,
+  Note,
 } from "@nocturne-xyz/primitives";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
-import { numberToStringPadded } from "..";
+import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
@@ -22,22 +23,17 @@ type AllNotes = Map<AssetKey, IncludedNote[]>;
 
 export class NotesDB {
   // store the following mappings:
-  //  merkleIndex => Note | bigint (note if owned, commitment otherwise)
-  //  asset => merkleIndex[]
-  //  nullifier => merkleIndex
+  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not (i.e. it's been spent or it's not owned by the user)))
+  //  assetKey => merkleIndexKey[]
+  //  nullifierKey => merkleIndexKey
+  //
+  // where `merkleIndexKey`, `assetKey` and `nullifierKey` are as defined below by `formatIndexKey`, `formatAssetKey` and `formatNullifierKey` respectively
   public kv: KVStore;
 
   constructor(kv: KVStore) {
     this.kv = kv;
   }
 
-  /**
-   * Format an `IncludedNote` into its corresponding key in the KV store
-   * It produces a key of the form NOTES_<note.asset>_<note.id>_<sha256(note)>
-   *
-   * @param note the note to format
-   * @returns key the corresponding key for the note
-   */
   static formatIndexKey(merkleIndex: number): string {
     return `${NOTES_BY_INDEX_PREFIX}-${numberToStringPadded(
       merkleIndex,
@@ -45,14 +41,18 @@ export class NotesDB {
     )}`;
   }
 
-  static parseIndexKey(key: string): number {
-    return parseInt(key.split("-")[1]);
-  }
-
   static formatAssetKey(asset: Asset): string {
     return `${NOTES_BY_ASSET_PREFIX}-${
       asset.assetType
     }-${asset.assetAddr.toUpperCase()}-${asset.id.toString()}`;
+  }
+
+  static formatNullifierKey(nullifier: bigint): string {
+    return `${NOTES_BY_NULLIFIER_PREFIX}-${nullifier.toString()}`;
+  }
+
+  static parseIndexKey(key: string): number {
+    return parseInt(key.split("-")[1]);
   }
 
   static parseAssetKey(key: string): Asset {
@@ -64,63 +64,46 @@ export class NotesDB {
     };
   }
 
-  static formatNullifierKey(nullifier: bigint): string {
-    return `${NOTES_BY_NULLIFIER_PREFIX}-${nullifier.toString()}`;
-  }
-
   async storeNotesAndCommitments(
     notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[]
   ): Promise<void> {
-    // merkleIndex => Note
-    const baseKVs: KV[] = notesAndCommitments.map((noteOrCommitment) => {
-      if (NoteTrait.isNoteNotCommitment(noteOrCommitment)) {
-        const includedNote = noteOrCommitment as IncludedNoteWithNullifier;
-        const note = NoteTrait.toNote(includedNote);
-        return [
-          NotesDB.formatIndexKey(includedNote.merkleIndex),
-          JSON.stringify(note),
-        ];
-      } else {
-        const commitment = noteOrCommitment as IncludedNoteCommitment;
-        return [
-          NotesDB.formatIndexKey(commitment.merkleIndex),
-          commitment.noteCommitment.toString(),
-        ];
-      }
-    });
+    // partition the notes and commitments
+    const [commitmentsPartition, notesPartition] = partition(
+      notesAndCommitments,
+      NoteTrait.isCommitment
+    );
+    const commitments = commitmentsPartition as IncludedNoteCommitment[];
+    const notes = notesPartition as IncludedNoteWithNullifier[];
 
-    const notes = notesAndCommitments.filter(
-      NoteTrait.isNoteNotCommitment
-    ) as IncludedNoteWithNullifier[];
-
-    // nullifier => merkleIndex
-    const nullifierKVs: KV[] = notes.map((note) => [
-      NotesDB.formatNullifierKey(note.nullifier),
-      NotesDB.formatIndexKey(note.merkleIndex),
-    ]);
-
-    // asset => merkleIndex[]
-    const assetKVMap = new Map<AssetKey, string[]>();
-    for (const note of notes) {
-      const assetKey = NotesDB.formatAssetKey(note.asset);
-      let indexKeys = assetKVMap.get(assetKey);
-      if (!indexKeys) {
-        indexKeys = await this.getMerkleIndexKeysForAsset(note.asset);
-      }
-
-      assetKVMap.set(assetKey, [
-        ...indexKeys,
-        NotesDB.formatIndexKey(note.merkleIndex),
-      ]);
-    }
-    const assetKVs: KV[] = Array.from(assetKVMap.entries()).map(
-      ([key, value]) => [key, JSON.stringify(value)]
+    // make note and commitment KVs
+    const noteKVs: KV[] = notes.map((note) =>
+      NotesDB.makeNoteKV(note.merkleIndex, note)
+    );
+    const commitmentKVs: KV[] = commitments.map(
+      ({ merkleIndex, noteCommitment }) =>
+        NotesDB.makeCommitmentKV(merkleIndex, noteCommitment)
     );
 
-    await this.kv.putMany([...baseKVs, ...nullifierKVs, ...assetKVs]);
+    // make the nullifier => merkleIndex KV pairs
+    const nullifierKVs: KV[] = notes.map(({ merkleIndex, nullifier }) =>
+      NotesDB.makeNullifierKV(merkleIndex, nullifier)
+    );
+
+    // get the updated asset => merkleIndex[] KV pairs
+    const assetKVs = await this.getUpdatedAssetKVs(notes, (keyset, note) =>
+      keyset.add(NotesDB.formatIndexKey(note.merkleIndex))
+    );
+
+    // write them all into the KV store
+    await this.kv.putMany([
+      ...noteKVs,
+      ...commitmentKVs,
+      ...nullifierKVs,
+      ...assetKVs,
+    ]);
   }
 
-  async removeNotesByNullifier(nullifiers: bigint[]): Promise<void> {
+  async removeNotesByNullifiers(nullifiers: bigint[]): Promise<void> {
     const nfKeys = nullifiers.map((nullifier) =>
       NotesDB.formatNullifierKey(nullifier)
     );
@@ -164,6 +147,47 @@ export class NotesDB {
     }
 
     return allNotes;
+  }
+
+  private static makeCommitmentKV(merkleIndex: number, commitment: bigint): KV {
+    return [NotesDB.formatIndexKey(merkleIndex), commitment.toString()];
+  }
+
+  private static makeNoteKV<N extends Note>(merkleIndex: number, note: N): KV {
+    return [
+      NotesDB.formatIndexKey(merkleIndex),
+      JSON.stringify(NoteTrait.toNote(note)),
+    ];
+  }
+
+  private static makeNullifierKV(merkleIndex: number, nullifier: bigint): KV {
+    return [
+      NotesDB.formatNullifierKey(nullifier),
+      NotesDB.formatIndexKey(merkleIndex),
+    ];
+  }
+
+  private async getUpdatedAssetKVs<N extends IncludedNote>(
+    notes: N[],
+    update: (keyset: Set<string>, note: N) => void
+  ): Promise<KV[]> {
+    const map = new Map<AssetKey, Set<string>>();
+    for (const note of notes) {
+      const assetKey = NotesDB.formatAssetKey(note.asset);
+      let indexKeys = map.get(assetKey);
+      if (!indexKeys) {
+        indexKeys = new Set(await this.getMerkleIndexKeysForAsset(note.asset));
+      }
+
+      update(indexKeys, note);
+
+      map.set(assetKey, indexKeys);
+    }
+
+    return Array.from(map.entries()).map(([assetKey, indexKeys]) => [
+      assetKey,
+      JSON.stringify(Array.from(indexKeys)),
+    ]);
   }
 
   private async getMerkleIndexKeysForAsset(asset: Asset): Promise<string[]> {

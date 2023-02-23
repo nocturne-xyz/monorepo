@@ -75,7 +75,7 @@ export abstract class NotesManager {
       nullifiers.push(e.joinSplit.nullifierA, e.joinSplit.nullifierB);
     }
 
-    await this.db.removeNotesByNullifier(nullifiers);
+    await this.db.removeNotesByNullifiers(nullifiers);
   }
 
   private async processEncryptedNote(
