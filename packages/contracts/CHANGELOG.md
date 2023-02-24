@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- Add `Wallet` unit tests
+- Add more `BalanceManager` tests for testing joinsplit verification failures
+- Add `ForgeUtils` contract for vm expecting events
+- Add `TokenSwapper` and `ReentrantCaller` test contracts for wallet tests
+- Add interfaces for Simple tokens to be used in `TokenSwapper`
 - Remove `verificationGasLimit` from `Operation`
 - Break shared utils for Wallet and BalanceManager into `NocturneUtils` test lib
 - Add separate `BalanceManager` unit tests (`BalanceManager.t.sol`)
