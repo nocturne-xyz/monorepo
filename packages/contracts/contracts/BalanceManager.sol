@@ -46,10 +46,8 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        uint256 stage = reentrancyGuardStage();
-
         // Must reject the transfer outside of an operation processing
-        if (stage == NO_OPERATION_ENTERED) {
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
 
@@ -70,10 +68,8 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        uint256 stage = reentrancyGuardStage();
-
         // Must reject the transfer outside of an operation processing
-        if (stage == NO_OPERATION_ENTERED) {
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
 
@@ -95,10 +91,8 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        uint256 stage = reentrancyGuardStage();
-
         // Must reject the transfer outside of an operation processing
-        if (stage == NO_OPERATION_ENTERED) {
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
 

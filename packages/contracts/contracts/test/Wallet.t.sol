@@ -19,6 +19,7 @@ import {ReentrantCaller} from "./utils/ReentrantCaller.sol";
 import {TokenSwapper, SwapRequest} from "./utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
 import "./utils/NocturneUtils.sol";
+import "./utils/ForgeUtils.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
@@ -30,7 +31,7 @@ import {Utils} from "../libs/Utils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import "../libs/Types.sol";
 
-contract WalletTest is Test, ParseUtils, PoseidonDeployer {
+contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -71,14 +72,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
         JoinSplit joinSplit
-    );
-
-    event OperationProcessed(
-        uint256 indexed operationDigest,
-        bool indexed opProcessed,
-        string failureReason,
-        bool[] callSuccesses,
-        bytes[] callResults
     );
 
     function setUp() public virtual {
@@ -219,7 +212,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         );
     }
 
-    function testDummyTransferSingleJoinSplit() public {
+    function testProcessBundleTransferSingleJoinSplit() public {
         // Alice starts with 2 * 50M tokens in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
@@ -250,28 +243,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check joinsplit event
-        vm.expectEmit(true, true, false, true);
-        emit JoinSplitProcessed(
-            bundle.operations[0].joinSplits[0].nullifierA,
-            bundle.operations[0].joinSplits[0].nullifierB,
-            16, // newNoteAIndex
-            17, // newNoteBIndex
-            bundle.operations[0].joinSplits[0]
-        );
-
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = true;
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -289,7 +265,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
 
-    function testDummyTransferThreeJoinSplit() public {
+    function testProcessBundleTransferThreeJoinSplit() public {
         // Alice starts with 3 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
@@ -320,18 +296,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = true;
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -349,7 +318,7 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
 
-    function testDummyTransferSixJoinSplit() public {
+    function testProcessBundleTransferSixJoinSplit() public {
         // Alice starts with 6 * 50M in vault
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
@@ -380,18 +349,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = true;
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -441,17 +403,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "Tree root not past root"
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -502,17 +458,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "Nullifier B already used"
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -563,17 +513,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "2 nfs should !equal"
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -627,17 +571,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true, // op processed = true, as internal revert happened in action
-            failureReason,
-            callSuccesses,
-            callResults
+        // op processed = true, as internal revert happened in action
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -720,17 +659,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true, // op processed = true, as internal revert happened in action
-            failureReason,
-            callSuccesses,
-            callResults
+        // op processed = true, as internal revert happened in action
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -813,17 +747,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
             })
         );
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](0);
-        bytes[] memory callResults = new bytes[](0);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true, // op processed = true, as internal revert happened in action
-            failureReason,
-            callSuccesses,
-            callResults
+        // op processed = true, as internal revert happened in action
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -883,18 +812,12 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = false;
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true,
-            failureReason,
-            callSuccesses,
-            callResults
+        // op processed = true, as internal revert happened in action
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         // Use Bob as bundler for this call
@@ -921,66 +844,6 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertLt(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
-    }
-
-    function testProcessOperationNotWalletCaller() public {
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
-
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitToken: token,
-                root: wallet.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
-                encodedRefundAssets: new EncodedAsset[](0),
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
-                gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
-            })
-        );
-
-        // Attempt to call processOperation directly without ALICE as caller not
-        // wallet
-        vm.prank(ALICE);
-        vm.expectRevert("Only the Wallet can call this");
-        wallet.processOperation(op, 0, ALICE);
-    }
-
-    function testExecuteActionsNotWalletCaller() public {
-        SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
-
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitToken: token,
-                root: wallet.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
-                encodedRefundAssets: new EncodedAsset[](0),
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
-                gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
-            })
-        );
-
-        // Attempt to call executeActions directly without ALICE as caller not
-        // wallet
-        vm.prank(ALICE);
-        vm.expectRevert("Only the Wallet can call this");
-        wallet.executeActions(op);
     }
 
     function testProcessBundleSuccessfulAllRefunds() public {
@@ -1066,18 +929,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
-        // Check OperationProcessed event
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = true;
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            true,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: true,
+                failureReason: ""
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1190,16 +1046,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         // Check OperationProcessed event emits processed = false
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "Too many refunds"
+            })
         );
 
         vm.prank(BOB);
@@ -1262,16 +1113,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), 0);
 
         // Check OperationProcessed event emits processed = false
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "Too few gas tokens"
+            })
         );
 
         vm.prank(BOB);
@@ -1322,16 +1168,11 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), 0);
 
         // Check OperationProcessed event emits processed = false
-        vm.expectEmit(false, true, false, false);
-        bool[] memory callSuccesses = new bool[](1);
-        bytes[] memory callResults = new bytes[](1);
-        string memory failureReason;
-        emit OperationProcessed(
-            uint256(0),
-            false,
-            failureReason,
-            callSuccesses,
-            callResults
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                wasProcessed: false,
+                failureReason: "Transaction reverted silently"
+            })
         );
 
         vm.prank(ALICE);
@@ -1344,5 +1185,65 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(vault)), 2 * PER_NOTE_AMOUNT);
         assertGt(token.balanceOf(address(ALICE)), 0);
+    }
+
+    function testProcessOperationNotWalletCaller() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Attempt to call processOperation directly without ALICE as caller not
+        // wallet
+        vm.prank(ALICE);
+        vm.expectRevert("Only the Wallet can call this");
+        wallet.processOperation(op, 0, ALICE);
+    }
+
+    function testExecuteActionsNotWalletCaller() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        // Attempt to call executeActions directly without ALICE as caller not
+        // wallet
+        vm.prank(ALICE);
+        vm.expectRevert("Only the Wallet can call this");
+        wallet.executeActions(op);
     }
 }

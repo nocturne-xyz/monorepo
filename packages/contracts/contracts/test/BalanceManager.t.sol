@@ -435,7 +435,7 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
-    function testProcessJoinSplitsNotEnoughFundsOwned() public {
+    function testProcessJoinSplitsNotEnoughFundsOwnedForTransfer() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Only reserves + deposits 50M of token
