@@ -252,6 +252,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -305,6 +306,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -358,6 +360,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -412,10 +415,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].callSuccesses.length, uint256(0));
-        assertEq(opResults[0].callResults.length, uint256(0));
         assertEq(opResults[0].failureReason, "Tree root not past root");
 
         // No tokens are lost from vault because handleJoinSplit revert stops
@@ -467,10 +469,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].callSuccesses.length, uint256(0));
-        assertEq(opResults[0].callResults.length, uint256(0));
         assertEq(opResults[0].failureReason, "Nullifier B already used");
 
         // No tokens are lost from vault because handleJoinSplit revert stops
@@ -522,10 +523,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].callSuccesses.length, uint256(0));
-        assertEq(opResults[0].callResults.length, uint256(0));
         assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from vault because handleJoinSplit revert stops
@@ -582,6 +582,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Op was processed but call result has reentry failure message
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -670,6 +672,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Op was processed but call result has reentry failure message
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -758,6 +762,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Op was processed but call result has reentry failure message
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -824,6 +830,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
+        // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
@@ -938,7 +945,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        // Check operation result
+        // One op, processed = true, approve call and swap call both succeeded
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].callSuccesses.length, uint256(2));
@@ -1056,7 +1063,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        // Check operation failed due to too many refunds
+        // One op, processed = false, call[0] failed (too many refunds)
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assert(
@@ -1123,7 +1130,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        // Check operation failed due to too many refunds
+        // One op, processed = true, call[0] failed (too few gas tokens)
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assert(
@@ -1178,9 +1185,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        // Check operation failed due to too many refunds
+        // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].failureReason, "Transaction reverted silently");
 
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(vault)), 2 * PER_NOTE_AMOUNT);
