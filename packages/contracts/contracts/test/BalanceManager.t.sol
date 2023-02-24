@@ -405,7 +405,7 @@ contract BalanceManagerTest is Test {
         // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        // Unwrap 150M of token (alice has sufficient balance)
+        // Unwrap 50M, not enough for bundler comp with 3 joinsplits (62.5M)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,

@@ -1230,4 +1230,119 @@ contract WalletTest is Test, ParseUtils, PoseidonDeployer {
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
     }
+
+    function testProcessBundleFailureNotEnoughBundlerComp() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
+
+        // Unwrap 50M, not enough for bundler comp with 3 joinsplits (62.5M)
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
+                numJoinSplits: 3,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                maxNumRefunds: 1,
+                gasPrice: 50,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        assertEq(token.balanceOf(address(vault)), PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(BOB)), 0);
+
+        // Check OperationProcessed event emits processed = false
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        vm.prank(BOB);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // Check operation failed due to too many refunds
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].failureReason),
+                "Too few gas tokens"
+            )
+        );
+
+        // No balances changed, bundler not compensated for missing this check
+        assertEq(token.balanceOf(address(vault)), PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(BOB)), 0);
+    }
+
+    function testProcessBundleFailureOOG() public {
+        // Alice starts with 2 * 50M tokens in vault
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create operation low executionGasLimit (not enough for transfer)
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                root: wallet.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: 100, // not enough gas for transfer
+                maxNumRefunds: 1,
+                gasPrice: 50,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        assertEq(token.balanceOf(address(vault)), 2 * PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(BOB)), 0);
+
+        // Check OperationProcessed event emits processed = false
+        vm.expectEmit(false, true, false, false);
+        bool[] memory callSuccesses = new bool[](1);
+        bytes[] memory callResults = new bytes[](1);
+        string memory failureReason;
+        emit OperationProcessed(
+            uint256(0),
+            false,
+            failureReason,
+            callSuccesses,
+            callResults
+        );
+
+        vm.prank(ALICE);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // Check operation failed due to too many refunds
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+
+        // ALICE (bundler) was still paid
+        assertLt(token.balanceOf(address(vault)), 2 * PER_NOTE_AMOUNT);
+        assertGt(token.balanceOf(address(ALICE)), 0);
+    }
 }
