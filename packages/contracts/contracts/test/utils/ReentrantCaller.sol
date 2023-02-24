@@ -12,6 +12,11 @@ contract ReentrantCaller {
     uint256 public constant PER_NOTE_AMOUNT = 50_000_000;
     uint256 public constant DEFAULT_GAS_LIMIT = 500_000;
 
+    modifier onlyWallet() {
+        require(msg.sender == address(_wallet), "Only wallet");
+        _;
+    }
+
     constructor(Wallet wallet, SimpleERC20Token token) {
         _wallet = wallet;
         _token = token;
@@ -39,19 +44,19 @@ contract ReentrantCaller {
             );
     }
 
-    function reentrantProcessBundle() external {
+    function reentrantProcessBundle() external onlyWallet {
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatOperation();
         _wallet.processBundle(bundle);
     }
 
-    function reentrantProcessOperation() external {
+    function reentrantProcessOperation() external onlyWallet {
         Operation memory op = formatOperation();
         _wallet.processOperation(op, 0, address(0x0));
     }
 
-    function reentrantExecuteActions() external {
+    function reentrantExecuteActions() external onlyWallet {
         Operation memory op = formatOperation();
         _wallet.executeActions(op);
     }
