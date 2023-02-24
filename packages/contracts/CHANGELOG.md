@@ -2,7 +2,14 @@
 
 ### Unreleased
 
+- Make `OperationReentrancyGuard` only for op processing/execution, use OZ `ReentrancyGuardUpgradable` for `processBundle` (the only actually exposed method for wallet)
 - Add `Wallet` unit tests
+  - Reentrancy from actions
+  - In-action failure cases (call failure)
+  - Pre-action failure cases (while processing joinsplits, not enough bundler comp)
+  - Access control for `processOperation` and `executeActions`
+  - OOG gas test
+  - E2E tests with receiving assets from `TokenSwapper` test contract
 - Add more `BalanceManager` tests for testing joinsplit verification failures
 - Add `ForgeUtils` contract for vm expecting events
 - Add `TokenSwapper` and `ReentrantCaller` test contracts for wallet tests
