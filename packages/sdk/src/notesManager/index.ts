@@ -2,7 +2,7 @@ import { NotesDB } from "../db";
 import {
   IncludedNote,
   NoteTrait,
-  NocturneSigner,
+  NocturneViewer,
   Asset,
   AssetTrait,
   BaseJoinSplit,
@@ -19,11 +19,11 @@ export interface JoinSplitEvent {
 
 export abstract class NotesManager {
   protected db: NotesDB;
-  protected signer: NocturneSigner;
+  protected viewer: NocturneViewer;
 
-  constructor(db: NotesDB, signer: NocturneSigner) {
+  constructor(db: NotesDB, viewer: NocturneViewer) {
     this.db = db;
-    this.signer = signer;
+    this.viewer = viewer;
   }
 
   protected abstract fetchNotesFromRefunds(): Promise<IncludedNote[]>;
@@ -40,7 +40,7 @@ export abstract class NotesManager {
   async fetchAndStoreNewNotesFromRefunds(): Promise<void> {
     const newNotes = await this.fetchNotesFromRefunds();
     const ownedNotes = newNotes.filter((refund) => {
-      return this.signer.isOwnAddress(refund.owner);
+      return this.viewer.isOwnAddress(refund.owner);
     });
     console.log("[Refunds] Owned notes:", ownedNotes);
     await this.storeNewNotesFromRefunds(ownedNotes);
@@ -73,7 +73,7 @@ export abstract class NotesManager {
       // Delete nullified notes
       for (const oldNote of allNotesUpdated) {
         // TODO implement note indexing by nullifiers
-        const oldNullifier = this.signer.createNullifier(oldNote);
+        const oldNullifier = this.viewer.createNullifier(oldNote);
         if (
           oldNullifier == e.oldNoteANullifier ||
           oldNullifier == e.oldNoteBNullifier
@@ -90,8 +90,8 @@ export abstract class NotesManager {
     newNoteIndex: number,
     asset: Asset
   ): Promise<void> {
-    if (this.signer.isOwnAddress(newEncryptedNote.owner)) {
-      const newNote = this.signer.getNoteFromEncryptedNote(
+    if (this.viewer.isOwnAddress(newEncryptedNote.owner)) {
+      const newNote = this.viewer.getNoteFromEncryptedNote(
         newEncryptedNote,
         newNoteIndex,
         asset

@@ -12,7 +12,7 @@ import {
   AssetTrait,
   PreSignOperation,
   MerkleProofInput,
-  NocturneSigner,
+  NocturneViewer,
   CanonAddress,
   StealthAddressTrait,
   encryptNote,
@@ -27,18 +27,18 @@ export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 export class OpPreparer {
   private readonly notesDB: NotesDB;
   private readonly merkle: MerkleProver;
-  private readonly signer: NocturneSigner;
+  private readonly viewer: NocturneViewer;
   private readonly simulator: OpSimulator;
 
   constructor(
     notesDB: NotesDB,
     merkle: MerkleProver,
-    signer: NocturneSigner,
+    viewer: NocturneViewer,
     walletContract: Wallet
   ) {
     this.notesDB = notesDB;
     this.merkle = merkle;
-    this.signer = signer;
+    this.viewer = viewer;
     this.simulator = new OpSimulator(walletContract);
   }
 
@@ -78,7 +78,7 @@ export class OpPreparer {
 
     // defaults
     // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-    refundAddr = refundAddr ?? this.signer.generateRandomStealthAddress();
+    refundAddr = refundAddr ?? this.viewer.generateRandomStealthAddress();
     gasPrice = gasPrice ?? 0n;
     maxNumRefunds =
       maxNumRefunds ??
@@ -193,7 +193,7 @@ export class OpPreparer {
   ): Promise<PreSignJoinSplit[]> {
     // add a dummy note if there are an odd number of notes.
     if (notes.length % 2 == 1) {
-      const newAddr = this.signer.generateRandomStealthAddress();
+      const newAddr = this.viewer.generateRandomStealthAddress();
       const nonce = randomBigInt();
       notes.push({
         owner: newAddr,
@@ -238,7 +238,7 @@ export class OpPreparer {
     amountToReturn: bigint,
     receiver?: CanonAddress
   ): Promise<PreSignJoinSplit> {
-    const sender = this.signer.canonicalAddress();
+    const sender = this.viewer.canonicalAddress();
     // if receiver not given, assumme the sender is the receiver
     receiver = receiver ?? sender;
 
@@ -248,13 +248,13 @@ export class OpPreparer {
     const totalValue = oldNoteA.value + oldNoteB.value;
     const publicSpend = totalValue - amountToReturn - paymentAmount;
 
-    const nullifierA = this.signer.createNullifier(oldNoteA);
-    const nullifierB = this.signer.createNullifier(oldNoteB);
+    const nullifierA = this.viewer.createNullifier(oldNoteA);
+    const nullifierB = this.viewer.createNullifier(oldNoteB);
 
     // first note contains the leftovers - return to sender
     const newNoteA: Note = {
       owner: StealthAddressTrait.fromCanonAddress(sender),
-      nonce: this.signer.generateNewNonce(nullifierA),
+      nonce: this.viewer.generateNewNonce(nullifierA),
       asset: oldNoteA.asset,
       value: amountToReturn,
     };
@@ -262,7 +262,7 @@ export class OpPreparer {
     // the second note contains the confidential payment
     const newNoteB: Note = {
       owner: StealthAddressTrait.fromCanonAddress(receiver),
-      nonce: this.signer.generateNewNonce(nullifierB),
+      nonce: this.viewer.generateNewNonce(nullifierB),
       asset: oldNoteA.asset,
       value: paymentAmount,
     };

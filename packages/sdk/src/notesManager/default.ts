@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import {
   Address,
   IncludedNote,
-  NocturneSigner,
+  NocturneViewer,
 } from "@nocturne-xyz/primitives";
 import { NotesDB } from "../db";
 import { NotesManager, JoinSplitEvent } from ".";
@@ -28,12 +28,12 @@ export class DefaultNotesManager extends NotesManager {
 
   constructor(
     db: NotesDB,
-    signer: NocturneSigner,
+    viewer: NocturneViewer,
     walletAddress: Address,
     provider: ethers.providers.Provider,
     opts?: DefaultNotesManagerOpts
   ) {
-    super(db, signer);
+    super(db, viewer);
     this.provider = provider;
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
     this.startBlock = opts?.startBlock ?? DEFAULT_START_BLOCK;
