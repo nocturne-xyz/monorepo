@@ -127,7 +127,7 @@ contract BalanceManagerTest is Test {
         assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
     }
 
-    function testOnErc721ReceivedNotEntered() public {
+    function testOnErc721ReceivedFailureNotEntered() public {
         // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
 
         // Token balance manager will receive
@@ -187,7 +187,7 @@ contract BalanceManagerTest is Test {
         assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
     }
 
-    function testOnErc1155ReceivedNotEntered() public {
+    function testOnErc1155FailureReceivedNotEntered() public {
         // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
 
         // Token balance manager will attempt to receive
@@ -243,11 +243,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -264,8 +260,9 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
-        // Unwrap 100M of token (alice has sufficient balance)
-        // Only transfer 50M, other 50M for fee
+        // Unwrap 100M of token
+        // Transfer 50M tokens via action and offer a gas price of 50 (see total
+        // fee below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -276,15 +273,12 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
+        // gasPrice * (providedExecutionGas + gasPerJoinSplit + gasPerRefund)
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
         uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
@@ -304,7 +298,7 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 150M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
 
-        // Unwrap 150M of token (alice has sufficient balance)
+        // Unwrapping 150M, transferring 50M via action, and setting gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -315,15 +309,12 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
                 gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
+        // gasPrice * (executionGas + joinSplitGas + refundGas)
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
@@ -343,7 +334,7 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
-        // Unwrap 100M of token (alice has sufficient balance)
+        // Unwrapping 100M, transferring 50M via action, and setting gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -354,16 +345,12 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
-        // 50 * (executionGas + (2 * estJoinSplitGas) + (2 * refundGas))
+        // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
         uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
 
@@ -399,13 +386,14 @@ contract BalanceManagerTest is Test {
         // TODO: pay out subtree updater
     }
 
-    function testProcessJoinSplitsReservingFeeNotEnoughForFee() public {
+    function testProcessJoinSplitsFailureNotEnoughForFee() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        // Unwrap 50M, not enough for bundler comp with 3 joinsplits (62.5M)
+        // Unwrap 50M, not enough for bundler comp with 3 joinsplits and gas
+        // price of 50. Attempt to transfer of 50M to bob will fail as result.
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -416,16 +404,13 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
                 gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
-        // Gas cost: 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
+        // gasPrice * (executionGas + joinSplitGas + refundGas)
+        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         // NOTE: we only deposited 50M
         uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
         assertGt(totalFeeReserved, PER_NOTE_AMOUNT);
@@ -435,7 +420,7 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
-    function testProcessJoinSplitsNotEnoughFundsOwnedForTransfer() public {
+    function testProcessJoinSplitsFailureNotEnoughFundsForUnwrap() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Only reserves + deposits 50M of token
@@ -452,11 +437,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -466,13 +447,13 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
-    function testProcessJoinSplitsBadRoot() public {
+    function testProcessJoinSplitsFailureBadRoot() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
-        // Bad root joinsplit failure type
+        // Operation with bad merkle root fails joinsplit processing
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -483,11 +464,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
             })
         );
@@ -497,13 +474,14 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
-    function testProcessJoinSplitsAlreadyUsedNullifier() public {
+    function testProcessJoinSplitsFailureAlreadyUsedNullifier() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
-        // Already used nullifiers failure type
+        // Create operation with two joinsplits where 1st uses NF included in
+        // 2nd joinsplit
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -514,12 +492,8 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
+                actions: new Action[](0),
+                joinSplitsFailureType: JoinSplitsFailureType.NF_ALREADY_IN_SET
             })
         );
 
@@ -528,13 +502,13 @@ contract BalanceManagerTest is Test {
         balanceManager.processJoinSplitsReservingFee(op);
     }
 
-    function testProcessJoinSplitsMatchingNullifiers() public {
+    function testProcessJoinSplitsFailureMatchingNullifiers() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
-        // Matching nullifiers failure type
+        // Create operation with one of the joinsplits has matching NFs A and B
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -545,12 +519,8 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    PER_NOTE_AMOUNT
-                ),
-                joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
+                actions: new Action[](0),
+                joinSplitsFailureType: JoinSplitsFailureType.JOINSPLIT_NFS_SAME
             })
         );
 
@@ -576,11 +546,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0, // don't reserve any gas, wallet takes up all
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    0
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -622,11 +588,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    refundToken,
-                    BOB,
-                    0
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
@@ -658,11 +620,7 @@ contract BalanceManagerTest is Test {
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    joinSplitToken,
-                    BOB,
-                    0
-                ),
+                actions: new Action[](0),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );

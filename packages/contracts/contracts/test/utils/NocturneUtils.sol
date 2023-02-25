@@ -8,8 +8,8 @@ import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 enum JoinSplitsFailureType {
     NONE,
     BAD_ROOT,
-    ALREADY_USED_NF,
-    MATCHING_NFS
+    NF_ALREADY_IN_SET,
+    JOINSPLIT_NFS_SAME
 }
 
 struct FormatOperationArgs {
@@ -103,10 +103,12 @@ library NocturneUtils {
         JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
         if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
             args.root = 0x12345; // fill with garbage root
-        } else if (joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF) {
+        } else if (
+            joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET
+        ) {
             require(
                 args.numJoinSplits >= 2,
-                "Must specify at least 2 joinsplits for ALREADY_USED_NF failure type"
+                "Must specify at least 2 joinsplits for NF_ALREADY_IN_SET failure type"
             );
         }
 
@@ -145,17 +147,17 @@ library NocturneUtils {
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
             uint256 nullifierA = 0;
             uint256 nullifierB = 0;
-            if (joinSplitsFailure == JoinSplitsFailureType.MATCHING_NFS) {
+            if (joinSplitsFailure == JoinSplitsFailureType.JOINSPLIT_NFS_SAME) {
                 nullifierA = uint256(2 * 0x1234);
                 nullifierB = uint256(2 * 0x1234);
             } else if (
-                joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF &&
+                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
                 i + 2 == args.numJoinSplits
             ) {
                 nullifierA = uint256(2 * 0x1234); // Matches last NF B
                 nullifierB = uint256(2 * i + 1);
             } else if (
-                joinSplitsFailure == JoinSplitsFailureType.ALREADY_USED_NF &&
+                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
                 i + 1 == args.numJoinSplits
             ) {
                 nullifierA = uint256(2 * i);

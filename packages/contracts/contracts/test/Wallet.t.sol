@@ -201,7 +201,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         token.approve(address(vault), PER_NOTE_AMOUNT);
 
-        vm.prank(BOB); // prank with BOB not ALICE
+        vm.prank(BOB); // msg.sender made to BOB not ALICE, causing error
         vm.expectRevert("Spender must be the sender");
         depositFunds(
             ALICE,
@@ -259,7 +259,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
-        // Ensure 50M left vault to BOB, 50M left in vault
+        // Expect BOB to have the 50M sent by alice
+        // Expect vault to have alice's remaining 50M
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
@@ -313,7 +314,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
-        // Ensure 50M left vault, 2 * 50M remains
+        // Expect BOB to have the 50M sent by alice
+        // Expect vault to have alice's remaining 100M
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
@@ -367,7 +369,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
-        // Ensure 4 * 50M left vault, 2 * 50M remains
+        // Expect BOB to have the 200M sent by alice
+        // Expect vault to have alice's remaining 100M
         assertEq(token.balanceOf(address(wallet)), uint256(0));
         assertEq(token.balanceOf(address(vault)), uint256(2 * PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
@@ -451,7 +454,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.ALREADY_USED_NF
+                joinSplitsFailureType: JoinSplitsFailureType.NF_ALREADY_IN_SET
             })
         );
 
@@ -487,8 +490,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        // Create operation with two joinsplits where 1st uses NF included in
-        // 2nd joinsplit
+        // Create operation with one of the joinsplits has matching NFs A and B
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -505,7 +507,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.MATCHING_NFS
+                joinSplitsFailureType: JoinSplitsFailureType.JOINSPLIT_NFS_SAME
             })
         );
 
@@ -633,7 +635,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Encode action for wallet to call itself processOperation
+        // Encode action for wallet to call itself via processOperation
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
             contractAddress: address(wallet),
@@ -723,7 +725,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Encode action for wallet to call itself executeActions
+        // Encode action for wallet to call itself via executeActions
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
             contractAddress: address(wallet),
@@ -1039,7 +1041,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in vault and nothing else, swapper has 0 erc20In tokens
+        // Ensure 100M tokensIn in vault and nothing else
+        // Swapper has 0 erc20In tokens
         assertEq(
             tokenIn.balanceOf(address(vault)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -1218,7 +1221,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Attempt to call processOperation directly without ALICE as caller not
+        // Attempt to call processOperation directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
         vm.expectRevert("Only the Wallet can call this");
@@ -1248,7 +1251,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Attempt to call executeActions directly without ALICE as caller not
+        // Attempt to call executeActions directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
         vm.expectRevert("Only the Wallet can call this");
