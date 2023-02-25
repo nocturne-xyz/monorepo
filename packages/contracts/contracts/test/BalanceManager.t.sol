@@ -265,8 +265,7 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
-        // Unwrap 100M of token
-        // Transfer 50M tokens via action and offer a gas price of 50 (see total
+        // Unwrap 100M of token with gas price of 50 (see total
         // fee below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -309,7 +308,8 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 150M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
 
-        // Unwrapping 150M, transferring 50M via action, and setting gas price to 50
+        // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
+        // calculated fee (see below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -351,7 +351,7 @@ contract BalanceManagerTest is Test {
         // Reserves + deposits 100M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
 
-        // Unwrapping 100M, transferring 50M via action, and setting gas price to 50
+        // Unwrap 100M and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -417,7 +417,7 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
         // Unwrap 50M, not enough for bundler comp with 3 joinsplits and gas
-        // price of 50. Attempt to transfer of 50M to bob will fail as result.
+        // price of 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
