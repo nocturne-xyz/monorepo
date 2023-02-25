@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- rename `removeNotesByNullifiers` -> `nullifyNotes`
+- fix future merkle sync issue in `NotesDB` by consolidating nullified notes into note commitments instead of removing them.
 - add more tests for new `NotesDB` impl
 - fix db tests
 - make `NotesManager` use `removeNotesByNullifiers` instead of looping through the entire DB

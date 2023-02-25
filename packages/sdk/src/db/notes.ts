@@ -7,9 +7,9 @@ import {
   IncludedNoteCommitment,
   Note,
 } from "@nocturne-xyz/primitives";
+import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
-import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
@@ -23,7 +23,7 @@ type AllNotes = Map<AssetKey, IncludedNote[]>;
 
 export class NotesDB {
   // store the following mappings:
-  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not (i.e. it's been spent or it's not owned by the user)))
+  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not. A note is usable IFF the user owns it and it hasn't been nullified yet).
   //  assetKey => merkleIndexKey[]
   //  nullifierKey => merkleIndexKey
   //
@@ -103,13 +103,35 @@ export class NotesDB {
     ]);
   }
 
-  async removeNotesByNullifiers(nullifiers: bigint[]): Promise<void> {
+  async nullifyNotes(nullifiers: bigint[]): Promise<void> {
+    // delete nullifier => merkleIndex KV pairs
     const nfKeys = nullifiers.map((nullifier) =>
       NotesDB.formatNullifierKey(nullifier)
     );
     const kvs = await this.kv.getMany(nfKeys);
+    await this.kv.removeMany([...nfKeys]);
+
+    // get the notes we're nullifying
     const idxKeys = kvs.map(([_nfKey, idxKey]) => idxKey);
-    await this.kv.removeMany([...nfKeys, ...idxKeys]);
+    const noteKVs = await this.kv.getMany(idxKeys);
+    const notes = noteKVs.map(([idxKey, value]) => ({
+      merkleIndex: NotesDB.parseIndexKey(idxKey),
+      ...JSON.parse(value),
+    })) as IncludedNote[];
+
+    // make the merkleIndex => commitment KV pairs
+    const commitmentKVs: KV[] = notes.map((note) =>
+      NotesDB.makeCommitmentKV(note.merkleIndex, NoteTrait.toCommitment(note))
+    );
+
+    // get the updated asset => merkleIndex[] KV pairs
+    // for each note, remove the note's merkleIndex from its asset's index keys
+    const assetKVs = await this.getUpdatedAssetKVs(notes, (keyset, note) =>
+      keyset.delete(NotesDB.formatIndexKey(note.merkleIndex))
+    );
+
+    // write the new commitment KV pairs and the new asset => merkleIndex[] KV pairs to the KV store
+    await this.kv.putMany([...commitmentKVs, ...assetKVs]);
   }
 
   /**
