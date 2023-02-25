@@ -251,7 +251,7 @@ describe("NotesDB", async () => {
     }
   });
 
-  it("removes one note by nullifier", async () => {
+  it("nullifies one note", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
     const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
@@ -266,7 +266,7 @@ describe("NotesDB", async () => {
     const noteToNullify = notes[0];
     const nfToApply = noteToNullify.nullifier;
 
-    await db.removeNotesByNullifiers([nfToApply]);
+    await db.nullifyNotes([nfToApply]);
     const map = await db.getAllNotes();
 
     const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
@@ -276,7 +276,7 @@ describe("NotesDB", async () => {
     expect(shitcoinNotes!).to.not.deep.include(toIncludedNote(noteToNullify));
   });
 
-  it("removes multiple notes by nullifier", async () => {
+  it("nullifies multiple notes", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
     const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
@@ -292,7 +292,7 @@ describe("NotesDB", async () => {
     const notesToNullify = notes.slice(10);
     const nfsToApply = notesToNullify.map((n) => n.nullifier);
 
-    await db.removeNotesByNullifiers(nfsToApply);
+    await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes();
 
     const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
@@ -306,7 +306,7 @@ describe("NotesDB", async () => {
     );
   });
 
-  it("removes all notes for a given asset by nullifier", async () => {
+  it("nullifies all notes for a given asset", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
     const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
@@ -324,7 +324,7 @@ describe("NotesDB", async () => {
     );
     const ponziNfs = ponziNotes.map((n) => n.nullifier);
 
-    await db.removeNotesByNullifiers(ponziNfs);
+    await db.nullifyNotes(ponziNfs);
     const map = await db.getAllNotes();
 
     const ponziKey = NotesDB.formatAssetKey(ponzi);
@@ -340,7 +340,7 @@ describe("NotesDB", async () => {
     expect(shitcoinNotesGot!.length).to.eql(shitcoinNotesExpected.length);
   });
 
-  it("removes multiple notes with different assets by nullifier", async () => {
+  it("nullifies multiple notes with different assets", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
     const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
@@ -375,7 +375,7 @@ describe("NotesDB", async () => {
       ...stablescamNotesToNullify.map((n) => n.nullifier),
     ];
 
-    await db.removeNotesByNullifiers(nfsToApply);
+    await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes();
 
     const shitcoinKey = NotesDB.formatAssetKey(shitcoin);

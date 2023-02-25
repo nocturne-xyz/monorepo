@@ -14,7 +14,7 @@ import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 
-const WALLET_ADDRESS = "0xA3183498b579bd228aa2B62101C40CC1da978F24";
+const WALLET_ADDRESS = "0x2655d06F79C7C135766355a0320fDDCd492686Ec";
 const START_BLOCK = 0;
 // const RPC_URL =
 //   "https://eth-goerli.g.alchemy.com/v2/meBVzK1NR_VyKM7wVmOHj1hAbakk4esk";

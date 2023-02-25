@@ -7,9 +7,9 @@ import {
   IncludedNoteCommitment,
   Note,
 } from "@nocturne-xyz/primitives";
+import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
-import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
@@ -23,11 +23,10 @@ type AllNotes = Map<AssetKey, IncludedNote[]>;
 
 export class NotesDB {
   // store the following mappings:
-  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not (i.e. it's been spent or it's not owned by the user)))
-  //  assetKey => merkleIndexKey[]
-  //  nullifierKey => merkleIndexKey
-  //
-  // where `merkleIndexKey`, `assetKey` and `nullifierKey` are as defined below by `formatIndexKey`, `formatAssetKey` and `formatNullifierKey` respectively
+  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not. A note is usable IFF the user owns it and it hasn't been nullified yet).
+  //  assetKey => merkleIndex[]
+  //  nullifierKey => merkleIndex
+
   public kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -90,9 +89,7 @@ export class NotesDB {
     );
 
     // get the updated asset => merkleIndex[] KV pairs
-    const assetKVs = await this.getUpdatedAssetKVs(notes, (keyset, note) =>
-      keyset.add(NotesDB.formatIndexKey(note.merkleIndex))
-    );
+    const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
     // write them all into the KV store
     await this.kv.putMany([
@@ -103,13 +100,31 @@ export class NotesDB {
     ]);
   }
 
-  async removeNotesByNullifiers(nullifiers: bigint[]): Promise<void> {
+  async nullifyNotes(nullifiers: bigint[]): Promise<void> {
+    // delete nullifier => merkleIndex KV pairs
     const nfKeys = nullifiers.map((nullifier) =>
       NotesDB.formatNullifierKey(nullifier)
     );
     const kvs = await this.kv.getMany(nfKeys);
-    const idxKeys = kvs.map(([_nfKey, idxKey]) => idxKey);
-    await this.kv.removeMany([...nfKeys, ...idxKeys]);
+    await this.kv.removeMany([...nfKeys]);
+
+    // get the notes we're nullifying
+    const indices = kvs.map(([_nfKey, stringifiedIdx]) =>
+      parseInt(stringifiedIdx)
+    );
+    const notes = await this.getNotesByMerkleIndices(indices);
+
+    // make the merkleIndex => commitment KV pairs
+    const commitmentKVs: KV[] = notes.map((note) =>
+      NotesDB.makeCommitmentKV(note.merkleIndex, NoteTrait.toCommitment(note))
+    );
+
+    // get the updated asset => merkleIndex[] KV pairs
+    // for each note, remove the note's merkleIndex from its asset's index keys
+    const assetKVs = await this.getUpdatedAssetKVsWithNotesRemoved(notes);
+
+    // write the new commitment KV pairs and the new asset => merkleIndex[] KV pairs to the KV store
+    await this.kv.putMany([...commitmentKVs, ...assetKVs]);
   }
 
   /**
@@ -119,9 +134,9 @@ export class NotesDB {
    * @returns notes an array of notes for the asset. The array has no guaranteed order.
    */
   async getNotesForAsset(asset: Asset): Promise<IncludedNote[]> {
-    const indexKeys = await this.getMerkleIndexKeysForAsset(asset);
+    const indices = await this.getMerkleIndicesForAsset(asset);
 
-    return await this.getNotesByIndexKeys(indexKeys);
+    return await this.getNotesByMerkleIndices(indices);
   }
 
   /**
@@ -134,9 +149,9 @@ export class NotesDB {
     const allNotes = new Map<AssetKey, IncludedNote[]>();
 
     const iterPrefix = await this.kv.iterPrefix(NOTES_BY_ASSET_PREFIX);
-    for await (const [assetKey, stringifiedIndexKeys] of iterPrefix) {
-      const indexKeys: string[] = JSON.parse(stringifiedIndexKeys);
-      const notes = await this.getNotesByIndexKeys(indexKeys);
+    for await (const [assetKey, stringifiedIndices] of iterPrefix) {
+      const indices: number[] = JSON.parse(stringifiedIndices);
+      const notes = await this.getNotesByMerkleIndices(indices);
 
       const notesForAsset = allNotes.get(assetKey) ?? [];
       notesForAsset.push(...notes);
@@ -161,27 +176,23 @@ export class NotesDB {
   }
 
   private static makeNullifierKV(merkleIndex: number, nullifier: bigint): KV {
-    return [
-      NotesDB.formatNullifierKey(nullifier),
-      NotesDB.formatIndexKey(merkleIndex),
-    ];
+    return [NotesDB.formatNullifierKey(nullifier), merkleIndex.toString()];
   }
 
-  private async getUpdatedAssetKVs<N extends IncludedNote>(
-    notes: N[],
-    update: (keyset: Set<string>, note: N) => void
+  private async getUpdatedAssetKVsWithNotesAdded<N extends IncludedNote>(
+    notes: N[]
   ): Promise<KV[]> {
-    const map = new Map<AssetKey, Set<string>>();
+    const map = new Map<AssetKey, Set<number>>();
     for (const note of notes) {
       const assetKey = NotesDB.formatAssetKey(note.asset);
-      let indexKeys = map.get(assetKey);
-      if (!indexKeys) {
-        indexKeys = new Set(await this.getMerkleIndexKeysForAsset(note.asset));
+      let indices = map.get(assetKey);
+      if (!indices) {
+        indices = new Set(await this.getMerkleIndicesForAsset(note.asset));
       }
 
-      update(indexKeys, note);
+      indices.add(note.merkleIndex);
 
-      map.set(assetKey, indexKeys);
+      map.set(assetKey, indices);
     }
 
     return Array.from(map.entries()).map(([assetKey, indexKeys]) => [
@@ -190,7 +201,29 @@ export class NotesDB {
     ]);
   }
 
-  private async getMerkleIndexKeysForAsset(asset: Asset): Promise<string[]> {
+  private async getUpdatedAssetKVsWithNotesRemoved<N extends IncludedNote>(
+    notes: N[]
+  ): Promise<KV[]> {
+    const map = new Map<AssetKey, Set<number>>();
+    for (const note of notes) {
+      const assetKey = NotesDB.formatAssetKey(note.asset);
+      let indices = map.get(assetKey);
+      if (!indices) {
+        indices = new Set(await this.getMerkleIndicesForAsset(note.asset));
+      }
+
+      indices.delete(note.merkleIndex);
+
+      map.set(assetKey, indices);
+    }
+
+    return Array.from(map.entries()).map(([assetKey, indexKeys]) => [
+      assetKey,
+      JSON.stringify(Array.from(indexKeys)),
+    ]);
+  }
+
+  private async getMerkleIndicesForAsset(asset: Asset): Promise<number[]> {
     const assetKey = NotesDB.formatAssetKey(asset);
     const value = await this.kv.getString(assetKey);
     if (!value) {
@@ -200,9 +233,10 @@ export class NotesDB {
     return JSON.parse(value);
   }
 
-  private async getNotesByIndexKeys(
-    idxKeys: string[]
+  private async getNotesByMerkleIndices(
+    indices: number[]
   ): Promise<IncludedNote[]> {
+    const idxKeys = indices.map((index) => NotesDB.formatIndexKey(index));
     const kvs = await this.kv.getMany(idxKeys);
     return kvs.map(([key, value]) => {
       const merkleIndex = NotesDB.parseIndexKey(key);

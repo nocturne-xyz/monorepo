@@ -4,7 +4,7 @@
 
 - add more tests for new `NotesDB` impl
 - fix db tests
-- make `NotesManager` use `removeNotesByNullifiers` instead of looping through the entire DB
+- make `NotesManager` use `nullifyNotes` instead of looping through the entire DB
 - re-implement `NotesDB` to index notes by `merkleIndex`, `nullifier`, and `asset`. 
 - rename `getNotesFor` -> `getNotesForAsset`
 - make `OpPreparer` and `NotesManager` use `NocturneViewer` instead of `NocturneSigner`
