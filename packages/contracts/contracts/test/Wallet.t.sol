@@ -1095,10 +1095,13 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     function testProcessBundleFailureNotEnoughBundlerComp() public {
         SimpleERC20Token token = ERC20s[0];
 
-        // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
+        // Reserves + deposit only 50M tokens
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        // Unwrap 50M, not enough for bundler comp with 3 joinsplits (62.5M)
+        // Unwrap 50M, not enough for bundler comp due to there being
+        // maxNumRefunds = 20.
+        // 20 refunds equates to at least below gas tokens:
+        //    gasPrice * (10 * refundGas) = 50 * (20 * 80k) = 80M
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1108,7 +1111,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 numJoinSplits: 3,
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
-                maxNumRefunds: 1,
+                maxNumRefunds: 20,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,

@@ -36,6 +36,8 @@ contract BalanceManagerTest is Test {
     address constant BUNDLER = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
+    uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 170_000;
+
     // Check storage layout file
     uint256 constant OPERATION_STAGE_STORAGE_SLOT = 75;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
@@ -250,7 +252,10 @@ contract BalanceManagerTest is Test {
 
         // Balance manager took up 100M of token
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertEq(token.balanceOf(address(balanceManager)), 100_000_000);
     }
 
@@ -280,11 +285,17 @@ contract BalanceManagerTest is Test {
 
         // gasPrice * (providedExecutionGas + gasPerJoinSplit + gasPerRefund)
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
 
         // Balance manager took up 50M, left 50M for bundler
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertEq(
             token.balanceOf(address(balanceManager)),
             (2 * PER_NOTE_AMOUNT) - totalFeeReserved
@@ -316,11 +327,17 @@ contract BalanceManagerTest is Test {
 
         // gasPrice * (executionGas + joinSplitGas + refundGas)
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
 
         // Balance manager took up 150M - 62.5M
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertEq(
             token.balanceOf(address(balanceManager)),
             (3 * PER_NOTE_AMOUNT) - totalFeeReserved
@@ -352,11 +369,17 @@ contract BalanceManagerTest is Test {
 
         // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
 
         // Take up 100M tokens
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertEq(
             token.balanceOf(address(balanceManager)),
             (2 * PER_NOTE_AMOUNT) - totalFeeReserved
@@ -375,6 +398,7 @@ contract BalanceManagerTest is Test {
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
             opResult,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             BUNDLER
         );
         assertEq(
@@ -412,12 +436,18 @@ contract BalanceManagerTest is Test {
         // gasPrice * (executionGas + joinSplitGas + refundGas)
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         // NOTE: we only deposited 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(op);
+        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertGt(totalFeeReserved, PER_NOTE_AMOUNT);
 
         // Expect revert due to not having enough to pay fee
         vm.expectRevert("Too few gas tokens");
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
     }
 
     function testProcessJoinSplitsFailureNotEnoughFundsForUnwrap() public {
@@ -426,7 +456,7 @@ contract BalanceManagerTest is Test {
         // Only reserves + deposits 50M of token
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 1);
 
-        // Attempts to unwrap 100M of token (exceeds owned)
+        // Attempts to unwrap 100M of token (we only deposited 50M)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -444,7 +474,10 @@ contract BalanceManagerTest is Test {
 
         // Expect revert for processing joinsplits
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
     }
 
     function testProcessJoinSplitsFailureBadRoot() public {
@@ -471,7 +504,10 @@ contract BalanceManagerTest is Test {
 
         // Expect revert for processing joinsplits
         vm.expectRevert("Tree root not past root");
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
     }
 
     function testProcessJoinSplitsFailureAlreadyUsedNullifier() public {
@@ -499,7 +535,10 @@ contract BalanceManagerTest is Test {
 
         // Expect revert for processing joinsplits
         vm.expectRevert("Nullifier B already used");
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
     }
 
     function testProcessJoinSplitsFailureMatchingNullifiers() public {
@@ -526,7 +565,10 @@ contract BalanceManagerTest is Test {
 
         // Expect revert for processing joinsplits
         vm.expectRevert("2 nfs should !equal");
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
     }
 
     function testHandleRefundsJoinSplitsSingleAsset() public {
@@ -552,7 +594,10 @@ contract BalanceManagerTest is Test {
         );
 
         // Take up 100M tokens
-        balanceManager.processJoinSplitsReservingFee(op);
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
         assertEq(
             token.balanceOf(address(balanceManager)),
             (2 * PER_NOTE_AMOUNT)

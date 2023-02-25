@@ -144,9 +144,12 @@ contract BalanceManager is
       to request maxGasAssetCost from vault with the same encodedAsset as
       joinSplits[0].
     */
-    function _processJoinSplitsReservingFee(Operation calldata op) internal {
+    function _processJoinSplitsReservingFee(
+        Operation calldata op,
+        uint256 perJoinSplitVerifyGas
+    ) internal {
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
-        uint256 gasAssetToReserve = op.maxGasAssetCost();
+        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -189,11 +192,12 @@ contract BalanceManager is
     function _gatherReservedGasAssetAndPayBundler(
         Operation calldata op,
         OperationResult memory opResult,
+        uint256 perJoinSplitVerifyGas,
         address bundler
     ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
-        uint256 gasAssetAmount = op.maxGasAssetCost();
+        uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
             // Request reserved gasAssetAmount from vault.

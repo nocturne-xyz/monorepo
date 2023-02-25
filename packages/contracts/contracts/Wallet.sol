@@ -65,7 +65,7 @@ contract Wallet is
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        (bool success, uint256 perJoinSplitGas) = _verifyAllProofsMetered(
+        (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
             ops,
             opDigests
         );
@@ -75,13 +75,8 @@ contract Wallet is
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            uint256 verificationGasForOp = WalletUtils.verificationGasForOp(
-                ops[i],
-                perJoinSplitGas
-            );
-
             try
-                this.processOperation(ops[i], verificationGasForOp, msg.sender)
+                this.processOperation(ops[i], perJoinSplitVerifyGas, msg.sender)
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
@@ -122,7 +117,7 @@ contract Wallet is
     */
     function processOperation(
         Operation calldata op,
-        uint256 verificationGasForOp,
+        uint256 perJoinSplitVerifyGas,
         address bundler
     )
         external
@@ -132,7 +127,7 @@ contract Wallet is
     {
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
-        _processJoinSplitsReservingFee(op);
+        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
@@ -144,11 +139,21 @@ contract Wallet is
                 WalletUtils.getRevertMsg(reason)
             );
         }
-        opResult.verificationGas = verificationGasForOp;
+
+        // Set verification and execution gas after getting opResult
+        opResult.verificationGas = WalletUtils.verificationGasForOp(
+            op,
+            perJoinSplitVerifyGas
+        );
         opResult.executionGas = preExecutionGas - gasleft();
 
         // Gather reserved gas asset and process gas payment to bundler
-        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
+        _gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            perJoinSplitVerifyGas,
+            bundler
+        );
 
         // Note: if too many refunds condition reverted in execute actions, the
         // actions creating the refunds were reverted too, so numRefunds would =
@@ -201,15 +206,17 @@ contract Wallet is
     function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests
-    ) internal view returns (bool success, uint256 perJoinSplitGas) {
+    ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
         success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
 
-        perJoinSplitGas = (preVerificationGasLeft - gasleft()) / proofs.length;
-        return (success, perJoinSplitGas);
+        perJoinSplitVerifyGas =
+            (preVerificationGasLeft - gasleft()) /
+            proofs.length;
+        return (success, perJoinSplitVerifyGas);
     }
 
     function _makeExternalCall(
