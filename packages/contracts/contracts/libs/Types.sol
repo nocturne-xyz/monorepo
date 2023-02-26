@@ -86,6 +86,7 @@ struct Operation {
     StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
+    EncodedAsset encodedGasAsset;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
@@ -132,12 +133,6 @@ library BundleLib {
 }
 
 library OperationLib {
-    function gasAsset(
-        Operation calldata self
-    ) internal pure returns (EncodedAsset calldata) {
-        return self.joinSplits[0].encodedAsset;
-    }
-
     function maxGasLimit(
         Operation calldata self,
         uint256 perJoinSplitVerifyGas

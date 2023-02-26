@@ -148,7 +148,7 @@ contract BalanceManager is
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-        EncodedAsset calldata encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         uint256 numJoinSplits = op.joinSplits.length;
@@ -196,7 +196,7 @@ contract BalanceManager is
         address bundler
     ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
-        EncodedAsset calldata encodedGasAsset = op.gasAsset();
+        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
