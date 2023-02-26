@@ -1,0 +1,28 @@
+# Contracts
+
+packages/contracts @luketchang
+
+# Circuits
+
+packages/circuits @Sladuca
+
+# SDKs
+
+packages/sdk @luketchang @Sladuca
+
+# Frontend
+
+packages/frontend-sdk @luketchang @Sladuca
+packages/site @luketchang @Sladuca
+
+# Offchain
+
+packages/bundler @luketchang @Sladuca
+packages/subtree-updater @Sladuca
+
+# Other Packages
+
+packages/deploy @luketchang
+packages/e2e-tests @luketchang @Sladuca
+packages/local-prover @Sladuca
+packages/snap @luketchang @Sladuca
