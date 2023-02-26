@@ -77,6 +77,7 @@ interface BaseOperation {
   refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
+  encodedGasAsset: EncodedAsset;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
