@@ -21,7 +21,7 @@
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
     "test:unit": "mocha --require ts-node/register test/**.test.ts --timeout 500000 --exit",
-    "test:ci": "mocha --require ts-node/register test/**.test.ci.ts --timeout 500000 --exit",
+    "test:ci": "mocha --require ts-node/register test/**.ci.ts --timeout 500000 --exit",
     "bundler-cli": "npx ts-node src/cli/index.ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test"
