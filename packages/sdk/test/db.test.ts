@@ -7,8 +7,15 @@ import {
   KV,
   IncludedNote,
   Asset,
-  AssetType,
+  zip,
+  NocturneViewer,
+  range,
+  NoteTrait,
+  groupBy,
+  IncludedNoteWithNullifier,
+  AssetTrait,
 } from "../src";
+import { ponzi, shitcoin, stablescam } from "./utils";
 
 describe("InMemoryKVStore", async () => {
   const kv = new InMemoryKVStore();
@@ -81,6 +88,36 @@ describe("InMemoryKVStore", async () => {
     expect(i).to.equal(prefixVals.length - 1);
   });
 
+  it("performs batch ops", async () => {
+    const kvs: KV[] = [
+      ["a", "1"],
+      ["b", "2"],
+      ["c", "3"],
+      ["d", "4"],
+      ["e", "5"],
+    ];
+
+    await kv.putMany(kvs);
+
+    for (const [key, value] of kvs) {
+      const val = await kv.getString(key);
+      expect(val).to.eql(value);
+    }
+
+    const gotKvs = await kv.getMany(kvs.map(([k, _]) => k));
+    for (const [[k, v], [key, value]] of zip(kvs, gotKvs)) {
+      expect(k).to.eql(key);
+      expect(v).to.eql(value);
+    }
+
+    await kv.removeMany(kvs.map(([k, _]) => k));
+
+    for (const [key, _] of kvs) {
+      const val = await kv.getString(key);
+      expect(val).to.be.undefined;
+    }
+  });
+
   it("dumps", async () => {
     const kvs: KV[] = [
       ["a", "1"],
@@ -125,6 +162,40 @@ describe("InMemoryKVStore", async () => {
 describe("NotesDB", async () => {
   const kv = new InMemoryKVStore();
   const db = new NotesDB(kv);
+  const viewer = new NocturneViewer(1n);
+
+  const dummyNotesAndNfs = (
+    notesPerAsset: number,
+    ...assets: Asset[]
+  ): [IncludedNoteWithNullifier[], bigint[]] => {
+    const owner = viewer.generateRandomStealthAddress();
+    const notes: IncludedNoteWithNullifier[] = [];
+    const nullifiers: bigint[] = [];
+    let offset = 0;
+    for (const asset of assets) {
+      const allNotes: IncludedNote[] = range(notesPerAsset).map((i) => ({
+        owner,
+        nonce: BigInt(i + offset),
+        asset,
+        value: 100n,
+        merkleIndex: i + offset,
+      }));
+      const allNfs = allNotes.map((n) => viewer.createNullifier(n));
+      const notesWithNFs = zip(allNotes, allNfs).map(([n, nf]) =>
+        NoteTrait.toIncludedNoteWithNullifier(n, nf)
+      );
+
+      notes.push(...notesWithNFs);
+      nullifiers.push(...notes.map((n) => viewer.createNullifier(n)));
+
+      offset += notesPerAsset;
+    }
+
+    return [notes, nullifiers];
+  };
+
+  const toIncludedNote = ({ nullifier, ...rest }: IncludedNoteWithNullifier) =>
+    rest;
 
   afterEach(async () => {
     await db.kv.clear();
@@ -134,91 +205,233 @@ describe("NotesDB", async () => {
     await db.kv.close();
   });
 
-  it("Stores, gets, and removes notes", async () => {
-    const asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: "0x1234",
-      id: 1234n,
-    };
-    const note: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
-      asset,
-      value: 100n,
-      merkleIndex: 6,
-    };
+  it("Stores a batch of notes/commitments with a single asset", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
+    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
 
-    await db.storeNote(note);
+    await db.storeNotesAndCommitments(notesAndCommitments);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NotesDB.formatNoteAssetKey(asset))!;
-    expect(notesArray).to.not.be.undefined;
-    expect(notesArray[0]).to.eql(note);
-
-    await db.removeNote(note);
-    const newMap = await db.getAllNotes();
-    expect(newMap.get(NotesDB.formatNoteAssetKey(asset))).to.eql(undefined);
+    const assetKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinNotes = map.get(assetKey)!;
+    const shitcoinNotesExpected = notes.map(toIncludedNote);
+    expect(shitcoinNotes).to.not.be.undefined;
+    expect(shitcoinNotes).to.eql(shitcoinNotesExpected);
   });
 
-  it("Stores, gets, and removes multiple notes for same asset", async () => {
-    const asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: "0x1234",
-      id: 1234n,
-    };
-    const noteOne: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
-      asset,
-      value: 100n,
-      merkleIndex: 6,
-    };
+  it("stores a batch of notes/commitments with a multiple assets", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
 
-    const noteTwo: IncludedNote = {
-      owner: {
-        h1X: 1n,
-        h1Y: 2n,
-        h2X: 3n,
-        h2Y: 4n,
-      },
-      nonce: 5n,
-      asset,
-      value: 150n,
-      merkleIndex: 7,
-    };
-
-    await db.storeNote(noteOne);
-    await db.storeNote(noteTwo);
+    await db.storeNotesAndCommitments(notesAndCommitments);
 
     const map = await db.getAllNotes();
-    const notesArray = map.get(NotesDB.formatNoteAssetKey(asset))!;
-    expect(notesArray).to.not.be.undefined;
-    expect(notesArray.length).to.equal(2);
-    expect(notesArray).to.deep.include(noteOne);
-    expect(notesArray).to.deep.include(noteTwo);
 
-    const notesForAsset = await db.getNotesFor(asset);
-    expect(notesForAsset).to.not.be.undefined;
-    expect(notesForAsset.length).to.equal(2);
-    expect(notesForAsset).to.deep.include(noteOne);
-    expect(notesForAsset).to.deep.include(noteTwo);
+    for (const asset of [shitcoin, ponzi, stablescam]) {
+      const assetKey = NotesDB.formatAssetKey(asset);
+      const assetHash = AssetTrait.hash(asset);
+      const assetNotesExpected = notes
+        .filter((n) => AssetTrait.hash(n.asset) === assetHash)
+        .map(toIncludedNote);
+      const assetNotesGot = map.get(assetKey)!;
+      expect(assetNotesGot).to.not.be.undefined;
+      expect(assetNotesGot).to.have.deep.members(assetNotesExpected);
+    }
+  });
 
-    await db.removeNote(noteOne);
-    const newMap = await db.getAllNotes();
-    const newNotesArray = newMap.get(NotesDB.formatNoteAssetKey(asset))!;
-    expect(notesArray).to.not.be.undefined;
-    expect(newNotesArray.length).to.eql(1);
-    expect(newNotesArray[0]).to.eql(noteTwo);
+  it("nullifies one note", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
+    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
+
+    await db.storeNotesAndCommitments(notesAndCommitments);
+
+    const noteToNullify = notes[0];
+    const nfToApply = noteToNullify.nullifier;
+
+    await db.nullifyNotes([nfToApply]);
+    const map = await db.getAllNotes();
+
+    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinNotes = map.get(shitcoinKey);
+    expect(shitcoinNotes).to.not.be.undefined;
+    expect(shitcoinNotes!.length).to.equal(notes.length - 1);
+    expect(shitcoinNotes!).to.not.deep.include(toIncludedNote(noteToNullify));
+  });
+
+  it("nullifies multiple notes", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
+    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
+
+    await db.storeNotesAndCommitments(notesAndCommitments);
+
+    // remove the first 10 notes
+    const notesToNullify = notes.slice(10);
+    const nfsToApply = notesToNullify.map((n) => n.nullifier);
+
+    await db.nullifyNotes(nfsToApply);
+    const map = await db.getAllNotes();
+
+    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinNotes = map.get(shitcoinKey);
+    expect(shitcoinNotes).to.not.be.undefined;
+    expect(shitcoinNotes!.length).to.equal(
+      notes.length - notesToNullify.length
+    );
+    expect(shitcoinNotes!).to.not.have.deep.members(
+      notesToNullify.map(toIncludedNote)
+    );
+  });
+
+  it("nullifies all notes for a given asset", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
+    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
+
+    await db.storeNotesAndCommitments(notesAndCommitments);
+
+    // remove all of the ponzi notes
+    const ponziNotes = notes.filter(
+      (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(ponzi)
+    );
+    const ponziNfs = ponziNotes.map((n) => n.nullifier);
+
+    await db.nullifyNotes(ponziNfs);
+    const map = await db.getAllNotes();
+
+    const ponziKey = NotesDB.formatAssetKey(ponzi);
+    const ponziNotesGot = map.get(ponziKey);
+    expect(ponziNotesGot).to.be.undefined;
+
+    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinNotesExpected = notes
+      .filter((n) => AssetTrait.hash(n.asset) === AssetTrait.hash(shitcoin))
+      .map(toIncludedNote);
+    const shitcoinNotesGot = map.get(shitcoinKey);
+    expect(shitcoinNotesGot).to.not.be.undefined;
+    expect(shitcoinNotesGot!.length).to.eql(shitcoinNotesExpected.length);
+  });
+
+  it("nullifies multiple notes with different assets", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
+
+    const shitcoinNotes = notes.filter(
+      (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(shitcoin)
+    );
+    const ponziNotes = notes.filter(
+      (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(ponzi)
+    );
+    const stablescamNotes = notes.filter(
+      (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(stablescam)
+    );
+
+    await db.storeNotesAndCommitments(notesAndCommitments);
+
+    // nullify a some each asset's notes
+    const shitcoinNotesToNullify = shitcoinNotes.filter((_, i) => i % 3 === 0);
+    const ponziNotesToNullify = ponziNotes.filter((_, i) => i % 2 === 0);
+    const stablescamNotesToNullify = stablescamNotes.filter(
+      (_, i) => i % 5 === 0
+    );
+
+    const nfsToApply = [
+      ...shitcoinNotesToNullify.map((n) => n.nullifier),
+      ...ponziNotesToNullify.map((n) => n.nullifier),
+      ...stablescamNotesToNullify.map((n) => n.nullifier),
+    ];
+
+    await db.nullifyNotes(nfsToApply);
+    const map = await db.getAllNotes();
+
+    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinNotesGot = map.get(shitcoinKey);
+    expect(shitcoinNotesGot).to.not.be.undefined;
+    expect(shitcoinNotesGot!.length).to.eql(
+      shitcoinNotes.length - shitcoinNotesToNullify.length
+    );
+    expect(shitcoinNotesGot!).to.not.have.deep.members(
+      shitcoinNotesToNullify.map(toIncludedNote)
+    );
+
+    const ponziKey = NotesDB.formatAssetKey(ponzi);
+    const ponziNotesGot = map.get(ponziKey);
+    expect(ponziNotesGot).to.not.be.undefined;
+    expect(ponziNotesGot!.length).to.eql(
+      ponziNotes.length - ponziNotesToNullify.length
+    );
+    expect(ponziNotesGot!).to.not.have.deep.members(
+      ponziNotesToNullify.map(toIncludedNote)
+    );
+
+    const stablescamKey = NotesDB.formatAssetKey(stablescam);
+    const stablescamNotesGot = map.get(stablescamKey);
+    expect(stablescamNotesGot).to.not.be.undefined;
+    expect(stablescamNotesGot!.length).to.eql(
+      stablescamNotes.length - stablescamNotesToNullify.length
+    );
+    expect(stablescamNotesGot!).to.not.have.deep.members(
+      stablescamNotesToNullify.map(toIncludedNote)
+    );
+  });
+
+  it("gets all notes for a given asset", async () => {
+    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+      (n.merkleIndex % 2).toString()
+    );
+    const notesAndCommitments = [
+      ...notes,
+      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
+    ];
+
+    await db.storeNotesAndCommitments(notesAndCommitments);
+
+    for (const asset of [shitcoin, ponzi, stablescam]) {
+      const assetHash = AssetTrait.hash(asset);
+      const notesExpected = notes
+        .filter((n) => AssetTrait.hash(n.asset) === assetHash)
+        .map(toIncludedNote);
+      const notesGot = await db.getNotesForAsset(asset);
+
+      expect(notesGot).to.not.be.undefined;
+      expect(notesGot!.length).to.eql(notesExpected.length);
+      expect(notesGot!).to.have.deep.members(notesExpected);
+    }
   });
 });
 

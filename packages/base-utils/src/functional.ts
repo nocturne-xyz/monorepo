@@ -29,6 +29,25 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
   return Array.from(map.values());
 }
 
+// splits an array into two arrays based on a predicate
+// returns [pass, fail], where `pass` is the array of items that pass the predicate,
+// and `fail` is the array of items that fail the predicate
+export function partition<T>(
+  arr: T[],
+  predicate: (item: T) => boolean
+): [T[], T[]] {
+  const pass = [];
+  const fail = [];
+  for (const item of arr) {
+    if (predicate(item)) {
+      pass.push(item);
+    } else {
+      fail.push(item);
+    }
+  }
+  return [pass, fail];
+}
+
 export function* iterChunks<T>(
   arr: T[],
   chunkSize: number

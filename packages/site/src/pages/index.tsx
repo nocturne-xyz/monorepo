@@ -37,7 +37,7 @@ import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
-const TOKEN_ADDRESS = "0xD4adf5B95f19ab6C6f028C325a379a45DD725BAA";
+const TOKEN_ADDRESS = "0x2182c58EC11Ca75831ae99fF04dA3C3EB27de195";
 
 const Container = styled.div`
   display: flex;

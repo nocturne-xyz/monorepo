@@ -81,7 +81,12 @@ export async function setup(
     value: amount,
     merkleIndex: i,
   }));
-  await notesDB.storeNotes(notes);
+
+  const nullifiers = notes.map((n) => signer.createNullifier(n));
+  const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>
+    NoteTrait.toIncludedNoteWithNullifier(n, nf)
+  );
+  await notesDB.storeNotesAndCommitments(notesWithNullfiers);
 
   const dummyWalletAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
