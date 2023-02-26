@@ -81,7 +81,7 @@ contract CommitmentTreeManager is Initializable {
         );
         require(
             joinSplit.nullifierA != joinSplit.nullifierB,
-            "2 nfs should !equal."
+            "2 nfs should !equal"
         );
 
         // Mark nullifiers as used

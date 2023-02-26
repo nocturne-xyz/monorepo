@@ -62,10 +62,10 @@
       "path": "./packages/snap"
     },
     {
-      "path": "./packages/utils"
+      "path": "./packages/base-utils"
     },
     {
-      "path": "./packages/core"
-    },
+      "path": "./packages/primitives"
+    }
   ]
 }

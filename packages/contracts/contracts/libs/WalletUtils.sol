@@ -190,9 +190,9 @@ library WalletUtils {
 
     function verificationGasForOp(
         Operation calldata op,
-        uint256 perJoinSplitGas
+        uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
-        return perJoinSplitGas * op.joinSplits.length;
+        return perJoinSplitVerifyGas * op.joinSplits.length;
     }
 
     function calculateBundlerGasAssetPayout(

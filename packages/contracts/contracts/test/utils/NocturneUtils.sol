@@ -5,16 +5,24 @@ import "../../libs/Types.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 
-struct TransferOperationArgs {
-    SimpleERC20Token token;
+enum JoinSplitsFailureType {
+    NONE,
+    BAD_ROOT,
+    NF_ALREADY_IN_SET,
+    JOINSPLIT_NFS_SAME
+}
+
+struct FormatOperationArgs {
+    SimpleERC20Token joinSplitToken;
     uint256 root;
-    address recipient;
-    uint256 amount;
     uint256 publicSpendPerJoinSplit;
     uint256 numJoinSplits;
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
+    uint256 maxNumRefunds;
     uint256 gasPrice;
+    Action[] actions;
+    JoinSplitsFailureType joinSplitsFailureType;
 }
 
 library NocturneUtils {
@@ -63,17 +71,46 @@ library NocturneUtils {
             });
     }
 
-    function formatTransferOperation(
-        TransferOperationArgs memory args
+    function formatSingleTransferActionArray(
+        SimpleERC20Token token,
+        address recipient,
+        uint256 amount
+    ) public pure returns (Action[] memory) {
+        Action[] memory actions = new Action[](1);
+        actions[0] = formatTransferAction(token, recipient, amount);
+        return actions;
+    }
+
+    function formatTransferAction(
+        SimpleERC20Token token,
+        address recipient,
+        uint256 amount
+    ) public pure returns (Action memory) {
+        return
+            Action({
+                contractAddress: address(token),
+                encodedFunction: abi.encodeWithSelector(
+                    token.transfer.selector,
+                    recipient,
+                    amount
+                )
+            });
+    }
+
+    function formatOperation(
+        FormatOperationArgs memory args
     ) internal pure returns (Operation memory) {
-        Action memory transferAction = Action({
-            contractAddress: address(args.token),
-            encodedFunction: abi.encodeWithSelector(
-                args.token.transfer.selector,
-                args.recipient,
-                args.amount
-            )
-        });
+        JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
+        if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
+            args.root = 0x12345; // fill with garbage root
+        } else if (
+            joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET
+        ) {
+            require(
+                args.numJoinSplits >= 2,
+                "Must specify at least 2 joinsplits for NF_ALREADY_IN_SET failure type"
+            );
+        }
 
         uint256 root = args.root;
         EncryptedNote memory newNoteAEncrypted = EncryptedNote({
@@ -101,16 +138,38 @@ library NocturneUtils {
 
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(args.token),
+            address(args.joinSplitToken),
             ERC20_ID
         );
 
+        // Setup joinsplits depending on failure type
         JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
+            uint256 nullifierA = 0;
+            uint256 nullifierB = 0;
+            if (joinSplitsFailure == JoinSplitsFailureType.JOINSPLIT_NFS_SAME) {
+                nullifierA = uint256(2 * 0x1234);
+                nullifierB = uint256(2 * 0x1234);
+            } else if (
+                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
+                i + 2 == args.numJoinSplits
+            ) {
+                nullifierA = uint256(2 * 0x1234); // Matches last NF B
+                nullifierB = uint256(2 * i + 1);
+            } else if (
+                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
+                i + 1 == args.numJoinSplits
+            ) {
+                nullifierA = uint256(2 * i);
+                nullifierB = uint256(2 * 0x1234); // Matches 2nd to last NF A
+            } else {
+                nullifierA = uint256(2 * i);
+                nullifierB = uint256(2 * i + 1);
+            }
             joinSplits[i] = JoinSplit({
                 commitmentTreeRoot: root,
-                nullifierA: uint256(2 * i),
-                nullifierB: uint256(2 * i + 1),
+                nullifierA: nullifierA,
+                nullifierB: nullifierB,
                 newNoteACommitment: uint256(i),
                 newNoteAEncrypted: newNoteAEncrypted,
                 newNoteBCommitment: uint256(i),
@@ -121,16 +180,14 @@ library NocturneUtils {
             });
         }
 
-        Action[] memory actions = new Action[](1);
-        actions[0] = transferAction;
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
-            actions: actions,
+            actions: args.actions,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: joinSplits.length + args.encodedRefundAssets.length
+            maxNumRefunds: args.maxNumRefunds
         });
 
         return op;

@@ -13,13 +13,13 @@ import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
 import "./libs/Types.sol";
-import "./NocturneReentrancyGuard.sol";
+import "./OperationReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
     CommitmentTreeManager,
-    NocturneReentrancyGuard
+    OperationReentrancyGuard
 {
     using OperationLib for Operation;
 
@@ -35,7 +35,7 @@ contract BalanceManager is
         address joinSplitVerifier,
         address subtreeUpdateVerifier
     ) public onlyInitializing {
-        __NocturneReentrancyGuard_init();
+        __OperationReentrancyGuard_init();
         __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _vault = IVault(vault);
     }
@@ -46,12 +46,13 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
             );
@@ -67,12 +68,13 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
@@ -89,12 +91,13 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
             return 0;
         }
+
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_OPERATION) {
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
             uint256 numIds = ids.length;
             for (uint256 i = 0; i < numIds; i++) {
                 _receivedAssets.push(
@@ -141,9 +144,12 @@ contract BalanceManager is
       to request maxGasAssetCost from vault with the same encodedAsset as
       joinSplits[0].
     */
-    function _processJoinSplitsReservingFee(Operation calldata op) internal {
+    function _processJoinSplitsReservingFee(
+        Operation calldata op,
+        uint256 perJoinSplitVerifyGas
+    ) internal {
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
-        uint256 gasAssetToReserve = op.maxGasAssetCost();
+        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -186,11 +192,12 @@ contract BalanceManager is
     function _gatherReservedGasAssetAndPayBundler(
         Operation calldata op,
         OperationResult memory opResult,
+        uint256 perJoinSplitVerifyGas,
         address bundler
     ) internal {
         // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset calldata encodedGasAsset = op.gasAsset();
-        uint256 gasAssetAmount = op.maxGasAssetCost();
+        uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
             // Request reserved gasAssetAmount from vault.

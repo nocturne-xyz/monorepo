@@ -43,4 +43,31 @@ contract ParseUtils {
         }
         return result;
     }
+
+    function hasSubstring(
+        string memory str,
+        string memory substr
+    ) public pure returns (bool) {
+        bytes memory strBytes = bytes(str);
+        bytes memory substrBytes = bytes(substr);
+
+        if (strBytes.length < substrBytes.length) {
+            return false;
+        }
+
+        for (uint i = 0; i <= strBytes.length - substrBytes.length; i++) {
+            bool isMatch = true;
+            for (uint j = 0; j < substrBytes.length; j++) {
+                if (strBytes[i + j] != substrBytes[j]) {
+                    isMatch = false;
+                    break;
+                }
+            }
+            if (isMatch) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

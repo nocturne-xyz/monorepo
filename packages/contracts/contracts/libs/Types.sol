@@ -139,19 +139,21 @@ library OperationLib {
     }
 
     function maxGasLimit(
-        Operation calldata self
+        Operation calldata self,
+        uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
         return
             self.executionGasLimit +
-            ((GAS_PER_JOINSPLIT_VERIFY + GAS_PER_JOINSPLIT_HANDLE) *
+            ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 self.joinSplits.length) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) *
                 self.maxNumRefunds);
     }
 
     function maxGasAssetCost(
-        Operation calldata self
+        Operation calldata self,
+        uint256 perJoinSplitVerifyGas
     ) internal pure returns (uint256) {
-        return self.gasPrice * maxGasLimit(self);
+        return self.gasPrice * maxGasLimit(self, perJoinSplitVerifyGas);
     }
 }

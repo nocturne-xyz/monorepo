@@ -4,33 +4,15 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ISimpleToken.sol";
 
-contract SimpleERC721Token is ERC721, Ownable {
+contract SimpleERC721Token is ISimpleERC721Token, ERC721, Ownable {
     constructor() ERC721("Simple", "Simple") {}
 
-    function reserveToken(address account, uint256 tokenId) external {
-        _safeMint(account, tokenId);
-    }
-
-    function reserveTokens(
+    function reserveToken(
         address account,
-        uint256[] calldata tokenIds
-    ) external {
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            _safeMint(account, tokenIds[i]);
-        }
-    }
-
-    function transferFrom(
-        address from,
-        address to,
         uint256 tokenId
-    ) public virtual override {
-        //solhint-disable-next-line max-line-length
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "ERC721: transfer caller is not owner nor approved"
-        );
-        _transfer(from, to, tokenId);
+    ) external virtual override {
+        _safeMint(account, tokenId);
     }
 }

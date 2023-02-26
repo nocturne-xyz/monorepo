@@ -4,38 +4,38 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
-contract NocturneReentrancyGuard is Initializable {
-    uint256 public constant NOT_ENTERED = 1;
+contract OperationReentrancyGuard is Initializable {
+    uint256 public constant NO_OPERATION_ENTERED = 1;
     uint256 public constant ENTERED_PROCESS_OPERATION = 2;
-    uint256 public constant ENTERED_EXECUTE_OPERATION = 3;
+    uint256 public constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 private _operationStage;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    function __NocturneReentrancyGuard_init() internal onlyInitializing {
-        _operationStage = NOT_ENTERED;
+    function __OperationReentrancyGuard_init() internal onlyInitializing {
+        _operationStage = NO_OPERATION_ENTERED;
     }
 
     modifier processOperationGuard() {
         require(
-            _operationStage == NOT_ENTERED,
+            _operationStage == NO_OPERATION_ENTERED,
             "Reentry into processOperation"
         );
         _operationStage = ENTERED_PROCESS_OPERATION;
 
         _;
 
-        _operationStage = NOT_ENTERED;
+        _operationStage = NO_OPERATION_ENTERED;
     }
 
-    modifier executeOperationGuard() {
+    modifier executeActionsGuard() {
         require(
             _operationStage == ENTERED_PROCESS_OPERATION,
-            "Reentry into executeOperation"
+            "Reentry into executeActions"
         );
-        _operationStage = ENTERED_EXECUTE_OPERATION;
+        _operationStage = ENTERED_EXECUTE_ACTIONS;
 
         _;
 

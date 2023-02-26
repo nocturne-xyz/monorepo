@@ -20,22 +20,32 @@ contract TestBalanceManager is BalanceManager {
         _makeDeposit(deposit);
     }
 
-    function processJoinSplitsReservingFee(Operation calldata op) public {
-        _processJoinSplitsReservingFee(op);
+    function processJoinSplitsReservingFee(
+        Operation calldata op,
+        uint256 perJoinSplitVerifyGas
+    ) public {
+        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
     }
 
     function gatherReservedGasAssetAndPayBundler(
         Operation calldata op,
         OperationResult memory opResult,
+        uint256 perJoinSplitVerifyGas,
         address bundler
     ) public {
-        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
+        _gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            perJoinSplitVerifyGas,
+            bundler
+        );
     }
 
     function calculateOpGasAssetCost(
-        Operation calldata op
+        Operation calldata op,
+        uint256 perJoinSplitVerifyGas
     ) public pure returns (uint256) {
-        return op.maxGasAssetCost();
+        return op.maxGasAssetCost(perJoinSplitVerifyGas);
     }
 
     function calculateBundlerGasAssetPayout(

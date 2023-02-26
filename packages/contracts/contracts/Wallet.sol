@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import "./interfaces/IVault.sol";
@@ -10,7 +11,12 @@ import "./libs/Types.sol";
 import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library
-contract Wallet is IWallet, BalanceManager, Versioned {
+contract Wallet is
+    IWallet,
+    BalanceManager,
+    Versioned,
+    ReentrancyGuardUpgradeable
+{
     using OperationLib for Operation;
 
     // gap for upgrade safety
@@ -55,11 +61,11 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     */
     function processBundle(
         Bundle calldata bundle
-    ) external override returns (OperationResult[] memory) {
+    ) external override nonReentrant returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
 
-        (bool success, uint256 perJoinSplitGas) = _verifyAllProofsMetered(
+        (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
             ops,
             opDigests
         );
@@ -69,13 +75,8 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            uint256 verificationGasForOp = WalletUtils.verificationGasForOp(
-                ops[i],
-                perJoinSplitGas
-            );
-
             try
-                this.processOperation(ops[i], verificationGasForOp, msg.sender)
+                this.processOperation(ops[i], perJoinSplitVerifyGas, msg.sender)
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
@@ -97,7 +98,7 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     /**
       @dev This function will only be message-called from `processBundle` and
       can only be entered once inside an Evm transaction. It will message-call
-      `executeOperation`.
+      `executeActions`.
 
       @param op an Operation
       @param bundler address of the bundler that provided the bundle
@@ -107,16 +108,16 @@ contract Wallet is IWallet, BalanceManager, Versioned {
       It is expected of `processBundle` to catch this error.
 
       @dev The gas cost of the call can be estimated in constant time given op:
-      1. The gas cost before `executeOperation` can be bounded as a function of
+      1. The gas cost before `executeActions` can be bounded as a function of
       op.joinSplits.length
-      2. `executeOperation` uses at most op.executionGasLimit
-      3. The gas cost after `executeOperation` can be bounded as a function of
+      2. `executeActions` uses at most op.executionGasLimit
+      3. The gas cost after `executeActions` can be bounded as a function of
       op.maxNumRefunds
       The bundler should estimate the gas cost functions in 1 and 3 offchain.
     */
     function processOperation(
         Operation calldata op,
-        uint256 verificationGasForOp,
+        uint256 perJoinSplitVerifyGas,
         address bundler
     )
         external
@@ -126,21 +127,33 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     {
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
-        _processJoinSplitsReservingFee(op);
+        _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
-        try this.executeOperation{gas: op.executionGasLimit}(op) returns (
+        uint256 preExecutionGas = gasleft();
+        try this.executeActions{gas: op.executionGasLimit}(op) returns (
             OperationResult memory result
         ) {
             opResult = result;
-        } catch (bytes memory result) {
-            // TODO: properly process this failure case
-            // TODO: properly set opResult.executionGas
-            opResult = WalletUtils.unsuccessfulOperation(op, result);
+        } catch (bytes memory reason) {
+            opResult = WalletUtils.failOperationWithReason(
+                WalletUtils.getRevertMsg(reason)
+            );
         }
-        opResult.verificationGas = verificationGasForOp;
+
+        // Set verification and execution gas after getting opResult
+        opResult.verificationGas = WalletUtils.verificationGasForOp(
+            op,
+            perJoinSplitVerifyGas
+        );
+        opResult.executionGas = preExecutionGas - gasleft();
 
         // Gather reserved gas asset and process gas payment to bundler
-        _gatherReservedGasAssetAndPayBundler(op, opResult, bundler);
+        _gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            perJoinSplitVerifyGas,
+            bundler
+        );
 
         // Note: if too many refunds condition reverted in execute actions, the
         // actions creating the refunds were reverted too, so numRefunds would =
@@ -154,16 +167,14 @@ contract Wallet is IWallet, BalanceManager, Versioned {
       @dev This function will only be message-called from `processOperation`.
       The call gas given is the execution gas specified by the operation.
     */
-    function executeOperation(
+    function executeActions(
         Operation calldata op
     )
         external
         onlyThis
-        executeOperationGuard
+        executeActionsGuard
         returns (OperationResult memory opResult)
     {
-        uint256 preExecutionGas = gasleft();
-
         uint256 numActions = op.actions.length;
         opResult.opProcessed = true; // default to true
         opResult.callSuccesses = new bool[](numActions);
@@ -181,14 +192,12 @@ contract Wallet is IWallet, BalanceManager, Versioned {
         }
 
         // Ensure number of refunds didn't exceed max specified in op.
-        // If it did, executeOperation is reverts and all action state changes
+        // If it did, executeActions is reverts and all action state changes
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
 
         opResult.numRefunds = numRefundsToHandle;
-
-        opResult.executionGas = preExecutionGas - gasleft();
     }
 
     // Verifies the joinsplit proofs of a bundle of transactions
@@ -197,15 +206,17 @@ contract Wallet is IWallet, BalanceManager, Versioned {
     function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests
-    ) internal view returns (bool success, uint256 perJoinSplitGas) {
+    ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
         success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
 
-        perJoinSplitGas = (preVerificationGasLeft - gasleft()) / proofs.length;
-        return (success, perJoinSplitGas);
+        perJoinSplitVerifyGas =
+            (preVerificationGasLeft - gasleft()) /
+            proofs.length;
+        return (success, perJoinSplitVerifyGas);
     }
 
     function _makeExternalCall(
