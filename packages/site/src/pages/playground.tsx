@@ -72,18 +72,9 @@ const Playground = () => {
     });
   }, [loadNocturneFrontendSDK, state.installedSnap]);
 
-  const syncNotes = async () => {
+  const sync = async () => {
     try {
-      await nocturneFrontendSDK!.syncNotes();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const syncLeaves = async () => {
-    try {
-      await nocturneFrontendSDK!.syncLeaves();
+      await nocturneFrontendSDK!.sync();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -93,8 +84,8 @@ const Playground = () => {
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK) return;
-      console.log("Syncing notes and leaves...");
-      await Promise.all([syncNotes(), syncLeaves()]);
+      console.log("Syncing and leaves...");
+      await sync();
     }, 20_000);
 
     return () => clearTimeout(timeout);

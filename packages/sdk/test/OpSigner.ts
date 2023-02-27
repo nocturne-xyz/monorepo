@@ -10,12 +10,12 @@ import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
 
 describe("OpSigner", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove separate `syncLeaves` method and rename `syncNotes` to `sync`
 - clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - adapt to breaking changes in MM Flask
 - rename methods to make intended usage clearer

@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+- fix `NotesDB` bug where `getAllNotes` also returns note commitments
+- replace separate `syncLeaves` and `SyncNotes` methods with single `sync method in NocutrneDB
+- add `NocturneSyncer` to `NocturneContext`
+- rename `NotesDB` -> `NocturneDB`
+- get rid of `MerkleDB` and `NotesManager`
+- add `currentBlock()`, `lastCommittedIndex()`, `applyStateDiff`, `getNoteCommitmentsByIndexRange()` to `NotesDB`
+- add `NocturneSyncer`
 - move `indexing/utils` to `utils/ethers` and get rid of `indexing` module
 - add `SyncAdapter` and default impl `RPCSyncAdapter` to `sync` module
 - add `ClosableAsyncIterator` to new module `sync`

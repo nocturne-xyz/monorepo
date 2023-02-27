@@ -1,6 +1,5 @@
 import { expect } from "chai";
 import { setupNocturne } from "../src/deploy";
-import * as JSON from "bigint-json-serialization";
 import { KEYS_TO_WALLETS, KEYS } from "../src/keys";
 import { startHardhatNetwork } from "../src/hardhat";
 import Dockerode from "dockerode";
@@ -18,18 +17,17 @@ import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import {
   NocturneContext,
-  NotesDB,
+  NocturneDB,
   OperationRequest,
   OperationRequestBuilder,
   OpProver,
   queryEvents,
   Asset,
   AssetType,
-  computeOperationDigest,
   JoinSplitProver,
 } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
-import { sleep } from "../src/utils";
+import { sleep, submitAndProcessOperation } from "../src/utils";
 import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
 import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
@@ -69,9 +67,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let erc20Token: SimpleERC20Token;
   let erc721Token: SimpleERC721Token;
   let erc1155Token: SimpleERC1155Token;
-  let notesDBAlice: NotesDB;
+  let nocturneDBAlice: NocturneDB;
   let nocturneContextAlice: NocturneContext;
-  let notesDBBob: NotesDB;
+  let nocturneDBBob: NocturneDB;
   let nocturneContextBob: NocturneContext;
   let joinSplitProver: JoinSplitProver;
   let opProver: OpProver;
@@ -91,9 +89,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     ({
       vault,
       wallet,
-      notesDBAlice,
+      nocturneDBAlice,
       nocturneContextAlice,
-      notesDBBob,
+      nocturneDBBob,
       nocturneContextBob,
       joinSplitProver,
     } = await setupNocturne(deployerEoa));
@@ -150,20 +148,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>
   ): Promise<void> {
-    console.log("Alice: Sync SDK notes manager");
-    await nocturneContextAlice.syncNotes();
+    console.log("Alice: Sync SDK");
+    await nocturneContextAlice.sync();
 
-    console.log("Bob: Sync SDK notes manager");
-    await nocturneContextBob.syncNotes();
+    console.log("Bob: Sync SDK");
+    await nocturneContextBob.sync();
 
-    const preOpNotesAlice = await notesDBAlice.getAllNotes();
+    const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
-
-    console.log("Alice: Sync SDK merkle prover");
-    await nocturneContextAlice.syncLeaves();
-
-    console.log("Bob: Sync SDK merkle prover");
-    await nocturneContextBob.syncLeaves();
 
     const opRequest: OperationRequest = {
       ...operationRequest,
@@ -175,33 +167,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const signed = nocturneContextAlice.signOperation(preSign);
     const operation = await opProver.proveOperation(signed);
 
-    console.log("Process bundle");
-    var res = await fetch(`http://localhost:3000/relay`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(operation),
-    });
-    console.log("Bundler server response: ", await res.json());
-
-    console.log("Sleeping for 20s while bundler submits...");
-    await sleep(20_000);
-
-    const operationDigest = computeOperationDigest(operation);
-    var res = await fetch(
-      `http://localhost:3000/operations/${operationDigest}`,
-      {
-        method: "GET",
-      }
-    );
-    console.log(
-      `Bundler marked operation ${operationDigest} ${JSON.stringify(
-        await res.json()
-      )}`
-    );
-
-    await sleep(5_000);
+    await submitAndProcessOperation(operation);
 
     await contractChecks();
     await offchainChecks();
@@ -267,9 +233,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     };
 
     const offchainChecks = async () => {
-      console.log("Alice: Sync SDK notes manager post-operation");
-      await nocturneContextAlice.syncNotes();
-      const updatedNotesAlice = await notesDBAlice.getNotesForAsset(
+      console.log("Alice: Sync SDK post-operation");
+      await nocturneContextAlice.sync();
+      const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
@@ -291,9 +257,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       );
       expect(foundNotesAlice.length).to.equal(1);
 
-      console.log("Bob: Sync SDK notes manager post-operation");
-      await nocturneContextBob.syncNotes();
-      const updatedNotesBob = await notesDBBob.getNotesForAsset(erc20Asset)!;
+      console.log("Bob: Sync SDK post-operation");
+      await nocturneContextBob.sync();
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -377,17 +343,17 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     };
 
     const offchainChecks = async () => {
-      console.log("Alice: Sync SDK notes manager post-operation");
-      await nocturneContextAlice.syncNotes();
+      console.log("Alice: Sync SDK post-operation");
+      await nocturneContextAlice.sync();
 
       // Alice should have a note for minted ERC721 token
-      const erc721NotesAlice = await notesDBAlice.getNotesForAsset(
+      const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc721Asset
       )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
-      const erc1155NotesAlice = await notesDBAlice.getNotesForAsset(
+      const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc1155Asset
       )!;
       expect(erc1155NotesAlice.length).to.equal(1);

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- remove "sync" buttons from test site 
+- use unified `sync` method from SDK in playground
 - update callsites for updated frontend SDK
 - use builder in index.ts
 - update imports with SDK renames (see SDK changelog)

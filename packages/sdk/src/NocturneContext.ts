@@ -4,33 +4,35 @@ import {
   AssetWithBalance,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
-import { NotesManager } from "./notesManager";
-import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
+import { MerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
-import { NotesDB } from "./db";
+import { NocturneDB } from "./NocturneDB";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { OpSigner } from "./opSigner";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
+import { SyncAdapter } from "./sync";
+import { NocturneSyncer } from "./NocturneSyncer";
 
 export class NocturneContext {
-  readonly signer: NocturneSigner;
-  protected merkleProver: MerkleProver;
-  protected notesManager: NotesManager;
-  protected walletContract: Wallet;
-  readonly db: NotesDB;
-
   private opPreparer: OpPreparer;
   private opSigner: OpSigner;
+  private syncer: NocturneSyncer;
+
+  protected walletContract: Wallet;
+  protected merkleProver: MerkleProver;
+  protected db: NocturneDB;
+
+  readonly signer: NocturneSigner;
 
   constructor(
     signer: NocturneSigner,
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
     merkleProver: MerkleProver,
-    notesManager: NotesManager,
-    db: NotesDB
+    db: NocturneDB,
+    syncAdapter: SyncAdapter
   ) {
     let config: NocturneConfig;
     if (typeof configOrNetworkName == "string") {
@@ -45,7 +47,6 @@ export class NocturneContext {
       provider
     );
     this.merkleProver = merkleProver;
-    this.notesManager = notesManager;
     this.db = db;
 
     this.opPreparer = new OpPreparer(
@@ -56,19 +57,18 @@ export class NocturneContext {
     );
 
     this.opSigner = new OpSigner(this.signer);
+
+    this.syncer = new NocturneSyncer(
+      this.signer,
+      syncAdapter,
+      this.db,
+      this.merkleProver,
+      provider
+    );
   }
 
-  async syncNotes(): Promise<void> {
-    await this.notesManager.fetchAndStoreNewNotesFromRefunds();
-    await this.notesManager.fetchAndApplyNewJoinSplits();
-  }
-
-  async syncLeaves(): Promise<void> {
-    if (this.merkleProver.isLocal()) {
-      await (this.merkleProver as InMemoryMerkleProver).fetchLeavesAndUpdate();
-    } else {
-      throw Error("Attempted to sync leaves for non-local merkle prover");
-    }
+  async sync(): Promise<void> {
+    await this.syncer.sync();
   }
 
   async prepareOperation(
@@ -84,7 +84,7 @@ export class NocturneContext {
   async getAllAssetBalances(): Promise<AssetWithBalance[]> {
     const notes = await this.db.getAllNotes();
     return Array.from(notes.entries()).map(([assetString, notes]) => {
-      const asset = NotesDB.parseAssetKey(assetString);
+      const asset = NocturneDB.parseAssetKey(assetString);
       const balance = notes.reduce((a, b) => a + b.value, 0n);
       return {
         asset,

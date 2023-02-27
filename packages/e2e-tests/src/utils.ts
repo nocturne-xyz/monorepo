@@ -1,11 +1,14 @@
 import {
   MockSubtreeUpdateProver,
+  ProvenOperation,
   SubtreeUpdateProver,
+  computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
+import * as JSON from "bigint-json-serialization";
 import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -54,4 +57,45 @@ export function getSubtreeUpdaterDelay(): number {
   }
 
   return MOCK_SUBTREE_UPDATER_DELAY;
+}
+
+export async function submitAndProcessOperation(
+  op: ProvenOperation
+): Promise<void> {
+  console.log("submitting operation");
+  let res: any;
+  try {
+    res = await fetch(`http://localhost:3000/relay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(op),
+    });
+  } catch (err) {
+    console.log("Error submitting operation: ", err);
+    throw err;
+  }
+
+  console.log("Bundler server response: ", await res.json());
+
+  console.log("Sleeping for 20s while bundler submits...");
+  await sleep(20_000);
+
+  const operationDigest = computeOperationDigest(op);
+  try {
+    res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
+      method: "GET",
+    });
+    console.log(
+      `Bundler marked operation ${operationDigest} ${JSON.stringify(
+        await res.json()
+      )}`
+    );
+  } catch (err) {
+    console.log("Error getting operation status: ", err);
+    throw err;
+  }
+
+  await sleep(5_000);
 }

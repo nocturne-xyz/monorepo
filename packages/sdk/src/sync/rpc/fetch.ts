@@ -1,4 +1,10 @@
-import { AssetTrait, EncodedAsset, IncludedNote, Note } from "../../primitives";
+import {
+  AssetTrait,
+  BaseJoinSplit,
+  EncodedAsset,
+  IncludedNote,
+  Note,
+} from "../../primitives";
 import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
@@ -6,9 +12,16 @@ import {
   InsertNoteCommitmentsEvent,
   InsertNotesEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { JoinSplitEvent } from "../../notesManager";
 import { Wallet } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
+
+export interface JoinSplitEvent {
+  oldNoteANullifier: bigint;
+  oldNoteBNullifier: bigint;
+  newNoteAIndex: number;
+  newNoteBIndex: number;
+  joinSplit: BaseJoinSplit;
+}
 
 export async function fetchNotesFromRefunds(
   contract: Wallet,

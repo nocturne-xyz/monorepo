@@ -7,7 +7,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
-import { NocturneContext, NotesDB } from "@nocturne-xyz/sdk";
+import { NocturneContext, NocturneDB } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../src/deploy";
 import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
@@ -33,7 +33,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let token: SimpleERC20Token;
   let nocturneContextAlice: NocturneContext;
   let server: SubtreeUpdateServer;
-  let notesDBAlice: NotesDB;
+  let nocturneDBAlice: NocturneDB;
 
   beforeEach(async () => {
     docker = new Dockerode();
@@ -44,7 +44,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
     [deployerEoa, aliceEoa, subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
-    ({ vault, wallet, nocturneContextAlice, notesDBAlice } =
+    ({ vault, wallet, nocturneContextAlice, nocturneDBAlice } =
       await setupNocturne(deployerEoa));
 
     const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
@@ -72,7 +72,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   }
 
   afterEach(async () => {
-    await notesDBAlice.kv.clear();
+    await nocturneDBAlice.kv.clear();
     await server.stop();
     await server.dropDB();
     await hhContainer.stop();

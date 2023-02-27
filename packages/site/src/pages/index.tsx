@@ -12,8 +12,6 @@ import {
   InstallFlaskButton,
   ReconnectButton,
   Card,
-  SyncNotesButton,
-  SyncLeavesButton,
   ClearDbButton,
   GetJoinSplitInputsButton,
   GetAllBalancesButton,
@@ -131,24 +129,6 @@ const Index = () => {
         type: MetamaskActions.SetInstalled,
         payload: installedSnap,
       });
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const handleSyncNotesClick = async () => {
-    try {
-      await nocturneFrontendSDK!.syncNotes();
-    } catch (e) {
-      console.error(e);
-      dispatch({ type: MetamaskActions.SetError, payload: e });
-    }
-  };
-
-  const handleSyncLeavesClick = async () => {
-    try {
-      await nocturneFrontendSDK!.syncLeaves();
     } catch (e) {
       console.error(e);
       dispatch({ type: MetamaskActions.SetError, payload: e });
@@ -306,40 +286,6 @@ const Index = () => {
               />
             </Card>
           )}
-          <Card
-            content={{
-              title: "Sync Notes",
-              description: "Sync notes.",
-            }}
-            disabled={!state.installedSnap}
-            fullWidth={
-              state.isFlask &&
-              Boolean(state.installedSnap) &&
-              !shouldDisplayReconnectButton(state.installedSnap)
-            }
-          >
-            <SyncNotesButton
-              onClick={handleSyncNotesClick}
-              disabled={!state.installedSnap}
-            />
-          </Card>
-          <Card
-            content={{
-              title: "Sync Leaves",
-              description: "Sync leaves.",
-            }}
-            disabled={!state.installedSnap}
-            fullWidth={
-              state.isFlask &&
-              Boolean(state.installedSnap) &&
-              !shouldDisplayReconnectButton(state.installedSnap)
-            }
-          >
-            <SyncLeavesButton
-              onClick={handleSyncLeavesClick}
-              disabled={!state.installedSnap}
-            />
-          </Card>
           <Card
             content={{
               title: "Get All Balances",

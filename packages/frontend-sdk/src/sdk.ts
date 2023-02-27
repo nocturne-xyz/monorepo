@@ -222,32 +222,18 @@ export class NocturneFrontendSDK {
   /**
    * Invoke snap `syncNotes` method.
    */
-  async syncNotes(): Promise<void> {
+  async sync(): Promise<void> {
     await window.ethereum.request({
       method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
-          method: "nocturne_syncNotes",
+          method: "nocturne_sync",
         },
       },
     });
   }
 
-  /**
-   * Invoke snap `syncLeaves` method.
-   */
-  async syncLeaves(): Promise<void> {
-    await window.ethereum.request({
-      method: "wallet_invokeSnap",
-      params: {
-        snapId: SNAP_ID,
-        request: {
-          method: "nocturne_syncLeaves",
-        },
-      },
-    });
-  }
 
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
