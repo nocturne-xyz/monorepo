@@ -1,8 +1,7 @@
 import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
-import { Note } from "../note";
-import { Asset } from "../asset";
-import { assertOrErr } from "@nocturne-xyz/base-utils";
-import { EncryptedNote } from "../types";
+import { Note, Asset } from "../primitives";
+import { assertOrErr } from "../utils";
+import { EncryptedNote } from "../primitives/types";
 import {
   AffinePoint,
   BabyJubJub,

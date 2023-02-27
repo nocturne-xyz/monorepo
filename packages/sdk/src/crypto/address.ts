@@ -4,7 +4,7 @@ import {
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
 import randomBytes from "randombytes";
-import { assertOrErr } from "@nocturne-xyz/base-utils";
+import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
 
 const Fr = BabyJubJub.ScalarField;

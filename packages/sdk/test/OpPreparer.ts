@@ -2,11 +2,8 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import {
-  NocturneSigner,
-  generateRandomSpendingKey,
-} from "@nocturne-xyz/primitives";
-import { range } from "@nocturne-xyz/base-utils";
+import { NocturneSigner, generateRandomSpendingKey } from "../src/crypto";
+import { range } from "../src/utils";
 import { OperationRequestBuilder } from "../src";
 import { OpPreparer } from "../src/opPreparer";
 import { sortNotesByValue } from "../src/utils";

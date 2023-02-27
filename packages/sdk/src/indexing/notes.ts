@@ -3,11 +3,7 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import {
-  IncludedNote,
-  AssetTrait,
-  EncodedAsset,
-} from "@nocturne-xyz/primitives";
+import { IncludedNote, AssetTrait, EncodedAsset } from "../primitives";
 import { queryEvents } from "./utils";
 import { JoinSplitEvent } from "../notesManager";
 

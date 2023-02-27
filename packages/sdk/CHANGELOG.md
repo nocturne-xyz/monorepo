@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move `base-utils` and `primitives` back into SDK
 - add more tests for new `NotesDB` impl
 - fix db tests
 - make `NotesManager` use `nullifyNotes` instead of looping through the entire DB

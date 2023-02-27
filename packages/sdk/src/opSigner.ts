@@ -1,14 +1,13 @@
 import {
   PreSignJoinSplit,
-  NocturneSignature,
-  NocturneSigner,
   NoteTrait,
   computeOperationDigest,
   PreSignOperation,
   PreProofJoinSplit,
   SignedOperation,
-  JoinSplitInputs,
-} from "@nocturne-xyz/primitives";
+} from "./primitives";
+import { JoinSplitInputs } from "./proof";
+import { NocturneSignature, NocturneSigner } from "./crypto";
 
 export class OpSigner {
   private readonly signer: NocturneSigner;

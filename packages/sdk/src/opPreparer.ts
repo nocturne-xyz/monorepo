@@ -11,16 +11,17 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
-  MerkleProofInput,
+} from "./primitives";
+import {
   NocturneViewer,
   CanonAddress,
   StealthAddressTrait,
   encryptNote,
   randomBigInt,
-} from "@nocturne-xyz/primitives";
+} from "./crypto";
+import { MerkleProofInput } from "./proof";
 import { OpSimulator } from "./opSimulator";
-import { min, iterChunks } from "@nocturne-xyz/base-utils";
-import { sortNotesByValue } from "./utils";
+import { sortNotesByValue, min, iterChunks } from "./utils";
 
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
