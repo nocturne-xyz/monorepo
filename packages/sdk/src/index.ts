@@ -3,7 +3,7 @@ export * from "./primitives";
 export * from "./proof";
 export * from "./crypto";
 export * from "./db";
-export * from "./indexing";
+export * from "./sync";
 export * from "./merkleProver";
 export * from "./notesManager";
 

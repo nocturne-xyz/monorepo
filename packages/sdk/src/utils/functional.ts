@@ -61,6 +61,21 @@ export function* iterChunks<T>(
   }
 }
 
-export function min(a: bigint, b: bigint): bigint {
+export function min(a: bigint, b: bigint): bigint;
+export function min(a: number, b: number): number;
+export function min(a: number | bigint, b: number | bigint): number | bigint {
   return a < b ? a : b;
+}
+
+export function max(a: bigint, b: bigint): bigint;
+export function max(a: number, b: number): number;
+export function max(a: number | bigint, b: number | bigint): number | bigint {
+  return a > b ? a : b;
+}
+
+export function maxArray(arr: number[]): number;
+export function maxArray(arr: bigint[]): bigint;
+export function maxArray(arr: number[] | bigint[]): number | bigint {
+  //@ts-ignore
+  return arr.reduce((curr, x) => max(curr, x));
 }
