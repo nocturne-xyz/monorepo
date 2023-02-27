@@ -6,8 +6,8 @@ import {
   IncludedNoteWithNullifier,
   IncludedNoteCommitment,
   Note,
-} from "@nocturne-xyz/primitives";
-import { partition, numberToStringPadded } from "@nocturne-xyz/base-utils";
+} from "../primitives";
+import { partition, numberToStringPadded } from "../utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./kvStore";
 

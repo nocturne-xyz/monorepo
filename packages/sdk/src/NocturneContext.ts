@@ -3,8 +3,8 @@ import {
   Address,
   PreSignOperation,
   AssetWithBalance,
-  NocturneSigner,
-} from "@nocturne-xyz/primitives";
+} from "./primitives";
+import { NocturneSigner } from "./crypto";
 import { NotesManager } from "./notesManager";
 import { MerkleProver, InMemoryMerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";

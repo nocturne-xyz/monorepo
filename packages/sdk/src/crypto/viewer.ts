@@ -2,9 +2,9 @@ import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
 import { ViewingKey } from "./keys";
 import randomBytes from "randombytes";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
-import { IncludedNote, Note, NoteTrait } from "../note";
-import { EncryptedNote } from "../types";
-import { Asset } from "../asset";
+import { IncludedNote, Note, NoteTrait } from "../primitives/note";
+import { EncryptedNote } from "../primitives/types";
+import { Asset } from "../primitives/asset";
 import { decryptNote } from "./noteEncryption";
 
 const Fr = BabyJubJub.ScalarField;

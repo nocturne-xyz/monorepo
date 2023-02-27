@@ -1,7 +1,8 @@
 /* eslint-disable */
 import { NotesManager, JoinSplitEvent } from ".";
 import { NotesDB, InMemoryKVStore } from "../db";
-import { IncludedNote, NocturneViewer } from "@nocturne-xyz/primitives";
+import { IncludedNote } from "../primitives";
+import { NocturneViewer } from "../crypto";
 
 export class MockNotesManager extends NotesManager {
   constructor() {

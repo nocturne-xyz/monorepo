@@ -23,13 +23,11 @@ import {
   OperationRequestBuilder,
   OpProver,
   queryEvents,
-} from "@nocturne-xyz/sdk";
-import {
   Asset,
   AssetType,
   computeOperationDigest,
   JoinSplitProver,
-} from "@nocturne-xyz/primitives";
+} from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep } from "../src/utils";
 import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";

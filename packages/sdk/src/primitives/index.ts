@@ -1,5 +1,3 @@
-export * from "./crypto";
-export * from "./proof";
 export * from "./types";
 
 export { BinaryPoseidonTree } from "./binaryPoseidonTree";

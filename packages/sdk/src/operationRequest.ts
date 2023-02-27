@@ -1,11 +1,6 @@
-import {
-  CanonAddress,
-  StealthAddress,
-  Asset,
-  Address,
-  Action,
-} from "@nocturne-xyz/primitives";
-import { groupBy } from "@nocturne-xyz/base-utils";
+import { Asset, Address, Action } from "./primitives";
+import { CanonAddress, StealthAddress } from "./crypto";
+import { groupBy } from "./utils";
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {

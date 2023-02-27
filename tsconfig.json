@@ -60,12 +60,6 @@
     },
     {
       "path": "./packages/snap"
-    },
-    {
-      "path": "./packages/base-utils"
-    },
-    {
-      "path": "./packages/primitives"
     }
   ]
 }

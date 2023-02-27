@@ -4,7 +4,7 @@ import {
   NocturneSigner,
   NocturneSignature,
   generateRandomSpendingKey,
-} from "@nocturne-xyz/primitives";
+} from "../src/crypto";
 import { shitcoin, setup, getDummyHex } from "./utils";
 import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
 

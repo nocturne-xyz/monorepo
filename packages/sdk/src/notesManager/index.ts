@@ -2,12 +2,12 @@ import { NotesDB } from "../db";
 import {
   IncludedNote,
   NoteTrait,
-  NocturneViewer,
   Asset,
   AssetTrait,
   BaseJoinSplit,
   EncryptedNote,
-} from "@nocturne-xyz/primitives";
+} from "../primitives";
+import { NocturneViewer } from "../crypto";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;

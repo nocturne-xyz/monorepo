@@ -5,7 +5,7 @@ import {
   SubtreeUpdateEvent,
 } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { queryEvents } from "./utils";
-import { Note, AssetTrait, EncodedAsset } from "@nocturne-xyz/primitives";
+import { Note, AssetTrait, EncodedAsset } from "../primitives";
 
 interface OrderedInsertion {
   insertion: bigint | Note;

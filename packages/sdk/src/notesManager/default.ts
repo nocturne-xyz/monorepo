@@ -1,10 +1,7 @@
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import {
-  Address,
-  IncludedNote,
-  NocturneViewer,
-} from "@nocturne-xyz/primitives";
+import { Address, IncludedNote } from "../primitives";
+import { NocturneViewer } from "../crypto";
 import { NotesDB } from "../db";
 import { NotesManager, JoinSplitEvent } from ".";
 import { fetchJoinSplits, fetchNotesFromRefunds } from "../indexing";

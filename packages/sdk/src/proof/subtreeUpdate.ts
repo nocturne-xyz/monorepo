@@ -1,12 +1,6 @@
 import { BaseProof } from "./types";
-import { BinaryPoseidonTree } from "../binaryPoseidonTree";
-import {
-  bigintToBEPadded,
-  bigInt256ToFieldElems,
-} from "@nocturne-xyz/base-utils";
-import { Note, NoteTrait } from "../note";
-import { AssetTrait } from "../asset";
-
+import { BinaryPoseidonTree, Note, NoteTrait, AssetTrait } from "../primitives";
+import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 

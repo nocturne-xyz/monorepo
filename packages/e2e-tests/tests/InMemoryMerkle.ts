@@ -11,8 +11,8 @@ import {
   NocturneContext,
   InMemoryMerkleProver,
   MerkleDB,
+  BinaryPoseidonTree,
 } from "@nocturne-xyz/sdk";
-import { BinaryPoseidonTree } from "@nocturne-xyz/primitives";
 import { setupNocturne } from "../src/deploy";
 import { depositFunds } from "../src/deposit";
 import { getSubtreeUpdateProver, sleep } from "../src/utils";

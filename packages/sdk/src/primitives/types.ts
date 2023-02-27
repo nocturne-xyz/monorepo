@@ -1,5 +1,5 @@
-import { StealthAddress } from "./crypto";
-import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "./proof";
+import { StealthAddress } from "../crypto";
+import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { EncodedAsset } from "./asset";
 
