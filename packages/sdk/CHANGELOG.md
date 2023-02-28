@@ -2,20 +2,21 @@
 
 ### Unreleased
 
+- Add `Operation.gasAsset` instead of using `joinsplits[0]`
 - move `base-utils` and `primitives` back into SDK
 - add more tests for new `NotesDB` impl
 - fix db tests
 - make `NotesManager` use `nullifyNotes` instead of looping through the entire DB
-- re-implement `NotesDB` to index notes by `merkleIndex`, `nullifier`, and `asset`. 
+- re-implement `NotesDB` to index notes by `merkleIndex`, `nullifier`, and `asset`.
 - rename `getNotesFor` -> `getNotesForAsset`
 - make `OpPreparer` and `NotesManager` use `NocturneViewer` instead of `NocturneSigner`
-- move  `crypto`, `proof`, `note`, `asset`, and `binaryPoseidonTree`, and `commonTypes` to new package `@nocturne-xyz/primitives`
+- move `crypto`, `proof`, `note`, `asset`, and `binaryPoseidonTree`, and `commonTypes` to new package `@nocturne-xyz/primitives`
 - move `utils` module to its own package
 - move `ethers` utils into `indexing` module
 - create `OpSimulator`
 - move `signOperation` to a new class `OpSigner`
 - replace `proveOperation` with `OpProver`
-- replace `prepareOperation` with `OpPreparer` 
+- replace `prepareOperation` with `OpPreparer`
 - Remove `verificationGasLimit` from `Operation`
 - clean module hierarchy:
   - flatten `sdk` submodule
