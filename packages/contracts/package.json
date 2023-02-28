@@ -8,13 +8,14 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
-    "build:hardhat": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
-    "build:foundry": "FOUNDRY_PROFILE=contracts forge build --sizes",
     "build": "yarn build:deps && yarn build:foundry && yarn build:hardhat",
     "build:deps": "./install_deps.sh",
+    "build:foundry": "FOUNDRY_PROFILE=contracts forge build --sizes",
+    "build:hardhat": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",
     "clean": "hardhat clean && rm -rf .turbo artifacts cache_hardhat dist src foundry_artifacts",
     "compile": "hardhat compile",
     "copy-definitions": "cp src/*.d.ts dist/src",
+    "inspect:storage-layout": "./storage_inspect.sh",
     "lint": "solhint contracts/*.sol",
     "lint:fix": "solhint --fix contracts/*.sol && yarn prettier --write",
     "prettier:check": "prettier --check ./contracts",
@@ -23,8 +24,7 @@
     "test:coverage": "FOUNDRY_PROFILE=contracts forge coverage",
     "test:coverage:report": "FOUNDRY_PROFILE=contracts forge coverage --report lcov",
     "test:gas-report": "yarn test:unit --gas-report",
-    "test:unit": "FOUNDRY_PROFILE=contracts forge test",
-    "inspect:storage-layout": "./storage_inspect.sh"
+    "test:unit": "FOUNDRY_PROFILE=contracts forge test"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.7.3",
