@@ -9,3 +9,5 @@ export {
   fetchNotesFromRefunds,
   RPCSyncAdapter,
 } from "./rpc";
+
+export { SubgraphSyncAdapter } from "./subgraph";

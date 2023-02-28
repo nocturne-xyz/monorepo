@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `SubgraphSyncAdapter`
 - Add test suite for `OpRequestPreparer`
 - Split out op request prepare and op prepare logic into `OpRequestPreparer` and `OpPreparer` (will be turned from classes to modules in follow on PR)
 - Incorporate gas compensation logic in `OpPreparer`

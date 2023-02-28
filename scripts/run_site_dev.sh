@@ -7,6 +7,7 @@ cd $ROOT_DIR
 
 LOG_DIR="$ROOT_DIR/site-dev-logs"
 mkdir -p $LOG_DIR
+echo "outputting logs to $LOG_DIR/"
 
 yarn build
 
@@ -16,23 +17,34 @@ trap 'trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 
 # start the site
 pushd packages/site
+echo "starting site..."
 yarn start &
 SITE_PID=$!
 popd
 
 # start the snap
 pushd packages/snap
+echo "starting snap..."
 yarn start &
 SNAP_PID=$!
 popd
 
+# clear graph node state
+pushd graph-node/docker
+rm -rf data
+popd
+
 # start the hardhat node
 pushd packages/e2e-tests
-echo "outputting logs to $LOG_DIR/"
+echo "starting hardhat node..."
 yarn hh-node &> "$LOG_DIR/hh-node" &
 HH_NODE_PID=$!
 
 sleep 10
+
+# start graph node
+echo "starting graph node..."
+yarn graph-node &> "$LOG_DIR/graph-node" &
 
 # deposit
 echo "Running deposit funds script..."
@@ -47,6 +59,12 @@ read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})
 read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
+popd
+
+# deploy subgraph
+pushd packages/subgraph
+yarn create-local
+yarn deploy-local
 popd
 
 # bundler default config variables

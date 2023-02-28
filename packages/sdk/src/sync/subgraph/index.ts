@@ -1,0 +1,1 @@
+export { SubgraphSyncAdapter } from "./adapter";
