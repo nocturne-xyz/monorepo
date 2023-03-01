@@ -93,7 +93,9 @@ export class OpPreparer {
       encodedRefundAssets,
       maxNumRefunds,
       gasPrice,
-
+      // TODO: add logic for specifying optional gas asset in OperationRequest
+      // and defaulting to ETH or DAI otherwise
+      encodedGasAsset: joinSplits[0].encodedAsset,
       // these may be undefined
       executionGasLimit,
     };

@@ -78,6 +78,7 @@ export class OpSimulator {
       refundAddr: op.refundAddr,
       encodedRefundAssets: op.encodedRefundAssets,
       actions: op.actions,
+      encodedGasAsset: op.encodedGasAsset,
       executionGasLimit: op.executionGasLimit,
       maxNumRefunds: op.maxNumRefunds,
       gasPrice: op.gasPrice,

@@ -14,6 +14,7 @@ enum JoinSplitsFailureType {
 
 struct FormatOperationArgs {
     SimpleERC20Token joinSplitToken;
+    SimpleERC20Token gasToken;
     uint256 root;
     uint256 publicSpendPerJoinSplit;
     uint256 numJoinSplits;
@@ -185,6 +186,11 @@ library NocturneUtils {
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
             actions: args.actions,
+            encodedGasAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(args.gasToken),
+                ERC20_ID
+            ),
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `Operation.gasAsset` instead of using `joinsplits[0]`
 - Make `OperationReentrancyGuard` only for op processing/execution, use OZ `ReentrancyGuardUpgradable` for `processBundle` (the only actually exposed method for wallet)
 - Add `Wallet` unit tests
   - Reentrancy from actions

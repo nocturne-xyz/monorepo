@@ -54,6 +54,10 @@ export const VALID_PROVEN_OPERATION_OBJ = {
       encodedFunction: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
     },
   ],
+  encodedGasAsset: {
+    encodedAssetAddr: "2n",
+    encodedAssetId: "3n",
+  },
   executionGasLimit: "10000000n",
   maxNumRefunds: "2n",
   gasPrice: "10n",

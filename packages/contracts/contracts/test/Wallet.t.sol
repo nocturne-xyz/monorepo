@@ -222,6 +222,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -277,6 +278,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
@@ -332,6 +334,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 6,
@@ -388,6 +391,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: 1 * PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -442,6 +446,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -495,6 +500,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -561,6 +567,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -619,6 +626,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -651,6 +659,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -709,6 +718,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -741,6 +751,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -799,6 +810,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -916,6 +928,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: tokenIn,
+                gasToken: tokenIn,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -1029,6 +1042,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: tokenIn,
+                gasToken: tokenIn,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -1106,6 +1120,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
                 numJoinSplits: 3,
@@ -1161,6 +1176,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -1208,6 +1224,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,
@@ -1238,6 +1255,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: wallet.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 1,

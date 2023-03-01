@@ -27,6 +27,7 @@ contract ReentrantCaller {
             NocturneUtils.formatOperation(
                 FormatOperationArgs({
                     joinSplitToken: _token,
+                    gasToken: _token,
                     root: _wallet.root(),
                     publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                     numJoinSplits: 6,

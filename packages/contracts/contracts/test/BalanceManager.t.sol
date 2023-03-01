@@ -238,6 +238,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -270,6 +271,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -313,6 +315,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 3,
@@ -355,6 +358,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -421,6 +425,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
                 numJoinSplits: 3,
@@ -460,6 +465,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -490,6 +496,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -521,6 +528,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -551,6 +559,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -581,6 +590,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
+                gasToken: token,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -626,6 +636,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: joinSplitToken,
+                gasToken: joinSplitToken,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
@@ -658,6 +669,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: joinSplitToken,
+                gasToken: joinSplitToken,
                 root: balanceManager.root(),
                 publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                 numJoinSplits: 2,
