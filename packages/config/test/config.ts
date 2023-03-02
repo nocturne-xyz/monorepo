@@ -12,9 +12,9 @@ describe("Config", async () => {
     const config = loadNocturneConfig("example-network");
 
     expect(jsonConfig.contracts).to.eql(config.contracts);
-    expect(config.gasAssets.get("weth")!).to.eql(jsonConfig.gasAssets.weth);
-    expect(config.gasAssets.get("dai")!).to.eql(jsonConfig.gasAssets.dai);
-    expect(config.rateLimits.get("weth")!).to.eql(jsonConfig.rateLimits.weth);
-    expect(config.rateLimits.get("dai")!).to.eql(jsonConfig.rateLimits.dai);
+    expect(config.gasAsset("weth")!).to.eql(jsonConfig.gasAssets.weth);
+    expect(config.gasAsset("dai")!).to.eql(jsonConfig.gasAssets.dai);
+    expect(config.rateLimit("weth")!).to.eql(jsonConfig.rateLimits.weth);
+    expect(config.rateLimit("dai")!).to.eql(jsonConfig.rateLimits.dai);
   });
 });
