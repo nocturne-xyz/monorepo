@@ -17,6 +17,11 @@ export interface NocturneConfig {
 }
 
 export function loadNocturneConfig(network: string): NocturneConfig {
-  const config = fs.readFileSync(`${CONFIGS_DIR}/${network}.json`).toString();
-  return JSON.parse(config) as NocturneConfig;
+  const json = fs.readFileSync(`${CONFIGS_DIR}/${network}.json`).toString();
+  const parsed = JSON.parse(json);
+  return {
+    contracts: parsed.contracts,
+    gasAssets: new Map(Object.entries(parsed.gasAssets)),
+    rateLimits: new Map(Object.entries(parsed.rateLimits)),
+  };
 }
