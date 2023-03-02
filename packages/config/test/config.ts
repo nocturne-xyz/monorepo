@@ -4,7 +4,7 @@ import { loadNocturneConfig } from "../src/index";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
-describe("BundlerBatcher", async () => {
+describe("Config", async () => {
   it("Loads example config", () => {
     const jsonConfig = JSON.parse(
       fs.readFileSync(`${__dirname}/../configs/example-network.json`).toString()

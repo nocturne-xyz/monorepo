@@ -3103,11 +3103,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
-    "@nocturne-xyz/deploy": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3162,6 +3161,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
   dependencies:
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0

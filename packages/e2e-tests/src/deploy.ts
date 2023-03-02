@@ -19,7 +19,7 @@ import {
 } from "@nocturne-xyz/sdk";
 
 import {
-  checkNocturneDeploymentConfig,
+  checkNocturneContractDeployment,
   NocturneDeployer,
 } from "@nocturne-xyz/deploy";
 
@@ -64,7 +64,7 @@ export async function setupNocturne(
     }
   );
 
-  await checkNocturneDeploymentConfig(deployment, connectedSigner.provider);
+  await checkNocturneContractDeployment(deployment, connectedSigner.provider);
 
   const { walletProxy, vaultProxy } = deployment;
   const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);

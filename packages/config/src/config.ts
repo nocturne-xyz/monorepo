@@ -1,4 +1,4 @@
-import { NocturneDeploymentConfig } from "@nocturne-xyz/deploy";
+import { NocturneContractDeployment } from "./deployment";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
@@ -9,9 +9,8 @@ export interface RateLimit {
   global: bigint;
 }
 
-// TODO: config exports NocturneDeploymentConfig not other way around
 export interface NocturneConfig {
-  contracts: NocturneDeploymentConfig;
+  contracts: NocturneContractDeployment;
   gasAssets: Map<string, string>; // ticker -> address
   rateLimits: Map<string, RateLimit>; // ticker -> rate limit
 }

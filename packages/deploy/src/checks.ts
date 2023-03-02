@@ -1,11 +1,11 @@
 import { ProxyAdmin__factory, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { NocturneDeploymentConfig } from "./deployment";
+import { NocturneContractDeployment } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { assertOrErr } from "./utils";
 
-export async function checkNocturneDeploymentConfig(
-  deployment: NocturneDeploymentConfig,
+export async function checkNocturneContractDeployment(
+  deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
   // Proxy admin owner matches deployment
