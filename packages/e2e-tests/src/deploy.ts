@@ -26,6 +26,7 @@ import {
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import { NocturneConfig } from "@nocturne-xyz/config";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -65,6 +66,13 @@ export async function setupNocturne(
   );
 
   await checkNocturneContractDeployment(deployment, connectedSigner.provider);
+  const config = new NocturneConfig(
+    deployment,
+    // TODO: fill with real assets and rate limits in SDK gas asset and deposit
+    // screener PRs
+    new Map(Object.entries({})),
+    new Map(Object.entries({}))
+  );
 
   const { walletProxy, vaultProxy } = deployment;
   const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
@@ -76,7 +84,7 @@ export async function setupNocturne(
   const merkleDBAlice = new MerkleDB(aliceKV);
   const nocturneContextAlice = setupNocturneContext(
     3n,
-    wallet,
+    config,
     notesDBAlice,
     merkleDBAlice,
     connectedSigner.provider
@@ -88,7 +96,7 @@ export async function setupNocturne(
   const merkleDBBob = new MerkleDB(bobKV);
   const nocturneContextBob = setupNocturneContext(
     5n,
-    wallet,
+    config,
     notesDBBob,
     merkleDBBob,
     connectedSigner.provider
@@ -113,15 +121,16 @@ export async function setupNocturne(
 
 function setupNocturneContext(
   sk: bigint,
-  wallet: any,
+  config: NocturneConfig,
   notesDB: NotesDB,
   merkleDB: MerkleDB,
   provider: ethers.providers.Provider
 ): NocturneContext {
+  const walletAddress = config.contracts.walletProxy.proxy;
   const nocturneSigner = new NocturneSigner(sk);
 
   const merkleProver = new InMemoryMerkleProver(
-    wallet.address,
+    walletAddress,
     provider,
     merkleDB
   );
@@ -129,13 +138,13 @@ function setupNocturneContext(
   const notesManager = new DefaultNotesManager(
     notesDB,
     nocturneSigner,
-    wallet.address,
+    walletAddress,
     provider
   );
   return new NocturneContext(
     nocturneSigner,
-    wallet.provider,
-    wallet.address,
+    provider,
+    config,
     merkleProver,
     notesManager,
     notesDB

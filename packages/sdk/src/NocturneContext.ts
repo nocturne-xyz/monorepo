@@ -1,6 +1,5 @@
 import {
   SignedOperation,
-  Address,
   PreSignOperation,
   AssetWithBalance,
 } from "./primitives";
@@ -13,6 +12,7 @@ import { NotesDB } from "./db";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { OpSigner } from "./opSigner";
+import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 
 export class NocturneContext {
   readonly signer: NocturneSigner;
@@ -27,16 +27,20 @@ export class NocturneContext {
   constructor(
     signer: NocturneSigner,
     provider: ethers.providers.Provider,
-    walletContractAddress: Address,
+    configOrNetworkName: NocturneConfig | string,
     merkleProver: MerkleProver,
     notesManager: NotesManager,
     db: NotesDB
   ) {
+    let config: NocturneConfig;
+    if (typeof configOrNetworkName == "string") {
+      config = loadNocturneConfig(configOrNetworkName);
+    } else {
+      config = configOrNetworkName;
+    }
+
     this.signer = signer;
-    this.walletContract = Wallet__factory.connect(
-      walletContractAddress,
-      provider
-    );
+    this.walletContract = Wallet__factory.connect(config.wallet(), provider);
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;

@@ -5,23 +5,21 @@
   "license": "ISC",
   "author": "",
   "main": "index.js",
-  "engines": {
-    "node": "18.12.1"
-  },
   "scripts": {
-    "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "build": "",
+    "clean": "rm -rf .turbo cache artifacts db",
+    "hh-node": "npx ts-node ./scripts/startHardhat.ts",
+    "hh-node-deposit": "npx ts-node ./scripts/deployAndDeposit.ts",
+    "prepare": "./prepare.sh",
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
-    "hh-node": "npx ts-node ./scripts/startHardhat.ts",
-    "prepare": "./prepare.sh",
+    "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "test:e2e": "yarn prepare && yarn test:e2e:no-prepare",
-    "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 10000000 --exit",
-    "hh-node-deposit": "npx ts-node ./scripts/deployAndDeposit.ts",
-    "clean": "rm -rf .turbo cache artifacts db"
+    "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
+    "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@nocturne-xyz/deploy": "workspace:^",
     "@nocturne-xyz/local-prover": "workspace:^",
@@ -43,5 +41,8 @@
     "mocha": "^10.1.0",
     "prettier": "^2.8.0",
     "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": "18.12.1"
   }
 }

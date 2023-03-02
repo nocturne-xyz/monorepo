@@ -3185,6 +3185,7 @@ __metadata:
   resolution: "@nocturne-xyz/e2e-tests@workspace:packages/e2e-tests"
   dependencies:
     "@nocturne-xyz/bundler": "workspace:^"
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
@@ -3265,6 +3266,7 @@ __metadata:
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
