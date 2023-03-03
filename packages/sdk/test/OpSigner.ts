@@ -5,7 +5,7 @@ import {
   NocturneSignature,
   generateRandomSpendingKey,
 } from "../src/crypto";
-import { shitcoin, setup, getDummyHex } from "./utils";
+import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
 import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
 
 describe("OpSigner", () => {
@@ -18,7 +18,8 @@ describe("OpSigner", () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
     const opSigner = new OpSigner(signer);
 
@@ -35,7 +36,7 @@ describe("OpSigner", () => {
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        gasPrice: 0n,
       })
       .build();
     const op = await preparer.prepareOperation(opRequest);

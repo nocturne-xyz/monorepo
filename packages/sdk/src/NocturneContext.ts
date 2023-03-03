@@ -53,7 +53,8 @@ export class NocturneContext {
       this.db,
       this.merkleProver,
       this.signer,
-      this.walletContract
+      this.walletContract,
+      config.gasAssets
     );
 
     this.opSigner = new OpSigner(this.signer);

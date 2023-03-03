@@ -19,6 +19,7 @@ import {
   encodedStablescam,
   encodedPlutocracy,
   getDummyHex,
+  testGasAssets,
 } from "./utils";
 
 chai.use(chaiAsPromised);
@@ -33,7 +34,8 @@ describe("gatherNotes", () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     // attempt request 1000 tokens, more than the user owns
@@ -53,7 +55,8 @@ describe("gatherNotes", () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     // expect to get one note - the 10 token note
@@ -72,7 +75,8 @@ describe("gatherNotes", () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     // attempt to request 55 tokens
@@ -96,7 +100,8 @@ describe("gatherNotes", () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     // attempt to spend 23 tokens
@@ -128,7 +133,8 @@ describe("prepareOperation", async () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     const builder = new OperationRequestBuilder();
@@ -138,7 +144,7 @@ describe("prepareOperation", async () => {
       .refundAsset(shitcoin)
       .gas({
         executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        gasPrice: 0n,
       })
       .build();
 
@@ -168,7 +174,8 @@ describe("prepareOperation", async () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
 
     const receiverSk = generateRandomSpendingKey();
@@ -182,8 +189,8 @@ describe("prepareOperation", async () => {
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
-        executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        executionGasLimit: 1_000_00n,
+        gasPrice: 0n,
       })
       .build();
 
@@ -213,7 +220,8 @@ describe("prepareOperation", async () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
     const refundAddr = signer.generateRandomStealthAddress();
 
@@ -225,7 +233,7 @@ describe("prepareOperation", async () => {
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,
-        gasPrice: 30n,
+        gasPrice: 0n,
       })
       .maxNumRefunds(1n)
       .build();
@@ -236,7 +244,7 @@ describe("prepareOperation", async () => {
 
     expect(op.refundAddr).to.eql(refundAddr);
     expect(op.executionGasLimit).to.equal(20n);
-    expect(op.gasPrice).to.equal(30n);
+    expect(op.gasPrice).to.equal(0n);
 
     expect(op.encodedRefundAssets.length).to.equal(1);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
@@ -260,7 +268,8 @@ describe("prepareOperation", async () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
     const receivers = range(2)
       .map((_) => generateRandomSpendingKey())
@@ -273,7 +282,7 @@ describe("prepareOperation", async () => {
       .confidentialPayment(stablescam, 2n, receivers[1])
       .gas({
         executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        gasPrice: 0n,
       })
       .build();
 
@@ -297,7 +306,8 @@ describe("prepareOperation", async () => {
       nocturneDB,
       merkleProver,
       signer,
-      walletContract
+      walletContract,
+      testGasAssets
     );
     const receivers = range(3)
       .map((_) => generateRandomSpendingKey())
@@ -324,7 +334,7 @@ describe("prepareOperation", async () => {
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        gasPrice: 0n,
       })
       .build();
 
@@ -352,6 +362,49 @@ describe("prepareOperation", async () => {
     // expect to have 5 joinsplits bc we have 5 different assets
     // and for each asset, there is at most 1 payment
     expect(op.joinSplits.length).to.equal(5);
+  });
+
+  it("Prepares operation with gas comp of first gas asset", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [500_000n, 500_000n, 500_000n],
+      [shitcoin, shitcoin, shitcoin]
+    );
+    const preparer = new OpPreparer(
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract,
+      testGasAssets
+    );
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action("0x1234", getDummyHex(0))
+      .unwrap(shitcoin, 3n)
+      .refundAsset(shitcoin)
+      .gas({
+        executionGasLimit: 1_000_000n,
+        gasPrice: 1n,
+      })
+      .build();
+
+    // Total required = executionGas + unwrapValue + (joinspliGas + refundGas)
+    // Total required = 1_000_000 + 3 + 170_000 + 80_000
+    const op = await preparer.prepareOperation(opRequest);
+    expect(op).to.not.be.null;
+    expect(op).to.not.be.undefined;
+
+    expect(op.encodedRefundAssets.length).to.equal(1);
+    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
+
+    expect(op.actions.length).to.equal(1);
+    expect(op.actions[0]).to.eql({
+      contractAddress: "0x1234",
+      encodedFunction: getDummyHex(0),
+    });
+
+    // expect to have 2 joinsplits (combine two 500k notes then use last 500k note)
+    expect(op.joinSplits.length).to.equal(2);
   });
 });
 

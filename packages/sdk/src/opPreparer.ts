@@ -11,6 +11,8 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
+  Address,
+  AssetType,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -23,24 +25,37 @@ import { MerkleProofInput } from "./proof";
 import { OpSimulator } from "./opSimulator";
 import { sortNotesByValue, min, iterChunks } from "./utils";
 
-export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
+const ERC20_ID = 0n;
+
+const DEFAULT_GAS_PRICE = 0n;
+const DEFAULT_EXECUTION_GAS_LIMIT = 500_000n;
+
+const PER_JOINSPLIT_GAS = 170_000n;
+const PER_REFUND_GAS = 80_000n;
+
+interface InternalPrepareOperationsOpts {
+  accountForGasComp: boolean;
+}
 
 export class OpPreparer {
   private readonly nocturneDB: NocturneDB;
   private readonly merkle: MerkleProver;
   private readonly viewer: NocturneViewer;
   private readonly simulator: OpSimulator;
+  private readonly gasTokens: Map<string, Address>;
 
   constructor(
     nocturneDB: NocturneDB,
     merkle: MerkleProver,
     viewer: NocturneViewer,
-    walletContract: Wallet
+    walletContract: Wallet,
+    gasTokens: Map<string, Address>
   ) {
     this.nocturneDB = nocturneDB;
     this.merkle = merkle;
     this.viewer = viewer;
     this.simulator = new OpSimulator(walletContract);
+    this.gasTokens = gasTokens;
   }
 
   async hasEnoughBalanceForOperationRequest(
@@ -64,17 +79,43 @@ export class OpPreparer {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    if (opRequest.executionGasLimit) {
+      // Execution gas specified, account for it in gas tokens
+      return this._prepareOperation(opRequest, { accountForGasComp: true });
+    } else {
+      // Estimate execution gas ignoring gas comp, then use execution gas est
+      // for gas comp accounting
+      const executionGasLimit = (
+        await this._prepareOperation(opRequest, { accountForGasComp: false })
+      ).executionGasLimit;
+      opRequest.executionGasLimit = executionGasLimit;
+      return this._prepareOperation(opRequest, { accountForGasComp: true });
+    }
+  }
 
-    const { actions, joinSplitRequests, refundAssets, executionGasLimit } =
-      opRequest;
+  private async _prepareOperation(
+    opRequest: OperationRequest,
+    opts?: InternalPrepareOperationsOpts
+  ): Promise<PreSignOperation> {
+    let { refundAddr, maxNumRefunds, gasPrice, joinSplitRequests } = opRequest;
+    const { actions, refundAssets, executionGasLimit } = opRequest;
+
+    if (
+      opts?.accountForGasComp &&
+      opRequest.gasPrice &&
+      opRequest.gasPrice > 0
+    ) {
+      joinSplitRequests = await this.getGasAccountedJoinSplitRequests(
+        opRequest
+      );
+    }
 
     // prepare joinSplits
     const joinSplits = (
       await Promise.all(
-        joinSplitRequests.map((joinSplitRequest) =>
-          this.prepareJoinSplits(joinSplitRequest)
-        )
+        joinSplitRequests.map((joinSplitRequest) => {
+          return this.prepareJoinSplits(joinSplitRequest);
+        })
       )
     ).flat();
     const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
@@ -103,12 +144,100 @@ export class OpPreparer {
     };
 
     // simulate if either of the gas limits are undefined
-    const simulationRequired = !executionGasLimit;
-    if (simulationRequired) {
+    if (!executionGasLimit) {
       op = await this.getGasEstimatedOperation(op);
     }
 
     return op as PreSignOperation;
+  }
+
+  private static getTotalGasEstimate(opRequest: OperationRequest): bigint {
+    const gasPrice = opRequest.gasPrice ?? DEFAULT_GAS_PRICE;
+    const executionGasLimit =
+      opRequest.executionGasLimit ?? DEFAULT_EXECUTION_GAS_LIMIT;
+
+    console.log(
+      "gas est:",
+      gasPrice *
+        (executionGasLimit +
+          BigInt(opRequest.joinSplitRequests.length) * PER_JOINSPLIT_GAS +
+          BigInt(opRequest.refundAssets.length) * PER_REFUND_GAS)
+    );
+
+    return (
+      gasPrice *
+      (executionGasLimit +
+        BigInt(opRequest.joinSplitRequests.length) * PER_JOINSPLIT_GAS +
+        BigInt(opRequest.refundAssets.length) * PER_REFUND_GAS)
+    );
+  }
+
+  private async getGasAccountedJoinSplitRequests(
+    opRequest: OperationRequest
+  ): Promise<JoinSplitRequest[]> {
+    // Convert JoinSplitRequest[] into Map<address, JoinSplitRequest>
+    const joinSplitsMapByAsset = new Map(
+      opRequest.joinSplitRequests.map((req) => {
+        return [req.asset.assetAddr, req];
+      })
+    );
+
+    // Look for existing joinsplit request with supported gas token
+    let joinSplitRequestWithGasAsset: JoinSplitRequest | undefined;
+    for (const gasAssetAddr of this.gasTokens.values()) {
+      const maybeJoinSplitRequest = joinSplitsMapByAsset.get(gasAssetAddr);
+      if (maybeJoinSplitRequest) {
+        joinSplitRequestWithGasAsset = maybeJoinSplitRequest;
+        break;
+      }
+    }
+
+    // Get total number of gas tokens
+    // TODO: convert to proper amount given conversion ratio in config
+    const totalEstimatedGas = OpPreparer.getTotalGasEstimate(opRequest);
+
+    // Modify joinsplit request array to include gas token
+    if (joinSplitRequestWithGasAsset == undefined) {
+      //  Add separate joinsplit for gas token
+      let newJoinSplitRequest: JoinSplitRequest | undefined;
+      for (const gasAssetAddr of this.gasTokens.values()) {
+        const gasAsset = {
+          assetType: AssetType.ERC20,
+          assetAddr: gasAssetAddr,
+          id: ERC20_ID,
+        };
+        const totalOwnedGasAsset = await this.notesDB.getBalanceForAsset(
+          gasAsset
+        );
+        if (totalOwnedGasAsset >= totalEstimatedGas) {
+          newJoinSplitRequest = {
+            asset: gasAsset,
+            unwrapValue: totalEstimatedGas,
+          };
+        }
+      }
+
+      if (newJoinSplitRequest == undefined) {
+        throw new Error("Not enough gas tokens owned to pay for op");
+      }
+
+      joinSplitsMapByAsset.set(
+        newJoinSplitRequest.asset.assetAddr,
+        newJoinSplitRequest
+      );
+    } else {
+      // Add gas estimate to existing and joinsplit in map
+      joinSplitRequestWithGasAsset.unwrapValue =
+        joinSplitRequestWithGasAsset.unwrapValue + totalEstimatedGas;
+      joinSplitsMapByAsset.set(
+        joinSplitRequestWithGasAsset.asset.assetAddr,
+        joinSplitRequestWithGasAsset
+      );
+    }
+
+    console.log(joinSplitsMapByAsset);
+
+    return Array.from(joinSplitsMapByAsset.values());
   }
 
   private async prepareJoinSplits(
