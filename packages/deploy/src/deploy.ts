@@ -11,8 +11,13 @@ import {
   Wallet__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { ProxiedContract, ProxyKind, TransparentProxyAddresses } from "./proxy";
-import { Address, NocturneDeploymentConfig } from "./deployment";
+import { ProxiedContract } from "./proxy";
+import {
+  ProxyKind,
+  TransparentProxyAddresses,
+  NocturneContractDeployment,
+} from "@nocturne-xyz/config";
+import { Address } from "./utils";
 
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
@@ -33,7 +38,7 @@ export class NocturneDeployer {
   async deployNocturne(
     proxyAdminOwner: Address,
     opts?: NocturneDeployOpts
-  ): Promise<NocturneDeploymentConfig> {
+  ): Promise<NocturneContractDeployment> {
     const { name, chainId } = await this.connectedSigner.provider.getNetwork();
     const startBlock = await this.connectedSigner.provider.getBlockNumber();
 

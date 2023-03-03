@@ -1,17 +1,5 @@
 import { Contract, ethers } from "ethers";
-import { Address } from "./deployment";
-
-export enum ProxyKind {
-  Transparent = "Transparent",
-}
-
-export interface ProxyAddresses<Kind extends ProxyKind> {
-  kind: Kind;
-  proxy: Address;
-  implementation: Address;
-}
-
-export type TransparentProxyAddresses = ProxyAddresses<ProxyKind.Transparent>;
+import { ProxyAddresses } from "@nocturne-xyz/config";
 
 export class ProxiedContract<
   C extends Contract,

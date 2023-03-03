@@ -6,13 +6,14 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "@nocturne-xyz/config#build": {
+      "dependsOn": ["@nocturne-xyz/contracts#build"]
+    },
     "@nocturne-xyz/deploy#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
     "@nocturne-xyz/sdk#build": {
-      "dependsOn": [
-        "@nocturne-xyz/contracts#build"
-      ]
+      "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
     "@nocturne-xyz/bundler#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build", "@nocturne-xyz/sdk#build"]

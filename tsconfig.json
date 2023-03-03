@@ -35,6 +35,9 @@
       "path": "./packages/contracts"
     },
     {
+      "path": "./packages/config"
+    },
+    {
       "path": "./packages/circuits"
     },
     {
