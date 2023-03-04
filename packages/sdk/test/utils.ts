@@ -55,6 +55,8 @@ export const testGasAssets = new Map(
     stablescam: stablescam.assetAddr,
     monkey: monkey.assetAddr,
     plutocracy: plutocracy.assetAddr,
+  }).map(([ticker, address]) => {
+    return [ticker, AssetTrait.mapErc20AddressToAsset(address)];
   })
 );
 

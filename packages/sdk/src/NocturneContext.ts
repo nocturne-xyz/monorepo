@@ -12,6 +12,7 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { OpSigner } from "./opSigner";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
+import { AssetTrait } from "./primitives/asset";
 import { SyncAdapter } from "./sync";
 import { NocturneSyncer } from "./NocturneSyncer";
 
@@ -41,6 +42,12 @@ export class NocturneContext {
       config = configOrNetworkName;
     }
 
+    const gasAssetMap = new Map(
+      Array.from(config.gasAssets).map(([ticker, address]) => {
+        return [ticker, AssetTrait.mapErc20AddressToAsset(address)];
+      })
+    );
+
     this.signer = signer;
     this.walletContract = Wallet__factory.connect(
       config.walletAddress(),
@@ -48,13 +55,12 @@ export class NocturneContext {
     );
     this.merkleProver = merkleProver;
     this.db = db;
-
     this.opPreparer = new OpPreparer(
       this.db,
       this.merkleProver,
       this.signer,
       this.walletContract,
-      config.gasAssets
+      gasAssetMap
     );
 
     this.opSigner = new OpSigner(this.signer);

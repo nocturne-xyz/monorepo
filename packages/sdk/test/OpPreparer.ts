@@ -364,7 +364,7 @@ describe("prepareOperation", async () => {
     expect(op.joinSplits.length).to.equal(5);
   });
 
-  it("Prepares operation with gas comp of first gas asset", async () => {
+  it("Prepares operation with gas tokens of already unwrapping asset", async () => {
     const [notesDB, merkleProver, signer, walletContract] = await setup(
       [500_000n, 500_000n, 500_000n],
       [shitcoin, shitcoin, shitcoin]
@@ -388,23 +388,51 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    // Total required = executionGas + unwrapValue + (joinspliGas + refundGas)
+    // Total required = executionGas + unwrapValue + (joinsplitGas + refundGas)
     // Total required = 1_000_000 + 3 + 170_000 + 80_000
     const op = await preparer.prepareOperation(opRequest);
-    expect(op).to.not.be.null;
-    expect(op).to.not.be.undefined;
-
-    expect(op.encodedRefundAssets.length).to.equal(1);
-    expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
-
-    expect(op.actions.length).to.equal(1);
-    expect(op.actions[0]).to.eql({
-      contractAddress: "0x1234",
-      encodedFunction: getDummyHex(0),
-    });
 
     // expect to have 2 joinsplits (combine two 500k notes then use last 500k note)
     expect(op.joinSplits.length).to.equal(2);
+    expect(
+      op.joinSplits[0].publicSpend + op.joinSplits[1].publicSpend
+    ).to.equal(1_250_003n);
+  });
+
+  it("Prepares operation with gas tokens of separate gas asset given not enough of first", async () => {
+    const [notesDB, merkleProver, signer, walletContract] = await setup(
+      [500_000n, 500_000n, 500_000n, 2_000_000n],
+      [shitcoin, shitcoin, shitcoin, stablescam]
+    );
+    const preparer = new OpPreparer(
+      notesDB,
+      merkleProver,
+      signer,
+      walletContract,
+      testGasAssets
+    );
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action("0x1234", getDummyHex(0))
+      .unwrap(shitcoin, 100_000n)
+      .refundAsset(shitcoin)
+      .gas({
+        // Exceeds shitcoin balance, forces us to use stablescam
+        executionGasLimit: 1_600_000n,
+        gasPrice: 1n,
+      })
+      .build();
+
+    const op = await preparer.prepareOperation(opRequest);
+
+    // Expect to have 2 joinsplits (one with 100_000 request of shitcoin, other
+    // of > 1_600_000 of stablescam as gas token)
+    expect(op.joinSplits.length).to.equal(2);
+    expect(op.joinSplits[0].oldNoteA.asset).to.eql(shitcoin);
+    expect(op.joinSplits[0].publicSpend).to.eql(100_000n);
+    expect(op.joinSplits[1].oldNoteA.asset).to.eql(stablescam);
+    expect(Number(op.joinSplits[1].publicSpend)).to.gte(1_600_000);
   });
 });
 

@@ -11,8 +11,6 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
-  Address,
-  AssetType,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -24,8 +22,6 @@ import {
 import { MerkleProofInput } from "./proof";
 import { OpSimulator } from "./opSimulator";
 import { sortNotesByValue, min, iterChunks } from "./utils";
-
-const ERC20_ID = 0n;
 
 const DEFAULT_GAS_PRICE = 0n;
 const DEFAULT_EXECUTION_GAS_LIMIT = 500_000n;
@@ -42,20 +38,20 @@ export class OpPreparer {
   private readonly merkle: MerkleProver;
   private readonly viewer: NocturneViewer;
   private readonly simulator: OpSimulator;
-  private readonly gasTokens: Map<string, Address>;
+  private readonly gasAssets: Map<string, Asset>;
 
   constructor(
     nocturneDB: NocturneDB,
     merkle: MerkleProver,
     viewer: NocturneViewer,
     walletContract: Wallet,
-    gasTokens: Map<string, Address>
+    gasTokens: Map<string, Asset>
   ) {
     this.nocturneDB = nocturneDB;
     this.merkle = merkle;
     this.viewer = viewer;
     this.simulator = new OpSimulator(walletContract);
-    this.gasTokens = gasTokens;
+    this.gasAssets = gasTokens;
   }
 
   async hasEnoughBalanceForOperationRequest(
@@ -156,14 +152,6 @@ export class OpPreparer {
     const executionGasLimit =
       opRequest.executionGasLimit ?? DEFAULT_EXECUTION_GAS_LIMIT;
 
-    console.log(
-      "gas est:",
-      gasPrice *
-        (executionGasLimit +
-          BigInt(opRequest.joinSplitRequests.length) * PER_JOINSPLIT_GAS +
-          BigInt(opRequest.refundAssets.length) * PER_REFUND_GAS)
-    );
-
     return (
       gasPrice *
       (executionGasLimit +
@@ -182,60 +170,57 @@ export class OpPreparer {
       })
     );
 
-    // Look for existing joinsplit request with supported gas token
-    let joinSplitRequestWithGasAsset: JoinSplitRequest | undefined;
-    for (const gasAssetAddr of this.gasTokens.values()) {
-      const maybeJoinSplitRequest = joinSplitsMapByAsset.get(gasAssetAddr);
-      if (maybeJoinSplitRequest) {
-        joinSplitRequestWithGasAsset = maybeJoinSplitRequest;
-        break;
-      }
-    }
-
     // Get total number of gas tokens
     // TODO: convert to proper amount given conversion ratio in config
     const totalEstimatedGas = OpPreparer.getTotalGasEstimate(opRequest);
 
-    // Modify joinsplit request array to include gas token
-    if (joinSplitRequestWithGasAsset == undefined) {
-      //  Add separate joinsplit for gas token
-      let newJoinSplitRequest: JoinSplitRequest | undefined;
-      for (const gasAssetAddr of this.gasTokens.values()) {
-        const gasAsset = {
-          assetType: AssetType.ERC20,
-          assetAddr: gasAssetAddr,
-          id: ERC20_ID,
-        };
+    // Look for existing joinsplit request with supported gas token first
+    for (const gasAsset of this.gasAssets.values()) {
+      const maybeMatchingJoinSplitReq = joinSplitsMapByAsset.get(
+        gasAsset.assetAddr
+      );
+
+      // If already unwrapping gas asset in joinsplit reqs, check if enough
+      if (maybeMatchingJoinSplitReq) {
         const totalOwnedGasAsset = await this.notesDB.getBalanceForAsset(
           gasAsset
         );
+
+        // If enough, modify joinsplit requests and returned modified
         if (totalOwnedGasAsset >= totalEstimatedGas) {
-          newJoinSplitRequest = {
-            asset: gasAsset,
-            unwrapValue: totalEstimatedGas,
-          };
+          maybeMatchingJoinSplitReq.unwrapValue =
+            maybeMatchingJoinSplitReq.unwrapValue + totalEstimatedGas;
+          joinSplitsMapByAsset.set(
+            maybeMatchingJoinSplitReq.asset.assetAddr,
+            maybeMatchingJoinSplitReq
+          );
+          return Array.from(joinSplitsMapByAsset.values());
         }
       }
-
-      if (newJoinSplitRequest == undefined) {
-        throw new Error("Not enough gas tokens owned to pay for op");
-      }
-
-      joinSplitsMapByAsset.set(
-        newJoinSplitRequest.asset.assetAddr,
-        newJoinSplitRequest
-      );
-    } else {
-      // Add gas estimate to existing and joinsplit in map
-      joinSplitRequestWithGasAsset.unwrapValue =
-        joinSplitRequestWithGasAsset.unwrapValue + totalEstimatedGas;
-      joinSplitsMapByAsset.set(
-        joinSplitRequestWithGasAsset.asset.assetAddr,
-        joinSplitRequestWithGasAsset
-      );
     }
 
-    console.log(joinSplitsMapByAsset);
+    // If gas asset not found in existing joinsplit reqs, try make separate one
+    let newJoinSplitRequest: JoinSplitRequest | undefined;
+    for (const gasAsset of this.gasAssets.values()) {
+      const totalOwnedGasAsset = await this.notesDB.getBalanceForAsset(
+        gasAsset
+      );
+      if (totalOwnedGasAsset >= totalEstimatedGas) {
+        newJoinSplitRequest = {
+          asset: gasAsset,
+          unwrapValue: totalEstimatedGas,
+        };
+      }
+    }
+
+    if (newJoinSplitRequest == undefined) {
+      throw new Error("Not enough gas tokens owned to pay for op");
+    }
+
+    joinSplitsMapByAsset.set(
+      newJoinSplitRequest.asset.assetAddr,
+      newJoinSplitRequest
+    );
 
     return Array.from(joinSplitsMapByAsset.values());
   }
