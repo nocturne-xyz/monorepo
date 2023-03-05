@@ -3361,6 +3361,7 @@ __metadata:
     "@metamask/snaps-cli": ^0.27.1
     "@metamask/snaps-types": ^0.27.1
     "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0

@@ -13,12 +13,42 @@ import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
+import {
+  NocturneConfig,
+  NocturneContractDeployment,
+} from "@nocturne-xyz/config";
 
 const WALLET_ADDRESS = "0xA3183498b579bd228aa2B62101C40CC1da978F24";
 const START_BLOCK = 0;
-// const RPC_URL =
-//   "https://eth-goerli.g.alchemy.com/v2/meBVzK1NR_VyKM7wVmOHj1hAbakk4esk";
 const RPC_URL = "http://127.0.0.1:8545/";
+
+const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
+  startBlock: 0,
+  network: {
+    name: "hardhat",
+    chainId: 31337,
+  },
+  proxyAdmin: "0x0000000000000000000000000000000000000000",
+  proxyAdminOwner: "0x0000000000000000000000000000000000000000",
+  walletProxy: {
+    kind: "Transparent",
+    proxy: WALLET_ADDRESS,
+    implementation: "0x0000000000000000000000000000000000000000",
+  },
+  vaultProxy: {
+    kind: "Transparent",
+    proxy: "0x0000000000000000000000000000000000000000",
+    implementation: "0x0000000000000000000000000000000000000000",
+  },
+  joinSplitVerifier: "0x0000000000000000000000000000000000000000",
+  subtreeUpdateVerifier: "0x0000000000000000000000000000000000000000",
+};
+
+const DUMMY_CONFIG = new NocturneConfig(
+  DUMMY_CONTRACT_DEPLOYMENT,
+  new Map(),
+  new Map()
+);
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -89,7 +119,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const context = new NocturneContext(
     signer,
     provider,
-    WALLET_ADDRESS,
+    DUMMY_CONFIG,
     merkleProver,
     notesManager,
     notesDB

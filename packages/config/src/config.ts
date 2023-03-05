@@ -41,9 +41,19 @@ export class NocturneConfig {
   }
 }
 
-export function loadNocturneConfig(network: string): NocturneConfig {
-  const json = fs.readFileSync(`${CONFIGS_DIR}/${network}.json`).toString();
-  const parsed = JSON.parse(json);
+export function loadNocturneConfig(
+  networkNameOrFilePath: string
+): NocturneConfig {
+  let json: string;
+  if (fs.existsSync(networkNameOrFilePath)) {
+    json = fs.readFileSync(networkNameOrFilePath).toString();
+  } else {
+    json = fs
+      .readFileSync(`${CONFIGS_DIR}/${networkNameOrFilePath}.json`)
+      .toString();
+  }
+
+  const parsed = JSON.parse(json) as NocturneConfig;
   return new NocturneConfig(
     parsed.contracts,
     new Map(Object.entries(parsed.gasAssets)),
