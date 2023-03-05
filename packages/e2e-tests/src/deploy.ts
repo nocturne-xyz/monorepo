@@ -126,7 +126,7 @@ function setupNocturneContext(
   merkleDB: MerkleDB,
   provider: ethers.providers.Provider
 ): NocturneContext {
-  const walletAddress = config.contracts.walletProxy.proxy;
+  const walletAddress = config.walletAddress();
   const nocturneSigner = new NocturneSigner(sk);
 
   const merkleProver = new InMemoryMerkleProver(

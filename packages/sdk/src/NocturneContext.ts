@@ -40,7 +40,10 @@ export class NocturneContext {
     }
 
     this.signer = signer;
-    this.walletContract = Wallet__factory.connect(config.wallet(), provider);
+    this.walletContract = Wallet__factory.connect(
+      config.walletAddress(),
+      provider
+    );
     this.merkleProver = merkleProver;
     this.notesManager = notesManager;
     this.db = db;

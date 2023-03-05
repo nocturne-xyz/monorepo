@@ -24,11 +24,11 @@ export class NocturneConfig {
     this.rateLimits = rateLimits;
   }
 
-  wallet(): Address {
+  walletAddress(): Address {
     return this.contracts.walletProxy.proxy;
   }
 
-  vault(): Address {
+  vaultAddress(): Address {
     return this.contracts.vaultProxy.proxy;
   }
 
