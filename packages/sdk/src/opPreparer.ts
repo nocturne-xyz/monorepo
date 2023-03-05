@@ -135,8 +135,9 @@ export class OpPreparer {
     opRequest: OperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
-    let { refundAddr, maxNumRefunds, gasPrice, joinSplitRequests } = opRequest;
-    const { actions, refundAssets, executionGasLimit } = opRequest;
+    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    const { actions, refundAssets, executionGasLimit, joinSplitRequests } =
+      opRequest;
 
     // prepare joinSplits
     const joinSplits = (
@@ -157,7 +158,7 @@ export class OpPreparer {
       BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
 
     // construct op.
-    let op: Partial<PreSignOperation> = {
+    const op: Partial<PreSignOperation> = {
       actions,
       joinSplits,
       refundAddr,
