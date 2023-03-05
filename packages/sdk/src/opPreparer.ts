@@ -130,7 +130,7 @@ export class OpPreparer {
     opRequest: OperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
-    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    const { refundAddr, maxNumRefunds, gasPrice } = opRequest;
     const { joinSplitRequests, refundAssets } = opRequest;
 
     // Fill operation request with mix of estimated and dummy values
@@ -176,7 +176,7 @@ export class OpPreparer {
     opRequest: FinalizedOperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
-    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    const { refundAddr, maxNumRefunds, gasPrice } = opRequest;
     const { actions, refundAssets, executionGasLimit, joinSplitRequests } =
       opRequest;
 
