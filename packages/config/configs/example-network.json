@@ -1,5 +1,4 @@
 {
-  "startBlock": 0,
   "contracts": {
     "network": { "name": "unknown", "chainId": 31337 },
     "startBlock": 32,

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Context takes `NocturneConfig` to get wallet address (gas assets will also come from this object)
 - Add `Operation.gasAsset` instead of using `joinsplits[0]`
 - move `base-utils` and `primitives` back into SDK
 - add more tests for new `NotesDB` impl
