@@ -19,6 +19,16 @@ export interface OperationRequest {
   maxNumRefunds?: bigint;
 }
 
+export interface FinalizedOperationRequest {
+  joinSplitRequests: JoinSplitRequest[];
+  refundAddr: StealthAddress;
+  refundAssets: Asset[];
+  actions: Action[];
+  executionGasLimit: bigint;
+  gasPrice: bigint;
+  maxNumRefunds: bigint;
+}
+
 export interface OperationGasParams {
   executionGasLimit: bigint;
   gasPrice: bigint;

@@ -1,6 +1,10 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { NocturneDB } from "./NocturneDB";
-import { OperationRequest, JoinSplitRequest } from "./operationRequest";
+import {
+  OperationRequest,
+  JoinSplitRequest,
+  FinalizedOperationRequest,
+} from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
   BLOCK_GAS_LIMIT,
@@ -79,35 +83,72 @@ export class OpPreparer {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    if (opRequest.executionGasLimit) {
-      const totalGasEstimate = estimateOperationRequestTotalGas(opRequest);
-      return this.getGasAccountedOperation(opRequest, totalGasEstimate);
+    const finalizedOpRequest = await this.finalizeOperationRequest(opRequest);
+
+    if (opRequest?.gasPrice == 0n) {
+      // If gasPrice = 0, use dummy gas asset and don't include in joinsplits
+      return this._prepareOperation(finalizedOpRequest, DUMMY_GAS_ASSET);
     } else {
-      // Simulate + estimate total gas needed
-      const totalGasEstimate = await this.simulateAndEstimateTotalGas(
-        opRequest
+      // Otherwise, get total gas estimate and get gas accounted op
+      const totalGasEstimate =
+        estimateOperationRequestTotalGas(finalizedOpRequest);
+      return this.getGasAccountedOperation(
+        finalizedOpRequest,
+        totalGasEstimate
       );
-      return this.getGasAccountedOperation(opRequest, totalGasEstimate);
     }
   }
 
-  private async simulateAndEstimateTotalGas(
+  private async finalizeOperationRequest(
     opRequest: OperationRequest
-  ): Promise<bigint> {
+  ): Promise<FinalizedOperationRequest> {
     // Estimate execution gas ignoring gas comp
-    const preGasEstimatedOp = await this._prepareOperation(
+    const preSimulateOpRequest = await this.getPreSimulateOperation(
       opRequest,
       DUMMY_GAS_ASSET
     );
-    const executionGasLimit = (
-      await this.getGasEstimatedOperation(preGasEstimatedOp)
-    ).executionGasLimit;
-    opRequest.executionGasLimit = executionGasLimit;
-    return estimateOperationRequestTotalGas(opRequest);
+
+    let executionGasLimit: bigint, maxNumRefunds: bigint;
+    if (opRequest.executionGasLimit && opRequest.maxNumRefunds) {
+      ({ executionGasLimit, maxNumRefunds } = opRequest);
+    } else {
+      ({ executionGasLimit, maxNumRefunds } =
+        await this.getGasEstimatedOperation(preSimulateOpRequest));
+    }
+
+    return {
+      ...opRequest,
+      refundAddr: opRequest.refundAddr ?? preSimulateOpRequest.refundAddr,
+      gasPrice: opRequest.gasPrice ?? DEFAULT_GAS_PRICE,
+      executionGasLimit,
+      maxNumRefunds,
+    };
+  }
+
+  // Return dummy operation solely for purpose of simulation
+  private async getPreSimulateOperation(
+    opRequest: OperationRequest,
+    gasAsset: Asset
+  ): Promise<PreSignOperation> {
+    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    const { joinSplitRequests, refundAssets } = opRequest;
+
+    // Fill operation request with mix of estimated and dummy values
+    const dummyOpRequest: FinalizedOperationRequest = {
+      ...opRequest,
+      refundAddr: refundAddr ?? this.viewer.generateRandomStealthAddress(),
+      gasPrice: gasPrice ?? 0n, // TODO: don't default to 0
+      maxNumRefunds:
+        maxNumRefunds ??
+        BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
+      executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
+    };
+
+    return this._prepareOperation(dummyOpRequest, gasAsset);
   }
 
   private async getGasAccountedOperation(
-    opRequest: OperationRequest,
+    opRequest: FinalizedOperationRequest,
     totalGasEstimate: bigint
   ): Promise<PreSignOperation> {
     // Get gas asset given proper gas estimate
@@ -132,7 +173,7 @@ export class OpPreparer {
   }
 
   private async _prepareOperation(
-    opRequest: OperationRequest,
+    opRequest: FinalizedOperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
     let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
@@ -148,14 +189,6 @@ export class OpPreparer {
       )
     ).flat();
     const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
-
-    // defaults
-    // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-    refundAddr = refundAddr ?? this.viewer.generateRandomStealthAddress();
-    gasPrice = gasPrice ?? 0n;
-    maxNumRefunds =
-      maxNumRefunds ??
-      BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
 
     // construct op.
     const op: Partial<PreSignOperation> = {
@@ -489,7 +522,7 @@ export class OpPreparer {
     // Give 20% over-estimate
     op.executionGasLimit = (result.executionGas * 12n) / 10n;
 
-    // since we're simulating, we can get the number of refunds while we're at it
+    // Get number of expected refunds
     op.maxNumRefunds = result.numRefunds;
 
     return op as PreSignOperation;

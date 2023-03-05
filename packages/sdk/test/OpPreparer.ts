@@ -142,6 +142,7 @@ describe("prepareOperation", async () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -187,6 +188,7 @@ describe("prepareOperation", async () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_00n,
@@ -230,6 +232,7 @@ describe("prepareOperation", async () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .refundAddr(refundAddr)
       .gas({
         executionGasLimit: 20n,
@@ -284,6 +287,7 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
+      .maxNumRefunds(1n)
       .build();
 
     const op = await preparer.prepareOperation(opRequest);
@@ -332,6 +336,7 @@ describe("prepareOperation", async () => {
       .refundAsset(stablescam)
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
+      .maxNumRefunds(4n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
@@ -382,6 +387,7 @@ describe("prepareOperation", async () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .gas({
         executionGasLimit: 1_000_000n,
         gasPrice: 1n,
@@ -417,6 +423,7 @@ describe("prepareOperation", async () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .gas({
         // Exceeds shitcoin balance, forces us to use stablescam
         executionGasLimit: 1_600_000n,

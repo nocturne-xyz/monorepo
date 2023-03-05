@@ -33,6 +33,7 @@ describe("OpSigner", () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_000n,
