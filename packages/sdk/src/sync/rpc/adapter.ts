@@ -1,4 +1,5 @@
 import {
+  Address,
   AssetTrait,
   BinaryPoseidonTree,
   IncludedEncryptedNote,
@@ -11,14 +12,15 @@ import {
   IterStateDiffsOpts,
   SyncAdapter,
 } from "../syncAdapter";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { maxArray } from "../../utils";
-import { JoinSplitEvent } from "../../notesManager";
 import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
   fetchSubtreeUpdateCommits,
+  JoinSplitEvent,
 } from "./fetch";
+import { ethers } from "ethers";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -26,8 +28,14 @@ const RPC_MAX_CHUNK_SIZE = 1000;
 export class RPCSyncAdapter implements SyncAdapter {
   private walletContract: Wallet;
 
-  constructor(walletContract: Wallet) {
-    this.walletContract = walletContract;
+  constructor(
+    provider: ethers.providers.Provider,
+    walletContractAddress: Address
+  ) {
+    this.walletContract = Wallet__factory.connect(
+      walletContractAddress,
+      provider
+    );
   }
 
   async iterStateDiffs(

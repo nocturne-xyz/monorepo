@@ -29,15 +29,6 @@ export interface StateDiff extends BaseStateDiff {
   // new notes / note commitments corresponding to *non-empty* leaves
   // these must be sorted in ascending order by `merkleIndex`
   notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[];
-
-  // new nullifiers in arbitrary order
-  nullifiers: Nullifier[];
-
-  // `merkleIndex` of the next leaf to be committed to the commitment tree
-  nextMerkleIndex: number;
-
-  // last block of the range this StateDiff represents
-  blockNumber: number;
 }
 
 export interface IterStateDiffsOpts {

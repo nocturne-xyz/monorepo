@@ -1,3 +1,5 @@
+import { assertOrErr } from "./error";
+
 export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
 }
@@ -76,6 +78,7 @@ export function max(a: number | bigint, b: number | bigint): number | bigint {
 export function maxArray(arr: number[]): number;
 export function maxArray(arr: bigint[]): bigint;
 export function maxArray(arr: number[] | bigint[]): number | bigint {
+  assertOrErr(arr.length > 0, "maxArray: array must have at least one element");
   //@ts-ignore
   return arr.reduce((curr, x) => max(curr, x));
 }

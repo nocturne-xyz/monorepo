@@ -3,6 +3,7 @@ import { Asset, AssetTrait, EncodedAsset } from "./asset";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { sha256 } from "js-sha256";
 import { bigintToBEPadded } from "../utils";
+import { EncryptedNote } from "./types";
 
 export interface Note {
   owner: StealthAddress;
@@ -62,6 +63,12 @@ export class NoteTrait {
       typeof noteOrCommitment === "bigint" ||
       Object.hasOwn(noteOrCommitment, "noteCommitment")
     );
+  }
+
+  static isEncryptedNote<N extends Note, E extends EncryptedNote>(
+    note: N | E
+  ): boolean {
+    return Object.hasOwn(note, "encappedKey");
   }
 
   static sha256<N extends Note>(note: N): number[] {

@@ -25,12 +25,12 @@ chai.use(chaiAsPromised);
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n],
       [stablescam]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -40,17 +40,17 @@ describe("gatherNotes", () => {
     // expect to throw error
     await expect(
       //@ts-ignore
-      preparer.gatherNotes(1000n, stablescam, notesDB)
+      preparer.gatherNotes(1000n, stablescam, nocturneDB)
     ).to.be.rejectedWith("Attempted to spend more funds than owned");
   });
 
   it("gathers the minimum notes for amount < smallest note", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       range(2).map((_) => stablescam)
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -58,18 +58,18 @@ describe("gatherNotes", () => {
 
     // expect to get one note - the 10 token note
     //@ts-ignore
-    const notes = await preparer.gatherNotes(5n, stablescam, notesDB);
+    const notes = await preparer.gatherNotes(5n, stablescam, nocturneDB);
     expect(notes).to.have.lengthOf(1);
     expect(notes[0].value).to.equal(10n);
   });
 
   it("gathers the minimum amount of notes for amount requiring all notes", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [30n, 20n, 10n],
       range(3).map((_) => stablescam)
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -78,7 +78,7 @@ describe("gatherNotes", () => {
     // attempt to request 55 tokens
     // expect to get all three notes
     //@ts-ignore
-    const notes = await preparer.gatherNotes(55n, stablescam, notesDB);
+    const notes = await preparer.gatherNotes(55n, stablescam, nocturneDB);
     expect(notes).to.have.lengthOf(3);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -88,12 +88,12 @@ describe("gatherNotes", () => {
   });
 
   it("gathers minimum amount of notes for a realistic-ish example", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [1000n, 51n, 19n, 3n, 3n, 2n, 1n, 1n, 1n],
       range(9).map((_) => stablescam)
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -104,7 +104,7 @@ describe("gatherNotes", () => {
     // in principle, we could get away with 3 notes - 19, 3, 1. But we also want to
     // utilize small notes. this is what we'd expect to get from the algorithm
     //@ts-ignore
-    const notes = await preparer.gatherNotes(23n, stablescam, notesDB);
+    const notes = await preparer.gatherNotes(23n, stablescam, nocturneDB);
     expect(notes).to.have.lengthOf(4);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -120,12 +120,12 @@ describe("gatherNotes", () => {
 
 describe("prepareOperation", async () => {
   it("works for an operation request with 1 action, 1 unrwap, 0 payments, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -160,12 +160,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 1 payment, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -205,12 +205,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 0 payments, all params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -252,12 +252,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
       [shitcoin, stablescam]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract
@@ -289,12 +289,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [1000n, 1000n, 1000n, 1n, 1000n],
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const preparer = new OpPreparer(
-      notesDB,
+      nocturneDB,
       merkleProver,
       signer,
       walletContract

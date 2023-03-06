@@ -39,7 +39,7 @@ export class NocturneViewer {
     return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
-  createNullifier(note: Note): bigint {
+  createNullifier<N extends Note>(note: N): bigint {
     if (!this.isOwnAddress(note.owner)) {
       throw Error("Attempted to create nullifier for note you do not own");
     }

@@ -7,6 +7,14 @@ export class MockMerkleProver extends MerkleProver {
     super();
   }
 
+  async count(): Promise<number> {
+    return 0;
+  }
+
+  async insert(index: number, leaf: bigint): Promise<void> {
+    return;
+  }
+
   async getProof(index: number): Promise<MerkleProof> {
     return {
       root: 1234,

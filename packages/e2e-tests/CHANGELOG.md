@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Merkle behavior changed - it now only syncs up to the latest, non-empty committed leaf
 - Container names use uuid for randomness to avoid conflicts in CI
 - Have `hh-node` and `hh-node-deposit` commands use dockerized hardhat
 - Change deposit script token deployment to be sequential (nonce conflicts)

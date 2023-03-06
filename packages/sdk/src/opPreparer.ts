@@ -1,5 +1,5 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { NotesDB } from "./db";
+import { NocturneDB } from "./NocturneDB";
 import { OperationRequest, JoinSplitRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
@@ -26,18 +26,18 @@ import { sortNotesByValue, min, iterChunks } from "./utils";
 export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
 export class OpPreparer {
-  private readonly notesDB: NotesDB;
+  private readonly nocturneDB: NocturneDB;
   private readonly merkle: MerkleProver;
   private readonly viewer: NocturneViewer;
   private readonly simulator: OpSimulator;
 
   constructor(
-    notesDB: NotesDB,
+    nocturneDB: NocturneDB,
     merkle: MerkleProver,
     viewer: NocturneViewer,
     walletContract: Wallet
   ) {
-    this.notesDB = notesDB;
+    this.nocturneDB = nocturneDB;
     this.merkle = merkle;
     this.viewer = viewer;
     this.simulator = new OpSimulator(walletContract);
@@ -49,7 +49,9 @@ export class OpPreparer {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
       // check that the user has enough notes to cover the request
-      const notes = await this.notesDB.getNotesForAsset(joinSplitRequest.asset);
+      const notes = await this.nocturneDB.getNotesForAsset(
+        joinSplitRequest.asset
+      );
       const balance = notes.reduce((acc, note) => acc + note.value, 0n);
       if (balance < requestedAmount) {
         return false;
@@ -137,7 +139,7 @@ export class OpPreparer {
     asset: Asset
   ): Promise<IncludedNote[]> {
     // check that the user has enough notes to cover the request
-    const notes = await this.notesDB.getNotesForAsset(asset);
+    const notes = await this.nocturneDB.getNotesForAsset(asset);
     const balance = notes.reduce((acc, note) => acc + note.value, 0n);
     if (balance < requestedAmount) {
       throw new Error(

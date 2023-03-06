@@ -2,10 +2,9 @@ import {
   NocturneContext,
   NocturneSigner,
   InMemoryMerkleProver,
-  DefaultNotesManager,
   OperationRequest,
-  NotesDB,
-  MerkleDB,
+  NocturneDB,
+  RPCSyncAdapter,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -94,35 +93,21 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }) => {
   const kvStore = new SnapKvStore();
-  const notesDB = new NotesDB(kvStore);
-  const merkleDB = new MerkleDB(kvStore);
+  const nocturneDB = new NocturneDB(kvStore, { startBlock: START_BLOCK });
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
   const signer = await getNocturneSignerFromBIP44();
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
-  const notesManager = new DefaultNotesManager(
-    notesDB,
-    signer,
-    WALLET_ADDRESS,
-    provider,
-    { startBlock: START_BLOCK }
-  );
-
-  const merkleProver = await InMemoryMerkleProver.fromDb(
-    WALLET_ADDRESS,
-    provider,
-    merkleDB,
-    { startBlock: START_BLOCK }
-  );
-
+  const merkleProver = new InMemoryMerkleProver();
+  const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
   const context = new NocturneContext(
     signer,
     provider,
     DUMMY_CONFIG,
     merkleProver,
-    notesManager,
-    notesDB
+    nocturneDB,
+    syncAdapter
   );
 
   console.log("Switching on method: ", request.method);
@@ -143,12 +128,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
+      await context.sync({ skipMerkleProverUpdates: true });
       return JSON.stringify(await context.getAllAssetBalances());
-    case "nocturne_syncNotes":
+    case "nocturne_sync":
       try {
-        await context.syncNotes();
+        // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
+        await context.sync({ skipMerkleProverUpdates: true });
         console.log(
-          "Synced notes, state: ",
+          "Synced. state is now: ",
           JSON.stringify(await kvStore.getState())
         );
       } catch (e) {
@@ -156,21 +143,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         throw e;
       }
       return;
-    case "nocturne_syncLeaves":
-      try {
-        await context.syncLeaves();
-        console.log(
-          "Synced leaves, state: ",
-          JSON.stringify(await kvStore.getState())
-        );
-      } catch (e) {
-        console.log("Error syncing leaves: ", e);
-        throw e;
-      }
-
-      return;
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
+
+      await context.sync();
+
       const operationRequest = JSON.parse(
         (request.params as any).operationRequest
       ) as OperationRequest;

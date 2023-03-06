@@ -7,10 +7,9 @@ import {
   MerkleProver,
   MockMerkleProver,
   NoteTrait,
-  NotesDB,
+  NocturneDB,
   zip,
   NocturneSigner,
-  MerkleDB,
   InMemoryMerkleProver,
 } from "../src";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
@@ -66,13 +65,13 @@ export async function setup(
   noteAmounts: bigint[],
   assets: Asset[],
   opts: TestSetupOpts = defaultTestSetupOpts
-): Promise<[NotesDB, MerkleProver, NocturneSigner, Wallet]> {
+): Promise<[NocturneDB, MerkleProver, NocturneSigner, Wallet]> {
   const { mockMerkle } = opts;
 
   const signer = new NocturneSigner(1n);
 
   const kv = new InMemoryKVStore();
-  const notesDB = new NotesDB(kv);
+  const nocturneDB = new NocturneDB(kv);
 
   const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
     owner: signer.generateRandomStealthAddress(),
@@ -86,7 +85,7 @@ export async function setup(
   const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
-  await notesDB.storeNotesAndCommitments(notesWithNullfiers);
+  await nocturneDB.storeNotesAndCommitments(notesWithNullfiers);
 
   const dummyWalletAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
@@ -96,16 +95,8 @@ export async function setup(
   if (mockMerkle) {
     merkleProver = new MockMerkleProver();
   } else {
-    const db = new MerkleDB(kv);
-    await Promise.all(
-      notes.map(NoteTrait.toCommitment).map((leaf, i) => db.storeLeaf(i, leaf))
-    );
-    merkleProver = await InMemoryMerkleProver.fromDb(
-      dummyWalletAddr,
-      provider,
-      db
-    );
+    merkleProver = new InMemoryMerkleProver();
   }
 
-  return [notesDB, merkleProver, signer, wallet];
+  return [nocturneDB, merkleProver, signer, wallet];
 }

@@ -11,11 +11,10 @@ import {
   NocturneSigner,
   NocturneContext,
   InMemoryKVStore,
-  NotesDB,
-  MerkleDB,
+  NocturneDB,
   InMemoryMerkleProver,
-  DefaultNotesManager,
   JoinSplitProver,
+  RPCSyncAdapter,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -39,11 +38,9 @@ const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 export interface NocturneSetup {
   vault: Vault;
   wallet: Wallet;
-  notesDBAlice: NotesDB;
-  merkleDBAlice: MerkleDB;
+  nocturneDBAlice: NocturneDB;
   nocturneContextAlice: NocturneContext;
-  notesDBBob: NotesDB;
-  merkleDBBob: MerkleDB;
+  nocturneDBBob: NocturneDB;
   nocturneContextBob: NocturneContext;
   joinSplitProver: JoinSplitProver;
 }
@@ -80,26 +77,22 @@ export async function setupNocturne(
 
   console.log("Create NocturneContextAlice");
   const aliceKV = new InMemoryKVStore();
-  const notesDBAlice = new NotesDB(aliceKV);
-  const merkleDBAlice = new MerkleDB(aliceKV);
+  const nocturneDBAlice = new NocturneDB(aliceKV);
   const nocturneContextAlice = setupNocturneContext(
     3n,
     config,
-    notesDBAlice,
-    merkleDBAlice,
-    connectedSigner.provider
+    connectedSigner.provider,
+    nocturneDBAlice
   );
 
   console.log("Create NocturneContextBob");
   const bobKV = new InMemoryKVStore();
-  const notesDBBob = new NotesDB(bobKV);
-  const merkleDBBob = new MerkleDB(bobKV);
+  const nocturneDBBob = new NocturneDB(bobKV);
   const nocturneContextBob = setupNocturneContext(
     5n,
     config,
-    notesDBBob,
-    merkleDBBob,
-    connectedSigner.provider
+    connectedSigner.provider,
+    nocturneDBBob
   );
 
   const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
@@ -109,11 +102,9 @@ export async function setupNocturne(
   return {
     vault,
     wallet,
-    notesDBAlice,
-    merkleDBAlice,
+    nocturneDBAlice,
     nocturneContextAlice,
-    notesDBBob,
-    merkleDBBob,
+    nocturneDBBob,
     nocturneContextBob,
     joinSplitProver,
   };
@@ -122,31 +113,22 @@ export async function setupNocturne(
 function setupNocturneContext(
   sk: bigint,
   config: NocturneConfig,
-  notesDB: NotesDB,
-  merkleDB: MerkleDB,
-  provider: ethers.providers.Provider
+  provider: ethers.providers.Provider,
+  nocturneDB: NocturneDB
 ): NocturneContext {
   const walletAddress = config.walletAddress();
   const nocturneSigner = new NocturneSigner(sk);
 
-  const merkleProver = new InMemoryMerkleProver(
-    walletAddress,
-    provider,
-    merkleDB
-  );
+  const merkleProver = new InMemoryMerkleProver();
 
-  const notesManager = new DefaultNotesManager(
-    notesDB,
-    nocturneSigner,
-    walletAddress,
-    provider
-  );
+  const syncAdapter = new RPCSyncAdapter(provider, walletAddress);
+
   return new NocturneContext(
     nocturneSigner,
     provider,
     config,
     merkleProver,
-    notesManager,
-    notesDB
+    nocturneDB,
+    syncAdapter
   );
 }

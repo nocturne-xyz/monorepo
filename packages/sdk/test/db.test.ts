@@ -1,9 +1,8 @@
 import "mocha";
 import { expect } from "chai";
 import {
-  NotesDB,
+  NocturneDB,
   InMemoryKVStore,
-  MerkleDB,
   KV,
   IncludedNote,
   Asset,
@@ -159,9 +158,9 @@ describe("InMemoryKVStore", async () => {
   });
 });
 
-describe("NotesDB", async () => {
+describe("NocturneDB", async () => {
   const kv = new InMemoryKVStore();
-  const db = new NotesDB(kv);
+  const db = new NocturneDB(kv);
   const viewer = new NocturneViewer(1n);
 
   const dummyNotesAndNfs = (
@@ -218,7 +217,7 @@ describe("NotesDB", async () => {
     await db.storeNotesAndCommitments(notesAndCommitments);
 
     const map = await db.getAllNotes();
-    const assetKey = NotesDB.formatAssetKey(shitcoin);
+    const assetKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(assetKey)!;
     const shitcoinNotesExpected = notes.map(toIncludedNote);
     expect(shitcoinNotes).to.not.be.undefined;
@@ -240,7 +239,7 @@ describe("NotesDB", async () => {
     const map = await db.getAllNotes();
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
-      const assetKey = NotesDB.formatAssetKey(asset);
+      const assetKey = NocturneDB.formatAssetKey(asset);
       const assetHash = AssetTrait.hash(asset);
       const assetNotesExpected = notes
         .filter((n) => AssetTrait.hash(n.asset) === assetHash)
@@ -269,7 +268,7 @@ describe("NotesDB", async () => {
     await db.nullifyNotes([nfToApply]);
     const map = await db.getAllNotes();
 
-    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(shitcoinKey);
     expect(shitcoinNotes).to.not.be.undefined;
     expect(shitcoinNotes!.length).to.equal(notes.length - 1);
@@ -295,7 +294,7 @@ describe("NotesDB", async () => {
     await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes();
 
-    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(shitcoinKey);
     expect(shitcoinNotes).to.not.be.undefined;
     expect(shitcoinNotes!.length).to.equal(
@@ -327,11 +326,11 @@ describe("NotesDB", async () => {
     await db.nullifyNotes(ponziNfs);
     const map = await db.getAllNotes();
 
-    const ponziKey = NotesDB.formatAssetKey(ponzi);
+    const ponziKey = NocturneDB.formatAssetKey(ponzi);
     const ponziNotesGot = map.get(ponziKey);
     expect(ponziNotesGot).to.be.undefined;
 
-    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotesExpected = notes
       .filter((n) => AssetTrait.hash(n.asset) === AssetTrait.hash(shitcoin))
       .map(toIncludedNote);
@@ -378,7 +377,7 @@ describe("NotesDB", async () => {
     await db.nullifyNotes(nfsToApply);
     const map = await db.getAllNotes();
 
-    const shitcoinKey = NotesDB.formatAssetKey(shitcoin);
+    const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotesGot = map.get(shitcoinKey);
     expect(shitcoinNotesGot).to.not.be.undefined;
     expect(shitcoinNotesGot!.length).to.eql(
@@ -388,7 +387,7 @@ describe("NotesDB", async () => {
       shitcoinNotesToNullify.map(toIncludedNote)
     );
 
-    const ponziKey = NotesDB.formatAssetKey(ponzi);
+    const ponziKey = NocturneDB.formatAssetKey(ponzi);
     const ponziNotesGot = map.get(ponziKey);
     expect(ponziNotesGot).to.not.be.undefined;
     expect(ponziNotesGot!.length).to.eql(
@@ -398,7 +397,7 @@ describe("NotesDB", async () => {
       ponziNotesToNullify.map(toIncludedNote)
     );
 
-    const stablescamKey = NotesDB.formatAssetKey(stablescam);
+    const stablescamKey = NocturneDB.formatAssetKey(stablescam);
     const stablescamNotesGot = map.get(stablescamKey);
     expect(stablescamNotesGot).to.not.be.undefined;
     expect(stablescamNotesGot!.length).to.eql(
@@ -432,27 +431,5 @@ describe("NotesDB", async () => {
       expect(notesGot!.length).to.eql(notesExpected.length);
       expect(notesGot!).to.have.deep.members(notesExpected);
     }
-  });
-});
-
-describe("MerkleDB", async () => {
-  const kv = new InMemoryKVStore();
-  const db = new MerkleDB(kv);
-
-  afterEach(async () => {
-    await kv.clear();
-  });
-
-  after(async () => {
-    await kv.close();
-  });
-
-  it("Stores and gets merkle leaves", async () => {
-    await db.storeLeaf(0, 0n);
-    await db.storeLeaf(1, 1n);
-    await db.storeLeaf(2, 2n);
-    expect(await db.getLeaf(0)).to.eql(0n);
-    expect(await db.getLeaf(1)).to.eql(1n);
-    expect(await db.getLeaf(2)).to.eql(2n);
   });
 });
