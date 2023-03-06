@@ -335,7 +335,7 @@ const Index = () => {
             }
           >
             <GenAndSubmitProofButton
-              onClick={() => handleGenAndSubmitProof()}
+              onClick={handleGenAndSubmitProof}
               disabled={!state.installedSnap}
             />
           </Card>
