@@ -21,68 +21,48 @@ import {
   getDummyHex,
   testGasAssets,
 } from "./utils";
+import { OpRequestPreparer } from "../src/opRequestPreparer";
 
 chai.use(chaiAsPromised);
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
-      [100n],
-      [stablescam]
-    );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
-      walletContract,
-      testGasAssets
-    );
+    const [notesDB, merkleProver, signer] = await setup([100n], [stablescam]);
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
 
     // attempt request 1000 tokens, more than the user owns
     // expect to throw error
     await expect(
       //@ts-ignore
-      preparer.gatherNotes(1000n, stablescam, nocturneDB)
+      opPreparer.gatherNotes(1000n, stablescam, notesDB)
     ).to.be.rejectedWith("Attempted to spend more funds than owned");
   });
 
   it("gathers the minimum notes for amount < smallest note", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [notesDB, merkleProver, signer] = await setup(
       [100n, 10n],
       range(2).map((_) => stablescam)
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
-      walletContract,
-      testGasAssets
-    );
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
 
     // expect to get one note - the 10 token note
     //@ts-ignore
-    const notes = await preparer.gatherNotes(5n, stablescam, nocturneDB);
+    const notes = await opPreparer.gatherNotes(5n, stablescam, notesDB);
     expect(notes).to.have.lengthOf(1);
     expect(notes[0].value).to.equal(10n);
   });
 
   it("gathers the minimum amount of notes for amount requiring all notes", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [notesDB, merkleProver, signer] = await setup(
       [30n, 20n, 10n],
       range(3).map((_) => stablescam)
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
-      walletContract,
-      testGasAssets
-    );
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
 
     // attempt to request 55 tokens
     // expect to get all three notes
     //@ts-ignore
-    const notes = await preparer.gatherNotes(55n, stablescam, nocturneDB);
+    const notes = await opPreparer.gatherNotes(55n, stablescam, notesDB);
     expect(notes).to.have.lengthOf(3);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -92,24 +72,18 @@ describe("gatherNotes", () => {
   });
 
   it("gathers minimum amount of notes for a realistic-ish example", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [notesDB, merkleProver, signer] = await setup(
       [1000n, 51n, 19n, 3n, 3n, 2n, 1n, 1n, 1n],
       range(9).map((_) => stablescam)
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
-      walletContract,
-      testGasAssets
-    );
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
 
     // attempt to spend 23 tokens
     // expect to get 4 notes - 19, 2, 1, 1
     // in principle, we could get away with 3 notes - 19, 3, 1. But we also want to
     // utilize small notes. this is what we'd expect to get from the algorithm
     //@ts-ignore
-    const notes = await preparer.gatherNotes(23n, stablescam, nocturneDB);
+    const notes = await opPreparer.gatherNotes(23n, stablescam, notesDB);
     expect(notes).to.have.lengthOf(4);
 
     const sortedNotes = sortNotesByValue(notes);
@@ -129,11 +103,12 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
 
@@ -149,7 +124,9 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOpRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -171,11 +148,12 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
 
@@ -196,7 +174,11 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -218,11 +200,12 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
     const refundAddr = signer.generateRandomStealthAddress();
@@ -241,7 +224,11 @@ describe("prepareOperation", async () => {
       .maxNumRefunds(1n)
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -267,13 +254,15 @@ describe("prepareOperation", async () => {
       [100n, 10n],
       [shitcoin, stablescam]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
+
     const receivers = range(2)
       .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
@@ -290,7 +279,11 @@ describe("prepareOperation", async () => {
       .maxNumRefunds(1n)
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -306,13 +299,15 @@ describe("prepareOperation", async () => {
       [1000n, 1000n, 1000n, 1n, 1000n],
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
+
     const receivers = range(3)
       .map((_) => generateRandomSpendingKey())
       .map((sk) => new NocturneSigner(sk))
@@ -343,7 +338,9 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOpRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -374,11 +371,12 @@ describe("prepareOperation", async () => {
       [500_000n, 500_000n, 500_000n],
       [shitcoin, shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      notesDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
 
@@ -396,7 +394,11 @@ describe("prepareOperation", async () => {
 
     // Total required = executionGas + unwrapValue + (joinsplitGas + refundGas)
     // Total required = 1_000_000 + 3 + 170_000 + 80_000
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
 
     // expect to have 2 joinsplits (combine two 500k notes then use last 500k note)
     expect(op.joinSplits.length).to.equal(2);
@@ -410,11 +412,12 @@ describe("prepareOperation", async () => {
       [500_000n, 500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]
     );
-    const preparer = new OpPreparer(
-      notesDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
 
@@ -431,7 +434,11 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const op = await preparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
 
     // Expect to have 2 joinsplits (one with 100_000 request of shitcoin, other
     // of > 1_600_000 of stablescam as gas token)

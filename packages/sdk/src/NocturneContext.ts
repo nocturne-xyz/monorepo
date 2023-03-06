@@ -4,6 +4,7 @@ import {
   AssetWithBalance,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
+import { OpRequestPreparer } from "./opRequestPreparer";
 import { MerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
@@ -17,6 +18,7 @@ import { SyncAdapter } from "./sync";
 import { NocturneSyncer } from "./NocturneSyncer";
 
 export class NocturneContext {
+  private opRequestPreparer: OpRequestPreparer;
   private opPreparer: OpPreparer;
   private opSigner: OpSigner;
   private syncer: NocturneSyncer;
@@ -55,11 +57,12 @@ export class NocturneContext {
     );
     this.merkleProver = merkleProver;
     this.db = db;
-    this.opPreparer = new OpPreparer(
-      this.db,
-      this.merkleProver,
-      this.signer,
+    this.opPreparer = new OpPreparer(this.db, this.merkleProver, this.signer);
+    this.opRequestPreparer = new OpRequestPreparer(
       this.walletContract,
+      this.opPreparer,
+      this.signer,
+      this.db,
       gasAssetMap
     );
 
@@ -81,7 +84,11 @@ export class NocturneContext {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    return await this.opPreparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await this.opRequestPreparer.prepareOperationRequest(opRequest);
+    return await this.opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {

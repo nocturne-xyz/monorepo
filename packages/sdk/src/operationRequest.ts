@@ -11,22 +11,28 @@ export interface JoinSplitRequest {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundAddr: StealthAddress;
   refundAssets: Asset[];
   actions: Action[];
+  refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
   gasPrice?: bigint;
   maxNumRefunds?: bigint;
 }
 
-export interface GasFilledOperationRequest {
-  joinSplitRequests: JoinSplitRequest[];
+export interface GasEstimatedOperationRequest
+  extends Omit<
+    OperationRequest,
+    "refundAddr" | "executionGasLimit" | "maxNumRefunds"
+  > {
   refundAddr: StealthAddress;
-  refundAssets: Asset[];
-  actions: Action[];
   executionGasLimit: bigint;
-  gasPrice: bigint;
   maxNumRefunds: bigint;
+}
+
+export interface GasAccountedOperationRequest
+  extends Omit<GasEstimatedOperationRequest, "gasPrice"> {
+  gasPrice: bigint;
+  gasAsset: Asset;
 }
 
 export interface OperationGasParams {

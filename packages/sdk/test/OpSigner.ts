@@ -7,6 +7,7 @@ import {
 } from "../src/crypto";
 import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
 import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
+import { OpRequestPreparer } from "../src/opRequestPreparer";
 
 describe("OpSigner", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
@@ -14,11 +15,12 @@ describe("OpSigner", () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
-      signer,
+    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
       walletContract,
+      opPreparer,
+      signer,
+      notesDB,
       testGasAssets
     );
     const opSigner = new OpSigner(signer);
@@ -40,7 +42,12 @@ describe("OpSigner", () => {
         gasPrice: 0n,
       })
       .build();
-    const op = await preparer.prepareOperation(opRequest);
+
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
 
     // attempt to sign it
     // expect it to not fail, and to have a valid signature
