@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 import { Address, NoteTrait, BinaryPoseidonTree } from "../primitives";
 import { MerkleDB } from "../db";
 import { MerkleProver } from "./abstract";
-import { fetchInsertions } from "../indexing";
+import { fetchInsertions } from "../sync";
 
 const DEFAULT_START_BLOCK = 0;
 const MERKLE_NEXT_BLOCK_TO_INDEX = "MERKLE_NEXT_BLOCK_TO_INDEX";

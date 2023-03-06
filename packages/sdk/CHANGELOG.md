@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- move `indexing/utils` to `utils/ethers` and get rid of `indexing` module
+- add `SyncAdapter` and default impl `RPCSyncAdapter` to `sync` module
+- add `ClosableAsyncIterator` to new module `sync`
 - Context takes `NocturneConfig` to get wallet address (gas assets will also come from this object)
 - Add `Operation.gasAsset` instead of using `joinsplits[0]`
 - move `base-utils` and `primitives` back into SDK

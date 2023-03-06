@@ -4,7 +4,7 @@ import { Address, IncludedNote } from "../primitives";
 import { NocturneViewer } from "../crypto";
 import { NotesDB } from "../db";
 import { NotesManager, JoinSplitEvent } from ".";
-import { fetchJoinSplits, fetchNotesFromRefunds } from "../indexing";
+import { fetchJoinSplits, fetchNotesFromRefunds } from "../sync";
 
 const DEFAULT_START_BLOCK = 0;
 const REFUNDS_LAST_INDEXED_BLOCK = "REFUNDS_LAST_INDEXED_BLOCK";
