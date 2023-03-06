@@ -163,6 +163,8 @@ const Index = () => {
       .unwrap(asset, amount)
       .action(TOKEN_ADDRESS, encodedFunction)
       .refundAsset(asset)
+      .maxNumRefunds(5n)
+      .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
       .build();
 
     console.log("Operation request: ", operationRequest);
