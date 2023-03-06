@@ -11,7 +11,7 @@ export interface JoinSplitRequest {
 
 export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
-  refundAddr?: StealthAddress;
+  refundAddr: StealthAddress;
   refundAssets: Asset[];
   actions: Action[];
   executionGasLimit?: bigint;
@@ -19,7 +19,7 @@ export interface OperationRequest {
   maxNumRefunds?: bigint;
 }
 
-export interface FinalizedOperationRequest {
+export interface GasFilledOperationRequest {
   joinSplitRequests: JoinSplitRequest[];
   refundAddr: StealthAddress;
   refundAssets: Asset[];

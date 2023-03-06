@@ -3,7 +3,7 @@ import { NocturneDB } from "./NocturneDB";
 import {
   OperationRequest,
   JoinSplitRequest,
-  FinalizedOperationRequest,
+  GasFilledOperationRequest,
 } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
@@ -101,7 +101,7 @@ export class OpPreparer {
 
   private async finalizeOperationRequest(
     opRequest: OperationRequest
-  ): Promise<FinalizedOperationRequest> {
+  ): Promise<GasFilledOperationRequest> {
     // Estimate execution gas ignoring gas comp
     const preSimulateOpRequest = await this.getPreSimulateOperation(
       opRequest,
@@ -130,14 +130,14 @@ export class OpPreparer {
     opRequest: OperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
-    const { refundAddr, maxNumRefunds, gasPrice } = opRequest;
+    const { refundAddr, maxNumRefunds } = opRequest;
     const { joinSplitRequests, refundAssets } = opRequest;
 
     // Fill operation request with mix of estimated and dummy values
-    const dummyOpRequest: FinalizedOperationRequest = {
+    const dummyOpRequest: GasFilledOperationRequest = {
       ...opRequest,
       refundAddr: refundAddr ?? this.viewer.generateRandomStealthAddress(),
-      gasPrice: gasPrice ?? 0n, // TODO: don't default to 0
+      gasPrice: 0n, // don't want to worry about gas comp for simulation
       maxNumRefunds:
         maxNumRefunds ??
         BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
@@ -148,7 +148,7 @@ export class OpPreparer {
   }
 
   private async getGasAccountedOperation(
-    opRequest: FinalizedOperationRequest,
+    opRequest: GasFilledOperationRequest,
     totalGasEstimate: bigint
   ): Promise<PreSignOperation> {
     // Get gas asset given proper gas estimate
@@ -172,8 +172,8 @@ export class OpPreparer {
     return this._prepareOperation(opRequest, maybeGasAsset);
   }
 
-  private async _prepareOperation(
-    opRequest: FinalizedOperationRequest,
+  async _prepareOperation(
+    opRequest: GasFilledOperationRequest,
     gasAsset: Asset
   ): Promise<PreSignOperation> {
     const { refundAddr, maxNumRefunds, gasPrice } = opRequest;
