@@ -27,11 +27,11 @@ export interface GasEstimatedOperationRequest
   refundAddr: StealthAddress;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
+  gasPrice: bigint;
 }
 
-export interface GasAccountedOperationRequest
-  extends Omit<GasEstimatedOperationRequest, "gasPrice"> {
-  gasPrice: bigint;
+export interface GasCompAccountedOperationRequest
+  extends GasEstimatedOperationRequest {
   gasAsset: Asset;
 }
 

@@ -2,7 +2,7 @@ import { Wallet } from "@nocturne-xyz/contracts";
 import { NocturneViewer, StealthAddress } from "./crypto";
 import { NotesDB } from "./db";
 import {
-  GasAccountedOperationRequest,
+  GasCompAccountedOperationRequest,
   GasEstimatedOperationRequest,
   JoinSplitRequest,
   OperationRequest,
@@ -62,7 +62,7 @@ export class OpRequestPreparer {
 
   async prepareOperationRequest(
     opRequest: OperationRequest
-  ): Promise<GasAccountedOperationRequest> {
+  ): Promise<GasCompAccountedOperationRequest> {
     const gasEstimatedOperation = await this.getGasEstimatedOperationRequest(
       opRequest
     );
@@ -95,12 +95,20 @@ export class OpRequestPreparer {
         await this.getGasEstimatedOperation(preSimulateOpRequest));
     }
 
+    let gasPrice: bigint;
+    if (opRequest.gasPrice == undefined) {
+      gasPrice = (await this.wallet.provider.getGasPrice()).toBigInt();
+    } else {
+      gasPrice = opRequest.gasPrice;
+    }
+
     return {
       ...opRequest,
       refundAddr:
         opRequest.refundAddr ?? this.viewer.generateRandomStealthAddress(),
       executionGasLimit,
       maxNumRefunds,
+      gasPrice,
     };
   }
 
@@ -111,12 +119,12 @@ export class OpRequestPreparer {
     const { maxNumRefunds, joinSplitRequests, refundAssets } = opRequest;
 
     // Fill operation request with mix of estimated and dummy values
-    const dummyOpRequest: GasAccountedOperationRequest = {
+    const dummyOpRequest: GasCompAccountedOperationRequest = {
       ...opRequest,
       maxNumRefunds:
         maxNumRefunds ??
         BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
-      executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
+      executionGasLimit: BLOCK_GAS_LIMIT,
       refundAddr: DUMMY_REFUND_ADDR,
       // Use 0 gas price and dummy asset for simulation
       gasPrice: 0n,
@@ -127,11 +135,8 @@ export class OpRequestPreparer {
   }
 
   private async getGasEstimatedOperation(
-    op: Partial<PreSignOperation>
+    op: PreSignOperation
   ): Promise<PreSignOperation> {
-    op.executionGasLimit = op.executionGasLimit ?? BLOCK_GAS_LIMIT;
-    op.gasPrice = op.gasPrice ?? 0n;
-
     console.log("Simulating op");
     const result = await this.simulateOperation(op as PreSignOperation);
     if (!result.opProcessed) {
@@ -148,13 +153,7 @@ export class OpRequestPreparer {
 
   private async getGasCompAccountedOperationRequest(
     opRequest: GasEstimatedOperationRequest
-  ): Promise<GasAccountedOperationRequest> {
-    if (!opRequest.gasPrice || opRequest.gasPrice == 0n) {
-      throw new Error(
-        "Should never try to create gas accounted op request with 0 or undefined gas price"
-      );
-    }
-
+  ): Promise<GasCompAccountedOperationRequest> {
     // Get gas asset given proper gas estimate
     const totalGasEstimate = estimateOperationRequestTotalGas(opRequest);
     const maybeGasAsset = await this.getOptimalGasAsset(

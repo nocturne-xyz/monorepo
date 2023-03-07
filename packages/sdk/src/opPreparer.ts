@@ -2,7 +2,7 @@ import { NocturneDB } from "./NocturneDB";
 import {
   OperationRequest,
   JoinSplitRequest,
-  GasAccountedOperationRequest,
+  GasCompAccountedOperationRequest,
 } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
@@ -58,11 +58,11 @@ export class OpPreparer {
   }
 
   async prepareOperation(
-    opRequest: GasAccountedOperationRequest
+    opRequest: GasCompAccountedOperationRequest
   ): Promise<PreSignOperation> {
-    const { refundAddr, maxNumRefunds } = opRequest;
-    const { actions, refundAssets, executionGasLimit, joinSplitRequests } =
-      opRequest;
+    const { refundAssets, joinSplitRequests } = opRequest;
+    const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
+    const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
     // prepare joinSplits
     const joinSplits = (
@@ -72,21 +72,13 @@ export class OpPreparer {
         })
       )
     ).flat();
-    const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
 
     // construct op.
     const op: PreSignOperation = {
-      actions,
+      ...opRequest,
       joinSplits,
-      refundAddr,
       encodedRefundAssets,
-      maxNumRefunds,
-      gasPrice: opRequest.gasPrice,
-      // TODO: add logic for specifying optional gas asset in OperationRequest
-      // and defaulting to ETH or DAI otherwise
-      encodedGasAsset: AssetTrait.encode(opRequest.gasAsset),
-      // these may be undefined
-      executionGasLimit,
+      encodedGasAsset,
     };
 
     return op as PreSignOperation;
