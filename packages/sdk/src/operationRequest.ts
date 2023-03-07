@@ -22,7 +22,7 @@ export interface OperationRequest {
 export interface GasEstimatedOperationRequest
   extends Omit<
     OperationRequest,
-    "refundAddr" | "executionGasLimit" | "maxNumRefunds"
+    "refundAddr" | "executionGasLimit" | "maxNumRefunds" | "gasPrice"
   > {
   refundAddr: StealthAddress;
   executionGasLimit: bigint;

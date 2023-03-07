@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Add test suite for `OpRequestPreparer`
+- Split out op request prepare and op prepare logic into `OpRequestPreparer` and `OpPreparer` (will be turned from classes to modules in follow on PR)
 - Incorporate gas compensation logic in `OpPreparer`
 - Add `FinalizedOperationRequest` type to demarcate operation request with all fields filled
 - fix `NotesDB` bug where `getAllNotes` also returns note commitments
