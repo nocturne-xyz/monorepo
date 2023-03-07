@@ -1,6 +1,6 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { NocturneViewer, StealthAddress } from "./crypto";
-import { NotesDB } from "./db";
+import { NocturneDB } from "./NocturneDB";
 import {
   GasCompAccountedOperationRequest,
   GasEstimatedOperationRequest,
@@ -43,20 +43,20 @@ export class OpRequestPreparer {
   private readonly wallet: Wallet;
   private readonly preparer: OpPreparer;
   private readonly viewer: NocturneViewer;
-  private readonly notesDB: NotesDB;
+  private readonly nocturneDB: NocturneDB;
   private readonly gasAssets: Map<string, Asset>;
 
   constructor(
     wallet: Wallet,
     preparer: OpPreparer,
     viewer: NocturneViewer,
-    notesDB: NotesDB,
+    nocturneDB: NocturneDB,
     gasAssets: Map<string, Asset>
   ) {
     this.wallet = wallet;
     this.preparer = preparer;
     this.viewer = viewer;
-    this.notesDB = notesDB;
+    this.nocturneDB = nocturneDB;
     this.gasAssets = gasAssets;
   }
 
@@ -198,7 +198,7 @@ export class OpRequestPreparer {
 
       // If already unwrapping gas asset in joinsplit reqs, check if enough
       if (maybeMatchingJoinSplitReq) {
-        const totalOwnedGasAsset = await this.notesDB.getBalanceForAsset(
+        const totalOwnedGasAsset = await this.nocturneDB.getBalanceForAsset(
           gasAsset
         );
 
@@ -211,7 +211,7 @@ export class OpRequestPreparer {
 
     // If gas asset not found in existing joinsplit reqs, try make separate one
     for (const gasAsset of this.gasAssets.values()) {
-      const totalOwnedGasAsset = await this.notesDB.getBalanceForAsset(
+      const totalOwnedGasAsset = await this.nocturneDB.getBalanceForAsset(
         gasAsset
       );
       if (totalOwnedGasAsset >= gasEstimate) {

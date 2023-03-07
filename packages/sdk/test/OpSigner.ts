@@ -15,12 +15,12 @@ describe("OpSigner", () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const opRequestPreparer = new OpRequestPreparer(
       walletContract,
       opPreparer,
       signer,
-      notesDB,
+      nocturneDB,
       testGasAssets
     );
     const opSigner = new OpSigner(signer);

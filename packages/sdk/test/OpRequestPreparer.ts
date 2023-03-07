@@ -25,16 +25,16 @@ const DUMMY_GAS_ASSET: Asset = {
 
 describe("prepareOperationRequest", async () => {
   it("Has gas price 0 and dummy asset when opRequest gasPrice = 0", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [500_000n, 500_000n],
       [shitcoin, shitcoin]
     );
-    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const opRequestPreparer = new OpRequestPreparer(
       walletContract,
       opPreparer,
       signer,
-      notesDB,
+      nocturneDB,
       testGasAssets
     );
 
@@ -58,16 +58,16 @@ describe("prepareOperationRequest", async () => {
   });
 
   it("Accounts for gas asset when gasPrice > 0, same asset as joinsplit request", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [500_000n, 500_000n, 500_000n],
       [shitcoin, shitcoin, shitcoin]
     );
-    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const opRequestPreparer = new OpRequestPreparer(
       walletContract,
       opPreparer,
       signer,
-      notesDB,
+      nocturneDB,
       testGasAssets
     );
 
@@ -100,16 +100,16 @@ describe("prepareOperationRequest", async () => {
   });
 
   it("Accounts for gas asset when gasPrice > 0, different joinsplit request for gas comp", async () => {
-    const [notesDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, stablescam]
     );
-    const opPreparer = new OpPreparer(notesDB, merkleProver, signer);
+    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const opRequestPreparer = new OpRequestPreparer(
       walletContract,
       opPreparer,
       signer,
-      notesDB,
+      nocturneDB,
       testGasAssets
     );
 
