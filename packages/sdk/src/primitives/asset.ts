@@ -123,7 +123,7 @@ export class AssetTrait {
     };
   }
 
-  static mapErc20AddressToAsset(address: string): Asset {
+  static erc20AddressToAsset(address: string): Asset {
     return {
       assetType: AssetType.ERC20,
       assetAddr: address,

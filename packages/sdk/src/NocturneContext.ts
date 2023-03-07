@@ -46,7 +46,7 @@ export class NocturneContext {
 
     const gasAssetMap = new Map(
       Array.from(config.gasAssets).map(([ticker, address]) => {
-        return [ticker, AssetTrait.mapErc20AddressToAsset(address)];
+        return [ticker, AssetTrait.erc20AddressToAsset(address)];
       })
     );
 

@@ -32,7 +32,7 @@ export class OpPreparer {
   constructor(
     nocturneDB: NocturneDB,
     merkle: MerkleProver,
-    viewer: NocturneViewer,
+    viewer: NocturneViewer
   ) {
     this.nocturneDB = nocturneDB;
     this.merkle = merkle;
