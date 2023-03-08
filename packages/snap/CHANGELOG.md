@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `SnapKVStore` only dump on writes by putting the inner KV store in a thunk
 - use `SubgraphSyncAdapter` against local graph node
 - call `context.sync()` at the beginning of `nocturne_signOperation` so it's unnecessary for frontend to explicitly sync
 - remove `syncLeaves` method and rename `syncNotes` to `sync` (only one `sync` method)
