@@ -1,6 +1,8 @@
 import { utils } from "ethers";
 import { Address } from "./types";
 
+export const ERC20_ID = 0n;
+
 export enum AssetType {
   ERC20,
   ERC721,
@@ -118,6 +120,14 @@ export class AssetTrait {
       assetType,
       assetAddr,
       id,
+    };
+  }
+
+  static erc20AddressToAsset(address: string): Asset {
+    return {
+      assetType: AssetType.ERC20,
+      assetAddr: address,
+      id: ERC20_ID,
     };
   }
 }

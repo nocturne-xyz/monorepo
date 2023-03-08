@@ -1,9 +1,11 @@
-import { Wallet } from "@nocturne-xyz/contracts";
 import { NocturneDB } from "./NocturneDB";
-import { OperationRequest, JoinSplitRequest } from "./operationRequest";
+import {
+  OperationRequest,
+  JoinSplitRequest,
+  GasCompAccountedOperationRequest,
+} from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
-  BLOCK_GAS_LIMIT,
   PreSignJoinSplit,
   Note,
   NoteTrait,
@@ -20,27 +22,21 @@ import {
   randomBigInt,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
-import { OpSimulator } from "./opSimulator";
 import { sortNotesByValue, min, iterChunks } from "./utils";
-
-export const DEFAULT_VERIFICATION_GAS_LIMIT = 1_000_000n;
 
 export class OpPreparer {
   private readonly nocturneDB: NocturneDB;
   private readonly merkle: MerkleProver;
   private readonly viewer: NocturneViewer;
-  private readonly simulator: OpSimulator;
 
   constructor(
     nocturneDB: NocturneDB,
     merkle: MerkleProver,
-    viewer: NocturneViewer,
-    walletContract: Wallet
+    viewer: NocturneViewer
   ) {
     this.nocturneDB = nocturneDB;
     this.merkle = merkle;
     this.viewer = viewer;
-    this.simulator = new OpSimulator(walletContract);
   }
 
   async hasEnoughBalanceForOperationRequest(
@@ -62,51 +58,28 @@ export class OpPreparer {
   }
 
   async prepareOperation(
-    opRequest: OperationRequest
+    opRequest: GasCompAccountedOperationRequest
   ): Promise<PreSignOperation> {
-    let { refundAddr, maxNumRefunds, gasPrice } = opRequest;
-
-    const { actions, joinSplitRequests, refundAssets, executionGasLimit } =
-      opRequest;
+    const { refundAssets, joinSplitRequests } = opRequest;
+    const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
+    const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
     // prepare joinSplits
     const joinSplits = (
       await Promise.all(
-        joinSplitRequests.map((joinSplitRequest) =>
-          this.prepareJoinSplits(joinSplitRequest)
-        )
+        joinSplitRequests.map((joinSplitRequest) => {
+          return this.prepareJoinSplits(joinSplitRequest);
+        })
       )
     ).flat();
-    const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
-
-    // defaults
-    // wallet implementations should independently fetch and set the gas price. The fallback of zero probably won't work
-    refundAddr = refundAddr ?? this.viewer.generateRandomStealthAddress();
-    gasPrice = gasPrice ?? 0n;
-    maxNumRefunds =
-      maxNumRefunds ??
-      BigInt(joinSplitRequests.length + refundAssets.length) + 5n;
 
     // construct op.
-    let op: Partial<PreSignOperation> = {
-      actions,
+    const op: PreSignOperation = {
+      ...opRequest,
       joinSplits,
-      refundAddr,
       encodedRefundAssets,
-      maxNumRefunds,
-      gasPrice,
-      // TODO: add logic for specifying optional gas asset in OperationRequest
-      // and defaulting to ETH or DAI otherwise
-      encodedGasAsset: joinSplits[0].encodedAsset,
-      // these may be undefined
-      executionGasLimit,
+      encodedGasAsset,
     };
-
-    // simulate if either of the gas limits are undefined
-    const simulationRequired = !executionGasLimit;
-    if (simulationRequired) {
-      op = await this.getGasEstimatedOperation(op);
-    }
 
     return op as PreSignOperation;
   }
@@ -328,28 +301,6 @@ export class OpPreparer {
       merkleProofA,
       merkleProofB,
     };
-  }
-
-  private async getGasEstimatedOperation(
-    op: Partial<PreSignOperation>
-  ): Promise<PreSignOperation> {
-    op.executionGasLimit = op.executionGasLimit ?? BLOCK_GAS_LIMIT;
-    op.gasPrice = op.gasPrice ?? 0n;
-
-    console.log("Simulating op");
-    const result = await this.simulator.simulateOperation(
-      op as PreSignOperation
-    );
-    if (!result.opProcessed) {
-      throw Error("Cannot estimate gas with Error: " + result.failureReason);
-    }
-    // Give 20% over-estimate
-    op.executionGasLimit = (result.executionGas * 12n) / 10n;
-
-    // since we're simulating, we can get the number of refunds while we're at it
-    op.maxNumRefunds = result.numRefunds;
-
-    return op as PreSignOperation;
   }
 }
 
