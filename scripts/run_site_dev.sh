@@ -61,6 +61,8 @@ read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 popd
 
+sleep 20
+
 # deploy subgraph
 pushd packages/subgraph
 yarn create-local
