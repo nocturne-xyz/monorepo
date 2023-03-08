@@ -4,6 +4,7 @@ import {
   AssetWithBalance,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
+import { OpRequestPreparer } from "./opRequestPreparer";
 import { MerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
@@ -12,10 +13,12 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { OpSigner } from "./opSigner";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
+import { AssetTrait } from "./primitives/asset";
 import { SyncAdapter } from "./sync";
 import { NocturneSyncer } from "./NocturneSyncer";
 
 export class NocturneContext {
+  private opRequestPreparer: OpRequestPreparer;
   private opPreparer: OpPreparer;
   private opSigner: OpSigner;
   private syncer: NocturneSyncer;
@@ -41,6 +44,12 @@ export class NocturneContext {
       config = configOrNetworkName;
     }
 
+    const gasAssetMap = new Map(
+      Array.from(config.gasAssets).map(([ticker, address]) => {
+        return [ticker, AssetTrait.erc20AddressToAsset(address)];
+      })
+    );
+
     this.signer = signer;
     this.walletContract = Wallet__factory.connect(
       config.walletAddress(),
@@ -48,12 +57,13 @@ export class NocturneContext {
     );
     this.merkleProver = merkleProver;
     this.db = db;
-
-    this.opPreparer = new OpPreparer(
-      this.db,
-      this.merkleProver,
+    this.opPreparer = new OpPreparer(this.db, this.merkleProver, this.signer);
+    this.opRequestPreparer = new OpRequestPreparer(
+      this.walletContract,
+      this.opPreparer,
       this.signer,
-      this.walletContract
+      this.db,
+      gasAssetMap
     );
 
     this.opSigner = new OpSigner(this.signer);
@@ -74,7 +84,11 @@ export class NocturneContext {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    return await this.opPreparer.prepareOperation(opRequest);
+    const gasCompAccountedOperationRequest =
+      await this.opRequestPreparer.prepareOperationRequest(opRequest);
+    return await this.opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {

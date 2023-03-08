@@ -206,6 +206,17 @@ export class NocturneDB {
   }
 
   /**
+   * Get total value for an asset
+   *
+   * @param asset the asset to get value for
+   * @returns value of all notes for the asset summed up
+   */
+  async getBalanceForAsset(asset: Asset): Promise<bigint> {
+    const notes = await this.getNotesForAsset(asset);
+    return notes.reduce((a, b) => a + b.value, 0n);
+  }
+
+  /**
    * Get all notes in the KV store
    *
    * @returns allNotes a map of all notes in the KV store. keys are the `NoteAssetKey` for an asset,

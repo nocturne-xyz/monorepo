@@ -5,8 +5,9 @@ import {
   NocturneSignature,
   generateRandomSpendingKey,
 } from "../src/crypto";
-import { shitcoin, setup, getDummyHex } from "./utils";
+import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
 import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
+import { OpRequestPreparer } from "../src/opRequestPreparer";
 
 describe("OpSigner", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
@@ -14,11 +15,13 @@ describe("OpSigner", () => {
       [100n, 10n],
       [shitcoin, shitcoin]
     );
-    const preparer = new OpPreparer(
-      nocturneDB,
-      merkleProver,
+    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
+    const opRequestPreparer = new OpRequestPreparer(
+      walletContract,
+      opPreparer,
       signer,
-      walletContract
+      nocturneDB,
+      testGasAssets
     );
     const opSigner = new OpSigner(signer);
 
@@ -32,13 +35,19 @@ describe("OpSigner", () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .maxNumRefunds(1n)
       .confidentialPayment(shitcoin, 1n, receiver)
       .gas({
         executionGasLimit: 1_000_000n,
-        gasPrice: 1n,
+        gasPrice: 0n,
       })
       .build();
-    const op = await preparer.prepareOperation(opRequest);
+
+    const gasCompAccountedOperationRequest =
+      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const op = await opPreparer.prepareOperation(
+      gasCompAccountedOperationRequest
+    );
 
     // attempt to sign it
     // expect it to not fail, and to have a valid signature
