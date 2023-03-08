@@ -9,6 +9,8 @@ export {
   partition,
   max,
   maxArray,
+  thunk,
+  Thunk,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
