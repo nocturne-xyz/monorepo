@@ -139,7 +139,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         await context.sync({ skipMerkleProverUpdates: true });
         console.log(
           "Synced. state is now: ",
-          JSON.stringify(await kvStore.getState())
+          //@ts-ignore
+          JSON.stringify(await kvStore.kv())
         );
       } catch (e) {
         console.log("Error syncing notes: ", e);
@@ -193,7 +194,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       await kvStore.clear();
       console.log(
         "Cleared DB, state: ",
-        JSON.stringify(await kvStore.getState())
+        //@ts-ignore
+        JSON.stringify(await kvStore.kv())
       );
       return;
     default:
