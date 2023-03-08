@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use `SubgraphSyncAdapter` against local graph node
 - call `context.sync()` at the beginning of `nocturne_signOperation` so it's unnecessary for frontend to explicitly sync
 - remove `syncLeaves` method and rename `syncNotes` to `sync` (only one `sync` method)
 - Fix regression where key derivation was still using `wallet` keyword instead of `snap`

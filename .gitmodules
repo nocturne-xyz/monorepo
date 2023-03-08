@@ -11,3 +11,6 @@
 	path = rapidsnark
 	url = https://github.com/nocturne-xyz/rapidsnark.git
 	ignore = dirty
+[submodule "graph-node"]
+	path = graph-node
+	url = https://github.com/graphprotocol/graph-node/

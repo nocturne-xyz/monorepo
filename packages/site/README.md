@@ -23,3 +23,7 @@ We use hardhat node to run a local devnet. The caveat is that the chain ID for h
 - Currency Symbol: GO
 
 Additionally, make sure to go to Settings -> Advanced and click "Reset account." This will reset the nonce for the selected network back to zero.
+
+### (Apple Silicon Only) Local Graph Node Setup
+
+The default graph node container is only compiled for x86, which is far less efficient and OOMs pretty easily due to emulation overhead when running it on apple silicon. To get around this, re-build the container and force docker to use that version by running `packages/e2e-tests/rebuild_graph_m1.sh`
