@@ -4,7 +4,8 @@ import {
   InMemoryMerkleProver,
   OperationRequest,
   NocturneDB,
-  RPCSyncAdapter,
+  // RPCSyncAdapter,
+  SubgraphSyncAdapter,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -20,6 +21,7 @@ import {
 const WALLET_ADDRESS = "0xA3183498b579bd228aa2B62101C40CC1da978F24";
 const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
+const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   startBlock: 0,
@@ -100,7 +102,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
   const merkleProver = new InMemoryMerkleProver();
-  const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
+  // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
+  const syncAdapter = new SubgraphSyncAdapter(SUBGRAPH_API_URL);
   const context = new NocturneContext(
     signer,
     provider,
@@ -136,7 +139,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         await context.sync({ skipMerkleProverUpdates: true });
         console.log(
           "Synced. state is now: ",
-          JSON.stringify(await kvStore.getState())
+          //@ts-ignore
+          JSON.stringify(await kvStore.kv())
         );
       } catch (e) {
         console.log("Error syncing notes: ", e);
@@ -190,7 +194,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       await kvStore.clear();
       console.log(
         "Cleared DB, state: ",
-        JSON.stringify(await kvStore.getState())
+        //@ts-ignore
+        JSON.stringify(await kvStore.kv())
       );
       return;
     default:

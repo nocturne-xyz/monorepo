@@ -82,3 +82,17 @@ export function maxArray(arr: number[] | bigint[]): number | bigint {
   //@ts-ignore
   return arr.reduce((curr, x) => max(curr, x));
 }
+
+export type Thunk<T> = () => Promise<T>;
+
+export function thunk<T>(fn: () => Promise<T>): Thunk<T> {
+  let item: T | undefined;
+
+  return async () => {
+    if (!item) {
+      item = await fn();
+    }
+
+    return item;
+  };
+}
