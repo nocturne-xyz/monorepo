@@ -4,7 +4,7 @@ import {
   AssetWithBalance,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
-import { OpRequestPreparer } from "./opRequestPreparer";
+import { handleGasForOperationRequest } from "./opRequestGas";
 import { MerkleProver } from "./merkleProver";
 import { OpPreparer } from "./opPreparer";
 import { OperationRequest } from "./operationRequest";
@@ -13,12 +13,11 @@ import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { OpSigner } from "./opSigner";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
-import { AssetTrait } from "./primitives/asset";
+import { Asset, AssetTrait } from "./primitives/asset";
 import { SyncAdapter } from "./sync";
 import { NocturneSyncer } from "./NocturneSyncer";
 
 export class NocturneContext {
-  private opRequestPreparer: OpRequestPreparer;
   private opPreparer: OpPreparer;
   private opSigner: OpSigner;
   private syncer: NocturneSyncer;
@@ -28,6 +27,7 @@ export class NocturneContext {
   protected db: NocturneDB;
 
   readonly signer: NocturneSigner;
+  readonly gasAssets: Asset[];
 
   constructor(
     signer: NocturneSigner,
@@ -44,10 +44,8 @@ export class NocturneContext {
       config = configOrNetworkName;
     }
 
-    const gasAssetMap = new Map(
-      Array.from(config.gasAssets).map(([ticker, address]) => {
-        return [ticker, AssetTrait.erc20AddressToAsset(address)];
-      })
+    this.gasAssets = Array.from(config.gasAssets.values()).map((address) =>
+      AssetTrait.erc20AddressToAsset(address)
     );
 
     this.signer = signer;
@@ -58,13 +56,6 @@ export class NocturneContext {
     this.merkleProver = merkleProver;
     this.db = db;
     this.opPreparer = new OpPreparer(this.db, this.merkleProver, this.signer);
-    this.opRequestPreparer = new OpRequestPreparer(
-      this.walletContract,
-      this.opPreparer,
-      this.signer,
-      this.db,
-      gasAssetMap
-    );
 
     this.opSigner = new OpSigner(this.signer);
 
@@ -84,11 +75,16 @@ export class NocturneContext {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    const gasCompAccountedOperationRequest =
-      await this.opRequestPreparer.prepareOperationRequest(opRequest);
-    return await this.opPreparer.prepareOperation(
-      gasCompAccountedOperationRequest
+    const gasAccountedOpRequest = await handleGasForOperationRequest(
+      {
+        db: this.db,
+        gasAssets: this.gasAssets,
+        opPreparer: this.opPreparer,
+        walletContract: this.walletContract,
+      },
+      opRequest
     );
+    return await this.opPreparer.prepareOperation(gasAccountedOpRequest);
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {

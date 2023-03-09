@@ -10,7 +10,7 @@ import {
   NocturneViewer,
   range,
   NoteTrait,
-  groupBy,
+  groupByArr,
   IncludedNoteWithNullifier,
   AssetTrait,
 } from "../src";
@@ -206,7 +206,7 @@ describe("NocturneDB", async () => {
 
   it("Stores a batch of notes/commitments with a single asset", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -226,7 +226,7 @@ describe("NocturneDB", async () => {
 
   it("stores a batch of notes/commitments with a multiple assets", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -252,7 +252,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies one note", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitments] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -277,7 +277,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies multiple notes", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -307,7 +307,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies all notes for a given asset", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
-    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -341,7 +341,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies multiple notes with different assets", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [
@@ -410,7 +410,7 @@ describe("NocturneDB", async () => {
 
   it("gets all notes for a given asset", async () => {
     const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitmetns] = groupBy(allNotes, (n) =>
+    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
       (n.merkleIndex % 2).toString()
     );
     const notesAndCommitments = [

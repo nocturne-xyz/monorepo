@@ -15,7 +15,18 @@ export function range(start: number, stop?: number, step = 1): number[] {
     .map((x, i) => x + i * (step as number));
 }
 
-export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
+export function groupByArr<T>(
+  list: T[],
+  keyGetter: (item: T) => string
+): T[][] {
+  const map = groupByMap(list, keyGetter);
+  return Array.from(map.values());
+}
+
+export function groupByMap<T>(
+  list: T[],
+  keyGetter: (item: T) => string
+): Map<string, T[]> {
   const map = new Map();
   for (const item of list) {
     const key = keyGetter(item);
@@ -28,7 +39,7 @@ export function groupBy<T>(list: T[], keyGetter: (item: T) => string): T[][] {
     }
   }
 
-  return Array.from(map.values());
+  return map;
 }
 
 // splits an array into two arrays based on a predicate
