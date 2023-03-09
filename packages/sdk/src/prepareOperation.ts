@@ -1,5 +1,5 @@
 import { NocturneDB } from "./NocturneDB";
-import { JoinSplitRequest } from "./operationRequest";
+import { JoinSplitRequest, GasAccountedOperationRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
   PreSignJoinSplit,
@@ -19,7 +19,10 @@ import {
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import { sortNotesByValue, min, iterChunks, getJoinSplitRequestTotalValue } from "./utils";
-import { GasAccountedOperationRequest } from "./opRequestGas";
+
+export const __private = {
+  gatherNotes,
+}
 
 export interface PrepareOperationDeps {
   db: NocturneDB,

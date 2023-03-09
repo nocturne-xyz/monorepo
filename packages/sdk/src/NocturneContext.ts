@@ -6,7 +6,7 @@ import {
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { MerkleProver } from "./merkleProver";
-import { OpPreparer } from "./opPreparer";
+import { prepareOperation } from "./prepareOperation";
 import { OperationRequest } from "./operationRequest";
 import { NocturneDB } from "./NocturneDB";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
@@ -19,7 +19,6 @@ import { NocturneSyncer } from "./NocturneSyncer";
 import { getJoinSplitRequestTotalValue } from "./utils";
 
 export class NocturneContext {
-  private opPreparer: OpPreparer;
   private opSigner: OpSigner;
   private syncer: NocturneSyncer;
 
@@ -56,7 +55,6 @@ export class NocturneContext {
     );
     this.merkleProver = merkleProver;
     this.db = db;
-    this.opPreparer = new OpPreparer(this.db, this.merkleProver, this.signer);
 
     this.opSigner = new OpSigner(this.signer);
 
@@ -76,16 +74,16 @@ export class NocturneContext {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
-    const gasAccountedOpRequest = await handleGasForOperationRequest(
-      {
-        db: this.db,
-        gasAssets: this.gasAssets,
-        opPreparer: this.opPreparer,
-        walletContract: this.walletContract,
-      },
-      opRequest
-    );
-    return await this.opPreparer.prepareOperation(gasAccountedOpRequest);
+    const deps = {
+      db: this.db,
+      gasAssets: this.gasAssets,
+      walletContract: this.walletContract,
+      merkle: this.merkleProver,
+      viewer: this.signer   
+    };
+
+    const gasAccountedOpRequest = await handleGasForOperationRequest(deps, opRequest);
+    return await prepareOperation(deps, gasAccountedOpRequest);
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {
