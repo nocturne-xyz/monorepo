@@ -16,6 +16,7 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SyncAdapter } from "./sync";
 import { NocturneSyncer } from "./NocturneSyncer";
+import { getJoinSplitRequestTotalValue } from "./utils";
 
 export class NocturneContext {
   private opPreparer: OpPreparer;
@@ -106,6 +107,18 @@ export class NocturneContext {
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
-    return this.opPreparer.hasEnoughBalanceForOperationRequest(opRequest);
+
+    for (const joinSplitRequest of opRequest.joinSplitRequests) {
+      const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
+      // check that the user has enough notes to cover the request
+      const notes = await this.db.getNotesForAsset(joinSplitRequest.asset);
+      const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+      if (balance < requestedAmount) {
+        return false;
+      }
+    }
+
+    return true;
+
   }
 }
