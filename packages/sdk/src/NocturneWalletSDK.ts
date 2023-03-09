@@ -11,20 +11,18 @@ import { OperationRequest } from "./operationRequest";
 import { NocturneDB } from "./NocturneDB";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { OpSigner } from "./opSigner";
+import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SyncAdapter } from "./sync";
-import { NocturneSyncer } from "./NocturneSyncer";
+import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
 
-export class NocturneContext {
-  private opSigner: OpSigner;
-  private syncer: NocturneSyncer;
-
+export class NocturneWalletSDK {
   protected walletContract: Wallet;
   protected merkleProver: MerkleProver;
   protected db: NocturneDB;
+  protected syncAdapter: SyncAdapter;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Asset[];
@@ -55,20 +53,15 @@ export class NocturneContext {
     );
     this.merkleProver = merkleProver;
     this.db = db;
-
-    this.opSigner = new OpSigner(this.signer);
-
-    this.syncer = new NocturneSyncer(
-      this.signer,
-      syncAdapter,
-      this.db,
-      this.merkleProver,
-      provider
-    );
+    this.syncAdapter = syncAdapter;
   }
 
   async sync(): Promise<void> {
-    await this.syncer.sync();
+    const deps = {
+      provider: this.walletContract.provider,
+      viewer: this.signer,
+    };
+    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
   }
 
   async prepareOperation(
@@ -79,15 +72,18 @@ export class NocturneContext {
       gasAssets: this.gasAssets,
       walletContract: this.walletContract,
       merkle: this.merkleProver,
-      viewer: this.signer   
+      viewer: this.signer,
     };
 
-    const gasAccountedOpRequest = await handleGasForOperationRequest(deps, opRequest);
+    const gasAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
     return await prepareOperation(deps, gasAccountedOpRequest);
   }
 
   signOperation(preSignOperation: PreSignOperation): SignedOperation {
-    return this.opSigner.signOperation(preSignOperation);
+    return signOperation(this.signer, preSignOperation);
   }
 
   async getAllAssetBalances(): Promise<AssetWithBalance[]> {
@@ -105,7 +101,6 @@ export class NocturneContext {
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
-
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
       // check that the user has enough notes to cover the request
@@ -117,6 +112,5 @@ export class NocturneContext {
     }
 
     return true;
-
   }
 }

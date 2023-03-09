@@ -12,7 +12,7 @@ import {
   joinSplitPublicSignalsToArray,
   VerifyingKey,
   computeOperationDigest,
-  OpProver,
+  proveOperation,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -28,7 +28,6 @@ export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
-  opProver: OpProver;
   bundlerEndpoint: string;
   walletContract: Wallet;
   vaultContractAddress: Address;
@@ -42,8 +41,6 @@ export class NocturneFrontendSDK {
     vkey: VerifyingKey
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-    this.opProver = new OpProver(this.joinSplitProver);
-
     this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
     this.vaultContractAddress = vaultContractAddress;
@@ -142,7 +139,7 @@ export class NocturneFrontendSDK {
   }
 
   async proveOperation(op: SignedOperation): Promise<ProvenOperation> {
-    return await this.opProver.proveOperation(op);
+    return await proveOperation(this.joinSplitProver, op);
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {

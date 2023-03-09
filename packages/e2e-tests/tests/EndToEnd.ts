@@ -16,15 +16,15 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import {
-  NocturneContext,
+  NocturneWalletSDK,
   NocturneDB,
   OperationRequest,
   OperationRequestBuilder,
-  OpProver,
   queryEvents,
   Asset,
   AssetType,
   JoinSplitProver,
+  proveOperation,
 } from "@nocturne-xyz/sdk";
 import { startSubtreeUpdater } from "../src/subtreeUpdater";
 import { sleep, submitAndProcessOperation } from "../src/utils";
@@ -68,11 +68,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let erc721Token: SimpleERC721Token;
   let erc1155Token: SimpleERC1155Token;
   let nocturneDBAlice: NocturneDB;
-  let nocturneContextAlice: NocturneContext;
+  let nocturneWalletSDKAlice: NocturneWalletSDK;
   let nocturneDBBob: NocturneDB;
-  let nocturneContextBob: NocturneContext;
+  let nocturneWalletSDKBob: NocturneWalletSDK;
   let joinSplitProver: JoinSplitProver;
-  let opProver: OpProver;
 
   beforeEach(async () => {
     docker = new Dockerode();
@@ -90,12 +89,11 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       wallet,
       nocturneDBAlice,
-      nocturneContextAlice,
+      nocturneWalletSDKAlice,
       nocturneDBBob,
-      nocturneContextBob,
+      nocturneWalletSDKBob,
       joinSplitProver,
     } = await setupNocturne(deployerEoa));
-    opProver = new OpProver(joinSplitProver);
 
     erc20Token = await new SimpleERC20Token__factory(deployerEoa).deploy();
     console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
@@ -149,10 +147,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     offchainChecks: () => Promise<void>
   ): Promise<void> {
     console.log("Alice: Sync SDK");
-    await nocturneContextAlice.sync();
+    await nocturneWalletSDKAlice.sync();
 
     console.log("Bob: Sync SDK");
-    await nocturneContextBob.sync();
+    await nocturneWalletSDKBob.sync();
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
@@ -162,10 +160,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       gasPrice: 0n,
     };
 
-    console.log("Create post-proof operation with NocturneContext");
-    const preSign = await nocturneContextAlice.prepareOperation(opRequest);
-    const signed = nocturneContextAlice.signOperation(preSign);
-    const operation = await opProver.proveOperation(signed);
+    console.log("Create post-proof operation with NocturneWalletSDK");
+    const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
+    const signed = nocturneWalletSDKAlice.signOperation(preSign);
+    const operation = await proveOperation(joinSplitProver, signed);
 
     await submitAndProcessOperation(operation);
 
@@ -180,7 +178,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       erc20Token,
       aliceEoa,
-      nocturneContextAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
     await sleep(15_000);
@@ -203,7 +201,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL,
-        nocturneContextBob.signer.canonicalAddress()
+        nocturneWalletSDKBob.signer.canonicalAddress()
       )
       .action(erc20Token.address, encodedFunction)
       .build();
@@ -234,7 +232,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const offchainChecks = async () => {
       console.log("Alice: Sync SDK post-operation");
-      await nocturneContextAlice.sync();
+      await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset
       )!;
@@ -258,7 +256,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("Bob: Sync SDK post-operation");
-      await nocturneContextBob.sync();
+      await nocturneWalletSDKBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
@@ -278,7 +276,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       vault,
       erc20Token,
       aliceEoa,
-      nocturneContextAlice.signer.canonicalStealthAddress(),
+      nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [PER_NOTE_AMOUNT]
     );
     await sleep(15_000);
@@ -344,7 +342,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const offchainChecks = async () => {
       console.log("Alice: Sync SDK post-operation");
-      await nocturneContextAlice.sync();
+      await nocturneWalletSDKAlice.sync();
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(

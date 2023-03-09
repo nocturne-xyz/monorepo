@@ -6,11 +6,12 @@ import {
   generateRandomSpendingKey,
 } from "../src/crypto";
 import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
-import { OperationRequestBuilder, OpSigner } from "../src";
+import { OperationRequestBuilder } from "../src";
 import { prepareOperation } from "../src/prepareOperation";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
+import { signOperation } from "../src/signOperation";
 
-describe("OpSigner", () => {
+describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
     const [nocturneDB, merkleProver, signer, walletContract] = await setup(
       [100n, 10n],
@@ -23,8 +24,6 @@ describe("OpSigner", () => {
       viewer: signer,
       walletContract,
     };
-
-    const opSigner = new OpSigner(signer);
 
     const receiverSk = generateRandomSpendingKey();
     const receiverSigner = new NocturneSigner(receiverSk);
@@ -48,14 +47,11 @@ describe("OpSigner", () => {
       deps,
       opRequest
     );
-    const op = await prepareOperation(
-      deps,
-      gasCompAccountedOperationRequest
-    );
+    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
 
     // attempt to sign it
     // expect it to not fail, and to have a valid signature
-    const signed = opSigner.signOperation(op);
+    const signed = signOperation(signer, op);
     expect(signed).to.not.be.undefined;
     expect(signed).to.not.be.null;
 

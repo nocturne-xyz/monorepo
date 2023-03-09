@@ -1,5 +1,8 @@
 import { NocturneDB } from "./NocturneDB";
-import { JoinSplitRequest, GasAccountedOperationRequest } from "./operationRequest";
+import {
+  JoinSplitRequest,
+  GasAccountedOperationRequest,
+} from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
   PreSignJoinSplit,
@@ -18,16 +21,21 @@ import {
   randomBigInt,
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
-import { sortNotesByValue, min, iterChunks, getJoinSplitRequestTotalValue } from "./utils";
+import {
+  sortNotesByValue,
+  min,
+  iterChunks,
+  getJoinSplitRequestTotalValue,
+} from "./utils";
 
 export const __private = {
   gatherNotes,
-}
+};
 
 export interface PrepareOperationDeps {
-  db: NocturneDB,
-  viewer: NocturneViewer,
-  merkle: MerkleProver,
+  db: NocturneDB;
+  viewer: NocturneViewer;
+  merkle: MerkleProver;
 }
 
 export async function prepareOperation(

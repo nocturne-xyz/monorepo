@@ -7,7 +7,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
-import { NocturneContext, NocturneDB } from "@nocturne-xyz/sdk";
+import { NocturneWalletSDK, NocturneDB } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../src/deploy";
 import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
@@ -31,7 +31,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
-  let nocturneContextAlice: NocturneContext;
+  let nocturneWalletSDKAlice: NocturneWalletSDK;
   let server: SubtreeUpdateServer;
   let nocturneDBAlice: NocturneDB;
 
@@ -44,7 +44,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
     [deployerEoa, aliceEoa, subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
-    ({ vault, wallet, nocturneContextAlice, nocturneDBAlice } =
+    ({ vault, wallet, nocturneWalletSDKAlice, nocturneDBAlice } =
       await setupNocturne(deployerEoa));
 
     const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
@@ -85,7 +85,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 

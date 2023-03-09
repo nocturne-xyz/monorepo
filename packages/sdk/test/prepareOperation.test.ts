@@ -29,16 +29,13 @@ chai.use(chaiAsPromised);
 
 describe("gatherNotes", () => {
   it("throws an error when attempting to overspend", async () => {
-    const [nocturneDB] = await setup(
-      [100n],
-      [stablescam]
-    );
+    const [nocturneDB] = await setup([100n], [stablescam]);
 
     // attempt request 1000 tokens, more than the user owns
     // expect to throw error
-    await expect(
-      gatherNotes(nocturneDB, 1000n, stablescam)
-    ).to.be.rejectedWith("Attempted to spend more funds than owned");
+    await expect(gatherNotes(nocturneDB, 1000n, stablescam)).to.be.rejectedWith(
+      "Attempted to spend more funds than owned"
+    );
   });
 
   it("gathers the minimum notes for amount < smallest note", async () => {
@@ -175,10 +172,7 @@ describe("prepareOperation", async () => {
       deps,
       opRequest
     );
-    const op = await prepareOperation(
-      deps,
-      gasCompAccountedOperationRequest
-    );
+    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -227,10 +221,7 @@ describe("prepareOperation", async () => {
       deps,
       opRequest
     );
-    const op = await prepareOperation(
-      deps,
-      gasCompAccountedOperationRequest
-    );
+    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -284,10 +275,7 @@ describe("prepareOperation", async () => {
       deps,
       opRequest
     );
-    const op = await prepareOperation(
-      deps,
-      gasCompAccountedOperationRequest
-    );
+    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
@@ -444,10 +432,7 @@ describe("prepareOperation", async () => {
       deps,
       opRequest
     );
-    const op = await prepareOperation(
-      deps,
-      gasCompAccountedOperationRequest
-    );
+    const op = await prepareOperation(deps, gasCompAccountedOperationRequest);
 
     // Expect to have 2 joinsplits (one with 100_000 request of shitcoin, other
     // of > 1_600_000 of stablescam as gas token)
