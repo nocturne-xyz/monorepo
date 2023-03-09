@@ -7,7 +7,7 @@ import {
 } from "../src/crypto";
 import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
 import { OperationRequestBuilder, OpSigner, OpPreparer } from "../src";
-import { OpRequestPreparer } from "../src/opRequestPreparer";
+import { handleGasForOperationRequest } from "../src/opRequestGas";
 
 describe("OpSigner", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
@@ -16,13 +16,13 @@ describe("OpSigner", () => {
       [shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
+      db: nocturneDB,
+      gasAssets: testGasAssets,
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+    };
+
     const opSigner = new OpSigner(signer);
 
     const receiverSk = generateRandomSpendingKey();
@@ -43,8 +43,10 @@ describe("OpSigner", () => {
       })
       .build();
 
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );

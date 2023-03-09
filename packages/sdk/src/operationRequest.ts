@@ -1,6 +1,6 @@
 import { Asset, Address, Action } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
-import { groupBy } from "./utils";
+import { groupByArr } from "./utils";
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -17,22 +17,6 @@ export interface OperationRequest {
   executionGasLimit?: bigint;
   gasPrice?: bigint;
   maxNumRefunds?: bigint;
-}
-
-export interface GasEstimatedOperationRequest
-  extends Omit<
-    OperationRequest,
-    "refundAddr" | "executionGasLimit" | "maxNumRefunds" | "gasPrice"
-  > {
-  refundAddr: StealthAddress;
-  executionGasLimit: bigint;
-  maxNumRefunds: bigint;
-  gasPrice: bigint;
-}
-
-export interface GasCompAccountedOperationRequest
-  extends GasEstimatedOperationRequest {
-  gasAsset: Asset;
 }
 
 export interface OperationGasParams {
@@ -172,7 +156,7 @@ export class OperationRequestBuilder {
       [joinSplits, payments],
     ] of this.joinSplitsAndPaymentsByAsset.entries()) {
       // consolidate payments to the same receiver
-      const paymentsByReceiver = groupBy(payments, (p) =>
+      const paymentsByReceiver = groupByArr(payments, (p) =>
         p.receiver.toString()
       );
       const consolidatedPayments = paymentsByReceiver.flatMap((payments) => {

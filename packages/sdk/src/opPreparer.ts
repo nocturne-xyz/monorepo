@@ -1,9 +1,5 @@
 import { NocturneDB } from "./NocturneDB";
-import {
-  OperationRequest,
-  JoinSplitRequest,
-  GasCompAccountedOperationRequest,
-} from "./operationRequest";
+import { OperationRequest, JoinSplitRequest } from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
   PreSignJoinSplit,
@@ -23,6 +19,7 @@ import {
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import { sortNotesByValue, min, iterChunks } from "./utils";
+import { GasAccountedOperationRequest } from "./opRequestGas";
 
 export class OpPreparer {
   private readonly nocturneDB: NocturneDB;
@@ -58,7 +55,7 @@ export class OpPreparer {
   }
 
   async prepareOperation(
-    opRequest: GasCompAccountedOperationRequest
+    opRequest: GasAccountedOperationRequest
   ): Promise<PreSignOperation> {
     const { refundAssets, joinSplitRequests } = opRequest;
     const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
@@ -73,9 +70,14 @@ export class OpPreparer {
       )
     ).flat();
 
+    // if refundAddr is not set, generate a random one
+    const refundAddr =
+      opRequest.refundAddr ?? this.viewer.generateRandomStealthAddress();
+
     // construct op.
     const op: PreSignOperation = {
       ...opRequest,
+      refundAddr,
       joinSplits,
       encodedRefundAssets,
       encodedGasAsset,
