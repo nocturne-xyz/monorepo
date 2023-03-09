@@ -11,7 +11,7 @@ import {
   testGasAssets,
   stablescam,
 } from "./utils";
-import { OpRequestPreparer } from "../src/opRequestPreparer";
+import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest";
 
@@ -30,13 +30,12 @@ describe("prepareOperationRequest", async () => {
       [shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const deps = {
+      db: nocturneDB,
       walletContract,
+      gasAssets: testGasAssets,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -50,8 +49,10 @@ describe("prepareOperationRequest", async () => {
       })
       .build();
 
-    const gasCompAccountedOpRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
 
     expect(gasCompAccountedOpRequest.gasPrice).to.eql(0n);
     expect(gasCompAccountedOpRequest.gasAsset).to.eql(DUMMY_GAS_ASSET);
@@ -63,13 +64,12 @@ describe("prepareOperationRequest", async () => {
       [shitcoin, shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const deps = {
+      db: nocturneDB,
       walletContract,
+      gasAssets: testGasAssets,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -83,8 +83,10 @@ describe("prepareOperationRequest", async () => {
       })
       .build();
 
-    const gasCompAccountedOpRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
 
     const expectedJoinSplitRequest: JoinSplitRequest = {
       asset: shitcoin,
@@ -105,13 +107,12 @@ describe("prepareOperationRequest", async () => {
       [shitcoin, shitcoin, stablescam]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const deps = {
+      db: nocturneDB,
       walletContract,
+      gasAssets: testGasAssets,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -125,8 +126,10 @@ describe("prepareOperationRequest", async () => {
       })
       .build();
 
-    const gasCompAccountedOpRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
 
     const expectedJoinSplitRequestUnwrap: JoinSplitRequest = {
       asset: shitcoin,

@@ -3,7 +3,8 @@ export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {
   zip,
   range,
-  groupBy,
+  groupByArr,
+  groupByMap,
   iterChunks,
   min,
   partition,

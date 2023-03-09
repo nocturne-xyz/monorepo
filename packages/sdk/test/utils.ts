@@ -48,17 +48,13 @@ export const plutocracy: Asset = {
 };
 export const encodedPlutocracy = AssetTrait.encode(plutocracy);
 
-export const testGasAssets = new Map(
-  Object.entries({
-    shitcoin: shitcoin.assetAddr,
-    ponzi: ponzi.assetAddr,
-    stablescam: stablescam.assetAddr,
-    monkey: monkey.assetAddr,
-    plutocracy: plutocracy.assetAddr,
-  }).map(([ticker, address]) => {
-    return [ticker, AssetTrait.erc20AddressToAsset(address)];
-  })
-);
+export const testGasAssets = [
+  shitcoin,
+  ponzi,
+  stablescam,
+  monkey,
+  plutocracy,
+].map((asset) => AssetTrait.erc20AddressToAsset(asset.assetAddr));
 
 export function getDummyHex(bump: number): string {
   const hex = utils.keccak256("0x" + bump.toString(16).padStart(64, "0"));

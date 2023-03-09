@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- replace `OpRequestPreparer` with a function `handleGasForOperationRequest` with easier-to-follow logic
+- move`refundAddr` generation to `OpPreparer`
 - add `Thunk` to utils
 - add `SubgraphSyncAdapter`
 - Add test suite for `OpRequestPreparer`

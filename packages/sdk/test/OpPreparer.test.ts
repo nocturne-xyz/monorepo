@@ -21,7 +21,7 @@ import {
   getDummyHex,
   testGasAssets,
 } from "./utils";
-import { OpRequestPreparer } from "../src/opRequestPreparer";
+import { handleGasForOperationRequest } from "../src/opRequestGas";
 
 chai.use(chaiAsPromised);
 
@@ -107,13 +107,12 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -127,8 +126,10 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const gasCompAccountedOpRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
@@ -152,13 +153,12 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const receiverSk = generateRandomSpendingKey();
     const receiverSigner = new NocturneSigner(receiverSk);
@@ -177,8 +177,10 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );
@@ -204,13 +206,12 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
     const refundAddr = signer.generateRandomStealthAddress();
 
     const builder = new OperationRequestBuilder();
@@ -227,8 +228,10 @@ describe("prepareOperation", async () => {
       .maxNumRefunds(1n)
       .build();
 
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );
@@ -258,13 +261,12 @@ describe("prepareOperation", async () => {
       [shitcoin, stablescam]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const receivers = range(2)
       .map((_) => generateRandomSpendingKey())
@@ -282,8 +284,10 @@ describe("prepareOperation", async () => {
       .maxNumRefunds(1n)
       .build();
 
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );
@@ -303,13 +307,12 @@ describe("prepareOperation", async () => {
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const receivers = range(3)
       .map((_) => generateRandomSpendingKey())
@@ -341,8 +344,10 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const gasCompAccountedOpRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(gasCompAccountedOpRequest);
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
@@ -375,13 +380,12 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin, shitcoin]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -397,8 +401,10 @@ describe("prepareOperation", async () => {
 
     // Total required = executionGas + unwrapValue + (joinsplitGas + refundGas)
     // Total required = 1_000_000 + 3 + 170_000 + 80_000
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );
@@ -416,13 +422,12 @@ describe("prepareOperation", async () => {
       [shitcoin, shitcoin, shitcoin, stablescam]
     );
     const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
-    const opRequestPreparer = new OpRequestPreparer(
+    const opGasDeps = {
       walletContract,
       opPreparer,
-      signer,
-      nocturneDB,
-      testGasAssets
-    );
+      gasAssets: testGasAssets,
+      db: nocturneDB,
+    };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
@@ -437,8 +442,10 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    const gasCompAccountedOperationRequest =
-      await opRequestPreparer.prepareOperationRequest(opRequest);
+    const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
+      opGasDeps,
+      opRequest
+    );
     const op = await opPreparer.prepareOperation(
       gasCompAccountedOperationRequest
     );
