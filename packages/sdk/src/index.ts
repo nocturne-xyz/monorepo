@@ -11,6 +11,6 @@ export {
   OperationGasParams,
   OperationRequestBuilder,
 } from "./operationRequest";
-export { NocturneWalletSDK as NocturneWalletSDK } from "./NocturneWalletSDK";
+export { NocturneWalletSDK } from "./NocturneWalletSDK";
 export { proveOperation } from "./proveOperation";
 export { NocturneDB } from "./NocturneDB";
