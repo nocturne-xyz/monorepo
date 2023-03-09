@@ -19,6 +19,17 @@ export interface OperationRequest {
   maxNumRefunds?: bigint;
 }
 
+export interface GasAccountedOperationRequest
+  extends Omit<
+    OperationRequest,
+    "executionGasLimit" | "maxNumRefunds" | "gasPrice"
+  > {
+  executionGasLimit: bigint;
+  maxNumRefunds: bigint;
+  gasPrice: bigint;
+  gasAsset: Asset;
+}
+
 export interface OperationGasParams {
   executionGasLimit: bigint;
   gasPrice: bigint;

@@ -1,7 +1,11 @@
 import { Wallet } from "@nocturne-xyz/contracts";
 import { StealthAddress } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import { JoinSplitRequest, OperationRequest } from "./operationRequest";
+import {
+  GasAccountedOperationRequest,
+  JoinSplitRequest,
+  OperationRequest,
+} from "./operationRequest";
 import {
   Operation,
   ProvenOperation,
@@ -14,7 +18,7 @@ import {
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
 import { OpPreparer } from "./opPreparer";
-import { groupBy } from "./utils/functional";
+import { groupByMap } from "./utils/functional";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
@@ -32,18 +36,7 @@ const DUMMY_GAS_ASSET: Asset = {
 const PER_JOINSPLIT_GAS = 170_000n;
 const PER_REFUND_GAS = 80_000n;
 
-export interface GasAccountedOperationRequest
-  extends Omit<
-    OperationRequest,
-    "executionGasLimit" | "maxNumRefunds" | "gasPrice"
-  > {
-  executionGasLimit: bigint;
-  maxNumRefunds: bigint;
-  gasPrice: bigint;
-  gasAsset: Asset;
-}
-
-export interface PrepareOperationRequestDeps {
+export interface HandleOpRequestGasDeps {
   db: NocturneDB;
   walletContract: Wallet;
   gasAssets: Asset[];
@@ -69,7 +62,7 @@ interface GasParams {
 }
 
 export async function handleGasForOperationRequest(
-  { walletContract, opPreparer, db, gasAssets }: PrepareOperationRequestDeps,
+  { walletContract, opPreparer, db, gasAssets }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
@@ -133,7 +126,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   gasEstimate: bigint
 ): Promise<[JoinSplitRequest[], Asset | undefined]> {
   // group joinSplitRequests by asset address
-  const joinSplitRequestsByAsset = groupBy(
+  const joinSplitRequestsByAsset = groupByMap(
     joinSplitRequests,
     (request) => request.asset.assetAddr
   );
@@ -148,9 +141,15 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     // TODO: is it possible to have empty array here?
     if (matchingRequests && matchingRequests.length > 0) {
       const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
+      const totalAmountInMatchingRequests = matchingRequests.reduce(
+        (acc, request) => {
+          return acc + request.unwrapValue;
+        },
+        0n
+      );
 
       // if they do, modify one of the requests to include the gas, and we're done
-      if (totalOwnedGasAsset >= gasEstimate) {
+      if (totalOwnedGasAsset >= gasEstimate + totalAmountInMatchingRequests) {
         matchingRequests[0].unwrapValue += gasEstimate;
         joinSplitRequestsByAsset.set(gasAsset.assetAddr, matchingRequests);
 

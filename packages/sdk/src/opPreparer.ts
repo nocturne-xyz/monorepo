@@ -1,5 +1,9 @@
 import { NocturneDB } from "./NocturneDB";
-import { OperationRequest, JoinSplitRequest } from "./operationRequest";
+import {
+  OperationRequest,
+  JoinSplitRequest,
+  GasAccountedOperationRequest,
+} from "./operationRequest";
 import { MerkleProver } from "./merkleProver";
 import {
   PreSignJoinSplit,
@@ -19,7 +23,6 @@ import {
 } from "./crypto";
 import { MerkleProofInput } from "./proof";
 import { sortNotesByValue, min, iterChunks } from "./utils";
-import { GasAccountedOperationRequest } from "./opRequestGas";
 
 export class OpPreparer {
   private readonly nocturneDB: NocturneDB;

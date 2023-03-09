@@ -19,11 +19,11 @@ export function groupByArr<T>(
   list: T[],
   keyGetter: (item: T) => string
 ): T[][] {
-  const map = groupBy(list, keyGetter);
+  const map = groupByMap(list, keyGetter);
   return Array.from(map.values());
 }
 
-export function groupBy<T>(
+export function groupByMap<T>(
   list: T[],
   keyGetter: (item: T) => string
 ): Map<string, T[]> {

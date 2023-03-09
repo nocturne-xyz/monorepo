@@ -4,7 +4,7 @@ export {
   zip,
   range,
   groupByArr,
-  groupBy,
+  groupByMap,
   iterChunks,
   min,
   partition,
