@@ -3,7 +3,6 @@ import { AssetTrait, AssetType, DepositRequest } from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { Wallet } from "ethers";
 import { signDepositRequest } from "../src";
-import * as JSON from "bigint-json-serialization";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -19,6 +18,14 @@ const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
 );
 
 const writeToFixture = process.argv[2] == "--writeFixture";
+
+function toObject(obj: any) {
+  return JSON.parse(
+    JSON.stringify(obj, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+}
 
 (async () => {
   const depositCheckerAddress = "0x1111111111111111111111111111111111111111";
@@ -50,11 +57,14 @@ const writeToFixture = process.argv[2] == "--writeFixture";
     depositCheckerAddress
   );
 
-  const json = JSON.stringify({
-    depositCheckerContractName: DEPOSIT_CHECKER_CONTRACT_NAME,
-    depositCheckerContractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
-    signedDepositRequest,
-  });
+  const json = JSON.stringify(
+    toObject({
+      contractName: DEPOSIT_CHECKER_CONTRACT_NAME,
+      contractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
+      screenerAddress: await signer.getAddress(),
+      signedDepositRequest,
+    })
+  );
   console.log(json);
 
   if (writeToFixture) {

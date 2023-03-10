@@ -11,6 +11,7 @@ export interface DepositRequest {
   gasPrice: bigint;
 }
 
-export interface SignedDepositRequest extends DepositRequest {
+export interface SignedDepositRequest {
+  depositRequest: DepositRequest;
   screenerSig: string;
 }

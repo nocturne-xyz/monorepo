@@ -5,6 +5,9 @@ import "./libs/Types.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 abstract contract DepositManagerBase {
+    string public contractName;
+    string public contractVersion;
+
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
             bytes(
@@ -31,6 +34,11 @@ abstract contract DepositManagerBase {
     string public constant EIP712_DOMAIN_TYPE =
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
+    constructor(string memory _contractName, string memory _contractVersion) {
+        contractName = _contractName;
+        contractVersion = _contractVersion;
+    }
+
     function _getDomainSeparator(
         uint256 chainId
     ) internal view returns (bytes32) {
@@ -38,8 +46,8 @@ abstract contract DepositManagerBase {
             keccak256(
                 abi.encode(
                     keccak256(bytes(EIP712_DOMAIN_TYPE)),
-                    keccak256(bytes("NocturneDepositChecker")),
-                    keccak256(bytes("v1")),
+                    keccak256(bytes(contractName)),
+                    keccak256(bytes(contractVersion)),
                     bytes32(chainId),
                     address(this)
                 )

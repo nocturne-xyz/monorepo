@@ -5,6 +5,7 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "../../libs/Types.sol";
 import {ParseUtils} from "./ParseUtils.sol";
 
 struct JoinSplitProofWithPublicSignals {
@@ -12,14 +13,21 @@ struct JoinSplitProofWithPublicSignals {
     BaseProof proof;
 }
 
-struct Spend2ProofWithPublicSignals {
-    uint256[7] publicSignals;
-    BaseProof proof;
-}
-
 struct SubtreeUpdateProofWithPublicSignals {
     uint256[4] publicSignals;
     BaseProof proof;
+}
+
+struct SignedDepositRequest {
+    DepositRequest depositRequest;
+    bytes screenerSig;
+}
+
+struct SignedDepositRequestFixture {
+    string contractName;
+    string contractVersion;
+    string screenerAddress;
+    SignedDepositRequest signedDepositRequest;
 }
 
 struct BaseProof {
@@ -40,15 +48,64 @@ contract JsonDecodings is Test, ParseUtils {
         return vm.readFile(string(abi.encodePacked(bytes(root), bytes(path))));
     }
 
-    function loadSpend2ProofFromFixture(
+    function baseProofTo8(
+        BaseProof memory proof
+    ) public pure returns (uint256[8] memory) {
+        return [
+            parseInt(proof.pi_a[0]),
+            parseInt(proof.pi_a[1]),
+            parseInt(proof.pi_b[0][1]),
+            parseInt(proof.pi_b[0][0]),
+            parseInt(proof.pi_b[1][1]),
+            parseInt(proof.pi_b[1][0]),
+            parseInt(proof.pi_c[0]),
+            parseInt(proof.pi_c[1])
+        ];
+    }
+
+    function loadSignedDepositRequestFixture(
         string memory path
-    ) public returns (Spend2ProofWithPublicSignals memory) {
+    ) public returns (SignedDepositRequestFixture memory) {
+        string memory json = loadFixtureJson(path);
+        bytes memory contractNameBytes = json.parseRaw(".contractName");
+        bytes memory contractVersionBytes = json.parseRaw(".contractVersion");
+        bytes memory screenerAddressBytes = json.parseRaw(".screenerAddress");
+        string memory contractName = abi.decode(contractNameBytes, (string));
+        string memory contractVersion = abi.decode(
+            contractVersionBytes,
+            (string)
+        );
+        string memory screenerAddress = abi.decode(
+            screenerAddressBytes,
+            (string)
+        );
+
+        bytes memory signedDepositRequestBytes = json.parseRaw(
+            ".signedDepositRequest"
+        );
+        SignedDepositRequest memory signedDepositRequest = abi.decode(
+            signedDepositRequestBytes,
+            (SignedDepositRequest)
+        );
+
+        return
+            SignedDepositRequestFixture({
+                contractName: contractName,
+                contractVersion: contractVersion,
+                screenerAddress: screenerAddress,
+                signedDepositRequest: signedDepositRequest
+            });
+    }
+
+    function loadJoinSplitProofFromFixture(
+        string memory path
+    ) public returns (JoinSplitProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
 
-        uint256[7] memory publicSignals;
-        for (uint256 i = 0; i < 7; i++) {
+        uint256[9] memory publicSignals;
+        for (uint256 i = 0; i < 9; i++) {
             bytes memory jsonSelector = abi.encodePacked(
                 bytes(".publicSignals["),
                 Strings.toString(i)
@@ -61,7 +118,7 @@ contract JsonDecodings is Test, ParseUtils {
         }
 
         return
-            Spend2ProofWithPublicSignals({
+            JoinSplitProofWithPublicSignals({
                 publicSignals: publicSignals,
                 proof: proof
             });
@@ -92,62 +149,5 @@ contract JsonDecodings is Test, ParseUtils {
                 publicSignals: publicSignals,
                 proof: proof
             });
-    }
-
-    function baseProofTo8(
-        BaseProof memory proof
-    ) public pure returns (uint256[8] memory) {
-        return [
-            parseInt(proof.pi_a[0]),
-            parseInt(proof.pi_a[1]),
-            parseInt(proof.pi_b[0][1]),
-            parseInt(proof.pi_b[0][0]),
-            parseInt(proof.pi_b[1][1]),
-            parseInt(proof.pi_b[1][0]),
-            parseInt(proof.pi_c[0]),
-            parseInt(proof.pi_c[1])
-        ];
-    }
-
-    function loadJoinSplitProofFromFixture(
-        string memory path
-    ) public returns (JoinSplitProofWithPublicSignals memory) {
-        string memory json = loadFixtureJson(path);
-        bytes memory proofBytes = json.parseRaw(".proof");
-        BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
-
-        uint256[9] memory publicSignals;
-        for (uint256 i = 0; i < 9; i++) {
-            bytes memory jsonSelector = abi.encodePacked(
-                bytes(".publicSignals["),
-                Strings.toString(i)
-            );
-            jsonSelector = abi.encodePacked(jsonSelector, bytes("]"));
-
-            bytes memory signalBytes = json.parseRaw(string(jsonSelector));
-            string memory signal = abi.decode(signalBytes, (string));
-            publicSignals[i] = parseInt(signal);
-        }
-
-        return
-            JoinSplitProofWithPublicSignals({
-                publicSignals: publicSignals,
-                proof: proof
-            });
-    }
-
-    function joinsplitBaseProofToProof8(
-        BaseProof memory proof
-    ) public pure returns (uint256[8] memory) {
-        return [
-            parseInt(proof.pi_a[0]),
-            parseInt(proof.pi_a[1]),
-            parseInt(proof.pi_b[0][1]),
-            parseInt(proof.pi_b[0][0]),
-            parseInt(proof.pi_b[1][1]),
-            parseInt(proof.pi_b[1][0]),
-            parseInt(proof.pi_c[0]),
-            parseInt(proof.pi_c[1])
-        ];
     }
 }

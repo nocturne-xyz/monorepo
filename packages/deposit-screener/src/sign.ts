@@ -28,5 +28,5 @@ export async function signDepositRequest(
     req
   );
 
-  return { ...req, screenerSig };
+  return { depositRequest: req, screenerSig };
 }
