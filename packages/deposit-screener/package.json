@@ -14,8 +14,8 @@
     "clean": "rm -rf .turbo dist",
     "gen-test-cases:depositrequest": "npx ts-node ./scripts/genSignedDepositRequestTestCase.ts",
     "lint": "eslint --fix src --ext .ts",
-    "prettier:check": "prettier --check ./src ./test",
-    "prettier:write": "prettier --write ./src ./test",
+    "prettier:check": "prettier --check ./src",
+    "prettier:write": "prettier --write ./src",
     "test:unit": ""
   },
   "dependencies": {
