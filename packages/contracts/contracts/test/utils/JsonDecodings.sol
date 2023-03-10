@@ -20,13 +20,13 @@ struct SubtreeUpdateProofWithPublicSignals {
 
 struct SignedDepositRequest {
     DepositRequest depositRequest;
-    bytes screenerSig;
+    string screenerSig;
 }
 
 struct SignedDepositRequestFixture {
     string contractName;
     string contractVersion;
-    string screenerAddress;
+    address screenerAddress;
     SignedDepositRequest signedDepositRequest;
 }
 
@@ -75,10 +75,7 @@ contract JsonDecodings is Test, ParseUtils {
             contractVersionBytes,
             (string)
         );
-        string memory screenerAddress = abi.decode(
-            screenerAddressBytes,
-            (string)
-        );
+        address screenerAddress = abi.decode(screenerAddressBytes, (address));
 
         bytes memory signedDepositRequestBytes = json.parseRaw(
             ".signedDepositRequest"

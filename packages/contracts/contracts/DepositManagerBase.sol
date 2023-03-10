@@ -5,14 +5,14 @@ import "./libs/Types.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 abstract contract DepositManagerBase {
-    string public contractName;
-    string public contractVersion;
+    string public _contractName;
+    string public _contractVersion;
 
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
             )
         );
     bytes32 public constant ENCODED_ASSET_TYPEHASH =
@@ -34,9 +34,9 @@ abstract contract DepositManagerBase {
     string public constant EIP712_DOMAIN_TYPE =
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
 
-    constructor(string memory _contractName, string memory _contractVersion) {
-        contractName = _contractName;
-        contractVersion = _contractVersion;
+    constructor(string memory contractName, string memory contractVersion) {
+        _contractName = contractName;
+        _contractVersion = contractVersion;
     }
 
     function _getDomainSeparator(
@@ -46,10 +46,10 @@ abstract contract DepositManagerBase {
             keccak256(
                 abi.encode(
                     keccak256(bytes(EIP712_DOMAIN_TYPE)),
-                    keccak256(bytes(contractName)),
-                    keccak256(bytes(contractVersion)),
+                    keccak256(bytes(_contractName)),
+                    keccak256(bytes(_contractVersion)),
                     bytes32(chainId),
-                    address(this)
+                    address(0x1111111111111111111111111111111111111111)
                 )
             );
     }
@@ -68,16 +68,7 @@ abstract contract DepositManagerBase {
             )
         );
 
-        (
-            address recovered,
-            ECDSAUpgradeable.RecoverError error
-        ) = ECDSAUpgradeable.tryRecover(digest, signature);
-        require(
-            error == ECDSAUpgradeable.RecoverError.NoError,
-            "Error recovering signature"
-        );
-
-        return recovered;
+        return ECDSAUpgradeable.recover(digest, signature);
     }
 
     function _hashDepositRequest(

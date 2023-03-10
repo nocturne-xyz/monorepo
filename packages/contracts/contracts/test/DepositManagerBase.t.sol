@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
+import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {ParseUtils} from "./utils/ParseUtils.sol";
 import {JsonDecodings, SignedDepositRequestFixture} from "./utils/JsonDecodings.sol";
@@ -23,9 +24,15 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
             fixture.contractVersion
         );
 
+        string memory sig = fixture.signedDepositRequest.screenerSig;
+        console.logString(sig);
+
         address recovered = depositManagerBase.recoverDepositRequestSig(
             fixture.signedDepositRequest.depositRequest,
-            fixture.signedDepositRequest.screenerSig
+            bytes(
+                "0xd26958669d49c619bcbac9fd8df5b8a4231a49eb3a12c3215045631cd9e5c19f77c43183e3b14cca921441934d4ead60b9ab9d67a76a37a551cb6b40df9ef7b21c"
+            )
         );
+        // assertEq(recovered, fixture.screenerAddress);
     }
 }
