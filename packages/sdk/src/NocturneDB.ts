@@ -178,8 +178,10 @@ export class NocturneDB {
     const { notesAndCommitments, nullifiers, nextMerkleIndex, blockNumber } =
       diff;
 
-    await this.nullifyNotes(nullifiers);
+    // TODO: make this all one write
+    // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
     await this.storeNotesAndCommitments(notesAndCommitments);
+    await this.nullifyNotes(nullifiers);
     await this.setNextMerkleIndex(nextMerkleIndex);
     await this.setNextBlock(blockNumber + 1);
   }

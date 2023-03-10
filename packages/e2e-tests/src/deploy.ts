@@ -15,6 +15,8 @@ import {
   InMemoryMerkleProver,
   JoinSplitProver,
   RPCSyncAdapter,
+  SyncAdapter,
+  SubgraphSyncAdapter,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -34,6 +36,7 @@ const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
+const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 export interface NocturneSetup {
   vault: Vault;
@@ -45,8 +48,18 @@ export interface NocturneSetup {
   joinSplitProver: JoinSplitProver;
 }
 
+export enum SyncAdapterOption {
+  RPC,
+  SUBGRAPH,
+}
+
+export interface SetupNocturneOpts {
+  syncAdapter: SyncAdapterOption;
+}
+
 export async function setupNocturne(
-  connectedSigner: ethers.Wallet
+  connectedSigner: ethers.Wallet,
+  opts?: SetupNocturneOpts
 ): Promise<NocturneSetup> {
   if (!connectedSigner.provider) {
     throw new Error("Signer must be connected");
@@ -75,6 +88,13 @@ export async function setupNocturne(
   const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
   const vault = Vault__factory.connect(vaultProxy.proxy, connectedSigner);
 
+  let syncAdapter: SyncAdapter;
+  if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
+    syncAdapter = new SubgraphSyncAdapter(SUBGRAPH_API_URL);
+  } else {
+    syncAdapter = new RPCSyncAdapter(connectedSigner.provider, wallet.address);
+  }
+
   console.log("Create NocturneWalletSDKAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
@@ -82,7 +102,8 @@ export async function setupNocturne(
     3n,
     config,
     connectedSigner.provider,
-    nocturneDBAlice
+    nocturneDBAlice,
+    syncAdapter
   );
 
   console.log("Create NocturneWalletSDKBob");
@@ -92,7 +113,8 @@ export async function setupNocturne(
     5n,
     config,
     connectedSigner.provider,
-    nocturneDBBob
+    nocturneDBBob,
+    syncAdapter
   );
 
   const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
@@ -114,15 +136,12 @@ function setupNocturneWalletSDK(
   sk: bigint,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
-  nocturneDB: NocturneDB
+  nocturneDB: NocturneDB,
+  syncAdapter: SyncAdapter
 ): NocturneWalletSDK {
-  const walletAddress = config.walletAddress();
   const nocturneSigner = new NocturneSigner(sk);
 
   const merkleProver = new InMemoryMerkleProver();
-
-  const syncAdapter = new RPCSyncAdapter(provider, walletAddress);
-
   return new NocturneWalletSDK(
     nocturneSigner,
     provider,
