@@ -7,6 +7,10 @@ import * as JSON from "bigint-json-serialization";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
+import {
+  DEPOSIT_CHECKER_CONTRACT_NAME,
+  DEPOSIT_CHECKER_CONTRACT_VERSION,
+} from "../src/typedData";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
@@ -46,7 +50,11 @@ const writeToFixture = process.argv[2] == "--writeFixture";
     depositCheckerAddress
   );
 
-  const json = JSON.stringify(signedDepositRequest);
+  const json = JSON.stringify({
+    depositCheckerContractName: DEPOSIT_CHECKER_CONTRACT_NAME,
+    depositCheckerContractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
+    signedDepositRequest,
+  });
   console.log(json);
 
   if (writeToFixture) {

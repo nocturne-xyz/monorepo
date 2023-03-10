@@ -1,3 +1,6 @@
+export const DEPOSIT_CHECKER_CONTRACT_NAME = "NocturneDepositChecker";
+export const DEPOSIT_CHECKER_CONTRACT_VERSION = "v1";
+
 export interface EIP712Domain {
   name: string;
   version: string;
