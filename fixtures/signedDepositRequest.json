@@ -1,0 +1,14 @@
+{
+  "depositCheckerContractName": "NocturneDepositChecker",
+  "depositCheckerContractVersion": "v1",
+  "signedDepositRequest": {
+    "chainId": "123n",
+    "spender": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
+    "encodedAsset": { "encodedAssetAddr": "291n", "encodedAssetId": "0n" },
+    "value": "1000n",
+    "depositAddr": { "h1X": "1n", "h1Y": "2n", "h2X": "3n", "h2Y": "4n" },
+    "nonce": "0n",
+    "gasPrice": "50n",
+    "screenerSig": "0xd26958669d49c619bcbac9fd8df5b8a4231a49eb3a12c3215045631cd9e5c19f77c43183e3b14cca921441934d4ead60b9ab9d67a76a37a551cb6b40df9ef7b21c"
+  }
+}
