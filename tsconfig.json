@@ -47,6 +47,9 @@
       "path": "./packages/deploy"
     },
     {
+      "path": "./packages/deposit-screener"
+    },
+    {
       "path": "./packages/frontend-sdk"
     },
     {
