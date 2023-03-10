@@ -20,6 +20,7 @@ import { SolidityProof } from "./proof";
 import { groupByMap } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { MerkleProver } from "./merkleProver";
+import { getJoinSplitRequestTotalValue } from "./utils";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
@@ -41,7 +42,6 @@ export interface HandleOpRequestGasDeps {
   db: NocturneDB;
   walletContract: Wallet;
   gasAssets: Asset[];
-  viewer: NocturneViewer;
   merkle: MerkleProver;
 }
 
@@ -145,7 +145,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
       const totalAmountInMatchingRequests = matchingRequests.reduce(
         (acc, request) => {
-          return acc + request.unwrapValue;
+          return acc + getJoinSplitRequestTotalValue(request);
         },
         0n
       );
@@ -205,8 +205,12 @@ async function estimateGasForOperationRequest(
       gasAsset: DUMMY_GAS_ASSET,
     };
 
-    // prepare the request into an operation
-    const simulationOp = await prepareOperation(deps, dummyOpRequest);
+    // prepare the request into an operation using a dummy viewer
+    const dummyViewer = new NocturneViewer(1n);
+    const simulationOp = await prepareOperation(
+      { viewer: dummyViewer, ...deps },
+      dummyOpRequest
+    );
 
     // simulate the operation
     const result = await simulateOperation(
