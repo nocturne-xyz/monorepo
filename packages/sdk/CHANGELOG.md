@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `DepositRequest` and `SignedDepositRequest` types for deposit-screener work
 - replace `OpRequestPreparer` with a function `handleGasForOperationRequest` with easier-to-follow logic
 - move`refundAddr` generation to `OpPreparer`
 - add `Thunk` to utils
