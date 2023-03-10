@@ -1,5 +1,5 @@
 import { Wallet } from "@nocturne-xyz/contracts";
-import { StealthAddress } from "./crypto";
+import { NocturneViewer, StealthAddress } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -17,8 +17,10 @@ import {
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
-import { OpPreparer } from "./opPreparer";
 import { groupByMap } from "./utils/functional";
+import { prepareOperation } from "./prepareOperation";
+import { MerkleProver } from "./merkleProver";
+import { getJoinSplitRequestTotalValue } from "./utils";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
@@ -40,9 +42,7 @@ export interface HandleOpRequestGasDeps {
   db: NocturneDB;
   walletContract: Wallet;
   gasAssets: Asset[];
-
-  // NOTE: this will be removed in the next PR
-  opPreparer: OpPreparer;
+  merkle: MerkleProver;
 }
 
 interface GasEstimatedOperationRequest
@@ -62,12 +62,12 @@ interface GasParams {
 }
 
 export async function handleGasForOperationRequest(
-  { walletContract, opPreparer, db, gasAssets }: HandleOpRequestGasDeps,
+  deps: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
   const { gasPrice, executionGasLimit, maxNumRefunds } =
-    await estimateGasForOperationRequest(walletContract, opPreparer, opRequest);
+    await estimateGasForOperationRequest(deps, opRequest);
 
   const gasEstimatedOpRequest: GasEstimatedOperationRequest = {
     ...opRequest,
@@ -93,6 +93,8 @@ export async function handleGasForOperationRequest(
         BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
           PER_JOINSPLIT_GAS +
         BigInt(maxNumRefunds) * PER_REFUND_GAS);
+
+    const { gasAssets, db } = deps;
 
     // attempt to update the joinSplitRequests with gas compensation
     // gasAsset will be `undefined` if the user's too broke to pay for gas
@@ -143,7 +145,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
       const totalAmountInMatchingRequests = matchingRequests.reduce(
         (acc, request) => {
-          return acc + request.unwrapValue;
+          return acc + getJoinSplitRequestTotalValue(request);
         },
         0n
       );
@@ -182,8 +184,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
 // estimate gas params for opRequest
 async function estimateGasForOperationRequest(
-  walletContract: Wallet,
-  opPreparer: OpPreparer,
+  { walletContract, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasParams> {
   let { executionGasLimit, maxNumRefunds, gasPrice } = opRequest;
@@ -204,8 +205,12 @@ async function estimateGasForOperationRequest(
       gasAsset: DUMMY_GAS_ASSET,
     };
 
-    // prepare the request into an operation
-    const simulationOp = await opPreparer.prepareOperation(dummyOpRequest);
+    // prepare the request into an operation using a dummy viewer
+    const dummyViewer = new NocturneViewer(1n);
+    const simulationOp = await prepareOperation(
+      { viewer: dummyViewer, ...deps },
+      dummyOpRequest
+    );
 
     // simulate the operation
     const result = await simulateOperation(

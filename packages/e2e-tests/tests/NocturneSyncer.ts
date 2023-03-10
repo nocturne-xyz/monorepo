@@ -11,8 +11,8 @@ import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   AssetType,
   JoinSplitProver,
-  NocturneContext,
-  OpProver,
+  NocturneWalletSDK,
+  proveOperation,
   OperationRequestBuilder,
 } from "@nocturne-xyz/sdk";
 import { setupNocturne } from "../src/deploy";
@@ -34,7 +34,7 @@ const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 const REDIS_URL = "redis://redis:6379";
 const REDIS_PASSWORD = "baka";
 
-describe("NocturneSyncer", async () => {
+describe("Syncing NocturneWalletSDK", async () => {
   let docker: Dockerode;
   let hhContainer: Dockerode.Container;
 
@@ -46,10 +46,9 @@ describe("NocturneSyncer", async () => {
   let wallet: Wallet;
   let vault: Vault;
   let token: SimpleERC20Token;
-  let nocturneContextAlice: NocturneContext;
+  let nocturneWalletSDKAlice: NocturneWalletSDK;
   let updater: SubtreeUpdater;
   let joinSplitProver: JoinSplitProver;
-  let opProver: OpProver;
 
   beforeEach(async () => {
     docker = new Dockerode();
@@ -60,10 +59,8 @@ describe("NocturneSyncer", async () => {
 
     provider = new ethers.providers.JsonRpcProvider(HH_URL);
     [deployerEoa, aliceEoa, bundlerEoa] = KEYS_TO_WALLETS(provider);
-    ({ vault, wallet, nocturneContextAlice, joinSplitProver } =
+    ({ vault, wallet, nocturneWalletSDKAlice, joinSplitProver } =
       await setupNocturne(deployerEoa));
-
-    opProver = new OpProver(joinSplitProver);
 
     const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
     token = await tokenFactory.deploy();
@@ -118,21 +115,21 @@ describe("NocturneSyncer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [100n, 100n]
     );
 
     // sync SDK
-    await nocturneContextAlice.sync();
+    await nocturneWalletSDKAlice.sync();
 
     // check that DB has notes and merkle doesn't
     //@ts-ignore
-    const allNotes = await nocturneContextAlice.db.getAllNotes();
+    const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
     const notes = Array.from(allNotes.values()).flat();
     expect(notes.length).to.eql(2);
 
     //@ts-ignore
-    expect(await nocturneContextAlice.merkleProver.count()).to.eql(0);
+    expect(await nocturneWalletSDKAlice.merkleProver.count()).to.eql(0);
   });
 
   it("syncs notes and latest non-zero leaves after subtree update", async () => {
@@ -142,28 +139,28 @@ describe("NocturneSyncer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [100n, 100n]
     );
     // apply subtree update and sync SDK
     await applySubtreeUpdate();
-    await nocturneContextAlice.sync();
+    await nocturneWalletSDKAlice.sync();
 
     // check that DB has notes and merkle has leaves for them
     //@ts-ignore
-    const allNotes = await nocturneContextAlice.db.getAllNotes();
+    const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
     const notes = Array.from(allNotes.values()).flat();
     expect(notes.length).to.eql(2);
 
     //@ts-ignore
-    expect(await nocturneContextAlice.merkleProver.count()).to.eql(2);
+    expect(await nocturneWalletSDKAlice.merkleProver.count()).to.eql(2);
     expect(
       //@ts-ignore
-      BigInt((await nocturneContextAlice.merkleProver.getProof(0)).leaf)
+      BigInt((await nocturneWalletSDKAlice.merkleProver.getProof(0)).leaf)
     ).to.equal(ncs[0]);
     expect(
       //@ts-ignore
-      BigInt((await nocturneContextAlice.merkleProver.getProof(1)).leaf)
+      BigInt((await nocturneWalletSDKAlice.merkleProver.getProof(1)).leaf)
     ).to.equal(ncs[1]);
   });
 
@@ -175,7 +172,7 @@ describe("NocturneSyncer", async () => {
       vault,
       token,
       aliceEoa,
-      nocturneContextAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [80n, 100n]
     );
 
@@ -184,7 +181,7 @@ describe("NocturneSyncer", async () => {
     await applySubtreeUpdate();
 
     console.log("syncing SDK...");
-    await nocturneContextAlice.sync();
+    await nocturneWalletSDKAlice.sync();
 
     // spend one of them...
     const asset = {
@@ -208,21 +205,21 @@ describe("NocturneSyncer", async () => {
     opRequest.gasPrice = 0n;
 
     console.log("preparing op...");
-    const preSign = await nocturneContextAlice.prepareOperation(opRequest);
-    const signed = nocturneContextAlice.signOperation(preSign);
+    const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
+    const signed = nocturneWalletSDKAlice.signOperation(preSign);
     console.log("proving op...");
-    const op = await opProver.proveOperation(signed);
+    const op = await proveOperation(joinSplitProver, signed);
 
     console.log("submitting op...");
     await submitAndProcessOperation(op);
 
     // sync SDK again...
     console.log("syncing SDK again...");
-    await nocturneContextAlice.sync();
+    await nocturneWalletSDKAlice.sync();
 
     // check that the DB nullified the spent note
     //@ts-ignore
-    const allNotes = await nocturneContextAlice.db.getAllNotes();
+    const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
     console.log("all notes: ", allNotes);
 
     const nonZeroNotes = Array.from(allNotes.values())

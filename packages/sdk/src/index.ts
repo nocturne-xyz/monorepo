@@ -11,9 +11,6 @@ export {
   OperationGasParams,
   OperationRequestBuilder,
 } from "./operationRequest";
-export { NocturneContext } from "./NocturneContext";
-export { OpPreparer } from "./opPreparer";
-export { OpSigner } from "./opSigner";
-export { OpProver } from "./opProver";
+export { NocturneWalletSDK } from "./NocturneWalletSDK";
+export { proveOperation } from "./proveOperation";
 export { NocturneDB } from "./NocturneDB";
-export { NocturneSyncer } from "./NocturneSyncer";

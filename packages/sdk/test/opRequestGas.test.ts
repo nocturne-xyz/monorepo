@@ -3,7 +3,6 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
 import { Asset, AssetType, OperationRequestBuilder } from "../src";
-import { OpPreparer } from "../src/opPreparer";
 import {
   setup,
   shitcoin,
@@ -29,12 +28,12 @@ describe("prepareOperationRequest", async () => {
       [500_000n, 500_000n],
       [shitcoin, shitcoin]
     );
-    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const deps = {
       db: nocturneDB,
       walletContract,
+      merkle: merkleProver,
+      viewer: signer,
       gasAssets: testGasAssets,
-      opPreparer,
     };
 
     const builder = new OperationRequestBuilder();
@@ -63,12 +62,12 @@ describe("prepareOperationRequest", async () => {
       [500_000n, 500_000n, 500_000n],
       [shitcoin, shitcoin, shitcoin]
     );
-    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const deps = {
       db: nocturneDB,
       walletContract,
+      merkle: merkleProver,
+      viewer: signer,
       gasAssets: testGasAssets,
-      opPreparer,
     };
 
     const builder = new OperationRequestBuilder();
@@ -106,12 +105,12 @@ describe("prepareOperationRequest", async () => {
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, stablescam]
     );
-    const opPreparer = new OpPreparer(nocturneDB, merkleProver, signer);
     const deps = {
       db: nocturneDB,
       walletContract,
+      merkle: merkleProver,
+      viewer: signer,
       gasAssets: testGasAssets,
-      opPreparer,
     };
 
     const builder = new OperationRequestBuilder();

@@ -1,5 +1,5 @@
 import {
-  NocturneContext,
+  NocturneWalletSDK,
   NocturneSigner,
   InMemoryMerkleProver,
   OperationRequest,
@@ -104,7 +104,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const merkleProver = new InMemoryMerkleProver();
   // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
   const syncAdapter = new SubgraphSyncAdapter(SUBGRAPH_API_URL);
-  const context = new NocturneContext(
+  const context = new NocturneWalletSDK(
     signer,
     provider,
     DUMMY_CONFIG,

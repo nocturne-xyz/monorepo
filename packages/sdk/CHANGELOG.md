@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- rename `NocturneContext` -> `NocturneWalletSDK`
+- replace `NocturneSyncer` with a function `syncSDK`
+- replace `OpProver` with a fucntion `proveOperation`
+- replace `OpSigner` with a function `signOperation`
+- replace `OpPreparer` with a functinon `prepareOperation`
 - Add `DepositRequest` and `SignedDepositRequest` types for deposit-screener work
 - replace `OpRequestPreparer` with a function `handleGasForOperationRequest` with easier-to-follow logic
 - move`refundAddr` generation to `OpPreparer`

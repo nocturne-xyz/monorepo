@@ -9,7 +9,7 @@ import {
 
 import {
   NocturneSigner,
-  NocturneContext,
+  NocturneWalletSDK,
   InMemoryKVStore,
   NocturneDB,
   InMemoryMerkleProver,
@@ -39,9 +39,9 @@ export interface NocturneSetup {
   vault: Vault;
   wallet: Wallet;
   nocturneDBAlice: NocturneDB;
-  nocturneContextAlice: NocturneContext;
+  nocturneWalletSDKAlice: NocturneWalletSDK;
   nocturneDBBob: NocturneDB;
-  nocturneContextBob: NocturneContext;
+  nocturneWalletSDKBob: NocturneWalletSDK;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -75,20 +75,20 @@ export async function setupNocturne(
   const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
   const vault = Vault__factory.connect(vaultProxy.proxy, connectedSigner);
 
-  console.log("Create NocturneContextAlice");
+  console.log("Create NocturneWalletSDKAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
-  const nocturneContextAlice = setupNocturneContext(
+  const nocturneWalletSDKAlice = setupNocturneWalletSDK(
     3n,
     config,
     connectedSigner.provider,
     nocturneDBAlice
   );
 
-  console.log("Create NocturneContextBob");
+  console.log("Create NocturneWalletSDKBob");
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
-  const nocturneContextBob = setupNocturneContext(
+  const nocturneWalletSDKBob = setupNocturneWalletSDK(
     5n,
     config,
     connectedSigner.provider,
@@ -103,19 +103,19 @@ export async function setupNocturne(
     vault,
     wallet,
     nocturneDBAlice,
-    nocturneContextAlice,
+    nocturneWalletSDKAlice,
     nocturneDBBob,
-    nocturneContextBob,
+    nocturneWalletSDKBob,
     joinSplitProver,
   };
 }
 
-function setupNocturneContext(
+function setupNocturneWalletSDK(
   sk: bigint,
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB
-): NocturneContext {
+): NocturneWalletSDK {
   const walletAddress = config.walletAddress();
   const nocturneSigner = new NocturneSigner(sk);
 
@@ -123,7 +123,7 @@ function setupNocturneContext(
 
   const syncAdapter = new RPCSyncAdapter(provider, walletAddress);
 
-  return new NocturneContext(
+  return new NocturneWalletSDK(
     nocturneSigner,
     provider,
     config,

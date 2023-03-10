@@ -1,4 +1,4 @@
-export { sortNotesByValue } from "./misc";
+export { sortNotesByValue, getJoinSplitRequestTotalValue } from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {
   zip,
