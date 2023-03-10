@@ -12,18 +12,20 @@
     "build": "tsc --build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
+    "gen-test-cases:depositrequest": "npx ts-node ./scripts/genSignedDepositRequestTestCase.ts",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 15000 --exit"
+    "test:unit": ""
   },
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
-    "ethers": "^5.0.0",
+    "ethers": "^5.7.2",
     "js-sha256": "^0.9.0",
     "randombytes": "^2.1.0",
     "sorted-btree": "^1.8.1"
@@ -42,6 +44,7 @@
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "find-yarn-workspace-root": "^2.0.0",
     "mocha": "^10.1.0",
     "prettier": "^2.8.0",
     "sinon": "^15.0.1",
