@@ -1,6 +1,5 @@
 name: Build and Test Packages
-on:
-  push:
+on: [ push ]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
