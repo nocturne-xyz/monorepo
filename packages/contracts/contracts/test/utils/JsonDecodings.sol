@@ -85,11 +85,6 @@ contract JsonDecodings is Test, ParseUtils {
         );
         address screenerAddress = abi.decode(screenerAddressBytes, (address));
 
-        console.log("contractAddress:", contractAddress);
-        console.log("contractName:", contractName);
-        console.log("contractVersion:", contractVersion);
-        console.log("screenerAddress:", screenerAddress);
-
         // NOTE: helper struct only used to reduce stack usage
         SimpleSignedDepositRequestTypes
             memory simpleTypes = extractSimpleSignedDepositRequestTypes(json);
@@ -121,21 +116,12 @@ contract JsonDecodings is Test, ParseUtils {
         string memory json
     ) public returns (SimpleSignedDepositRequestTypes memory) {
         uint256 chainId = parseInt(json.readString(".depositRequest.chainId"));
-        console.log("chainId:", chainId);
-
         address spender = json.readAddress(".depositRequest.spender");
-        console.log("spender:", spender);
-
         uint256 value = parseInt(json.readString(".depositRequest.value"));
-        console.log("value:", value);
-
         uint256 nonce = parseInt(json.readString(".depositRequest.nonce"));
-        console.log("nonce:", nonce);
-
         uint256 gasPrice = parseInt(
             json.readString(".depositRequest.gasPrice")
         );
-        console.log("gasPrice:", gasPrice);
 
         return
             SimpleSignedDepositRequestTypes({
@@ -153,12 +139,9 @@ contract JsonDecodings is Test, ParseUtils {
         uint256 encodedAssetAddr = parseInt(
             json.readString(".depositRequest.encodedAsset.encodedAssetAddr")
         );
-        console.log("encodedAssetAddr:", encodedAssetAddr);
-
         uint256 encodedAssetId = parseInt(
             json.readString(".depositRequest.encodedAsset.encodedAssetId")
         );
-        console.log("encodedAssetId:", encodedAssetId);
 
         return
             EncodedAsset({
@@ -173,29 +156,23 @@ contract JsonDecodings is Test, ParseUtils {
         uint256 h1X = parseInt(
             json.readString(".depositRequest.depositAddr.h1X")
         );
-        console.log("h1X:", h1X);
-
         uint256 h1Y = parseInt(
             json.readString(".depositRequest.depositAddr.h1Y")
         );
-        console.log("h1Y:", h1Y);
-
         uint256 h2X = parseInt(
             json.readString(".depositRequest.depositAddr.h2X")
         );
-        console.log("h2X:", h2X);
-
         uint256 h2Y = parseInt(
             json.readString(".depositRequest.depositAddr.h2Y")
         );
-        console.log("h2Y:", h2Y);
 
         return StealthAddress({h1X: h1X, h1Y: h1Y, h2X: h2X, h2Y: h2Y});
     }
 
+    // NOTE: we encode to rsv because foundry cannot parse 132 char byte string
     function extractSignature(
         string memory json
-    ) public view returns (bytes memory) {
+    ) public returns (bytes memory) {
         uint256 r = json.readUint(".signature.r");
         uint256 s = json.readUint(".signature.s");
         uint8 v = uint8(json.readUint(".signature.v"));

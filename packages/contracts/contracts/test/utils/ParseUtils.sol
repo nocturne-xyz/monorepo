@@ -31,36 +31,6 @@ contract ParseUtils {
         return r;
     }
 
-    function hexStringToAddress(
-        string calldata s
-    ) public pure returns (bytes memory) {
-        bytes memory ss = bytes(s);
-        require(ss.length % 2 == 0); // length must be even
-        bytes memory r = new bytes(ss.length / 2);
-        for (uint i = 0; i < ss.length / 2; ++i) {
-            r[i] = bytes1(
-                fromHexChar(uint8(ss[2 * i])) *
-                    16 +
-                    fromHexChar(uint8(ss[2 * i + 1]))
-            );
-        }
-
-        return r;
-    }
-
-    function stringToBytes32(
-        string memory source
-    ) public pure returns (bytes32 result) {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
-
     function rsvToSignatureBytes(
         uint256 r,
         uint256 s,
