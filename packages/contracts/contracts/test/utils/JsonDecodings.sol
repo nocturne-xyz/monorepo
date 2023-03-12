@@ -107,8 +107,7 @@ contract JsonDecodings is Test, ParseUtils {
                 depositRequest: DepositRequest({
                     chainId: simpleTypes.chainId,
                     spender: simpleTypes.spender,
-                    encodedAssetAddr: encodedAsset.encodedAssetAddr,
-                    encodedAssetId: encodedAsset.encodedAssetId,
+                    encodedAsset: encodedAsset,
                     value: simpleTypes.value,
                     h1X: depositAddr.h1X,
                     h1Y: depositAddr.h1Y,
@@ -155,12 +154,12 @@ contract JsonDecodings is Test, ParseUtils {
         string memory json
     ) public returns (EncodedAsset memory) {
         uint256 encodedAssetAddr = parseInt(
-            json.readString(".depositRequest.encodedAssetAddr")
+            json.readString(".depositRequest.encodedAsset.encodedAssetAddr")
         );
         console.log("encodedAssetAddr:", encodedAssetAddr);
 
         uint256 encodedAssetId = parseInt(
-            json.readString(".depositRequest.encodedAssetId")
+            json.readString(".depositRequest.encodedAsset.encodedAssetId")
         );
         console.log("encodedAssetId:", encodedAssetId);
 

@@ -21,15 +21,16 @@ abstract contract DepositManagerBase {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,uint256 encodedAssetAddr,uint256 encodedAssetId,uint256 value,uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y,uint256 nonce,uint256 gasPrice)"
+                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
             )
         );
 
-    // bytes32 public constant ENCODED_ASSET_TYPEHASH =
-    //     keccak256(
-    //         // solhint-disable-next-line max-line-length
-    //         "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
-    //     );
+    bytes32 public constant ENCODED_ASSET_TYPEHASH =
+        keccak256(
+            // solhint-disable-next-line max-line-length
+            "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
+        );
+
     // bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
     //     keccak256(
     //         // solhint-disable-next-line max-line-length
@@ -83,8 +84,7 @@ abstract contract DepositManagerBase {
                     DEPOSIT_REQUEST_TYPEHASH,
                     req.chainId,
                     req.spender,
-                    req.encodedAssetAddr,
-                    req.encodedAssetId,
+                    _hashEncodedAsset(req.encodedAsset),
                     req.value,
                     req.h1X,
                     req.h1Y,
@@ -96,18 +96,18 @@ abstract contract DepositManagerBase {
             );
     }
 
-    // function _hashEncodedAsset(
-    //     EncodedAsset calldata encodedAsset
-    // ) internal pure returns (bytes32) {
-    //     return
-    //         keccak256(
-    //             abi.encode(
-    //                 ENCODED_ASSET_TYPEHASH,
-    //                 encodedAsset.encodedAssetAddr,
-    //                 encodedAsset.encodedAssetId
-    //             )
-    //         );
-    // }
+    function _hashEncodedAsset(
+        EncodedAsset calldata encodedAsset
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    ENCODED_ASSET_TYPEHASH,
+                    encodedAsset.encodedAssetAddr,
+                    encodedAsset.encodedAssetId
+                )
+            );
+    }
 
     // function _hashStealthAddress(
     //     StealthAddress calldata stealthAddress

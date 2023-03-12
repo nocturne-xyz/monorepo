@@ -13,9 +13,9 @@ export const DEPOSIT_REQUEST_TYPES = {
   DepositRequest: [
     { name: "chainId", type: "uint256" },
     { name: "spender", type: "address" },
-    // {name: "encodedAsset", type: "EncodedAsset"},
-    { name: "encodedAssetAddr", type: "uint256" },
-    { name: "encodedAssetId", type: "uint256" },
+    { name: "encodedAsset", type: "EncodedAsset" },
+    // { name: "encodedAssetAddr", type: "uint256" },
+    // { name: "encodedAssetId", type: "uint256" },
     { name: "value", type: "uint256" },
     // { name: "depositAddr", type: "StealthAddress" },
     { name: "h1X", type: "uint256" },
@@ -25,10 +25,10 @@ export const DEPOSIT_REQUEST_TYPES = {
     { name: "nonce", type: "uint256" },
     { name: "gasPrice", type: "uint256" },
   ],
-  // EncodedAsset: [
-  //   { name: "encodedAssetAddr", type: "uint256" },
-  //   { name: "encodedAssetId", type: "uint256" },
-  // ],
+  EncodedAsset: [
+    { name: "encodedAssetAddr", type: "uint256" },
+    { name: "encodedAssetId", type: "uint256" },
+  ],
   // StealthAddress: [
   //   { name: "h1X", type: "uint256" },
   //   { name: "h1Y", type: "uint256" },

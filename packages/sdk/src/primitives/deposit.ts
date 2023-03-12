@@ -1,12 +1,12 @@
 // import { StealthAddress } from "../crypto";
-// import { EncodedAsset } from "./asset";
+import { EncodedAsset } from "./asset";
 
 export interface DepositRequest {
   chainId: bigint;
   spender: string;
-  // encodedAsset: EncodedAsset;
-  encodedAssetAddr: bigint;
-  encodedAssetId: bigint;
+  encodedAsset: EncodedAsset;
+  // encodedAssetAddr: bigint;
+  // encodedAssetId: bigint;
   value: bigint;
   // depositAddr: StealthAddress;
   h1X: bigint;

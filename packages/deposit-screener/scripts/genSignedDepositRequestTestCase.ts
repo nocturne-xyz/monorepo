@@ -51,8 +51,7 @@ function toObject(obj: any) {
   const depositRequest: DepositRequest = {
     chainId,
     spender: await signer.getAddress(),
-    encodedAssetAddr: encodedAsset.encodedAssetAddr,
-    encodedAssetId: encodedAsset.encodedAssetId,
+    encodedAsset,
     value: 1000n,
     h1X: 1n,
     h1Y: 2n,
