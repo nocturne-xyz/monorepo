@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {ParseUtils} from "./utils/ParseUtils.sol";
 import {JsonDecodings, SignedDepositRequestFixture} from "./utils/JsonDecodings.sol";
-import {TestDepositManagerBase} from "./harnesses/TestDepositManagerBase.sol";
+import "./harnesses/TestDepositManagerBase.sol";
 
 contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
     string constant SIGNED_DEPOSIT_REQ_FIXTURE_PATH =
@@ -20,19 +20,74 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
         SignedDepositRequestFixture memory fixture = JsonDecodings
             .loadSignedDepositRequestFixture(SIGNED_DEPOSIT_REQ_FIXTURE_PATH);
         depositManagerBase = new TestDepositManagerBase(
+            fixture.signedDepositRequest.depositRequest.chainId,
             fixture.contractName,
             fixture.contractVersion
         );
 
-        string memory sig = fixture.signedDepositRequest.screenerSig;
-        console.logString(sig);
+        bytes32 domainSeparator = depositManagerBase.getDomainSeparator();
+        console.log("Domain separator:");
+        console.logBytes32(domainSeparator);
+
+        bytes32 digest = depositManagerBase.getDigest(
+            fixture.signedDepositRequest.depositRequest
+        );
+        console.log("Digest:");
+        console.logBytes32(digest);
+
+        console.log("TEST -- chainId:", depositManagerBase.CHAIN_ID());
+        console.log(
+            "TEST -- contractName:",
+            depositManagerBase.CONTRACT_NAME()
+        );
+        console.log(
+            "TEST -- contractVersion:",
+            depositManagerBase.CONTRACT_VERSION()
+        );
+
+        vm.etch(
+            address(fixture.contractAddress),
+            address(depositManagerBase).code
+        );
+
+        bytes memory sig = rsvToSignatureBytes(
+            0xc300cd749eeee61cb410611702941891a839b6a98d4169b47d9be9d765c99292,
+            0x648a99880671daf805ab50a81da6559ec66170ab5ce42dea52003d74016ce99b,
+            0x1c
+        );
 
         address recovered = depositManagerBase.recoverDepositRequestSig(
             fixture.signedDepositRequest.depositRequest,
-            bytes(
-                "0xd26958669d49c619bcbac9fd8df5b8a4231a49eb3a12c3215045631cd9e5c19f77c43183e3b14cca921441934d4ead60b9ab9d67a76a37a551cb6b40df9ef7b21c"
-            )
+            sig
         );
-        // assertEq(recovered, fixture.screenerAddress);
+
+        console.log("recovered:", recovered);
+
+        assertEq(recovered, fixture.screenerAddress);
+    }
+
+    function testECRecover() public {
+        address recovered = ECDSAUpgradeable.recover(
+            0x93afb89179ea313da1d5eb78ffc75b68f53c79f44b76386affef903bbfe1b329, // messageHash
+            0x1c, // v
+            0xc300cd749eeee61cb410611702941891a839b6a98d4169b47d9be9d765c99292, // r
+            0x648a99880671daf805ab50a81da6559ec66170ab5ce42dea52003d74016ce99b // s
+        );
+
+        console.log("ECRecover:", recovered);
+    }
+
+    function testNormalRecover() public {
+        bytes memory sig = rsvToSignatureBytes(
+            0xc300cd749eeee61cb410611702941891a839b6a98d4169b47d9be9d765c99292,
+            0x648a99880671daf805ab50a81da6559ec66170ab5ce42dea52003d74016ce99b,
+            0x1c
+        );
+
+        address recovered = ECDSAUpgradeable.recover(
+            0x93afb89179ea313da1d5eb78ffc75b68f53c79f44b76386affef903bbfe1b329,
+            sig
+        );
+        console.log("Concat Recovered:", recovered);
     }
 }

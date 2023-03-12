@@ -115,9 +115,13 @@ struct Action {
 struct DepositRequest {
     uint256 chainId;
     address spender;
-    EncodedAsset encodedAsset;
+    uint256 encodedAssetAddr;
+    uint256 encodedAssetId;
     uint256 value;
-    StealthAddress depositAddr;
+    uint256 h1X;
+    uint256 h1Y;
+    uint256 h2X;
+    uint256 h2Y;
     uint256 nonce;
     uint256 gasPrice;
 }

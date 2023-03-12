@@ -5,50 +5,55 @@ import "./libs/Types.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 abstract contract DepositManagerBase {
-    string public _contractName;
-    string public _contractVersion;
+    uint256 public CHAIN_ID;
+    string public CONTRACT_NAME;
+    string public CONTRACT_VERSION;
+
+    bytes32 constant EIP712DOMAIN_TYPEHASH =
+        keccak256(
+            // solhint-disable-next-line max-line-length
+            bytes(
+                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+            )
+        );
 
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
-            )
-        );
-    bytes32 public constant ENCODED_ASSET_TYPEHASH =
-        keccak256(
-            bytes(
-                // solhint-disable-next-line max-line-length
-                "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
-            )
-        );
-    bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
-        keccak256(
-            bytes(
-                // solhint-disable-next-line max-line-length
-                "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+                "DepositRequest(uint256 chainId,address spender,uint256 encodedAssetAddr,uint256 encodedAssetId,uint256 value,uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y,uint256 nonce,uint256 gasPrice)"
             )
         );
 
-    // solhint-disable-next-line max-line-length
-    string public constant EIP712_DOMAIN_TYPE =
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)";
+    // bytes32 public constant ENCODED_ASSET_TYPEHASH =
+    //     keccak256(
+    //         // solhint-disable-next-line max-line-length
+    //         "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
+    //     );
+    // bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
+    //     keccak256(
+    //         // solhint-disable-next-line max-line-length
+    //         "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+    //     );
 
-    constructor(string memory contractName, string memory contractVersion) {
-        _contractName = contractName;
-        _contractVersion = contractVersion;
+    constructor(
+        uint256 chainId,
+        string memory contractName,
+        string memory contractVersion
+    ) {
+        CHAIN_ID = chainId;
+        CONTRACT_NAME = contractName;
+        CONTRACT_VERSION = contractVersion;
     }
 
-    function _getDomainSeparator(
-        uint256 chainId
-    ) internal view returns (bytes32) {
+    function _getDomainSeparator() internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
-                    keccak256(bytes(EIP712_DOMAIN_TYPE)),
-                    keccak256(bytes(_contractName)),
-                    keccak256(bytes(_contractVersion)),
-                    bytes32(chainId),
+                    EIP712DOMAIN_TYPEHASH,
+                    keccak256(bytes(CONTRACT_NAME)),
+                    keccak256(bytes(CONTRACT_VERSION)),
+                    bytes32(CHAIN_ID),
                     address(0x1111111111111111111111111111111111111111)
                 )
             );
@@ -58,14 +63,12 @@ abstract contract DepositManagerBase {
         DepositRequest calldata req,
         bytes calldata signature
     ) internal view returns (address) {
-        bytes32 domainSeparator = _getDomainSeparator(req.chainId);
+        bytes32 domainSeparator = _getDomainSeparator();
+        bytes32 structHash = _hashDepositRequest(req);
 
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                _hashDepositRequest(req)
-            )
+        bytes32 digest = ECDSAUpgradeable.toTypedDataHash(
+            domainSeparator,
+            structHash
         );
 
         return ECDSAUpgradeable.recover(digest, signature);
@@ -80,40 +83,44 @@ abstract contract DepositManagerBase {
                     DEPOSIT_REQUEST_TYPEHASH,
                     req.chainId,
                     req.spender,
-                    _hashEncodedAsset(req.encodedAsset),
+                    req.encodedAssetAddr,
+                    req.encodedAssetId,
                     req.value,
-                    _hashStealthAddress(req.depositAddr),
+                    req.h1X,
+                    req.h1Y,
+                    req.h2X,
+                    req.h2Y,
                     req.nonce,
                     req.gasPrice
                 )
             );
     }
 
-    function _hashEncodedAsset(
-        EncodedAsset calldata encodedAsset
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    ENCODED_ASSET_TYPEHASH,
-                    encodedAsset.encodedAssetAddr,
-                    encodedAsset.encodedAssetId
-                )
-            );
-    }
+    // function _hashEncodedAsset(
+    //     EncodedAsset calldata encodedAsset
+    // ) internal pure returns (bytes32) {
+    //     return
+    //         keccak256(
+    //             abi.encode(
+    //                 ENCODED_ASSET_TYPEHASH,
+    //                 encodedAsset.encodedAssetAddr,
+    //                 encodedAsset.encodedAssetId
+    //             )
+    //         );
+    // }
 
-    function _hashStealthAddress(
-        StealthAddress calldata stealthAddress
-    ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    STEALTH_ADDRESS_TYPEHASH,
-                    stealthAddress.h1X,
-                    stealthAddress.h1Y,
-                    stealthAddress.h2X,
-                    stealthAddress.h2Y
-                )
-            );
-    }
+    // function _hashStealthAddress(
+    //     StealthAddress calldata stealthAddress
+    // ) internal pure returns (bytes32) {
+    //     return
+    //         keccak256(
+    //             abi.encode(
+    //                 STEALTH_ADDRESS_TYPEHASH,
+    //                 stealthAddress.h1X,
+    //                 stealthAddress.h1Y,
+    //                 stealthAddress.h2X,
+    //                 stealthAddress.h2Y
+    //             )
+    //         );
+    // }
 }
