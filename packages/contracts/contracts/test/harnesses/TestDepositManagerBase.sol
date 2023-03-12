@@ -49,4 +49,18 @@ contract TestDepositManagerBase is DepositManagerBase {
 
         return ECDSAUpgradeable.recover(digest, signature);
     }
+
+    function getDomainSeparator() public view returns (bytes32) {
+        return _getDomainSeparator();
+    }
+
+    function getDigestWithMockedAddress(
+        address mockContractAddress,
+        DepositRequest calldata req
+    ) public view returns (bytes32) {
+        bytes32 domainSeparator = getMockedDomainSeparator(mockContractAddress);
+        bytes32 structHash = _hashDepositRequest(req);
+
+        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
+    }
 }

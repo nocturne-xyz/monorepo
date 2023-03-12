@@ -21,7 +21,7 @@ abstract contract DepositManagerBase {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
+                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
             )
         );
 
@@ -31,11 +31,11 @@ abstract contract DepositManagerBase {
             "EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)"
         );
 
-    // bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
-    //     keccak256(
-    //         // solhint-disable-next-line max-line-length
-    //         "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
-    //     );
+    bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
+        keccak256(
+            // solhint-disable-next-line max-line-length
+            "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+        );
 
     constructor(
         uint256 chainId,
@@ -86,10 +86,7 @@ abstract contract DepositManagerBase {
                     req.spender,
                     _hashEncodedAsset(req.encodedAsset),
                     req.value,
-                    req.h1X,
-                    req.h1Y,
-                    req.h2X,
-                    req.h2Y,
+                    _hashStealthAddress(req.depositAddr),
                     req.nonce,
                     req.gasPrice
                 )
@@ -109,18 +106,18 @@ abstract contract DepositManagerBase {
             );
     }
 
-    // function _hashStealthAddress(
-    //     StealthAddress calldata stealthAddress
-    // ) internal pure returns (bytes32) {
-    //     return
-    //         keccak256(
-    //             abi.encode(
-    //                 STEALTH_ADDRESS_TYPEHASH,
-    //                 stealthAddress.h1X,
-    //                 stealthAddress.h1Y,
-    //                 stealthAddress.h2X,
-    //                 stealthAddress.h2Y
-    //             )
-    //         );
-    // }
+    function _hashStealthAddress(
+        StealthAddress calldata stealthAddress
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    STEALTH_ADDRESS_TYPEHASH,
+                    stealthAddress.h1X,
+                    stealthAddress.h1Y,
+                    stealthAddress.h2X,
+                    stealthAddress.h2Y
+                )
+            );
+    }
 }

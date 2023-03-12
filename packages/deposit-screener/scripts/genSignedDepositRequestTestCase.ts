@@ -53,10 +53,12 @@ function toObject(obj: any) {
     spender: await signer.getAddress(),
     encodedAsset,
     value: 1000n,
-    h1X: 1n,
-    h1Y: 2n,
-    h2X: 3n,
-    h2Y: 5n,
+    depositAddr: {
+      h1X: 1n,
+      h1Y: 2n,
+      h2X: 3n,
+      h2Y: 5n,
+    },
     nonce: 0n,
     gasPrice: 50n,
   };

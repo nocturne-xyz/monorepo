@@ -25,6 +25,13 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
             fixture.contractVersion
         );
 
+        bytes32 digest = depositManagerBase.getDigestWithMockedAddress(
+            fixture.contractAddress,
+            fixture.depositRequest
+        );
+        console.log("Digest:");
+        console.logBytes32(digest);
+
         address recovered = depositManagerBase
             .recoverDepositRequestSigWithMockedAddress(
                 fixture.contractAddress,

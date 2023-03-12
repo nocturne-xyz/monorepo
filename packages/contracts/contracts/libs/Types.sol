@@ -117,13 +117,11 @@ struct DepositRequest {
     address spender;
     EncodedAsset encodedAsset;
     uint256 value;
-    uint256 h1X;
-    uint256 h1Y;
-    uint256 h2X;
-    uint256 h2Y;
+    StealthAddress depositAddr;
     uint256 nonce;
     uint256 gasPrice;
 }
+
 // TODO: remove after deposit screener work finished
 struct Deposit {
     address spender;

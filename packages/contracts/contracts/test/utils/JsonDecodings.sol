@@ -109,10 +109,7 @@ contract JsonDecodings is Test, ParseUtils {
                     spender: simpleTypes.spender,
                     encodedAsset: encodedAsset,
                     value: simpleTypes.value,
-                    h1X: depositAddr.h1X,
-                    h1Y: depositAddr.h1Y,
-                    h2X: depositAddr.h2X,
-                    h2Y: depositAddr.h2Y,
+                    depositAddr: depositAddr,
                     nonce: simpleTypes.nonce,
                     gasPrice: simpleTypes.gasPrice
                 }),
@@ -173,16 +170,24 @@ contract JsonDecodings is Test, ParseUtils {
     function extractDepositAddr(
         string memory json
     ) public returns (StealthAddress memory) {
-        uint256 h1X = parseInt(json.readString(".depositRequest.h1X"));
+        uint256 h1X = parseInt(
+            json.readString(".depositRequest.depositAddr.h1X")
+        );
         console.log("h1X:", h1X);
 
-        uint256 h1Y = parseInt(json.readString(".depositRequest.h1Y"));
+        uint256 h1Y = parseInt(
+            json.readString(".depositRequest.depositAddr.h1Y")
+        );
         console.log("h1Y:", h1Y);
 
-        uint256 h2X = parseInt(json.readString(".depositRequest.h2X"));
+        uint256 h2X = parseInt(
+            json.readString(".depositRequest.depositAddr.h2X")
+        );
         console.log("h2X:", h2X);
 
-        uint256 h2Y = parseInt(json.readString(".depositRequest.h2Y"));
+        uint256 h2Y = parseInt(
+            json.readString(".depositRequest.depositAddr.h2Y")
+        );
         console.log("h2Y:", h2Y);
 
         return StealthAddress({h1X: h1X, h1Y: h1Y, h2X: h2X, h2Y: h2Y});
