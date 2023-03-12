@@ -49,17 +49,4 @@ contract TestDepositManagerBase is DepositManagerBase {
 
         return ECDSAUpgradeable.recover(digest, signature);
     }
-
-    function getDomainSeparator() public view returns (bytes32) {
-        return _getDomainSeparator();
-    }
-
-    function getDigest(
-        DepositRequest calldata req
-    ) public view returns (bytes32) {
-        bytes32 domainSeparator = _getDomainSeparator();
-        bytes32 structHash = _hashDepositRequest(req);
-
-        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
-    }
 }

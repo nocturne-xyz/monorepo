@@ -25,32 +25,12 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
             fixture.contractVersion
         );
 
-        bytes32 domainSeparator = depositManagerBase.getDomainSeparator();
-        console.log("Domain separator:");
-        console.logBytes32(domainSeparator);
-
-        bytes32 digest = depositManagerBase.getDigest(fixture.depositRequest);
-        console.log("Digest:");
-        console.logBytes32(digest);
-
-        console.log("TEST -- chainId:", depositManagerBase.CHAIN_ID());
-        console.log(
-            "TEST -- contractName:",
-            depositManagerBase.CONTRACT_NAME()
-        );
-        console.log(
-            "TEST -- contractVersion:",
-            depositManagerBase.CONTRACT_VERSION()
-        );
-
         address recovered = depositManagerBase
             .recoverDepositRequestSigWithMockedAddress(
                 fixture.contractAddress,
                 fixture.depositRequest,
                 fixture.signature
             );
-
-        console.log("recovered:", recovered);
 
         assertEq(recovered, fixture.screenerAddress);
     }
