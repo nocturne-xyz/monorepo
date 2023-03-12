@@ -12,18 +12,42 @@ interface ITestDepositManagerBase {
     ) external view returns (address);
 }
 
-contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
+contract TestDepositManagerBase is DepositManagerBase {
     constructor(
         uint256 chainId,
         string memory contractName,
         string memory contractVersion
     ) DepositManagerBase(chainId, contractName, contractVersion) {}
 
-    function recoverDepositRequestSig(
+    function getMockedDomainSeparator(
+        address mockContractAddress
+    ) internal view returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    EIP712DOMAIN_TYPEHASH,
+                    keccak256(bytes(CONTRACT_NAME)),
+                    keccak256(bytes(CONTRACT_VERSION)),
+                    bytes32(CHAIN_ID),
+                    address(mockContractAddress)
+                )
+            );
+    }
+
+    function recoverDepositRequestSigWithMockedAddress(
+        address mockContractAddress,
         DepositRequest calldata req,
         bytes calldata signature
-    ) public view override returns (address) {
-        return _recoverDepositRequestSig(req, signature);
+    ) public view returns (address) {
+        bytes32 domainSeparator = getMockedDomainSeparator(mockContractAddress);
+        bytes32 structHash = _hashDepositRequest(req);
+
+        bytes32 digest = ECDSAUpgradeable.toTypedDataHash(
+            domainSeparator,
+            structHash
+        );
+
+        return ECDSAUpgradeable.recover(digest, signature);
     }
 
     function getDomainSeparator() public view returns (bytes32) {

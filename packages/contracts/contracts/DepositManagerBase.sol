@@ -54,7 +54,7 @@ abstract contract DepositManagerBase {
                     keccak256(bytes(CONTRACT_NAME)),
                     keccak256(bytes(CONTRACT_VERSION)),
                     bytes32(CHAIN_ID),
-                    address(0x1111111111111111111111111111111111111111)
+                    address(this)
                 )
             );
     }

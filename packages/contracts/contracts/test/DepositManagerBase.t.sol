@@ -45,21 +45,18 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
             depositManagerBase.CONTRACT_VERSION()
         );
 
-        vm.etch(
-            address(fixture.contractAddress),
-            address(depositManagerBase).code
-        );
-
         bytes memory sig = rsvToSignatureBytes(
             0xc300cd749eeee61cb410611702941891a839b6a98d4169b47d9be9d765c99292,
             0x648a99880671daf805ab50a81da6559ec66170ab5ce42dea52003d74016ce99b,
             0x1c
         );
 
-        address recovered = depositManagerBase.recoverDepositRequestSig(
-            fixture.signedDepositRequest.depositRequest,
-            sig
-        );
+        address recovered = depositManagerBase
+            .recoverDepositRequestSigWithMockedAddress(
+                fixture.contractAddress,
+                fixture.signedDepositRequest.depositRequest,
+                sig
+            );
 
         console.log("recovered:", recovered);
 
