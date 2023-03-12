@@ -62,26 +62,18 @@ function toObject(obj: any) {
     gasPrice: 50n,
   };
 
-  const signedDepositRequest = await signDepositRequest(
-    signer,
-    domain,
-    depositRequest
-  );
+  const signature = await signDepositRequest(signer, domain, depositRequest);
+  const { r, s, v } = ethers.utils.splitSignature(signature);
 
   const expectedSignerAddress = await signer.getAddress();
   const recoveredAddress = ethers.utils.verifyTypedData(
     domain,
     DEPOSIT_REQUEST_TYPES,
     depositRequest,
-    signedDepositRequest.screenerSig
+    signature
   );
   console.log("Recovered:", recoveredAddress);
   console.log("Actual:", expectedSignerAddress);
-
-  console.log(
-    "VRS:",
-    ethers.utils.splitSignature(signedDepositRequest.screenerSig)
-  );
 
   const json = JSON.stringify(
     toObject({
@@ -89,7 +81,8 @@ function toObject(obj: any) {
       contractName: DEPOSIT_CHECKER_CONTRACT_NAME,
       contractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
       screenerAddress: await signer.getAddress(),
-      signedDepositRequest,
+      depositRequest,
+      signature: { r, s, v },
     })
   );
   console.log(json);

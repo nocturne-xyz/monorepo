@@ -19,17 +19,13 @@ struct SubtreeUpdateProofWithPublicSignals {
     BaseProof proof;
 }
 
-struct SignedDepositRequest {
-    DepositRequest depositRequest;
-    bytes screenerSig;
-}
-
 struct SignedDepositRequestFixture {
     address contractAddress;
     string contractName;
     string contractVersion;
     address screenerAddress;
-    SignedDepositRequest signedDepositRequest;
+    DepositRequest depositRequest;
+    bytes signature;
 }
 
 struct BaseProof {
@@ -49,7 +45,6 @@ contract JsonDecodings is Test, ParseUtils {
         uint256 value;
         uint256 nonce;
         uint256 gasPrice;
-        bytes screenerSig;
     }
 
     function loadFixtureJson(
@@ -100,8 +95,8 @@ contract JsonDecodings is Test, ParseUtils {
             memory simpleTypes = extractSimpleSignedDepositRequestTypes(json);
 
         EncodedAsset memory encodedAsset = extractEncodedAsset(json);
-
         StealthAddress memory depositAddr = extractDepositAddr(json);
+        bytes memory signature = extractSignature(json);
 
         return
             SignedDepositRequestFixture({
@@ -109,57 +104,42 @@ contract JsonDecodings is Test, ParseUtils {
                 contractName: contractName,
                 contractVersion: contractVersion,
                 screenerAddress: screenerAddress,
-                signedDepositRequest: SignedDepositRequest({
-                    depositRequest: DepositRequest({
-                        chainId: simpleTypes.chainId,
-                        spender: simpleTypes.spender,
-                        encodedAssetAddr: encodedAsset.encodedAssetAddr,
-                        encodedAssetId: encodedAsset.encodedAssetId,
-                        value: simpleTypes.value,
-                        h1X: depositAddr.h1X,
-                        h1Y: depositAddr.h1Y,
-                        h2X: depositAddr.h2X,
-                        h2Y: depositAddr.h2Y,
-                        nonce: simpleTypes.nonce,
-                        gasPrice: simpleTypes.gasPrice
-                    }),
-                    screenerSig: simpleTypes.screenerSig
-                })
+                depositRequest: DepositRequest({
+                    chainId: simpleTypes.chainId,
+                    spender: simpleTypes.spender,
+                    encodedAssetAddr: encodedAsset.encodedAssetAddr,
+                    encodedAssetId: encodedAsset.encodedAssetId,
+                    value: simpleTypes.value,
+                    h1X: depositAddr.h1X,
+                    h1Y: depositAddr.h1Y,
+                    h2X: depositAddr.h2X,
+                    h2Y: depositAddr.h2Y,
+                    nonce: simpleTypes.nonce,
+                    gasPrice: simpleTypes.gasPrice
+                }),
+                signature: signature
             });
     }
 
     function extractSimpleSignedDepositRequestTypes(
         string memory json
     ) public returns (SimpleSignedDepositRequestTypes memory) {
-        uint256 chainId = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.chainId")
-        );
+        uint256 chainId = parseInt(json.readString(".depositRequest.chainId"));
         console.log("chainId:", chainId);
 
-        address spender = json.readAddress(
-            ".signedDepositRequest.depositRequest.spender"
-        );
+        address spender = json.readAddress(".depositRequest.spender");
         console.log("spender:", spender);
 
-        uint256 value = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.value")
-        );
+        uint256 value = parseInt(json.readString(".depositRequest.value"));
         console.log("value:", value);
 
-        uint256 nonce = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.nonce")
-        );
+        uint256 nonce = parseInt(json.readString(".depositRequest.nonce"));
         console.log("nonce:", nonce);
 
         uint256 gasPrice = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.gasPrice")
+            json.readString(".depositRequest.gasPrice")
         );
         console.log("gasPrice:", gasPrice);
-
-        bytes memory screenerSig = json.readBytes(
-            ".signedDepositRequest.screenerSig"
-        );
-        console.logBytes(screenerSig);
 
         return
             SimpleSignedDepositRequestTypes({
@@ -167,8 +147,7 @@ contract JsonDecodings is Test, ParseUtils {
                 spender: spender,
                 value: value,
                 nonce: nonce,
-                gasPrice: gasPrice,
-                screenerSig: screenerSig
+                gasPrice: gasPrice
             });
     }
 
@@ -176,16 +155,12 @@ contract JsonDecodings is Test, ParseUtils {
         string memory json
     ) public returns (EncodedAsset memory) {
         uint256 encodedAssetAddr = parseInt(
-            json.readString(
-                ".signedDepositRequest.depositRequest.encodedAssetAddr"
-            )
+            json.readString(".depositRequest.encodedAssetAddr")
         );
         console.log("encodedAssetAddr:", encodedAssetAddr);
 
         uint256 encodedAssetId = parseInt(
-            json.readString(
-                ".signedDepositRequest.depositRequest.encodedAssetId"
-            )
+            json.readString(".depositRequest.encodedAssetId")
         );
         console.log("encodedAssetId:", encodedAssetId);
 
@@ -199,27 +174,31 @@ contract JsonDecodings is Test, ParseUtils {
     function extractDepositAddr(
         string memory json
     ) public returns (StealthAddress memory) {
-        uint256 h1X = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.h1X")
-        );
+        uint256 h1X = parseInt(json.readString(".depositRequest.h1X"));
         console.log("h1X:", h1X);
 
-        uint256 h1Y = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.h1Y")
-        );
+        uint256 h1Y = parseInt(json.readString(".depositRequest.h1Y"));
         console.log("h1Y:", h1Y);
 
-        uint256 h2X = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.h2X")
-        );
+        uint256 h2X = parseInt(json.readString(".depositRequest.h2X"));
         console.log("h2X:", h2X);
 
-        uint256 h2Y = parseInt(
-            json.readString(".signedDepositRequest.depositRequest.h2Y")
-        );
+        uint256 h2Y = parseInt(json.readString(".depositRequest.h2Y"));
         console.log("h2Y:", h2Y);
 
         return StealthAddress({h1X: h1X, h1Y: h1Y, h2X: h2X, h2Y: h2Y});
+    }
+
+    function extractSignature(
+        string memory json
+    ) public view returns (bytes memory) {
+        uint256 r = json.readUint(".signature.r");
+        uint256 s = json.readUint(".signature.s");
+        uint8 v = uint8(json.readUint(".signature.v"));
+        bytes memory sig = rsvToSignatureBytes(r, s, v);
+
+        console.logBytes(sig);
+        return sig;
     }
 
     function loadJoinSplitProofFromFixture(

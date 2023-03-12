@@ -120,7 +120,7 @@ const createForwardRequestParams = async () => {
 
 */
 
-import { DepositRequest, SignedDepositRequest } from "@nocturne-xyz/sdk";
+import { DepositRequest } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 import { EIP712Domain } from "./typedData";
 
@@ -144,7 +144,7 @@ export async function signDepositRequest(
   wallet: ethers.Wallet,
   domain: EIP712Domain,
   depositRequest: DepositRequest
-): Promise<SignedDepositRequest> {
+): Promise<string> {
   const domainSeparator = computeDomainSeparator(domain);
   const hashedDepositRequest = hashDepositRequest(depositRequest);
   const digest = ethers.utils.solidityKeccak256(
@@ -154,11 +154,7 @@ export async function signDepositRequest(
 
   console.log("Digest:", digest);
 
-  const signature: ethers.utils.BytesLike = ethers.utils.joinSignature(
-    wallet._signingKey().signDigest(digest)
-  );
-
-  return { depositRequest, screenerSig: signature };
+  return ethers.utils.joinSignature(wallet._signingKey().signDigest(digest));
 }
 
 function computeDomainSeparator(domain: EIP712Domain): string {
