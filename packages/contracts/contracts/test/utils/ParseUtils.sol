@@ -31,6 +31,21 @@ contract ParseUtils {
         return r;
     }
 
+    function rsvToSignatureBytes(
+        uint256 r,
+        uint256 s,
+        uint8 v
+    ) public pure returns (bytes memory) {
+        bytes memory sig = new bytes(65);
+        assembly {
+            mstore(add(sig, 32), r)
+            mstore(add(sig, 64), s)
+        }
+        sig[64] = bytes1(abi.encodePacked(v));
+
+        return sig;
+    }
+
     // Parse string into int
     function parseInt(string memory s) public pure returns (uint256) {
         bytes memory b = bytes(s);

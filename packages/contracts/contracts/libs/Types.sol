@@ -112,6 +112,17 @@ struct Action {
     bytes encodedFunction;
 }
 
+struct DepositRequest {
+    uint256 chainId;
+    address spender;
+    EncodedAsset encodedAsset;
+    uint256 value;
+    StealthAddress depositAddr;
+    uint256 nonce;
+    uint256 gasPrice;
+}
+
+// TODO: remove after deposit screener work finished
 struct Deposit {
     address spender;
     uint256 encodedAssetAddr;

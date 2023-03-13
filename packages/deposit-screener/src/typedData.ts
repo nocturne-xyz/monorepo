@@ -1,4 +1,4 @@
-export const DEPOSIT_CHECKER_CONTRACT_NAME = "NocturneDepositChecker";
+export const DEPOSIT_CHECKER_CONTRACT_NAME = "NocturneDepositManager";
 export const DEPOSIT_CHECKER_CONTRACT_VERSION = "v1";
 
 export interface EIP712Domain {
@@ -8,8 +8,16 @@ export interface EIP712Domain {
   verifyingContract: string;
 }
 
-// The named list of all type definitions
 export const DEPOSIT_REQUEST_TYPES = {
+  DepositRequest: [
+    { name: "chainId", type: "uint256" },
+    { name: "spender", type: "address" },
+    { name: "encodedAsset", type: "EncodedAsset" },
+    { name: "value", type: "uint256" },
+    { name: "depositAddr", type: "StealthAddress" },
+    { name: "nonce", type: "uint256" },
+    { name: "gasPrice", type: "uint256" },
+  ],
   EncodedAsset: [
     { name: "encodedAssetAddr", type: "uint256" },
     { name: "encodedAssetId", type: "uint256" },
@@ -19,14 +27,5 @@ export const DEPOSIT_REQUEST_TYPES = {
     { name: "h1Y", type: "uint256" },
     { name: "h2X", type: "uint256" },
     { name: "h2Y", type: "uint256" },
-  ],
-  DepositRequest: [
-    { name: "chainId", type: "uint256" },
-    { name: "spender", type: "string" },
-    { name: "encodedAsset", type: "EncodedAsset" },
-    { name: "value", type: "uint256" },
-    { name: "depositAddr", type: "StealthAddress" },
-    { name: "nonce", type: "uint256" },
-    { name: "gasPrice", type: "uint256" },
   ],
 };

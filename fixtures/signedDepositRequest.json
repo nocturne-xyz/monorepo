@@ -1,14 +1,1 @@
-{
-  "depositCheckerContractName": "NocturneDepositChecker",
-  "depositCheckerContractVersion": "v1",
-  "signedDepositRequest": {
-    "chainId": "123n",
-    "spender": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
-    "encodedAsset": { "encodedAssetAddr": "291n", "encodedAssetId": "0n" },
-    "value": "1000n",
-    "depositAddr": { "h1X": "1n", "h1Y": "2n", "h2X": "3n", "h2Y": "4n" },
-    "nonce": "0n",
-    "gasPrice": "50n",
-    "screenerSig": "0xd26958669d49c619bcbac9fd8df5b8a4231a49eb3a12c3215045631cd9e5c19f77c43183e3b14cca921441934d4ead60b9ab9d67a76a37a551cb6b40df9ef7b21c"
-  }
-}
+{"contractAddress":"0x1111111111111111111111111111111111111111","contractName":"NocturneDepositManager","contractVersion":"v1","screenerAddress":"0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf","depositRequest":{"chainId":"123","spender":"0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf","encodedAsset":{"encodedAssetAddr":"291","encodedAssetId":"0"},"value":"1000","depositAddr":{"h1X":"1","h1Y":"2","h2X":"3","h2Y":"5"},"nonce":"0","gasPrice":"50"},"signature":{"r":"0x76d030104ade5ae83f8571571c0cb2eb7838f460ea49b32a931ad0672c50a361","s":"0x3dfda66d354c4a2970184f1263d0392694da5820bd5fc9a179a1fe384e988d4b","v":28}}

@@ -27,8 +27,8 @@
     "test:unit": "FOUNDRY_PROFILE=contracts forge test"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "4.7.3",
-    "@openzeppelin/contracts-upgradeable": "4.7.3"
+    "@openzeppelin/contracts": "4.8.2",
+    "@openzeppelin/contracts-upgradeable": "4.8.2"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.4",

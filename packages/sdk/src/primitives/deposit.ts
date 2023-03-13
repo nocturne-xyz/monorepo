@@ -10,7 +10,3 @@ export interface DepositRequest {
   nonce: bigint;
   gasPrice: bigint;
 }
-
-export interface SignedDepositRequest extends DepositRequest {
-  screenerSig: string;
-}
