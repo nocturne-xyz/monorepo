@@ -22,14 +22,26 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
 
         depositManagerBase = new TestDepositManagerBase();
         depositManagerBase.initialize(
-            fixture.depositRequest.chainId,
             fixture.contractName,
             fixture.contractVersion
         );
 
-        address recovered = depositManagerBase
-            .recoverDepositRequestSigWithMockedAddress(
-                fixture.contractAddress,
+        // Override chainid, bytecode, and storage for fixture.contractAddress
+        vm.chainId(fixture.depositRequest.chainId);
+        vm.etch(fixture.contractAddress, address(depositManagerBase).code);
+        vm.store(
+            fixture.contractAddress,
+            bytes32(uint256(1)),
+            keccak256(bytes(fixture.contractName))
+        );
+        vm.store(
+            fixture.contractAddress,
+            bytes32(uint256(2)),
+            keccak256(bytes(fixture.contractVersion))
+        );
+
+        address recovered = ITestDepositManagerBase(fixture.contractAddress)
+            .recoverDepositRequestSig(
                 fixture.depositRequest,
                 fixture.signature
             );

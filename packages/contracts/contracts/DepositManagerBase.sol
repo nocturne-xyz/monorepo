@@ -2,22 +2,11 @@
 pragma solidity ^0.8.17;
 
 import "./libs/Types.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import {ECDSAUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 
-abstract contract DepositManagerBase is Initializable {
-    uint256 public _chainId;
-    string public _contractName;
-    string public _contractVersion;
-
-    bytes32 constant EIP712DOMAIN_TYPEHASH =
-        keccak256(
-            // solhint-disable-next-line max-line-length
-            bytes(
-                "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-            )
-        );
-
+abstract contract DepositManagerBase is EIP712Upgradeable {
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
             bytes(
@@ -39,33 +28,17 @@ abstract contract DepositManagerBase is Initializable {
         );
 
     function __DepositManagerBase_initialize(
-        uint256 chainId,
         string memory contractName,
         string memory contractVersion
     ) internal onlyInitializing {
-        _chainId = chainId;
-        _contractName = contractName;
-        _contractVersion = contractVersion;
-    }
-
-    function _getDomainSeparator() internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    EIP712DOMAIN_TYPEHASH,
-                    keccak256(bytes(_contractName)),
-                    keccak256(bytes(_contractVersion)),
-                    bytes32(_chainId),
-                    address(this)
-                )
-            );
+        __EIP712_init(contractName, contractVersion);
     }
 
     function _recoverDepositRequestSig(
         DepositRequest calldata req,
         bytes calldata signature
     ) internal view returns (address) {
-        bytes32 domainSeparator = _getDomainSeparator();
+        bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashDepositRequest(req);
 
         bytes32 digest = ECDSAUpgradeable.toTypedDataHash(

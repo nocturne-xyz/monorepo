@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Bump Open Zeppelin npm deps to `4.8.2`
 - Add json decoding utils for retrieving signed deposit request fixture
 - Add initial `DepositManagerBase` contract and fixture unit test
 - Add `Operation.gasAsset` instead of using `joinsplits[0]`
