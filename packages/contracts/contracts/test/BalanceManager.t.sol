@@ -82,7 +82,7 @@ contract BalanceManagerTest is Test {
         token.reserveTokens(recipient, amount);
 
         StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
-        Deposit memory deposit = NocturneUtils.formatDeposit(
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             recipient,
             address(token),
             amount,

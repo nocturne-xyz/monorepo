@@ -41,12 +41,11 @@ contract Vault is
         AssetUtils.transferAssetTo(encodedAsset, _wallet, value);
     }
 
-    function makeDeposit(Deposit calldata deposit) public override onlyWallet {
+    function makeDeposit(
+        DepositRequest calldata deposit
+    ) public override onlyWallet {
         AssetUtils.transferAssetFrom(
-            EncodedAsset({
-                encodedAssetAddr: deposit.encodedAssetAddr,
-                encodedAssetId: deposit.encodedAssetId
-            }),
+            deposit.encodedAsset,
             deposit.spender,
             deposit.value
         );

@@ -108,19 +108,19 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
     function depositFunds(
         address _spender,
-        address _asset,
+        address _token,
         uint256 _value,
         uint256 _id,
         StealthAddress memory _depositAddr
     ) public {
         wallet.depositFunds(
-            Deposit({
-                spender: _spender,
-                encodedAssetAddr: uint256(uint160(_asset)),
-                encodedAssetId: _id,
-                value: _value,
-                depositAddr: _depositAddr
-            })
+            NocturneUtils.formatDepositRequest(
+                _spender,
+                _token,
+                _value,
+                _id,
+                _depositAddr
+            )
         );
     }
 
@@ -131,7 +131,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     ) internal {
         token.reserveTokens(recipient, amount);
 
-        vm.prank(recipient);
+        vm.startPrank(recipient);
         token.approve(address(vault), amount);
 
         uint256[] memory batch = new uint256[](16);
@@ -154,7 +154,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 uint128(i)
             );
 
-            vm.prank(recipient);
             if (i == depositIterations - 1 && remainder != 0) {
                 depositFunds(
                     recipient,
@@ -186,6 +185,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             batch[i] = noteCommitment;
         }
 
+        vm.stopPrank();
+
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 root = path[path.length - 1];
 
@@ -201,15 +202,24 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         token.approve(address(vault), PER_NOTE_AMOUNT);
 
-        vm.prank(BOB); // msg.sender made to BOB not ALICE, causing error
+        vm.startPrank(BOB); // msg.sender made to BOB not ALICE, causing error
         vm.expectRevert("Spender must be the sender");
-        depositFunds(
-            ALICE,
-            address(token),
-            PER_NOTE_AMOUNT,
-            ERC20_ID,
-            NocturneUtils.defaultStealthAddress()
+        wallet.depositFunds(
+            DepositRequest({
+                chainId: 0,
+                spender: ALICE,
+                encodedAsset: AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(token),
+                    ERC20_ID
+                ),
+                value: PER_NOTE_AMOUNT,
+                depositAddr: NocturneUtils.defaultStealthAddress(),
+                nonce: 0,
+                gasPrice: 0
+            })
         );
+        vm.stopPrank();
     }
 
     function testProcessBundleTransferSingleJoinSplit() public {

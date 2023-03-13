@@ -49,26 +49,30 @@ library NocturneUtils {
         }
     }
 
-    function formatDeposit(
+    function formatDepositRequest(
         address spender,
         address asset,
         uint256 value,
         uint256 id,
         StealthAddress memory depositAddr
-    ) public pure returns (Deposit memory) {
+    ) public pure returns (DepositRequest memory) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             asset,
             id
         );
 
+        // TODO: allow passing of chainId, nonce, and gasPrice once
+        // DepositManager integrated
         return
-            Deposit({
+            DepositRequest({
+                chainId: 0,
                 spender: spender,
-                encodedAssetAddr: encodedAsset.encodedAssetAddr,
-                encodedAssetId: encodedAsset.encodedAssetId,
+                encodedAsset: encodedAsset,
                 value: value,
-                depositAddr: depositAddr
+                depositAddr: depositAddr,
+                nonce: 0,
+                gasPrice: 0
             });
     }
 

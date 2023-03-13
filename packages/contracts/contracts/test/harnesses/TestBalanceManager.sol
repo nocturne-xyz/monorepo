@@ -16,7 +16,7 @@ contract TestBalanceManager is BalanceManager {
         __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
     }
 
-    function makeDeposit(Deposit calldata deposit) public {
+    function makeDeposit(DepositRequest calldata deposit) public {
         _makeDeposit(deposit);
     }
 

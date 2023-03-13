@@ -122,15 +122,6 @@ struct DepositRequest {
     uint256 gasPrice;
 }
 
-// TODO: remove after deposit screener work finished
-struct Deposit {
-    address spender;
-    uint256 encodedAssetAddr;
-    uint256 encodedAssetId;
-    uint256 value;
-    StealthAddress depositAddr;
-}
-
 library BundleLib {
     function totalNumJoinSplits(
         Bundle calldata self
