@@ -13,11 +13,13 @@ interface ITestDepositManagerBase {
 }
 
 contract TestDepositManagerBase is DepositManagerBase {
-    constructor(
+    function initialize(
         uint256 chainId,
         string memory contractName,
         string memory contractVersion
-    ) DepositManagerBase(chainId, contractName, contractVersion) {}
+    ) external initializer {
+        __DepositManagerBase_initialize(chainId, contractName, contractVersion);
+    }
 
     function getMockedDomainSeparator(
         address mockContractAddress
@@ -26,9 +28,9 @@ contract TestDepositManagerBase is DepositManagerBase {
             keccak256(
                 abi.encode(
                     EIP712DOMAIN_TYPEHASH,
-                    keccak256(bytes(CONTRACT_NAME)),
-                    keccak256(bytes(CONTRACT_VERSION)),
-                    bytes32(CHAIN_ID),
+                    keccak256(bytes(_contractName)),
+                    keccak256(bytes(_contractVersion)),
+                    bytes32(_chainId),
                     address(mockContractAddress)
                 )
             );

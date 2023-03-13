@@ -3,13 +3,12 @@ pragma solidity ^0.8.17;
 
 import "./libs/Types.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-
-abstract contract DepositManagerBase {
-    uint256 public CHAIN_ID;
-    string public CONTRACT_NAME;
-    string public CONTRACT_VERSION;
+abstract contract DepositManagerBase is Initializable {
+    uint256 public _chainId;
+    string public _contractName;
+    string public _contractVersion;
 
     bytes32 constant EIP712DOMAIN_TYPEHASH =
         keccak256(
@@ -39,14 +38,14 @@ abstract contract DepositManagerBase {
             "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
         );
 
-    constructor(
+    function __DepositManagerBase_initialize(
         uint256 chainId,
         string memory contractName,
         string memory contractVersion
-    ) {
-        CHAIN_ID = chainId;
-        CONTRACT_NAME = contractName;
-        CONTRACT_VERSION = contractVersion;
+    ) internal onlyInitializing {
+        _chainId = chainId;
+        _contractName = contractName;
+        _contractVersion = contractVersion;
     }
 
     function _getDomainSeparator() internal view returns (bytes32) {
@@ -54,9 +53,9 @@ abstract contract DepositManagerBase {
             keccak256(
                 abi.encode(
                     EIP712DOMAIN_TYPEHASH,
-                    keccak256(bytes(CONTRACT_NAME)),
-                    keccak256(bytes(CONTRACT_VERSION)),
-                    bytes32(CHAIN_ID),
+                    keccak256(bytes(_contractName)),
+                    keccak256(bytes(_contractVersion)),
+                    bytes32(_chainId),
                     address(this)
                 )
             );

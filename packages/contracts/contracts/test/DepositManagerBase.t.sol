@@ -20,7 +20,8 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
         SignedDepositRequestFixture memory fixture = JsonDecodings
             .loadSignedDepositRequestFixture(SIGNED_DEPOSIT_REQ_FIXTURE_PATH);
 
-        depositManagerBase = new TestDepositManagerBase(
+        depositManagerBase = new TestDepositManagerBase();
+        depositManagerBase.initialize(
             fixture.depositRequest.chainId,
             fixture.contractName,
             fixture.contractVersion
