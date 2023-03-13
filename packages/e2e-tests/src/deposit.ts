@@ -51,7 +51,7 @@ export async function depositFunds(
     };
     commitments.push(NoteTrait.toCommitment(note));
   }
-  
+
   await sleep(3_000);
   return commitments;
 }
