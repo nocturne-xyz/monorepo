@@ -81,6 +81,8 @@ contract DepositManagerTest is Test, ParseUtils {
             address(vault)
         );
 
+        depositManager.setScreenerPermission(SCREENER, true);
+
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
@@ -342,5 +344,37 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.expectRevert("Cannot retrieve nonexistent deposit");
         vm.prank(ALICE);
         depositManager.retrieveDeposit(deposit);
+    }
+
+    function testProcessDepositSuccess() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            10 // gasPrice of 10
+        );
+
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit(deposit);
+
+        bytes32 digest = depositManager.computeDigest(deposit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
+
+        // TODO: Wallet contract still expects msg.sender to be depositor,
+        // followup PR will refactor Wallet, tests, and sdks to use deposit
+        // manager
+        vm.expectRevert("Spender must be the sender");
+        depositManager.processDeposit(deposit, signature);
     }
 }

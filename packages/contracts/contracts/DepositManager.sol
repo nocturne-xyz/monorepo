@@ -5,17 +5,24 @@ import {IWallet} from "./interfaces/IWallet.sol";
 import {DepositManagerBase} from "./DepositManagerBase.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./libs/Types.sol";
 import "./libs/AssetUtils.sol";
 import "./libs/Utils.sol";
 
-contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
+contract DepositManager is
+    DepositManagerBase,
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable
+{
     IWallet public _wallet;
     address public _vault;
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(address => uint256) public _gasTankBalances;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
+
+    event ScreenerPermissionSet(address screener, bool permission);
 
     event DepositInstantiated(
         address indexed spender,
@@ -44,9 +51,18 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
         address wallet,
         address vault
     ) external initializer {
+        __Ownable_init();
         __DepositManagerBase_initialize(contractName, contractVersion);
         _wallet = IWallet(wallet);
         _vault = vault;
+    }
+
+    function setScreenerPermission(
+        address screener,
+        bool permission
+    ) external onlyOwner {
+        _screeners[screener] = permission;
+        emit ScreenerPermissionSet(screener, permission);
     }
 
     function instantiateDeposit(
