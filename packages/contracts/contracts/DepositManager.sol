@@ -15,7 +15,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(address => uint256) public _gasTankBalances;
-    mapping(uint256 => bool) public _outstandingDepositHashes;
+    mapping(bytes32 => bool) public _outstandingDepositHashes;
 
     event DepositInstantiated(
         address indexed spender,
@@ -56,11 +56,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
         require(msg.sender == req.spender, "Only spender can start deposit");
         require(req.nonce == _nonces[req.spender], "Invalid nonce");
 
-        uint256 depositHash = uint256(_hashDepositRequest(req));
-        require(
-            !_outstandingDepositHashes[depositHash],
-            "Deposit request already submitted"
-        );
+        bytes32 depositHash = _hashDepositRequest(req);
 
         // Update gas tank
         _gasTankBalances[msg.sender] += msg.value;
@@ -86,7 +82,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
-        uint256 depositHash = uint256(_hashDepositRequest(req));
+        bytes32 depositHash = _hashDepositRequest(req);
         require(
             _outstandingDepositHashes[depositHash],
             "Cannot retrieve nonexistent deposit"
@@ -113,7 +109,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
-        uint256 depositHash = uint256(_hashDepositRequest(req));
+        bytes32 depositHash = _hashDepositRequest(req);
         require(
             _outstandingDepositHashes[depositHash],
             "Cannot retrieve nonexistent deposit"

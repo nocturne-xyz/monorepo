@@ -7,12 +7,13 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 import "../libs/Types.sol";
 import {NocturneUtils} from "./utils/NocturneUtils.sol";
+import {ParseUtils} from "./utils/ParseUtils.sol";
+import {AssetUtils} from "../libs/AssetUtils.sol";
 import {TestDepositManager} from "./harnesses/TestDepositManager.sol";
 import {Vault} from "../Vault.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
@@ -30,10 +31,32 @@ contract DepositManagerTest is Test, ParseUtils {
     string constant CONTRACT_VERSION = "v1";
 
     address constant ALICE = address(1);
+    address constant BOB = address(2);
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER = vm.addr(SCREENER_PRIVKEY);
 
     uint256 constant RESERVE_AMOUNT = 50_000_000;
+
+    event DepositInstantiated(
+        address indexed spender,
+        EncodedAsset indexed encodedAsset,
+        uint256 value,
+        uint256 nonce
+    );
+
+    event DepositRetrieved(
+        address indexed spender,
+        EncodedAsset indexed encodedAsset,
+        uint256 value,
+        uint256 nonce
+    );
+
+    event DepositProcessed(
+        address indexed spender,
+        EncodedAsset indexed encodedAsset,
+        uint256 value,
+        uint256 nonce
+    );
 
     function setUp() public virtual {
         // TODO: extract wallet/vault deployment into NocturneUtils
@@ -84,6 +107,92 @@ contract DepositManagerTest is Test, ParseUtils {
             0 // 0 gas price
         );
 
+        // Deposit hash not yet marked true
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+
+        vm.expectEmit(true, true, true, true);
+        emit DepositInstantiated(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.nonce
+        );
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit(deposit);
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+    }
+
+    function testInstantiateDepositFailureWrongChainId() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 25M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+
+        DepositRequest memory deposit = DepositRequest({
+            chainId: 0x123,
+            spender: ALICE,
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(token),
+                NocturneUtils.ERC20_ID
+            ),
+            value: RESERVE_AMOUNT / 2,
+            depositAddr: NocturneUtils.defaultStealthAddress(),
+            nonce: depositManager._nonces(ALICE),
+            gasPrice: 0 // 0 gas price
+        });
+
+        vm.expectRevert("Wrong chainId");
+        depositManager.instantiateDeposit(deposit);
+    }
+
+    function testInstantiateDepositFailureWrongSpender() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 25M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT / 2,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            0 // 0 gas price
+        );
+
+        vm.prank(BOB); // prank BOB not ALICE
+        vm.expectRevert("Only spender can start deposit");
+        depositManager.instantiateDeposit(deposit);
+    }
+
+    function testInstantiateDepositFailureBadNonce() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT / 2,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE) + 1, // Invalid nonce
+            0 // 0 gas price
+        );
+
+        // Expect revert
+        vm.expectRevert("Invalid nonce");
         vm.prank(ALICE);
         depositManager.instantiateDeposit(deposit);
     }
