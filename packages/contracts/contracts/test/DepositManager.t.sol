@@ -294,4 +294,53 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), 0);
         assertEq(token.balanceOf(address(ALICE)), deposit.value);
     }
+
+    function testRetrieveDepositFailureNotSpender() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve all 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            0
+        );
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+
+        // Call instantiateDeposit
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit(deposit);
+
+        // Call retrieveDeposit, but prank as BOB
+        vm.expectRevert("Only spender can retrieve deposit");
+        vm.prank(BOB);
+        depositManager.retrieveDeposit(deposit);
+    }
+
+    function testRetrieveDepositFailureNoDeposit() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Create deposit request but never instantiate deposit with it
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            0
+        );
+
+        vm.expectRevert("Cannot retrieve nonexistent deposit");
+        vm.prank(ALICE);
+        depositManager.retrieveDeposit(deposit);
+    }
 }
