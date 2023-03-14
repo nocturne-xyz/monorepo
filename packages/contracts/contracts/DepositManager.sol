@@ -88,7 +88,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
             "Cannot retrieve nonexistent deposit"
         );
 
-        // Update deposit hashes and escrow assets in contract
+        // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
 
         AssetUtils.transferAssetTo(req.encodedAsset, req.spender, req.value);

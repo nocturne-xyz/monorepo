@@ -123,6 +123,9 @@ contract DepositManagerTest is Test, ParseUtils {
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token escrowed by manager contract
+        assertEq(token.balanceOf(address(depositManager)), deposit.value);
     }
 
     function testInstantiateDepositSuccessWithGasPayment() public {
@@ -164,6 +167,9 @@ contract DepositManagerTest is Test, ParseUtils {
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token escrowed by manager contract
+        assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         // Gas tank updated
         assertEq(depositManager._gasTankBalances(ALICE), 10_000_000);
@@ -241,5 +247,51 @@ contract DepositManagerTest is Test, ParseUtils {
         depositManager.instantiateDeposit(deposit);
     }
 
-    // TODO: test deposit successfully goes through with wallet contract
+    function testRetrieveDepositSuccess() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve all 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            0
+        );
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+
+        // Call instantiateDeposit
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit(deposit);
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token escrowed by manager contract
+        assertEq(token.balanceOf(address(depositManager)), deposit.value);
+
+        // Call retrieveDeposit
+        vm.expectEmit(true, true, true, true);
+        emit DepositRetrieved(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.nonce
+        );
+        vm.prank(ALICE);
+        depositManager.retrieveDeposit(deposit);
+
+        // Deposit hash marked false again
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token sent back to user
+        assertEq(token.balanceOf(address(depositManager)), 0);
+        assertEq(token.balanceOf(address(ALICE)), deposit.value);
+    }
 }
