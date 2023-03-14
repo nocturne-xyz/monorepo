@@ -119,7 +119,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 _token,
                 _value,
                 _id,
-                _depositAddr
+                _depositAddr,
+                0, // nonce and gasPrice irrelevant once past deposit manager
+                0
             )
         );
     }

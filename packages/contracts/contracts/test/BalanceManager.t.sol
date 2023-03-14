@@ -87,7 +87,9 @@ contract BalanceManagerTest is Test {
             address(token),
             amount,
             ERC20_ID,
-            addr
+            addr,
+            0, // nonce and gasPrice irrelevant
+            0
         );
 
         vm.prank(recipient);
