@@ -364,7 +364,7 @@ export class Nullifier extends Entity {
   }
 }
 
-export class SubtreeCommit extends Entity {
+export class LatestSubtreeCommit extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -372,19 +372,19 @@ export class SubtreeCommit extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save SubtreeCommit entity without an ID");
+    assert(id != null, "Cannot save LatestSubtreeCommit entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type SubtreeCommit must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type LatestSubtreeCommit must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("SubtreeCommit", id.toBytes().toHexString(), this);
+      store.set("LatestSubtreeCommit", id.toBytes().toHexString(), this);
     }
   }
 
-  static load(id: Bytes): SubtreeCommit | null {
-    return changetype<SubtreeCommit | null>(
-      store.get("SubtreeCommit", id.toHexString())
+  static load(id: Bytes): LatestSubtreeCommit | null {
+    return changetype<LatestSubtreeCommit | null>(
+      store.get("LatestSubtreeCommit", id.toHexString())
     );
   }
 

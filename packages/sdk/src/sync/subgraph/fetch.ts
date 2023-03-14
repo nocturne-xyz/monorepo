@@ -5,7 +5,6 @@ import {
   IncludedEncryptedNote,
   IncludedNote,
 } from "../../primitives";
-import { maxArray } from "../../utils";
 
 interface NoteResponse {
   ownerH1X: string;
@@ -194,19 +193,21 @@ function encryptedNoteFromEncryptedNoteResponse(
 
 interface FetchSubtreeCommitsResponse {
   data: {
-    subtreeCommits: SubtreeCommitResponse[];
+    latestSubtreeCommit: SubtreeCommitResponse;
   };
 }
 
 interface SubtreeCommitResponse {
-  newRoot: string;
   subtreeIndex: string;
 }
 
+// sha256(LATEST_SUBTREE_COMMIT)
+const SUBTREE_COMMIT_ID =
+  "0x1a16f59baba7e0b739bd5fd70f32f1f9f147675e91baf5e3f3014b6a8975b839";
+
 const subtreeCommitQuery = `
-  query fetchSubtreeCommits($toBlock: Int!) {
-    subtreeCommits(block: { number: $toBlock }, orderBy: subtreeIndex, orderDirection: desc, first: 1) {
-      newRoot,
+  query fetchLatestSubtreeCommit($toBlock: Int!) {
+    latestSubtreeCommit(id: "${SUBTREE_COMMIT_ID}", block: { number: $toBlock }) {
       subtreeIndex
     }
   }
@@ -243,15 +244,12 @@ export async function fetchLastCommittedMerkleIndex(
 
     const res = (await response.json()) as FetchSubtreeCommitsResponse;
 
-    if (res.data.subtreeCommits.length === 0) {
+    if (!res.data.latestSubtreeCommit) {
       return -1;
     } else {
-      const subtreeIndices = res.data.subtreeCommits.map((commit) =>
-        parseInt(commit.subtreeIndex)
-      );
-      const maxSubtreeIndex = maxArray(subtreeIndices);
+      const subtreeIndex = parseInt(res.data.latestSubtreeCommit.subtreeIndex);
 
-      return (maxSubtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE - 1;
+      return (subtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE - 1;
     }
   } catch (err) {
     console.error("Error when fetching latest subtree commit from subgraph");

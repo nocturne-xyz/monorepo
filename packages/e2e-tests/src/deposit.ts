@@ -7,6 +7,7 @@ import {
   StealthAddress,
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
+import { sleep } from "./utils";
 
 export async function depositFunds(
   wallet: Wallet,
@@ -51,5 +52,6 @@ export async function depositFunds(
     commitments.push(NoteTrait.toCommitment(note));
   }
 
+  await sleep(3_000);
   return commitments;
 }

@@ -36,7 +36,7 @@ type Nullifier @entity(immutable: true) {
 	nullifier: BigInt!
 }
 
-type SubtreeCommit @entity(immutable: true) {
+type LatestSubtreeCommit @entity {
   id: Bytes!
   newRoot: BigInt!
   subtreeIndex: BigInt!

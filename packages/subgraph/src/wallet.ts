@@ -8,9 +8,14 @@ import {
   EncodedNote,
   EncodedOrEncryptedNote,
   EncryptedNote,
-  SubtreeCommit,
+  LatestSubtreeCommit,
   Nullifier,
 } from "../generated/schema";
+
+// sha256(LATEST_SUBTREE_COMMIT)
+const SUBTREE_COMMIT_ID = Bytes.fromHexString(
+  "0x1a16f59baba7e0b739bd5fd70f32f1f9f147675e91baf5e3f3014b6a8975b839"
+);
 
 // assumes txIndex and logIndex are less than 2^32. in practice this is a pretty safe assumption (a block should never have billions of txs/log entries)
 // assumption: txIndex and logIndex are less than 2^32.
@@ -134,10 +139,10 @@ export function handleRefund(event: RefundProcessed): void {
 }
 
 export function handleSubtreeUpdate(event: SubtreeUpdate): void {
-  const totalLogIndex = getTotalLogIndex(event);
-
-  const id = getId(totalLogIndex, 0);
-  const commit = new SubtreeCommit(id);
+  let commit = LatestSubtreeCommit.load(SUBTREE_COMMIT_ID);
+  if (!commit) {
+    commit = new LatestSubtreeCommit(SUBTREE_COMMIT_ID);
+  }
 
   commit.newRoot = event.params.newRoot;
   commit.subtreeIndex = event.params.subtreeIndex;
