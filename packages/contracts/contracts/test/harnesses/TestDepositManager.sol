@@ -14,7 +14,7 @@ contract TestDepositManager is DepositManager {
 
     function hashDepositRequest(
         DepositRequest calldata req
-    ) public view returns (bytes32) {
+    ) public pure returns (bytes32) {
         return _hashDepositRequest(req);
     }
 }

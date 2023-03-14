@@ -125,6 +125,50 @@ contract DepositManagerTest is Test, ParseUtils {
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
     }
 
+    function testInstantiateDepositSuccessWithGasPayment() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 25M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT / 2,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            0 // 0 gas price
+        );
+
+        // Deposit hash not yet marked true and gas tank empty
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+        assertEq(depositManager._gasTankBalances(ALICE), 0);
+
+        // Set ALICE balance to 100M gwei
+        vm.deal(ALICE, 100_000_000);
+
+        // Call instantiateDeposit with 10M gwei
+        vm.expectEmit(true, true, true, true);
+        emit DepositInstantiated(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.nonce
+        );
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Gas tank updated
+        assertEq(depositManager._gasTankBalances(ALICE), 10_000_000);
+    }
+
     function testInstantiateDepositFailureWrongChainId() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
