@@ -38,15 +38,17 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         DepositRequest calldata req,
         bytes calldata signature
     ) internal view returns (address) {
+        bytes32 digest = _computeDigest(req);
+        return ECDSAUpgradeable.recover(digest, signature);
+    }
+
+    function _computeDigest(
+        DepositRequest calldata req
+    ) public view returns (bytes32) {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashDepositRequest(req);
 
-        bytes32 digest = ECDSAUpgradeable.toTypedDataHash(
-            domainSeparator,
-            structHash
-        );
-
-        return ECDSAUpgradeable.recover(digest, signature);
+        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
     }
 
     function _hashDepositRequest(

@@ -11,6 +11,7 @@ import "./libs/Utils.sol";
 
 contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
     IWallet public _wallet;
+    address public _vault;
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(address => uint256) public _gasTankBalances;
@@ -34,17 +35,18 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
         address indexed spender,
         EncodedAsset indexed encodedAsset,
         uint256 value,
-        uint256 nonce,
-        string failureReason
+        uint256 nonce
     );
 
     function initialize(
         string memory contractName,
         string memory contractVersion,
-        address wallet
+        address wallet,
+        address vault
     ) external initializer {
         __DepositManagerBase_initialize(contractName, contractVersion);
         _wallet = IWallet(wallet);
+        _vault = vault;
     }
 
     function instantiateDeposit(
@@ -80,15 +82,17 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
     function retrieveDeposit(
         DepositRequest calldata req
     ) external nonReentrant {
-        require(req.chainId == block.chainid, "Wrong chainId");
         require(msg.sender == req.spender, "Only spender can retrieve deposit");
 
+        // If _outstandingDepositHashes has request, implies all checks (e.g.
+        // chainId, nonce, etc) already passed upon instantiation
         uint256 depositHash = uint256(_hashDepositRequest(req));
         require(
             _outstandingDepositHashes[depositHash],
             "Cannot retrieve nonexistent deposit"
         );
 
+        // Update deposit hashes and escrow assets in contract
         _outstandingDepositHashes[depositHash] = false;
 
         AssetUtils.transferAssetTo(req.encodedAsset, req.spender, req.value);
@@ -107,33 +111,24 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
     ) external nonReentrant {
         uint256 preDepositGas = gasleft();
 
-        // If failure at deposit screen verification, depositor loses gas funds
-        require(req.chainId == block.chainid, "Wrong chainId");
-        require(
-            msg.sender == req.spender,
-            "Only spender can instantiate deposit"
-        );
-        require(req.nonce == _nonces[req.spender], "Invalid nonce");
-
-        address recovered = _recoverDepositRequestSig(req, signature);
-        require(_screeners[recovered], "!screener sig");
-
+        // If _outstandingDepositHashes has request, implies all checks (e.g.
+        // chainId, nonce, etc) already passed upon instantiation
         uint256 depositHash = uint256(_hashDepositRequest(req));
         require(
             _outstandingDepositHashes[depositHash],
             "Cannot retrieve nonexistent deposit"
         );
-        _outstandingDepositHashes[depositHash] = false;
 
-        // If failure in depositFunds (e.g. revoked approval), user still
-        // pays gas
-        string memory failureReason = "";
-        try _wallet.depositFunds(req) {
-            // If success, do nothing
-        } catch (bytes memory reason) {
-            failureReason = Utils.getRevertMsg(reason);
-        }
+        // Recover and check screener signature
+        address recovered = _recoverDepositRequestSig(req, signature);
+        require(_screeners[recovered], "!screener sig");
 
+        // Approve vault for assets and deposit funds
+        AssetUtils.approveAsset(req.encodedAsset, _vault, req.value);
+        _wallet.depositFunds(req);
+
+        // Compensate screener for gas
+        // TODO: should users be able to withdraw ETH from gas tank?
         uint256 postDepositGas = preDepositGas - gasleft();
         uint256 gasToTransfer = postDepositGas * req.gasPrice;
 
@@ -150,8 +145,7 @@ contract DepositManager is DepositManagerBase, ReentrancyGuardUpgradeable {
             req.spender,
             req.encodedAsset,
             req.value,
-            req.nonce,
-            failureReason
+            req.nonce
         );
     }
 }

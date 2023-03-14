@@ -11,6 +11,7 @@ import "./libs/Types.sol";
 import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library
+// TODO: do we need IWallet and IVault? Can probably remove
 contract Wallet is
     IWallet,
     BalanceManager,

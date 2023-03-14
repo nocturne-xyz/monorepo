@@ -91,12 +91,12 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             address(subtreeUpdateVerifier)
         );
 
+        vault.initialize(address(wallet));
+
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
         treeTest.initialize(hasherT3, hasherT6);
-
-        vault.initialize(address(wallet));
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
