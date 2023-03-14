@@ -28,17 +28,20 @@ export async function depositFunds(
     id: 0n,
   };
 
-  const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(asset);
+  const encodedAsset = AssetTrait.encode(asset);
 
   const commitments: bigint[] = [];
   for (let i = 0; i < amounts.length; i++) {
     console.log(`Depositing ${amounts[i]} of token ${token.address}`);
+    // TODO: use real chainId, nonce, gasPrice when we integrate depositManager
     const tx = await wallet.connect(eoa).depositFunds({
+      chainId: 0,
       spender: eoaAddress,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset,
       value: amounts[i],
       depositAddr: stealthAddress,
+      nonce: 0,
+      gasPrice: 0,
     });
     await tx.wait(1);
 

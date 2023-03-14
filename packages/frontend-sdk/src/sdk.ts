@@ -99,7 +99,7 @@ export class NocturneFrontendSDK {
   ): Promise<ContractTransaction> {
     const spender = await this.walletContract.signer.getAddress();
     const depositAddr = await this.getRandomizedAddr();
-    const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode({
+    const encodedAsset = AssetTrait.encode({
       assetType,
       assetAddr: assetAddress,
       id: assetId,
@@ -115,12 +115,15 @@ export class NocturneFrontendSDK {
       await tokenContract.setApprovalForAll(this.vaultContractAddress, true);
     }
 
+    // TODO: use real chainId, nonce, gasPrice when we integrate depositManager
     return this.walletContract.depositFunds({
+      chainId: 0,
       spender,
-      encodedAssetAddr,
-      encodedAssetId,
+      encodedAsset,
       value,
       depositAddr,
+      nonce: 0,
+      gasPrice: 0,
     });
   }
 
@@ -230,7 +233,6 @@ export class NocturneFrontendSDK {
       },
     });
   }
-
 
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
