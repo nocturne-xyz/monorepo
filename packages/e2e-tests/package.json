@@ -14,7 +14,7 @@
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
-    "graph-node": "docker compose -f ../../graph-node/docker/docker-compose.yml up",
+    "graph-node": "docker-compose -f ../../graph-node/docker/docker-compose.yml up",
     "test:e2e": "yarn prepare && yarn test:e2e:no-prepare",
     "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },

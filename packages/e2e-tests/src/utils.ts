@@ -4,6 +4,7 @@ import {
   SubtreeUpdateProver,
   computeOperationDigest,
 } from "@nocturne-xyz/sdk";
+import { spawn } from "child_process";
 import { RapidsnarkSubtreeUpdateProver } from "@nocturne-xyz/subtree-updater";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
@@ -96,6 +97,31 @@ export async function submitAndProcessOperation(
     console.log("Error getting operation status: ", err);
     throw err;
   }
+}
 
-  await sleep(5_000);
+export async function runCommand(
+  cmd: string,
+  cwd?: string
+): Promise<[string, string]> {
+  return new Promise((resolve, reject) => {
+    let stdout = "";
+    let stderr = "";
+    const child = spawn("sh", ["-c", cmd], { cwd, env: process.env });
+    child.stdout.on("data", (data) => {
+      const output = data.toString();
+      stdout += output;
+    });
+    child.stderr.on("data", (data) => {
+      const output = data.toString();
+      stderr += output;
+    });
+    child.on("error", () => {
+      console.error(stderr);
+      reject(stderr);
+    });
+    child.on("exit", () => {
+      console.log(stdout);
+      resolve([stdout, stderr]);
+    });
+  });
 }

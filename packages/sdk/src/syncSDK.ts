@@ -47,11 +47,12 @@ export async function syncSDK(
     decryptStateDiff(viewer, diff)
   );
 
-  // update merkle tree to current
+  // apply diffs
   for await (const diff of diffs.iter) {
     await db.applyStateDiff(diff);
   }
 
+  // update merkle tree to current
   if (!opts?.skipMerkleProverUpdates) {
     await updateMerkle(db, merkle);
   }

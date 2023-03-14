@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug in `NocturneDB` where `applyStateDiff` nullifies notes before, not after adding them
 - rename `NocturneContext` -> `NocturneWalletSDK`
 - replace `NocturneSyncer` with a function `syncSDK`
 - replace `OpProver` with a fucntion `proveOperation`
