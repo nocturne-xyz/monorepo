@@ -6,7 +6,7 @@ import "../../libs/Types.sol";
 import {DepositManagerBase} from "../../DepositManagerBase.sol";
 
 interface ITestDepositManagerBase {
-    function recoverDepositRequestSig(
+    function recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
     ) external view returns (address);
@@ -20,11 +20,11 @@ contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
         __DepositManagerBase_initialize(contractName, contractVersion);
     }
 
-    function recoverDepositRequestSig(
+    function recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
     ) external view override returns (address) {
-        return _recoverDepositRequestSig(req, signature);
+        return _recoverDepositRequestSigner(req, signature);
     }
 
     function nameHash() public view returns (bytes32) {

@@ -81,17 +81,22 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   );
 
   const perNoteAmount = ethers.utils.parseEther("10.0");
-  for (const { encodedAssetAddr, encodedAssetId } of encodedAssets) {
+  for (const encodedAsset of encodedAssets) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
+
+      // TODO: replace with real chainid, nonce, and gasPrice once deposit
+      // manager integrated
       await wallet.connect(deployer).depositFunds(
         {
-          encodedAssetAddr,
-          encodedAssetId,
+          chainId: 0,
+          encodedAsset,
           spender: deployer.address,
           value: perNoteAmount,
           depositAddr: addr,
+          nonce: 0,
+          gasCompensation: 0,
         },
         {
           gasLimit: 1000000,

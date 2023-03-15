@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `DepositManager` contract + unit tests up to process deposit failing because Wallet expects `msg.sender == deposit.spender` (to fix in followup PR)
 - Bump Open Zeppelin npm deps to `4.8.2`
 - Add json decoding utils for retrieving signed deposit request fixture
 - Add initial `DepositManagerBase` contract and fixture unit test

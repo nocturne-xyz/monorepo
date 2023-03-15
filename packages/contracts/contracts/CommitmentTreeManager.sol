@@ -161,8 +161,7 @@ contract CommitmentTreeManager is Initializable {
 
     function _handleRefundNote(
         StealthAddress memory refundAddr,
-        uint256 encodedAssetAddr,
-        uint256 encodedAssetId,
+        EncodedAsset memory encodedAsset,
         uint256 value
     ) internal {
         uint128 index = _merkle.getTotalCount();
@@ -170,8 +169,8 @@ contract CommitmentTreeManager is Initializable {
             ownerH1: refundAddr.h1X,
             ownerH2: refundAddr.h2X,
             nonce: index,
-            encodedAssetAddr: encodedAssetAddr,
-            encodedAssetId: encodedAssetId,
+            encodedAssetAddr: encodedAsset.encodedAssetAddr,
+            encodedAssetId: encodedAsset.encodedAssetId,
             value: value
         });
 
@@ -180,8 +179,8 @@ contract CommitmentTreeManager is Initializable {
         emit RefundProcessed(
             refundAddr,
             index,
-            encodedAssetAddr,
-            encodedAssetId,
+            encodedAsset.encodedAssetAddr,
+            encodedAsset.encodedAssetId,
             value,
             index
         );

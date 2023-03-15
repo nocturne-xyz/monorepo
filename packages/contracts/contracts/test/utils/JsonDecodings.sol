@@ -44,7 +44,7 @@ contract JsonDecodings is Test, ParseUtils {
         address spender;
         uint256 value;
         uint256 nonce;
-        uint256 gasPrice;
+        uint256 gasCompensation;
     }
 
     function loadFixtureJson(
@@ -106,7 +106,7 @@ contract JsonDecodings is Test, ParseUtils {
                     value: simpleTypes.value,
                     depositAddr: depositAddr,
                     nonce: simpleTypes.nonce,
-                    gasPrice: simpleTypes.gasPrice
+                    gasCompensation: simpleTypes.gasCompensation
                 }),
                 signature: signature
             });
@@ -119,8 +119,8 @@ contract JsonDecodings is Test, ParseUtils {
         address spender = json.readAddress(".depositRequest.spender");
         uint256 value = parseInt(json.readString(".depositRequest.value"));
         uint256 nonce = parseInt(json.readString(".depositRequest.nonce"));
-        uint256 gasPrice = parseInt(
-            json.readString(".depositRequest.gasPrice")
+        uint256 gasCompensation = parseInt(
+            json.readString(".depositRequest.gasCompensation")
         );
 
         return
@@ -129,7 +129,7 @@ contract JsonDecodings is Test, ParseUtils {
                 spender: spender,
                 value: value,
                 nonce: nonce,
-                gasPrice: gasPrice
+                gasCompensation: gasCompensation
             });
     }
 

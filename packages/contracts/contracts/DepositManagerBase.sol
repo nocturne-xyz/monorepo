@@ -11,7 +11,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
             )
         );
 
@@ -34,19 +34,21 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
-    function _recoverDepositRequestSig(
+    function _recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
     ) internal view returns (address) {
+        bytes32 digest = _computeDigest(req);
+        return ECDSAUpgradeable.recover(digest, signature);
+    }
+
+    function _computeDigest(
+        DepositRequest calldata req
+    ) public view returns (bytes32) {
         bytes32 domainSeparator = _domainSeparatorV4();
         bytes32 structHash = _hashDepositRequest(req);
 
-        bytes32 digest = ECDSAUpgradeable.toTypedDataHash(
-            domainSeparator,
-            structHash
-        );
-
-        return ECDSAUpgradeable.recover(digest, signature);
+        return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
     }
 
     function _hashDepositRequest(
@@ -62,7 +64,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
                     req.value,
                     _hashStealthAddress(req.depositAddr),
                     req.nonce,
-                    req.gasPrice
+                    req.gasCompensation
                 )
             );
     }

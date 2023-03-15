@@ -9,5 +9,5 @@ interface IWallet {
         Bundle calldata bundle
     ) external returns (OperationResult[] memory opResults);
 
-    function depositFunds(Deposit calldata deposit) external;
+    function depositFunds(DepositRequest calldata deposit) external;
 }

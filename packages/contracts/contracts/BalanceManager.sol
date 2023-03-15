@@ -123,15 +123,10 @@ contract BalanceManager is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    function _makeDeposit(Deposit calldata deposit) internal {
+    function _makeDeposit(DepositRequest calldata deposit) internal {
         StealthAddress calldata depositAddr = deposit.depositAddr;
 
-        _handleRefundNote(
-            depositAddr,
-            deposit.encodedAssetAddr,
-            deposit.encodedAssetId,
-            deposit.value
-        );
+        _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
 
         _vault.makeDeposit(deposit);
     }
@@ -256,12 +251,7 @@ contract BalanceManager is
         uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
         if (value != 0) {
             AssetUtils.transferAssetTo(encodedAsset, address(_vault), value);
-            _handleRefundNote(
-                refundAddr,
-                encodedAsset.encodedAssetAddr,
-                encodedAsset.encodedAssetId,
-                value
-            );
+            _handleRefundNote(refundAddr, encodedAsset, value);
         }
     }
 }

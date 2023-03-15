@@ -60,7 +60,7 @@ function toObject(obj: any) {
       h2Y: 5n,
     },
     nonce: 0n,
-    gasPrice: 50n,
+    gasCompensation: 50n,
   };
 
   const signature = await signDepositRequest(signer, domain, depositRequest);

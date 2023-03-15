@@ -119,16 +119,7 @@ struct DepositRequest {
     uint256 value;
     StealthAddress depositAddr;
     uint256 nonce;
-    uint256 gasPrice;
-}
-
-// TODO: remove after deposit screener work finished
-struct Deposit {
-    address spender;
-    uint256 encodedAssetAddr;
-    uint256 encodedAssetId;
-    uint256 value;
-    StealthAddress depositAddr;
+    uint256 gasCompensation;
 }
 
 library BundleLib {

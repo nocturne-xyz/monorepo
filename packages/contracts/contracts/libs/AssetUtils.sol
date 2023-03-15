@@ -172,6 +172,34 @@ library AssetUtils {
         }
     }
 
+    /**
+      @dev Approve asset to spender for amount. Throws if unsuccssful.
+    */
+    function approveAsset(
+        EncodedAsset memory encodedAsset,
+        address spender,
+        uint256 amount
+    ) internal {
+        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
+            encodedAsset
+        );
+
+        if (assetType == AssetType.ERC20) {
+            require(
+                IERC20(assetAddr).approve(spender, amount),
+                "ERC20 approve failed"
+            );
+        } else if (assetType == AssetType.ERC721) {
+            // uncaught revert will be propagated
+            IERC721(assetAddr).approve(spender, id);
+        } else if (assetType == AssetType.ERC1155) {
+            // uncaught revert will be propagated
+            IERC1155(assetAddr).setApprovalForAll(spender, true);
+        } else {
+            revert("Invalid asset");
+        }
+    }
+
     function eq(
         EncodedAsset calldata assetA,
         EncodedAsset calldata assetB

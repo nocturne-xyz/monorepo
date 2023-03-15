@@ -8,5 +8,5 @@ export interface DepositRequest {
   value: bigint;
   depositAddr: StealthAddress;
   nonce: bigint;
-  gasPrice: bigint;
+  gasCompensation: bigint;
 }

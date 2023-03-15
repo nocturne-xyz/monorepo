@@ -11,6 +11,7 @@ import "./libs/Types.sol";
 import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library
+// TODO: do we need IWallet and IVault? Can probably remove
 contract Wallet is
     IWallet,
     BalanceManager,
@@ -43,7 +44,7 @@ contract Wallet is
         _;
     }
 
-    function depositFunds(Deposit calldata deposit) external override {
+    function depositFunds(DepositRequest calldata deposit) external override {
         require(deposit.spender == msg.sender, "Spender must be the sender");
 
         _makeDeposit(deposit);
@@ -81,7 +82,7 @@ contract Wallet is
                 opResults[i] = result;
             } catch (bytes memory reason) {
                 opResults[i] = WalletUtils.failOperationWithReason(
-                    WalletUtils.getRevertMsg(reason)
+                    Utils.getRevertMsg(reason)
                 );
             }
             emit OperationProcessed(
@@ -136,7 +137,7 @@ contract Wallet is
             opResult = result;
         } catch (bytes memory reason) {
             opResult = WalletUtils.failOperationWithReason(
-                WalletUtils.getRevertMsg(reason)
+                Utils.getRevertMsg(reason)
             );
         }
 
