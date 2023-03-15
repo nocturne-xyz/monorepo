@@ -34,7 +34,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
-    function _recoverDepositRequestSig(
+    function _recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
     ) internal view returns (address) {

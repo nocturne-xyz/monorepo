@@ -75,7 +75,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   beforeEach(async () => {
     docker = new Dockerode();
-    await sleep(5_000);
+    await sleep(10_000);
     hhContainer = await startHardhatNetwork(docker, {
       blockTime: 3_000,
       keys: KEYS,

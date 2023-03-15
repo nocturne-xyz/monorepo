@@ -41,7 +41,7 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
         );
 
         address recovered = ITestDepositManagerBase(fixture.contractAddress)
-            .recoverDepositRequestSig(
+            .recoverDepositRequestSigner(
                 fixture.depositRequest,
                 fixture.signature
             );

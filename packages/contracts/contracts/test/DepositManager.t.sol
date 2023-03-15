@@ -109,12 +109,12 @@ contract DepositManagerTest is Test, ParseUtils {
             10_000_000 // 10M gas comp
         );
 
-        // Deposit hash not yet marked true and gas tank empty
+        // Deposit hash not yet marked true and ETH balance empty
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
         assertEq(address(depositManager).balance, 0);
 
-        // Set ALICE balance to 100M gwei
+        // Set ALICE balance to 10M gwei
         vm.deal(ALICE, 10_000_000);
 
         vm.expectEmit(true, true, true, true);
@@ -133,7 +133,6 @@ contract DepositManagerTest is Test, ParseUtils {
         // Token escrowed by manager contract
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
-        // Gas tank updated
         console.log("Alice remaining eth:", ALICE.balance);
         assertEq(address(depositManager).balance, 10_000_000);
     }
@@ -345,6 +344,6 @@ contract DepositManagerTest is Test, ParseUtils {
         // followup PR will refactor Wallet, tests, and sdks to use deposit
         // manager
         vm.expectRevert("Spender must be the sender");
-        depositManager.processDeposit(deposit, signature, 10);
+        depositManager.processDeposit(deposit, signature);
     }
 }

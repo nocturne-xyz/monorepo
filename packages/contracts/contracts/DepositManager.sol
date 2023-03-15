@@ -98,6 +98,7 @@ contract DepositManager is
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
+        // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
         require(
             _outstandingDepositHashes[depositHash],
@@ -124,13 +125,13 @@ contract DepositManager is
 
     function processDeposit(
         DepositRequest calldata req,
-        bytes calldata signature,
-        uint256 gasPrice
+        bytes calldata signature
     ) external nonReentrant {
         uint256 preDepositGas = gasleft();
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
+        // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
         require(
             _outstandingDepositHashes[depositHash],
@@ -138,16 +139,18 @@ contract DepositManager is
         );
 
         // Recover and check screener signature
-        address recovered = _recoverDepositRequestSig(req, signature);
-        require(_screeners[recovered], "!screener sig");
+        address recoveredSigner = _recoverDepositRequestSigner(req, signature);
+        require(_screeners[recoveredSigner], "request signer !screener");
 
         // Approve vault for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, _vault, req.value);
         _wallet.depositFunds(req);
 
+        // NOTE: screener may be under-compensated for gas during spikes in
+        // demand
         uint256 gasUsed = preDepositGas - gasleft();
         uint256 actualGasComp = Utils.min(
-            gasUsed * gasPrice,
+            gasUsed * tx.gasprice,
             req.gasCompensation
         );
 
@@ -156,9 +159,9 @@ contract DepositManager is
         require(screenerSuccess, "Failed to send eth to screener");
 
         // Send back any remaining eth to user
-        uint256 remainingGas = req.gasCompensation - actualGasComp;
-        if (remainingGas > 0) {
-            (bool spenderSuccess, ) = req.spender.call{value: actualGasComp}(
+        uint256 remainingGasComp = req.gasCompensation - actualGasComp;
+        if (remainingGasComp > 0) {
+            (bool spenderSuccess, ) = req.spender.call{value: remainingGasComp}(
                 ""
             );
             require(spenderSuccess, "Failed to send eth back to user");
