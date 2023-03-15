@@ -34,8 +34,7 @@ import {
 import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
-// import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
-import { SubgraphConfig } from "./subgraph";
+import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS, KEYS_TO_WALLETS } from "./keys";
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
@@ -118,10 +117,6 @@ const docker = new Dockerode();
 export async function setupTestDeployment(
   config?: TestActorsConfig
 ): Promise<NocturneTestDeployment> {
-  // wait a bit to ensure old hardhat is torn down before this one goes up
-  // sometimes docker doesn't actually deallocate the port until a bit after dockerode says container is stopped
-  await sleep(5000);
-
   // hh node has to go up first,
   // then contracts,
   // then everything else can go up in any order
@@ -193,16 +188,16 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  // if (!config?.skip?.subgraph) {
-  //   const givenSubgraphConfig = config?.configs?.subgraph ?? {};
-  //   const subgraphConfig = {
-  //     ...defaultSubgraphConfig,
-  //     ...givenSubgraphConfig,
-  //     walletAddress: walletProxy.proxy,
-  //   };
+  if (!config?.skip?.subgraph) {
+    const givenSubgraphConfig = config?.configs?.subgraph ?? {};
+    const subgraphConfig = {
+      ...defaultSubgraphConfig,
+      ...givenSubgraphConfig,
+      walletAddress: walletProxy.proxy,
+    };
 
-  //   proms.push(startSubgraph(subgraphConfig));
-  // }
+    proms.push(startSubgraph(subgraphConfig));
+  }
 
   await Promise.all(proms);
 
@@ -222,18 +217,21 @@ export async function setupTestDeployment(
       proms.push(stopBundler());
     }
 
-    // if (!config?.skip?.subgraph) {
-    //   proms.push(stopSubgraph());
-    // }
+    if (!config?.skip?.subgraph) {
+      proms.push(stopSubgraph());
+    }
 
     await Promise.all(proms);
+
+    // wait for all of the actors to finish teardown before tearing down hh node
+    await sleep(10_000);
 
     // teardown hh node
     await hhContainer.stop();
     await hhContainer.remove();
 
-    // sleep for a bit for good measure
-    await sleep(3_000);
+    // wait a bit to ensure hh node is torn down before next test is allowed to run
+    await sleep(5_000);
   };
 
   return {

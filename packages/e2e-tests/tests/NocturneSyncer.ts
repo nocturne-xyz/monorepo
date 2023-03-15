@@ -33,10 +33,10 @@ describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
   syncTestSuite(SyncAdapterOption.RPC)
 );
-// describe(
-//   "Syncing NocturneWalletSDK with SubgraphSyncAdapter",
-//   syncTestSuite(SyncAdapterOption.SUBGRAPH)
-// );
+describe(
+  "Syncing NocturneWalletSDK with SubgraphSyncAdapter",
+  syncTestSuite(SyncAdapterOption.SUBGRAPH)
+);
 
 function syncTestSuite(syncAdapter: SyncAdapterOption) {
   return async () => {
