@@ -51,5 +51,4 @@ export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
 
 export async function stopSubgraph(): Promise<void> {
   await compose.down(GRAPH_NODE_COMPOSE_OPTS);
-  await sleep(10_000);
 }
