@@ -345,6 +345,6 @@ contract DepositManagerTest is Test, ParseUtils {
         // followup PR will refactor Wallet, tests, and sdks to use deposit
         // manager
         vm.expectRevert("Spender must be the sender");
-        depositManager.processDeposit(deposit, signature);
+        depositManager.processDeposit(deposit, signature, 10);
     }
 }

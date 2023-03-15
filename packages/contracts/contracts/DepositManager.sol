@@ -124,8 +124,11 @@ contract DepositManager is
 
     function processDeposit(
         DepositRequest calldata req,
-        bytes calldata signature
+        bytes calldata signature,
+        uint256 gasPrice
     ) external nonReentrant {
+        uint256 preDepositGas = gasleft();
+
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
@@ -142,9 +145,24 @@ contract DepositManager is
         AssetUtils.approveAsset(req.encodedAsset, _vault, req.value);
         _wallet.depositFunds(req);
 
+        uint256 gasUsed = preDepositGas - gasleft();
+        uint256 actualGasComp = Utils.min(
+            gasUsed * gasPrice,
+            req.gasCompensation
+        );
+
         // Compensate screener for gas
-        (bool success, ) = msg.sender.call{value: req.gasCompensation}("");
-        require(success, "Failed to send eth to screener");
+        (bool screenerSuccess, ) = msg.sender.call{value: actualGasComp}("");
+        require(screenerSuccess, "Failed to send eth to screener");
+
+        // Send back any remaining eth to user
+        uint256 remainingGas = req.gasCompensation - actualGasComp;
+        if (remainingGas > 0) {
+            (bool spenderSuccess, ) = req.spender.call{value: actualGasComp}(
+                ""
+            );
+            require(spenderSuccess, "Failed to send eth back to user");
+        }
 
         emit DepositProcessed(
             req.spender,
