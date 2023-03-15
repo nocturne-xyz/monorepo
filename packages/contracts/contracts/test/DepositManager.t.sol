@@ -106,16 +106,16 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            0 // 0 gas price
+            10_000_000 // 10M gas comp
         );
 
         // Deposit hash not yet marked true and gas tank empty
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
-        assertEq(depositManager._gasTankBalances(ALICE), 0);
+        assertEq(address(depositManager).balance, 0);
 
         // Set ALICE balance to 100M gwei
-        vm.deal(ALICE, 100_000_000);
+        vm.deal(ALICE, 10_000_000);
 
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
@@ -134,7 +134,8 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         // Gas tank updated
-        assertEq(depositManager._gasTankBalances(ALICE), 10_000_000);
+        console.log("Alice remaining eth:", ALICE.balance);
+        assertEq(address(depositManager).balance, 10_000_000);
     }
 
     function testInstantiateDepositFailureWrongChainId() public {
@@ -156,7 +157,7 @@ contract DepositManagerTest is Test, ParseUtils {
             value: RESERVE_AMOUNT / 2,
             depositAddr: NocturneUtils.defaultStealthAddress(),
             nonce: depositManager._nonces(ALICE),
-            gasPrice: 0 // 0 gas price
+            gasCompensation: 0 // 0 gas comp
         });
 
         vm.expectRevert("Wrong chainId");
@@ -224,19 +225,24 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            0
+            10_000_000
         );
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
 
         // Call instantiateDeposit
+        vm.deal(ALICE, 10_000_000);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit(deposit);
+        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
 
         // Token escrowed by manager contract
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
+
+        // Eth received
+        assertEq(address(depositManager).balance, 10_000_000);
+        assertEq(ALICE.balance, 0);
 
         // Call retrieveDeposit
         vm.expectEmit(true, true, true, true);
@@ -255,6 +261,10 @@ contract DepositManagerTest is Test, ParseUtils {
         // Token sent back to user
         assertEq(token.balanceOf(address(depositManager)), 0);
         assertEq(token.balanceOf(address(ALICE)), deposit.value);
+
+        // Eth gas sent back to user
+        assertEq(address(depositManager).balance, 0);
+        assertEq(ALICE.balance, 10_000_000);
     }
 
     function testRetrieveDepositFailureNotSpender() public {
@@ -274,7 +284,6 @@ contract DepositManagerTest is Test, ParseUtils {
             depositManager._nonces(ALICE),
             0
         );
-        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
 
         // Call instantiateDeposit
         vm.prank(ALICE);
@@ -321,11 +330,12 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10 // gasPrice of 10
+            10_000_000 // 10M gas comp
         );
 
+        vm.deal(ALICE, 10_000_000);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit(deposit);
+        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);

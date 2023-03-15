@@ -119,7 +119,7 @@ struct DepositRequest {
     uint256 value;
     StealthAddress depositAddr;
     uint256 nonce;
-    uint256 gasPrice;
+    uint256 gasCompensation;
 }
 
 library BundleLib {

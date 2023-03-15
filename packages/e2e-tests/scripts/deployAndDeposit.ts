@@ -96,7 +96,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
           value: perNoteAmount,
           depositAddr: addr,
           nonce: 0,
-          gasPrice: 0,
+          gasCompensation: 0,
         },
         {
           gasLimit: 1000000,

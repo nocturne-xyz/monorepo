@@ -11,7 +11,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasPrice)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
             )
         );
 
@@ -64,7 +64,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
                     req.value,
                     _hashStealthAddress(req.depositAddr),
                     req.nonce,
-                    req.gasPrice
+                    req.gasCompensation
                 )
             );
     }

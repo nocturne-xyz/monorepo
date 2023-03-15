@@ -16,7 +16,7 @@ export const DEPOSIT_REQUEST_TYPES = {
     { name: "value", type: "uint256" },
     { name: "depositAddr", type: "StealthAddress" },
     { name: "nonce", type: "uint256" },
-    { name: "gasPrice", type: "uint256" },
+    { name: "gasCompensation", type: "uint256" },
   ],
   EncodedAsset: [
     { name: "encodedAssetAddr", type: "uint256" },

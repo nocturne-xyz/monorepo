@@ -218,7 +218,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 value: PER_NOTE_AMOUNT,
                 depositAddr: NocturneUtils.defaultStealthAddress(),
                 nonce: 0,
-                gasPrice: 0
+                gasCompensation: 0
             })
         );
         vm.stopPrank();

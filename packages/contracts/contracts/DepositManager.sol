@@ -19,7 +19,6 @@ contract DepositManager is
     address public _vault;
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
-    mapping(address => uint256) public _gasTankBalances;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
 
     event ScreenerPermissionSet(address screener, bool permission);
@@ -71,11 +70,12 @@ contract DepositManager is
         require(req.chainId == block.chainid, "Wrong chainId");
         require(msg.sender == req.spender, "Only spender can start deposit");
         require(req.nonce == _nonces[req.spender], "Invalid nonce");
+        require(
+            msg.value == req.gasCompensation,
+            "msg.value != req.gasCompensation"
+        );
 
         bytes32 depositHash = _hashDepositRequest(req);
-
-        // Update gas tank
-        _gasTankBalances[msg.sender] += msg.value;
 
         // Update deposit mapping and nonces
         _outstandingDepositHashes[depositHash] = true;
@@ -107,7 +107,12 @@ contract DepositManager is
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
 
+        // Send back asset
         AssetUtils.transferAssetTo(req.encodedAsset, req.spender, req.value);
+
+        // Send back eth gas compensation
+        (bool success, ) = msg.sender.call{value: req.gasCompensation}("");
+        require(success, "Failed to send eth back to user");
 
         emit DepositRetrieved(
             req.spender,
@@ -121,8 +126,6 @@ contract DepositManager is
         DepositRequest calldata req,
         bytes calldata signature
     ) external nonReentrant {
-        uint256 preDepositGas = gasleft();
-
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
@@ -140,17 +143,7 @@ contract DepositManager is
         _wallet.depositFunds(req);
 
         // Compensate screener for gas
-        // TODO: should users be able to withdraw ETH from gas tank?
-        uint256 postDepositGas = preDepositGas - gasleft();
-        uint256 gasToTransfer = postDepositGas * req.gasPrice;
-
-        uint256 actualGas = Utils.min(
-            gasToTransfer,
-            _gasTankBalances[req.spender]
-        );
-        _gasTankBalances[req.spender] -= actualGas; // before transfer to avoid reentrancy
-
-        (bool success, ) = msg.sender.call{value: actualGas}("");
+        (bool success, ) = msg.sender.call{value: req.gasCompensation}("");
         require(success, "Failed to send eth to screener");
 
         emit DepositProcessed(

@@ -123,7 +123,7 @@ export class NocturneFrontendSDK {
       value,
       depositAddr,
       nonce: 0,
-      gasPrice: 0,
+      gasCompensation: 0,
     });
   }
 
