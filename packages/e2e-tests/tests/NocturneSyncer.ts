@@ -33,10 +33,10 @@ describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
   syncTestSuite(SyncAdapterOption.RPC)
 );
-// describe(
-//   "Syncing NocturneWalletSDK with SubgraphSyncAdapter",
-//   syncTestSuite(SyncAdapterOption.SUBGRAPH)
-// );
+describe(
+  "Syncing NocturneWalletSDK with SubgraphSyncAdapter",
+  syncTestSuite(SyncAdapterOption.SUBGRAPH)
+);
 
 function syncTestSuite(syncAdapter: SyncAdapterOption) {
   return async () => {
@@ -115,6 +115,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [100n, 100n]
       );
       // wait for subgraph to sync
+      await 1_0000;
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -172,6 +173,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [80n, 100n]
       );
+      // wait for subgraph to sync
+      await 1_0000;
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
