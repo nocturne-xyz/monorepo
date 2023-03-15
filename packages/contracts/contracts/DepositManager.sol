@@ -5,6 +5,7 @@ import {IWallet} from "./interfaces/IWallet.sol";
 import {DepositManagerBase} from "./DepositManagerBase.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./libs/Types.sol";
 import "./libs/AssetUtils.sol";
@@ -111,9 +112,8 @@ contract DepositManager is
         // Send back asset
         AssetUtils.transferAssetTo(req.encodedAsset, req.spender, req.value);
 
-        // Send back eth gas compensation
-        (bool success, ) = msg.sender.call{value: req.gasCompensation}("");
-        require(success, "Failed to send eth back to user");
+        // Send back eth gas compensation, revert propagated
+        AddressUpgradeable.sendValue(payable(msg.sender), req.gasCompensation);
 
         emit DepositRetrieved(
             req.spender,
@@ -153,18 +153,19 @@ contract DepositManager is
             gasUsed * tx.gasprice,
             req.gasCompensation
         );
-
-        // Compensate screener for gas
-        (bool screenerSuccess, ) = msg.sender.call{value: actualGasComp}("");
-        require(screenerSuccess, "Failed to send eth to screener");
+        if (actualGasComp > 0) {
+            // Revert propagated
+            AddressUpgradeable.sendValue(payable(msg.sender), actualGasComp);
+        }
 
         // Send back any remaining eth to user
         uint256 remainingGasComp = req.gasCompensation - actualGasComp;
         if (remainingGasComp > 0) {
-            (bool spenderSuccess, ) = req.spender.call{value: remainingGasComp}(
-                ""
+            // Revert propagated
+            AddressUpgradeable.sendValue(
+                payable(req.spender),
+                remainingGasComp
             );
-            require(spenderSuccess, "Failed to send eth back to user");
         }
 
         emit DepositProcessed(
