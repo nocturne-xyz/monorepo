@@ -91,46 +91,7 @@ contract DepositManagerTest is Test, ParseUtils {
         }
     }
 
-    function testInstantiateDepositSuccessNoGasPayment() public {
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
-
-        // Approve 25M tokens for deposit
-        vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
-
-        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
-            ALICE,
-            address(token),
-            RESERVE_AMOUNT / 2,
-            NocturneUtils.ERC20_ID,
-            NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
-            0 // 0 gas price
-        );
-
-        // Deposit hash not yet marked true
-        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
-        assertFalse(depositManager._outstandingDepositHashes(depositHash));
-
-        vm.expectEmit(true, true, true, true);
-        emit DepositInstantiated(
-            deposit.spender,
-            deposit.encodedAsset,
-            deposit.value,
-            deposit.nonce
-        );
-        vm.prank(ALICE);
-        depositManager.instantiateDeposit(deposit);
-
-        // Deposit hash marked true
-        assertTrue(depositManager._outstandingDepositHashes(depositHash));
-
-        // Token escrowed by manager contract
-        assertEq(token.balanceOf(address(depositManager)), deposit.value);
-    }
-
-    function testInstantiateDepositSuccessWithGasPayment() public {
+    function testInstantiateDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -156,7 +117,6 @@ contract DepositManagerTest is Test, ParseUtils {
         // Set ALICE balance to 100M gwei
         vm.deal(ALICE, 100_000_000);
 
-        // Call instantiateDeposit with 10M gwei
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
             deposit.spender,

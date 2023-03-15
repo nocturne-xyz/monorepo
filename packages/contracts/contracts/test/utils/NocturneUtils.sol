@@ -64,8 +64,6 @@ library NocturneUtils {
             id
         );
 
-        // TODO: allow passing of chainId, nonce, and gasPrice once
-        // DepositManager integrated
         return
             DepositRequest({
                 chainId: block.chainid,

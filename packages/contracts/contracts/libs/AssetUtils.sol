@@ -173,7 +173,7 @@ library AssetUtils {
     }
 
     /**
-      @dev Transfer asset from spender. Throws if unsuccssful.
+      @dev Approve asset to spender for amount. Throws if unsuccssful.
     */
     function approveAsset(
         EncodedAsset memory encodedAsset,

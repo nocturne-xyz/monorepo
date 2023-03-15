@@ -85,6 +85,9 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
+
+      // TODO: replace with real chainid, nonce, and gasPrice once deposit
+      // manager integrated
       await wallet.connect(deployer).depositFunds(
         {
           chainId: 0,
