@@ -58,7 +58,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let joinSplitProver: JoinSplitProver;
 
   beforeEach(async () => {
-    const testDeployment = await setupTestDeployment();
+    const testDeployment = await setupTestDeployment({
+      skip: { subgraph: true },
+    });
     provider = testDeployment.provider;
     teardown = testDeployment.teardown;
     wallet = testDeployment.wallet;
