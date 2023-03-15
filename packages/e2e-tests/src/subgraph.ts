@@ -1,6 +1,7 @@
 import { sleep, runCommand } from "./utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as compose from "docker-compose";
+import * as fs from "fs";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
@@ -21,19 +22,7 @@ export interface SubgraphConfig {
 export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   // clear data
   console.log("clearing graph node data...");
-  try {
-    const [stdout, stderr] = await runCommand(
-      `rm -rf data`,
-      GRAPH_NODE_COMPOSE_CWD
-    );
-    console.log(stdout);
-    if (stderr) {
-      console.error(stderr);
-    }
-  } catch (err) {
-    console.error(err);
-    throw err;
-  }
+  await fs.promises.rm(`${GRAPH_NODE_COMPOSE_CWD}/data`, { recursive: true });
 
   // start graph node
   console.log("starting graph node...");
