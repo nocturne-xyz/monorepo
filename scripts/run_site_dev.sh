@@ -29,11 +29,6 @@ yarn start &
 SNAP_PID=$!
 popd
 
-# clear graph node state
-pushd graph-node/docker
-rm -rf data
-popd
-
 # start the hardhat node
 pushd packages/e2e-tests
 echo "starting hardhat node..."

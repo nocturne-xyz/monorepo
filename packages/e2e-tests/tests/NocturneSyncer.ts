@@ -115,7 +115,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [100n, 100n]
       );
       // wait for subgraph to sync
-      await 1_0000;
+      await sleep(1_0000);
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -174,7 +174,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [80n, 100n]
       );
       // wait for subgraph to sync
-      await 1_0000;
+      await sleep(1_0000);
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
