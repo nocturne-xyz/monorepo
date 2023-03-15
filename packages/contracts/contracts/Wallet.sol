@@ -2,34 +2,34 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "./upgrade/Versioned.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Versioned} from "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
-import "./interfaces/IVault.sol";
-import "./libs/WalletUtils.sol";
+import {IVault} from "./interfaces/IVault.sol";
+import {Utils} from "./libs/Utils.sol";
+import {WalletUtils} from "./libs/WalletUtils.sol";
+import {Groth16} from "./libs/WalletUtils.sol";
+import {BalanceManager} from "./BalanceManager.sol";
 import "./libs/Types.sol";
-import "./BalanceManager.sol";
 
 // TODO: use SafeERC20 library
 // TODO: do we need IWallet and IVault? Can probably remove
 contract Wallet is
     IWallet,
     BalanceManager,
-    Versioned,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable,
+    Versioned
 {
     using OperationLib for Operation;
+
+    mapping(address => bool) public _depositSources;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    function initialize(
-        address vault,
-        address joinSplitVerifier,
-        address subtreeUpdateVerifier
-    ) external initializer {
-        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
-    }
+    event DepositSourcePermissionSet(address source, bool permission);
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -38,6 +38,23 @@ contract Wallet is
         bool[] callSuccesses,
         bytes[] callResults
     );
+
+    function initialize(
+        address vault,
+        address joinSplitVerifier,
+        address subtreeUpdateVerifier
+    ) external initializer {
+        __Ownable_init();
+        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+    }
+
+    function setDepositSourcePermission(
+        address source,
+        bool permission
+    ) external onlyOwner {
+        _depositSources[source] = permission;
+        emit DepositSourcePermissionSet(source, permission);
+    }
 
     modifier onlyThis() {
         require(msg.sender == address(this), "Only the Wallet can call this");
