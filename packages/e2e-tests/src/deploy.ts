@@ -126,6 +126,9 @@ export async function setupTestDeployment(
   const hhConfig = { ...defaultHardhatNetworkConfig, ...givenHHConfig };
   const hhContainer = await startHardhatNetwork(docker, hhConfig);
 
+  // sliep while the container starts up
+  await sleep(5_000);
+
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
@@ -224,7 +227,7 @@ export async function setupTestDeployment(
     await Promise.all(proms);
 
     // wait for all of the actors to finish teardown before tearing down hh node
-    await sleep(10_000);
+    await sleep(5_000);
 
     // teardown hh node
     await hhContainer.stop();
