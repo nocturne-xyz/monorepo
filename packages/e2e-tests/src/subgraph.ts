@@ -11,11 +11,13 @@ const GRAPH_NODE_COMPOSE_OPTS: compose.IDockerComposeOptions = {
 
 export const SUBGRAPH_CWD = `${ROOT_DIR}/packages/subgraph`;
 
-interface SubgraphConfig {
+export interface SubgraphConfig {
   walletAddress: string;
   startBlock: number;
 }
 
+// NOTE: `_config` here is actually unused - it just uses what's currently hardcoded in `subgraph.yaml`
+// TODO: parse / modify / backup subgraph.yaml or find a way to do this through CLI (doubtful) so we can actually set this config
 export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   // clear data
   console.log("clearing graph node data...");

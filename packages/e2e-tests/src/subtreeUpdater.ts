@@ -7,7 +7,7 @@ const ROOT_DIR = findWorkspaceRoot()!;
 
 const SUBTREE_UPDATER_IMAGE = "mock-subtree-updater";
 
-interface SubtreeUpdaterConfig {
+export interface SubtreeUpdaterConfig {
   walletAddress: string;
   rpcUrl: string;
   txSignerKey: string;

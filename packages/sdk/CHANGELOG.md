@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Fix `SubgraphSyncAdapter` not including `endBlock` in the range over which it emits diffs
 - fix bug in `NocturneDB` where `applyStateDiff` nullifies notes before, not after adding them
 - rename `NocturneContext` -> `NocturneWalletSDK`
 - replace `NocturneSyncer` with a function `syncSDK`

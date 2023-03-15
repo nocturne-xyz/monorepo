@@ -74,7 +74,7 @@ query fetchNotes($fromBlock: Int!, $toBlock: Int!) {
 }`;
 
 // gets notes or encrypted notes for a given block range
-// the range is exclusive - i.e. [fromBlock, toBlock)
+// the range is exclusive - i.e. [fromBlock, toBlock]
 export async function fetchNotes(
   endpoint: string,
   fromBlock: number,
@@ -90,7 +90,7 @@ export async function fetchNotes(
         query: notesQuery,
         variables: {
           fromBlock,
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });
@@ -225,7 +225,7 @@ export async function fetchLastCommittedMerkleIndex(
       body: JSON.stringify({
         query: subtreeCommitQuery,
         variables: {
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });
@@ -292,7 +292,7 @@ export async function fetchNullifiers(
         query: nullifiersQuery,
         variables: {
           fromBlock,
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });

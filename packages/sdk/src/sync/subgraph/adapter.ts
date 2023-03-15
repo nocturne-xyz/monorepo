@@ -61,7 +61,7 @@ export class SubgraphSyncAdapter implements SyncAdapter {
 
         yield stateDiff;
 
-        from = to;
+        from = to + 1;
       }
     };
 
