@@ -21,13 +21,18 @@ export interface SubgraphConfig {
 export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   // clear data
   console.log("clearing graph node data...");
-  let [stdout, stderr] = await runCommand(
-    `rm -rf data`,
-    GRAPH_NODE_COMPOSE_CWD
-  );
-  console.log(stdout);
-  if (stderr) {
-    console.error(stderr);
+  try {
+    const [stdout, stderr] = await runCommand(
+      `rm -rf data`,
+      GRAPH_NODE_COMPOSE_CWD
+    );
+    console.log(stdout);
+    if (stderr) {
+      console.error(stderr);
+    }
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 
   // start graph node
@@ -38,14 +43,19 @@ export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   await sleep(20_000);
 
   // deploy subgraph
-  console.log("deploying subgraph...");
-  [stdout, stderr] = await runCommand(
-    `yarn create-local && yarn deploy-local`,
-    SUBGRAPH_CWD
-  );
-  console.log(stdout);
-  if (stderr) {
-    console.error(stderr);
+  try {
+    console.log("deploying subgraph...");
+    const [stdout, stderr] = await runCommand(
+      `yarn create-local && yarn deploy-local`,
+      SUBGRAPH_CWD
+    );
+    console.log(stdout);
+    if (stderr) {
+      console.error(stderr);
+    }
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 }
 
