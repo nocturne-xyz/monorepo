@@ -34,7 +34,8 @@ import {
 import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
-import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
+// import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
+import { SubgraphConfig } from "./subgraph";
 import { KEYS, KEYS_TO_WALLETS } from "./keys";
 import Dockerode from "dockerode";
 import { sleep } from "./utils";
@@ -192,16 +193,16 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  if (!config?.skip?.subgraph) {
-    const givenSubgraphConfig = config?.configs?.subgraph ?? {};
-    const subgraphConfig = {
-      ...defaultSubgraphConfig,
-      ...givenSubgraphConfig,
-      walletAddress: walletProxy.proxy,
-    };
+  // if (!config?.skip?.subgraph) {
+  //   const givenSubgraphConfig = config?.configs?.subgraph ?? {};
+  //   const subgraphConfig = {
+  //     ...defaultSubgraphConfig,
+  //     ...givenSubgraphConfig,
+  //     walletAddress: walletProxy.proxy,
+  //   };
 
-    proms.push(startSubgraph(subgraphConfig));
-  }
+  //   proms.push(startSubgraph(subgraphConfig));
+  // }
 
   await Promise.all(proms);
 
@@ -221,9 +222,9 @@ export async function setupTestDeployment(
       proms.push(stopBundler());
     }
 
-    if (!config?.skip?.subgraph) {
-      proms.push(stopSubgraph());
-    }
+    // if (!config?.skip?.subgraph) {
+    //   proms.push(stopSubgraph());
+    // }
 
     await Promise.all(proms);
 
