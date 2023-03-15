@@ -57,14 +57,19 @@ contract Wallet is
     }
 
     modifier onlyThis() {
-        require(msg.sender == address(this), "Only the Wallet can call this");
+        require(msg.sender == address(this), "Only wallet");
         _;
     }
 
-    function depositFunds(DepositRequest calldata deposit) external override {
-        require(deposit.spender == msg.sender, "Spender must be the sender");
+    modifier onlyDepositSource() {
+        require(_depositSources[msg.sender], "Only deposit source");
+        _;
+    }
 
-        _makeDeposit(deposit);
+    function depositFunds(
+        DepositRequest calldata deposit
+    ) external override onlyDepositSource {
+        _makeDeposit(deposit, msg.sender);
     }
 
     /**

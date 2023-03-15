@@ -96,7 +96,7 @@ contract BalanceManagerTest is Test {
         token.approve(address(vault), amount);
 
         vm.prank(recipient);
-        balanceManager.makeDeposit(deposit);
+        balanceManager.makeDeposit(deposit, recipient);
     }
 
     function testOnErc721ReceivedEnteredExecute() public {

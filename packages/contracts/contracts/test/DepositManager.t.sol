@@ -82,6 +82,7 @@ contract DepositManagerTest is Test, ParseUtils {
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
+        wallet.setDepositSourcePermission(address(depositManager), true);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -340,10 +341,7 @@ contract DepositManagerTest is Test, ParseUtils {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
-        // TODO: Wallet contract still expects msg.sender to be depositor,
-        // followup PR will refactor Wallet, tests, and sdks to use deposit
-        // manager
-        vm.expectRevert("Spender must be the sender");
+        // TODO: add checks below
         depositManager.processDeposit(deposit, signature);
     }
 }
