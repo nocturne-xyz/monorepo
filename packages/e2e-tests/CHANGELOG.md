@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add check that bundler is compensated for gas to e2e test
 - `deployContractsWithDummyAdmins` passes in alice and bob's addresses as whitelisted screeners so they can deposit (temporary until we have designated screening actor)
 - refactor `deploy.ts` to separate deploying test node / contracts / actors from setting up client
 - add subgraph E2E tests

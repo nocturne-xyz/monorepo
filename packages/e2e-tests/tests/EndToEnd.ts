@@ -46,6 +46,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let provider: ethers.providers.JsonRpcProvider;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
+  let bundlerEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
   let wallet: Wallet;
@@ -69,10 +70,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     ({ provider, teardown, wallet, vault, depositManager } = testDeployment);
 
-    const [deployerEoa, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
+    [bundlerEoa, aliceEoa, bobEoa] = KEYS_TO_WALLETS(provider);
 
-    aliceEoa = _aliceEoa;
-    bobEoa = _bobEoa;
+    aliceEoa = aliceEoa;
+    bobEoa = bobEoa;
 
     ({
       nocturneDBAlice,
@@ -82,11 +83,11 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       joinSplitProver,
     } = await setupTestClient(testDeployment.contractDeployment, provider));
 
-    erc20Token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+    erc20Token = await new SimpleERC20Token__factory(bundlerEoa).deploy();
     console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
-    erc721Token = await new SimpleERC721Token__factory(deployerEoa).deploy();
+    erc721Token = await new SimpleERC721Token__factory(bundlerEoa).deploy();
     console.log("ERC721 token deployed at: ", erc721Token.address);
-    erc1155Token = await new SimpleERC1155Token__factory(deployerEoa).deploy();
+    erc1155Token = await new SimpleERC1155Token__factory(bundlerEoa).deploy();
     console.log("ERC1155 token deployed at: ", erc1155Token.address);
   });
 
@@ -159,6 +160,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .action(erc20Token.address, encodedFunction)
       .build();
 
+    const bundlerBalanceBefore = await bundlerEoa.getBalance();
+
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
@@ -217,6 +220,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       // That one note should contain the tokens sent privately from alice
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
+
+      // check that bundler got compensated for gas, at least enough that it breaks even
+      const bundlerBalanceAfter = await bundlerEoa.getBalance();
+      // for some reason, mocha `.gte` doesn't work here
+      expect(bundlerBalanceAfter.toBigInt() >= bundlerBalanceBefore.toBigInt())
+        .to.be.true;
     };
 
     await testE2E(operationRequest, contractChecks, offchainChecks);
