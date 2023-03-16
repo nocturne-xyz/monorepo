@@ -24,7 +24,6 @@ export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   console.log("starting graph node...");
   const res = await compose.upAll(GRAPH_NODE_COMPOSE_OPTS);
   console.log(res);
-  // await runCommand("yarn graph-node-up");
   await sleep(20_000);
 
   // deploy subgraph

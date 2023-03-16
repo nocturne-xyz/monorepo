@@ -113,26 +113,16 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
 const docker = new Dockerode();
 
 // returns an async function that should be called for teardown
-//
+// if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
-  config?: TestActorsConfig
+  config: TestActorsConfig
 ): Promise<NocturneTestDeployment> {
   // hh node has to go up first,
   // then contracts,
   // then everything else can go up in any order
 
-  const includeBundler = config?.include
-    ? config.include.bundler ?? false
-    : true;
-  const includeSubtreeUpdater = config?.include
-    ? config.include.subtreeUpdater ?? false
-    : true;
-  const includeSubgraph = config?.include
-    ? config.include.subgraph ?? false
-    : true;
-
   // spin up hh node
-  const givenHHConfig = config?.configs?.hhNode ?? {};
+  const givenHHConfig = config.configs?.hhNode ?? {};
   const hhConfig = { ...DEFAULT_HH_NETWORK_CONFIG, ...givenHHConfig };
   const hhContainer = await startHardhatNetwork(docker, hhConfig);
 
@@ -159,8 +149,8 @@ export async function setupTestDeployment(
   // deploy everything else
   const proms = [];
 
-  if (includeBundler) {
-    const givenBundlerConfig = config?.configs?.bundler ?? {};
+  if (config.include?.bundler) {
+    const givenBundlerConfig = config.configs?.bundler ?? {};
     const bundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
@@ -172,8 +162,8 @@ export async function setupTestDeployment(
   }
 
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
-  if (includeSubtreeUpdater) {
-    const givenSubtreeUpdaterConfig = config?.configs?.subtreeUpdater ?? {};
+  if (config.include?.subtreeUpdater) {
+    const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
     const subtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
@@ -201,8 +191,8 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  if (includeSubgraph) {
-    const givenSubgraphConfig = config?.configs?.subgraph ?? {};
+  if (config.include?.subgraph) {
+    const givenSubgraphConfig = config.configs?.subgraph ?? {};
     const subgraphConfig = {
       ...DEFAULT_SUBGRAPH_CONFIG,
       ...givenSubgraphConfig,
@@ -226,11 +216,11 @@ export async function setupTestDeployment(
       proms.push(teardown());
     }
 
-    if (includeBundler) {
+    if (config.include?.bundler) {
       proms.push(stopBundler());
     }
 
-    if (includeSubgraph) {
+    if (config.include?.subgraph) {
       proms.push(stopSubgraph());
     }
 
