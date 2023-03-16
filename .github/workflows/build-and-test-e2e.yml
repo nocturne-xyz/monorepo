@@ -4,7 +4,10 @@ jobs:
   build-and-test-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: checkout repo and get submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Cache dependencies
         uses: actions/cache@v2
         with:

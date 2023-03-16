@@ -19,8 +19,14 @@ export async function depositFunds(
 ): Promise<bigint[]> {
   const eoaAddress = await eoa.getAddress();
   const total = amounts.reduce((sum, a) => sum + a);
-  token.reserveTokens(eoaAddress, total);
-  await token.connect(eoa).approve(vault.address, total);
+  {
+    const tx = await token.reserveTokens(eoaAddress, total);
+    await tx.wait(1);
+  }
+  {
+    const tx = await token.connect(eoa).approve(vault.address, total);
+    await tx.wait(1);
+  }
 
   const asset = {
     assetType: AssetType.ERC20,

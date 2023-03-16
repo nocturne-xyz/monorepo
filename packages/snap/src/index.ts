@@ -18,7 +18,7 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 
-const WALLET_ADDRESS = "0xA3183498b579bd228aa2B62101C40CC1da978F24";
+const WALLET_ADDRESS = "";
 const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";

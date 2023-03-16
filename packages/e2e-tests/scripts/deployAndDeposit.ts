@@ -1,6 +1,6 @@
-import { setupNocturne } from "../src/deploy";
+import { deployContractsWithDummyAdmin } from "../src/deploy";
 import { ethers } from "ethers";
-import { SimpleERC20Token__factory } from "@nocturne-xyz/contracts";
+import { SimpleERC20Token__factory, Vault__factory, Wallet__factory } from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
   AssetType,
@@ -9,6 +9,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { NocturneDeployer } from "@nocturne-xyz/deploy";
 
 const HH_URL = "http://localhost:8545";
 
@@ -35,11 +36,18 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  console.log("Post deploy setup");
+  console.log("deploying contracts with dummy proxy admin...")
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployer] = KEYS_TO_WALLETS(provider);
-  const { wallet, vault } = await setupNocturne(deployer);
-  const tokenFactory = new SimpleERC20Token__factory(deployer);
+
+  const [deployerEoa] = KEYS_TO_WALLETS(provider);
+  const deployer = new NocturneDeployer(deployerEoa);
+
+  const { walletProxy, vaultProxy }= await deployContractsWithDummyAdmin(deployer);
+  const wallet = await Wallet__factory.connect(walletProxy.proxy, deployerEoa)
+  const vault = await Vault__factory.connect(vaultProxy.proxy, deployerEoa);
+
+  // deploy test token contracts
+  const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
   const tokens: SimpleERC20Token[] = [];
   for (let i = 0; i < 2; i++) {
     const token = await tokenFactory.deploy();
@@ -48,11 +56,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     tokens.push(token);
   }
 
+  // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`
   for (const token of tokens) {
-    // Reserve tokens to eth addresses
     for (const addr of TEST_ETH_ADDRS) {
       console.log(`Sending ETH and tokens to ${addr}`);
-      await deployer.sendTransaction({
+      await deployerEoa.sendTransaction({
         to: addr,
         value: ethers.utils.parseEther("10.0"),
       });
@@ -62,9 +70,9 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Reserve and approve tokens for nocturne addr deployer
     const reserveAmount = ethers.utils.parseEther("100.0");
     await token
-      .connect(deployer)
-      .reserveTokens(deployer.address, reserveAmount);
-    await token.connect(deployer).approve(vault.address, reserveAmount);
+      .connect(deployerEoa)
+      .reserveTokens(deployerEoa.address, reserveAmount);
+    await token.connect(deployerEoa).approve(vault.address, reserveAmount);
   }
 
   const encodedAssets = tokens
@@ -75,11 +83,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     }))
     .map(AssetTrait.encode);
 
-  // We will deposit to setup alice and test nocturne addrs
+  // deposit some test tokens to each nocturne address in `TEST_CANONICAL_NOCTURNE_ADDRS`
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
     StealthAddressTrait.fromCanonAddress
   );
-
   const perNoteAmount = ethers.utils.parseEther("10.0");
   for (const encodedAsset of encodedAssets) {
     // Deposit two 100 unit notes for given token
@@ -88,11 +95,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
       // TODO: replace with real chainid, nonce, and gasPrice once deposit
       // manager integrated
-      await wallet.connect(deployer).depositFunds(
+      await wallet.connect(deployerEoa).depositFunds(
         {
           chainId: 0,
           encodedAsset,
-          spender: deployer.address,
+          spender: deployerEoa.address,
           value: perNoteAmount,
           depositAddr: addr,
           nonce: 0,
@@ -105,5 +112,5 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     }
   }
 
-  await wallet.connect(deployer).fillBatchWithZeros();
+  await wallet.connect(deployerEoa).fillBatchWithZeros();
 })();

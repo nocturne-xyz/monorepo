@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const HH_IMAGE = "hardhat";
 
-interface HardhatNetworkConfig {
+export interface HardhatNetworkConfig {
   blockTime: number;
   keys: string[];
 }

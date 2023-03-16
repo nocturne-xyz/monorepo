@@ -6,14 +6,14 @@ import * as compose from "docker-compose";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 
-export const BUNDLER_COMPOSE_CWD = `${ROOT_DIR}/packages/bundler`;
+const BUNDLER_COMPOSE_CWD = `${ROOT_DIR}/packages/bundler`;
 const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
 const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: BUNDLER_COMPOSE_CWD,
   commandOptions: [["--build"], ["--force-recreate"], ["--renew-anon-volumes"]],
 };
 
-interface BundlerConfig {
+export interface BundlerConfig {
   redisUrl: string;
   redisPassword: string;
   walletAddress: string;
@@ -47,4 +47,11 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
   await sleep(3_000);
+}
+
+export async function stopBundler(): Promise<void> {
+  await compose.down({
+    cwd: BUNDLER_COMPOSE_CWD,
+    commandOptions: [["--volumes"]],
+  });
 }

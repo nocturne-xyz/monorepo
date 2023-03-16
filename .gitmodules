@@ -13,4 +13,5 @@
 	ignore = dirty
 [submodule "graph-node"]
 	path = graph-node
-	url = https://github.com/graphprotocol/graph-node/
+	url = https://github.com/nocturne-xyz/graph-node.git
+	branch = dont-persist-volumes

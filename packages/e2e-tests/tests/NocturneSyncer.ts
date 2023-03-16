@@ -6,7 +6,6 @@ import {
   Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
-import * as compose from "docker-compose";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   AssetType,
@@ -15,7 +14,11 @@ import {
   proveOperation,
   OperationRequestBuilder,
 } from "@nocturne-xyz/sdk";
-import { SyncAdapterOption, setupNocturne } from "../src/deploy";
+import {
+  SyncAdapterOption,
+  setupTestDeployment,
+  setupTestClient,
+} from "../src/deploy";
 import { depositFunds } from "../src/deposit";
 import {
   getSubtreeUpdateProver,
@@ -24,17 +27,7 @@ import {
 } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
-import Dockerode from "dockerode";
-import { KEYS, KEYS_TO_WALLETS } from "../src/keys";
-import { startHardhatNetwork } from "../src/hardhat";
-import { BUNDLER_COMPOSE_CWD, startBundler } from "../src/bundler";
-import { startSubgraph, stopSubgraph } from "../src/subgraph";
-
-const HH_URL = "http://localhost:8545";
-const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
-
-const REDIS_URL = "redis://redis:6379";
-const REDIS_PASSWORD = "baka";
+import { KEYS_TO_WALLETS } from "../src/keys";
 
 describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
@@ -47,13 +40,10 @@ describe(
 
 function syncTestSuite(syncAdapter: SyncAdapterOption) {
   return async () => {
-    let docker: Dockerode;
-    let hhContainer: Dockerode.Container;
-
+    let teardown: () => Promise<void>;
     let provider: ethers.providers.Provider;
-    let deployerEoa: ethers.Wallet;
+
     let aliceEoa: ethers.Wallet;
-    let bundlerEoa: ethers.Wallet;
 
     let wallet: Wallet;
     let vault: Vault;
@@ -61,41 +51,34 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let nocturneWalletSDKAlice: NocturneWalletSDK;
     let updater: SubtreeUpdater;
 
-    //@ts-ignore
     let joinSplitProver: JoinSplitProver;
 
     beforeEach(async () => {
-      docker = new Dockerode();
-      await sleep(10_000);
-      hhContainer = await startHardhatNetwork(docker, {
-        blockTime: 3_000,
-        keys: KEYS,
+      // don't deploy subtree updater, and don't deploy subgraph unless we're using SubgraphSyncAdapter
+      const testDeployment = await setupTestDeployment({
+        include: {
+          bundler: true,
+          subgraph: syncAdapter === SyncAdapterOption.SUBGRAPH,
+        },
       });
 
-      provider = new ethers.providers.JsonRpcProvider(HH_URL);
-      [deployerEoa, aliceEoa, bundlerEoa] = KEYS_TO_WALLETS(provider);
-      ({ vault, wallet, nocturneWalletSDKAlice, joinSplitProver } =
-        await setupNocturne(deployerEoa, { syncAdapter }));
+      ({ teardown, provider, wallet, vault } = testDeployment);
+
+      const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
+      aliceEoa = _aliceEoa;
+
+      ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
+        testDeployment.contractDeployment,
+        provider,
+        {
+          syncAdapter,
+        }
+      ));
 
       token = await new SimpleERC20Token__factory(deployerEoa).deploy();
       console.log("Token deployed at: ", token.address);
 
       await newSubtreeUpdater();
-      await startBundler({
-        redisUrl: REDIS_URL,
-        redisPassword: REDIS_PASSWORD,
-        walletAddress: wallet.address,
-        maxLatency: 1,
-        rpcUrl: HH_FROM_DOCKER_URL,
-        txSignerKey: bundlerEoa.privateKey,
-      });
-
-      if (syncAdapter === SyncAdapterOption.SUBGRAPH) {
-        await startSubgraph({
-          walletAddress: wallet.address,
-          startBlock: 0,
-        });
-      }
     });
 
     async function newSubtreeUpdater() {
@@ -106,35 +89,16 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await updater.init();
     }
 
-    //@ts-ignore
     async function applySubtreeUpdate() {
       const tx = await wallet.fillBatchWithZeros();
       await tx.wait(1);
       await updater.pollInsertionsAndTryMakeBatch();
       await updater.tryGenAndSubmitProofs();
-      await sleep(3_000);
-    }
-
-    async function stopHH() {
-      await hhContainer.stop();
-      await hhContainer.remove();
+      await sleep(10_000);
     }
 
     afterEach(async () => {
-      const proms = [
-        stopHH(),
-        updater.dropDB(),
-        compose.down({
-          cwd: BUNDLER_COMPOSE_CWD,
-          commandOptions: [["--volumes"]],
-        }),
-      ];
-
-      if (syncAdapter === SyncAdapterOption.SUBGRAPH) {
-        proms.push(stopSubgraph());
-      }
-
-      await Promise.all(proms);
+      await Promise.all([teardown(), updater.dropDB()]);
     });
 
     it("syncs notes, not leaves before subtree update", async () => {
@@ -147,6 +111,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [100n, 100n]
       );
+      // wait for subgraph to sync
+      await sleep(1_0000);
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -204,6 +170,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [80n, 100n]
       );
+      // wait for subgraph to sync
+      await sleep(1_0000);
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
