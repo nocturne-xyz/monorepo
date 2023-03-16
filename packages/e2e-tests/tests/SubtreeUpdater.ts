@@ -31,10 +31,10 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
   beforeEach(async () => {
     const testDeployment = await setupTestDeployment({
-      skip: {
-        subgraph: true,
-        bundler: true,
-        subtreeUpdater: true,
+      include: {
+        subgraph: false,
+        bundler: false,
+        subtreeUpdater: false,
       },
     });
 

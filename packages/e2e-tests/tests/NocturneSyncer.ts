@@ -56,16 +56,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     beforeEach(async () => {
       // don't deploy subtree updater, and don't deploy subgraph unless we're using SubgraphSyncAdapter
       const testDeployment = await setupTestDeployment({
-        skip: {
-          subtreeUpdater: true,
-          subgraph: syncAdapter !== SyncAdapterOption.SUBGRAPH,
+        include: {
+          bundler: true,
+          subgraph: syncAdapter === SyncAdapterOption.SUBGRAPH,
         },
       });
 
-      teardown = testDeployment.teardown;
-      provider = testDeployment.provider;
-      wallet = testDeployment.wallet;
-      vault = testDeployment.vault;
+      ({ teardown, provider, wallet, vault } = testDeployment);
 
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;

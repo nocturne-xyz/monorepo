@@ -49,9 +49,9 @@ const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 export interface TestActorsConfig {
-  // specify which actors to skip
-  // by default, all actors are deployed
-  skip?: {
+  // specify which actors to include
+  // if not given, all actors are deployed
+  include: {
     bundler?: boolean;
     subtreeUpdater?: boolean;
     subgraph?: boolean;
@@ -84,12 +84,12 @@ const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 const REDIS_URL = "redis://redis:6379";
 const REDIS_PASSWORD = "baka";
 
-const defaultHardhatNetworkConfig: HardhatNetworkConfig = {
+const DEFAULT_HH_NETWORK_CONFIG: HardhatNetworkConfig = {
   blockTime: 3_000,
   keys: KEYS,
 };
 
-const defaultBundlerConfig: Omit<
+const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
   "walletAddress" | "txSignerKey"
 > = {
@@ -99,14 +99,14 @@ const defaultBundlerConfig: Omit<
   rpcUrl: HH_FROM_DOCKER_URL,
 };
 
-const defaultSubtreeUpdaterConfig: Omit<
+const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "walletAddress" | "txSignerKey"
 > = {
   rpcUrl: HH_FROM_DOCKER_URL,
 };
 
-const defaultSubgraphConfig: Omit<SubgraphConfig, "walletAddress"> = {
+const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
   startBlock: 0,
 };
 
@@ -121,9 +121,19 @@ export async function setupTestDeployment(
   // then contracts,
   // then everything else can go up in any order
 
+  const includeBundler = config?.include
+    ? config.include.bundler ?? false
+    : true;
+  const includeSubtreeUpdater = config?.include
+    ? config.include.subtreeUpdater ?? false
+    : true;
+  const includeSubgraph = config?.include
+    ? config.include.subgraph ?? false
+    : true;
+
   // spin up hh node
   const givenHHConfig = config?.configs?.hhNode ?? {};
-  const hhConfig = { ...defaultHardhatNetworkConfig, ...givenHHConfig };
+  const hhConfig = { ...DEFAULT_HH_NETWORK_CONFIG, ...givenHHConfig };
   const hhContainer = await startHardhatNetwork(docker, hhConfig);
 
   // sliep while the container starts up
@@ -149,10 +159,10 @@ export async function setupTestDeployment(
   // deploy everything else
   const proms = [];
 
-  if (!config?.skip?.bundler) {
+  if (includeBundler) {
     const givenBundlerConfig = config?.configs?.bundler ?? {};
     const bundlerConfig = {
-      ...defaultBundlerConfig,
+      ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       walletAddress: walletProxy.proxy,
       txSignerKey: deployer.connectedSigner.privateKey,
@@ -162,10 +172,10 @@ export async function setupTestDeployment(
   }
 
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
-  if (!config?.skip?.subtreeUpdater) {
+  if (includeSubtreeUpdater) {
     const givenSubtreeUpdaterConfig = config?.configs?.subtreeUpdater ?? {};
     const subtreeUpdaterConfig = {
-      ...defaultSubtreeUpdaterConfig,
+      ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
       walletAddress: walletProxy.proxy,
       txSignerKey: deployer.connectedSigner.privateKey,
@@ -191,10 +201,10 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  if (!config?.skip?.subgraph) {
+  if (includeSubgraph) {
     const givenSubgraphConfig = config?.configs?.subgraph ?? {};
     const subgraphConfig = {
-      ...defaultSubgraphConfig,
+      ...DEFAULT_SUBGRAPH_CONFIG,
       ...givenSubgraphConfig,
       walletAddress: walletProxy.proxy,
     };
@@ -216,18 +226,18 @@ export async function setupTestDeployment(
       proms.push(teardown());
     }
 
-    if (!config?.skip?.bundler) {
+    if (includeBundler) {
       proms.push(stopBundler());
     }
 
-    if (!config?.skip?.subgraph) {
+    if (includeSubgraph) {
       proms.push(stopSubgraph());
     }
 
     await Promise.all(proms);
 
     // wait for all of the actors to finish teardown before tearing down hh node
-    await sleep(5_000);
+    await sleep(10_000);
 
     // teardown hh node
     await hhContainer.stop();

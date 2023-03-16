@@ -1,4 +1,4 @@
 // prettier-ignore
-export const WALLET_CONTRACT_ADDRESS = "0xA3183498b579bd228aa2B62101C40CC1da978F24";
+export const WALLET_CONTRACT_ADDRESS = "";
 // prettier-ignore
-export const VAULT_CONTRACT_ADDRESS = "0x51a240271AB8AB9f9a21C82d9a85396b704E164d";
+export const VAULT_CONTRACT_ADDRESS = "";

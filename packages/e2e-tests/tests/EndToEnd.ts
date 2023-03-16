@@ -59,12 +59,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   beforeEach(async () => {
     const testDeployment = await setupTestDeployment({
-      skip: { subgraph: true },
+      include: {
+        bundler: true,
+        subtreeUpdater: true,
+      },
     });
-    provider = testDeployment.provider;
-    teardown = testDeployment.teardown;
-    wallet = testDeployment.wallet;
-    vault = testDeployment.vault;
+
+    ({ provider, teardown, wallet, vault } = testDeployment);
 
     const [deployerEoa, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
 
