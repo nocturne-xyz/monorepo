@@ -95,7 +95,7 @@ mkdir ./redis-data
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up --build  &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up  &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "Bundler running at PID: $BUNDLER_PID"

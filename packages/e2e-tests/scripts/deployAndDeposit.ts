@@ -50,7 +50,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
   const { depositManagerProxy, walletProxy } =
     await deployContractsWithDummyAdmins(deployerEoa, {
-      screeners: TEST_ETH_ADDRS.concat(deployerEoa.address), // TODO: remove this once we have real deposit-screener
+      screeners: [deployerEoa.address], // TODO: remove this once we have real deposit-screener
     });
   const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
