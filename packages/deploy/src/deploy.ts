@@ -21,7 +21,6 @@ import {
 import { Address } from "./utils";
 
 export interface NocturneDeployArgs {
-  connectedSigner: ethers.Wallet;
   proxyAdminOwner: Address;
   walletOwner: Address;
   depositManagerOwner: Address;
@@ -36,10 +35,10 @@ export interface NocturneDeployOpts {
 }
 
 export async function deployNocturne(
+  connectedSigner: ethers.Wallet,
   args: NocturneDeployArgs,
   opts?: NocturneDeployOpts
 ): Promise<NocturneContractDeployment> {
-  const { connectedSigner } = args;
   if (!connectedSigner.provider)
     throw new Error("Wallet must be connected to provider");
 
@@ -146,13 +145,17 @@ export async function deployNocturne(
       chainId,
     },
     startBlock,
-    proxyAdminOwner: args.proxyAdminOwner,
+    owners: {
+      proxyAdminOwner: args.proxyAdminOwner,
+      walletOwner: args.walletOwner,
+      depositManagerOwner: args.depositManagerOwner,
+    },
     proxyAdmin: proxyAdmin.address,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     walletProxy: proxiedWallet.proxyAddresses,
     vaultProxy: proxiedVault.proxyAddresses,
-    joinSplitVerifier: joinSplitVerifier.address,
-    subtreeUpdateVerifier: subtreeUpdateVerifier.address,
+    joinSplitVerifierAddress: joinSplitVerifier.address,
+    subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
     screeners: args.screeners,
     depositSources: [proxiedDepositManager.address],
   };

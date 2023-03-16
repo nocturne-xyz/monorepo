@@ -10,13 +10,18 @@ export interface Network {
 export interface NocturneContractDeployment {
   network: Network;
   startBlock: number;
-  proxyAdminOwner: Address;
+  // TODO: consolidate owners once we've sorted out upgrade admin situation
+  owners: {
+    proxyAdminOwner: Address;
+    walletOwner: Address;
+    depositManagerOwner: Address;
+  };
   proxyAdmin: Address;
   depositManagerProxy: ProxyAddresses<any>;
   walletProxy: ProxyAddresses<any>;
   vaultProxy: ProxyAddresses<any>;
-  joinSplitVerifier: Address;
-  subtreeUpdateVerifier: Address;
+  joinSplitVerifierAddress: Address;
+  subtreeUpdateVerifierAddress: Address;
   depositSources: Address[];
   screeners: Address[];
 }

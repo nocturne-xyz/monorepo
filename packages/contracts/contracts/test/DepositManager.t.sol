@@ -36,6 +36,7 @@ contract DepositManagerTest is Test, ParseUtils {
     address SCREENER = vm.addr(SCREENER_PRIVKEY);
 
     uint256 constant RESERVE_AMOUNT = 50_000_000;
+    uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
     event DepositInstantiated(
         address indexed spender,
@@ -107,7 +108,7 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000 // 10M gas comp
+            GAS_COMP_AMOUNT // 10M gas comp
         );
 
         // Deposit hash not yet marked true and ETH balance empty
@@ -115,8 +116,8 @@ contract DepositManagerTest is Test, ParseUtils {
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
         assertEq(address(depositManager).balance, 0);
 
-        // Set ALICE balance to 10M gwei
-        vm.deal(ALICE, 10_000_000);
+        // Set ALICE balance to 10M wei
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
@@ -126,7 +127,7 @@ contract DepositManagerTest is Test, ParseUtils {
             deposit.nonce
         );
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -135,7 +136,7 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         console.log("Alice remaining eth:", ALICE.balance);
-        assertEq(address(depositManager).balance, 10_000_000);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
     }
 
     function testInstantiateDepositFailureWrongChainId() public {
@@ -225,14 +226,14 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000
+            GAS_COMP_AMOUNT
         );
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
 
         // Call instantiateDeposit
-        vm.deal(ALICE, 10_000_000);
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -241,7 +242,7 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         // Eth received
-        assertEq(address(depositManager).balance, 10_000_000);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
         assertEq(ALICE.balance, 0);
 
         // Call retrieveDeposit
@@ -264,7 +265,7 @@ contract DepositManagerTest is Test, ParseUtils {
 
         // Eth gas sent back to user
         assertEq(address(depositManager).balance, 0);
-        assertEq(ALICE.balance, 10_000_000);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
     function testRetrieveDepositFailureNotSpender() public {
@@ -330,18 +331,29 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000 // 10M gas comp
+            GAS_COMP_AMOUNT // 10M gas comp
         );
 
-        vm.deal(ALICE, 10_000_000);
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
-        // TODO: add checks below
+        console.log("DepositManager ETH Pre:", address(depositManager).balance);
+        vm.prank(SCREENER);
         depositManager.processDeposit(deposit, signature);
+
+        assertEq(token.balanceOf(address(vault)), RESERVE_AMOUNT);
+        assertEq(token.balanceOf(address(ALICE)), 0);
+
+        // TODO: currently unable to set tx.gasprice in foundry, once added we
+        // should check logic for screener compensation. For now we assume all
+        // goes back to user.
+        assertEq(address(depositManager).balance, 0);
+        assertEq(SCREENER.balance, 0);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 }

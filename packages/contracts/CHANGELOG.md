@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Refactor unit tests to whitelist deposit source for deposits now that we use that instead of `msg.sender == deposit.spender`
+- Vault and BalanceManager now take both deposit and its `source` so they know where transfer funds from upon deposit
+- Add `_depositSources` to wallet and integrate `DepositManager`
 - Add `DepositManager` contract + unit tests up to process deposit failing because Wallet expects `msg.sender == deposit.spender` (to fix in followup PR)
 - Bump Open Zeppelin npm deps to `4.8.2`
 - Add json decoding utils for retrieving signed deposit request fixture

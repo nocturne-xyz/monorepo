@@ -2,8 +2,12 @@
   "contracts": {
     "network": { "name": "unknown", "chainId": 31337 },
     "startBlock": 32,
-    "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
     "proxyAdmin": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
+    "owners": {
+      "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "walletOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
+    },
     "depositManagerProxy": {
       "kind": "Transparent",
       "proxy": "0x51401dc811bb5740090279Ba06cfA8fcF6113778",

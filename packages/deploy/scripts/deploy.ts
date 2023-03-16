@@ -20,7 +20,7 @@ dotenv.config();
 
   const screenersString = process.env.SCREENERS;
   if (!screenersString) throw new Error("Missing SCREENERS");
-  const screeners = screenersString?.split(",");
+  const screeners = screenersString?.split(",") ?? [];
 
   const useMockSubtreeUpdateVerifier =
     process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
@@ -35,8 +35,8 @@ dotenv.config();
   const deployer = new ethers.Wallet(deployerKey, provider);
 
   const deployment = await deployNocturne(
+    deployer,
     {
-      connectedSigner: deployer,
       proxyAdminOwner,
       walletOwner,
       depositManagerOwner,
