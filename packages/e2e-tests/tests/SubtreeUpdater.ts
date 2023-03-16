@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 import {
   DepositManager,
   SimpleERC20Token__factory,
-  Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -24,7 +23,6 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let subtreeUpdaterEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
@@ -41,8 +39,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     });
 
     teardown = testDeployment.teardown;
-    wallet = testDeployment.wallet;
-    vault = testDeployment.vault;
+    ({ wallet, depositManager } = testDeployment);
     const { provider, contractDeployment } = testDeployment;
 
     const [deployerEoa, _aliceEoa, _subtreeUpdaterEoa] =
@@ -95,8 +92,6 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   it("can recover state", async () => {
     await depositFunds(
       depositManager,
-      wallet,
-      vault,
       token,
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),

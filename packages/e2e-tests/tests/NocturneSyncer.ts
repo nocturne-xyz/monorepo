@@ -4,7 +4,6 @@ import { open } from "lmdb";
 import {
   DepositManager,
   SimpleERC20Token__factory,
-  Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
@@ -48,7 +47,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     let depositManager: DepositManager;
     let wallet: Wallet;
-    let vault: Vault;
     let token: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
     let updater: SubtreeUpdater;
@@ -64,7 +62,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         },
       });
 
-      ({ teardown, provider, wallet, vault } = testDeployment);
+      ({ teardown, provider, wallet, depositManager } = testDeployment);
 
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
@@ -107,8 +105,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // deposit notes
       await depositFunds(
         depositManager,
-        wallet,
-        vault,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
@@ -134,8 +130,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // deposit notes...
       const ncs = await depositFunds(
         depositManager,
-        wallet,
-        vault,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
@@ -168,8 +162,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("depositing funds...");
       await depositFunds(
         depositManager,
-        wallet,
-        vault,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),

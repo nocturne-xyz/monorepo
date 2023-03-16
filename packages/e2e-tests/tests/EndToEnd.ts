@@ -7,8 +7,8 @@ import {
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
-  Vault,
   Wallet,
+  Vault,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -48,8 +48,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let bobEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let vault: Vault;
   let wallet: Wallet;
+  let vault: Vault;
   let erc20Token: SimpleERC20Token;
   let erc721Token: SimpleERC721Token;
   let erc1155Token: SimpleERC1155Token;
@@ -67,7 +67,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     });
 
-    ({ provider, teardown, wallet, vault } = testDeployment);
+    ({ provider, teardown, wallet, vault, depositManager } = testDeployment);
 
     const [deployerEoa, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
 
@@ -128,8 +128,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       depositManager,
-      wallet,
-      vault,
       erc20Token,
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
@@ -228,8 +226,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       depositManager,
-      wallet,
-      vault,
       erc20Token,
       aliceEoa,
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),

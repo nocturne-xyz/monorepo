@@ -51,6 +51,10 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
+export interface NocturneDeployArgs {
+  screeners: Address[];
+}
+
 export interface TestActorsConfig {
   // specify which actors to include
   // if not given, all actors are deployed
@@ -71,42 +75,19 @@ export interface TestActorsConfig {
 }
 
 export interface NocturneTestDeployment {
+  depositManager: DepositManager;
   wallet: Wallet;
   vault: Vault;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
-  deployer: NocturneDeployer;
   teardown: () => Promise<void>;
-}
-
-// defaults for actor deployments
-
-export interface SetupNocturneArgs {
-  connectedSigner: ethers.Wallet;
-  screeners: Address[];
 }
 
 export interface SetupNocturneOpts {
   syncAdapter: SyncAdapterOption;
 }
 
-export async function setupNocturne(
-  args: SetupNocturneArgs,
-  opts?: SetupNocturneOpts
-): Promise<NocturneSetup> {
-  const { connectedSigner, screeners } = args;
-  if (!connectedSigner.provider) {
-    throw new Error("Signer must be connected");
-  }
-
-  const deployment = await deployNocturne(
-    {
-      connectedSigner,
-      proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      screeners,
-    },
+// defaults for actor deployments
 const HH_URL = "http://localhost:8545";
 const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 
@@ -160,17 +141,19 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa] = KEYS_TO_WALLETS(provider);
-  const deployer = new NocturneDeployer(deployerEoa);
-  const contractDeployment = await deployContractsWithDummyAdmin(deployer);
+  const [deployerEoa, aliceEoa, bobEoa] = KEYS_TO_WALLETS(provider);
+  const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
+    screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
+  });
 
   await checkNocturneContractDeployment(
     contractDeployment,
-    deployer.connectedSigner.provider
+    deployerEoa.provider
   );
 
-  const { walletProxy, vaultProxy } = contractDeployment;
-  const [wallet, vault] = await Promise.all([
+  const { depositManagerProxy, walletProxy, vaultProxy } = contractDeployment;
+  const [depositManager, wallet, vault] = await Promise.all([
+    DepositManager__factory.connect(depositManagerProxy.proxy, deployerEoa),
     Wallet__factory.connect(walletProxy.proxy, deployerEoa),
     Vault__factory.connect(vaultProxy.proxy, deployerEoa),
   ]);
@@ -184,7 +167,7 @@ export async function setupTestDeployment(
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       walletAddress: walletProxy.proxy,
-      txSignerKey: deployer.connectedSigner.privateKey,
+      txSignerKey: deployerEoa.privateKey,
     };
 
     proms.push(startBundler(bundlerConfig));
@@ -197,7 +180,7 @@ export async function setupTestDeployment(
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
       walletAddress: walletProxy.proxy,
-      txSignerKey: deployer.connectedSigner.privateKey,
+      txSignerKey: deployerEoa.privateKey,
     };
 
     const startContainerWithLogs = async () => {
@@ -267,20 +250,27 @@ export async function setupTestDeployment(
   };
 
   return {
+    depositManager,
     wallet,
     vault,
     contractDeployment,
     provider,
-    deployer,
     teardown,
   };
 }
 
-export async function deployContractsWithDummyAdmin(
-  deployer: NocturneDeployer
+export async function deployContractsWithDummyAdmins(
+  connectedSigner: ethers.Wallet,
+  args: NocturneDeployArgs
 ): Promise<NocturneContractDeployment> {
-  return await deployer.deployNocturne(
-    "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6", // dummy
+  return deployNocturne(
+    {
+      connectedSigner,
+      proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      screeners: args.screeners,
+    },
     {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
@@ -319,13 +309,8 @@ export async function setupTestClient(
     new Map(Object.entries({}))
   );
 
-  const { depositManagerProxy, walletProxy, vaultProxy } = deployment;
-  const depositManager = DepositManager__factory.connect(
-    depositManagerProxy.proxy,
-    connectedSigner
-  );
-  const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
-  const vault = Vault__factory.connect(vaultProxy.proxy, connectedSigner);
+  const { walletProxy } = contractDeployment;
+  const wallet = Wallet__factory.connect(walletProxy.proxy, provider);
 
   let syncAdapter: SyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
@@ -358,8 +343,6 @@ export async function setupTestClient(
 
   const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
 
-  console.log("Wallet address:", wallet.address);
-  console.log("Vault address:", vault.address);
   return {
     nocturneDBAlice,
     nocturneWalletSDKAlice,

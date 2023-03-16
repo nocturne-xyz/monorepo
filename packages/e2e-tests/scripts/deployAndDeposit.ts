@@ -1,6 +1,10 @@
-import { deployContractsWithDummyAdmin } from "../src/deploy";
+import { deployContractsWithDummyAdmins } from "../src/deploy";
 import { ethers } from "ethers";
-import { SimpleERC20Token__factory, Vault__factory, Wallet__factory } from "@nocturne-xyz/contracts";
+import {
+  DepositManager__factory,
+  SimpleERC20Token__factory,
+  Wallet__factory,
+} from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
   AssetType,
@@ -14,7 +18,6 @@ import {
 } from "@nocturne-xyz/deposit-screener";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { NocturneDeployer } from "@nocturne-xyz/deploy";
 
 const HH_URL = "http://localhost:8545";
 
@@ -41,15 +44,21 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  console.log("deploying contracts with dummy proxy admin...")
+  console.log("deploying contracts with dummy proxy admin...");
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
   const chainId = BigInt((await provider.getNetwork()).chainId);
-  const [deployer] = KEYS_TO_WALLETS(provider);
-  const { depositManager, wallet } = await setupNocturne({
-    connectedSigner: deployer,
-    screeners: TEST_ETH_ADDRS.concat(deployer.address), // TODO: remove this once we have real deposit-screener
-  });
-  const tokenFactory = new SimpleERC20Token__factory(deployer);
+  const [deployerEoa] = KEYS_TO_WALLETS(provider);
+  const { depositManagerProxy, walletProxy } =
+    await deployContractsWithDummyAdmins(deployerEoa, {
+      screeners: TEST_ETH_ADDRS.concat(deployerEoa.address), // TODO: remove this once we have real deposit-screener
+    });
+  const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
+  const depositManager = DepositManager__factory.connect(
+    depositManagerProxy.proxy,
+    deployerEoa
+  );
+
+  const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
   const tokens: SimpleERC20Token[] = [];
   for (let i = 0; i < 2; i++) {
     const token = await tokenFactory.deploy();
@@ -72,10 +81,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     // Reserve and approve tokens for nocturne addr deployer
     const reserveAmount = ethers.utils.parseEther("100.0");
     await token
-      .connect(deployer)
-      .reserveTokens(deployer.address, reserveAmount);
+      .connect(deployerEoa)
+      .reserveTokens(deployerEoa.address, reserveAmount);
     await token
-      .connect(deployer)
+      .connect(deployerEoa)
       .approve(depositManager.address, reserveAmount);
   }
 
@@ -97,10 +106,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
 
-      const nonce = await depositManager._nonces(deployer.address);
+      const nonce = await depositManager._nonces(deployerEoa.address);
       const depositRequest: DepositRequest = {
         chainId,
-        spender: deployer.address,
+        spender: deployerEoa.address,
         encodedAsset,
         value: perNoteAmount.toBigInt(),
         depositAddr: addr,
@@ -109,7 +118,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       };
 
       const instantiateDepositTx = await depositManager
-        .connect(deployer)
+        .connect(deployerEoa)
         .instantiateDeposit(depositRequest);
       await instantiateDepositTx.wait(1);
 
@@ -122,7 +131,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
         verifyingContract: depositManager.address,
       };
       const signature = await signDepositRequest(
-        deployer,
+        deployerEoa,
         domain,
         depositRequest
       );

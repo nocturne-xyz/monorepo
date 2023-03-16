@@ -1,4 +1,4 @@
-import { DepositManager, Vault, Wallet } from "@nocturne-xyz/contracts";
+import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
   AssetType,
@@ -13,8 +13,6 @@ import { EIP712Domain } from "@nocturne-xyz/deposit-screener/dist/src/typedData"
 
 export async function depositFunds(
   depositManager: DepositManager,
-  wallet: Wallet,
-  vault: Vault,
   token: SimpleERC20Token,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
@@ -29,7 +27,7 @@ export async function depositFunds(
     await tx.wait(1);
   }
   {
-    const tx = await token.connect(eoa).approve(vault.address, total);
+    const tx = await token.connect(eoa).approve(depositManager.address, total);
     await tx.wait(1);
   }
 
