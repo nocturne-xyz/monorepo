@@ -101,10 +101,7 @@ contract DepositManager is
         // chainId, nonce, etc) already passed upon instantiation
         // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
-        require(
-            _outstandingDepositHashes[depositHash],
-            "Cannot retrieve nonexistent deposit"
-        );
+        require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
@@ -133,10 +130,7 @@ contract DepositManager is
         // chainId, nonce, etc) already passed upon instantiation
         // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
-        require(
-            _outstandingDepositHashes[depositHash],
-            "Cannot retrieve nonexistent deposit"
-        );
+        require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
         // Recover and check screener signature
         address recoveredSigner = _recoverDepositRequestSigner(req, signature);

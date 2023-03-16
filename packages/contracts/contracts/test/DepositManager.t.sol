@@ -311,7 +311,7 @@ contract DepositManagerTest is Test, ParseUtils {
             0
         );
 
-        vm.expectRevert("Cannot retrieve nonexistent deposit");
+        vm.expectRevert("deposit !exists");
         vm.prank(ALICE);
         depositManager.retrieveDeposit(deposit);
     }
@@ -338,11 +338,14 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(ALICE);
         depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
+        // Deposit manager has tokens and gas funds
+        assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
-        console.log("DepositManager ETH Pre:", address(depositManager).balance);
         vm.prank(SCREENER);
         depositManager.processDeposit(deposit, signature);
 
@@ -355,5 +358,73 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(address(depositManager).balance, 0);
         assertEq(SCREENER.balance, 0);
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
+    }
+
+    function testProcessDepositFailureBadSignature() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+
+        bytes32 digest = depositManager.computeDigest(deposit);
+        uint256 randomPrivkey = 123;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomPrivkey, digest);
+        bytes memory badSignature = rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
+
+        vm.expectRevert("request signer !screener");
+        vm.prank(SCREENER);
+        depositManager.processDeposit(deposit, badSignature);
+    }
+
+    function testProcessDepositFailureNonExistentDeposit() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        // Format deposit request but do NOT instantiate deposit
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        bytes32 digest = depositManager.computeDigest(deposit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        bytes memory badSignature = rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
+
+        vm.expectRevert("deposit !exists");
+        vm.prank(SCREENER);
+        depositManager.processDeposit(deposit, badSignature);
     }
 }
