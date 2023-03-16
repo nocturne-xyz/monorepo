@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
 import {
+  DepositManager,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
@@ -22,6 +23,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let aliceEoa: ethers.Wallet;
   let subtreeUpdaterEoa: ethers.Wallet;
 
+  let depositManager: DepositManager;
   let vault: Vault;
   let wallet: Wallet;
   let token: SimpleERC20Token;
@@ -92,6 +94,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
   it("can recover state", async () => {
     await depositFunds(
+      depositManager,
       wallet,
       vault,
       token,

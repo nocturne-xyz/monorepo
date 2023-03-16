@@ -3,6 +3,7 @@ import { setupTestDeployment, setupTestClient } from "../src/deploy";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { ethers } from "ethers";
 import {
+  DepositManager,
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
@@ -46,6 +47,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
 
+  let depositManager: DepositManager;
   let vault: Vault;
   let wallet: Wallet;
   let erc20Token: SimpleERC20Token;
@@ -125,6 +127,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
+      depositManager,
       wallet,
       vault,
       erc20Token,
@@ -224,6 +227,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
+      depositManager,
       wallet,
       vault,
       erc20Token,

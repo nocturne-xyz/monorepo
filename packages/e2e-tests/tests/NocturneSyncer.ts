@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 import { open } from "lmdb";
 import {
+  DepositManager,
   SimpleERC20Token__factory,
   Vault,
   Wallet,
@@ -45,6 +46,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     let aliceEoa: ethers.Wallet;
 
+    let depositManager: DepositManager;
     let wallet: Wallet;
     let vault: Vault;
     let token: SimpleERC20Token;
@@ -104,6 +106,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs notes, not leaves before subtree update", async () => {
       // deposit notes
       await depositFunds(
+        depositManager,
         wallet,
         vault,
         token,
@@ -130,6 +133,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs notes and latest non-zero leaves after subtree update", async () => {
       // deposit notes...
       const ncs = await depositFunds(
+        depositManager,
         wallet,
         vault,
         token,
@@ -163,6 +167,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // deposit notes...
       console.log("depositing funds...");
       await depositFunds(
+        depositManager,
         wallet,
         vault,
         token,

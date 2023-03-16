@@ -5,6 +5,8 @@ import {
   Vault__factory,
   Vault,
   Wallet,
+  DepositManager,
+  DepositManager__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -317,9 +319,13 @@ export async function setupTestClient(
     new Map(Object.entries({}))
   );
 
-  const { walletProxy, vaultProxy } = contractDeployment;
-  const wallet = Wallet__factory.connect(walletProxy.proxy, provider);
-  const vault = Vault__factory.connect(vaultProxy.proxy, provider);
+  const { depositManagerProxy, walletProxy, vaultProxy } = deployment;
+  const depositManager = DepositManager__factory.connect(
+    depositManagerProxy.proxy,
+    connectedSigner
+  );
+  const wallet = Wallet__factory.connect(walletProxy.proxy, connectedSigner);
+  const vault = Vault__factory.connect(vaultProxy.proxy, connectedSigner);
 
   let syncAdapter: SyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
