@@ -1,1 +1,1 @@
-export { signDepositRequest } from "./src/index";
+export { signDepositRequest, EIP712Domain } from "./src/index";
