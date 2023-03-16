@@ -12,8 +12,11 @@ export interface NocturneContractDeployment {
   startBlock: number;
   proxyAdminOwner: Address;
   proxyAdmin: Address;
+  depositManagerProxy: ProxyAddresses<any>;
   walletProxy: ProxyAddresses<any>;
   vaultProxy: ProxyAddresses<any>;
   joinSplitVerifier: Address;
   subtreeUpdateVerifier: Address;
+  depositSources: Address[];
+  screeners: Address[];
 }

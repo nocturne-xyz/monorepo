@@ -17,11 +17,12 @@ import {
   RPCSyncAdapter,
   SyncAdapter,
   SubgraphSyncAdapter,
+  Address,
 } from "@nocturne-xyz/sdk";
 
 import {
   checkNocturneContractDeployment,
-  NocturneDeployer,
+  deployNocturne,
 } from "@nocturne-xyz/deploy";
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -78,6 +79,32 @@ export interface NocturneTestDeployment {
 
 // defaults for actor deployments
 
+export interface SetupNocturneArgs {
+  connectedSigner: ethers.Wallet;
+  screeners: Address[];
+}
+
+export interface SetupNocturneOpts {
+  syncAdapter: SyncAdapterOption;
+}
+
+export async function setupNocturne(
+  args: SetupNocturneArgs,
+  opts?: SetupNocturneOpts
+): Promise<NocturneSetup> {
+  const { connectedSigner, screeners } = args;
+  if (!connectedSigner.provider) {
+    throw new Error("Signer must be connected");
+  }
+
+  const deployment = await deployNocturne(
+    {
+      connectedSigner,
+      proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      screeners,
+    },
 const HH_URL = "http://localhost:8545";
 const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 

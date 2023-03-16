@@ -38,16 +38,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 (async () => {
   console.log("deploying contracts with dummy proxy admin...")
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-
-  const [deployerEoa] = KEYS_TO_WALLETS(provider);
-  const deployer = new NocturneDeployer(deployerEoa);
-
-  const { walletProxy, vaultProxy }= await deployContractsWithDummyAdmin(deployer);
-  const wallet = await Wallet__factory.connect(walletProxy.proxy, deployerEoa)
-  const vault = await Vault__factory.connect(vaultProxy.proxy, deployerEoa);
-
-  // deploy test token contracts
-  const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
+  const [deployer] = KEYS_TO_WALLETS(provider);
+  const { wallet, vault } = await setupNocturne({
+    connectedSigner: deployer,
+    screeners: TEST_ETH_ADDRS, // TODO: remove this once we have real deposit-screener
+  });
+  const tokenFactory = new SimpleERC20Token__factory(deployer);
   const tokens: SimpleERC20Token[] = [];
   for (let i = 0; i < 2; i++) {
     const token = await tokenFactory.deploy();

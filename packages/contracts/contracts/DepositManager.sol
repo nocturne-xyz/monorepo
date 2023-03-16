@@ -52,7 +52,7 @@ contract DepositManager is
         address vault
     ) external initializer {
         __Ownable_init();
-        __DepositManagerBase_initialize(contractName, contractVersion);
+        __DepositManagerBase_init(contractName, contractVersion);
         _wallet = IWallet(wallet);
         _vault = vault;
     }

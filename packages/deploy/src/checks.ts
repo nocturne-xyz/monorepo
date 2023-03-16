@@ -1,4 +1,8 @@
-import { ProxyAdmin__factory, Wallet__factory } from "@nocturne-xyz/contracts";
+import {
+  DepositManager__factory,
+  ProxyAdmin__factory,
+  Wallet__factory,
+} from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { NocturneContractDeployment } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
@@ -70,6 +74,30 @@ export async function checkNocturneContractDeployment(
     walletJoinSplitVerifier === deployment.joinSplitVerifier,
     "Wallet joinsplit verifier does not match deployment"
   );
+
+  const depositManagerContract = DepositManager__factory.connect(
+    deployment.depositManagerProxy.proxy,
+    provider
+  );
+
+  // Wallet whitelisted deposit manager as source
+  const hasDepositManager = await walletContract._depositSources(
+    depositManagerContract.address
+  );
+  assertOrErr(
+    hasDepositManager,
+    "Wallet did not whitelist deposit manager as deposit source"
+  );
+
+  // Deposit manager whitelisted screeners
+
+  for (const screener of deployment.screeners) {
+    const hasScreener = await depositManagerContract._screeners(screener);
+    assertOrErr(
+      hasScreener,
+      `DepositManager did not whitelist screener ${screener}`
+    );
+  }
 
   // TODO: is there a way to check subtree update verifier?
 }
