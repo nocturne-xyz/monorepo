@@ -286,7 +286,8 @@ export async function deployContractsWithDummyAdmins(
 }
 
 export interface SetupNocturneOpts {
-  syncAdapter: SyncAdapterOption;
+  syncAdapter?: SyncAdapterOption;
+  gasAssets?: Map<string, string>;
 }
 
 export enum SyncAdapterOption {
@@ -311,7 +312,7 @@ export async function setupTestClient(
     contractDeployment,
     // TODO: fill with real assets and rate limits in SDK gas asset and deposit
     // screener PRs
-    new Map(Object.entries({})),
+    opts?.gasAssets ?? new Map(Object.entries({})),
     new Map(Object.entries({}))
   );
 

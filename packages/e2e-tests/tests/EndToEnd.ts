@@ -20,13 +20,13 @@ import {
   OperationRequestBuilder,
   queryEvents,
   Asset,
-  AssetType,
   JoinSplitProver,
   proveOperation,
 } from "@nocturne-xyz/sdk";
 import { sleep, submitAndProcessOperation } from "../src/utils";
 import { depositFunds } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
+import { deployERC1155, deployERC20, deployERC721 } from "../src/tokens";
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
@@ -35,10 +35,7 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
-const ERC20_TOKEN_ID = 0n;
-const ERC721_TOKEN_ID = 1n;
-const ERC1155_TOKEN_ID = 2n;
-const ERC1155_TOKEN_AMOUNT = 3n;
+const PLUTOCRACY_AMOUNT = 3n;
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let teardown: () => Promise<void>;
@@ -51,14 +48,23 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let depositManager: DepositManager;
   let wallet: Wallet;
   let vault: Vault;
-  let erc20Token: SimpleERC20Token;
-  let erc721Token: SimpleERC721Token;
-  let erc1155Token: SimpleERC1155Token;
   let nocturneDBAlice: NocturneDB;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
   let nocturneDBBob: NocturneDB;
   let nocturneWalletSDKBob: NocturneWalletSDK;
   let joinSplitProver: JoinSplitProver;
+
+  let shitcoin: SimpleERC20Token;
+  let shitcoinAsset: Asset;
+
+  let monkey: SimpleERC721Token;
+  let monkeyAsset: Asset;
+
+  let plutocracy: SimpleERC1155Token;
+  let plutocracyAsset: Asset;
+
+  let gasToken: SimpleERC20Token;
+  let gasTokenAsset: Asset;
 
   beforeEach(async () => {
     const testDeployment = await setupTestDeployment({
@@ -75,20 +81,34 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     aliceEoa = aliceEoa;
     bobEoa = bobEoa;
 
+    [shitcoin, shitcoinAsset] = await deployERC20(bundlerEoa);
+    console.log("ERC20 'shitcoin' deployed at: ", shitcoin.address);
+
+    [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
+
+    {
+      let ctor;
+      [monkey, ctor] = await deployERC721(bundlerEoa);
+      monkeyAsset = ctor(0n);
+      console.log("ERC721 'monkey' deployed at: ", monkey.address);
+    }
+
+    {
+      let ctor;
+      [plutocracy, ctor] = await deployERC1155(bundlerEoa);
+      plutocracyAsset = ctor(0n);
+      console.log("ERC1155 'plutocracy' deployed at: ", plutocracy.address);
+    }
+
     ({
       nocturneDBAlice,
       nocturneWalletSDKAlice,
       nocturneDBBob,
       nocturneWalletSDKBob,
       joinSplitProver,
-    } = await setupTestClient(testDeployment.contractDeployment, provider));
-
-    erc20Token = await new SimpleERC20Token__factory(bundlerEoa).deploy();
-    console.log("ERC20 erc20Token deployed at: ", erc20Token.address);
-    erc721Token = await new SimpleERC721Token__factory(bundlerEoa).deploy();
-    console.log("ERC721 token deployed at: ", erc721Token.address);
-    erc1155Token = await new SimpleERC1155Token__factory(bundlerEoa).deploy();
-    console.log("ERC1155 token deployed at: ", erc1155Token.address);
+    } = await setupTestClient(testDeployment.contractDeployment, provider, {
+      gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
+    }));
   });
 
   afterEach(async () => {
@@ -129,19 +149,21 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       depositManager,
-      erc20Token,
+      shitcoin,
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
     );
+    await depositFunds(
+      depositManager,
+      gasToken,
+      aliceEoa,
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
+      [PER_NOTE_AMOUNT]
+    );
+
     console.log("wait for subtreee update");
     await sleep(20_000);
-
-    const erc20Asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: erc20Token.address,
-      id: ERC20_TOKEN_ID,
-    };
 
     console.log("Encode transfer erc20 action");
     const encodedFunction =
@@ -151,16 +173,19 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       );
 
     const operationRequest = new OperationRequestBuilder()
-      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .unwrap(shitcoinAsset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
-        erc20Asset,
+        shitcoinAsset,
         ALICE_TO_BOB_PRIV_VAL,
         nocturneWalletSDKBob.signer.canonicalAddress()
       )
-      .action(erc20Token.address, encodedFunction)
+      .action(shitcoin.address, encodedFunction)
       .build();
 
-    const bundlerBalanceBefore = await bundlerEoa.getBalance();
+    const bundlerBalanceBefore = (
+      await gasToken.balanceOf(await bundlerEoa.getAddress())
+    ).toBigInt();
+    console.log("bunlder gas asset balance before op:", bundlerBalanceBefore);
 
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
@@ -176,12 +201,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(events[0].args.callSuccesses[0]).to.equal(true);
 
       expect(
-        (await erc20Token.balanceOf(await aliceEoa.getAddress())).toBigInt()
+        (await shitcoin.balanceOf(await aliceEoa.getAddress())).toBigInt()
       ).to.equal(0n);
       expect(
-        (await erc20Token.balanceOf(await bobEoa.getAddress())).toBigInt()
+        (await shitcoin.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20Token.balanceOf(vault.address)).toBigInt()).to.equal(
+      expect((await shitcoin.balanceOf(vault.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
     };
@@ -190,7 +215,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       console.log("Alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset
+        shitcoinAsset
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
@@ -213,7 +238,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       console.log("Bob: Sync SDK post-operation");
       await nocturneWalletSDKBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(
+        shitcoinAsset
+      )!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -222,10 +249,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(nonZeroNotesBob[0].value).to.equal(ALICE_TO_BOB_PRIV_VAL);
 
       // check that bundler got compensated for gas, at least enough that it breaks even
-      const bundlerBalanceAfter = await bundlerEoa.getBalance();
+      const bundlerBalanceAfter = (
+        await gasToken.balanceOf(await bundlerEoa.getAddress())
+      ).toBigInt();
+      console.log("bunlder gas asset balance after op:", bundlerBalanceBefore);
       // for some reason, mocha `.gte` doesn't work here
-      expect(bundlerBalanceAfter.toBigInt() >= bundlerBalanceBefore.toBigInt())
-        .to.be.true;
+      expect(bundlerBalanceAfter >= bundlerBalanceBefore).to.be.true;
     };
 
     await testE2E(operationRequest, contractChecks, offchainChecks);
@@ -235,7 +264,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("Deposit funds and commit note commitments");
     await depositFunds(
       depositManager,
-      erc20Token,
+      gasToken,
       aliceEoa,
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [PER_NOTE_AMOUNT]
@@ -244,47 +273,26 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await sleep(20_000);
 
     console.log("Encode reserve erc721 action");
-    const erc721Asset: Asset = {
-      assetType: AssetType.ERC721,
-      assetAddr: erc721Token.address,
-      id: ERC721_TOKEN_ID,
-    };
-
-    console.log("Encode reserve erc1155 action");
-    const erc1155Asset: Asset = {
-      assetType: AssetType.ERC1155,
-      assetAddr: erc1155Token.address,
-      id: ERC1155_TOKEN_ID,
-    };
-
-    const erc721EncodedFunction =
+    const monkeyEncodedFunction =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
-        [wallet.address, ERC721_TOKEN_ID]
+        [wallet.address, monkeyAsset.id]
       );
 
-    const erc1155EncodedFunction =
+    console.log("Encode reserve erc1155 action");
+    const plutocracyEncodedFunction =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, ERC1155_TOKEN_ID, ERC1155_TOKEN_AMOUNT]
+        [wallet.address, plutocracyAsset.id, PLUTOCRACY_AMOUNT]
       );
-
-    // TODO: This is dummy gas token, needed to ensure contract has a
-    // gas token joinsplit. In future PR, we need to have SDK auto-find
-    // gas joinsplit.
-    const erc20Asset: Asset = {
-      assetType: AssetType.ERC20,
-      assetAddr: erc20Token.address,
-      id: ERC20_TOKEN_ID,
-    };
 
     // unwrap 1 erc20 to satisfy gas token requirement
     const operationRequest = new OperationRequestBuilder()
-      .action(erc721Token.address, erc721EncodedFunction)
-      .action(erc1155Token.address, erc1155EncodedFunction)
-      .unwrap(erc20Asset, 1n)
+      .action(monkey.address, monkeyEncodedFunction)
+      .action(plutocracy.address, plutocracyEncodedFunction)
+      .unwrap(gasTokenAsset, 1n)
       .build();
 
     const contractChecks = async () => {
@@ -308,13 +316,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc721Asset
+        monkeyAsset
       )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
       const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc1155Asset
+        plutocracyAsset
       )!;
       expect(erc1155NotesAlice.length).to.equal(1);
     };
