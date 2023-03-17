@@ -349,12 +349,14 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(SCREENER);
         depositManager.processDeposit(deposit, signature);
 
+        // Ensure vault now has ALICE's tokens
         assertEq(token.balanceOf(address(vault)), RESERVE_AMOUNT);
         assertEq(token.balanceOf(address(ALICE)), 0);
 
-        // TODO: currently unable to set tx.gasprice in foundry, once added we
-        // should check logic for screener compensation. For now we assume all
-        // goes back to user.
+        // TODO: We want to check that some gas went to screener and rest went
+        // back to ALICE. Currently unable to because we can't set tx.gasprice
+        // in foundry. once added we should check logic for screener
+        // compensation. For now we assume all goes back to user.
         assertEq(address(depositManager).balance, 0);
         assertEq(SCREENER.balance, 0);
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
@@ -417,14 +419,10 @@ contract DepositManagerTest is Test, ParseUtils {
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
-        bytes memory badSignature = rsvToSignatureBytes(
-            uint256(r),
-            uint256(s),
-            v
-        );
+        bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
         vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);
-        depositManager.processDeposit(deposit, badSignature);
+        depositManager.processDeposit(deposit, signature);
     }
 }
