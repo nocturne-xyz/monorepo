@@ -7,6 +7,8 @@ import {
 } from "../../primitives";
 import { maxArray } from "../../utils";
 
+const SUBGRAPH_NAME = "nocturne-test";
+
 interface NoteResponse {
   ownerH1X: string;
   ownerH1Y: string;
@@ -74,7 +76,7 @@ query fetchNotes($fromBlock: Int!, $toBlock: Int!) {
 }`;
 
 // gets notes or encrypted notes for a given block range
-// the range is exclusive - i.e. [fromBlock, toBlock)
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchNotes(
   endpoint: string,
   fromBlock: number,
@@ -90,7 +92,7 @@ export async function fetchNotes(
         query: notesQuery,
         variables: {
           fromBlock,
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });
@@ -206,12 +208,13 @@ interface SubtreeCommitResponse {
 const subtreeCommitQuery = `
   query fetchSubtreeCommits($toBlock: Int!) {
     subtreeCommits(block: { number: $toBlock }, orderBy: subtreeIndex, orderDirection: desc, first: 1) {
-      newRoot,
       subtreeIndex
     }
   }
 `;
 
+// gets last committed merkle index for a given block range
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
   toBlock: number
@@ -225,7 +228,7 @@ export async function fetchLastCommittedMerkleIndex(
       body: JSON.stringify({
         query: subtreeCommitQuery,
         variables: {
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });
@@ -277,6 +280,8 @@ const nullifiersQuery = `
   }
 `;
 
+// gets nullifiers for a given block range
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchNullifiers(
   endpoint: string,
   fromBlock: number,
@@ -310,5 +315,52 @@ export async function fetchNullifiers(
   } catch (err) {
     console.error("Error when fetching nullifiers from subgraph");
     throw err;
+  }
+}
+
+const latestIndexedBlockQuery = `
+  query indexingStatusForCurrentVersion(subgraphName: ${SUBGRAPH_NAME}) {
+    chains {
+      latestBlock {
+        number
+      }
+    }
+  }
+`
+
+interface FetchLatestIndexedBlockResponse {
+  data: {
+    chains: {
+      latestBlock: {
+        number: string;
+      }
+    }
+  }
+}
+
+// gets the latest indexed block from the subgraph
+export async function fetchLatestIndexedBlock(endpoint: string): Promise<number> {
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: latestIndexedBlockQuery,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`Failed to fetch latest indexed block from subgraph: ${text}`);
+
+      throw new Error(`Failed to fetch latest indexed block from subgraph: ${text}`);
+    }
+
+    const res = (await response.json()) as FetchLatestIndexedBlockResponse;
+    console.log(res)
+
+    return parseInt(res.data.chains.latestBlock.number);
   }
 }

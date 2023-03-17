@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fetch latest block number subgraph has indexed in `SubgraphSyncAdapter` and don't fetch at block heights beyond that
+- yield correct block number in state diffs in `RPCSyncAdapter`
 - return empty array from `getNoteCommitmentsByIndexRange` if `start >= nextMerkleIndex`
 - make separate multi-asset variant of depositFunds
 - move gas accounting tests from `prepareOperationGas.test.ts` to `opRequestGas.test.ts`
