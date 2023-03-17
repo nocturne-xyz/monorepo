@@ -27,7 +27,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
             "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
         );
 
-    function __DepositManagerBase_initialize(
+    function __DepositManagerBase_init(
         string memory contractName,
         string memory contractVersion
     ) internal onlyInitializing {

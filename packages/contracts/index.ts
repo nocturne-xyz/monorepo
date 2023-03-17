@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export type { DepositManager } from './src/DepositManager';
 export type { Wallet } from './src/Wallet';
 export type { Vault } from './src/Vault';
 export type { JoinSplitVerifier } from './src/JoinSplitVerifier';
@@ -19,6 +20,7 @@ export type { TransparentUpgradeableProxy } from './src/TransparentUpgradeablePr
 export type { ProxyAdmin } from './src/ProxyAdmin';
 export type { Versioned } from './src/Versioned';
 
+export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Wallet__factory } from './src/factories/Wallet__factory';
 export { Vault__factory } from './src/factories/Vault__factory';
 export { JoinSplitVerifier__factory } from './src/factories/JoinSplitVerifier__factory';

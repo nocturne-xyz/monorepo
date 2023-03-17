@@ -1,15 +1,23 @@
-import { deployContractsWithDummyAdmin } from "../src/deploy";
+import { deployContractsWithDummyAdmins } from "../src/deploy";
 import { ethers } from "ethers";
-import { SimpleERC20Token__factory, Vault__factory, Wallet__factory } from "@nocturne-xyz/contracts";
+import {
+  DepositManager__factory,
+  SimpleERC20Token__factory,
+  Wallet__factory,
+} from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
   AssetType,
   CanonAddress,
+  DepositRequest,
   StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
+import {
+  EIP712Domain,
+  signDepositRequest,
+} from "@nocturne-xyz/deposit-screener";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { NocturneDeployer } from "@nocturne-xyz/deploy";
 
 const HH_URL = "http://localhost:8545";
 
@@ -36,17 +44,20 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  console.log("deploying contracts with dummy proxy admin...")
+  console.log("deploying contracts with dummy proxy admin...");
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-
+  const chainId = BigInt((await provider.getNetwork()).chainId);
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
-  const deployer = new NocturneDeployer(deployerEoa);
+  const { depositManagerProxy, walletProxy } =
+    await deployContractsWithDummyAdmins(deployerEoa, {
+      screeners: [deployerEoa.address], // TODO: remove this once we have real deposit-screener
+    });
+  const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
+  const depositManager = DepositManager__factory.connect(
+    depositManagerProxy.proxy,
+    deployerEoa
+  );
 
-  const { walletProxy, vaultProxy }= await deployContractsWithDummyAdmin(deployer);
-  const wallet = await Wallet__factory.connect(walletProxy.proxy, deployerEoa)
-  const vault = await Vault__factory.connect(vaultProxy.proxy, deployerEoa);
-
-  // deploy test token contracts
   const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
   const tokens: SimpleERC20Token[] = [];
   for (let i = 0; i < 2; i++) {
@@ -72,7 +83,9 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     await token
       .connect(deployerEoa)
       .reserveTokens(deployerEoa.address, reserveAmount);
-    await token.connect(deployerEoa).approve(vault.address, reserveAmount);
+    await token
+      .connect(deployerEoa)
+      .approve(depositManager.address, reserveAmount);
   }
 
   const encodedAssets = tokens
@@ -93,22 +106,41 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     for (const addr of targetAddrs) {
       console.log("depositing 1 100 token note to", addr);
 
-      // TODO: replace with real chainid, nonce, and gasPrice once deposit
-      // manager integrated
-      await wallet.connect(deployerEoa).depositFunds(
-        {
-          chainId: 0,
-          encodedAsset,
-          spender: deployerEoa.address,
-          value: perNoteAmount,
-          depositAddr: addr,
-          nonce: 0,
-          gasCompensation: 0,
-        },
-        {
-          gasLimit: 1000000,
-        }
+      const nonce = await depositManager._nonces(deployerEoa.address);
+      const depositRequest: DepositRequest = {
+        chainId,
+        spender: deployerEoa.address,
+        encodedAsset,
+        value: perNoteAmount.toBigInt(),
+        depositAddr: addr,
+        nonce: nonce.toBigInt(),
+        gasCompensation: BigInt(0),
+      };
+
+      const instantiateDepositTx = await depositManager
+        .connect(deployerEoa)
+        .instantiateDeposit(depositRequest);
+      await instantiateDepositTx.wait(1);
+
+      // TODO: remove self signing once we have real deposit screener agent
+      // We currently ensure all EOAs are registered as screeners as temp setup
+      const domain: EIP712Domain = {
+        name: "NocturneDepositManager",
+        version: "v1",
+        chainId,
+        verifyingContract: depositManager.address,
+      };
+      const signature = await signDepositRequest(
+        deployerEoa,
+        domain,
+        depositRequest
       );
+
+      const processDepositTx = await depositManager.processDeposit(
+        depositRequest,
+        signature
+      );
+      await processDepositTx.wait(1);
     }
   }
 

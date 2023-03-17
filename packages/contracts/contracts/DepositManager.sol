@@ -52,7 +52,7 @@ contract DepositManager is
         address vault
     ) external initializer {
         __Ownable_init();
-        __DepositManagerBase_initialize(contractName, contractVersion);
+        __DepositManagerBase_init(contractName, contractVersion);
         _wallet = IWallet(wallet);
         _vault = vault;
     }
@@ -101,10 +101,7 @@ contract DepositManager is
         // chainId, nonce, etc) already passed upon instantiation
         // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
-        require(
-            _outstandingDepositHashes[depositHash],
-            "Cannot retrieve nonexistent deposit"
-        );
+        require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
@@ -133,10 +130,7 @@ contract DepositManager is
         // chainId, nonce, etc) already passed upon instantiation
         // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
-        require(
-            _outstandingDepositHashes[depositHash],
-            "Cannot retrieve nonexistent deposit"
-        );
+        require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
         // Recover and check screener signature
         address recoveredSigner = _recoverDepositRequestSigner(req, signature);

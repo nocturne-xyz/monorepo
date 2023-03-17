@@ -42,11 +42,12 @@ contract Vault is
     }
 
     function makeDeposit(
-        DepositRequest calldata deposit
+        DepositRequest calldata deposit,
+        address source
     ) public override onlyWallet {
         AssetUtils.transferAssetFrom(
             deposit.encodedAsset,
-            deposit.spender,
+            source,
             deposit.value
         );
     }

@@ -2,8 +2,17 @@
   "contracts": {
     "network": { "name": "unknown", "chainId": 31337 },
     "startBlock": 32,
-    "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
     "proxyAdmin": "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690",
+    "owners": {
+      "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "walletOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
+    },
+    "depositManagerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x51401dc811bb5740090279Ba06cfA8fcF6113778",
+      "implementation": "0xf5059a5D22d5853360D16C683c16e67980206f36"
+    },
     "walletProxy": {
       "kind": "Transparent",
       "proxy": "0x95401dc811bb5740090279Ba06cfA8fcF6113778",
@@ -15,7 +24,9 @@
       "implementation": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042"
     },
     "joinSplitVerifierAddress": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
-    "subtreeUpdateVerifierAddress": "0x851356ae760d987E095750cCeb3bC6014560891C"
+    "subtreeUpdateVerifierAddress": "0x851356ae760d987E095750cCeb3bC6014560891C",
+    "depositSources": ["0x51401dc811bb5740090279Ba06cfA8fcF6113778"],
+    "screeners": ["0x1111beB3B2C4f22Ee086B2b38C1476A3cE7f78E8"]
   },
   "gasAssets": {
     "weth": "0xDe09E74d4888Bc4e65F589e8c13Bce9F71DdF4c7",

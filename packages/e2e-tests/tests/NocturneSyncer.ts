@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 import { open } from "lmdb";
 import {
+  DepositManager,
   SimpleERC20Token__factory,
-  Vault,
   Wallet,
 } from "@nocturne-xyz/contracts";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
@@ -45,8 +45,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     let aliceEoa: ethers.Wallet;
 
+    let depositManager: DepositManager;
     let wallet: Wallet;
-    let vault: Vault;
     let token: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
     let updater: SubtreeUpdater;
@@ -62,7 +62,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         },
       });
 
-      ({ teardown, provider, wallet, vault } = testDeployment);
+      ({ teardown, provider, wallet, depositManager } = testDeployment);
 
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
@@ -104,8 +104,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs notes, not leaves before subtree update", async () => {
       // deposit notes
       await depositFunds(
-        wallet,
-        vault,
+        depositManager,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
@@ -130,8 +129,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs notes and latest non-zero leaves after subtree update", async () => {
       // deposit notes...
       const ncs = await depositFunds(
-        wallet,
-        vault,
+        depositManager,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
@@ -163,8 +161,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // deposit notes...
       console.log("depositing funds...");
       await depositFunds(
-        wallet,
-        vault,
+        depositManager,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),

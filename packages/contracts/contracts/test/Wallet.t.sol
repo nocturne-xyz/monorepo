@@ -44,6 +44,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
+    address constant DEPOSIT_SOURCE = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
     Wallet wallet;
@@ -93,6 +94,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         vault.initialize(address(wallet));
 
+        wallet.setDepositSourcePermission(DEPOSIT_SOURCE, true);
+
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
@@ -107,23 +110,30 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     }
 
     function depositFunds(
-        address _spender,
-        address _token,
-        uint256 _value,
-        uint256 _id,
-        StealthAddress memory _depositAddr
+        address spender,
+        SimpleERC20Token token,
+        uint256 value,
+        uint256 id,
+        StealthAddress memory depositAddr
     ) public {
+        // Transfer to deposit source first
+        vm.prank(spender);
+        token.transfer(DEPOSIT_SOURCE, value);
+
+        vm.startPrank(DEPOSIT_SOURCE);
+        token.approve(address(vault), value);
         wallet.depositFunds(
             NocturneUtils.formatDepositRequest(
-                _spender,
-                _token,
-                _value,
-                _id,
-                _depositAddr,
+                spender,
+                address(token),
+                value,
+                id,
+                depositAddr,
                 0, // nonce and gasPrice irrelevant once past deposit manager
                 0
             )
         );
+        vm.stopPrank();
     }
 
     function reserveAndDepositFunds(
@@ -132,9 +142,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         uint256 amount
     ) internal {
         token.reserveTokens(recipient, amount);
-
-        vm.startPrank(recipient);
-        token.approve(address(vault), amount);
 
         uint256[] memory batch = new uint256[](16);
 
@@ -157,21 +164,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             );
 
             if (i == depositIterations - 1 && remainder != 0) {
-                depositFunds(
-                    recipient,
-                    address(token),
-                    remainder,
-                    ERC20_ID,
-                    addr
-                );
+                depositFunds(recipient, token, remainder, ERC20_ID, addr);
             } else {
-                depositFunds(
-                    recipient,
-                    address(token),
-                    PER_NOTE_AMOUNT,
-                    ERC20_ID,
-                    addr
-                );
+                depositFunds(recipient, token, PER_NOTE_AMOUNT, ERC20_ID, addr);
             }
 
             EncodedNote memory note = EncodedNote(
@@ -187,8 +182,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             batch[i] = noteCommitment;
         }
 
-        vm.stopPrank();
-
         uint256[] memory path = treeTest.computeInitialRoot(batch);
         uint256 root = path[path.length - 1];
 
@@ -198,14 +191,14 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         wallet.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
-    function testDepositNotMsgSender() public {
+    function testDepositNotDepositSource() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
         vm.prank(ALICE);
         token.approve(address(vault), PER_NOTE_AMOUNT);
 
-        vm.startPrank(BOB); // msg.sender made to BOB not ALICE, causing error
-        vm.expectRevert("Spender must be the sender");
+        vm.startPrank(ALICE); // msg.sender made to be ALICE not DEPOSIT_SOURCE
+        vm.expectRevert("Only deposit source");
         wallet.depositFunds(
             DepositRequest({
                 chainId: 0,
@@ -1256,7 +1249,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Attempt to call processOperation directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
-        vm.expectRevert("Only the Wallet can call this");
+        vm.expectRevert("Only wallet");
         wallet.processOperation(op, 0, ALICE);
     }
 
@@ -1287,7 +1280,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Attempt to call executeActions directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
-        vm.expectRevert("Only the Wallet can call this");
+        vm.expectRevert("Only wallet");
         wallet.executeActions(op);
     }
 }

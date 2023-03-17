@@ -115,7 +115,7 @@ export class NocturneFrontendSDK {
       await tokenContract.setApprovalForAll(this.vaultContractAddress, true);
     }
 
-    // TODO: use real chainId, nonce, gasPrice when we integrate depositManager
+    // TODO: currently broken as is, fix once we have deposit screener agent
     return this.walletContract.depositFunds({
       chainId: 0,
       spender,

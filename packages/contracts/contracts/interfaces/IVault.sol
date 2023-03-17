@@ -10,5 +10,8 @@ interface IVault {
         uint256 value
     ) external;
 
-    function makeDeposit(DepositRequest calldata deposit) external;
+    function makeDeposit(
+        DepositRequest calldata deposit,
+        address source
+    ) external;
 }

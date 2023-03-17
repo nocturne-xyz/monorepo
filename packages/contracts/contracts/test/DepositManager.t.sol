@@ -36,6 +36,7 @@ contract DepositManagerTest is Test, ParseUtils {
     address SCREENER = vm.addr(SCREENER_PRIVKEY);
 
     uint256 constant RESERVE_AMOUNT = 50_000_000;
+    uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
     event DepositInstantiated(
         address indexed spender,
@@ -82,6 +83,7 @@ contract DepositManagerTest is Test, ParseUtils {
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
+        wallet.setDepositSourcePermission(address(depositManager), true);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -106,7 +108,7 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000 // 10M gas comp
+            GAS_COMP_AMOUNT // 10M gas comp
         );
 
         // Deposit hash not yet marked true and ETH balance empty
@@ -114,8 +116,8 @@ contract DepositManagerTest is Test, ParseUtils {
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
         assertEq(address(depositManager).balance, 0);
 
-        // Set ALICE balance to 10M gwei
-        vm.deal(ALICE, 10_000_000);
+        // Set ALICE balance to 10M wei
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
 
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
@@ -125,7 +127,7 @@ contract DepositManagerTest is Test, ParseUtils {
             deposit.nonce
         );
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -134,7 +136,7 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         console.log("Alice remaining eth:", ALICE.balance);
-        assertEq(address(depositManager).balance, 10_000_000);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
     }
 
     function testInstantiateDepositFailureWrongChainId() public {
@@ -224,14 +226,14 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000
+            GAS_COMP_AMOUNT
         );
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
 
         // Call instantiateDeposit
-        vm.deal(ALICE, 10_000_000);
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -240,7 +242,7 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
 
         // Eth received
-        assertEq(address(depositManager).balance, 10_000_000);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
         assertEq(ALICE.balance, 0);
 
         // Call retrieveDeposit
@@ -263,7 +265,7 @@ contract DepositManagerTest is Test, ParseUtils {
 
         // Eth gas sent back to user
         assertEq(address(depositManager).balance, 0);
-        assertEq(ALICE.balance, 10_000_000);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
     function testRetrieveDepositFailureNotSpender() public {
@@ -309,7 +311,7 @@ contract DepositManagerTest is Test, ParseUtils {
             0
         );
 
-        vm.expectRevert("Cannot retrieve nonexistent deposit");
+        vm.expectRevert("deposit !exists");
         vm.prank(ALICE);
         depositManager.retrieveDeposit(deposit);
     }
@@ -329,21 +331,98 @@ contract DepositManagerTest is Test, ParseUtils {
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
-            10_000_000 // 10M gas comp
+            GAS_COMP_AMOUNT // 10M gas comp
         );
 
-        vm.deal(ALICE, 10_000_000);
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: 10_000_000}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+
+        // Deposit manager has tokens and gas funds
+        assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
-        // TODO: Wallet contract still expects msg.sender to be depositor,
-        // followup PR will refactor Wallet, tests, and sdks to use deposit
-        // manager
-        vm.expectRevert("Spender must be the sender");
+        vm.prank(SCREENER);
+        depositManager.processDeposit(deposit, signature);
+
+        // Ensure vault now has ALICE's tokens
+        assertEq(token.balanceOf(address(vault)), RESERVE_AMOUNT);
+        assertEq(token.balanceOf(address(ALICE)), 0);
+
+        // TODO: We want to check that some gas went to screener and rest went
+        // back to ALICE. Currently unable to because we can't set tx.gasprice
+        // in foundry. once added we should check logic for screener
+        // compensation. For now we assume all goes back to user.
+        assertEq(address(depositManager).balance, 0);
+        assertEq(SCREENER.balance, 0);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT);
+    }
+
+    function testProcessDepositFailureBadSignature() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+
+        bytes32 digest = depositManager.computeDigest(deposit);
+        uint256 randomPrivkey = 123;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomPrivkey, digest);
+        bytes memory badSignature = rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
+
+        vm.expectRevert("request signer !screener");
+        vm.prank(SCREENER);
+        depositManager.processDeposit(deposit, badSignature);
+    }
+
+    function testProcessDepositFailureNonExistentDeposit() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        // Format deposit request but do NOT instantiate deposit
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        bytes32 digest = depositManager.computeDigest(deposit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
+
+        vm.expectRevert("deposit !exists");
+        vm.prank(SCREENER);
         depositManager.processDeposit(deposit, signature);
     }
 }

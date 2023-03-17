@@ -17,7 +17,7 @@ contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
         string memory contractName,
         string memory contractVersion
     ) external initializer {
-        __DepositManagerBase_initialize(contractName, contractVersion);
+        __DepositManagerBase_init(contractName, contractVersion);
     }
 
     function recoverDepositRequestSigner(

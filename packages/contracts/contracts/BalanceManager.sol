@@ -123,12 +123,15 @@ contract BalanceManager is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    function _makeDeposit(DepositRequest calldata deposit) internal {
+    function _makeDeposit(
+        DepositRequest calldata deposit,
+        address source
+    ) internal {
         StealthAddress calldata depositAddr = deposit.depositAddr;
 
         _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
 
-        _vault.makeDeposit(deposit);
+        _vault.makeDeposit(deposit, source);
     }
 
     /**
