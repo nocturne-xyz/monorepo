@@ -179,6 +179,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         ALICE_TO_BOB_PRIV_VAL,
         nocturneWalletSDKBob.signer.canonicalAddress()
       )
+      .gasPrice(1n)
       .action(shitcoin.address, encodedFunction)
       .build();
 
@@ -254,7 +255,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       ).toBigInt();
       console.log("bunlder gas asset balance after op:", bundlerBalanceBefore);
       // for some reason, mocha `.gte` doesn't work here
-      expect(bundlerBalanceAfter >= bundlerBalanceBefore).to.be.true;
+      expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };
 
     await testE2E(operationRequest, contractChecks, offchainChecks);
