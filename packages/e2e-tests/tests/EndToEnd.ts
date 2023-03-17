@@ -35,6 +35,11 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
+// 10^9 (e.g. 10 gwei if this was eth)
+const GAS_PRICE = 10n * (10n ** 9n);
+// 10^9 gas
+const GAS_FAUCET_DEFAULT_AMOUNT = (10n ** 9n) * GAS_PRICE;
+
 const PLUTOCRACY_AMOUNT = 3n;
 
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
@@ -129,13 +134,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
 
-    const opRequest: OperationRequest = {
-      ...operationRequest,
-      gasPrice: 0n,
-    };
+    if (operationRequest.gasPrice === undefined) {
+      operationRequest.gasPrice = 0n;
+    }
 
     console.log("Create post-proof operation with NocturneWalletSDK");
-    const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
+    const preSign = await nocturneWalletSDKAlice.prepareOperation(operationRequest);
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
@@ -159,7 +163,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       gasToken,
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-      [PER_NOTE_AMOUNT]
+      [GAS_FAUCET_DEFAULT_AMOUNT]
     );
 
     console.log("wait for subtreee update");
@@ -179,14 +183,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         ALICE_TO_BOB_PRIV_VAL,
         nocturneWalletSDKBob.signer.canonicalAddress()
       )
-      .gasPrice(1n)
       .action(shitcoin.address, encodedFunction)
+      .gasPrice(GAS_PRICE)
       .build();
 
     const bundlerBalanceBefore = (
       await gasToken.balanceOf(await bundlerEoa.getAddress())
     ).toBigInt();
-    console.log("bunlder gas asset balance before op:", bundlerBalanceBefore);
+    console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
 
     const contractChecks = async () => {
       console.log("Check for OperationProcessed event");
@@ -253,7 +257,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
-      console.log("bunlder gas asset balance after op:", bundlerBalanceBefore);
+      console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
       // for some reason, mocha `.gte` doesn't work here
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };

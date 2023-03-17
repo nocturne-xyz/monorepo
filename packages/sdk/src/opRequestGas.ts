@@ -35,7 +35,7 @@ const DUMMY_GAS_ASSET: Asset = {
   id: ERC20_ID,
 };
 
-const PER_JOINSPLIT_GAS = 170_000n;
+const PER_JOINSPLIT_GAS = 525_000n;
 const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
@@ -88,11 +88,11 @@ export async function handleGasForOperationRequest(
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
     const totalGasEstimate =
-      gasPrice *
+      gasPrice * 
       (executionGasLimit +
         BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
           PER_JOINSPLIT_GAS +
-        BigInt(maxNumRefunds) * PER_REFUND_GAS);
+        (maxNumRefunds + 1n) * PER_REFUND_GAS);
 
     const { gasAssets, db } = deps;
 
@@ -104,7 +104,11 @@ export async function handleGasForOperationRequest(
         db,
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasEstimate
-      );
+    );
+
+    if (joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length) {
+      gasEstimatedOpRequest.maxNumRefunds += 1n;
+    }
 
     if (!gasAsset) {
       throw new Error("Not enough owned gas tokens pay for op");

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix `opRequestGas` not increasing `maxNumRefunds` when joinsplits are added for gas
+- increase default gas estimate per joinsplit in `opRequestGas`
 - Fix `SubgraphSyncAdapter` not including `endBlock` in the range over which it emits diffs
 - fix bug in `NocturneDB` where `applyStateDiff` nullifies notes before, not after adding them
 - rename `NocturneContext` -> `NocturneWalletSDK`
