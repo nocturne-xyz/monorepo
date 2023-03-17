@@ -80,11 +80,9 @@ export interface NocturneTestDeployment {
   vault: Vault;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
+  bundlerEoa: ethers.Wallet;
+  subtreeUpdaterEoa: ethers.Wallet;
   teardown: () => Promise<void>;
-}
-
-export interface SetupNocturneOpts {
-  syncAdapter: SyncAdapterOption;
 }
 
 // defaults for actor deployments
@@ -141,7 +139,8 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa, aliceEoa, bobEoa] = KEYS_TO_WALLETS(provider);
+  const [deployerEoa, aliceEoa, bobEoa, bundlerEoa, subtreeUpdaterEoa] =
+    KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
   });
@@ -167,7 +166,7 @@ export async function setupTestDeployment(
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       walletAddress: walletProxy.proxy,
-      txSignerKey: deployerEoa.privateKey,
+      txSignerKey: bundlerEoa.privateKey,
     };
 
     proms.push(startBundler(bundlerConfig));
@@ -180,7 +179,7 @@ export async function setupTestDeployment(
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
       walletAddress: walletProxy.proxy,
-      txSignerKey: deployerEoa.privateKey,
+      txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 
     const startContainerWithLogs = async () => {
@@ -256,6 +255,8 @@ export async function setupTestDeployment(
     contractDeployment,
     provider,
     teardown,
+    bundlerEoa,
+    subtreeUpdaterEoa,
   };
 }
 

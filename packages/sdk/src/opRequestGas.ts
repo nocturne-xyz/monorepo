@@ -88,7 +88,7 @@ export async function handleGasForOperationRequest(
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
     const totalGasEstimate =
-      gasPrice * 
+      gasPrice *
       (executionGasLimit +
         BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
           PER_JOINSPLIT_GAS +
@@ -104,9 +104,11 @@ export async function handleGasForOperationRequest(
         db,
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasEstimate
-    );
+      );
 
-    if (joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length) {
+    if (
+      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
+    ) {
       gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
 

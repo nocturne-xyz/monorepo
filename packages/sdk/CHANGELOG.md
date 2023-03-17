@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move gas accounting tests from `prepareOperationGas.test.ts` to `opRequestGas.test.ts`
 - fix `opRequestGas` not increasing `maxNumRefunds` when joinsplits are added for gas
 - increase default gas estimate per joinsplit in `opRequestGas`
 - Fix `SubgraphSyncAdapter` not including `endBlock` in the range over which it emits diffs

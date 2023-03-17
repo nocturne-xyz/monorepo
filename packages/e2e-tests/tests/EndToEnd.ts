@@ -36,9 +36,9 @@ const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
 // 10^9 (e.g. 10 gwei if this was eth)
-const GAS_PRICE = 10n * (10n ** 9n);
+const GAS_PRICE = 10n * 10n ** 9n;
 // 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = (10n ** 9n) * GAS_PRICE;
+const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
 
 const PLUTOCRACY_AMOUNT = 3n;
 
@@ -79,28 +79,29 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     });
 
-    ({ provider, teardown, wallet, vault, depositManager } = testDeployment);
+    ({ provider, teardown, wallet, vault, bundlerEoa, depositManager } =
+      testDeployment);
 
-    [bundlerEoa, aliceEoa, bobEoa] = KEYS_TO_WALLETS(provider);
+    const [deployer, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
 
-    aliceEoa = aliceEoa;
-    bobEoa = bobEoa;
+    aliceEoa = _aliceEoa;
+    bobEoa = _bobEoa;
 
-    [shitcoin, shitcoinAsset] = await deployERC20(bundlerEoa);
+    [shitcoin, shitcoinAsset] = await deployERC20(deployer);
     console.log("ERC20 'shitcoin' deployed at: ", shitcoin.address);
 
     [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
 
     {
       let ctor;
-      [monkey, ctor] = await deployERC721(bundlerEoa);
+      [monkey, ctor] = await deployERC721(deployer);
       monkeyAsset = ctor(0n);
       console.log("ERC721 'monkey' deployed at: ", monkey.address);
     }
 
     {
       let ctor;
-      [plutocracy, ctor] = await deployERC1155(bundlerEoa);
+      [plutocracy, ctor] = await deployERC1155(deployer);
       plutocracyAsset = ctor(0n);
       console.log("ERC1155 'plutocracy' deployed at: ", plutocracy.address);
     }
@@ -139,7 +140,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     }
 
     console.log("Create post-proof operation with NocturneWalletSDK");
-    const preSign = await nocturneWalletSDKAlice.prepareOperation(operationRequest);
+    const preSign = await nocturneWalletSDKAlice.prepareOperation(
+      operationRequest
+    );
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
@@ -163,7 +166,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       gasToken,
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-      [GAS_FAUCET_DEFAULT_AMOUNT]
+      [GAS_FAUCET_DEFAULT_AMOUNT],
+      2
     );
 
     console.log("wait for subtreee update");

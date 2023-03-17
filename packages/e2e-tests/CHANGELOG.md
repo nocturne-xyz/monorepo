@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- make bundler and subtree updater use separate EOAs in `setupTestDeployment`
+- make `submitAndProcessOperation` use a retry loop and print statuses
 - add gas asset to E2E test setup
 - copy over named assets from SDK unit tests
 - add check that bundler is compensated for gas to e2e test

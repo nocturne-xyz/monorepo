@@ -81,30 +81,25 @@ export async function submitAndProcessOperation(
 
   console.log("Bundler server response: ", await res.json());
 
-
   console.log("waiting for bundler to receive the operation");
   await sleep(5_000);
 
   const operationDigest = computeOperationDigest(op);
-  let executed = false;
-  setTimeout(() => {
-    if (!executed) {
-      console.error("operation timed out after 60 seconds");
-      throw new Error("operation timed out after 60 seconds");
-    }
-  }, 60_000);
 
-  while (!executed) {
+  let executed = false;
+  let count = 0;
+  while (!executed && count < 10) {
     try {
       res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
         method: "GET",
       });
       const statusRes = await res.json();
       const status = statusRes.status as OperationStatus;
-      console.log(
-        `Bundler marked operation ${operationDigest} ${status}`
-      );
-      if (status === OperationStatus.EXECUTED_FAILED || status === OperationStatus.EXECUTED_SUCCESS) {
+      console.log(`Bundler marked operation ${operationDigest} ${status}`);
+      if (
+        status === OperationStatus.EXECUTED_FAILED ||
+        status === OperationStatus.EXECUTED_SUCCESS
+      ) {
         executed = true;
       }
     } catch (err) {
@@ -113,6 +108,12 @@ export async function submitAndProcessOperation(
     }
 
     await sleep(5_000);
+    count++;
+  }
+
+  if (!executed) {
+    console.error("operation timed out after 50 seconds");
+    throw new Error("operation timed out after 50 seconds");
   }
 }
 
