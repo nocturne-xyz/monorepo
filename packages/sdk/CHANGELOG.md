@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make separate multi-asset variant of depositFunds
 - move gas accounting tests from `prepareOperationGas.test.ts` to `opRequestGas.test.ts`
 - fix `opRequestGas` not increasing `maxNumRefunds` when joinsplits are added for gas
 - increase default gas estimate per joinsplit in `opRequestGas`

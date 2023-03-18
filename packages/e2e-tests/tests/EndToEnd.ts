@@ -24,7 +24,10 @@ import {
   proveOperation,
 } from "@nocturne-xyz/sdk";
 import { sleep, submitAndProcessOperation } from "../src/utils";
-import { depositFunds } from "../src/deposit";
+import {
+  depositFundsMultiToken,
+  depositFundsSingleToken,
+} from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { deployERC1155, deployERC20, deployERC721 } from "../src/tokens";
 
@@ -59,14 +62,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let nocturneWalletSDKBob: NocturneWalletSDK;
   let joinSplitProver: JoinSplitProver;
 
-  let shitcoin: SimpleERC20Token;
-  let shitcoinAsset: Asset;
+  let erc20: SimpleERC20Token;
+  let erc20Asset: Asset;
 
-  let monkey: SimpleERC721Token;
-  let monkeyAsset: Asset;
+  let erc721: SimpleERC721Token;
+  let erc721Asset: Asset;
 
-  let plutocracy: SimpleERC1155Token;
-  let plutocracyAsset: Asset;
+  let erc1155: SimpleERC1155Token;
+  let erc1155Asset: Asset;
 
   let gasToken: SimpleERC20Token;
   let gasTokenAsset: Asset;
@@ -87,23 +90,23 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     aliceEoa = _aliceEoa;
     bobEoa = _bobEoa;
 
-    [shitcoin, shitcoinAsset] = await deployERC20(deployer);
-    console.log("ERC20 'shitcoin' deployed at: ", shitcoin.address);
+    [erc20, erc20Asset] = await deployERC20(deployer);
+    console.log("ERC20 'shitcoin' deployed at: ", erc20.address);
 
     [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
 
     {
       let ctor;
-      [monkey, ctor] = await deployERC721(deployer);
-      monkeyAsset = ctor(0n);
-      console.log("ERC721 'monkey' deployed at: ", monkey.address);
+      [erc721, ctor] = await deployERC721(deployer);
+      erc721Asset = ctor(0n);
+      console.log("ERC721 'monkey' deployed at: ", erc721.address);
     }
 
     {
       let ctor;
-      [plutocracy, ctor] = await deployERC1155(deployer);
-      plutocracyAsset = ctor(0n);
-      console.log("ERC1155 'plutocracy' deployed at: ", plutocracy.address);
+      [erc1155, ctor] = await deployERC1155(deployer);
+      erc1155Asset = ctor(0n);
+      console.log("ERC1155 'plutocracy' deployed at: ", erc1155.address);
     }
 
     ({
@@ -135,10 +138,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
 
-    if (operationRequest.gasPrice === undefined) {
-      operationRequest.gasPrice = 0n;
-    }
-
     console.log("Create post-proof operation with NocturneWalletSDK");
     const preSign = await nocturneWalletSDKAlice.prepareOperation(
       operationRequest
@@ -154,20 +153,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("Deposit funds and commit note commitments");
-    await depositFunds(
+    await depositFundsMultiToken(
       depositManager,
-      shitcoin,
+      [
+        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-      [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]
-    );
-    await depositFunds(
-      depositManager,
-      gasToken,
-      aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-      [GAS_FAUCET_DEFAULT_AMOUNT],
-      2
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
 
     console.log("wait for subtreee update");
@@ -181,13 +174,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       );
 
     const operationRequest = new OperationRequestBuilder()
-      .unwrap(shitcoinAsset, ALICE_UNWRAP_VAL)
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .confidentialPayment(
-        shitcoinAsset,
+        erc20Asset,
         ALICE_TO_BOB_PRIV_VAL,
         nocturneWalletSDKBob.signer.canonicalAddress()
       )
-      .action(shitcoin.address, encodedFunction)
+      .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
       .build();
 
@@ -210,12 +203,12 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(events[0].args.callSuccesses[0]).to.equal(true);
 
       expect(
-        (await shitcoin.balanceOf(await aliceEoa.getAddress())).toBigInt()
+        (await erc20.balanceOf(await aliceEoa.getAddress())).toBigInt()
       ).to.equal(0n);
       expect(
-        (await shitcoin.balanceOf(await bobEoa.getAddress())).toBigInt()
+        (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await shitcoin.balanceOf(vault.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(vault.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
     };
@@ -224,7 +217,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       console.log("Alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        shitcoinAsset
+        erc20Asset
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
@@ -247,9 +240,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       console.log("Bob: Sync SDK post-operation");
       await nocturneWalletSDKBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(
-        shitcoinAsset
-      )!;
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -271,7 +262,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
     console.log("Deposit funds and commit note commitments");
-    await depositFunds(
+    await depositFundsSingleToken(
       depositManager,
       gasToken,
       aliceEoa,
@@ -286,7 +277,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
-        [wallet.address, monkeyAsset.id]
+        [wallet.address, erc721Asset.id]
       );
 
     console.log("Encode reserve erc1155 action");
@@ -294,13 +285,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, plutocracyAsset.id, PLUTOCRACY_AMOUNT]
+        [wallet.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
       );
 
     // unwrap 1 erc20 to satisfy gas token requirement
     const operationRequest = new OperationRequestBuilder()
-      .action(monkey.address, monkeyEncodedFunction)
-      .action(plutocracy.address, plutocracyEncodedFunction)
+      .action(erc721.address, monkeyEncodedFunction)
+      .action(erc1155.address, plutocracyEncodedFunction)
       .unwrap(gasTokenAsset, 1n)
       .build();
 
@@ -325,13 +316,13 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        monkeyAsset
+        erc721Asset
       )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
       const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        plutocracyAsset
+        erc1155Asset
       )!;
       expect(erc1155NotesAlice.length).to.equal(1);
     };
