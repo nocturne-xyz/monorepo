@@ -273,7 +273,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await sleep(20_000);
 
     console.log("Encode reserve erc721 action");
-    const monkeyEncodedFunction =
+    const erc721ReserveCalldata =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
@@ -281,7 +281,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       );
 
     console.log("Encode reserve erc1155 action");
-    const plutocracyEncodedFunction =
+    const erc1155ReserveCalldata =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
@@ -290,8 +290,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     // unwrap 1 erc20 to satisfy gas token requirement
     const operationRequest = new OperationRequestBuilder()
-      .action(erc721.address, monkeyEncodedFunction)
-      .action(erc1155.address, plutocracyEncodedFunction)
+      .action(erc721.address, erc721ReserveCalldata)
+      .action(erc1155.address, erc1155ReserveCalldata)
       .unwrap(gasTokenAsset, 1n)
       .build();
 
