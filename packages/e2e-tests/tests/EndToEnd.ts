@@ -267,7 +267,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       gasToken,
       aliceEoa,
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
-      [PER_NOTE_AMOUNT]
+      [GAS_FAUCET_DEFAULT_AMOUNT]
     );
     console.log("wait for subtreee update");
     await sleep(20_000);
