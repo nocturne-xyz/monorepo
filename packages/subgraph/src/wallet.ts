@@ -10,26 +10,26 @@ import {
   SubtreeCommit,
   Nullifier,
 } from "../generated/schema";
-import { getId, getTotalLogIndex } from "./utils";
+import { getIdWithEntityIndex, getTotalLogIndex } from "./utils";
 
 export function handleJoinSplit(event: JoinSplitProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
   const joinSplit = event.params.joinSplit;
 
   // first old note's nullifier
-  let id = getId(totalLogIndex, 0);
+  let id = getIdWithEntityIndex(totalLogIndex, 0);
   const nullifierA = new Nullifier(id);
   nullifierA.nullifier = event.params.oldNoteANullifier;
   nullifierA.save();
 
   // second old note's nullfier
-  id = getId(totalLogIndex, 1);
+  id = getIdWithEntityIndex(totalLogIndex, 1);
   const nullifierB = new Nullifier(id);
   nullifierB.nullifier = event.params.oldNoteBNullifier;
   nullifierB.save();
 
   // unpack first new note
-  id = getId(totalLogIndex, 2);
+  id = getIdWithEntityIndex(totalLogIndex, 2);
 
   const encryptedNoteA = new EncryptedNote(id);
 
@@ -55,7 +55,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   newNoteA.save();
 
   // unpack second new note
-  id = getId(totalLogIndex, 3);
+  id = getIdWithEntityIndex(totalLogIndex, 3);
 
   const encryptedNoteB = new EncryptedNote(id);
 
@@ -84,7 +84,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
 export function handleRefund(event: RefundProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
 
-  const id = getId(totalLogIndex, 0);
+  const id = getIdWithEntityIndex(totalLogIndex, 0);
   const newNote = new EncodedOrEncryptedNote(id);
   const encodedNote = new EncodedNote(id);
 
@@ -108,7 +108,7 @@ export function handleRefund(event: RefundProcessed): void {
 export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   const totalLogIndex = getTotalLogIndex(event);
 
-  const id = getId(totalLogIndex, 0);
+  const id = getIdWithEntityIndex(totalLogIndex, 0);
   const commit = new SubtreeCommit(id);
 
   commit.newRoot = event.params.newRoot;

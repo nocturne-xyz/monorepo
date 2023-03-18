@@ -4,7 +4,7 @@ import { getId, getTotalLogIndex } from "./utils";
 
 export function handleDepositInstantiated(event: DepositInstantiated): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const id = getId(totalLogIndex, 0);
+  const id = getId(totalLogIndex);
 
   const deposit = new DepositEvent(id);
 
