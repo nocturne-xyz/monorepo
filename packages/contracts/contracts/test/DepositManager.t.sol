@@ -39,24 +39,33 @@ contract DepositManagerTest is Test, ParseUtils {
     uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
     event DepositInstantiated(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     event DepositRetrieved(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     event DepositProcessed(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     function setUp() public virtual {
@@ -121,10 +130,13 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
+            block.chainid,
             deposit.spender,
             deposit.encodedAsset,
             deposit.value,
-            deposit.nonce
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
         );
         vm.prank(ALICE);
         depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
@@ -248,10 +260,13 @@ contract DepositManagerTest is Test, ParseUtils {
         // Call retrieveDeposit
         vm.expectEmit(true, true, true, true);
         emit DepositRetrieved(
+            block.chainid,
             deposit.spender,
             deposit.encodedAsset,
             deposit.value,
-            deposit.nonce
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
         );
         vm.prank(ALICE);
         depositManager.retrieveDeposit(deposit);
@@ -345,6 +360,17 @@ contract DepositManagerTest is Test, ParseUtils {
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
+
+        vm.expectEmit(true, true, true, true);
+        emit DepositProcessed(
+            block.chainid,
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
+        );
 
         vm.prank(SCREENER);
         depositManager.processDeposit(deposit, signature);
