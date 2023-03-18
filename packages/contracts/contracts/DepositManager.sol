@@ -27,7 +27,7 @@ contract DepositManager is
     event DepositInstantiated(
         uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
         StealthAddress depositAddr,
         uint256 nonce,
@@ -37,7 +37,7 @@ contract DepositManager is
     event DepositRetrieved(
         uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
         StealthAddress depositAddr,
         uint256 nonce,
@@ -47,7 +47,7 @@ contract DepositManager is
     event DepositProcessed(
         uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
         StealthAddress depositAddr,
         uint256 nonce,
