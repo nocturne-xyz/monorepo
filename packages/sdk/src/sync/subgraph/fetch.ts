@@ -7,8 +7,6 @@ import {
 } from "../../primitives";
 import { maxArray } from "../../utils";
 
-const SUBGRAPH_NAME = "nocturne-test";
-
 interface NoteResponse {
   ownerH1X: string;
   ownerH1Y: string;
@@ -319,27 +317,29 @@ export async function fetchNullifiers(
 }
 
 const latestIndexedBlockQuery = `
-  query indexingStatusForCurrentVersion(subgraphName: ${SUBGRAPH_NAME}) {
-    chains {
-      latestBlock {
-        number
-      }
-    }
-  }
-`
-
-interface FetchLatestIndexedBlockResponse {
-  data: {
-    chains: {
-      latestBlock: {
-        number: string;
-      }
+{
+  _meta {
+    block {
+      number
     }
   }
 }
+`;
+
+interface FetchLatestIndexedBlockResponse {
+  data: {
+    _meta: {
+      block: {
+        number: number;
+      };
+    };
+  };
+}
 
 // gets the latest indexed block from the subgraph
-export async function fetchLatestIndexedBlock(endpoint: string): Promise<number> {
+export async function fetchLatestIndexedBlock(
+  endpoint: string
+): Promise<number> {
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -353,14 +353,20 @@ export async function fetchLatestIndexedBlock(endpoint: string): Promise<number>
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(`Failed to fetch latest indexed block from subgraph: ${text}`);
+      console.error(
+        `Failed to fetch latest indexed block from subgraph: ${text}`
+      );
 
-      throw new Error(`Failed to fetch latest indexed block from subgraph: ${text}`);
+      throw new Error(
+        `Failed to fetch latest indexed block from subgraph: ${text}`
+      );
     }
 
     const res = (await response.json()) as FetchLatestIndexedBlockResponse;
-    console.log(res)
 
-    return parseInt(res.data.chains.latestBlock.number);
+    return res.data._meta.block.number;
+  } catch (err) {
+    console.error("Error when fetching latest indexed block from subgraph");
+    throw err;
   }
 }

@@ -30,7 +30,7 @@ export class RPCSyncAdapter implements SyncAdapter {
 
   constructor(
     provider: ethers.providers.Provider,
-    walletContractAddress: Address,
+    walletContractAddress: Address
   ) {
     this.walletContract = Wallet__factory.connect(
       walletContractAddress,
@@ -62,21 +62,21 @@ export class RPCSyncAdapter implements SyncAdapter {
         to = min(to, await walletContract.provider.getBlockNumber());
 
         // if `from` >= `to`, we've caught up to the tip of the chain
-        // sleep for a bit to avoid spamming the RPC endpoint 
+        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
+        // and no new blocks were produced since then
+        // sleep for a bit and re-try to avoid spamming the RPC endpoint
         if (from >= to) {
           await sleep(5_000);
+          continue;
         }
 
         // fetch event data from chain
-        const [
-          includedNotes,
-          joinSplitEvents,
-          subtreeUpdateCommits,
-        ] = await Promise.all([
-          await fetchNotesFromRefunds(walletContract, from, to),
-          await fetchJoinSplits(walletContract, from, to),
-          await fetchSubtreeUpdateCommits(walletContract, from, to),
-        ]);
+        const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
+          await Promise.all([
+            await fetchNotesFromRefunds(walletContract, from, to),
+            await fetchJoinSplits(walletContract, from, to),
+            await fetchSubtreeUpdateCommits(walletContract, from, to),
+          ]);
 
         // extract notes and nullifiers
         const nullifiers =
