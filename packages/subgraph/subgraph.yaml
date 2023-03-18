@@ -47,8 +47,6 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Deposit
-        - EncodedAsset
-        - StealthAddress
       abis:
         - name: DepositManager
           file: ./abis/DepositManager.json

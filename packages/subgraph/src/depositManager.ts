@@ -1,17 +1,16 @@
-import { Bytes, Address } from "@graphprotocol/graph-ts";
 import { DepositInstantiated } from "../generated/DepositManager/DepositManager";
-import { DepositEvent, EncodedAsset } from "../generated/schema";
-import { getTotalLogIndex } from "./utils";
+import { DepositEvent } from "../generated/schema";
+import { getId, getTotalLogIndex } from "./utils";
 
 export function handleDepositInstantiated(event: DepositInstantiated): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const id = Bytes.fromHexString(totalLogIndex.toHexString());
+  const id = getId(totalLogIndex, 0);
 
   const deposit = new DepositEvent(id);
 
   deposit.type = "Instantiated";
   deposit.chainId = event.params.chainId;
-  deposit.spender = event.params.spender.toString();
+  deposit.spender = event.params.spender;
 
   deposit.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
   deposit.encodedAssetId = event.params.encodedAsset.encodedAssetId;
