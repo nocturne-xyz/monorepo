@@ -63,7 +63,7 @@ export function getSubtreeUpdaterDelay(): number {
 
 export async function submitAndProcessOperation(
   op: ProvenOperation
-): Promise<void> {
+): Promise<OperationStatus> {
   console.log("submitting operation");
   let res: any;
   try {
@@ -86,9 +86,8 @@ export async function submitAndProcessOperation(
 
   const operationDigest = computeOperationDigest(op);
 
-  let executed = false;
   let count = 0;
-  while (!executed && count < 10) {
+  while (count < 10) {
     try {
       res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
         method: "GET",
@@ -96,11 +95,12 @@ export async function submitAndProcessOperation(
       const statusRes = await res.json();
       const status = statusRes.status as OperationStatus;
       console.log(`Bundler marked operation ${operationDigest} ${status}`);
+
       if (
         status === OperationStatus.EXECUTED_FAILED ||
         status === OperationStatus.EXECUTED_SUCCESS
       ) {
-        executed = true;
+        return status;
       }
     } catch (err) {
       console.log("Error getting operation status: ", err);
@@ -111,10 +111,9 @@ export async function submitAndProcessOperation(
     count++;
   }
 
-  if (!executed) {
-    console.error("operation timed out after 50 seconds");
-    throw new Error("operation timed out after 50 seconds");
-  }
+  // if we get here, operation timed out
+  console.error("operation timed out after 50 seconds");
+  throw new Error("operation timed out after 50 seconds");
 }
 
 export async function runCommand(

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `submitAndProcessOperation` return `OperationStatus`
 - make bundler and subtree updater use separate EOAs in `setupTestDeployment`
 - make `submitAndProcessOperation` use a retry loop and print statuses
 - add gas asset to E2E test setup
