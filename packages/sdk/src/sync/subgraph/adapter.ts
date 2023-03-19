@@ -17,10 +17,10 @@ export class SubgraphSyncAdapter implements SyncAdapter {
     this.graphqlEndpoint = graphqlEndpoint;
   }
 
-  async iterStateDiffs(
+  iterStateDiffs(
     startBlock: number,
     opts?: IterSyncOpts
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;

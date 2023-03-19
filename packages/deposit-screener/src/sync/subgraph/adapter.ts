@@ -18,11 +18,11 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
     this.graphqlEndpoint = graphqlEndpoint;
   }
 
-  async iterDepositEvents(
+  iterDepositEvents(
     type: DepositEventType,
     startBlock: number,
     opts?: IterSyncOpts
-  ): Promise<ClosableAsyncIterator<DepositEvent[]>> {
+  ): ClosableAsyncIterator<DepositEvent[]> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;

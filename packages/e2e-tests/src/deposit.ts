@@ -7,9 +7,11 @@ import {
   DepositRequest,
   Note,
 } from "@nocturne-xyz/sdk";
-import { signDepositRequest } from "@nocturne-xyz/deposit-screener";
 import { ethers } from "ethers";
-import { EIP712Domain } from "@nocturne-xyz/deposit-screener/dist/src/typedData";
+import {
+  EIP712Domain,
+  signDepositRequest,
+} from "@nocturne-xyz/deposit-screener";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
