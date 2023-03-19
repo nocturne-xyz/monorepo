@@ -1,19 +1,19 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { DepositRequest } from "@nocturne-xyz/sdk";
-import { RateLimitDB } from "./db";
+import { DepositScreenerDB } from "./db";
 import { DepositRequestStage } from "./types";
 import { ScreeningApi } from "./screening";
 
-interface ScreenDepositRequestDeps {
+interface CheckDepositRequestDeps {
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi; // chainalysis, TRM, etc
-  rateLimitDB: RateLimitDB; // track rate limits
+  db: DepositScreenerDB; // track rate limits
 }
 
 // TODO: fill with real implementation
-export async function screenDepositRequest(
+export async function checkDepositRequest(
   deposit: DepositRequest,
-  deps: ScreenDepositRequestDeps
+  deps: CheckDepositRequestDeps
 ): Promise<DepositRequestStage> {
   deposit;
   deps;
