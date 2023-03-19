@@ -13,11 +13,13 @@ export class OperationValidator {
   nullifierDB: NullifierDB;
   provider: ethers.providers.Provider;
   walletContract: Wallet;
+  ignoreGas: boolean;
 
   constructor(
     walletAddress: string,
     redis: IORedis,
-    provider?: ethers.providers.Provider
+    provider?: ethers.providers.Provider,
+    ignoreGas: boolean = false
   ) {
     this.nullifierDB = new NullifierDB(redis);
 
@@ -32,6 +34,7 @@ export class OperationValidator {
     }
 
     this.walletContract = Wallet__factory.connect(walletAddress, this.provider);
+    this.ignoreGas = ignoreGas;
   }
 
   async addNullifiers(operation: ProvenOperation): Promise<void> {
@@ -98,5 +101,22 @@ export class OperationValidator {
     } catch (e) {
       return `Operation with digest ${id} reverts with: ${e}`;
     }
+  }
+
+  async checkNotEnoughGasError(
+    operation: ProvenOperation
+  ): Promise<ErrString | undefined> {
+    if (!this.ignoreGas) {
+      console.log("checking that operation's gas price >= current chain's gas price");
+      const gasPrice = (await this.provider.getGasPrice()).toBigInt();
+      if (operation.gasPrice < gasPrice) {
+        const id = computeOperationDigest(operation).toString();
+        return `Operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`
+      }
+    } else {
+      console.log("`ignoreGas` set to true - skipping gas price check")
+    }
+
+    return undefined;
   }
 }
