@@ -15,3 +15,5 @@ export {
   makeSubgraphQuery,
   fetchLatestIndexedBlock,
 } from "./subgraph";
+
+export { IterSyncOpts } from "./syncAdapter";

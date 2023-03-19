@@ -1,10 +1,6 @@
 import { min, sleep } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
-import {
-  EncryptedStateDiff,
-  IterStateDiffsOpts,
-  SyncAdapter,
-} from "../syncAdapter";
+import { EncryptedStateDiff, IterSyncOpts, SyncAdapter } from "../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
   fetchLatestIndexedBlock,
@@ -23,7 +19,7 @@ export class SubgraphSyncAdapter implements SyncAdapter {
 
   async iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts | undefined
+    opts?: IterSyncOpts
   ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
