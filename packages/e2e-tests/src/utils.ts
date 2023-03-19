@@ -1,5 +1,6 @@
 import {
   MockSubtreeUpdateProver,
+  OperationStatus,
   ProvenOperation,
   SubtreeUpdateProver,
   computeOperationDigest,
@@ -62,7 +63,7 @@ export function getSubtreeUpdaterDelay(): number {
 
 export async function submitAndProcessOperation(
   op: ProvenOperation
-): Promise<void> {
+): Promise<OperationStatus> {
   console.log("submitting operation");
   let res: any;
   try {
@@ -80,23 +81,39 @@ export async function submitAndProcessOperation(
 
   console.log("Bundler server response: ", await res.json());
 
-  console.log("Sleeping for 20s while bundler submits...");
-  await sleep(20_000);
+  console.log("waiting for bundler to receive the operation");
+  await sleep(5_000);
 
   const operationDigest = computeOperationDigest(op);
-  try {
-    res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
-      method: "GET",
-    });
-    console.log(
-      `Bundler marked operation ${operationDigest} ${JSON.stringify(
-        await res.json()
-      )}`
-    );
-  } catch (err) {
-    console.log("Error getting operation status: ", err);
-    throw err;
+
+  let count = 0;
+  while (count < 10) {
+    try {
+      res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
+        method: "GET",
+      });
+      const statusRes = await res.json();
+      const status = statusRes.status as OperationStatus;
+      console.log(`Bundler marked operation ${operationDigest} ${status}`);
+
+      if (
+        status === OperationStatus.EXECUTED_FAILED ||
+        status === OperationStatus.EXECUTED_SUCCESS
+      ) {
+        return status;
+      }
+    } catch (err) {
+      console.log("Error getting operation status: ", err);
+      throw err;
+    }
+
+    await sleep(5_000);
+    count++;
   }
+
+  // if we get here, operation timed out
+  console.error("operation timed out after 50 seconds");
+  throw new Error("operation timed out after 50 seconds");
 }
 
 export async function runCommand(

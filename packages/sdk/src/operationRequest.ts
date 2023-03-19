@@ -152,6 +152,11 @@ export class OperationRequestBuilder {
     return this;
   }
 
+  gasPrice(gasPrice: bigint): OperationRequestBuilder {
+    this.op.gasPrice = gasPrice;
+    return this;
+  }
+
   // builds the `OperationRequest`.
   // unwraps become `joinSplitRequest`s.
   // all `confidentialPayment`s and joinSplits for the same asset are consolidated

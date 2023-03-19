@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- return empty array from `getNoteCommitmentsByIndexRange` if `start >= nextMerkleIndex`
+- make separate multi-asset variant of depositFunds
+- move gas accounting tests from `prepareOperationGas.test.ts` to `opRequestGas.test.ts`
+- fix `opRequestGas` not increasing `maxNumRefunds` when joinsplits are added for gas
+- increase default gas estimate per joinsplit in `opRequestGas`
 - Fix `SubgraphSyncAdapter` not including `endBlock` in the range over which it emits diffs
 - fix bug in `NocturneDB` where `applyStateDiff` nullifies notes before, not after adding them
 - rename `NocturneContext` -> `NocturneWalletSDK`

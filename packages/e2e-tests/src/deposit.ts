@@ -3,27 +3,53 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   AssetType,
   AssetTrait,
-  NoteTrait,
   StealthAddress,
   DepositRequest,
+  Note,
 } from "@nocturne-xyz/sdk";
 import { signDepositRequest } from "@nocturne-xyz/deposit-screener";
 import { ethers } from "ethers";
 import { EIP712Domain } from "@nocturne-xyz/deposit-screener/dist/src/typedData";
 
-export async function depositFunds(
+export async function depositFundsMultiToken(
+  depositManager: DepositManager,
+  tokensWithAmounts: [SimpleERC20Token, bigint[]][],
+  eoa: ethers.Wallet,
+  stealthAddress: StealthAddress
+): Promise<Note[]> {
+  const deposit = await makeDeposit(depositManager, eoa, stealthAddress);
+  const notes: Note[] = [];
+  for (const [token, amounts] of tokensWithAmounts) {
+    const total = amounts.reduce((sum, a) => sum + a);
+    {
+      const tx = await token.reserveTokens(eoa.address, total);
+      await tx.wait(1);
+    }
+    {
+      const tx = await token
+        .connect(eoa)
+        .approve(depositManager.address, total);
+      await tx.wait(1);
+    }
+
+    for (const [i, amount] of amounts.entries()) {
+      notes.push(await deposit(token, amount, i));
+    }
+  }
+
+  return notes;
+}
+
+export async function depositFundsSingleToken(
   depositManager: DepositManager,
   token: SimpleERC20Token,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
-  amounts: bigint[],
-  startNonce = 0
-): Promise<bigint[]> {
-  const eoaAddress = await eoa.getAddress();
-  const chainId = BigInt(await eoa.getChainId());
+  amounts: bigint[]
+): Promise<Note[]> {
   const total = amounts.reduce((sum, a) => sum + a);
   {
-    const tx = await token.reserveTokens(eoaAddress, total);
+    const tx = await token.reserveTokens(eoa.address, total);
     await tx.wait(1);
   }
   {
@@ -31,29 +57,47 @@ export async function depositFunds(
     await tx.wait(1);
   }
 
-  const asset = {
-    assetType: AssetType.ERC20,
-    assetAddr: token.address,
-    id: 0n,
-  };
+  const deposit = await makeDeposit(depositManager, eoa, stealthAddress);
 
-  const encodedAsset = AssetTrait.encode(asset);
+  const notes: Note[] = [];
+  for (const [i, amount] of amounts.entries()) {
+    notes.push(await deposit(token, amount, i));
+  }
 
-  const commitments: bigint[] = [];
-  for (let i = 0; i < amounts.length; i++) {
+  return notes;
+}
+
+async function makeDeposit(
+  depositManager: DepositManager,
+  eoa: ethers.Wallet,
+  stealthAddress: StealthAddress
+): Promise<
+  (token: SimpleERC20Token, amount: bigint, noteNonce: number) => Promise<Note>
+> {
+  const chainId = BigInt(await eoa.getChainId());
+  const eoaAddress = await eoa.getAddress();
+
+  return async (token: SimpleERC20Token, amount: bigint, noteNonce: number) => {
+    const asset = {
+      assetType: AssetType.ERC20,
+      assetAddr: token.address,
+      id: 0n,
+    };
+    const encodedAsset = AssetTrait.encode(asset);
+
     const nonce = await depositManager._nonces(eoaAddress);
     const depositRequest: DepositRequest = {
       chainId,
       spender: eoaAddress,
       encodedAsset,
-      value: amounts[i],
+      value: amount,
       depositAddr: stealthAddress,
       nonce: nonce.toBigInt(),
       gasCompensation: BigInt(0),
     };
 
     console.log(
-      `Instantiating deposit for ${amounts[i]} of token ${token.address}`
+      `Instantiating deposit for ${amount} of token ${token.address}`
     );
     const instantiateDepositTx = await depositManager
       .connect(eoa)
@@ -70,21 +114,18 @@ export async function depositFunds(
     };
     const signature = await signDepositRequest(eoa, domain, depositRequest);
 
-    console.log(`Depositing ${amounts[i]} of token ${token.address}`);
+    console.log(`Depositing ${amount} of token ${token.address}`);
     const processDepositTx = await depositManager.processDeposit(
       depositRequest,
       signature
     );
     await processDepositTx.wait(1);
 
-    const note = {
+    return {
       owner: stealthAddress,
-      nonce: BigInt(i + startNonce),
+      nonce: BigInt(noteNonce),
       asset,
-      value: amounts[i],
+      value: amount,
     };
-    commitments.push(NoteTrait.toCommitment(note));
-  }
-
-  return commitments;
+  };
 }

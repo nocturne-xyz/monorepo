@@ -12,7 +12,7 @@ import { setupTestDeployment, setupTestClient } from "../src/deploy";
 import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 import { KEYS_TO_WALLETS } from "../src/keys";
-import { depositFunds } from "../src/deposit";
+import { depositFundsSingleToken } from "../src/deposit";
 
 const PER_SPEND_AMOUNT = 100n;
 
@@ -90,7 +90,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   });
 
   it("can recover state", async () => {
-    await depositFunds(
+    await depositFundsSingleToken(
       depositManager,
       token,
       aliceEoa,

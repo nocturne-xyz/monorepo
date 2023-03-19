@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- make `submitAndProcessOperation` return `OperationStatus`
+- make bundler and subtree updater use separate EOAs in `setupTestDeployment`
+- make `submitAndProcessOperation` use a retry loop and print statuses
+- add gas asset to E2E test setup
+- copy over named assets from SDK unit tests
+- add check that bundler is compensated for gas to e2e test
 - `deployContractsWithDummyAdmins` passes in alice and bob's addresses as whitelisted screeners so they can deposit (temporary until we have designated screening actor)
 - refactor `deploy.ts` to separate deploying test node / contracts / actors from setting up client
 - add subgraph E2E tests

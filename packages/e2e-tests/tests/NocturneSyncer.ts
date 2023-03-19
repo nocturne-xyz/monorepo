@@ -13,13 +13,14 @@ import {
   NocturneWalletSDK,
   proveOperation,
   OperationRequestBuilder,
+  NoteTrait,
 } from "@nocturne-xyz/sdk";
 import {
   SyncAdapterOption,
   setupTestDeployment,
   setupTestClient,
 } from "../src/deploy";
-import { depositFunds } from "../src/deposit";
+import { depositFundsSingleToken } from "../src/deposit";
 import {
   getSubtreeUpdateProver,
   sleep,
@@ -103,7 +104,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     it("syncs notes, not leaves before subtree update", async () => {
       // deposit notes
-      await depositFunds(
+      await depositFundsSingleToken(
         depositManager,
         token,
         aliceEoa,
@@ -128,13 +129,16 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     it("syncs notes and latest non-zero leaves after subtree update", async () => {
       // deposit notes...
-      const ncs = await depositFunds(
+      const depositedNotes = await depositFundsSingleToken(
         depositManager,
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [100n, 100n]
       );
+
+      const ncs = depositedNotes.map(NoteTrait.toCommitment);
+
       // apply subtree update and sync SDK
       await applySubtreeUpdate();
       await nocturneWalletSDKAlice.sync();
@@ -160,7 +164,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs nullifiers and nullifies notes", async () => {
       // deposit notes...
       console.log("depositing funds...");
-      await depositFunds(
+      await depositFundsSingleToken(
         depositManager,
         token,
         aliceEoa,

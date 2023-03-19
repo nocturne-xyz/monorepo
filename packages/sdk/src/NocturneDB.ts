@@ -194,6 +194,10 @@ export class NocturneDB {
     end?: number
   ): Promise<IncludedNoteCommitment[]> {
     const nextMerkleIndex = await this.nextMerkleIndex();
+    if (start >= nextMerkleIndex) {
+      return [];
+    }
+
     const indices = range(start, min(end ?? nextMerkleIndex, nextMerkleIndex));
     const notesAndCommitments = await this.getNotesOrCommitmentsByMerkleIndices(
       indices

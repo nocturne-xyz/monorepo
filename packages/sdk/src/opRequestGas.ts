@@ -35,7 +35,8 @@ const DUMMY_GAS_ASSET: Asset = {
   id: ERC20_ID,
 };
 
-const PER_JOINSPLIT_GAS = 170_000n;
+// TODO: ask bundler for the batch size and make a more intelligent estimate than this
+const PER_JOINSPLIT_GAS = 525_000n;
 const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
@@ -87,12 +88,13 @@ export async function handleGasForOperationRequest(
     // Otherwise, we need to add gas compensation to the operation request
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
+    // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
     const totalGasEstimate =
       gasPrice *
       (executionGasLimit +
         BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
           PER_JOINSPLIT_GAS +
-        BigInt(maxNumRefunds) * PER_REFUND_GAS);
+        (maxNumRefunds + 1n) * PER_REFUND_GAS);
 
     const { gasAssets, db } = deps;
 
@@ -105,6 +107,13 @@ export async function handleGasForOperationRequest(
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasEstimate
       );
+
+    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
+    if (
+      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
+    ) {
+      gasEstimatedOpRequest.maxNumRefunds += 1n;
+    }
 
     if (!gasAsset) {
       throw new Error("Not enough owned gas tokens pay for op");
