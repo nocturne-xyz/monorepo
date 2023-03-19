@@ -1,7 +1,7 @@
 import { DepositRequest } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 import { hashDepositRequest } from "./typedData";
-import { DepositRequestStage } from "./types";
+import { DepositRequestStatus } from "./types";
 
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 
@@ -17,7 +17,7 @@ export class DepositScreenerDB {
     this.redis = redis;
   }
 
-  private static formatDepositRequestStageKey(
+  private static formatDepositRequestStatusKey(
     depositRequest: DepositRequest
   ): string {
     return DEPOSIT_REQUEST_STAGE_PREFIX + hashDepositRequest(depositRequest);
@@ -31,11 +31,11 @@ export class DepositScreenerDB {
     this.redis.set(NEXT_BLOCK_KEY, block);
   }
 
-  async setDepositRequestStage(
+  async setDepositRequestStatus(
     depositRequest: DepositRequest,
-    status: DepositRequestStage
+    status: DepositRequestStatus
   ): Promise<void> {
-    const key = DepositScreenerDB.formatDepositRequestStageKey(depositRequest);
+    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
     this.redis.set(key, status.toString());
   }
 

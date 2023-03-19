@@ -4,7 +4,7 @@ import { calculateDelaySeconds } from "./delay";
 import {
   DelayedDepositJobData,
   DELAYED_DEPOSIT_JOB_TAG,
-  DepositRequestStage,
+  DepositRequestStatus,
 } from "./types";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
@@ -16,7 +16,7 @@ interface EnqueueDepositRequestDeps {
 export async function enqueueDepositRequest(
   depositRequest: DepositRequest,
   deps: EnqueueDepositRequestDeps
-): Promise<DepositRequestStage> {
+): Promise<DepositRequestStatus> {
   const delaySeconds = await calculateDelaySeconds(depositRequest);
 
   const depositRequestJson = JSON.stringify(depositRequest);
@@ -27,5 +27,5 @@ export async function enqueueDepositRequest(
   await deps.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
     delay: secsToMillis(delaySeconds),
   });
-  return DepositRequestStage.Enqueued;
+  return DepositRequestStatus.Enqueued;
 }
