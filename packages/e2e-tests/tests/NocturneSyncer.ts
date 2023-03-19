@@ -30,6 +30,11 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { KEYS_TO_WALLETS } from "../src/keys";
 
+// 10^9 (e.g. 10 gwei if this was eth)
+const GAS_PRICE = 10n * 10n ** 9n;
+// 10^9 gas
+const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
+
 describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
   syncTestSuite(SyncAdapterOption.RPC)
@@ -68,16 +73,17 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
 
+      token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+      console.log("Token deployed at: ", token.address);
+
       ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
         testDeployment.contractDeployment,
         provider,
         {
           syncAdapter,
+          gasAssets: new Map([["TOKEN", token.address]]),
         }
       ));
-
-      token = await new SimpleERC20Token__factory(deployerEoa).deploy();
-      console.log("Token deployed at: ", token.address);
 
       await newSubtreeUpdater();
     });
@@ -112,7 +118,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [100n, 100n]
       );
       // wait for subgraph to sync
-      await sleep(1_0000);
+      await sleep(2_000);
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -169,10 +175,10 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         token,
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-        [80n, 100n]
+        [80n, GAS_FAUCET_DEFAULT_AMOUNT]
       );
       // wait for subgraph to sync
-      await sleep(1_0000);
+      await sleep(2_000);
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
@@ -198,9 +204,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const opRequest = builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
+        .gasPrice(GAS_PRICE)
         .build();
-
-      opRequest.gasPrice = 0n;
 
       console.log("preparing op...");
       const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
@@ -216,6 +221,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await nocturneWalletSDKAlice.sync();
 
       // check that the DB nullified the spent note
+      // after the op, 1 refund should be issued, so the result should be that there are 2
+      // non-zero notes left in the DB (the refund and the unspent note)
       //@ts-ignore
       const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
       console.log("all notes: ", allNotes);
@@ -230,7 +237,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           nocturneWalletSDKAlice.signer.createNullifier(note)
         )
       );
-      expect(nonZeroNotes.length).to.eql(1);
+      expect(nonZeroNotes.length).to.eql(2);
     });
   };
 }

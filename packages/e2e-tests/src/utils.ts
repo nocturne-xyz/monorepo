@@ -74,12 +74,16 @@ export async function submitAndProcessOperation(
       },
       body: JSON.stringify(op),
     });
+    const resJson = await res.json();
+    console.log("Bundler server response: ", resJson);
+
+    if (!res.ok) {
+      throw new Error(resJson);
+    }
   } catch (err) {
     console.log("Error submitting operation: ", err);
     throw err;
   }
-
-  console.log("Bundler server response: ", await res.json());
 
   console.log("waiting for bundler to receive the operation");
   await sleep(5_000);

@@ -107,14 +107,16 @@ export class OperationValidator {
     operation: ProvenOperation
   ): Promise<ErrString | undefined> {
     if (!this.ignoreGas) {
-      console.log("checking that operation's gas price >= current chain's gas price");
+      console.log(
+        "checking that operation's gas price >= current chain's gas price"
+      );
       const gasPrice = (await this.provider.getGasPrice()).toBigInt();
       if (operation.gasPrice < gasPrice) {
         const id = computeOperationDigest(operation).toString();
-        return `Operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`
+        return `Operation ${id} gas price too low: ${operation.gasPrice} < current chain's gas price ${gasPrice}`;
       }
     } else {
-      console.log("`ignoreGas` set to true - skipping gas price check")
+      console.log("`ignoreGas` set to true - skipping gas price check");
     }
 
     return undefined;

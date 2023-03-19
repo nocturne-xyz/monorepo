@@ -67,10 +67,10 @@ export interface TestActorsConfig {
   // specify configs for actors to deploy
   // if non-skipped actors don't have a config, one of the defaults below will be used
   configs?: {
-    hhNode: Partial<HardhatNetworkConfig>;
-    bundler: Partial<BundlerConfig>;
-    subtreeUpdater: Partial<SubtreeUpdaterConfig>;
-    subgraph: Partial<SubgraphConfig>;
+    hhNode?: Partial<HardhatNetworkConfig>;
+    bundler?: Partial<BundlerConfig>;
+    subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
+    subgraph?: Partial<SubgraphConfig>;
   };
 }
 

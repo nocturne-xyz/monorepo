@@ -124,6 +124,8 @@ SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 sed -i '' -r -e "s/const WALLET_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SNAP_INDEX_TS
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
 
+# Set snap gas token addresses
+sed -i '' -r -e "s/const GAS_TOKEN_ADDRS = \[\"0x[0-9a-faA-F]+\", \"0x[0-9a-faA-F]+\"\];/const GAS_TOKEN_ADDRS = [\"$TOKEN_CONTRACT_ADDR1\", \"$TOKEN_CONTRACT_ADDR2\"];/g" $SNAP_INDEX_TS
 
 # Set site wallet and vault addresses
 sed -i '' -r -e "s/export const WALLET_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const WALLET_CONTRACT_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
@@ -131,6 +133,7 @@ sed -i '' -r -e "s/export const VAULT_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/ex
 
 # Set test site token address
 sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
+
 
 wait $SITE_PID
 wait $SNAP_PID

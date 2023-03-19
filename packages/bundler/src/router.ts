@@ -28,7 +28,7 @@ export class BundlerRouter {
     walletAddress: string,
     redis?: IORedis,
     provider?: ethers.providers.Provider,
-    ignoreGas?: boolean,
+    ignoreGas?: boolean
   ) {
     this.redis = getRedis(redis);
     this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: this.redis });
@@ -52,7 +52,7 @@ export class BundlerRouter {
 
     const operation = errorOrOperation;
 
-    console.log("Checking operation's gas price")
+    console.log("Checking operation's gas price");
     const gasPriceErr = await this.validator.checkNotEnoughGasError(operation);
     if (gasPriceErr) {
       res.status(400).json(gasPriceErr);
