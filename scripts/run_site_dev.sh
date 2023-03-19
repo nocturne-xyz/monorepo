@@ -41,13 +41,13 @@ sleep 10
 echo "starting graph node..."
 yarn graph-node &> "$LOG_DIR/graph-node" &
 
-# deposit
-echo "Running deposit funds script..."
-yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
-
 START_BLOCK=0
 BUNDLER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000004"
 SUBTREE_UPDATER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000005"
+
+# deposit
+echo "Running deposit funds script..."
+SUBTREE_BATCH_FILLER="$SUBTREE_UPDATER_TX_SIGNER_KEY" yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
 
 # read config variables from logs
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)

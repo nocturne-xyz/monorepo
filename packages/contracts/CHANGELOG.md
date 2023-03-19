@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add permission gate to `fillBatchWithZeros`
 - Add fixture check against deposit request hash in `DepositManagerBase` unit tests
 - Rename `processDeposit` and `DepositProcessed` to `completeDeposit` and `DepositCompleted`
 - delegate to single verifier in batch verifier if batch size is 1

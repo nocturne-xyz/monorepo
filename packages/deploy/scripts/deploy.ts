@@ -22,6 +22,11 @@ dotenv.config();
   if (!screenersString) throw new Error("Missing SCREENERS");
   const screeners = screenersString?.split(",") ?? [];
 
+  const subtreeBatchFillersString = process.env.SUBTREE_BATCH_FILLERS;
+  if (!subtreeBatchFillersString)
+    throw new Error("Missing SUBTREE_BATCH_FILLERS");
+  const subtreeBatchFillers = subtreeBatchFillersString?.split(",") ?? [];
+
   const useMockSubtreeUpdateVerifier =
     process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
 
@@ -41,6 +46,7 @@ dotenv.config();
       walletOwner,
       depositManagerOwner,
       screeners,
+      subtreeBatchFillers,
     },
     {
       useMockSubtreeUpdateVerifier,

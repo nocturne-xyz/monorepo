@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add subtree batch fillers args to `NocturneDeployArgs` and give them permission in `deployNocturne`
 - Now deploys deposit manager and connects deposit manager to wallet (+ related checks)
 - De-classify `NocturneDeployer` into just functions
 - Move proxy types to `config` package and import `config`
