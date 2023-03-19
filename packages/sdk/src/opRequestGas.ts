@@ -35,6 +35,7 @@ const DUMMY_GAS_ASSET: Asset = {
   id: ERC20_ID,
 };
 
+// TODO: ask bundler for the batch size and make a more intelligent estimate than this
 const PER_JOINSPLIT_GAS = 525_000n;
 const PER_REFUND_GAS = 80_000n;
 
@@ -87,6 +88,7 @@ export async function handleGasForOperationRequest(
     // Otherwise, we need to add gas compensation to the operation request
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
+    // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
     const totalGasEstimate =
       gasPrice *
       (executionGasLimit +
@@ -106,6 +108,7 @@ export async function handleGasForOperationRequest(
         totalGasEstimate
       );
 
+    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
     if (
       joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
     ) {
