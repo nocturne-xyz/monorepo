@@ -6,5 +6,5 @@ export interface ScreenerSyncAdapter {
     type: DepositEventType,
     startBlock: number,
     opts?: IterSyncOpts
-  ): Promise<ClosableAsyncIterator<DepositEvent[]>>;
+  ): ClosableAsyncIterator<DepositEvent[]>;
 }

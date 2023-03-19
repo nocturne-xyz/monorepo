@@ -48,5 +48,5 @@ export interface SyncAdapter {
   iterStateDiffs(
     startBlock: number,
     opts?: IterSyncOpts
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>>;
+  ): ClosableAsyncIterator<EncryptedStateDiff>;
 }

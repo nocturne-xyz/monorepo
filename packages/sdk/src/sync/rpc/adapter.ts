@@ -34,10 +34,10 @@ export class RPCSyncAdapter implements SyncAdapter {
     );
   }
 
-  async iterStateDiffs(
+  iterStateDiffs(
     startBlock: number,
     opts?: IterSyncOpts
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
       : RPC_MAX_CHUNK_SIZE;
