@@ -302,7 +302,7 @@ export function makeFetchLatestIndexedBlock(
 
 export const makeSubgraphQuery =
   <T, U>(endpoint: string, query: string, dataLabel: string) =>
-  async (variables: T) => {
+  async (variables: T): Promise<U> => {
     try {
       const response = await fetch(endpoint, {
         method: "POST",
