@@ -110,6 +110,10 @@ export async function deployNocturne(
       proxiedVault.address,
     ]
   );
+  console.log(
+    "Deployed proxied DepositManager:",
+    proxiedDepositManager.proxyAddresses
+  );
 
   console.log("Setting deposit manager screeners\n");
   for (const screener of args.screeners) {

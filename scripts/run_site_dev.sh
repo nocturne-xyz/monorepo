@@ -50,6 +50,7 @@ BUNDLER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000
 SUBTREE_UPDATER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000005"
 
 # read config variables from logs
+read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
@@ -70,6 +71,7 @@ REDIS_PASSWORD="baka"
 RPC_URL="http://host.docker.internal:8545"
 BUNDLER_PORT="3000"
 
+echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
 echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"
 echo "Vault contract address: $VAULT_CONTRACT_ADDRESS"
 echo "Token contract addresses: $TOKEN_CONTRACT_ADDR1, $TOKEN_CONTRACT_ADDR2"
