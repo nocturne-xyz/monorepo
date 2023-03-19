@@ -1,6 +1,13 @@
 import { DepositRequest } from "@nocturne-xyz/sdk";
 import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
-import { DEPOSIT_REQUEST_TYPES, EIP712Domain } from "./typedData";
+import { DEPOSIT_REQUEST_TYPES } from "./constants";
+
+export interface EIP712Domain {
+  name: string;
+  version: string;
+  chainId: bigint;
+  verifyingContract: string;
+}
 
 export async function signDepositRequest(
   signer: TypedDataSigner,
