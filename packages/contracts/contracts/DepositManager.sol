@@ -25,24 +25,33 @@ contract DepositManager is
     event ScreenerPermissionSet(address screener, bool permission);
 
     event DepositInstantiated(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     event DepositRetrieved(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     event DepositProcessed(
+        uint256 indexed chainId,
         address indexed spender,
-        EncodedAsset indexed encodedAsset,
+        EncodedAsset encodedAsset,
         uint256 value,
-        uint256 nonce
+        StealthAddress depositAddr,
+        uint256 nonce,
+        uint256 gasCompensation
     );
 
     function initialize(
@@ -85,10 +94,13 @@ contract DepositManager is
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
         emit DepositInstantiated(
+            req.chainId,
             req.spender,
             req.encodedAsset,
             req.value,
-            req.nonce
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
         );
     }
 
@@ -113,10 +125,13 @@ contract DepositManager is
         AddressUpgradeable.sendValue(payable(msg.sender), req.gasCompensation);
 
         emit DepositRetrieved(
+            req.chainId,
             req.spender,
             req.encodedAsset,
             req.value,
-            req.nonce
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
         );
     }
 
@@ -163,10 +178,13 @@ contract DepositManager is
         }
 
         emit DepositProcessed(
+            req.chainId,
             req.spender,
             req.encodedAsset,
             req.value,
-            req.nonce
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
         );
     }
 }

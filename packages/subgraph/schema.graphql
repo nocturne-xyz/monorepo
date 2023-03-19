@@ -1,3 +1,25 @@
+enum DepositEventType {
+  Instantiated
+  Retrieved
+  Processed
+}
+
+type DepositEvent @entity(immutable: true) {
+  id: Bytes!
+  type: DepositEventType!
+  chainId: BigInt!
+  spender: Bytes!
+  encodedAssetAddr: BigInt!
+  encodedAssetId: BigInt!
+  value: BigInt!
+  depositAddrH1X: BigInt!
+  depositAddrH1Y: BigInt!
+  depositAddrH2X: BigInt!
+  depositAddrH2Y: BigInt!
+  nonce: BigInt!
+  gasCompensation: BigInt!
+}
+
 type EncodedOrEncryptedNote @entity(immutable: true) {
   id: Bytes!
   merkleIndex: BigInt!
@@ -25,15 +47,15 @@ type EncryptedNote @entity(immutable: true) {
   ownerH2Y: BigInt!
   encappedKey: BigInt!
   encryptedNonce: BigInt!
-  encryptedValue: BigInt!  
+  encryptedValue: BigInt!
   encodedAssetAddr: BigInt!
   encodedAssetId: BigInt!
   commitment: BigInt!
 }
 
 type Nullifier @entity(immutable: true) {
-	id: Bytes!
-	nullifier: BigInt!
+  id: Bytes!
+  nullifier: BigInt!
 }
 
 type SubtreeCommit @entity(immutable: true) {

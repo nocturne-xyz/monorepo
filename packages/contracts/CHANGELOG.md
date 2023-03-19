@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Change Deposit events to include all info needed to recover deposit hash
 - Refactor unit tests to whitelist deposit source for deposits now that we use that instead of `msg.sender == deposit.spender`
 - Vault and BalanceManager now take both deposit and its `source` so they know where transfer funds from upon deposit
 - Add `_depositSources` to wallet and integrate `DepositManager`

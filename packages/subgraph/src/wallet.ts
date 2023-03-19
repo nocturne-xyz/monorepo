@@ -1,4 +1,3 @@
-import { BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   JoinSplitProcessed,
   RefundProcessed,
@@ -11,53 +10,26 @@ import {
   SubtreeCommit,
   Nullifier,
 } from "../generated/schema";
-
-// assumes txIndex and logIndex are less than 2^32. in practice this is a pretty safe assumption (a block should never have billions of txs/log entries)
-// assumption: txIndex and logIndex are less than 2^32.
-// in practice this is a pretty safe assumption
-// because a block should never have billions of txs or log entries
-function getTotalLogIndex(event: ethereum.Event): BigInt {
-  const blockNumber = event.block.number;
-  const txIndex = event.transaction.index;
-  const logIndex = event.logIndex;
-
-  return blockNumber.leftShift(32).bitOr(txIndex).leftShift(32).bitOr(logIndex);
-}
-
-// Bytes(blockNumber << 96 | txIndex << 64 | logIndex << 32 || entityIndex)
-// where `blockNumber`, `txIndex`, and `logIndex` uniquely identify the event
-// and `entityIndex` is used to handle cases where a single event produces
-// multiple entities (e.g. JoinSplit, which produces four of them)
-function getId(totalLogIndex: BigInt, entityIndex: number): Bytes {
-  const idNum = totalLogIndex
-    .leftShift(32)
-    .bitOr(BigInt.fromI32(entityIndex as i32));
-
-  const without0x = idNum.toHexString().slice(2);
-  // this leaves 160 bits for `blockNumber`. Plenty
-  const padded = without0x.padStart(64, "0");
-
-  return Bytes.fromHexString("0x" + padded);
-}
+import { getIdWithEntityIndex, getTotalLogIndex } from "./utils";
 
 export function handleJoinSplit(event: JoinSplitProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
   const joinSplit = event.params.joinSplit;
 
   // first old note's nullifier
-  let id = getId(totalLogIndex, 0);
+  let id = getIdWithEntityIndex(totalLogIndex, 0);
   const nullifierA = new Nullifier(id);
   nullifierA.nullifier = event.params.oldNoteANullifier;
   nullifierA.save();
 
   // second old note's nullfier
-  id = getId(totalLogIndex, 1);
+  id = getIdWithEntityIndex(totalLogIndex, 1);
   const nullifierB = new Nullifier(id);
   nullifierB.nullifier = event.params.oldNoteBNullifier;
   nullifierB.save();
 
   // unpack first new note
-  id = getId(totalLogIndex, 2);
+  id = getIdWithEntityIndex(totalLogIndex, 2);
 
   const encryptedNoteA = new EncryptedNote(id);
 
@@ -83,7 +55,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   newNoteA.save();
 
   // unpack second new note
-  id = getId(totalLogIndex, 3);
+  id = getIdWithEntityIndex(totalLogIndex, 3);
 
   const encryptedNoteB = new EncryptedNote(id);
 
@@ -112,7 +84,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
 export function handleRefund(event: RefundProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
 
-  const id = getId(totalLogIndex, 0);
+  const id = getIdWithEntityIndex(totalLogIndex, 0);
   const newNote = new EncodedOrEncryptedNote(id);
   const encodedNote = new EncodedNote(id);
 
@@ -136,7 +108,7 @@ export function handleRefund(event: RefundProcessed): void {
 export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   const totalLogIndex = getTotalLogIndex(event);
 
-  const id = getId(totalLogIndex, 0);
+  const id = getIdWithEntityIndex(totalLogIndex, 0);
   const commit = new SubtreeCommit(id);
 
   commit.newRoot = event.params.newRoot;
