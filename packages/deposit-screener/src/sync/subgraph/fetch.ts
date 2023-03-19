@@ -54,7 +54,7 @@ const depositEventsQuery = `\
     }
   }`;
 
-// the range is exclusive - i.e. [fromBlock, toBlock)
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchDepositEvents(
   endpoint: string,
   type: DepositEventType,
@@ -72,7 +72,7 @@ export async function fetchDepositEvents(
         variables: {
           type: type.toString(),
           fromBlock,
-          toBlock: toBlock - 1,
+          toBlock: toBlock,
         },
       }),
     });
@@ -80,13 +80,10 @@ export async function fetchDepositEvents(
     if (!response.ok) {
       const text = await response.text();
       console.error(`Failed to fetch deposit events from subgraph: ${text}`);
-
       throw new Error(`Failed to deposit events from subgraph: ${text}`);
     }
 
     const res = (await response.json()) as FetchDepositEventsResponse;
-    console.log(JSON.stringify(res));
-
     return res.data.depositEvents.map(depositEventFromDepositEventResponse);
   } catch (err) {
     console.error("Error when fetching deposit events from subgraph");
