@@ -1,2 +1,2 @@
 export { SubgraphSyncAdapter } from "./adapter";
-export { makeSubgraphQuery } from "./fetch";
+export { makeSubgraphQuery, fetchLatestIndexedBlock } from "./fetch";
