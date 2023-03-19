@@ -1,4 +1,4 @@
-import { min } from "../../utils";
+import { min, sleep } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import {
   EncryptedStateDiff,
@@ -7,6 +7,7 @@ import {
 } from "../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
+  fetchLatestIndexedBlock,
   fetchNotes,
   fetchNullifiers,
 } from "./fetch";
@@ -40,6 +41,19 @@ export class SubgraphSyncAdapter implements SyncAdapter {
           to = min(to, endBlock);
         }
 
+        // only fetch up to the latest indexed block
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        to = min(to, latestIndexedBlock);
+
+        // if `from` >= `to`, we've caught up to the tip of the chain
+        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
+        // and no new blocks were indexed by the subgraph since then
+        // sleep for a bit and retry to avoid spamming the API
+        if (from >= to) {
+          await sleep(5_000);
+          continue;
+        }
+
         const [notes, nullifiers, lastCommittedMerkleIndex] = await Promise.all(
           [
             fetchNotes(endpoint, from, to),
@@ -61,7 +75,7 @@ export class SubgraphSyncAdapter implements SyncAdapter {
 
         yield stateDiff;
 
-        from = to;
+        from = to + 1;
       }
     };
 

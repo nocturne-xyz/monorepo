@@ -23,6 +23,9 @@ export interface JoinSplitEvent {
   joinSplit: BaseJoinSplit;
 }
 
+// fetching refunded notes occuring in block range [from, to]
+// if `to` > the current block number, will only return up to the current block number
+// (this is same behavior as ethers)
 export async function fetchNotesFromRefunds(
   contract: Wallet,
   from: number,
@@ -68,6 +71,9 @@ export async function fetchNotesFromRefunds(
   });
 }
 
+// fetching joinsplits occuring in block range [from, to]
+// if `to` > the current block number, will only return up to the current block number
+// (this is same behavior as ethers)
 export async function fetchJoinSplits(
   contract: Wallet,
   from: number,
@@ -167,7 +173,9 @@ interface SubtreeUpdateCommit {
   subtreeIndex: number;
 }
 
-// returns SubtreeUpdateCommit events in the order in which they appeared on-chain
+// fetches subtree commits in block range [from, to]
+// if `to` > the current block number, will only return up to the current block number
+// (this is same behavior as ethers)
 export async function fetchSubtreeUpdateCommits(
   contract: Wallet,
   from: number,

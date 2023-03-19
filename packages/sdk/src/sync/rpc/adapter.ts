@@ -13,7 +13,7 @@ import {
   SyncAdapter,
 } from "../syncAdapter";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { maxArray } from "../../utils";
+import { maxArray, sleep } from "../../utils";
 import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
@@ -58,18 +58,25 @@ export class RPCSyncAdapter implements SyncAdapter {
           to = min(to, endBlock);
         }
 
+        // if `to` > current block number, want to only fetch up to current block number
+        to = min(to, await walletContract.provider.getBlockNumber());
+
+        // if `from` >= `to`, we've caught up to the tip of the chain
+        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
+        // and no new blocks were produced since then
+        // sleep for a bit and re-try to avoid spamming the RPC endpoint
+        if (from >= to) {
+          await sleep(5_000);
+          continue;
+        }
+
         // fetch event data from chain
-        const [
-          includedNotes,
-          joinSplitEvents,
-          blockNumber,
-          subtreeUpdateCommits,
-        ] = await Promise.all([
-          await fetchNotesFromRefunds(walletContract, from, to),
-          await fetchJoinSplits(walletContract, from, to),
-          await walletContract.provider.getBlockNumber(),
-          await fetchSubtreeUpdateCommits(walletContract, from, to),
-        ]);
+        const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
+          await Promise.all([
+            await fetchNotesFromRefunds(walletContract, from, to),
+            await fetchJoinSplits(walletContract, from, to),
+            await fetchSubtreeUpdateCommits(walletContract, from, to),
+          ]);
 
         // extract notes and nullifiers
         const nullifiers =
@@ -93,11 +100,12 @@ export class RPCSyncAdapter implements SyncAdapter {
           notes,
           nullifiers,
           nextMerkleIndex,
-          blockNumber,
+          blockNumber: to,
         };
         yield diff;
 
-        from = to;
+        // the next state diff starts at the first block in the next range, `to + 1`
+        from = to + 1;
       }
     };
 

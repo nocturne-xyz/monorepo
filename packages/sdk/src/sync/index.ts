@@ -10,4 +10,4 @@ export {
   RPCSyncAdapter,
 } from "./rpc";
 
-export { SubgraphSyncAdapter } from "./subgraph";
+export { SubgraphSyncAdapter, makeSubgraphQuery } from "./subgraph";

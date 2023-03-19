@@ -44,6 +44,11 @@ interface FetchNotesResponse {
   };
 }
 
+interface FetchNotesVars {
+  fromBlock: number;
+  toBlock: number;
+}
+
 const notesQuery = `\
 query fetchNotes($fromBlock: Int!, $toBlock: Int!) {
   encodedOrEncryptedNotes(block: { number: $toBlock, number_gte: $fromBlock }) {
@@ -74,54 +79,32 @@ query fetchNotes($fromBlock: Int!, $toBlock: Int!) {
 }`;
 
 // gets notes or encrypted notes for a given block range
-// the range is exclusive - i.e. [fromBlock, toBlock)
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchNotes(
   endpoint: string,
   fromBlock: number,
   toBlock: number
 ): Promise<(IncludedNote | IncludedEncryptedNote)[]> {
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: notesQuery,
-        variables: {
-          fromBlock,
-          toBlock: toBlock - 1,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Failed to fetch notes from subgraph: ${text}`);
-
-      throw new Error(`Failed to fetch notes from subgraph: ${text}`);
-    }
-
-    const res = (await response.json()) as FetchNotesResponse;
-
-    return res.data.encodedOrEncryptedNotes.map(
-      ({ merkleIndex, note, encryptedNote }) => {
-        if (note) {
-          return includedNoteFromNoteResponse(note, parseInt(merkleIndex));
-        } else if (encryptedNote) {
-          return encryptedNoteFromEncryptedNoteResponse(
-            encryptedNote,
-            parseInt(merkleIndex)
-          );
-        } else {
-          throw new Error("res must contain either note or encryptedNote");
-        }
+  const query = makeSubgraphQuery<FetchNotesVars, FetchNotesResponse>(
+    endpoint,
+    notesQuery,
+    "notes"
+  );
+  const res = await query({ fromBlock, toBlock });
+  return res.data.encodedOrEncryptedNotes.map(
+    ({ merkleIndex, note, encryptedNote }) => {
+      if (note) {
+        return includedNoteFromNoteResponse(note, parseInt(merkleIndex));
+      } else if (encryptedNote) {
+        return encryptedNoteFromEncryptedNoteResponse(
+          encryptedNote,
+          parseInt(merkleIndex)
+        );
+      } else {
+        throw new Error("res must contain either note or encryptedNote");
       }
-    );
-  } catch (err) {
-    console.error("Error when fetching notes from subgraph");
-    throw err;
-  }
+    }
+  );
 }
 
 function includedNoteFromNoteResponse(
@@ -198,6 +181,10 @@ interface FetchSubtreeCommitsResponse {
   };
 }
 
+interface FetchSubtreeCommitsVars {
+  toBlock: number;
+}
+
 interface SubtreeCommitResponse {
   newRoot: string;
   subtreeIndex: string;
@@ -206,56 +193,31 @@ interface SubtreeCommitResponse {
 const subtreeCommitQuery = `
   query fetchSubtreeCommits($toBlock: Int!) {
     subtreeCommits(block: { number: $toBlock }, orderBy: subtreeIndex, orderDirection: desc, first: 1) {
-      newRoot,
       subtreeIndex
     }
   }
 `;
 
+// gets last committed merkle index for a given block range
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
   toBlock: number
 ): Promise<number> {
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: subtreeCommitQuery,
-        variables: {
-          toBlock: toBlock - 1,
-        },
-      }),
-    });
+  const query = makeSubgraphQuery<
+    FetchSubtreeCommitsVars,
+    FetchSubtreeCommitsResponse
+  >(endpoint, subtreeCommitQuery, "last committed merkle index");
+  const res = await query({ toBlock });
+  if (res.data.subtreeCommits.length === 0) {
+    return -1;
+  } else {
+    const subtreeIndices = res.data.subtreeCommits.map((commit) =>
+      parseInt(commit.subtreeIndex)
+    );
+    const maxSubtreeIndex = maxArray(subtreeIndices);
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(
-        `Failed to fetch last committed merkle index from subgraph: ${text}`
-      );
-
-      throw new Error(
-        `Failed to fetch last committed merkle index from subgraph: ${text}`
-      );
-    }
-
-    const res = (await response.json()) as FetchSubtreeCommitsResponse;
-
-    if (res.data.subtreeCommits.length === 0) {
-      return -1;
-    } else {
-      const subtreeIndices = res.data.subtreeCommits.map((commit) =>
-        parseInt(commit.subtreeIndex)
-      );
-      const maxSubtreeIndex = maxArray(subtreeIndices);
-
-      return (maxSubtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE - 1;
-    }
-  } catch (err) {
-    console.error("Error when fetching latest subtree commit from subgraph");
-    throw err;
+    return (maxSubtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE - 1;
   }
 }
 
@@ -263,6 +225,11 @@ interface FetchNullifiersResponse {
   data: {
     nullifiers: NullifierResponse[];
   };
+}
+
+interface FetchNullifiersVars {
+  fromBlock: number;
+  toBlock: number;
 }
 
 interface NullifierResponse {
@@ -277,38 +244,81 @@ const nullifiersQuery = `
   }
 `;
 
+// gets nullifiers for a given block range
+// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchNullifiers(
   endpoint: string,
   fromBlock: number,
   toBlock: number
 ): Promise<bigint[]> {
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: nullifiersQuery,
-        variables: {
-          fromBlock,
-          toBlock: toBlock - 1,
-        },
-      }),
-    });
+  const query = makeSubgraphQuery<FetchNullifiersVars, FetchNullifiersResponse>(
+    endpoint,
+    nullifiersQuery,
+    "nullifiers"
+  );
+  const res = await query({ fromBlock, toBlock });
+  return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
+}
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Failed to fetch nullifiers from subgraph: ${text}`);
-
-      throw new Error(`Failed to fetch nullifiers from subgraph: ${text}`);
+// see https://thegraph.com/docs/en/querying/graphql-api/#subgraph-metadata
+const latestIndexedBlockQuery = `
+{
+  _meta {
+    block {
+      number
     }
-
-    const res = (await response.json()) as FetchNullifiersResponse;
-
-    return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
-  } catch (err) {
-    console.error("Error when fetching nullifiers from subgraph");
-    throw err;
   }
 }
+`;
+
+interface FetchLatestIndexedBlockResponse {
+  data: {
+    _meta: {
+      block: {
+        number: number;
+      };
+    };
+  };
+}
+
+// gets the latest indexed block from the subgraph
+export async function fetchLatestIndexedBlock(
+  endpoint: string
+): Promise<number> {
+  const query = makeSubgraphQuery<undefined, FetchLatestIndexedBlockResponse>(
+    endpoint,
+    latestIndexedBlockQuery,
+    "latest indexed block"
+  );
+  const res = await query(undefined);
+  return res.data._meta.block.number;
+}
+
+export const makeSubgraphQuery =
+  <T, U>(endpoint: string, query: string, dataLabel: string) =>
+  async (variables: T): Promise<U> => {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error(`Failed to query ${dataLabel} from subgraph: ${text}`);
+
+        throw new Error(`Failed to query ${dataLabel} from subgraph: ${text}`);
+      }
+
+      return (await response.json()) as U;
+    } catch (err) {
+      console.error(`Error when querying ${dataLabel} from subgraph`);
+      throw err;
+    }
+  };
