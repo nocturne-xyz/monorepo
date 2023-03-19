@@ -1,19 +1,9 @@
 import {
-  DepositRequest,
   EncodedAsset,
   StealthAddress,
   makeSubgraphQuery,
 } from "@nocturne-xyz/sdk";
-
-export enum DepositEventType {
-  Instantiated = "Instantiated",
-  Retrieved = "Retrieved",
-  Processed = "Processed",
-}
-
-export interface DepositEvent extends DepositRequest {
-  type: DepositEventType;
-}
+import { DepositEvent, DepositEventType } from "../../types";
 
 export interface DepositEventResponse {
   id: string;
