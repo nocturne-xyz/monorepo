@@ -6,10 +6,10 @@ import {
   SyncAdapter,
 } from "../syncAdapter";
 import {
-  makeFetchLastCommittedMerkleIndex,
-  makeFetchLatestIndexedBlock,
-  makeFetchNotes,
-  makeFetchNullifiers,
+  fetchLastCommittedMerkleIndex,
+  fetchLatestIndexedBlock,
+  fetchNotes,
+  fetchNullifiers,
 } from "./fetch";
 
 const MAX_CHUNK_SIZE = 10000;
@@ -32,15 +32,7 @@ export class SubgraphSyncAdapter implements SyncAdapter {
     const endBlock = opts?.endBlock;
     let closed = false;
 
-    const fetchLatestIndexedBlock = makeFetchLatestIndexedBlock(
-      this.graphqlEndpoint
-    );
-    const fetchNotes = makeFetchNotes(this.graphqlEndpoint);
-    const fetchNullifiers = makeFetchNullifiers(this.graphqlEndpoint);
-    const fetchLastCommittedMerkleIndex = makeFetchLastCommittedMerkleIndex(
-      this.graphqlEndpoint
-    );
-
+    const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
@@ -50,7 +42,7 @@ export class SubgraphSyncAdapter implements SyncAdapter {
         }
 
         // only fetch up to the latest indexed block
-        const latestIndexedBlock = await fetchLatestIndexedBlock();
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         to = min(to, latestIndexedBlock);
 
         // if `from` >= `to`, we've caught up to the tip of the chain
@@ -64,9 +56,9 @@ export class SubgraphSyncAdapter implements SyncAdapter {
 
         const [notes, nullifiers, lastCommittedMerkleIndex] = await Promise.all(
           [
-            fetchNotes(from, to),
-            fetchNullifiers(from, to),
-            fetchLastCommittedMerkleIndex(to),
+            fetchNotes(endpoint, from, to),
+            fetchNullifiers(endpoint, from, to),
+            fetchLastCommittedMerkleIndex(endpoint, to),
           ]
         );
 
