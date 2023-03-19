@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
+- add `subtreeBatchFillers` param to `NocturneDeployArgs`
+- make `deployAndDeposit` script take optional `SUBTREE_BATCH_FILLER` key from env
 - Set depositScreener option on service deployment to `true` for all test suites
 - Add deposit screener options to deploy logic
 - make `OpValidator` check that op's `gasPrice` >= `gasPrice` from chain
