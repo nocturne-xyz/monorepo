@@ -18,6 +18,9 @@
         "@nocturne-xyz/config#build"
       ]
     },
+    "@nocturne-xyz/subgraph#build": {
+      "dependsOn": ["@nocturne-xyz/contracts#build"]
+    },
     "@nocturne-xyz/bundler#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build", "@nocturne-xyz/sdk#build"]
     },

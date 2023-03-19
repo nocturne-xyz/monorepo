@@ -58,7 +58,7 @@ contract DepositManagerTest is Test, ParseUtils {
         uint256 gasCompensation
     );
 
-    event DepositProcessed(
+    event DepositCompleted(
         uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -362,7 +362,7 @@ contract DepositManagerTest is Test, ParseUtils {
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositProcessed(
+        emit DepositCompleted(
             block.chainid,
             deposit.spender,
             deposit.encodedAsset,

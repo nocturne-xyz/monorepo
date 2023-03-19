@@ -44,7 +44,7 @@ contract DepositManager is
         uint256 gasCompensation
     );
 
-    event DepositProcessed(
+    event DepositCompleted(
         uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -177,7 +177,7 @@ contract DepositManager is
             );
         }
 
-        emit DepositProcessed(
+        emit DepositCompleted(
             req.chainId,
             req.spender,
             req.encodedAsset,
