@@ -36,9 +36,7 @@ dataSources:
     name: DepositManager
     network: mainnet
     source:
-      # address: "0x57551a36C99528e4E19EA954C037d81c39fFdE4C"
-      address: "0xA3183498b579bd228aa2B62101C40CC1da978F24"
-      # startBlock: 8412194
+      address: "0x00De48310d77A4d56aa400248b0B1613508f5B73"
       startBlock: 0
       abi: DepositManager
     mapping:
