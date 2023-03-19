@@ -31,7 +31,7 @@ export interface StateDiff extends BaseStateDiff {
   notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[];
 }
 
-export interface IterStateDiffsOpts {
+export interface IterSyncOpts {
   endBlock?: number;
   maxChunkSize?: number;
 }
@@ -47,6 +47,6 @@ export interface SyncAdapter {
   // chunks.
   iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts
+    opts?: IterSyncOpts
   ): Promise<ClosableAsyncIterator<EncryptedStateDiff>>;
 }

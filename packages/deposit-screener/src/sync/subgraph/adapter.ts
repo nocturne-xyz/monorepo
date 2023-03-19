@@ -1,11 +1,12 @@
 import {
   ClosableAsyncIterator,
   fetchLatestIndexedBlock,
+  IterSyncOpts,
   min,
   sleep,
 } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
-import { IterSyncOpts, ScreenerSyncAdapter } from "../syncAdapter";
+import { ScreenerSyncAdapter } from "../syncAdapter";
 import { fetchDepositEvents } from "./fetch";
 
 const MAX_CHUNK_SIZE = 10000;

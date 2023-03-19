@@ -7,11 +7,7 @@ import {
 } from "../../primitives";
 import { min } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
-import {
-  EncryptedStateDiff,
-  IterStateDiffsOpts,
-  SyncAdapter,
-} from "../syncAdapter";
+import { EncryptedStateDiff, IterSyncOpts, SyncAdapter } from "../syncAdapter";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { maxArray, sleep } from "../../utils";
 import {
@@ -40,7 +36,7 @@ export class RPCSyncAdapter implements SyncAdapter {
 
   async iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts
+    opts?: IterSyncOpts
   ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
