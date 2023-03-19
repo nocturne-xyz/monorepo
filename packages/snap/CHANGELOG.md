@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- if op doesn't have `gasPrice` set, set it to chain's current gas price
+- set `gasAssets` in `DUMMY_CONFIG`
 - use new `NocturneWalletSDK` instead of `NocturneContext`
 - make `SnapKVStore` only dump on writes by putting the inner KV store in a thunk
 - use `SubgraphSyncAdapter` against local graph node

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `OpValidator` check that op's `gasPrice` >= `gasPrice` from chain
 - make `submitAndProcessOperation` return `OperationStatus`
 - make bundler and subtree updater use separate EOAs in `setupTestDeployment`
 - make `submitAndProcessOperation` use a retry loop and print statuses
