@@ -25,7 +25,9 @@
     "@types/randombytes": "^2.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
+    "bullmq": "^3.10.1",
     "ethers": "^5.7.2",
+    "ioredis": "^5.3.1",
     "js-sha256": "^0.9.0",
     "randombytes": "^2.1.0",
     "sorted-btree": "^1.8.1"
