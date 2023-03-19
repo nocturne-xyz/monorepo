@@ -10,6 +10,80 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class DepositCompleted extends ethereum.Event {
+  get params(): DepositCompleted__Params {
+    return new DepositCompleted__Params(this);
+  }
+}
+
+export class DepositCompleted__Params {
+  _event: DepositCompleted;
+
+  constructor(event: DepositCompleted) {
+    this._event = event;
+  }
+
+  get chainId(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get spender(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get encodedAsset(): DepositCompletedEncodedAssetStruct {
+    return changetype<DepositCompletedEncodedAssetStruct>(
+      this._event.parameters[2].value.toTuple()
+    );
+  }
+
+  get value(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+
+  get depositAddr(): DepositCompletedDepositAddrStruct {
+    return changetype<DepositCompletedDepositAddrStruct>(
+      this._event.parameters[4].value.toTuple()
+    );
+  }
+
+  get nonce(): BigInt {
+    return this._event.parameters[5].value.toBigInt();
+  }
+
+  get gasCompensation(): BigInt {
+    return this._event.parameters[6].value.toBigInt();
+  }
+}
+
+export class DepositCompletedEncodedAssetStruct extends ethereum.Tuple {
+  get encodedAssetAddr(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get encodedAssetId(): BigInt {
+    return this[1].toBigInt();
+  }
+}
+
+export class DepositCompletedDepositAddrStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
 export class DepositInstantiated extends ethereum.Event {
   get params(): DepositInstantiated__Params {
     return new DepositInstantiated__Params(this);
@@ -67,80 +141,6 @@ export class DepositInstantiatedEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class DepositInstantiatedDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get h1Y(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class DepositProcessed extends ethereum.Event {
-  get params(): DepositProcessed__Params {
-    return new DepositProcessed__Params(this);
-  }
-}
-
-export class DepositProcessed__Params {
-  _event: DepositProcessed;
-
-  constructor(event: DepositProcessed) {
-    this._event = event;
-  }
-
-  get chainId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
-  get spender(): Address {
-    return this._event.parameters[1].value.toAddress();
-  }
-
-  get encodedAsset(): DepositProcessedEncodedAssetStruct {
-    return changetype<DepositProcessedEncodedAssetStruct>(
-      this._event.parameters[2].value.toTuple()
-    );
-  }
-
-  get value(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-
-  get depositAddr(): DepositProcessedDepositAddrStruct {
-    return changetype<DepositProcessedDepositAddrStruct>(
-      this._event.parameters[4].value.toTuple()
-    );
-  }
-
-  get nonce(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
-  }
-
-  get gasCompensation(): BigInt {
-    return this._event.parameters[6].value.toBigInt();
-  }
-}
-
-export class DepositProcessedEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class DepositProcessedDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
