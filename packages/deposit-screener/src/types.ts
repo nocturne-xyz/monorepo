@@ -11,12 +11,12 @@ export interface DepositEvent extends DepositRequest {
 }
 
 export enum DepositRequestStatus {
-  FailedDepositMappingCheck,
-  FailedScreen,
-  FailedRateLimit,
-  PassedScreen,
-  Enqueued,
-  Processed,
+  FailedDepositMappingCheck = "FailedDepositMappingCheck",
+  FailedScreen = "FailedScreen",
+  FailedRateLimit = "FailedRateLimit",
+  PassedScreen = "PassedScreen",
+  Enqueued = "Enqueued",
+  Processed = "Processed",
 }
 
 export const DEPOSIT_DELAY_QUEUE = "DepositDelayQueue";

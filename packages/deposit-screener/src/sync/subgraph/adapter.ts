@@ -5,8 +5,8 @@ import {
   min,
   sleep,
 } from "@nocturne-xyz/sdk";
-import { DepositEvent, DepositEventType } from "../../types";
-import { ScreenerSyncAdapter } from "../syncAdapter";
+import { DepositEventType } from "../../types";
+import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
 import { fetchDepositEvents } from "./fetch";
 
 const MAX_CHUNK_SIZE = 10000;
@@ -22,7 +22,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
     type: DepositEventType,
     startBlock: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<DepositEvent[]> {
+  ): ClosableAsyncIterator<DepositEventsBatch> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;
@@ -54,9 +54,12 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           from,
           to
         );
-        console.log("yieding deposit events:", depositEvents);
+        console.log("yielding deposit events:", depositEvents);
 
-        yield depositEvents;
+        yield {
+          blockNumber: to,
+          depositEvents,
+        };
 
         from = to + 1;
       }

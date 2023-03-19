@@ -31,12 +31,25 @@ export class DepositScreenerDB {
     this.redis.set(NEXT_BLOCK_KEY, block);
   }
 
+  async getNextBlock(): Promise<number> {
+    const val = await this.redis.get(NEXT_BLOCK_KEY);
+    return val ? Number(val) : 0;
+  }
+
   async setDepositRequestStatus(
     depositRequest: DepositRequest,
     status: DepositRequestStatus
   ): Promise<void> {
     const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
     this.redis.set(key, status.toString());
+  }
+
+  async getDepositRequestStatus(
+    depositRequest: DepositRequest
+  ): Promise<DepositRequestStatus | undefined> {
+    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
+    const val = await this.redis.get(key);
+    return val ? (val as DepositRequestStatus) : undefined;
   }
 
   async setDepositAmountForAddress(
