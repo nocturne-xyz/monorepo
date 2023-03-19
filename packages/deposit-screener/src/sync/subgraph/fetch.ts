@@ -2,6 +2,7 @@ import {
   DepositRequest,
   EncodedAsset,
   StealthAddress,
+  makeSubgraphQuery,
 } from "@nocturne-xyz/sdk";
 
 export enum DepositEventType {
@@ -28,6 +29,12 @@ export interface DepositEventResponse {
   depositAddrH2Y: string;
   nonce: string;
   gasCompensation: string;
+}
+
+interface FetchDepositEventsVars {
+  type: DepositEventType;
+  fromBlock: number;
+  toBlock: number;
 }
 
 interface FetchDepositEventsResponse {
@@ -61,34 +68,12 @@ export async function fetchDepositEvents(
   fromBlock: number,
   toBlock: number
 ): Promise<DepositEvent[]> {
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: depositEventsQuery,
-        variables: {
-          type: type.toString(),
-          fromBlock,
-          toBlock: toBlock,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Failed to fetch deposit events from subgraph: ${text}`);
-      throw new Error(`Failed to deposit events from subgraph: ${text}`);
-    }
-
-    const res = (await response.json()) as FetchDepositEventsResponse;
-    return res.data.depositEvents.map(depositEventFromDepositEventResponse);
-  } catch (err) {
-    console.error("Error when fetching deposit events from subgraph");
-    throw err;
-  }
+  const query = makeSubgraphQuery<
+    FetchDepositEventsVars,
+    FetchDepositEventsResponse
+  >(endpoint, depositEventsQuery, "depositEvents");
+  const res = await query({ type, fromBlock, toBlock });
+  return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 
 function depositEventFromDepositEventResponse(
