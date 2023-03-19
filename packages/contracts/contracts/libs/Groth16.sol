@@ -179,6 +179,11 @@ library Groth16 {
             "Invalid inputs length for a batch"
         );
 
+        // if there is only one proof, use the single proof verification
+        if (proofs.length == 1) {
+            return verifyProof(vk, proofs[0], allPis[0]);
+        }
+
         // strategy is to accumulate entropy separately for some proof elements
         // (accumulate only for G1, can't in G2) of the pairing equation, as well as input verification key,
         // postpone scalar multiplication as much as possible and check only one equation
