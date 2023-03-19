@@ -10,7 +10,7 @@ export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
 }
 
-export enum DepositRequestStage {
+export enum DepositRequestStatus {
   FailedDepositMappingCheck,
   FailedScreen,
   FailedRateLimit,

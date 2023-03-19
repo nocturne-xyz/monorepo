@@ -1,7 +1,7 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { DepositRequest } from "@nocturne-xyz/sdk";
 import { DepositScreenerDB } from "./db";
-import { DepositRequestStage } from "./types";
+import { DepositRequestStatus } from "./types";
 import { ScreeningApi } from "./screening";
 
 interface CheckDepositRequestDeps {
@@ -14,8 +14,8 @@ interface CheckDepositRequestDeps {
 export async function checkDepositRequest(
   deposit: DepositRequest,
   deps: CheckDepositRequestDeps
-): Promise<DepositRequestStage> {
+): Promise<DepositRequestStatus> {
   deposit;
   deps;
-  return DepositRequestStage.PassedScreen;
+  return DepositRequestStatus.PassedScreen;
 }

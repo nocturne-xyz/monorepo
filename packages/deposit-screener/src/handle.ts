@@ -5,7 +5,7 @@ import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { enqueueDepositRequest } from "./enqueue";
 import { ScreeningApi } from "./screening";
-import { DepositRequestStage } from "./types";
+import { DepositRequestStatus } from "./types";
 
 interface HandleDepositRequestDeps {
   depositManagerContract: DepositManager;
@@ -17,13 +17,13 @@ interface HandleDepositRequestDeps {
 export async function handleDepositRequest(
   depositRequest: DepositRequest,
   deps: HandleDepositRequestDeps
-): Promise<DepositRequestStage> {
-  const stage = await checkDepositRequest(depositRequest, { ...deps });
+): Promise<DepositRequestStatus> {
+  const status = await checkDepositRequest(depositRequest, { ...deps });
 
-  if (stage == DepositRequestStage.PassedScreen) {
+  if (status == DepositRequestStatus.PassedScreen) {
     await enqueueDepositRequest(depositRequest, { ...deps });
-    return DepositRequestStage.Enqueued;
+    return DepositRequestStatus.Enqueued;
   } else {
-    return stage;
+    return status;
   }
 }
