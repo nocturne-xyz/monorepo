@@ -3283,12 +3283,14 @@ __metadata:
     "@typescript-eslint/parser": ^5.20.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
+    bullmq: ^3.10.1
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ethers: ^5.7.2
     find-yarn-workspace-root: ^2.0.0
+    ioredis: ^5.3.1
     js-sha256: ^0.9.0
     mocha: ^10.1.0
     prettier: ^2.8.0
@@ -8746,6 +8748,22 @@ __metadata:
   dependencies:
     semver: ^7.0.0
   checksum: 66d204657fe36522822a95b288943ad11b58f5eaede235b11d8c4edaa28ce4800087d44a2681524c340494aadb120a0068011acabe99d30e8f11a7d826d83515
+  languageName: node
+  linkType: hard
+
+"bullmq@npm:^3.10.1":
+  version: 3.10.1
+  resolution: "bullmq@npm:3.10.1"
+  dependencies:
+    cron-parser: ^4.6.0
+    glob: ^8.0.3
+    ioredis: ^5.3.0
+    lodash: ^4.17.21
+    msgpackr: ^1.6.2
+    semver: ^7.3.7
+    tslib: ^2.0.0
+    uuid: ^9.0.0
+  checksum: 1acc0961737e5237e731f7a911075c8efd2c9678ea51afaf9a552fd2e367e2dc6f0c092fe73bbfce2f09faf39d9a56926bd9bc0f740fe6ac449aed3c69824844
   languageName: node
   linkType: hard
 
@@ -15807,7 +15825,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ioredis@npm:^5.2.4, ioredis@npm:^5.3.0":
+"ioredis@npm:^5.2.4, ioredis@npm:^5.3.0, ioredis@npm:^5.3.1":
   version: 5.3.1
   resolution: "ioredis@npm:5.3.1"
   dependencies:

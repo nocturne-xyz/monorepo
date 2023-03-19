@@ -9,3 +9,19 @@ export enum DepositEventType {
 export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
 }
+
+export enum DepositRequestStage {
+  FailedDepositMappingCheck,
+  FailedScreen,
+  FailedRateLimit,
+  PassedScreen,
+  Enqueued,
+  Processed,
+}
+
+export const DEPOSIT_DELAY_QUEUE = "DepositDelayQueue";
+export const DELAYED_DEPOSIT_JOB_TAG = "DELAYED_DEPOSIT";
+
+export type DelayedDepositJobData = {
+  depositRequestJson: string;
+};
