@@ -3,6 +3,7 @@
 ### Unreleased
 
 - Add fixture check against deposit request hash in `DepositManagerBase` unit tests
+- Rename `processDeposit` and `DepositProcessed` to `completeDeposit` and `DepositCompleted`
 - delegate to single verifier in batch verifier if batch size is 1
 - Change Deposit events to include all info needed to recover deposit hash
 - Refactor unit tests to whitelist deposit source for deposits now that we use that instead of `msg.sender == deposit.spender`

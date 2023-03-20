@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Export `IterSync` opts for `deposit-screener` package to use as well
+- `iterStateDiffs` returns `ClosableAsyncIterator` not `Promise<ClosableAsyncIterator>`
 - fetch latest block number subgraph has indexed in `SubgraphSyncAdapter` and don't fetch at block heights beyond that
 - yield correct block number in state diffs in `RPCSyncAdapter`
 - return empty array from `getNoteCommitmentsByIndexRange` if `start >= nextMerkleIndex`
