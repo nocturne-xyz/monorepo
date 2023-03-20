@@ -18,12 +18,14 @@ import {
 } from "./types";
 import { getRedis } from "./utils";
 import IORedis from "ioredis";
+import { DelayCalculator, DummyDelayCalculator } from "./delay";
 
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
   db: DepositScreenerDB;
+  delayCalculator: DelayCalculator;
   delayQueue: Queue;
 
   constructor(
@@ -56,6 +58,7 @@ export class DepositScreenerProcessor {
     );
 
     this.screeningApi = new DummyScreeningApi();
+    this.delayCalculator = new DummyDelayCalculator();
 
     const connection = getRedis(redis);
     this.db = new DepositScreenerDB(connection);
