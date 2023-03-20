@@ -2,14 +2,22 @@ import {
   DepositManager,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
-import { Address, DepositRequest } from "@nocturne-xyz/sdk";
+import {
+  Address,
+  DepositRequest,
+  parseEventsFromContractReceipt,
+} from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { DepositScreenerDB } from "./db";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
 import IORedis from "ioredis";
 import { getRedis } from "./utils";
-import { DelayedDepositJobData, DELAYED_DEPOSIT_QUEUE } from "./types";
+import {
+  DelayedDepositJobData,
+  DELAYED_DEPOSIT_QUEUE,
+  DepositRequestStatus,
+} from "./types";
 import {
   EIP712Domain,
   hashDepositRequest,
@@ -21,6 +29,7 @@ import {
 } from "./typedData/constants";
 import { assert } from "console";
 import * as JSON from "bigint-json-serialization";
+import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
 export class DepositScreenerSubmitter {
   redis: IORedis;
@@ -73,6 +82,9 @@ export class DepositScreenerSubmitter {
         const inSet =
           await this.depositManagerContract._outstandingDepositHashes(hash);
         if (!inSet) {
+          console.log(
+            `Deposit already retrieved or completed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+          );
           return; // Already retrieved or completed
         }
 
@@ -113,6 +125,30 @@ export class DepositScreenerSubmitter {
       depositRequest
     );
 
-    this.depositManagerContract.completeDeposit(depositRequest, signature);
+    const tx = await this.depositManagerContract.completeDeposit(
+      depositRequest,
+      signature
+    );
+
+    const receipt = await tx.wait(1);
+    const matchingEvents = parseEventsFromContractReceipt(
+      receipt,
+      this.depositManagerContract.interface.getEvent("DepositCompleted")
+    ) as DepositCompletedEvent[];
+    console.log("Matching events:", matchingEvents);
+
+    if (matchingEvents.length > 0) {
+      console.log(
+        `Deposit signed and submitted. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+      );
+      await this.db.setDepositRequestStatus(
+        depositRequest,
+        DepositRequestStatus.Completed
+      );
+    } else {
+      console.error(
+        `Deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+      );
+    }
   }
 }

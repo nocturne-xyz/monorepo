@@ -117,11 +117,11 @@ async function makeDeposit(
     const signature = await signDepositRequest(eoa, domain, depositRequest);
 
     console.log(`Depositing ${amount} of token ${token.address}`);
-    const processDepositTx = await depositManager.processDeposit(
+    const completeDepositTx = await depositManager.completeDeposit(
       depositRequest,
       signature
     );
-    await processDepositTx.wait(1);
+    await completeDepositTx.wait(1);
 
     return {
       owner: stealthAddress,

@@ -28,7 +28,7 @@ export class DepositScreenerDB {
   }
 
   async setNextBlock(block: number): Promise<void> {
-    this.redis.set(NEXT_BLOCK_KEY, block);
+    await this.redis.set(NEXT_BLOCK_KEY, block);
   }
 
   async getNextBlock(): Promise<number> {
@@ -41,7 +41,7 @@ export class DepositScreenerDB {
     status: DepositRequestStatus
   ): Promise<void> {
     const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
-    this.redis.set(key, status.toString());
+    await this.redis.set(key, status.toString());
   }
 
   async getDepositRequestStatus(
@@ -57,7 +57,7 @@ export class DepositScreenerDB {
     amount: number
   ): Promise<void> {
     const key = DepositScreenerDB.formatPerAddressDepositKey(address);
-    this.redis.set(key, amount);
+    await this.redis.set(key, amount);
   }
 
   async getDepositAmountForAddress(address: string): Promise<number> {
@@ -67,7 +67,7 @@ export class DepositScreenerDB {
   }
 
   async setGlobalDepositAmount(amount: number): Promise<void> {
-    this.redis.set(GLOBAL_DEPOSIT_KEY, amount);
+    await this.redis.set(GLOBAL_DEPOSIT_KEY, amount);
   }
 
   async getGlobalDepositAmount(amount: number): Promise<number> {
