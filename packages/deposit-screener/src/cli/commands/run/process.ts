@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { DepositScreenerProcessor } from "../../../processor";
 import { DepositScreenerSubmitter } from "../../../submitter";
 
-const runServer = new Command("process")
+const runProcess = new Command("process")
   .summary("Process deposit requests")
   .description(
     "Must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_ENDPOINT. Must supply deposit manager contract address as options."
@@ -20,4 +20,4 @@ const runServer = new Command("process")
     await Promise.all([processor.run(), submitter.run()]);
   });
 
-export default runServer;
+export default runProcess;

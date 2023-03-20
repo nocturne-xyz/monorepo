@@ -1,13 +1,9 @@
 import { Command } from "commander";
-// import runBatcher from "./batcher";
-// import runServer from "./server";
-// import runSubmitter from "./submitter";
+import runProcess from "./process";
 
 const run = new Command("run").description(
   "Run a deposit screener action (run server or process)"
 );
-// run.addCommand(runServer);
-// run.addCommand(runBatcher);
-// run.addCommand(runSubmitter);
+run.addCommand(runProcess);
 
 export default run;
