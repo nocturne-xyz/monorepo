@@ -27,12 +27,16 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
 
   constructor(
-    subgraphEndpoint: string,
     depositManagerAddress: Address,
     provider?: ethers.providers.Provider,
     redis?: IORedis
   ) {
     // TODO: enable switching on adapter impl
+    const subgraphEndpoint = process.env.SUGRAPH_ENDPOINT;
+    if (!subgraphEndpoint) {
+      throw new Error("Missing SUBGRAPH_ENDPOINT");
+    }
+
     this.adapter = new SubgraphScreenerSyncAdapter(subgraphEndpoint);
 
     let _provider;
