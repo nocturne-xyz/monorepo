@@ -135,7 +135,7 @@ contract DepositManager is
         );
     }
 
-    function processDeposit(
+    function completeDeposit(
         DepositRequest calldata req,
         bytes calldata signature
     ) external nonReentrant {

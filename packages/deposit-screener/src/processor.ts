@@ -17,6 +17,7 @@ import {
   DEPOSIT_DELAY_QUEUE,
 } from "./types";
 import { getRedis } from "./utils";
+import IORedis from "ioredis";
 
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
@@ -28,7 +29,8 @@ export class DepositScreenerProcessor {
   constructor(
     subgraphEndpoint: string,
     depositManagerAddress: Address,
-    provider?: ethers.providers.Provider
+    provider?: ethers.providers.Provider,
+    redis?: IORedis
   ) {
     // TODO: enable switching on adapter impl
     this.adapter = new SubgraphScreenerSyncAdapter(subgraphEndpoint);
@@ -51,8 +53,8 @@ export class DepositScreenerProcessor {
 
     this.screeningApi = new DummyScreeningApi();
 
-    const redis = getRedis();
-    this.db = new DepositScreenerDB(redis);
+    const connection = getRedis(redis);
+    this.db = new DepositScreenerDB(connection);
     this.delayQueue = new Queue(DEPOSIT_DELAY_QUEUE, { connection: redis });
   }
 
