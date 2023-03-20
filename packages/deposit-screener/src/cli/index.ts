@@ -8,10 +8,10 @@ export default async function main(): Promise<void> {
   dotenv.config();
 
   program
-    .name("bundler-cli")
-    .description("CLI for running/debugging bundler components")
+    .name("screener-cli")
+    .description("CLI for running/debugging deposit-screener components")
     .addCommand(run);
   await program.parseAsync(process.argv);
 }
 
-main().catch((e) => console.log(`Bundler exited with error: ${e}`));
+main().catch((e) => console.log(`Deposit screener exited with error: ${e}`));

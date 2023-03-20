@@ -4,6 +4,9 @@
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "screener-cli": "dist/src/cli/index.js"
+  },
   "files": [
     "dist/**/*",
     "src/**/*"
@@ -16,6 +19,7 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src",
     "prettier:write": "prettier --write ./src",
+    "screener-cli": "npx ts-node src/cli/index.ts",
     "test:unit": ""
   },
   "dependencies": {
