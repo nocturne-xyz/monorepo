@@ -562,6 +562,104 @@ export class DepositManager extends ethereum.SmartContract {
   }
 }
 
+export class CompleteDepositCall extends ethereum.Call {
+  get inputs(): CompleteDepositCall__Inputs {
+    return new CompleteDepositCall__Inputs(this);
+  }
+
+  get outputs(): CompleteDepositCall__Outputs {
+    return new CompleteDepositCall__Outputs(this);
+  }
+}
+
+export class CompleteDepositCall__Inputs {
+  _call: CompleteDepositCall;
+
+  constructor(call: CompleteDepositCall) {
+    this._call = call;
+  }
+
+  get req(): CompleteDepositCallReqStruct {
+    return changetype<CompleteDepositCallReqStruct>(
+      this._call.inputValues[0].value.toTuple()
+    );
+  }
+
+  get signature(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class CompleteDepositCall__Outputs {
+  _call: CompleteDepositCall;
+
+  constructor(call: CompleteDepositCall) {
+    this._call = call;
+  }
+}
+
+export class CompleteDepositCallReqStruct extends ethereum.Tuple {
+  get chainId(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get spender(): Address {
+    return this[1].toAddress();
+  }
+
+  get encodedAsset(): CompleteDepositCallReqEncodedAssetStruct {
+    return changetype<CompleteDepositCallReqEncodedAssetStruct>(
+      this[2].toTuple()
+    );
+  }
+
+  get value(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get depositAddr(): CompleteDepositCallReqDepositAddrStruct {
+    return changetype<CompleteDepositCallReqDepositAddrStruct>(
+      this[4].toTuple()
+    );
+  }
+
+  get nonce(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get gasCompensation(): BigInt {
+    return this[6].toBigInt();
+  }
+}
+
+export class CompleteDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
+  get encodedAssetAddr(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get encodedAssetId(): BigInt {
+    return this[1].toBigInt();
+  }
+}
+
+export class CompleteDepositCallReqDepositAddrStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
 export class InitializeCall extends ethereum.Call {
   get inputs(): InitializeCall__Inputs {
     return new InitializeCall__Inputs(this);
@@ -681,104 +779,6 @@ export class InstantiateDepositCallReqEncodedAssetStruct extends ethereum.Tuple 
 }
 
 export class InstantiateDepositCallReqDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get h1Y(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessDepositCall extends ethereum.Call {
-  get inputs(): ProcessDepositCall__Inputs {
-    return new ProcessDepositCall__Inputs(this);
-  }
-
-  get outputs(): ProcessDepositCall__Outputs {
-    return new ProcessDepositCall__Outputs(this);
-  }
-}
-
-export class ProcessDepositCall__Inputs {
-  _call: ProcessDepositCall;
-
-  constructor(call: ProcessDepositCall) {
-    this._call = call;
-  }
-
-  get req(): ProcessDepositCallReqStruct {
-    return changetype<ProcessDepositCallReqStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-
-  get signature(): Bytes {
-    return this._call.inputValues[1].value.toBytes();
-  }
-}
-
-export class ProcessDepositCall__Outputs {
-  _call: ProcessDepositCall;
-
-  constructor(call: ProcessDepositCall) {
-    this._call = call;
-  }
-}
-
-export class ProcessDepositCallReqStruct extends ethereum.Tuple {
-  get chainId(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get spender(): Address {
-    return this[1].toAddress();
-  }
-
-  get encodedAsset(): ProcessDepositCallReqEncodedAssetStruct {
-    return changetype<ProcessDepositCallReqEncodedAssetStruct>(
-      this[2].toTuple()
-    );
-  }
-
-  get value(): BigInt {
-    return this[3].toBigInt();
-  }
-
-  get depositAddr(): ProcessDepositCallReqDepositAddrStruct {
-    return changetype<ProcessDepositCallReqDepositAddrStruct>(
-      this[4].toTuple()
-    );
-  }
-
-  get nonce(): BigInt {
-    return this[5].toBigInt();
-  }
-
-  get gasCompensation(): BigInt {
-    return this[6].toBigInt();
-  }
-}
-
-export class ProcessDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class ProcessDepositCallReqDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
