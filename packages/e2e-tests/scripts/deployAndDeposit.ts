@@ -136,11 +136,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
         depositRequest
       );
 
-      const processDepositTx = await depositManager.processDeposit(
+      const completeDepositTx = await depositManager.completeDeposit(
         depositRequest,
         signature
       );
-      await processDepositTx.wait(1);
+      await completeDepositTx.wait(1);
     }
   }
 

@@ -16,7 +16,7 @@ export enum DepositRequestStatus {
   FailedRateLimit = "FailedRateLimit",
   PassedScreen = "PassedScreen",
   Enqueued = "Enqueued",
-  Processed = "Processed",
+  Completed = "Completed",
 }
 
 export const DELAYED_DEPOSIT_QUEUE = "DelayedDepositQueue";
