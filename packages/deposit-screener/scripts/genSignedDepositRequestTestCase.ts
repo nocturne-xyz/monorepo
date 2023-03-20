@@ -6,8 +6,8 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import {
-  DEPOSIT_CHECKER_CONTRACT_NAME,
-  DEPOSIT_CHECKER_CONTRACT_VERSION,
+  DEPOSIT_MANAGER_CONTRACT_NAME,
+  DEPOSIT_MANAGER_CONTRACT_VERSION,
   DEPOSIT_REQUEST_TYPES,
 } from "../src/typedData/constants";
 
@@ -35,8 +35,8 @@ function toObject(obj: any) {
   const depositManagerAddress = "0x1111111111111111111111111111111111111111";
   const chainId = 123n;
   const domain: EIP712Domain = {
-    name: DEPOSIT_CHECKER_CONTRACT_NAME,
-    version: DEPOSIT_CHECKER_CONTRACT_VERSION,
+    name: DEPOSIT_MANAGER_CONTRACT_NAME,
+    version: DEPOSIT_MANAGER_CONTRACT_VERSION,
     chainId,
     verifyingContract: depositManagerAddress,
   };
@@ -78,8 +78,8 @@ function toObject(obj: any) {
   const json = JSON.stringify(
     toObject({
       contractAddress: depositManagerAddress,
-      contractName: DEPOSIT_CHECKER_CONTRACT_NAME,
-      contractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
+      contractName: DEPOSIT_MANAGER_CONTRACT_NAME,
+      contractVersion: DEPOSIT_MANAGER_CONTRACT_VERSION,
       screenerAddress: await signer.getAddress(),
       depositRequest,
       signature: { r, s, v },

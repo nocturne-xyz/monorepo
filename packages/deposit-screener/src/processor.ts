@@ -14,7 +14,7 @@ import { ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
-  DEPOSIT_DELAY_QUEUE,
+  DELAYED_DEPOSIT_QUEUE,
 } from "./types";
 import { getRedis } from "./utils";
 import IORedis from "ioredis";
@@ -55,7 +55,7 @@ export class DepositScreenerProcessor {
 
     const connection = getRedis(redis);
     this.db = new DepositScreenerDB(connection);
-    this.delayQueue = new Queue(DEPOSIT_DELAY_QUEUE, { connection: redis });
+    this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
   }
 
   async run(): Promise<void> {

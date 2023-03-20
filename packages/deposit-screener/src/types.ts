@@ -19,7 +19,7 @@ export enum DepositRequestStatus {
   Processed = "Processed",
 }
 
-export const DEPOSIT_DELAY_QUEUE = "DepositDelayQueue";
+export const DELAYED_DEPOSIT_QUEUE = "DelayedDepositQueue";
 export const DELAYED_DEPOSIT_JOB_TAG = "DELAYED_DEPOSIT";
 
 export type DelayedDepositJobData = {
