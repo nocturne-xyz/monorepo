@@ -1,7 +1,7 @@
 import { AssetTrait, AssetType, DepositRequest } from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import { EIP712Domain, signDepositRequest } from "../src";
+import { EIP712Domain, hashDepositRequest, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -62,6 +62,8 @@ function toObject(obj: any) {
     gasCompensation: 50n,
   };
 
+  const hash = hashDepositRequest(depositRequest);
+
   const signature = await signDepositRequest(signer, domain, depositRequest);
   const { r, s, v } = ethers.utils.splitSignature(signature);
 
@@ -82,6 +84,7 @@ function toObject(obj: any) {
       contractVersion: DEPOSIT_MANAGER_CONTRACT_VERSION,
       screenerAddress: await signer.getAddress(),
       depositRequest,
+      depositRequestHash: hash,
       signature: { r, s, v },
     })
   );

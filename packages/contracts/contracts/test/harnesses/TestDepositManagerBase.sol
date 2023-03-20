@@ -27,6 +27,12 @@ contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
         return _recoverDepositRequestSigner(req, signature);
     }
 
+    function hashDepositRequest(
+        DepositRequest calldata req
+    ) public pure returns (bytes32) {
+        return _hashDepositRequest(req);
+    }
+
     function nameHash() public view returns (bytes32) {
         return _EIP712NameHash();
     }
