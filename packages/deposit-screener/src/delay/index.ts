@@ -1,9 +1,7 @@
 import { DepositRequest } from "@nocturne-xyz/sdk";
 
-// TODO: add real implementation
-export async function calculateDelaySeconds(
-  depositRequest: DepositRequest
-): Promise<number> {
-  depositRequest;
-  return 0;
+export interface DelayCalculator {
+  calculateDelaySeconds(depositRequest: DepositRequest): Promise<number>;
 }
+
+export { DummyDelayCalculator } from "./dummy";

@@ -1,6 +1,6 @@
 import { DepositRequest } from "@nocturne-xyz/sdk";
 import { Queue } from "bullmq";
-import { calculateDelaySeconds } from "./delay";
+import { DelayCalculator } from "./delay";
 import {
   DelayedDepositJobData,
   DELAYED_DEPOSIT_JOB_TAG,
@@ -10,6 +10,7 @@ import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 
 interface EnqueueDepositRequestDeps {
+  delayCalculator: DelayCalculator;
   delayQueue: Queue;
 }
 
@@ -17,7 +18,9 @@ export async function enqueueDepositRequest(
   depositRequest: DepositRequest,
   deps: EnqueueDepositRequestDeps
 ): Promise<DepositRequestStatus> {
-  const delaySeconds = await calculateDelaySeconds(depositRequest);
+  const delaySeconds = await deps.delayCalculator.calculateDelaySeconds(
+    depositRequest
+  );
 
   const depositRequestJson = JSON.stringify(depositRequest);
   const jobData: DelayedDepositJobData = {
