@@ -6,9 +6,9 @@ import { DepositRequestStatus } from "./types";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 
 const DEPOSIT_REQUEST_STAGE_PREFIX = "DEPOSIT_REQUEST_STAGE_";
-const PER_ADDR_DEPOSIT_PREFIX = "PER_ADDR_DEPOSIT_AMOUNT_";
+const PER_ADDR_DEPOSIT_AMOUNT_PREFIX = "PER_ADDR_DEPOSIT_AMOUNT_";
 
-const GLOBAL_DEPOSIT_KEY = "GLOBAL_DEPOSIT_AMOUNT";
+const GLOBAL_DEPOSIT_AMOUNT_KEY = "GLOBAL_DEPOSIT_AMOUNT";
 
 export class DepositScreenerDB {
   redis: IORedis;
@@ -23,8 +23,8 @@ export class DepositScreenerDB {
     return DEPOSIT_REQUEST_STAGE_PREFIX + hashDepositRequest(depositRequest);
   }
 
-  private static formatPerAddressDepositKey(address: string): string {
-    return PER_ADDR_DEPOSIT_PREFIX + address;
+  private static formatPerAddressDepositAmountKey(address: string): string {
+    return PER_ADDR_DEPOSIT_AMOUNT_PREFIX + address;
   }
 
   async setNextBlock(block: number): Promise<void> {
@@ -56,22 +56,22 @@ export class DepositScreenerDB {
     address: string,
     amount: number
   ): Promise<void> {
-    const key = DepositScreenerDB.formatPerAddressDepositKey(address);
+    const key = DepositScreenerDB.formatPerAddressDepositAmountKey(address);
     await this.redis.set(key, amount);
   }
 
   async getDepositAmountForAddress(address: string): Promise<number> {
-    const key = DepositScreenerDB.formatPerAddressDepositKey(address);
+    const key = DepositScreenerDB.formatPerAddressDepositAmountKey(address);
     const val = await this.redis.get(key);
     return val ? Number(val) : 0;
   }
 
   async setGlobalDepositAmount(amount: number): Promise<void> {
-    await this.redis.set(GLOBAL_DEPOSIT_KEY, amount);
+    await this.redis.set(GLOBAL_DEPOSIT_AMOUNT_KEY, amount);
   }
 
   async getGlobalDepositAmount(amount: number): Promise<number> {
-    const val = await this.redis.get(GLOBAL_DEPOSIT_KEY);
+    const val = await this.redis.get(GLOBAL_DEPOSIT_AMOUNT_KEY);
     return val ? Number(val) : 0;
   }
 }

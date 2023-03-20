@@ -90,6 +90,9 @@ export class DepositScreenerSubmitter {
 
         const valid = this.screeningApi.validDepositRequest(depositRequest);
         if (!valid) {
+          console.log(
+            `Deposit no longer passes screening. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+          );
           return;
         }
 
@@ -146,6 +149,7 @@ export class DepositScreenerSubmitter {
         DepositRequestStatus.Completed
       );
     } else {
+      // NOTE: not sure if possible that tx submission passes but event not found
       console.error(
         `Deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
       );
