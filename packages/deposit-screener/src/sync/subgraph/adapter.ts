@@ -6,12 +6,12 @@ import {
   sleep,
 } from "@nocturne-xyz/sdk";
 import { DepositEventType } from "../../types";
-import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
+import { DepositEventsBatch, StreamAdapter } from "../syncAdapter";
 import { fetchDepositEvents } from "./fetch";
 
 const MAX_CHUNK_SIZE = 10000;
 
-export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
+export class SubgraphStreamAdapter implements StreamAdapter {
   private readonly graphqlEndpoint: string;
 
   constructor(graphqlEndpoint: string) {

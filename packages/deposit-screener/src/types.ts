@@ -11,7 +11,7 @@ export interface DepositEvent extends DepositRequest {
 }
 
 export enum DepositRequestStatus {
-  FailedDepositMappingCheck = "FailedDepositMappingCheck",
+  DepositDoesNotExist = "DepositDoesNotExist",
   FailedScreen = "FailedScreen",
   FailedRateLimit = "FailedRateLimit",
   PassedScreen = "PassedScreen",

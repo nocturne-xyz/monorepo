@@ -9,8 +9,8 @@ import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { enqueueDepositRequest } from "./enqueue";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
-import { SubgraphScreenerSyncAdapter } from "./sync/subgraph/adapter";
-import { ScreenerSyncAdapter } from "./sync/syncAdapter";
+import { SubgraphStreamAdapter } from "./sync/subgraph/adapter";
+import { StreamAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
@@ -21,7 +21,7 @@ import IORedis from "ioredis";
 import { DelayCalculator, DummyDelayCalculator } from "./delay";
 
 export class DepositScreenerProcessor {
-  adapter: ScreenerSyncAdapter;
+  adapter: StreamAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
   db: DepositScreenerDB;
@@ -39,7 +39,7 @@ export class DepositScreenerProcessor {
       throw new Error("Missing SUBGRAPH_ENDPOINT");
     }
 
-    this.adapter = new SubgraphScreenerSyncAdapter(subgraphEndpoint);
+    this.adapter = new SubgraphStreamAdapter(subgraphEndpoint);
 
     let _provider;
     if (provider) {
@@ -62,14 +62,14 @@ export class DepositScreenerProcessor {
 
     const connection = getRedis(redis);
     this.db = new DepositScreenerDB(connection);
-    this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
+    this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection });
   }
 
   async run(): Promise<void> {
     const nextBlockToSync = await this.db.getNextBlock();
-    const currentBlock =
-      await this.depositManagerContract.provider.getBlockNumber();
-    console.log(`Syncing from block ${nextBlockToSync} to ${currentBlock}...`);
+    console.log(
+      `processing deposit requests starting from block ${nextBlockToSync}`
+    );
 
     const depositEvents = this.adapter.iterDepositEvents(
       DepositEventType.Instantiated,
