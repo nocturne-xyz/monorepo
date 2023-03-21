@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Move env var parsing to CLI
+- add `ignoreGas` option to validator
 - Remove `verificationGasLimit` from `Operation`
 - Change `docker-compose.yml` to have redis `volumes: ./redis-data:/data` to `volumes: /redis-data` (volumes finally mount on docker env instead of host machine)
 - update imports with SDK renames (see SDK changelog)

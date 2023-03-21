@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Move env var parsing to CLI
 - Add stubs for non-server screener functionality
   - Processor (fetches new deposit events, checks, enqueues)
   - Submitter (takes new deposit requests of queue and signs/submits)
