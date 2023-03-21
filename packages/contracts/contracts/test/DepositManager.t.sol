@@ -58,7 +58,7 @@ contract DepositManagerTest is Test, ParseUtils {
         uint256 gasCompensation
     );
 
-    event DepositProcessed(
+    event DepositCompleted(
         uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -331,7 +331,7 @@ contract DepositManagerTest is Test, ParseUtils {
         depositManager.retrieveDeposit(deposit);
     }
 
-    function testProcessDepositSuccess() public {
+    function testCompleteDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -362,7 +362,7 @@ contract DepositManagerTest is Test, ParseUtils {
         bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
 
         vm.expectEmit(true, true, true, true);
-        emit DepositProcessed(
+        emit DepositCompleted(
             block.chainid,
             deposit.spender,
             deposit.encodedAsset,
@@ -373,7 +373,7 @@ contract DepositManagerTest is Test, ParseUtils {
         );
 
         vm.prank(SCREENER);
-        depositManager.processDeposit(deposit, signature);
+        depositManager.completeDeposit(deposit, signature);
 
         // Ensure vault now has ALICE's tokens
         assertEq(token.balanceOf(address(vault)), RESERVE_AMOUNT);
@@ -388,7 +388,7 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
-    function testProcessDepositFailureBadSignature() public {
+    function testCompleteDepositFailureBadSignature() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -421,10 +421,10 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.expectRevert("request signer !screener");
         vm.prank(SCREENER);
-        depositManager.processDeposit(deposit, badSignature);
+        depositManager.completeDeposit(deposit, badSignature);
     }
 
-    function testProcessDepositFailureNonExistentDeposit() public {
+    function testCompleteDepositFailureNonExistentDeposit() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -449,6 +449,6 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);
-        depositManager.processDeposit(deposit, signature);
+        depositManager.completeDeposit(deposit, signature);
     }
 }

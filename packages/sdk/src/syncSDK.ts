@@ -5,7 +5,7 @@ import {
   ClosableAsyncIterator,
   EncryptedStateDiff,
   StateDiff,
-  SyncAdapter,
+  SDKSyncAdapter,
 } from "./sync";
 import { ethers } from "ethers";
 import { IncludedEncryptedNote, IncludedNote, NoteTrait } from "./primitives";
@@ -28,7 +28,7 @@ export interface SyncDeps {
 
 export async function syncSDK(
   { provider, viewer }: SyncDeps,
-  adapter: SyncAdapter,
+  adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: MerkleProver,
   opts?: SyncOpts
@@ -37,7 +37,7 @@ export async function syncSDK(
   const currentBlock = await provider.getBlockNumber();
   console.log(`Syncing from block ${nextBlockToSync} to ${currentBlock}...`);
 
-  const newDiffs = await adapter.iterStateDiffs(nextBlockToSync, {
+  const newDiffs = adapter.iterStateDiffs(nextBlockToSync, {
     maxChunkSize: NOTES_MAX_CHUNK_SIZE,
     endBlock: currentBlock,
   });

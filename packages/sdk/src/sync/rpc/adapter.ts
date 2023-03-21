@@ -9,8 +9,8 @@ import { min } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import {
   EncryptedStateDiff,
-  IterStateDiffsOpts,
-  SyncAdapter,
+  IterSyncOpts,
+  SDKSyncAdapter,
 } from "../syncAdapter";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { maxArray, sleep } from "../../utils";
@@ -25,7 +25,7 @@ import { ethers } from "ethers";
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
 
-export class RPCSyncAdapter implements SyncAdapter {
+export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   private walletContract: Wallet;
 
   constructor(
@@ -38,10 +38,10 @@ export class RPCSyncAdapter implements SyncAdapter {
     );
   }
 
-  async iterStateDiffs(
+  iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
+    opts?: IterSyncOpts
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
       : RPC_MAX_CHUNK_SIZE;

@@ -7,9 +7,11 @@ import {
   DepositRequest,
   Note,
 } from "@nocturne-xyz/sdk";
-import { signDepositRequest } from "@nocturne-xyz/deposit-screener";
 import { ethers } from "ethers";
-import { EIP712Domain } from "@nocturne-xyz/deposit-screener/dist/src/typedData";
+import {
+  EIP712Domain,
+  signDepositRequest,
+} from "@nocturne-xyz/deposit-screener";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
@@ -115,11 +117,11 @@ async function makeDeposit(
     const signature = await signDepositRequest(eoa, domain, depositRequest);
 
     console.log(`Depositing ${amount} of token ${token.address}`);
-    const processDepositTx = await depositManager.processDeposit(
+    const completeDepositTx = await depositManager.completeDeposit(
       depositRequest,
       signature
     );
-    await processDepositTx.wait(1);
+    await completeDepositTx.wait(1);
 
     return {
       owner: stealthAddress,

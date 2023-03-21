@@ -31,12 +31,12 @@ export interface StateDiff extends BaseStateDiff {
   notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[];
 }
 
-export interface IterStateDiffsOpts {
+export interface IterSyncOpts {
   endBlock?: number;
   maxChunkSize?: number;
 }
 
-export interface SyncAdapter {
+export interface SDKSyncAdapter {
   // return an async iterator over state diffs in managably-sized chunks starting from `startBlock`
   // with notes / nfs when there's a lot of blocks to sync
   // By default, this iterator runs forever, yielding a state diff every `chunkSize` blocks have passed
@@ -47,6 +47,6 @@ export interface SyncAdapter {
   // chunks.
   iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>>;
+    opts?: IterSyncOpts
+  ): ClosableAsyncIterator<EncryptedStateDiff>;
 }

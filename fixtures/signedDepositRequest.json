@@ -12,6 +12,7 @@
     "nonce": "0",
     "gasCompensation": "50"
   },
+  "depositRequestHash": "0x04b9df8160b9cd2a00c2a76b38fd4e21f52b9b90ac0a2b6f761580e20c5f8c3e",
   "signature": {
     "r": "0x4a877f0bfc701c03caaa1231c55466125aff3c4ccb704d3bf0d922fa6b566578",
     "s": "0x48dccd101dfd5545f36c06a7fbbfd864c3d92d78dda2322a4b49fab4bc2c5272",

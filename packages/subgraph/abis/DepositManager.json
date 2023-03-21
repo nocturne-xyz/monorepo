@@ -79,7 +79,7 @@
         "type": "uint256"
       }
     ],
-    "name": "DepositInstantiated",
+    "name": "DepositCompleted",
     "type": "event"
   },
   {
@@ -162,7 +162,7 @@
         "type": "uint256"
       }
     ],
-    "name": "DepositProcessed",
+    "name": "DepositInstantiated",
     "type": "event"
   },
   {
@@ -514,6 +514,95 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "spender",
+            "type": "address"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetAddr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetId",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct EncodedAsset",
+            "name": "encodedAsset",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "h1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h1Y",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2Y",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct StealthAddress",
+            "name": "depositAddr",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gasCompensation",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct DepositRequest",
+        "name": "req",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "completeDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "contractName",
         "type": "string"
@@ -634,95 +723,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "spender",
-            "type": "address"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetAddr",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetId",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncodedAsset",
-            "name": "encodedAsset",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "h1X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct StealthAddress",
-            "name": "depositAddr",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasCompensation",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct DepositRequest",
-        "name": "req",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "processDeposit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -14,7 +14,7 @@ import { ethers } from "ethers";
 import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
-import { SyncAdapter } from "./sync";
+import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
 
@@ -22,7 +22,7 @@ export class NocturneWalletSDK {
   protected walletContract: Wallet;
   protected merkleProver: MerkleProver;
   protected db: NocturneDB;
-  protected syncAdapter: SyncAdapter;
+  protected syncAdapter: SDKSyncAdapter;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Asset[];
@@ -33,7 +33,7 @@ export class NocturneWalletSDK {
     configOrNetworkName: NocturneConfig | string,
     merkleProver: MerkleProver,
     db: NocturneDB,
-    syncAdapter: SyncAdapter
+    syncAdapter: SDKSyncAdapter
   ) {
     let config: NocturneConfig;
     if (typeof configOrNetworkName == "string") {

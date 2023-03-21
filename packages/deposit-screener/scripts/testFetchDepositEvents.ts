@@ -1,7 +1,5 @@
-import {
-  fetchDepositEvents,
-  DepositEventType,
-} from "../src/sync/subgraph/fetch";
+import { fetchDepositEvents } from "../src/sync/subgraph/fetch";
+import { DepositEventType } from "../src/types";
 
 (async () => {
   const res = await fetchDepositEvents(

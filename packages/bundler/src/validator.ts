@@ -17,8 +17,8 @@ export class OperationValidator {
 
   constructor(
     walletAddress: string,
+    provider: ethers.providers.Provider,
     redis: IORedis,
-    provider?: ethers.providers.Provider,
     ignoreGas: boolean = false
   ) {
     this.nullifierDB = new NullifierDB(redis);

@@ -1,12 +1,5 @@
-export const DEPOSIT_CHECKER_CONTRACT_NAME = "NocturneDepositManager";
-export const DEPOSIT_CHECKER_CONTRACT_VERSION = "v1";
-
-export interface EIP712Domain {
-  name: string;
-  version: string;
-  chainId: bigint;
-  verifyingContract: string;
-}
+export const DEPOSIT_MANAGER_CONTRACT_NAME = "NocturneDepositManager";
+export const DEPOSIT_MANAGER_CONTRACT_VERSION = "v1";
 
 export const DEPOSIT_REQUEST_TYPES = {
   DepositRequest: [

@@ -2,8 +2,8 @@ import { min, sleep } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import {
   EncryptedStateDiff,
-  IterStateDiffsOpts,
-  SyncAdapter,
+  IterSyncOpts,
+  SDKSyncAdapter,
 } from "../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
@@ -14,17 +14,17 @@ import {
 
 const MAX_CHUNK_SIZE = 10000;
 
-export class SubgraphSyncAdapter implements SyncAdapter {
+export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
 
   constructor(graphqlEndpoint: string) {
     this.graphqlEndpoint = graphqlEndpoint;
   }
 
-  async iterStateDiffs(
+  iterStateDiffs(
     startBlock: number,
-    opts?: IterStateDiffsOpts | undefined
-  ): Promise<ClosableAsyncIterator<EncryptedStateDiff>> {
+    opts?: IterSyncOpts
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;

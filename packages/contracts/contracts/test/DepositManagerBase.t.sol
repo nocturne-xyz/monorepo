@@ -48,4 +48,21 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
 
         assertEq(recovered, fixture.screenerAddress);
     }
+
+    function testDepositRequestHashMatchesOffchainImpl() public {
+        SignedDepositRequestFixture memory fixture = JsonDecodings
+            .loadSignedDepositRequestFixture(SIGNED_DEPOSIT_REQ_FIXTURE_PATH);
+
+        depositManagerBase = new TestDepositManagerBase();
+        depositManagerBase.initialize(
+            fixture.contractName,
+            fixture.contractVersion
+        );
+
+        bytes32 depositRequestHash = depositManagerBase.hashDepositRequest(
+            fixture.depositRequest
+        );
+
+        assertEq(depositRequestHash, fixture.depositRequestHash);
+    }
 }

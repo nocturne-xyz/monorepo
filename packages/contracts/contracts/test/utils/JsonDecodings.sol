@@ -25,6 +25,7 @@ struct SignedDepositRequestFixture {
     string contractVersion;
     address screenerAddress;
     DepositRequest depositRequest;
+    bytes32 depositRequestHash;
     bytes signature;
 }
 
@@ -77,6 +78,9 @@ contract JsonDecodings is Test, ParseUtils {
         bytes memory contractNameBytes = json.parseRaw(".contractName");
         bytes memory contractVersionBytes = json.parseRaw(".contractVersion");
         bytes memory screenerAddressBytes = json.parseRaw(".screenerAddress");
+        bytes memory depositRequestHashBytes = json.parseRaw(
+            ".depositRequestHash"
+        );
         address contractAddress = abi.decode(contractAddressBytes, (address));
         string memory contractName = abi.decode(contractNameBytes, (string));
         string memory contractVersion = abi.decode(
@@ -84,6 +88,10 @@ contract JsonDecodings is Test, ParseUtils {
             (string)
         );
         address screenerAddress = abi.decode(screenerAddressBytes, (address));
+        bytes32 depositRequestHash = abi.decode(
+            depositRequestHashBytes,
+            (bytes32)
+        );
 
         // NOTE: helper struct only used to reduce stack usage
         SimpleSignedDepositRequestTypes
@@ -108,6 +116,7 @@ contract JsonDecodings is Test, ParseUtils {
                     nonce: simpleTypes.nonce,
                     gasCompensation: simpleTypes.gasCompensation
                 }),
+                depositRequestHash: depositRequestHash,
                 signature: signature
             });
     }

@@ -1,16 +1,15 @@
 import { AssetTrait, AssetType, DepositRequest } from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import { signDepositRequest } from "../src";
+import { EIP712Domain, hashDepositRequest, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 import {
-  DEPOSIT_CHECKER_CONTRACT_NAME,
-  DEPOSIT_CHECKER_CONTRACT_VERSION,
+  DEPOSIT_MANAGER_CONTRACT_NAME,
+  DEPOSIT_MANAGER_CONTRACT_VERSION,
   DEPOSIT_REQUEST_TYPES,
-  EIP712Domain,
-} from "../src/typedData";
+} from "../src/typedData/constants";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
@@ -36,8 +35,8 @@ function toObject(obj: any) {
   const depositManagerAddress = "0x1111111111111111111111111111111111111111";
   const chainId = 123n;
   const domain: EIP712Domain = {
-    name: DEPOSIT_CHECKER_CONTRACT_NAME,
-    version: DEPOSIT_CHECKER_CONTRACT_VERSION,
+    name: DEPOSIT_MANAGER_CONTRACT_NAME,
+    version: DEPOSIT_MANAGER_CONTRACT_VERSION,
     chainId,
     verifyingContract: depositManagerAddress,
   };
@@ -63,6 +62,8 @@ function toObject(obj: any) {
     gasCompensation: 50n,
   };
 
+  const hash = hashDepositRequest(depositRequest);
+
   const signature = await signDepositRequest(signer, domain, depositRequest);
   const { r, s, v } = ethers.utils.splitSignature(signature);
 
@@ -79,10 +80,11 @@ function toObject(obj: any) {
   const json = JSON.stringify(
     toObject({
       contractAddress: depositManagerAddress,
-      contractName: DEPOSIT_CHECKER_CONTRACT_NAME,
-      contractVersion: DEPOSIT_CHECKER_CONTRACT_VERSION,
+      contractName: DEPOSIT_MANAGER_CONTRACT_NAME,
+      contractVersion: DEPOSIT_MANAGER_CONTRACT_VERSION,
       screenerAddress: await signer.getAddress(),
       depositRequest,
+      depositRequestHash: hash,
       signature: { r, s, v },
     })
   );
