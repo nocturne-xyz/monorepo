@@ -61,6 +61,22 @@ contract TestJoinSplitVerifier is Test, ParseUtils, JsonDecodings {
         );
     }
 
+    function testBatchVerifySingle() public {
+        (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
+            BASIC_FIXTURE_PATH
+        );
+        Groth16.Proof[] memory proofs = new Groth16.Proof[](1);
+        uint256[][] memory allPis = new uint256[][](1);
+
+        proofs[0] = proof;
+        allPis[0] = pis;
+
+        require(
+            joinSplitVerifier.batchVerifyProofs(proofs, allPis),
+            "Invalid proof"
+        );
+    }
+
     function testBasicVerify() public {
         verifyFixture(BASIC_FIXTURE_PATH);
     }

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- delegate to single verifier in batch verifier if batch size is 1
 - Change Deposit events to include all info needed to recover deposit hash
 - Refactor unit tests to whitelist deposit source for deposits now that we use that instead of `msg.sender == deposit.spender`
 - Vault and BalanceManager now take both deposit and its `source` so they know where transfer funds from upon deposit

@@ -234,7 +234,13 @@ contract Wallet is
 
         (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
             .extractJoinSplitProofsAndPis(ops, opDigests);
-        success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+
+        // if there is only one proof, use the single proof verification
+        if (proofs.length == 1) {
+            success = _joinSplitVerifier.verifyProof(proofs[0], allPis[0]);
+        } else {
+            success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+        }
 
         perJoinSplitVerifyGas =
             (preVerificationGasLeft - gasleft()) /
