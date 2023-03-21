@@ -11,11 +11,11 @@ export class BundlerServer {
 
   constructor(
     walletAddress: string,
-    redis?: IORedis,
-    provider?: ethers.providers.Provider,
+    provider: ethers.providers.Provider,
+    redis: IORedis
     ignoreGas?: boolean
   ) {
-    this.router = new BundlerRouter(walletAddress, redis, provider, ignoreGas);
+    this.router = new BundlerRouter(walletAddress, provider, redis);
   }
 
   run(port: number): Server {

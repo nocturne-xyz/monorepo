@@ -14,7 +14,6 @@ import {
 import { OperationValidator } from "./validator";
 import * as JSON from "bigint-json-serialization";
 import { StatusDB } from "./db";
-import { getRedis } from "./utils";
 import { ethers } from "ethers";
 import { tryParseRelayRequest } from "./requestValidation";
 
@@ -26,19 +25,14 @@ export class BundlerRouter {
 
   constructor(
     walletAddress: string,
-    redis?: IORedis,
-    provider?: ethers.providers.Provider,
+    provider: ethers.providers.Provider,
+    redis: IORedis
     ignoreGas?: boolean
   ) {
-    this.redis = getRedis(redis);
-    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: this.redis });
-    this.statusDB = new StatusDB(this.redis);
-    this.validator = new OperationValidator(
-      walletAddress,
-      this.redis,
-      provider,
-      ignoreGas
-    );
+    this.redis = redis;
+    this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: redis });
+    this.statusDB = new StatusDB(redis);
+    this.validator = new OperationValidator(walletAddress, provider, redis, ignoreGas);
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {

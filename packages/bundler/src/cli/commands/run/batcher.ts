@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { BundlerBatcher } from "../../../batcher";
+import { getRedis } from "../../utils";
 
 const runBatcher = new Command("batcher")
   .summary("Run bundler batcher")
@@ -11,7 +12,7 @@ const runBatcher = new Command("batcher")
   )
   .action(async (options) => {
     const { maxLatency, batchSize } = options;
-    const batcher = new BundlerBatcher(maxLatency, batchSize);
+    const batcher = new BundlerBatcher(getRedis(), maxLatency, batchSize);
     await batcher.run();
   });
 
