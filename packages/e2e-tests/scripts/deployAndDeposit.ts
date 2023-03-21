@@ -53,8 +53,7 @@ const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLE
 
   const subtreeBatchFillers = [deployerEoa.address];
   if (SUBTREE_BATCH_FILLER) {
-    const eoa = new ethers.Wallet(SUBTREE_BATCH_FILLER);
-    subtreeBatchFillers.push(eoa.address);
+    subtreeBatchFillers.push(SUBTREE_BATCH_FILLER);
   }
 
   console.log("subtree batch fillers:", subtreeBatchFillers);
