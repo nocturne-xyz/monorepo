@@ -34,7 +34,7 @@ describe("BundlerBatcher", async () => {
 
     statusDB = new StatusDB(redis);
     batcherDB = new BatcherDB(redis);
-    batcher = new BundlerBatcher(MAX_BATCH_LATENCY_SECS, BATCH_SIZE, redis); // 6 second wait time
+    batcher = new BundlerBatcher(redis, MAX_BATCH_LATENCY_SECS, BATCH_SIZE); // 6 second wait time
   });
 
   beforeEach(async () => {

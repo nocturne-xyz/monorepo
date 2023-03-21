@@ -26,13 +26,18 @@ export class BundlerRouter {
   constructor(
     walletAddress: string,
     provider: ethers.providers.Provider,
-    redis: IORedis
+    redis: IORedis,
     ignoreGas?: boolean
   ) {
     this.redis = redis;
     this.queue = new Queue(PROVEN_OPERATION_QUEUE, { connection: redis });
     this.statusDB = new StatusDB(redis);
-    this.validator = new OperationValidator(walletAddress, provider, redis, ignoreGas);
+    this.validator = new OperationValidator(
+      walletAddress,
+      provider,
+      redis,
+      ignoreGas
+    );
   }
 
   async handleRelay(req: Request, res: Response): Promise<void> {
