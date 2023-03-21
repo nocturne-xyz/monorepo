@@ -169,6 +169,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("wait for subtreee update");
     await sleep(20_000);
 
+    // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
+    // HH's default gas price seems to be somewhere around 1 gwei experimentally
+    // unfortunately it doesn't have a way to set it in the chain itself, only in hre
     const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .gasPrice(1n)
