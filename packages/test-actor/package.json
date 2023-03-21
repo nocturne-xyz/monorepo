@@ -27,6 +27,8 @@
     "@nocturne-xyz/sdk": "workspace:^",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
+    "commander": "^10.0.0",
+    "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "randombytes": "^2.1.0"
   },
