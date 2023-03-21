@@ -5,7 +5,7 @@ import {
   ClosableAsyncIterator,
   EncryptedStateDiff,
   StateDiff,
-  SyncAdapter,
+  SDKSyncAdapter,
 } from "./sync";
 import { ethers } from "ethers";
 import { IncludedEncryptedNote, IncludedNote, NoteTrait } from "./primitives";
@@ -28,7 +28,7 @@ export interface SyncDeps {
 
 export async function syncSDK(
   { provider, viewer }: SyncDeps,
-  adapter: SyncAdapter,
+  adapter: SDKSyncAdapter,
   db: NocturneDB,
   merkle: MerkleProver,
   opts?: SyncOpts

@@ -1,5 +1,5 @@
 export { ClosableAsyncIterator } from "./closableAsyncIterator";
-export { SyncAdapter, EncryptedStateDiff, StateDiff } from "./syncAdapter";
+export { SDKSyncAdapter, EncryptedStateDiff, StateDiff } from "./syncAdapter";
 
 // NEXT PR: don't export the fetch methods
 export {
@@ -7,11 +7,11 @@ export {
   fetchSubtreeUpdateCommits,
   fetchJoinSplits,
   fetchNotesFromRefunds,
-  RPCSyncAdapter,
+  RPCSDKSyncAdapter,
 } from "./rpc";
 
 export {
-  SubgraphSyncAdapter,
+  SubgraphSDKSyncAdapter,
   makeSubgraphQuery,
   fetchLatestIndexedBlock,
 } from "./subgraph";
