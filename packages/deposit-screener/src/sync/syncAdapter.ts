@@ -6,7 +6,7 @@ export interface DepositEventsBatch {
   depositEvents: DepositEvent[];
 }
 
-export interface ScreenerSyncAdapter {
+export interface StreamAdapter {
   iterDepositEvents(
     type: DepositEventType,
     startBlock: number,
