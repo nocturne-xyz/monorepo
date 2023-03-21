@@ -36,6 +36,11 @@ import {
 } from "@nocturne-xyz/config";
 import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
+import {
+  DepositScreenerConfig,
+  startDepositScreener,
+  stopDepositScreener,
+} from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS, KEYS_TO_WALLETS } from "./keys";
@@ -60,6 +65,7 @@ export interface TestActorsConfig {
   // if not given, all actors are deployed
   include: {
     bundler?: boolean;
+    depositScreener?: boolean;
     subtreeUpdater?: boolean;
     subgraph?: boolean;
   };
@@ -69,6 +75,7 @@ export interface TestActorsConfig {
   configs?: {
     hhNode?: Partial<HardhatNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
+    depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
     subgraph?: Partial<SubgraphConfig>;
   };
@@ -107,6 +114,16 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   rpcUrl: HH_FROM_DOCKER_URL,
 };
 
+const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
+  DepositScreenerConfig,
+  "depositManagerAddress" | "txSignerKey"
+> = {
+  redisUrl: REDIS_URL,
+  redisPassword: REDIS_PASSWORD,
+  rpcUrl: HH_FROM_DOCKER_URL,
+  subgraphUrl: SUBGRAPH_API_URL,
+};
+
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "walletAddress" | "txSignerKey"
@@ -139,8 +156,14 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa, aliceEoa, bobEoa, bundlerEoa, subtreeUpdaterEoa] =
-    KEYS_TO_WALLETS(provider);
+  const [
+    deployerEoa,
+    aliceEoa,
+    bobEoa,
+    bundlerEoa,
+    subtreeUpdaterEoa,
+    screenerEoa,
+  ] = KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
   });
@@ -160,9 +183,9 @@ export async function setupTestDeployment(
   // deploy everything else
   const proms = [];
 
-  if (config.include?.bundler) {
+  if (config.include.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
-    const bundlerConfig = {
+    const bundlerConfig: BundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       walletAddress: walletProxy.proxy,
@@ -172,10 +195,22 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
+  if (config.include.depositScreener) {
+    const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
+    const depositScreenerConfig: DepositScreenerConfig = {
+      ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
+      ...givenDepositScreenerConfig,
+      depositManagerAddress: depositManagerProxy.proxy,
+      txSignerKey: screenerEoa.privateKey,
+    };
+
+    proms.push(startDepositScreener(depositScreenerConfig));
+  }
+
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
-  if (config.include?.subtreeUpdater) {
+  if (config.include.subtreeUpdater) {
     const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
-    const subtreeUpdaterConfig = {
+    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
       walletAddress: walletProxy.proxy,
@@ -202,7 +237,7 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  if (config.include?.subgraph) {
+  if (config.include.subgraph) {
     const givenSubgraphConfig = config.configs?.subgraph ?? {};
     const subgraphConfig = {
       ...DEFAULT_SUBGRAPH_CONFIG,
@@ -219,6 +254,14 @@ export async function setupTestDeployment(
     // teardown offchain actors
     const proms = [];
 
+    if (config.include.bundler) {
+      proms.push(stopBundler());
+    }
+
+    if (config.include.depositScreener) {
+      proms.push(stopDepositScreener());
+    }
+
     if (subtreeUpdaterContainer) {
       const teardown = async () => {
         await subtreeUpdaterContainer?.stop();
@@ -227,11 +270,7 @@ export async function setupTestDeployment(
       proms.push(teardown());
     }
 
-    if (config.include?.bundler) {
-      proms.push(stopBundler());
-    }
-
-    if (config.include?.subgraph) {
+    if (config.include.subgraph) {
       proms.push(stopSubgraph());
     }
 
