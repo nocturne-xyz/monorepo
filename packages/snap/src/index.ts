@@ -45,9 +45,14 @@ const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   subtreeUpdateVerifier: "0x0000000000000000000000000000000000000000",
 };
 
+const GAS_TOKEN_ADDRS = [
+  "0x4e3df2073bf4b43B9944b8e5A463b1E185D6448C",
+  "0xbfce6B877Ebff977bB6e80B24FbBb7bC4eBcA4df",
+];
+
 const DUMMY_CONFIG = new NocturneConfig(
   DUMMY_CONTRACT_DEPLOYMENT,
-  new Map(),
+  new Map(GAS_TOKEN_ADDRS.map((addr, i) => [`TOKEN-${i}`, addr])),
   new Map()
 );
 
@@ -176,6 +181,14 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       });
 
       console.log("Operation request: ", operationRequest);
+
+      // fetch gas price from chain and set it in the operation request if it's not already set
+      if (!operationRequest.gasPrice) {
+        const gasPrice = await provider.getGasPrice();
+        operationRequest.gasPrice = gasPrice.toBigInt();
+      }
+
+      console.log("Operation gas price: ", operationRequest.gasPrice);
 
       try {
         const preSignOp = await context.prepareOperation(operationRequest);

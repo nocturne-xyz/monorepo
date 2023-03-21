@@ -20,7 +20,10 @@ import {
   setupTestDeployment,
   setupTestClient,
 } from "../src/deploy";
-import { depositFundsSingleToken } from "../src/deposit";
+import {
+  depositFundsMultiToken,
+  depositFundsSingleToken,
+} from "../src/deposit";
 import {
   getSubtreeUpdateProver,
   sleep,
@@ -29,6 +32,11 @@ import {
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { KEYS_TO_WALLETS } from "../src/keys";
+
+// 10^9 (e.g. 10 gwei if this was eth)
+const GAS_PRICE = 10n * 10n ** 9n;
+// 10^9 gas
+const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
 
 describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
@@ -49,6 +57,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let depositManager: DepositManager;
     let wallet: Wallet;
     let token: SimpleERC20Token;
+    let gasToken: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
     let updater: SubtreeUpdater;
 
@@ -68,16 +77,20 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
 
+      token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+      console.log("Token deployed at: ", token.address);
+
+      gasToken = await new SimpleERC20Token__factory(deployerEoa).deploy();
+      console.log("Gas Token deployed at: ", gasToken.address);
+
       ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
         testDeployment.contractDeployment,
         provider,
         {
           syncAdapter,
+          gasAssets: new Map([["GAS", gasToken.address]]),
         }
       ));
-
-      token = await new SimpleERC20Token__factory(deployerEoa).deploy();
-      console.log("Token deployed at: ", token.address);
 
       await newSubtreeUpdater();
     });
@@ -112,7 +125,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [100n, 100n]
       );
       // wait for subgraph to sync
-      await sleep(1_0000);
+      await sleep(2_000);
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -164,15 +177,17 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     it("syncs nullifiers and nullifies notes", async () => {
       // deposit notes...
       console.log("depositing funds...");
-      await depositFundsSingleToken(
+      await depositFundsMultiToken(
         depositManager,
-        token,
+        [
+          [token, [80n]],
+          [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+        ],
         aliceEoa,
-        nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-        [80n, 100n]
+        nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
       );
       // wait for subgraph to sync
-      await sleep(1_0000);
+      await sleep(2_000);
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
@@ -198,9 +213,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const opRequest = builder
         .unwrap(asset, 80n)
         .action(token.address, transfer)
+        .gasPrice(GAS_PRICE)
         .build();
-
-      opRequest.gasPrice = 0n;
 
       console.log("preparing op...");
       const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
@@ -216,21 +230,21 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await nocturneWalletSDKAlice.sync();
 
       // check that the DB nullified the spent note
+      // after the op, the 80 token note should be nullified, so they should have
+      // no non-zero notes for `token`
       //@ts-ignore
-      const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
-      console.log("all notes: ", allNotes);
+      const notesForToken = await nocturneWalletSDKAlice.db.getNotesForAsset({
+        assetType: AssetType.ERC20,
+        assetAddr: token.address,
+        id: 0n,
+      });
+      console.log("notesForToken: ", notesForToken);
 
-      const nonZeroNotes = Array.from(allNotes.values())
+      const nonZeroNotes = Array.from(notesForToken.values())
         .flat()
         .filter((note) => note.value > 0n);
 
-      console.log(
-        "non zero note nullifiers:",
-        nonZeroNotes.map((note) =>
-          nocturneWalletSDKAlice.signer.createNullifier(note)
-        )
-      );
-      expect(nonZeroNotes.length).to.eql(1);
+      expect(nonZeroNotes).to.be.empty;
     });
   };
 }

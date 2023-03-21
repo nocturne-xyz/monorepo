@@ -1,4 +1,5 @@
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { ethers } from "ethers";
@@ -30,6 +31,8 @@ import {
 } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
 import { deployERC1155, deployERC20, deployERC721 } from "../src/tokens";
+
+chai.use(chaiAsPromised);
 
 // ALICE_UNWRAP_VAL + ALICE_TO_BOB_PRIV_VAL should be between PER_NOTE_AMOUNT
 // and and 2 * PER_NOTE_AMOUNT
@@ -150,6 +153,38 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await contractChecks();
     await offchainChecks();
   }
+
+  it("Bundler rejects operation with gas price < chain's gas price", async () => {
+    console.log("Deposit funds");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+    );
+
+    console.log("wait for subtreee update");
+    await sleep(20_000);
+
+    // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
+    // HH's default gas price seems to be somewhere around 1 gwei experimentally
+    // unfortunately it doesn't have a way to set it in the chain itself, only in hre
+    const operationRequest = new OperationRequestBuilder()
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .gasPrice(1n)
+      .build();
+
+    expect(
+      testE2E(
+        operationRequest,
+        async () => {},
+        async () => {}
+      )
+    ).to.eventually.be.rejectedWith("gas price too low");
+  });
 
   it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
     console.log("Deposit funds and commit note commitments");
@@ -293,6 +328,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .action(erc721.address, erc721ReserveCalldata)
       .action(erc1155.address, erc1155ReserveCalldata)
       .unwrap(gasTokenAsset, 1n)
+      .gasPrice(GAS_PRICE)
       .build();
 
     const contractChecks = async () => {
