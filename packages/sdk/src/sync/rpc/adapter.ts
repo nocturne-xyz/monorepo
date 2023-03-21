@@ -73,9 +73,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // fetch event data from chain
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
           await Promise.all([
-            await fetchNotesFromRefunds(walletContract, from, to),
-            await fetchJoinSplits(walletContract, from, to),
-            await fetchSubtreeUpdateCommits(walletContract, from, to),
+            fetchNotesFromRefunds(walletContract, from, to),
+            fetchJoinSplits(walletContract, from, to),
+            fetchSubtreeUpdateCommits(walletContract, from, to),
           ]);
 
         // extract notes and nullifiers
