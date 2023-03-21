@@ -1,7 +1,6 @@
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
 import { BatcherDB, StatusDB } from "./db";
-import { getRedis } from "./utils";
 import {
   OperationStatus,
   computeOperationDigest,
@@ -24,7 +23,7 @@ export class BundlerBatcher {
   readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
-  constructor(maxLatencySeconds?: number, batchSize?: number, redis?: IORedis) {
+  constructor(redis: IORedis, maxLatencySeconds?: number, batchSize?: number) {
     if (batchSize) {
       this.BATCH_SIZE = batchSize;
     }
@@ -33,11 +32,12 @@ export class BundlerBatcher {
       this.MAX_BATCH_LATENCY_SECS = maxLatencySeconds;
     }
 
-    const connection = getRedis(redis);
-    this.redis = connection;
-    this.statusDB = new StatusDB(connection);
-    this.batcherDB = new BatcherDB(connection);
-    this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, { connection });
+    this.redis = redis;
+    this.statusDB = new StatusDB(redis);
+    this.batcherDB = new BatcherDB(redis);
+    this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
+      connection: redis,
+    });
   }
 
   async run(): Promise<void> {

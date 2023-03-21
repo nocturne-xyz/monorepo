@@ -16,9 +16,9 @@ import {
   NocturneDB,
   InMemoryMerkleProver,
   JoinSplitProver,
-  RPCSyncAdapter,
-  SyncAdapter,
-  SubgraphSyncAdapter,
+  RPCSDKSyncAdapter,
+  SDKSyncAdapter,
+  SubgraphSDKSyncAdapter,
   Address,
 } from "@nocturne-xyz/sdk";
 
@@ -320,11 +320,11 @@ export async function setupTestClient(
   const { walletProxy } = contractDeployment;
   const wallet = Wallet__factory.connect(walletProxy.proxy, provider);
 
-  let syncAdapter: SyncAdapter;
+  let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
-    syncAdapter = new SubgraphSyncAdapter(SUBGRAPH_API_URL);
+    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
   } else {
-    syncAdapter = new RPCSyncAdapter(provider, wallet.address);
+    syncAdapter = new RPCSDKSyncAdapter(provider, wallet.address);
   }
 
   console.log("Create NocturneWalletSDKAlice");
@@ -365,7 +365,7 @@ function setupNocturneWalletSDK(
   config: NocturneConfig,
   provider: ethers.providers.Provider,
   nocturneDB: NocturneDB,
-  syncAdapter: SyncAdapter
+  syncAdapter: SDKSyncAdapter
 ): NocturneWalletSDK {
   const nocturneSigner = new NocturneSigner(sk);
   const merkleProver = new InMemoryMerkleProver();

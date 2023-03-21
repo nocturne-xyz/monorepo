@@ -9,9 +9,8 @@ import {
 } from "@nocturne-xyz/sdk";
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
-import { ethers, providers } from "ethers";
+import { ethers } from "ethers";
 import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
-import { getRedis } from "./utils";
 import { StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 
@@ -26,29 +25,12 @@ export class BundlerSubmitter {
 
   constructor(
     walletAddress: Address,
-    redis?: IORedis,
-    signingProvider?: ethers.Signer
+    signingProvider: ethers.Signer,
+    redis: IORedis
   ) {
-    const connection = getRedis(redis);
-    this.redis = connection;
-    this.statusDB = new StatusDB(connection);
-
-    if (signingProvider) {
-      this.signingProvider = signingProvider;
-    } else {
-      const privateKey = process.env.TX_SIGNER_KEY;
-      if (!privateKey) {
-        throw new Error("Missing TX_SIGNER_KEY");
-      }
-
-      const rpcUrl = process.env.RPC_URL;
-      if (!rpcUrl) {
-        throw new Error("Missing RPC_URL");
-      }
-      const provider = new providers.JsonRpcProvider(rpcUrl);
-      this.signingProvider = new ethers.Wallet(privateKey, provider);
-    }
-
+    this.redis = redis;
+    this.statusDB = new StatusDB(this.redis);
+    this.signingProvider = signingProvider;
     this.walletContract = Wallet__factory.connect(
       walletAddress,
       this.signingProvider
