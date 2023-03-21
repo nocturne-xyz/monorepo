@@ -28,6 +28,13 @@
         "@nocturne-xyz/config#build"
       ]
     },
+    "@nocturne-xyz/test-actor#build": {
+      "dependsOn": [
+        "@nocturne-xyz/contracts#build",
+        "@nocturne-xyz/sdk#build",
+        "@nocturne-xyz/config#build"
+      ]
+    },
     "@nocturne-xyz/deposit-screener#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",

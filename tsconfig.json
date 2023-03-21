@@ -69,6 +69,9 @@
     },
     {
       "path": "./packages/subgraph"
-    }
+    },
+    {
+      "path": "./packages/test-actor"
+    },
   ]
 }
