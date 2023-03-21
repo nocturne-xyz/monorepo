@@ -4,7 +4,7 @@ import { DepositScreenerProcessor } from "../../../processor";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 
-const runProcess = new Command("process")
+const runProcess = new Command("screener")
   .summary("Process deposit requests")
   .description(
     "Must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. Must supply deposit manager contract address as options."
