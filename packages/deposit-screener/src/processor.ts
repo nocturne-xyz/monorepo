@@ -42,22 +42,25 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
   db: DepositScreenerDB;
   redis: IORedis;
-  signingProvider: ethers.Wallet; // ethers.Wallet for signing typed data
+  attestationSigner: ethers.Wallet; // ethers.Wallet implements TypedDataSigner
+  txSigner: ethers.Wallet;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
     depositManagerAddress: Address,
-    signingProvider: ethers.Wallet,
+    attestationSigner: ethers.Wallet,
+    txSigner: ethers.Wallet,
     redis: IORedis
   ) {
     this.redis = redis;
     this.adapter = syncAdapter;
 
-    this.signingProvider = signingProvider;
+    this.attestationSigner = attestationSigner;
+    this.txSigner = txSigner;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      signingProvider.provider
+      txSigner.provider
     );
 
     this.db = new DepositScreenerDB(redis);
@@ -84,6 +87,7 @@ export class DepositScreenerProcessor {
     );
 
     for await (const batch of depositEvents.iter) {
+      console.log(`Received deposit events, processing: ${batch}`);
       for (const event of batch.depositEvents) {
         const result = await this.handleDepositRequest({ ...event });
         await this.db.setDepositRequestStatus({ ...event }, result);
@@ -145,7 +149,7 @@ export class DepositScreenerProcessor {
   }
 
   async signAndSubmitDeposit(depositRequest: DepositRequest): Promise<void> {
-    const chainId = BigInt(await this.signingProvider.getChainId());
+    const chainId = BigInt(await this.txSigner.getChainId());
     assert(
       chainId == depositRequest.chainId,
       "connected chainId != deposit.chainId"
@@ -158,7 +162,7 @@ export class DepositScreenerProcessor {
       verifyingContract: this.depositManagerContract.address,
     };
     const signature = await signDepositRequest(
-      this.signingProvider,
+      this.attestationSigner,
       domain,
       depositRequest
     );
