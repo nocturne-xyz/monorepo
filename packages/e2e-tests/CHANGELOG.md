@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
+- add `subtreeBatchFillers` param to `NocturneDeployArgs`
+- make `deployAndDeposit` script take optional `SUBTREE_BATCH_FILLER` key from env
 - make `OpValidator` check that op's `gasPrice` >= `gasPrice` from chain
 - make `submitAndProcessOperation` return `OperationStatus`
 - make bundler and subtree updater use separate EOAs in `setupTestDeployment`

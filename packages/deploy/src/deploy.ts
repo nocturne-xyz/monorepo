@@ -25,6 +25,7 @@ export interface NocturneDeployArgs {
   walletOwner: Address;
   depositManagerOwner: Address;
   screeners: Address[];
+  subtreeBatchFillers: Address[];
 }
 
 export interface NocturneDeployOpts {
@@ -119,6 +120,15 @@ export async function deployNocturne(
   for (const screener of args.screeners) {
     const tx = await proxiedDepositManager.contract.setScreenerPermission(
       screener,
+      true
+    );
+    await tx.wait(opts?.confirmations);
+  }
+
+  console.log("setting subtre batch fillers\n");
+  for (const filler of args.subtreeBatchFillers) {
+    const tx = await proxiedWallet.contract.setSubtreeBatchFillerPermission(
+      filler,
       true
     );
     await tx.wait(opts?.confirmations);

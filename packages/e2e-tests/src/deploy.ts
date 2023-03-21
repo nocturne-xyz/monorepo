@@ -53,6 +53,7 @@ const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 export interface NocturneDeployArgs {
   screeners: Address[];
+  subtreeBatchFillers: Address[];
 }
 
 export interface TestActorsConfig {
@@ -143,6 +144,7 @@ export async function setupTestDeployment(
     KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
+    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
   });
 
   await checkNocturneContractDeployment(
@@ -157,9 +159,10 @@ export async function setupTestDeployment(
     Vault__factory.connect(vaultProxy.proxy, deployerEoa),
   ]);
 
-  // deploy everything else
+  // deploy off-chain actors concurrently
   const proms = [];
 
+  // deploy bundler if requested
   if (config.include?.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
     const bundlerConfig = {
@@ -172,6 +175,7 @@ export async function setupTestDeployment(
     proms.push(startBundler(bundlerConfig));
   }
 
+  // deploy subtree updater if requested
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
   if (config.include?.subtreeUpdater) {
     const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
@@ -202,6 +206,7 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
+  // deploy graph node & subgraph if requested
   if (config.include?.subgraph) {
     const givenSubgraphConfig = config.configs?.subgraph ?? {};
     const subgraphConfig = {
@@ -271,6 +276,7 @@ export async function deployContractsWithDummyAdmins(
       walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       screeners: args.screeners,
+      subtreeBatchFillers: args.subtreeBatchFillers,
     },
     {
       useMockSubtreeUpdateVerifier:

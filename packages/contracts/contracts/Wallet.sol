@@ -26,10 +26,13 @@ contract Wallet is
 
     mapping(address => bool) public _depositSources;
 
+    mapping(address => bool) public _subtreeBatchFiller;
+
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event DepositSourcePermissionSet(address source, bool permission);
+    event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -56,6 +59,15 @@ contract Wallet is
         emit DepositSourcePermissionSet(source, permission);
     }
 
+    // gives an address permission to call `fillBatchesWithZeros`
+    function setSubtreeBatchFillerPermission(
+        address filler,
+        bool permission
+    ) external onlyOwner {
+        _subtreeBatchFiller[filler] = permission;
+        emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
     modifier onlyThis() {
         require(msg.sender == address(this), "Only wallet");
         _;
@@ -63,6 +75,11 @@ contract Wallet is
 
     modifier onlyDepositSource() {
         require(_depositSources[msg.sender], "Only deposit source");
+        _;
+    }
+
+    modifier onlySubtreeBatchFiller() {
+        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
         _;
     }
 
@@ -257,5 +274,13 @@ contract Wallet is
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    // Force-fills the current commitment tree batch with zeros.
+    // this can be used to "force" an update sooner if someone doesn't want
+    // to wait for the batch to get filled with real transactions
+    // This function is permissioned because it can be used to DoS the commitment tree
+    function fillBatchWithZeros() external onlySubtreeBatchFiller {
+        _fillBatchWithZeros();
     }
 }
