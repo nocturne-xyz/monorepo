@@ -1,6 +1,10 @@
 import { min, sleep } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
-import { EncryptedStateDiff, IterSyncOpts, SyncAdapter } from "../syncAdapter";
+import {
+  EncryptedStateDiff,
+  IterSyncOpts,
+  SDKSyncAdapter,
+} from "../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
   fetchLatestIndexedBlock,
@@ -10,7 +14,7 @@ import {
 
 const MAX_CHUNK_SIZE = 10000;
 
-export class SubgraphSyncAdapter implements SyncAdapter {
+export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
 
   constructor(graphqlEndpoint: string) {

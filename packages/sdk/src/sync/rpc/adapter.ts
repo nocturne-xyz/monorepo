@@ -7,7 +7,11 @@ import {
 } from "../../primitives";
 import { min } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
-import { EncryptedStateDiff, IterSyncOpts, SyncAdapter } from "../syncAdapter";
+import {
+  EncryptedStateDiff,
+  IterSyncOpts,
+  SDKSyncAdapter,
+} from "../syncAdapter";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
 import { maxArray, sleep } from "../../utils";
 import {
@@ -21,7 +25,7 @@ import { ethers } from "ethers";
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
 
-export class RPCSyncAdapter implements SyncAdapter {
+export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   private walletContract: Wallet;
 
   constructor(

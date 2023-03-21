@@ -1,4 +1,4 @@
-export { RPCSyncAdapter } from "./adapter";
+export { RPCSDKSyncAdapter } from "./adapter";
 export {
   fetchInsertions,
   fetchSubtreeUpdateCommits,

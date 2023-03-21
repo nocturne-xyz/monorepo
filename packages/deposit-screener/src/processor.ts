@@ -9,8 +9,7 @@ import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { enqueueDepositRequest } from "./enqueue";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
-import { SubgraphStreamAdapter } from "./sync/subgraph/adapter";
-import { StreamAdapter } from "./sync/syncAdapter";
+import { ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
@@ -21,7 +20,7 @@ import IORedis from "ioredis";
 import { DelayCalculator, DummyDelayCalculator } from "./delay";
 
 export class DepositScreenerProcessor {
-  adapter: StreamAdapter;
+  adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
   db: DepositScreenerDB;
@@ -29,40 +28,24 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
 
   constructor(
+    syncAdapter: ScreenerSyncAdapter,
     depositManagerAddress: Address,
-    provider?: ethers.providers.Provider,
+    provider: ethers.providers.Provider,
     redis?: IORedis
   ) {
-    // TODO: enable switching on adapter impl
-    const subgraphEndpoint = process.env.SUGRAPH_ENDPOINT;
-    if (!subgraphEndpoint) {
-      throw new Error("Missing SUBGRAPH_ENDPOINT");
-    }
-
-    this.adapter = new SubgraphStreamAdapter(subgraphEndpoint);
-
-    let _provider;
-    if (provider) {
-      _provider = provider;
-    } else {
-      const rpcUrl = process.env.RPC_URL;
-      if (!rpcUrl) {
-        throw new Error("Missing RPC_URL");
-      }
-      _provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    }
+    this.adapter = syncAdapter;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      _provider
+      provider
     );
-
-    this.screeningApi = new DummyScreeningApi();
-    this.delayCalculator = new DummyDelayCalculator();
 
     const connection = getRedis(redis);
     this.db = new DepositScreenerDB(connection);
     this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection });
+
+    this.screeningApi = new DummyScreeningApi();
+    this.delayCalculator = new DummyDelayCalculator();
   }
 
   async run(): Promise<void> {
