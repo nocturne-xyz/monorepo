@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Fix bug where `depositRequest.depositAddr` was being incorrectly copied over from subgraph
+- Add Dockerfile and docker-compose.yml
+- Delete `enqueue.ts` and move logic into `processor.ts`
 - Move env var parsing to CLI
 - Add stubs for non-server screener functionality
   - Processor (fetches new deposit events, checks, enqueues)

@@ -35,6 +35,7 @@ import {
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
+import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
 
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
@@ -44,13 +45,13 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
   db: DepositScreenerDB;
   redis: IORedis;
-  attestationSigner: ethers.Wallet; // ethers.Wallet implements TypedDataSigner
+  attestationSigner: TypedDataSigner;
   txSigner: ethers.Wallet;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
     depositManagerAddress: Address,
-    attestationSigner: ethers.Wallet,
+    attestationSigner: TypedDataSigner,
     txSigner: ethers.Wallet,
     redis: IORedis
   ) {

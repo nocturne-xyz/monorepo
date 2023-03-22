@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Set depositScreener option on service deployment to `true` for all test suites
+- Add deposit screener options to deploy logic
 - make `OpValidator` check that op's `gasPrice` >= `gasPrice` from chain
 - make `submitAndProcessOperation` return `OperationStatus`
 - make bundler and subtree updater use separate EOAs in `setupTestDeployment`
