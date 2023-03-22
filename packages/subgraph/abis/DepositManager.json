@@ -160,12 +160,6 @@
         "internalType": "uint256",
         "name": "gasCompensation",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "depositHash",
-        "type": "bytes32"
       }
     ],
     "name": "DepositInstantiated",

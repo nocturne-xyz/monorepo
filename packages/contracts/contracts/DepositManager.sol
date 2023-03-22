@@ -31,8 +31,7 @@ contract DepositManager is
         uint256 value,
         StealthAddress depositAddr,
         uint256 nonce,
-        uint256 gasCompensation,
-        bytes32 depositHash
+        uint256 gasCompensation
     );
 
     event DepositRetrieved(
@@ -101,8 +100,7 @@ contract DepositManager is
             req.value,
             req.depositAddr,
             req.nonce,
-            req.gasCompensation,
-            depositHash
+            req.gasCompensation
         );
     }
 

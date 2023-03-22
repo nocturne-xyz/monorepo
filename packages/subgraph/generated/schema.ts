@@ -151,15 +151,6 @@ export class DepositEvent extends Entity {
   set gasCompensation(value: BigInt) {
     this.set("gasCompensation", Value.fromBigInt(value));
   }
-
-  get depositHash(): Bytes {
-    let value = this.get("depositHash");
-    return value!.toBytes();
-  }
-
-  set depositHash(value: Bytes) {
-    this.set("depositHash", Value.fromBytes(value));
-  }
 }
 
 export class EncodedOrEncryptedNote extends Entity {

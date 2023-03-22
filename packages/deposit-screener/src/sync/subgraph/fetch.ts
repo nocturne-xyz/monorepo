@@ -19,7 +19,6 @@ export interface DepositEventResponse {
   depositAddrH2Y: string;
   nonce: string;
   gasCompensation: string;
-  depositHash: string;
 }
 
 interface FetchDepositEventsVars {
@@ -49,7 +48,6 @@ const depositEventsQuery = `\
       depositAddrH2Y
       nonce
       gasCompensation
-      depositHash
     }
   }`;
 
@@ -71,7 +69,6 @@ export async function fetchDepositEvents(
 function depositEventFromDepositEventResponse(
   depositEventResponse: DepositEventResponse
 ): DepositEvent {
-  console.log("DEPOSIT HASH:", depositEventResponse.depositHash);
   const type = depositEventResponse.type;
   const chainId = BigInt(depositEventResponse.chainId);
   const spender = depositEventResponse.spender;
