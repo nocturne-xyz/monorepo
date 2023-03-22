@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- site script works with deposit screener
 - site script feeds snap gas tokens
 - Site script logs deposit manager
 - Site script uses dockerized hardhat instead of `npx hardhat node`
