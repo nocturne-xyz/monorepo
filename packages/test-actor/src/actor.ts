@@ -89,23 +89,24 @@ export class TestActor {
       if (flipCoin()) {
         await this.deposit();
       } else {
-        await this.submitOpRequest();
+        await this.operation();
       }
     }
   }
 
   /// helpers
 
-  private async submitOpRequest() {
+  private async operation() {
     await this.mutex.runExclusive(async () => {
       // choose a random opRequest
       const opRequest = randomElem(this.opRequests);
 
-      // prepare, sign, prove, and submit
+      // prepare, sign, and prove
       const preSign = await this.sdk.prepareOperation(opRequest);
       const signed = this.sdk.signOperation(preSign);
       const proven = proveOperation(this.prover, signed);
 
+      // submit
       const res = await fetch(`${this.bundlerEndpoint}/relay`, {
         method: "POST",
         headers: {
@@ -132,24 +133,23 @@ export class TestActor {
       // choose a random deposit request and set its nonce
       const depositRequest = randomElem(this.depositRequests);
 
-      // submit it
-      await this.submitDepositRequest(depositRequest);
+      // set its nonce
+      const nonce = await this.depositManager._nonces(depositRequest.spender);
+      depositRequest.nonce = nonce.toBigInt();
+
+      // submit
+      console.log(
+        `instantiating deposit request ${JSON.stringify(depositRequest)}`
+      );
+      const instantiateDepositTx = await this.depositManager.instantiateDeposit(
+        depositRequest
+      );
+      await instantiateDepositTx.wait(1);
+
+      // TODO request from deposit screener instead
+      console.log("waiting for deposit to be processed");
+      await sleep(10_000);
     });
-  }
-
-  // TODO: use FE SDK instead once deposit screener is done
-  private async submitDepositRequest(depositRequest: DepositRequest) {
-    console.log(
-      `instantiating deposit request ${JSON.stringify(depositRequest)}`
-    );
-    const instantiateDepositTx = await this.depositManager.instantiateDeposit(
-      depositRequest
-    );
-    await instantiateDepositTx.wait(1);
-
-    // TODO request from deposit screener instead
-    console.log("waiting for deposit to be processed");
-    await sleep(10_000);
   }
 }
 
