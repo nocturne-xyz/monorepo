@@ -15,16 +15,14 @@ import {
   OperationRequest,
   SubgraphSDKSyncAdapter,
 } from "@nocturne-xyz/sdk";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { TestActor } from "../actor";
-import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
-import { program } from "commander";
 import * as fs from "fs";
 import * as BigintJSON from "bigint-json-serialization";
-import * as dotenv from "dotenv";
 
-const run = new Command("run")
+export const run = new Command("run")
   .summary("run test actor")
   .description(
     "Must supply .env file with RPC_URL, BUNDLER_URL, SUBGRPH_URL, TX_SIGNER_KEY, and NOCTURNE_SK."
@@ -113,14 +111,7 @@ const run = new Command("run")
     );
 
     const vkey = JSON.parse(vkeyPath);
-    const frontendSDK = new NocturneFrontendSDK(
-      bundlerEndpoint,
-      wallet,
-      config.vaultAddress(),
-      wasmPath,
-      zkeyPath,
-      vkey
-    );
+    const prover = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
 
     let depositRequests: DepositRequest[] = [];
     if (depositRequestsPath) {
@@ -142,22 +133,11 @@ const run = new Command("run")
       wallet,
       depositManager,
       sdk,
-      frontendSDK,
+      prover,
+      bundlerEndpoint,
       depositRequests,
       opRequests
     );
 
     await actor.run();
   });
-
-export default async function main(): Promise<void> {
-  dotenv.config();
-
-  program
-    .name("test-actor-cli")
-    .description("CLI for running nocturne test actor")
-    .addCommand(run);
-  await program.parseAsync(process.argv);
-}
-
-main().catch((e) => console.log(`test actor exited with error: ${e}`));

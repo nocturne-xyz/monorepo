@@ -43,14 +43,6 @@ export class NocturneConfig {
   rateLimit(ticker: string): RateLimit | undefined {
     return this.rateLimits.get(ticker);
   }
-
-  serialize(): string {
-    return JSON.stringify({
-      contracts: this.contracts,
-      gaasAssets: this.gasAssets,
-      rateLimits: this.rateLimits,
-    });
-  }
 }
 
 export function loadNocturneConfig(

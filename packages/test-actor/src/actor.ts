@@ -1,10 +1,11 @@
 import { DepositManager, Wallet } from "@nocturne-xyz/contracts";
-import { NocturneFrontendSDK } from "@nocturne-xyz/frontend-sdk";
 import {
   DepositRequest,
   NocturneWalletSDK,
   OperationRequest,
   sleep,
+  JoinSplitProver,
+  proveOperation,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import { randomInt } from "crypto";
@@ -14,7 +15,8 @@ export class TestActor {
   wallet: Wallet;
   depositManager: DepositManager;
   sdk: NocturneWalletSDK;
-  frontendSDK: NocturneFrontendSDK;
+  prover: JoinSplitProver;
+  bundlerEndpoint: string;
 
   depositRequests: DepositRequest[];
   opRequests: OperationRequest[];
@@ -25,14 +27,16 @@ export class TestActor {
     wallet: Wallet,
     depositManager: DepositManager,
     sdk: NocturneWalletSDK,
-    frontendSDK: NocturneFrontendSDK,
+    prover: JoinSplitProver,
+    bundlerEndpoint: string,
     depositRequests: DepositRequest[] = [],
     opRequests: OperationRequest[] = []
   ) {
     this.wallet = wallet;
     this.depositManager = depositManager;
     this.sdk = sdk;
-    this.frontendSDK = frontendSDK;
+    this.prover = prover;
+    this.bundlerEndpoint = bundlerEndpoint;
 
     this.depositRequests = depositRequests;
     this.opRequests = opRequests;
@@ -85,14 +89,14 @@ export class TestActor {
       if (flipCoin()) {
         await this.deposit();
       } else {
-        await this.sendOpRequest();
+        await this.submitOpRequest();
       }
     }
   }
 
   /// helpers
 
-  private async sendOpRequest() {
+  private async submitOpRequest() {
     await this.mutex.runExclusive(async () => {
       // choose a random opRequest
       const opRequest = randomElem(this.opRequests);
@@ -100,8 +104,26 @@ export class TestActor {
       // prepare, sign, prove, and submit
       const preSign = await this.sdk.prepareOperation(opRequest);
       const signed = this.sdk.signOperation(preSign);
-      const proven = await this.frontendSDK.proveOperation(signed);
-      await this.frontendSDK.submitProvenOperation(proven);
+      const proven = proveOperation(this.prover, signed);
+
+      const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(proven),
+      });
+
+      const resJSON = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          `Failed to submit proven operation to bundler: ${JSON.stringify(
+            resJSON
+          )}`
+        );
+      }
+
+      return resJSON.id;
     });
   }
 

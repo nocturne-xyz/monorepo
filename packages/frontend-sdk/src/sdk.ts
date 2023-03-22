@@ -32,7 +32,7 @@ export class NocturneFrontendSDK {
   walletContract: Wallet;
   vaultContractAddress: Address;
 
-  constructor(
+  private constructor(
     bundlerEndpoint: string,
     walletContract: Wallet,
     vaultContractAddress: string,
