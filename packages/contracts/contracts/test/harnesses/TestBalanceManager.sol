@@ -16,6 +16,13 @@ contract TestBalanceManager is BalanceManager {
         __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
     }
 
+    function addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) public {
+        _addToAssetPrefill(encodedAsset, value);
+    }
+
     function makeDeposit(
         DepositRequest calldata deposit,
         address source
