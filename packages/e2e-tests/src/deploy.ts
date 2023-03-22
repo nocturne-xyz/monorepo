@@ -178,6 +178,18 @@ export async function setupTestDeployment(
     Vault__factory.connect(vaultProxy.proxy, deployerEoa),
   ]);
 
+  // Deploy subgraph first, as other services depend on it
+  if (config.include.subgraph) {
+    const givenSubgraphConfig = config.configs?.subgraph ?? {};
+    const subgraphConfig = {
+      ...DEFAULT_SUBGRAPH_CONFIG,
+      ...givenSubgraphConfig,
+      walletAddress: walletProxy.proxy,
+    };
+
+    await startSubgraph(subgraphConfig);
+  }
+
   // deploy everything else
   const proms = [];
 
@@ -221,19 +233,6 @@ export async function setupTestDeployment(
     };
 
     proms.push(startContainerWithLogs());
-  }
-
-  if (config.include.subgraph) {
-    const givenSubgraphConfig = config.configs?.subgraph ?? {};
-    const subgraphConfig = {
-      ...DEFAULT_SUBGRAPH_CONFIG,
-      ...givenSubgraphConfig,
-      walletAddress: walletProxy.proxy,
-    };
-
-    proms.push(startSubgraph(subgraphConfig));
-    console.log("Subgraph sleep...");
-    await sleep(40_000);
   }
 
   if (config.include.depositScreener) {
