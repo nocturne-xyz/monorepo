@@ -37,19 +37,18 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
+
+        // Only fetch up to end block
         if (endBlock) {
           to = min(to, endBlock);
         }
 
-        // only fetch up to the latest indexed block
+        // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         to = min(to, latestIndexedBlock);
 
-        // if `from` >= `to`, we've caught up to the tip of the chain
-        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
-        // and no new blocks were indexed by the subgraph since then
-        // sleep for a bit and retry to avoid spamming the API
-        if (from >= to) {
+        // Exceeded tip, sleep
+        if (latestIndexedBlock <= from) {
           await sleep(5_000);
           continue;
         }

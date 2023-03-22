@@ -19,12 +19,13 @@ export interface DepositEventResponse {
   depositAddrH2Y: string;
   nonce: string;
   gasCompensation: string;
+  depositHash: string;
 }
 
 interface FetchDepositEventsVars {
-  type: DepositEventType;
   fromBlock: number;
   toBlock: number;
+  type: DepositEventType;
 }
 
 interface FetchDepositEventsResponse {
@@ -35,7 +36,7 @@ interface FetchDepositEventsResponse {
 
 const depositEventsQuery = `\
   query fetchDepositEvents($fromBlock: Int!, $toBlock: Int!, $type: String!) {
-    depositEvents(block: { number: $toBlock, number_gte: $fromBlock }, type: $type) {
+    depositEvents(block: { number_gte: $fromBlock, number: $toBlock }, where: { type: $type }) {
       type
       chainId
       spender
@@ -48,6 +49,7 @@ const depositEventsQuery = `\
       depositAddrH2Y
       nonce
       gasCompensation
+      depositHash
     }
   }`;
 
@@ -62,21 +64,22 @@ export async function fetchDepositEvents(
     FetchDepositEventsVars,
     FetchDepositEventsResponse
   >(endpoint, depositEventsQuery, "depositEvents");
-  const res = await query({ type, fromBlock, toBlock });
+  const res = await query({ fromBlock, toBlock, type });
   return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 
 function depositEventFromDepositEventResponse(
   depositEventResponse: DepositEventResponse
 ): DepositEvent {
+  console.log("DEPOSIT HASH:", depositEventResponse.depositHash);
   const type = depositEventResponse.type;
   const chainId = BigInt(depositEventResponse.chainId);
   const spender = depositEventResponse.spender;
 
   const h1X = BigInt(depositEventResponse.depositAddrH1X);
-  const h1Y = BigInt(depositEventResponse.depositAddrH1X);
-  const h2X = BigInt(depositEventResponse.depositAddrH1X);
-  const h2Y = BigInt(depositEventResponse.depositAddrH1X);
+  const h1Y = BigInt(depositEventResponse.depositAddrH1Y);
+  const h2X = BigInt(depositEventResponse.depositAddrH2X);
+  const h2Y = BigInt(depositEventResponse.depositAddrH2Y);
   const depositAddr: StealthAddress = {
     h1X,
     h1Y,

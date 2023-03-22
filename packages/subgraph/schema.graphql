@@ -18,6 +18,7 @@ type DepositEvent @entity(immutable: true) {
   depositAddrH2Y: BigInt!
   nonce: BigInt!
   gasCompensation: BigInt!
+  depositHash: Bytes!
 }
 
 type EncodedOrEncryptedNote @entity(immutable: true) {

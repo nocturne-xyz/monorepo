@@ -8,10 +8,7 @@ import {
   Note,
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
-import {
-  EIP712Domain,
-  signDepositRequest,
-} from "@nocturne-xyz/deposit-screener";
+import { sleep } from "./utils";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
@@ -39,6 +36,7 @@ export async function depositFundsMultiToken(
     }
   }
 
+  await sleep(30_000); // wait for deposit screener to complete
   return notes;
 }
 
@@ -66,6 +64,7 @@ export async function depositFundsSingleToken(
     notes.push(await deposit(token, amount, i));
   }
 
+  await sleep(30_000); // wait for deposit screener to complete
   return notes;
 }
 
@@ -97,6 +96,7 @@ async function makeDeposit(
       nonce: nonce.toBigInt(),
       gasCompensation: BigInt(0),
     };
+    console.log("Deposit request:", depositRequest);
 
     console.log(
       `Instantiating deposit for ${amount} of token ${token.address}`
@@ -105,23 +105,6 @@ async function makeDeposit(
       .connect(eoa)
       .instantiateDeposit(depositRequest);
     await instantiateDepositTx.wait(1);
-
-    // TODO: remove self signing once we have real deposit screener agent
-    // We currently ensure all EOAs are registered as screeners as temp setup
-    const domain: EIP712Domain = {
-      name: "NocturneDepositManager",
-      version: "v1",
-      chainId,
-      verifyingContract: depositManager.address,
-    };
-    const signature = await signDepositRequest(eoa, domain, depositRequest);
-
-    console.log(`Depositing ${amount} of token ${token.address}`);
-    const completeDepositTx = await depositManager.completeDeposit(
-      depositRequest,
-      signature
-    );
-    await completeDepositTx.wait(1);
 
     return {
       owner: stealthAddress,

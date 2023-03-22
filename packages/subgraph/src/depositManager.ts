@@ -21,5 +21,6 @@ export function handleDepositInstantiated(event: DepositInstantiated): void {
   deposit.depositAddrH2Y = event.params.depositAddr.h2Y;
   deposit.nonce = event.params.nonce;
   deposit.gasCompensation = event.params.gasCompensation;
+  deposit.depositHash = event.params.depositHash;
   deposit.save();
 }

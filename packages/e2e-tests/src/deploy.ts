@@ -54,7 +54,6 @@ const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 export interface NocturneDeployArgs {
   screeners: Address[];
@@ -96,7 +95,12 @@ export interface NocturneTestDeployment {
 const HH_URL = "http://localhost:8545";
 const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 
-const REDIS_URL = "redis://redis:6379";
+const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
+const SUBGRAPH_FROM_DOCKER_URL =
+  "http://host.docker.internal:8000/subgraphs/name/nocturne-test";
+
+const REDIS_URL_BUNDLER = "redis://redis:6379";
+const REDIS_URL_SCREENER = "redis://redis:6380";
 const REDIS_PASSWORD = "baka";
 
 const DEFAULT_HH_NETWORK_CONFIG: HardhatNetworkConfig = {
@@ -108,7 +112,7 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
   "walletAddress" | "txSignerKey"
 > = {
-  redisUrl: REDIS_URL,
+  redisUrl: REDIS_URL_BUNDLER,
   redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
   rpcUrl: HH_FROM_DOCKER_URL,
@@ -116,12 +120,12 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
   DepositScreenerConfig,
-  "depositManagerAddress" | "txSignerKey"
+  "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
 > = {
-  redisUrl: REDIS_URL,
+  redisUrl: REDIS_URL_SCREENER,
   redisPassword: REDIS_PASSWORD,
   rpcUrl: HH_FROM_DOCKER_URL,
-  subgraphUrl: SUBGRAPH_API_URL,
+  subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
 };
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
@@ -156,16 +160,10 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [
-    deployerEoa,
-    aliceEoa,
-    bobEoa,
-    bundlerEoa,
-    subtreeUpdaterEoa,
-    screenerEoa,
-  ] = KEYS_TO_WALLETS(provider);
+  const [deployerEoa, bundlerEoa, subtreeUpdaterEoa, screenerEoa] =
+    KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
-    screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
+    screeners: [screenerEoa.address],
   });
 
   await checkNocturneContractDeployment(
@@ -193,18 +191,6 @@ export async function setupTestDeployment(
     };
 
     proms.push(startBundler(bundlerConfig));
-  }
-
-  if (config.include.depositScreener) {
-    const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
-    const depositScreenerConfig: DepositScreenerConfig = {
-      ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
-      ...givenDepositScreenerConfig,
-      depositManagerAddress: depositManagerProxy.proxy,
-      txSignerKey: screenerEoa.privateKey,
-    };
-
-    proms.push(startDepositScreener(depositScreenerConfig));
   }
 
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
@@ -246,6 +232,21 @@ export async function setupTestDeployment(
     };
 
     proms.push(startSubgraph(subgraphConfig));
+    console.log("Subgraph sleep...");
+    await sleep(40_000);
+  }
+
+  if (config.include.depositScreener) {
+    const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
+    const depositScreenerConfig: DepositScreenerConfig = {
+      ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
+      ...givenDepositScreenerConfig,
+      depositManagerAddress: depositManagerProxy.proxy,
+      attestationSignerKey: screenerEoa.privateKey,
+      txSignerKey: screenerEoa.privateKey,
+    };
+
+    proms.push(startDepositScreener(depositScreenerConfig));
   }
 
   await Promise.all(proms);
@@ -361,7 +362,7 @@ export async function setupTestClient(
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
-    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
+    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
   } else {
     syncAdapter = new RPCSDKSyncAdapter(provider, wallet.address);
   }

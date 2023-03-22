@@ -128,6 +128,10 @@ export class DepositInstantiated__Params {
   get gasCompensation(): BigInt {
     return this._event.parameters[6].value.toBigInt();
   }
+
+  get depositHash(): Bytes {
+    return this._event.parameters[7].value.toBytes();
+  }
 }
 
 export class DepositInstantiatedEncodedAssetStruct extends ethereum.Tuple {

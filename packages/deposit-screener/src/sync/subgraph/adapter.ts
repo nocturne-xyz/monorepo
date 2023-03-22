@@ -35,19 +35,23 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
+
+        // Only fetch up to end block
         if (endBlock) {
           to = min(to, endBlock);
         }
 
-        // only fetch up to the latest indexed block
+        // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         to = min(to, latestIndexedBlock);
 
-        if (from >= to) {
+        // Exceeded tip, sleep
+        if (latestIndexedBlock <= from) {
           await sleep(5_000);
           continue;
         }
 
+        console.log(`Fetching deposit events from ${from} to ${to}...`);
         const depositEvents = await fetchDepositEvents(
           endpoint,
           type,

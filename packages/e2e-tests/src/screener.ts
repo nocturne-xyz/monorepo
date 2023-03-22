@@ -11,6 +11,7 @@ const SCREENER_ENV_FILE_PATH = `${ROOT_DIR}/packages/deposit-screener/.env`;
 const SCREENER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: SCREENER_COMPOSE_CWD,
   commandOptions: [["--build"], ["--force-recreate"], ["--renew-anon-volumes"]],
+  log: true,
 };
 
 export interface DepositScreenerConfig {
@@ -19,6 +20,7 @@ export interface DepositScreenerConfig {
   depositManagerAddress: string;
   subgraphUrl: string;
   rpcUrl: string;
+  attestationSignerKey: string;
   txSignerKey: string;
 }
 
@@ -31,6 +33,7 @@ export async function startDepositScreener(
     depositManagerAddress,
     subgraphUrl,
     rpcUrl,
+    attestationSignerKey,
     txSignerKey,
   } = config;
 
@@ -38,8 +41,9 @@ export async function startDepositScreener(
     REDIS_URL: redisUrl,
     REDIS_PASSWORD: redisPassword,
     DEPOSIT_MANAGER_ADDRESS: depositManagerAddress,
-    SUBGRAPH_RUL: subgraphUrl,
+    SUBGRAPH_URL: subgraphUrl,
     RPC_URL: rpcUrl,
+    ATTESTATION_SIGNER_KEY: attestationSignerKey,
     TX_SIGNER_KEY: txSignerKey,
   });
 
