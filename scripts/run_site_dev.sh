@@ -49,6 +49,9 @@ START_BLOCK=0
 BUNDLER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000004"
 SUBTREE_UPDATER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000005"
 
+# Eth address: 0xE57bFE9F44b819898F47BF37E5AF72a0783e1141
+SCREENER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000006"
+
 # read config variables from logs
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
 read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
@@ -66,10 +69,14 @@ yarn deploy-local
 popd
 
 # bundler default config variables
-REDIS_URL="redis://redis:6379"
+BUNDLER_REDIS_URL="redis://redis:6379"
 REDIS_PASSWORD="baka"
 RPC_URL="http://host.docker.internal:8545"
 BUNDLER_PORT="3000"
+
+# screener default config variables
+SCREENER_REDIS_URL="redis://redis:6380"
+SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne-test"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
 echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"
@@ -81,7 +88,7 @@ echo "Subtree updater submitter private key: $SUBTREE_UPDATER_TX_SIGNER_KEY"
 # write bundler's .env file
 pushd packages/bundler
 cat > .env <<- EOM
-REDIS_URL=$REDIS_URL
+REDIS_URL=$BUNDLER_REDIS_URL
 REDIS_PASSWORD=$REDIS_PASSWORD
 
 WALLET_ADDRESS=$WALLET_CONTRACT_ADDRESS
@@ -97,10 +104,35 @@ mkdir ./redis-data
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env  up  &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "Bundler running at PID: $BUNDLER_PID"
+
+# write screener's .env file
+pushd packages/deposit-screener
+cat > .env <<- EOM
+REDIS_URL=$SCREENER_REDIS_URL
+REDIS_PASSWORD=$REDIS_PASSWORD
+
+DEPOSIT_MANAGER_ADDRESS=$DEPOSIT_MANAGER_CONTRACT_ADDRESS
+SUBGRAPH_URL=$SUBGRAPH_URL
+RPC_URL=$RPC_URL
+
+TX_SIGNER_KEY=$SCREENER_TX_SIGNER_KEY
+ATTESTATION_SIGNER_KEY=$SCREENER_TX_SIGNER_KEY
+EOM
+
+# clear redis if it exists 
+rm -r ./redis-data || echo 'redis-data does not yet exist'
+mkdir ./redis-data
+popd
+
+# run screener
+docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
+SCREENER_PID=$!
+
+echo "Screener running at PID: $SCREENER_PID"
 
 # write subtree updater's .env file
 pushd packages/subtree-updater
@@ -138,5 +170,6 @@ sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRES
 wait $SITE_PID
 wait $SNAP_PID
 wait $BUNDLER_PID
+wait $SCREENER_PID
 wait $HH_NODE_PID
 wait $SUBTREE_UPDATER_PID

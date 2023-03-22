@@ -201,7 +201,7 @@ export class DepositScreenerProcessor {
 
     console.log("Submitting completeDeposit tx...");
     const tx = await this.depositManagerContract
-      .completeDeposit(depositRequest, signature, { gasLimit: 1_000_000 })
+      .completeDeposit(depositRequest, signature)
       .catch((e) => {
         throw new Error(e);
       });
