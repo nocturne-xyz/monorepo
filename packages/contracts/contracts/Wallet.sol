@@ -48,14 +48,6 @@ contract Wallet is
         __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
     }
 
-    function setDepositSourcePermission(
-        address source,
-        bool permission
-    ) external onlyOwner {
-        _depositSources[source] = permission;
-        emit DepositSourcePermissionSet(source, permission);
-    }
-
     modifier onlyThis() {
         require(msg.sender == address(this), "Only wallet");
         _;
@@ -64,6 +56,21 @@ contract Wallet is
     modifier onlyDepositSource() {
         require(_depositSources[msg.sender], "Only deposit source");
         _;
+    }
+
+    function setDepositSourcePermission(
+        address source,
+        bool permission
+    ) external onlyOwner {
+        _depositSources[source] = permission;
+        emit DepositSourcePermissionSet(source, permission);
+    }
+
+    function addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) external onlyOwner {
+        _addToAssetPrefill(encodedAsset, value);
     }
 
     function depositFunds(

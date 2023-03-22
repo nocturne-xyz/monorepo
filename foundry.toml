@@ -6,7 +6,7 @@ remappings = [                # Libraries that we use from node_modules and are 
 "forge-std/=lib/forge-std/src/"
 ]
 optimizer = true              # Enable or disable the solc optimizer
-optimizer_runs = 500          # The number of optimizer runs
+optimizer_runs = 200          # The number of optimizer runs
 verbosity = 3                 # The verbosity of tests
 bytecode_hash = "none"        # For deterministic code
 block_timestamp = 1622400000  # Timestamp for tests (non-zero)

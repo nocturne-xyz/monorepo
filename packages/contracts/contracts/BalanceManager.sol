@@ -23,7 +23,12 @@ contract BalanceManager is
 {
     using OperationLib for Operation;
 
+    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
+
     IVault public _vault;
+
+    // Mapping of encoded asset hash => prefilled balance
+    mapping(bytes32 => uint256) public _prefilledAssetBalances;
 
     EncodedAsset[] public _receivedAssets;
 
@@ -38,6 +43,20 @@ contract BalanceManager is
         __OperationReentrancyGuard_init();
         __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
         _vault = IVault(vault);
+    }
+
+    function _addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) internal {
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        _prefilledAssetBalances[assetHash] += value;
+
+        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
+        emit UpdatedAssetPrefill(
+            encodedAsset,
+            _prefilledAssetBalances[assetHash]
+        );
     }
 
     function onERC721Received(
@@ -251,10 +270,18 @@ contract BalanceManager is
         EncodedAsset memory encodedAsset,
         StealthAddress memory refundAddr
     ) internal {
-        uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
-        if (value != 0) {
-            AssetUtils.transferAssetTo(encodedAsset, address(_vault), value);
-            _handleRefundNote(refundAddr, encodedAsset, value);
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        uint256 preFilledBalance = _prefilledAssetBalances[assetHash];
+
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+        if (currentBalance > preFilledBalance) {
+            uint256 difference = currentBalance - preFilledBalance;
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_vault),
+                difference
+            );
+            _handleRefundNote(refundAddr, encodedAsset, difference);
         }
     }
 }
