@@ -11,3 +11,7 @@ popd
 pushd ../bundler
 yarn build:docker
 popd
+
+pushd ../deposit-screener
+yarn build:docker
+popd

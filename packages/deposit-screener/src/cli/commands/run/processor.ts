@@ -4,7 +4,7 @@ import { DepositScreenerProcessor } from "../../../processor";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 
-const runProcess = new Command("process")
+const runProcess = new Command("processor")
   .summary("Process deposit requests")
   .description(
     "Must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. Must supply deposit manager contract address as options."
@@ -27,19 +27,24 @@ const runProcess = new Command("process")
     if (!rpcUrl) {
       throw new Error("Missing RPC_URL");
     }
-
-    const privateKey = process.env.TX_SIGNER_KEY;
-    if (!privateKey) {
+    const txSignerKey = process.env.TX_SIGNER_KEY;
+    if (!txSignerKey) {
       throw new Error("Missing TX_SIGNER_KEY");
     }
-
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const signingProvider = new ethers.Wallet(privateKey, provider);
+    const txSigner = new ethers.Wallet(txSignerKey, provider);
+
+    const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
+    if (!attestationSignerKey) {
+      throw new Error("Missing ATTESTATION_SIGNER_KEY");
+    }
+    const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
     const processor = new DepositScreenerProcessor(
       adapter,
       depositManagerAddress,
-      signingProvider,
+      attestationSigner,
+      txSigner,
       getRedis()
     );
 

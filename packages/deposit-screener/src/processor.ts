@@ -11,7 +11,6 @@ import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
-import { enqueueDepositRequest } from "./enqueue";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
 import { ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
@@ -19,6 +18,7 @@ import {
   DepositRequestStatus,
   DELAYED_DEPOSIT_QUEUE,
   DelayedDepositJobData,
+  DELAYED_DEPOSIT_JOB_TAG,
 } from "./types";
 import IORedis from "ioredis";
 import { DelayCalculator, DummyDelayCalculator } from "./delay";
@@ -33,6 +33,9 @@ import {
   DEPOSIT_MANAGER_CONTRACT_VERSION,
 } from "./typedData/constants";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
+import * as JSON from "bigint-json-serialization";
+import { secsToMillis } from "./utils";
+import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
 
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
@@ -42,22 +45,25 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
   db: DepositScreenerDB;
   redis: IORedis;
-  signingProvider: ethers.Wallet; // ethers.Wallet for signing typed data
+  attestationSigner: TypedDataSigner;
+  txSigner: ethers.Wallet;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
     depositManagerAddress: Address,
-    signingProvider: ethers.Wallet,
+    attestationSigner: TypedDataSigner,
+    txSigner: ethers.Wallet,
     redis: IORedis
   ) {
     this.redis = redis;
     this.adapter = syncAdapter;
 
-    this.signingProvider = signingProvider;
+    this.attestationSigner = attestationSigner;
+    this.txSigner = txSigner;
 
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      signingProvider.provider
+      txSigner
     );
 
     this.db = new DepositScreenerDB(redis);
@@ -68,7 +74,9 @@ export class DepositScreenerProcessor {
   }
 
   async run(): Promise<void> {
-    await Promise.all([this.runScreener(), this.runSubmitter()]);
+    await Promise.all([this.runScreener(), this.runSubmitter()]).catch((e) => {
+      throw new Error(e);
+    });
   }
 
   async runScreener(): Promise<void> {
@@ -85,6 +93,7 @@ export class DepositScreenerProcessor {
 
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
+        console.log(`Received deposit events: ${JSON.stringify(event)}`);
         const result = await this.handleDepositRequest({ ...event });
         await this.db.setDepositRequestStatus({ ...event }, result);
       }
@@ -98,11 +107,29 @@ export class DepositScreenerProcessor {
     const status = await checkDepositRequest(depositRequest, { ...this });
 
     if (status == DepositRequestStatus.PassedScreen) {
-      await enqueueDepositRequest(depositRequest, { ...this });
+      await this.enqueueDepositRequest(depositRequest);
       return DepositRequestStatus.Enqueued;
     } else {
       return status;
     }
+  }
+
+  async enqueueDepositRequest(
+    depositRequest: DepositRequest
+  ): Promise<DepositRequestStatus> {
+    const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
+      depositRequest
+    );
+
+    const depositRequestJson = JSON.stringify(depositRequest);
+    const jobData: DelayedDepositJobData = {
+      depositRequestJson,
+    };
+
+    await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+      delay: secsToMillis(delaySeconds),
+    });
+    return DepositRequestStatus.Enqueued;
   }
 
   async runSubmitter(): Promise<void> {
@@ -114,19 +141,26 @@ export class DepositScreenerProcessor {
         );
 
         const hash = hashDepositRequest(depositRequest);
+        console.log("Hash of deposit request post-queue:", hash);
         const inSet =
           await this.depositManagerContract._outstandingDepositHashes(hash);
         if (!inSet) {
           console.log(
-            `Deposit already retrieved or completed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+            `Deposit already retrieved or completed. ${JSON.stringify(
+              depositRequest
+            )}`
           );
           return; // Already retrieved or completed
         }
 
-        const valid = this.screeningApi.validDepositRequest(depositRequest);
+        const valid = await this.screeningApi.validDepositRequest(
+          depositRequest
+        );
         if (!valid) {
           console.log(
-            `Deposit no longer passes screening. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+            `Deposit no longer passes screening. ${JSON.stringify(
+              depositRequest
+            )}`
           );
           return;
         }
@@ -145,7 +179,7 @@ export class DepositScreenerProcessor {
   }
 
   async signAndSubmitDeposit(depositRequest: DepositRequest): Promise<void> {
-    const chainId = BigInt(await this.signingProvider.getChainId());
+    const chainId = BigInt(await this.txSigner.getChainId());
     assert(
       chainId == depositRequest.chainId,
       "connected chainId != deposit.chainId"
@@ -157,18 +191,25 @@ export class DepositScreenerProcessor {
       chainId,
       verifyingContract: this.depositManagerContract.address,
     };
+
+    console.log("Signing deposit request:", JSON.stringify(depositRequest));
     const signature = await signDepositRequest(
-      this.signingProvider,
+      this.attestationSigner,
       domain,
       depositRequest
     );
 
-    const tx = await this.depositManagerContract.completeDeposit(
-      depositRequest,
-      signature
-    );
+    console.log("Submitting completeDeposit tx...");
+    const tx = await this.depositManagerContract
+      .completeDeposit(depositRequest, signature)
+      .catch((e) => {
+        throw new Error(e);
+      });
 
+    console.log("Waiting for receipt...");
     const receipt = await tx.wait(1);
+    console.log("completeDeposit receipt:", receipt);
+
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")

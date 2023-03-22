@@ -82,6 +82,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       include: {
         bundler: true,
         subtreeUpdater: true,
+        subgraph: true,
+        depositScreener: true,
       },
     });
 

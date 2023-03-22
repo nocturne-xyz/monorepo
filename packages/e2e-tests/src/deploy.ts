@@ -36,6 +36,11 @@ import {
 } from "@nocturne-xyz/config";
 import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
+import {
+  DepositScreenerConfig,
+  startDepositScreener,
+  stopDepositScreener,
+} from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS, KEYS_TO_WALLETS } from "./keys";
@@ -49,7 +54,6 @@ const WASM_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_js/joinsplit.wasm`;
 const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
-const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
 export interface NocturneDeployArgs {
   screeners: Address[];
@@ -60,6 +64,7 @@ export interface TestActorsConfig {
   // if not given, all actors are deployed
   include: {
     bundler?: boolean;
+    depositScreener?: boolean;
     subtreeUpdater?: boolean;
     subgraph?: boolean;
   };
@@ -69,6 +74,7 @@ export interface TestActorsConfig {
   configs?: {
     hhNode?: Partial<HardhatNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
+    depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
     subgraph?: Partial<SubgraphConfig>;
   };
@@ -89,7 +95,12 @@ export interface NocturneTestDeployment {
 const HH_URL = "http://localhost:8545";
 const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 
-const REDIS_URL = "redis://redis:6379";
+const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
+const SUBGRAPH_FROM_DOCKER_URL =
+  "http://host.docker.internal:8000/subgraphs/name/nocturne-test";
+
+const REDIS_URL_BUNDLER = "redis://redis:6379";
+const REDIS_URL_SCREENER = "redis://redis:6380";
 const REDIS_PASSWORD = "baka";
 
 const DEFAULT_HH_NETWORK_CONFIG: HardhatNetworkConfig = {
@@ -101,10 +112,20 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
   "walletAddress" | "txSignerKey"
 > = {
-  redisUrl: REDIS_URL,
+  redisUrl: REDIS_URL_BUNDLER,
   redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
   rpcUrl: HH_FROM_DOCKER_URL,
+};
+
+const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
+  DepositScreenerConfig,
+  "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
+> = {
+  redisUrl: REDIS_URL_SCREENER,
+  redisPassword: REDIS_PASSWORD,
+  rpcUrl: HH_FROM_DOCKER_URL,
+  subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
 };
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
@@ -139,10 +160,10 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa, aliceEoa, bobEoa, bundlerEoa, subtreeUpdaterEoa] =
+  const [deployerEoa, bundlerEoa, subtreeUpdaterEoa, screenerEoa] =
     KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
-    screeners: [aliceEoa.address, bobEoa.address], // TODO: remove once we have designated screener actor
+    screeners: [screenerEoa.address],
   });
 
   await checkNocturneContractDeployment(
@@ -157,12 +178,24 @@ export async function setupTestDeployment(
     Vault__factory.connect(vaultProxy.proxy, deployerEoa),
   ]);
 
+  // Deploy subgraph first, as other services depend on it
+  if (config.include.subgraph) {
+    const givenSubgraphConfig = config.configs?.subgraph ?? {};
+    const subgraphConfig = {
+      ...DEFAULT_SUBGRAPH_CONFIG,
+      ...givenSubgraphConfig,
+      walletAddress: walletProxy.proxy,
+    };
+
+    await startSubgraph(subgraphConfig);
+  }
+
   // deploy everything else
   const proms = [];
 
-  if (config.include?.bundler) {
+  if (config.include.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
-    const bundlerConfig = {
+    const bundlerConfig: BundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
       walletAddress: walletProxy.proxy,
@@ -173,9 +206,9 @@ export async function setupTestDeployment(
   }
 
   let subtreeUpdaterContainer: Dockerode.Container | undefined;
-  if (config.include?.subtreeUpdater) {
+  if (config.include.subtreeUpdater) {
     const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
-    const subtreeUpdaterConfig = {
+    const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
       walletAddress: walletProxy.proxy,
@@ -202,15 +235,17 @@ export async function setupTestDeployment(
     proms.push(startContainerWithLogs());
   }
 
-  if (config.include?.subgraph) {
-    const givenSubgraphConfig = config.configs?.subgraph ?? {};
-    const subgraphConfig = {
-      ...DEFAULT_SUBGRAPH_CONFIG,
-      ...givenSubgraphConfig,
-      walletAddress: walletProxy.proxy,
+  if (config.include.depositScreener) {
+    const givenDepositScreenerConfig = config.configs?.depositScreener ?? {};
+    const depositScreenerConfig: DepositScreenerConfig = {
+      ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
+      ...givenDepositScreenerConfig,
+      depositManagerAddress: depositManagerProxy.proxy,
+      attestationSignerKey: screenerEoa.privateKey,
+      txSignerKey: screenerEoa.privateKey,
     };
 
-    proms.push(startSubgraph(subgraphConfig));
+    proms.push(startDepositScreener(depositScreenerConfig));
   }
 
   await Promise.all(proms);
@@ -218,6 +253,14 @@ export async function setupTestDeployment(
   const teardown = async () => {
     // teardown offchain actors
     const proms = [];
+
+    if (config.include.bundler) {
+      proms.push(stopBundler());
+    }
+
+    if (config.include.depositScreener) {
+      proms.push(stopDepositScreener());
+    }
 
     if (subtreeUpdaterContainer) {
       const teardown = async () => {
@@ -227,11 +270,7 @@ export async function setupTestDeployment(
       proms.push(teardown());
     }
 
-    if (config.include?.bundler) {
-      proms.push(stopBundler());
-    }
-
-    if (config.include?.subgraph) {
+    if (config.include.subgraph) {
       proms.push(stopSubgraph());
     }
 
@@ -322,7 +361,7 @@ export async function setupTestClient(
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
-    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
+    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
   } else {
     syncAdapter = new RPCSDKSyncAdapter(provider, wallet.address);
   }

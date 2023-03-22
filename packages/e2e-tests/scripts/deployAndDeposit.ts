@@ -12,14 +12,13 @@ import {
   DepositRequest,
   StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
-import {
-  EIP712Domain,
-  signDepositRequest,
-} from "@nocturne-xyz/deposit-screener";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 const HH_URL = "http://localhost:8545";
+
+// Corresponds to privkey 0x000...006
+const DEPOSIT_SCREENER = "0xE57bFE9F44b819898F47BF37E5AF72a0783e1141";
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [
@@ -50,7 +49,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
   const { depositManagerProxy, walletProxy } =
     await deployContractsWithDummyAdmins(deployerEoa, {
-      screeners: [deployerEoa.address], // TODO: remove this once we have real deposit-screener
+      screeners: [DEPOSIT_SCREENER],
     });
   const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
@@ -121,26 +120,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
         .connect(deployerEoa)
         .instantiateDeposit(depositRequest);
       await instantiateDepositTx.wait(1);
-
-      // TODO: remove self signing once we have real deposit screener agent
-      // We currently ensure all EOAs are registered as screeners as temp setup
-      const domain: EIP712Domain = {
-        name: "NocturneDepositManager",
-        version: "v1",
-        chainId,
-        verifyingContract: depositManager.address,
-      };
-      const signature = await signDepositRequest(
-        deployerEoa,
-        domain,
-        depositRequest
-      );
-
-      const completeDepositTx = await depositManager.completeDeposit(
-        depositRequest,
-        signature
-      );
-      await completeDepositTx.wait(1);
     }
   }
 

@@ -4,8 +4,8 @@ import {
   InMemoryMerkleProver,
   OperationRequest,
   NocturneDB,
-  // RPCSyncAdapter,
-  SubgraphSyncAdapter,
+  // RPCSDKSyncAdapter,
+  SubgraphSDKSyncAdapter,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -108,7 +108,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   const merkleProver = new InMemoryMerkleProver();
   // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
-  const syncAdapter = new SubgraphSyncAdapter(SUBGRAPH_API_URL);
+  const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
   const context = new NocturneWalletSDK(
     signer,
     provider,

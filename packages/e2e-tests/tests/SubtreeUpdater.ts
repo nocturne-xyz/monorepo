@@ -32,7 +32,8 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   beforeEach(async () => {
     const testDeployment = await setupTestDeployment({
       include: {
-        subgraph: false,
+        subgraph: true,
+        depositScreener: true,
         bundler: false,
         subtreeUpdater: false,
       },

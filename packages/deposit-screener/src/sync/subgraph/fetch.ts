@@ -22,9 +22,9 @@ export interface DepositEventResponse {
 }
 
 interface FetchDepositEventsVars {
-  type: DepositEventType;
   fromBlock: number;
   toBlock: number;
+  type: DepositEventType;
 }
 
 interface FetchDepositEventsResponse {
@@ -35,7 +35,7 @@ interface FetchDepositEventsResponse {
 
 const depositEventsQuery = `\
   query fetchDepositEvents($fromBlock: Int!, $toBlock: Int!, $type: String!) {
-    depositEvents(block: { number: $toBlock, number_gte: $fromBlock }, type: $type) {
+    depositEvents(block: { number_gte: $fromBlock, number: $toBlock }, where: { type: $type }) {
       type
       chainId
       spender
@@ -62,7 +62,7 @@ export async function fetchDepositEvents(
     FetchDepositEventsVars,
     FetchDepositEventsResponse
   >(endpoint, depositEventsQuery, "depositEvents");
-  const res = await query({ type, fromBlock, toBlock });
+  const res = await query({ fromBlock, toBlock, type });
   return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 
@@ -74,9 +74,9 @@ function depositEventFromDepositEventResponse(
   const spender = depositEventResponse.spender;
 
   const h1X = BigInt(depositEventResponse.depositAddrH1X);
-  const h1Y = BigInt(depositEventResponse.depositAddrH1X);
-  const h2X = BigInt(depositEventResponse.depositAddrH1X);
-  const h2Y = BigInt(depositEventResponse.depositAddrH1X);
+  const h1Y = BigInt(depositEventResponse.depositAddrH1Y);
+  const h2X = BigInt(depositEventResponse.depositAddrH2X);
+  const h2Y = BigInt(depositEventResponse.depositAddrH2Y);
   const depositAddr: StealthAddress = {
     h1X,
     h1Y,
