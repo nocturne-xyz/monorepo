@@ -68,7 +68,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const testDeployment = await setupTestDeployment({
         include: {
           bundler: true,
-          subgraph: syncAdapter === SyncAdapterOption.SUBGRAPH,
+          subgraph: true,
+          depositScreener: true,
         },
       });
 
