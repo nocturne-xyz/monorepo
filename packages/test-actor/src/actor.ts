@@ -1,4 +1,10 @@
-import { DepositManager, Wallet } from "@nocturne-xyz/contracts";
+import {
+  DepositManager,
+  SimpleERC1155Token__factory,
+  SimpleERC20Token__factory,
+  SimpleERC721Token__factory,
+  Wallet,
+} from "@nocturne-xyz/contracts";
 import {
   DepositRequest,
   NocturneWalletSDK,
@@ -6,8 +12,9 @@ import {
   sleep,
   JoinSplitProver,
   proveOperation,
+  AssetTrait,
+  AssetType,
 } from "@nocturne-xyz/sdk";
-import { Mutex } from "async-mutex";
 import { randomInt } from "crypto";
 import * as JSON from "bigint-json-serialization";
 
@@ -18,7 +25,7 @@ export class TestActor {
   prover: JoinSplitProver;
   bundlerEndpoint: string;
 
-  depositRequests: DepositRequest[];
+  depositRequests: Omit<DepositRequest, "nonce">[];
   opRequests: OperationRequest[];
 
   constructor(
@@ -28,7 +35,7 @@ export class TestActor {
     prover: JoinSplitProver,
     bundlerEndpoint: string,
     depositRequests: DepositRequest[],
-    opRequests: OperationRequest[],
+    opRequests: OperationRequest[]
   ) {
     this.wallet = wallet;
     this.depositManager = depositManager;
@@ -84,11 +91,55 @@ export class TestActor {
 
   private async deposit() {
     // choose a random deposit request and set its nonce
-    const depositRequest = randomElem(this.depositRequests);
+    const depositRequestWithoutNonce = randomElem(this.depositRequests);
 
     // set its nonce
-    const nonce = await this.depositManager._nonces(depositRequest.spender);
-    depositRequest.nonce = nonce.toBigInt();
+    const nonce = await this.depositManager._nonces(
+      depositRequestWithoutNonce.spender
+    );
+    const depositRequest: DepositRequest = {
+      ...depositRequestWithoutNonce,
+      nonce: nonce.toBigInt(),
+    };
+
+    // approve asset to depositManager
+    const asset = AssetTrait.decode(depositRequest.encodedAsset);
+    switch (asset.assetType) {
+      case AssetType.ERC20: {
+        const contract = SimpleERC20Token__factory.connect(
+          asset.assetAddr,
+          this.depositManager.signer
+        );
+        const tx = await contract.approve(
+          depositRequest.spender,
+          depositRequest.value
+        );
+        await tx.wait(1);
+        break;
+      }
+      case AssetType.ERC721: {
+        const contract = SimpleERC721Token__factory.connect(
+          asset.assetAddr,
+          this.depositManager.signer
+        );
+        const tx = await contract.approve(depositRequest.spender, asset.id);
+        await tx.wait(1);
+        break;
+      }
+      case AssetType.ERC1155: {
+        const contract = SimpleERC1155Token__factory.connect(
+          asset.assetAddr,
+          this.depositManager.signer
+        );
+        // NOTE: AFAICT ERC1155 only has "approveAll"
+        const tx = await contract.setApprovalForAll(
+          depositRequest.spender,
+          true
+        );
+        await tx.wait(1);
+        break;
+      }
+    }
 
     // submit
     console.log(

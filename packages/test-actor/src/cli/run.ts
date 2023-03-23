@@ -1,5 +1,3 @@
-#! /usr/bin/env node
-
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager__factory,
@@ -25,7 +23,7 @@ import * as BigintJSON from "bigint-json-serialization";
 export const run = new Command("run")
   .summary("run test actor")
   .description(
-    "Must supply .env file with RPC_URL, BUNDLER_URL, SUBGRPH_URL, TX_SIGNER_KEY, and NOCTURNE_SK."
+    "Must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
   )
   .requiredOption(
     "--nocturne-config-path <string>",
@@ -78,9 +76,9 @@ export const run = new Command("run")
       throw new Error("Missing TX_SIGNER_KEY");
     }
 
-    const nocturneSKStr = process.env.NOCTURNE_SIGNING_KEY;
+    const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
-      throw new Error("Missing NOCTURNE_SK");
+      throw new Error("Missing NOCTURNE_SPENDING_KEY");
     }
     const nocturneSK = BigInt(nocturneSKStr);
 
