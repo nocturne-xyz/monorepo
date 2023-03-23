@@ -1,8 +1,5 @@
 #!/bin/bash
 export $(cat ./.env | grep -v '#' | xargs)
-pushd ./hardhat
-npm run build:docker
-popd
 
 pushd ../subtree-updater
 yarn build:mock:docker

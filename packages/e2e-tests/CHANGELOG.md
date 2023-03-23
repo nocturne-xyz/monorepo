@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- get rid of `startAnvil` script`
+- rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
+- switch from hh node to anvil
 - Modify deployment and setup code to work with handler <> wallet separation
 - in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
 - add `subtreeBatchFillers` param to `NocturneDeployArgs`

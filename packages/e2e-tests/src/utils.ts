@@ -146,3 +146,83 @@ export async function runCommand(
     });
   });
 }
+
+export interface RunCommandDetachedOpts {
+  cwd?: string;
+  processName?: string;
+  onStdOut?: (out: string) => void;
+  onError?: (stderr: string) => void;
+  onExit?: (
+    stdout: string,
+    stderr: string,
+    code: number,
+    signal: NodeJS.Signals | null
+  ) => void;
+}
+
+// runs a command in the child process without waiting for completion
+// instead, returns a teardown function that can be used to kill the process
+// NOTE: there is a potential race condition when killing the process:
+//   if the process has already exited and the OS re-allocated the PID,
+//   then the teardown function may attempt to kill that other process.
+export function runCommandDetached(
+  cmd: string,
+  opts?: RunCommandDetachedOpts
+): () => void {
+  const { cwd, onStdOut, onError, onExit, processName } = opts ?? {};
+  const child = spawn("sh", ["-c", cmd], { cwd, env: process.env });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (data) => {
+    const output = data.toString();
+    stdout += output;
+
+    if (onStdOut) {
+      onStdOut(output);
+    }
+  });
+  child.stderr.on("data", (data) => {
+    const output = data.toString();
+    stderr += output;
+  });
+
+  child.on("error", () => {
+    if (onError) {
+      onError(stderr);
+    } else {
+      console.error(stderr);
+    }
+  });
+
+  let exited = false;
+  child.on("exit", (code: number, signal: NodeJS.Signals | null) => {
+    exited = true;
+    if (onExit) {
+      onExit(stdout, stderr, code, signal);
+    } else {
+      let msg = "";
+      if (processName) {
+        msg += `${processName} (${child.pid}) exited with code ${code}`;
+      } else {
+        msg += `child process ${child.pid} exited with code ${code}`;
+      }
+
+      if (signal) {
+        msg += `on signal ${signal}`;
+      }
+
+      if (stdout) {
+        console.log(stdout);
+      }
+      if (stderr) {
+        console.error(stderr);
+      }
+    }
+  });
+
+  return () => {
+    if (!exited) {
+      child.kill();
+    }
+  };
+}

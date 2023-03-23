@@ -34,7 +34,7 @@ import {
   NocturneConfig,
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
-import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
+import { AnvilNetworkConfig, startAnvil } from "./anvil";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
 import {
   DepositScreenerConfig,
@@ -73,7 +73,7 @@ export interface TestActorsConfig {
   // specify configs for actors to deploy
   // if non-skipped actors don't have a config, one of the defaults below will be used
   configs?: {
-    hhNode?: Partial<HardhatNetworkConfig>;
+    anvil?: Partial<AnvilNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
     depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
@@ -108,9 +108,11 @@ const REDIS_URL_BUNDLER = "redis://redis:6379";
 const REDIS_URL_SCREENER = "redis://redis:6380";
 const REDIS_PASSWORD = "baka";
 
-const DEFAULT_HH_NETWORK_CONFIG: HardhatNetworkConfig = {
-  blockTime: 3_000,
-  keys: KEYS,
+const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
+  blockTimeSecs: 2,
+
+  // 1 gwei
+  gasPrice: 1_000_000_000n,
 };
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
@@ -151,17 +153,14 @@ const docker = new Dockerode();
 export async function setupTestDeployment(
   config: TestActorsConfig
 ): Promise<NocturneTestDeployment> {
-  // hh node has to go up first,
+  // anvil has to go up first,
   // then contracts,
   // then everything else can go up in any order
 
-  // spin up hh node
-  const givenHHConfig = config.configs?.hhNode ?? {};
-  const hhConfig = { ...DEFAULT_HH_NETWORK_CONFIG, ...givenHHConfig };
-  const hhContainer = await startHardhatNetwork(docker, hhConfig);
-
-  // sliep while the container starts up
-  await sleep(5_000);
+  // spin up anvil
+  const givenAnvilConfig = config.configs?.anvil ?? {};
+  const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
+  const stopAnvil = startAnvil(anvilConfig);
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
@@ -292,12 +291,8 @@ export async function setupTestDeployment(
     // wait for all of the actors to finish teardown before tearing down hh node
     await sleep(10_000);
 
-    // teardown hh node
-    await hhContainer.stop();
-    await hhContainer.remove();
-
-    // wait a bit to ensure hh node is torn down before next test is allowed to run
-    await sleep(5_000);
+    // teardown anvil node
+    await stopAnvil();
   };
 
   return {
