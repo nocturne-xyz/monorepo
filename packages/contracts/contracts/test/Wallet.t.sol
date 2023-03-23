@@ -58,6 +58,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
 
+    event DepositSourcePermissionSet(address source, bool permission);
+
+    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
+
     event RefundProcessed(
         StealthAddress refundAddr,
         uint256 nonce,
@@ -95,6 +99,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vault.initialize(address(wallet));
 
         wallet.setDepositSourcePermission(DEPOSIT_SOURCE, true);
+        wallet.transferOwnership(ALICE); // ALICE is owner
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
@@ -189,6 +194,44 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         wallet.fillBatchWithZeros();
 
         wallet.applySubtreeUpdate(root, NocturneUtils.dummyProof());
+    }
+
+    function testSetDepositSourcePermission() public {
+        vm.prank(BOB); // not owner
+        vm.expectRevert("Ownable: caller is not the owner");
+        wallet.setDepositSourcePermission(address(0x123), true);
+
+        // Send from owner, succeeds
+        vm.expectEmit(true, true, true, true);
+        emit DepositSourcePermissionSet(address(0x123), true);
+        vm.prank(ALICE);
+        wallet.setDepositSourcePermission(address(0x123), true);
+    }
+
+    function testAddToAssetPrefill() public {
+        SimpleERC20Token token = ERC20s[0];
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            ERC20_ID
+        );
+
+        token.reserveTokens(ALICE, 100);
+        token.reserveTokens(BOB, 100);
+
+        vm.startPrank(BOB); // not owner
+        token.approve(address(wallet), 1);
+        vm.expectRevert("Ownable: caller is not the owner");
+        wallet.addToAssetPrefill(encodedAsset, 1);
+        vm.stopPrank();
+
+        // Send from owner, succeeds
+        vm.startPrank(ALICE);
+        token.approve(address(wallet), 1);
+        vm.expectEmit(true, true, true, true);
+        emit UpdatedAssetPrefill(encodedAsset, 1);
+        wallet.addToAssetPrefill(encodedAsset, 1);
+        vm.stopPrank();
     }
 
     function testDepositNotDepositSource() public {
