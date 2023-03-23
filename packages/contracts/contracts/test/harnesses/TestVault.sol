@@ -8,4 +8,16 @@ contract TestVault is Vault {
     function initialize(address handler) external initializer {
         __Vault_init(handler);
     }
+
+    modifier onlyHandler() {
+        require(msg.sender == address(_handler), "Only handler");
+        _;
+    }
+
+    function requestAsset(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) external onlyHandler {
+        _requestAsset(encodedAsset, value);
+    }
 }

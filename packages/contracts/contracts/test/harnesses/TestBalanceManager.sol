@@ -9,13 +9,20 @@ contract TestBalanceManager is BalanceManager {
     using OperationLib for Operation;
 
     function initialize(
-        address vault,
+        address wallet,
         address subtreeUpdateVerifier
     ) external initializer {
-        __BalanceManager_init(vault, subtreeUpdateVerifier);
+        __BalanceManager_init(wallet, subtreeUpdateVerifier);
     }
 
-    function handleDeposit(DepositRequest calldata deposit) public {
+    modifier onlyWallet() {
+        require(msg.sender == address(_wallet), "Only wallet");
+        _;
+    }
+
+    function handleDeposit(
+        DepositRequest calldata deposit
+    ) external onlyWallet {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
     }
