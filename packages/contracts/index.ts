@@ -2,7 +2,7 @@
 /* eslint-disable */
 export type { DepositManager } from './src/DepositManager';
 export type { Wallet } from './src/Wallet';
-export type { Vault } from './src/Vault';
+export type { Handler } from './src/Handler';
 export type { JoinSplitVerifier } from './src/JoinSplitVerifier';
 export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
 export type { TestSubtreeUpdateVerifier } from './src/TestSubtreeUpdateVerifier';
@@ -22,7 +22,7 @@ export type { Versioned } from './src/Versioned';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Wallet__factory } from './src/factories/Wallet__factory';
-export { Vault__factory } from './src/factories/Vault__factory';
+export { Handler__factory } from './src/factories/Handler__factory';
 export { JoinSplitVerifier__factory } from './src/factories/JoinSplitVerifier__factory';
 export { SubtreeUpdateVerifier__factory } from './src/factories/SubtreeUpdateVerifier__factory';
 export { TestSubtreeUpdateVerifier__factory } from './src/factories/TestSubtreeUpdateVerifier__factory';
