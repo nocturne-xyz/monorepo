@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import {IVault} from "./interfaces/IVault.sol";
+import {IHandler} from "./interfaces/IHandler.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -15,39 +15,30 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
 contract Vault is
-    IVault,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
     Initializable
 {
-    address public _wallet;
+    IHandler public _handler;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    modifier onlyWallet() {
-        require(msg.sender == _wallet, "Not called from Wallet");
-        _;
+    function __Vault_init(address handler) internal onlyInitializing {
+        _handler = IHandler(handler);
     }
 
-    function initialize(address wallet) external initializer {
-        _wallet = wallet;
-    }
-
-    function requestAsset(
+    function _requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external override onlyWallet {
-        AssetUtils.transferAssetTo(encodedAsset, _wallet, value);
+    ) internal {
+        AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    function makeDeposit(
-        DepositRequest calldata deposit,
-        address source
-    ) public override onlyWallet {
+    function _makeDeposit(DepositRequest calldata deposit) internal {
         AssetUtils.transferAssetFrom(
             deposit.encodedAsset,
-            source,
+            msg.sender,
             deposit.value
         );
     }

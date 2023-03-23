@@ -10,17 +10,14 @@ contract TestBalanceManager is BalanceManager {
 
     function initialize(
         address vault,
-        address joinSplitVerifier,
         address subtreeUpdateVerifier
     ) external initializer {
-        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+        __BalanceManager_init(vault, subtreeUpdateVerifier);
     }
 
-    function makeDeposit(
-        DepositRequest calldata deposit,
-        address source
-    ) public {
-        _makeDeposit(deposit, source);
+    function handleDeposit(DepositRequest calldata deposit) public {
+        StealthAddress calldata depositAddr = deposit.depositAddr;
+        _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
     }
 
     function processJoinSplitsReservingFee(

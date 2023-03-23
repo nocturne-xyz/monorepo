@@ -2,7 +2,6 @@
 pragma solidity ^0.8.17;
 
 import {IWallet} from "./interfaces/IWallet.sol";
-import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
 import {QueueLib} from "./libs/Queue.sol";
@@ -21,8 +20,6 @@ contract CommitmentTreeManager is Initializable {
     mapping(uint256 => bool) public _nullifierSet;
 
     OffchainMerkleTreeData internal _merkle;
-
-    IJoinSplitVerifier public _joinSplitVerifier;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
@@ -51,11 +48,9 @@ contract CommitmentTreeManager is Initializable {
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
     function __CommitmentTreeManager_init(
-        address joinSplitVerifier,
         address subtreeUpdateVerifier
-    ) public onlyInitializing {
+    ) internal onlyInitializing {
         _merkle.initialize(subtreeUpdateVerifier);
-        _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
