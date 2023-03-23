@@ -2,9 +2,11 @@
 
 ### Unreleased
 
-- move sleeps into inner actor setup / teardown fns
 - get rid of `startAnvil` script`
 - rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
+- add `runCommandDetatched` util that returns a function that can be called to kill the child`
+- reduce some unnecessarily-long sleeps
+- move sleeps into inner actor setup / teardown fns
 - switch from hh node to anvil
 - Modify deployment and setup code to work with handler <> wallet separation
 - in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
