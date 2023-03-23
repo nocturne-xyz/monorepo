@@ -17,7 +17,6 @@ contract DepositManager is
     OwnableUpgradeable
 {
     IWallet public _wallet;
-    address public _vault;
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
@@ -57,13 +56,11 @@ contract DepositManager is
     function initialize(
         string memory contractName,
         string memory contractVersion,
-        address wallet,
-        address vault
+        address wallet
     ) external initializer {
         __Ownable_init();
         __DepositManagerBase_init(contractName, contractVersion);
         _wallet = IWallet(wallet);
-        _vault = vault;
     }
 
     function setScreenerPermission(
@@ -152,7 +149,7 @@ contract DepositManager is
         require(_screeners[recoveredSigner], "request signer !screener");
 
         // Approve vault for assets and deposit funds
-        AssetUtils.approveAsset(req.encodedAsset, _vault, req.value);
+        AssetUtils.approveAsset(req.encodedAsset, address(_wallet), req.value);
         _wallet.depositFunds(req);
 
         // NOTE: screener may be under-compensated for gas during spikes in

@@ -54,11 +54,11 @@ contract BalanceManagerTest is Test {
     function setUp() public virtual {
         // Instantiate wallet, joinSplitVerifier, tree, and balanceManager
         wallet = new Wallet();
-        joinSplitVerifier = new TestJoinSplitVerifier();
+        balanceManager = new TestBalanceManager();
 
+        joinSplitVerifier = new TestJoinSplitVerifier();
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        balanceManager = new TestBalanceManager();
         balanceManager.initialize(
             address(wallet),
             address(subtreeUpdateVerifier)
