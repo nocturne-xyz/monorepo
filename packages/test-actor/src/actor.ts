@@ -111,7 +111,7 @@ export class TestActor {
           this.depositManager.signer
         );
         const tx = await contract.approve(
-          depositRequest.spender,
+          this.depositManager.address,
           depositRequest.value
         );
         await tx.wait(1);
@@ -122,7 +122,7 @@ export class TestActor {
           asset.assetAddr,
           this.depositManager.signer
         );
-        const tx = await contract.approve(depositRequest.spender, asset.id);
+        const tx = await contract.approve(this.depositManager.address, asset.id);
         await tx.wait(1);
         break;
       }
@@ -133,7 +133,7 @@ export class TestActor {
         );
         // NOTE: AFAICT ERC1155 only has "approveAll"
         const tx = await contract.setApprovalForAll(
-          depositRequest.spender,
+          this.depositManager.address,
           true
         );
         await tx.wait(1);
