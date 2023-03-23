@@ -122,7 +122,10 @@ export class TestActor {
           asset.assetAddr,
           this.depositManager.signer
         );
-        const tx = await contract.approve(this.depositManager.address, asset.id);
+        const tx = await contract.approve(
+          this.depositManager.address,
+          asset.id
+        );
         await tx.wait(1);
         break;
       }
