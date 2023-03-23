@@ -206,7 +206,7 @@ export function runCommandDetached(
     if (onExit) {
       onExit(stdout, stderr, code, signal);
     } else {
-      let msg = ""
+      let msg = "";
       if (processName) {
         msg += `${processName} (${child.pid}) exited`;
       } else {

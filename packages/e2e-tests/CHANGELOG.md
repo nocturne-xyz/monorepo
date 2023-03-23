@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- make `deployAndDeposit` reserve 1000 eth instead of 100 eth to deployer
+- make `deployAndDeposit` wait for one confirmation on each tx
 - get rid of `startAnvil` script`
 - rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
 - add `runCommandDetatched` util that returns a function that can be called to kill the child`

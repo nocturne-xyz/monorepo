@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- print errors in console
 - Fix bug where `depositRequest.depositAddr` was being incorrectly copied over from subgraph
 - Add Dockerfile and docker-compose.yml
 - Delete `enqueue.ts` and move logic into `processor.ts`

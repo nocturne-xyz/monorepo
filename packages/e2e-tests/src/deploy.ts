@@ -110,9 +110,6 @@ const REDIS_PASSWORD = "baka";
 
 const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
   blockTimeSecs: 2,
-
-  // 1 gwei
-  gasPrice: 1_000_000_000n,
 };
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
@@ -160,7 +157,7 @@ export async function setupTestDeployment(
   // spin up anvil
   const givenAnvilConfig = config.configs?.anvil ?? {};
   const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
-  console.log("starting anvil...")
+  console.log("starting anvil...");
   const stopAnvil = await startAnvil(anvilConfig);
 
   // deploy contracts

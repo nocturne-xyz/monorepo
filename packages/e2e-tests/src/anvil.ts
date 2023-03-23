@@ -5,24 +5,20 @@ export interface AnvilNetworkConfig {
   gasPrice?: bigint;
 }
 
-export async function startAnvil(config: AnvilNetworkConfig): Promise<() => Promise<void>> {
+export async function startAnvil(
+  config: AnvilNetworkConfig
+): Promise<() => Promise<void>> {
   const { blockTimeSecs, gasPrice } = config ?? {};
 
   const cmd = "anvil";
-  const args = []
+  const args = [];
 
   if (blockTimeSecs) {
-    args.push(
-      '--block-time',
-      blockTimeSecs.toString()
-    );
+    args.push("--block-time", blockTimeSecs.toString());
   }
 
   if (gasPrice) {
-    args.push(
-      '--gas-price',
-      gasPrice.toString()
-    );
+    args.push("--gas-price", gasPrice.toString());
   }
 
   const cmdOpts: RunCommandDetachedOpts = {
