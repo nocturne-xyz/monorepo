@@ -148,7 +148,7 @@ contract DepositManager is
         address recoveredSigner = _recoverDepositRequestSigner(req, signature);
         require(_screeners[recoveredSigner], "request signer !screener");
 
-        // Approve vault for assets and deposit funds
+        // Approve wallet for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, address(_wallet), req.value);
         _wallet.depositFunds(req);
 

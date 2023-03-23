@@ -2,8 +2,17 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+
+import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+
 import {Versioned} from "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
@@ -12,19 +21,21 @@ import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {WalletUtils} from "./libs/WalletUtils.sol";
 import {Groth16} from "./libs/WalletUtils.sol";
-import {Vault} from "./Vault.sol";
 import "./libs/Types.sol";
 
 // TODO: use SafeERC20 library
-// TODO: do we need IWallet and IVault? Can probably remove
+// TODO: do we need IWallet iface?
 contract Wallet is
     IWallet,
-    Vault,
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable,
     Versioned
 {
     using OperationLib for Operation;
+
+    IHandler public _handler;
 
     IJoinSplitVerifier public _joinSplitVerifier;
 
@@ -51,7 +62,7 @@ contract Wallet is
         address joinSplitVerifier
     ) external initializer {
         __Ownable_init();
-        __Vault_init(handler);
+        _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
 
@@ -95,15 +106,19 @@ contract Wallet is
     function depositFunds(
         DepositRequest calldata deposit
     ) external override onlyDepositSource {
-        _makeDeposit(deposit);
         _handler.handleDeposit(deposit);
+        AssetUtils.transferAssetFrom(
+            deposit.encodedAsset,
+            msg.sender,
+            deposit.value
+        );
     }
 
     function requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
     ) external override onlyHandler {
-        _requestAsset(encodedAsset, value);
+        AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
     /**
@@ -179,5 +194,43 @@ contract Wallet is
             (preVerificationGasLeft - gasleft()) /
             proofs.length;
         return (success, perJoinSplitVerifyGas);
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256, // tokenId
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256, // id
+        uint256, // value
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata, // ids
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
+            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
+            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 }

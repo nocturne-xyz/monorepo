@@ -51,8 +51,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     Wallet wallet;
     Handler handler;
     TreeTest treeTest;
-    IJoinSplitVerifier joinSplitVerifier;
-    ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
     SimpleERC1155Token[3] ERC1155s;
@@ -1138,7 +1136,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Vault lost some tokenIn to BOB due to bundler gas fee, but otherwise
+        // Wallet lost some tokenIn to BOB due to bundler gas fee, but otherwise
         // no state changes
         assertLt(
             tokenIn.balanceOf(address(wallet)),

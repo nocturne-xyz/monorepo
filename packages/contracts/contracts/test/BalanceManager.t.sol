@@ -15,7 +15,6 @@ import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.s
 import {WalletUtils} from "../libs/WalletUtils.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
-import {TestVault} from "./harnesses/TestVault.sol";
 import "./utils/NocturneUtils.sol";
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";

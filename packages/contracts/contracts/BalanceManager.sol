@@ -79,7 +79,7 @@ contract BalanceManager is
             );
         }
 
-        // ENTERED_PROCESS is ok because this is when vault funds wallet
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -109,7 +109,7 @@ contract BalanceManager is
             }
         }
 
-        // ENTERED_PROCESS is ok because this is when vault funds wallet
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
@@ -124,10 +124,10 @@ contract BalanceManager is
 
     /**
       Process all joinSplits and request all declared publicSpend from the
-      vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
+      wallet, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from vault with the same encodedAsset as
+      to request maxGasAssetCost from wallet with the same encodedAsset as
       joinSplits[0].
     */
     function _processJoinSplitsReservingFee(
@@ -143,7 +143,7 @@ contract BalanceManager is
             // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
 
-            // Defaults to requesting all publicSpend from vault
+            // Defaults to requesting all publicSpend from wallet
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
             // If we still need to reserve more gas and the current
             // `joinSplit` is spending the gasAsset, then reserve what we can
@@ -186,7 +186,7 @@ contract BalanceManager is
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
-            // Request reserved gasAssetAmount from vault.
+            // Request reserved gasAssetAmount from wallet.
             /// @dev This is safe because _processJoinSplitsReservingFee is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
             _wallet.requestAsset(encodedGasAsset, gasAssetAmount);
