@@ -156,7 +156,7 @@ export interface RunCommandDetachedOpts {
   onExit?: (
     stdout: string,
     stderr: string,
-    code: number,
+    code: number | null,
     signal: NodeJS.Signals | null
   ) => void;
 }
@@ -202,20 +202,24 @@ export function runCommandDetached(
     }
   });
 
-  child.on("exit", (code: number, signal: NodeJS.Signals | null) => {
+  child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
     if (onExit) {
       onExit(stdout, stderr, code, signal);
     } else {
       let msg = ""
       if (processName) {
-        msg += `${processName} (${child.pid}) exited with code ${code}`;
+        msg += `${processName} (${child.pid}) exited`;
       } else {
-        msg += `child process ${child.pid} exited with code ${code}`;
+        msg += `child process ${child.pid} exited`;
       }
 
+      if (code) {
+        msg += ` with code ${code}`;
+      }
       if (signal) {
         msg += ` on signal ${signal}`;
       }
+
       console.log(msg);
     }
   });

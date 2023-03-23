@@ -173,7 +173,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     );
 
     console.log("wait for subtreee update");
-    await sleep(20_000);
+    await sleep(10_000);
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
@@ -205,7 +205,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     );
 
     console.log("wait for subtreee update");
-    await sleep(20_000);
+    await sleep(10_000);
 
     console.log("Encode transfer erc20 action");
     const encodedFunction =
@@ -313,7 +313,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
     console.log("wait for subtreee update");
-    await sleep(20_000);
+    await sleep(10_000);
 
     console.log("Encode reserve erc721 action");
     const erc721ReserveCalldata =
