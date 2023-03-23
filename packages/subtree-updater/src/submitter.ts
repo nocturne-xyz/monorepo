@@ -1,4 +1,4 @@
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Handler } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 
@@ -15,13 +15,13 @@ export interface SubtreeUpdateSubmitter {
 // Default implementation of `SubtreeUpdateSubmitter` that just sits there and waits
 // for the TX to confirm.
 export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
-  walletContract: Wallet;
+  handlerContract: Handler;
 
   // HACK: use a mutex to prevent nonces from colliding
   mutex: Mutex;
 
-  constructor(walletContract: Wallet) {
-    this.walletContract = walletContract;
+  constructor(handlerContract: Handler) {
+    this.handlerContract = handlerContract;
     this.mutex = new Mutex();
   }
 
@@ -30,7 +30,7 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
     try {
       console.log("submitting tx...");
       const tx = await this.mutex.runExclusive(() =>
-        this.walletContract.applySubtreeUpdate(newRoot, solidityProof)
+        this.handlerContract.applySubtreeUpdate(newRoot, solidityProof)
       );
       await tx.wait();
       console.log("successfully updated root to", newRoot);
@@ -47,7 +47,7 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
 
   async fillBatch(): Promise<void> {
     await this.mutex.runExclusive(() =>
-      this.walletContract.fillBatchWithZeros()
+      this.handlerContract.fillBatchWithZeros()
     );
   }
 
