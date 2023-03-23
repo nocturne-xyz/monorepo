@@ -24,7 +24,7 @@ export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
   console.log("starting graph node...");
   const res = await compose.upAll(GRAPH_NODE_COMPOSE_OPTS);
   console.log(res);
-  await sleep(20_000);
+  await sleep(10_000);
 
   // deploy subgraph
   try {
@@ -48,4 +48,5 @@ export async function stopSubgraph(): Promise<void> {
     cwd: GRAPH_NODE_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
+  await sleep(10_000);
 }

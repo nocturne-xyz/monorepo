@@ -3,36 +3,38 @@ import { RunCommandDetachedOpts, runCommandDetached, sleep } from "./utils";
 export interface AnvilNetworkConfig {
   blockTimeSecs?: number;
   gasPrice?: bigint;
-  streamStdOut?: boolean;
 }
 
-export function startAnvil(config: AnvilNetworkConfig): () => Promise<void> {
-  const { blockTimeSecs, gasPrice, streamStdOut } = config ?? {};
+export async function startAnvil(config: AnvilNetworkConfig): Promise<() => Promise<void>> {
+  const { blockTimeSecs, gasPrice } = config ?? {};
 
-  let cmd = "anvil";
+  const cmd = "anvil";
+  const args = []
 
   if (blockTimeSecs) {
-    cmd += ` --block-time ${blockTimeSecs}`;
+    args.push(
+      '--block-time',
+      blockTimeSecs.toString()
+    );
   }
 
   if (gasPrice) {
-    cmd += `--gas-price ${gasPrice.toString()}`;
+    args.push(
+      '--gas-price',
+      gasPrice.toString()
+    );
   }
 
   const cmdOpts: RunCommandDetachedOpts = {
     processName: "anvil",
+    onError: console.error,
   };
 
-  if (streamStdOut) {
-    cmdOpts.onStdOut = (out: string) => {
-      console.log(out);
-    };
-  }
-
-  const inner = runCommandDetached(cmd, cmdOpts);
+  const stop = runCommandDetached(cmd, args, cmdOpts);
+  await sleep(100);
   return async () => {
-    inner();
-    // wait 100ms or so to ensure it stops and unbinds from port
+    stop();
+    // wait a bit for anvil to stop stops and unbind from port
     await sleep(100);
   };
 }

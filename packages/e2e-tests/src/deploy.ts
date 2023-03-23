@@ -20,6 +20,7 @@ import {
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
   Address,
+  sleep,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -43,9 +44,8 @@ import {
 } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
-import { KEYS, KEYS_TO_WALLETS } from "./keys";
+import { KEYS_TO_WALLETS } from "./keys";
 import Dockerode from "dockerode";
-import { sleep } from "./utils";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -97,8 +97,8 @@ export interface NocturneTestDeployment {
 }
 
 // defaults for actor deployments
-const HH_URL = "http://localhost:8545";
-const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
+const ANVIL_URL = "http://127.0.0.1:8545";
+const ANVIL_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 
 const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 const SUBGRAPH_FROM_DOCKER_URL =
@@ -122,7 +122,7 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   redisUrl: REDIS_URL_BUNDLER,
   redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
 };
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
@@ -131,7 +131,7 @@ const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
 > = {
   redisUrl: REDIS_URL_SCREENER,
   redisPassword: REDIS_PASSWORD,
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
   subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
 };
 
@@ -139,7 +139,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "handlerAddress" | "txSignerKey"
 > = {
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
@@ -160,10 +160,11 @@ export async function setupTestDeployment(
   // spin up anvil
   const givenAnvilConfig = config.configs?.anvil ?? {};
   const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
-  const stopAnvil = startAnvil(anvilConfig);
+  console.log("starting anvil...")
+  const stopAnvil = await startAnvil(anvilConfig);
 
   // deploy contracts
-  const provider = new ethers.providers.JsonRpcProvider(HH_URL);
+  const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
   const [
     deployerEoa,
     aliceEoa,
@@ -172,6 +173,7 @@ export async function setupTestDeployment(
     subtreeUpdaterEoa,
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
+  console.log("deploying contracts...")
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -278,18 +280,16 @@ export async function setupTestDeployment(
       const teardown = async () => {
         await subtreeUpdaterContainer?.stop();
         await subtreeUpdaterContainer?.remove();
+        await sleep(3000);
       };
       proms.push(teardown());
     }
-
-    if (config.include.subgraph) {
-      proms.push(stopSubgraph());
-    }
-
     await Promise.all(proms);
 
-    // wait for all of the actors to finish teardown before tearing down hh node
-    await sleep(10_000);
+    // teradown subgraph
+    if (config.include.subgraph) {
+      await stopSubgraph();
+    }
 
     // teardown anvil node
     await stopAnvil();

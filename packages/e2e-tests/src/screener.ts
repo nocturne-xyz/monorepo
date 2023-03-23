@@ -60,4 +60,5 @@ export async function stopDepositScreener(): Promise<void> {
     cwd: SCREENER_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
+  await sleep(3_000);
 }

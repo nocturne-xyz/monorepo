@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move sleeps into inner actor setup / teardown fns
 - get rid of `startAnvil` script`
 - rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
 - switch from hh node to anvil

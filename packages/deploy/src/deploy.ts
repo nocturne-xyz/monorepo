@@ -44,34 +44,36 @@ export async function deployNocturne(
   if (!connectedSigner.provider)
     throw new Error("Wallet must be connected to provider");
 
+  console.log("getting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();
+  console.log("fetching current block number...");
   const startBlock = await connectedSigner.provider.getBlockNumber();
 
   // Maybe deploy proxy admin
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
-    console.log("\nDeploying ProxyAdmin");
+    console.log("deploying ProxyAdmin...");
     proxyAdmin = await new ProxyAdmin__factory(connectedSigner).deploy();
     const tx = await proxyAdmin.transferOwnership(args.proxyAdminOwner);
     await tx.wait(opts?.confirmations);
   }
 
   // Deploy handler proxy, un-initialized
-  console.log("\nDeploying proxied Handler");
+  console.log("deploying proxied Handler...");
   const proxiedHandler = await deployProxiedContract(
     new Handler__factory(connectedSigner),
     proxyAdmin
   );
-  console.log("Deployed proxied Handler:", proxiedHandler.proxyAddresses);
+  console.log("deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
-  console.log("\nDeploying JoinSplitVerifier");
+  console.log("deploying JoinSplitVerifier...");
   const joinSplitVerifier = await new JoinSplitVerifier__factory(
     connectedSigner
   ).deploy();
   await joinSplitVerifier.deployTransaction.wait(opts?.confirmations);
 
   let subtreeUpdateVerifier: SubtreeUpdateVerifier | TestSubtreeUpdateVerifier;
-  console.log("\nDeploying SubtreeUpdateVerifier");
+  console.log("deploying SubtreeUpdateVerifier...");
   if (opts?.useMockSubtreeUpdateVerifier) {
     subtreeUpdateVerifier = await new TestSubtreeUpdateVerifier__factory(
       connectedSigner
@@ -83,33 +85,33 @@ export async function deployNocturne(
   }
   await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
-  console.log("\nDeploying proxied Wallet");
+  console.log("deploying proxied Wallet...");
   const proxiedWallet = await deployProxiedContract(
     new Wallet__factory(connectedSigner),
     proxyAdmin,
     [proxiedHandler.address, joinSplitVerifier.address]
   );
-  console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
+  console.log("deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
-  console.log("Initializing proxied Handler");
+  console.log("initializing proxied Handler");
   const handlerInitTx = await proxiedHandler.contract.initialize(
     proxiedWallet.address,
     subtreeUpdateVerifier.address
   );
   await handlerInitTx.wait(opts?.confirmations);
 
-  console.log("\nDeploying proxied DepositManager");
+  console.log("deploying proxied DepositManager...");
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
     ["NocturneDepositManager", "v1", proxiedWallet.address]
   );
   console.log(
-    "Deployed proxied DepositManager:",
+    "deployed proxied DepositManager:",
     proxiedDepositManager.proxyAddresses
   );
 
-  console.log("Setting deposit manager screeners\n");
+  console.log("setting deposit manager screeners...");
   for (const screener of args.screeners) {
     const tx = await proxiedDepositManager.contract.setScreenerPermission(
       screener,
@@ -118,7 +120,7 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  console.log("setting subtre batch fillers\n");
+  console.log("setting subtre batch fillers...");
   for (const filler of args.subtreeBatchFillers) {
     const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
       filler,
@@ -127,7 +129,7 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  console.log("Adding deposit manager to wallet deposit sources\n");
+  console.log("Adding deposit manager to wallet deposit sources...");
   const enrollDepositManagerTx =
     await proxiedWallet.contract.setDepositSourcePermission(
       proxiedDepositManager.address,
@@ -136,7 +138,7 @@ export async function deployNocturne(
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
   console.log(
-    "Relinquishing control of wallet, handler, and deposit manager\n"
+    "relinquishing control of wallet, handler, and deposit manager..."
   );
   const walletTransferOwnershipTx =
     await proxiedWallet.contract.transferOwnership(args.walletOwner);
