@@ -1,4 +1,4 @@
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Handler } from "@nocturne-xyz/contracts";
 import { NocturneViewer, StealthAddress } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
@@ -41,7 +41,7 @@ const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
-  walletContract: Wallet;
+  handlerContract: Handler;
   gasAssets: Asset[];
   merkle: MerkleProver;
 }
@@ -193,7 +193,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
 
 // estimate gas params for opRequest
 async function estimateGasForOperationRequest(
-  { walletContract, ...deps }: HandleOpRequestGasDeps,
+  { handlerContract, ...deps }: HandleOpRequestGasDeps,
   opRequest: OperationRequest
 ): Promise<GasParams> {
   let { executionGasLimit, maxNumRefunds, gasPrice } = opRequest;
@@ -223,7 +223,7 @@ async function estimateGasForOperationRequest(
 
     // simulate the operation
     const result = await simulateOperation(
-      walletContract,
+      handlerContract,
       simulationOp as PreSignOperation
     );
     if (!result.opProcessed) {
@@ -240,7 +240,7 @@ async function estimateGasForOperationRequest(
   // if gasPrice is not specified, get it from RPC node
   // TODO - add conversion logic to set gasPrice if gasAsset isn't ETH
   gasPrice =
-    gasPrice ?? (await walletContract.provider.getGasPrice()).toBigInt();
+    gasPrice ?? (await handlerContract.provider.getGasPrice()).toBigInt();
 
   return {
     executionGasLimit,
@@ -250,14 +250,14 @@ async function estimateGasForOperationRequest(
 }
 
 async function simulateOperation(
-  walletContract: Wallet,
+  handlerContract: Handler,
   op: Operation
 ): Promise<OperationResult> {
   // We need to do staticCall, which fails if wallet is connected to a signer
   // https://github.com/ethers-io/ethers.js/discussions/3327#discussioncomment-3539505
   // Switching to a regular provider underlying the signer
-  if (walletContract.signer) {
-    walletContract = walletContract.connect(walletContract.provider);
+  if (handlerContract.signer) {
+    handlerContract = handlerContract.connect(handlerContract.provider);
   }
 
   // Fill-in the some fake proof
@@ -270,14 +270,14 @@ async function simulateOperation(
 
   // Set dummy parameters which should not affect operation simulation
   const verificationGasForOp = 0n;
-  const bundler = walletContract.address;
+  const bundler = handlerContract.address;
 
-  const result = await walletContract.callStatic.processOperation(
+  const result = await handlerContract.callStatic.processOperation(
     provenOp,
     verificationGasForOp,
     bundler,
     {
-      from: walletContract.address,
+      from: handlerContract.address,
     }
   );
   const {

@@ -24,13 +24,13 @@ const DUMMY_GAS_ASSET: Asset = {
 
 describe("handleGasForOperationRequest", async () => {
   it("produces an operation request with gas price 0 and dummy gas assset when gasPrice set to 0", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n],
       [shitcoin, shitcoin]
     );
     const deps = {
       db: nocturneDB,
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -58,13 +58,13 @@ describe("handleGasForOperationRequest", async () => {
   });
 
   it("adds gas comp to existing joinsplit when gas price is nonzero, ∃ a joinsplit unwrapping gasAsset, and user has enough", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin]
     );
     const deps = {
       db: nocturneDB,
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -99,13 +99,13 @@ describe("handleGasForOperationRequest", async () => {
   });
 
   it("adds a joinsplit request including gas comp when gas price is nonzero, ∄ a joinsplit unwrapping a gasAsset, and user has enough of it", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, stablescam]
     );
     const deps = {
       db: nocturneDB,
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -149,12 +149,12 @@ describe("handleGasForOperationRequest", async () => {
   });
 
   it("adds a joinsplit request for gasAssetB when gas price is nonzeo, ∃ a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,

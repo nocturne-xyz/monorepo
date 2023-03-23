@@ -11,8 +11,8 @@ import {
   SubtreeUpdateEvent,
   InsertNoteCommitmentsEvent,
   InsertNotesEvent,
-} from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { Wallet } from "@nocturne-xyz/contracts";
+} from "@nocturne-xyz/contracts/dist/src/Handler";
+import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
 
 export interface JoinSplitEvent {
@@ -27,7 +27,7 @@ export interface JoinSplitEvent {
 // if `to` > the current block number, will only return up to the current block number
 // (this is same behavior as ethers)
 export async function fetchNotesFromRefunds(
-  contract: Wallet,
+  contract: Handler,
   from: number,
   to: number
 ): Promise<IncludedNote[]> {
@@ -75,7 +75,7 @@ export async function fetchNotesFromRefunds(
 // if `to` > the current block number, will only return up to the current block number
 // (this is same behavior as ethers)
 export async function fetchJoinSplits(
-  contract: Wallet,
+  contract: Handler,
   from: number,
   to: number
 ): Promise<JoinSplitEvent[]> {
@@ -177,7 +177,7 @@ interface SubtreeUpdateCommit {
 // if `to` > the current block number, will only return up to the current block number
 // (this is same behavior as ethers)
 export async function fetchSubtreeUpdateCommits(
-  contract: Wallet,
+  contract: Handler,
   from: number,
   to: number
 ): Promise<SubtreeUpdateCommit[]> {
@@ -211,7 +211,7 @@ interface OrderedInsertion {
 
 // returns SubtreeUpdateCommit events sorted in the order in which they appeared on-chain
 export async function fetchInsertions(
-  contract: Wallet,
+  contract: Handler,
   from: number,
   to: number
 ): Promise<(Note | bigint)[]> {

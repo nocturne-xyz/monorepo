@@ -93,12 +93,12 @@ describe("gatherNotes", () => {
 
 describe("prepareOperation", async () => {
   it("works for an operation request with 1 action, 1 unrwap, 0 payments, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -139,12 +139,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 1 payment, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -190,12 +190,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 1 action, 1 unwrap, 0 payments, all params set", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -243,12 +243,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 0 actions, 0 unwraps, 2 payments, no params set", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n],
       [shitcoin, stablescam]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
@@ -287,12 +287,12 @@ describe("prepareOperation", async () => {
   });
 
   it("works for an operation request with 2 actions, 5 unwraps, 3 payments, 5 different assets, refund addr set", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [1000n, 1000n, 1000n, 1n, 1000n],
       [shitcoin, ponzi, stablescam, monkey, plutocracy]
     );
     const deps = {
-      walletContract,
+      handlerContract,
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,

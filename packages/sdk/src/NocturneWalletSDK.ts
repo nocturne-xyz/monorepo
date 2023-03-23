@@ -9,7 +9,7 @@ import { MerkleProver } from "./merkleProver";
 import { prepareOperation } from "./prepareOperation";
 import { OperationRequest } from "./operationRequest";
 import { NocturneDB } from "./NocturneDB";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { signOperation } from "./signOperation";
 import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
@@ -19,7 +19,7 @@ import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
 
 export class NocturneWalletSDK {
-  protected walletContract: Wallet;
+  protected handlerContract: Handler;
   protected merkleProver: MerkleProver;
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
@@ -47,7 +47,7 @@ export class NocturneWalletSDK {
     );
 
     this.signer = signer;
-    this.walletContract = Wallet__factory.connect(
+    this.handlerContract = Handler__factory.connect(
       config.walletAddress(),
       provider
     );
@@ -58,7 +58,7 @@ export class NocturneWalletSDK {
 
   async sync(): Promise<void> {
     const deps = {
-      provider: this.walletContract.provider,
+      provider: this.handlerContract.provider,
       viewer: this.signer,
     };
     await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
@@ -70,7 +70,7 @@ export class NocturneWalletSDK {
     const deps = {
       db: this.db,
       gasAssets: this.gasAssets,
-      walletContract: this.walletContract,
+      handlerContract: this.handlerContract,
       merkle: this.merkleProver,
       viewer: this.signer,
     };

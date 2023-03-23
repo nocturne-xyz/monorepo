@@ -12,7 +12,7 @@ import {
   NocturneSigner,
   InMemoryMerkleProver,
 } from "../src";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 
 export const shitcoin: Asset = {
   assetType: AssetType.ERC20,
@@ -73,7 +73,7 @@ export async function setup(
   noteAmounts: bigint[],
   assets: Asset[],
   opts: TestSetupOpts = defaultTestSetupOpts
-): Promise<[NocturneDB, MerkleProver, NocturneSigner, Wallet]> {
+): Promise<[NocturneDB, MerkleProver, NocturneSigner, Handler]> {
   const { mockMerkle } = opts;
 
   const signer = new NocturneSigner(1n);
@@ -95,9 +95,9 @@ export async function setup(
   );
   await nocturneDB.storeNotesAndCommitments(notesWithNullfiers);
 
-  const dummyWalletAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
+  const dummyHandlerAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
-  const wallet = Wallet__factory.connect(dummyWalletAddr, provider);
+  const handler = Handler__factory.connect(dummyHandlerAddr, provider);
 
   let merkleProver: MerkleProver;
   if (mockMerkle) {
@@ -106,5 +106,5 @@ export async function setup(
     merkleProver = new InMemoryMerkleProver();
   }
 
-  return [nocturneDB, merkleProver, signer, wallet];
+  return [nocturneDB, merkleProver, signer, handler];
 }
