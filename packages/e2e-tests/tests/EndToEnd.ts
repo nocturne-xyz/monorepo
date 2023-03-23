@@ -9,7 +9,7 @@ import {
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
   Wallet,
-  Vault,
+  Handler,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -58,7 +58,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
   let depositManager: DepositManager;
   let wallet: Wallet;
-  let vault: Vault;
+  let handler: Handler;
   let nocturneDBAlice: NocturneDB;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
   let nocturneDBBob: NocturneDB;
@@ -87,7 +87,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     });
 
-    ({ provider, teardown, wallet, vault, bundlerEoa, depositManager } =
+    ({ provider, teardown, wallet, handler, bundlerEoa, depositManager } =
       testDeployment);
 
     const [deployer, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
@@ -245,7 +245,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20.balanceOf(vault.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
     };

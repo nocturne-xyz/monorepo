@@ -2,8 +2,8 @@ import { ethers } from "ethers";
 import * as fs from "fs";
 import {
   Wallet__factory,
-  Vault__factory,
-  Vault,
+  Handler__factory,
+  Handler,
   Wallet,
   DepositManager,
   DepositManager__factory,
@@ -84,7 +84,7 @@ export interface TestActorsConfig {
 export interface NocturneTestDeployment {
   depositManager: DepositManager;
   wallet: Wallet;
-  vault: Vault;
+  handler: Handler;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
   bundlerEoa: ethers.Wallet;
@@ -173,11 +173,11 @@ export async function setupTestDeployment(
     deployerEoa.provider
   );
 
-  const { depositManagerProxy, walletProxy, vaultProxy } = contractDeployment;
-  const [depositManager, wallet, vault] = await Promise.all([
+  const { depositManagerProxy, walletProxy, handlerProxy } = contractDeployment;
+  const [depositManager, wallet, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, deployerEoa),
     Wallet__factory.connect(walletProxy.proxy, deployerEoa),
-    Vault__factory.connect(vaultProxy.proxy, deployerEoa),
+    Handler__factory.connect(handlerProxy.proxy, deployerEoa),
   ]);
 
   // Deploy subgraph first, as other services depend on it
@@ -293,7 +293,7 @@ export async function setupTestDeployment(
   return {
     depositManager,
     wallet,
-    vault,
+    handler,
     contractDeployment,
     provider,
     teardown,
@@ -324,7 +324,7 @@ export async function deployContractsWithDummyAdmins(
 
   // Log for dev site script
   console.log("Wallet address:", deployment.walletProxy.proxy);
-  console.log("Vault address:", deployment.vaultProxy.proxy);
+  console.log("Handler address:", deployment.handlerProxy.proxy);
   console.log("DepositManager address:", deployment.depositManagerProxy.proxy);
   return deployment;
 }

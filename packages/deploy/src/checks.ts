@@ -33,13 +33,13 @@ export async function checkNocturneContractDeployment(
     "Wallet proxy admin incorrectly set"
   );
 
-  // Vault proxy admin matches deployment proxy admin
-  const vaultProxyAdmin = await proxyAdmin(
+  // Handler proxy admin matches deployment proxy admin
+  const handlerProxyAdmin = await proxyAdmin(
     provider,
-    deployment.vaultProxy.proxy
+    deployment.handlerProxy.proxy
   );
   assertOrErr(
-    vaultProxyAdmin === deployment.proxyAdmin,
+    handlerProxyAdmin === deployment.proxyAdmin,
     "Vault proxy admin incorrectly set"
   );
 
@@ -56,10 +56,10 @@ export async function checkNocturneContractDeployment(
   // Vault proxy implementation matches deployment
   const vaultProxyImplementation = await proxyImplementation(
     provider,
-    deployment.vaultProxy.proxy
+    deployment.handlerProxy.proxy
   );
   assertOrErr(
-    vaultProxyImplementation === deployment.vaultProxy.implementation,
+    vaultProxyImplementation === deployment.handlerProxy.implementation,
     "Vault proxy implementation does not match deployment"
   );
 

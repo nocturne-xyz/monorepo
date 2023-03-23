@@ -7,7 +7,7 @@ import {
   TestSubtreeUpdateVerifier,
   TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
-  Vault__factory,
+  Handler__factory,
   Wallet__factory,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
@@ -55,13 +55,13 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  // Deploy vault proxy, un-initialized
-  console.log("\nDeploying proxied Vault");
-  const proxiedVault = await deployProxiedContract(
-    new Vault__factory(connectedSigner),
+  // Deploy handler proxy, un-initialized
+  console.log("\nDeploying proxied Handler");
+  const proxiedHandler = await deployProxiedContract(
+    new Handler__factory(connectedSigner),
     proxyAdmin
   );
-  console.log("Deployed proxied Vault:", proxiedVault.proxyAddresses);
+  console.log("Deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
   console.log("\nDeploying JoinSplitVerifier");
   const joinSplitVerifier = await new JoinSplitVerifier__factory(
@@ -86,17 +86,14 @@ export async function deployNocturne(
   const proxiedWallet = await deployProxiedContract(
     new Wallet__factory(connectedSigner),
     proxyAdmin,
-    [
-      proxiedVault.address,
-      joinSplitVerifier.address,
-      subtreeUpdateVerifier.address,
-    ]
+    [proxiedHandler.address, subtreeUpdateVerifier.address]
   );
   console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
   console.log("Initializing proxied Vault");
-  const vaultInitTx = await proxiedVault.contract.initialize(
-    proxiedWallet.address
+  const vaultInitTx = await proxiedHandler.contract.initialize(
+    proxiedWallet.address,
+    proxiedHandler.address
   );
   await vaultInitTx.wait(opts?.confirmations);
 
@@ -104,12 +101,7 @@ export async function deployNocturne(
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
-    [
-      "NocturneDepositManager",
-      "v1",
-      proxiedWallet.address,
-      proxiedVault.address,
-    ]
+    ["NocturneDepositManager", "v1", proxiedWallet.address]
   );
   console.log(
     "Deployed proxied DepositManager:",
@@ -167,7 +159,7 @@ export async function deployNocturne(
     proxyAdmin: proxyAdmin.address,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     walletProxy: proxiedWallet.proxyAddresses,
-    vaultProxy: proxiedVault.proxyAddresses,
+    handlerProxy: proxiedHandler.proxyAddresses,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
     screeners: args.screeners,

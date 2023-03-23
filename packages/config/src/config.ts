@@ -28,8 +28,8 @@ export class NocturneConfig {
     return this.contracts.walletProxy.proxy;
   }
 
-  vaultAddress(): Address {
-    return this.contracts.vaultProxy.proxy;
+  handlerAddress(): Address {
+    return this.contracts.handlerProxy.proxy;
   }
 
   depositManagerAddress(): Address {

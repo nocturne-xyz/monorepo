@@ -19,7 +19,7 @@ export interface NocturneContractDeployment {
   proxyAdmin: Address;
   depositManagerProxy: ProxyAddresses<any>;
   walletProxy: ProxyAddresses<any>;
-  vaultProxy: ProxyAddresses<any>;
+  handlerProxy: ProxyAddresses<any>;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;
   depositSources: Address[];
