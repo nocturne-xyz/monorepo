@@ -31,7 +31,7 @@ import {
   BundlerOperationID,
   formatTokenAmountEvmRepr,
 } from "@nocturne-xyz/frontend-sdk";
-import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
+import { WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
@@ -111,13 +111,11 @@ const Index = () => {
   const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK(
-      BUNDLER_ENDPOINT,
-      WALLET_CONTRACT_ADDRESS,
-      VAULT_CONTRACT_ADDRESS
-    ).then((sdk) => {
-      setFrontendSDK(sdk);
-    });
+    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, WALLET_CONTRACT_ADDRESS).then(
+      (sdk) => {
+        setFrontendSDK(sdk);
+      }
+    );
   }, [loadNocturneFrontendSDK]);
 
   const handleConnectClick = async () => {

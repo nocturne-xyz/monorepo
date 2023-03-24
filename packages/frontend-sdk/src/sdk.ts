@@ -30,12 +30,10 @@ export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   bundlerEndpoint: string;
   walletContract: Wallet;
-  vaultContractAddress: Address;
 
   private constructor(
     bundlerEndpoint: string,
     walletContract: Wallet,
-    vaultContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
@@ -43,7 +41,6 @@ export class NocturneFrontendSDK {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.bundlerEndpoint = bundlerEndpoint;
     this.walletContract = walletContract;
-    this.vaultContractAddress = vaultContractAddress;
   }
 
   /**
@@ -57,7 +54,6 @@ export class NocturneFrontendSDK {
   static async instantiate(
     bundlerEndpoint: string,
     walletContractAddress: string,
-    vaultContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
@@ -68,7 +64,6 @@ export class NocturneFrontendSDK {
     return new NocturneFrontendSDK(
       bundlerEndpoint,
       walletContract,
-      vaultContractAddress,
       wasmPath,
       zkeyPath,
       vkey
@@ -108,11 +103,11 @@ export class NocturneFrontendSDK {
     const signer = await getWindowSigner();
     const tokenContract = getTokenContract(assetType, assetAddress, signer);
     if (assetType == AssetType.ERC20) {
-      await tokenContract.approve(this.vaultContractAddress, value);
+      await tokenContract.approve(this.walletContract.address, value);
     } else if (assetType == AssetType.ERC721) {
-      await tokenContract.approve(this.vaultContractAddress, assetId);
+      await tokenContract.approve(this.walletContract.address, assetId);
     } else if (assetType == AssetType.ERC1155) {
-      await tokenContract.setApprovalForAll(this.vaultContractAddress, true);
+      await tokenContract.setApprovalForAll(this.walletContract.address, true);
     }
 
     // TODO: currently broken as is, fix once we have deposit screener agent
@@ -277,7 +272,7 @@ export class NocturneFrontendSDK {
 
 /**
  * Load a `NocturneFrontendSDK` instance, provided a wallet contract
- * address, vault contract address, and paths to local prover's wasm, zkey, and
+ * address, and paths to local prover's wasm, zkey, and
  * vkey. Circuit file paths default to caller's current directory (joinsplit.
  * wasm, joinsplit.zkey, joinSplitVkey.json).
  *
@@ -288,7 +283,6 @@ export class NocturneFrontendSDK {
 export async function loadNocturneFrontendSDK(
   bundlerEndpoint: string,
   walletContractAddress: string,
-  vaultContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
@@ -297,7 +291,6 @@ export async function loadNocturneFrontendSDK(
   return await NocturneFrontendSDK.instantiate(
     bundlerEndpoint,
     walletContractAddress,
-    vaultContractAddress,
     wasmPath,
     zkeyPath,
     vkey as VerifyingKey
