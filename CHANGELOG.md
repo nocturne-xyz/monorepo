@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add foundryup to ci workflow
 - reduce sleeps
 - site script uses anvil test accounts
 - site script uses anvil instead of hardhat

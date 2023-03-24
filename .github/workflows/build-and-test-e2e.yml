@@ -24,6 +24,8 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
+      - name: Run Foundryup 
+        run: foundryup
       - name: Yarn install
         run: |
           yarn install --immutable
