@@ -28,6 +28,14 @@
         "@nocturne-xyz/config#build"
       ]
     },
+    "@nocturne-xyz/test-actor#build": {
+      "dependsOn": [
+        "@nocturne-xyz/contracts#build",
+        "@nocturne-xyz/sdk#build",
+        "@nocturne-xyz/config#build",
+        "@nocturne-xyz/local-prover#build"
+      ]
+    },
     "@nocturne-xyz/deposit-screener#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
@@ -61,7 +69,8 @@
         "@nocturne-xyz/deploy#build",
         "@nocturne-xyz/subtree-updater#build",
         "@nocturne-xyz/local-prover#build",
-        "@nocturne-xyz/bundler#build"
+        "@nocturne-xyz/bundler#build",
+        "@nocturne-xyz/deposit-screener#build"
       ]
     },
     "@nocturne-xyz/subtree-updater#build": {

@@ -32,6 +32,10 @@ export class NocturneConfig {
     return this.contracts.vaultProxy.proxy;
   }
 
+  depositManagerAddress(): Address {
+    return this.contracts.depositManagerProxy.proxy;
+  }
+
   gasAsset(ticker: string): Address | undefined {
     return this.gasAssets.get(ticker);
   }
