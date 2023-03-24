@@ -146,7 +146,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
-    console.log("Alice pre-of nextMerkleIndex", await nocturneDBAlice.nextMerkleIndex());
+    console.log(
+      "Alice pre-of nextMerkleIndex",
+      await nocturneDBAlice.nextMerkleIndex()
+    );
 
     console.log("prepare, sign, and prove operation with NocturneWalletSDK");
     const preSign = await nocturneWalletSDKAlice.prepareOperation(

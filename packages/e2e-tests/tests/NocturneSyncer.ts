@@ -225,7 +225,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await submitAndProcessOperation(op);
 
       // wait for subgraph
-      await sleep(2_000)
+      await sleep(2_000);
 
       // sync SDK again...
       console.log("syncing SDK again...");

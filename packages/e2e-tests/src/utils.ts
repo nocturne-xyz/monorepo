@@ -146,9 +146,9 @@ export async function runCommand(
     });
 
     // kill child if parent exits first
-    process.on('exit', () => {
+    process.on("exit", () => {
       child.kill();
-    })
+    });
   });
 }
 
@@ -230,9 +230,9 @@ export function runCommandDetached(
   });
 
   // kill child if parent exits first
-  process.on('exit', () => {
+  process.on("exit", () => {
     child.kill();
-  })
+  });
 
   return () => {
     child.kill();
