@@ -3187,7 +3187,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@^1.0.0-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3241,6 +3241,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@nocturne-xyz/contracts@npm:1.0.10-alpha, @nocturne-xyz/contracts@npm:^1.0.10-alpha":
+  version: 1.0.10-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.10-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.8.2
+    "@openzeppelin/contracts-upgradeable": 4.8.2
+  checksum: c4d6e8ac657aba2690d5c65ccc2094952dc0cabb46636c27c30b50c2629e1669a291c5651785131ac8e73b9ac242982e5da052ac15d3ef08e6a241f0ff532d19
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
@@ -3268,12 +3278,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.10-alpha
+    "@nocturne-xyz/sdk": 1.0.84-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
+    "@types/commander": ^2.12.2
     "@types/mocha": ^10.0.0
     "@types/node": ^18.8.0
     "@types/randombytes": ^2.0.0
@@ -3286,6 +3296,8 @@ __metadata:
     bullmq: ^3.10.1
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
+    commander: ^10.0.0
+    dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.3.0
     ethers: ^5.7.2
@@ -3423,6 +3435,25 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/sdk@npm:1.0.84-alpha":
+  version: 1.0.84-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.84-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.0-alpha
+    "@nocturne-xyz/contracts": ^1.0.10-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 563157c3dc2265a7f50ca38147eb6b6fa0617991aabab21e138ccd89d184c70d7e31e98deb23a4752b534138bbfe2c8d959552ab439801f494576d901b95a84b
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local

@@ -10,7 +10,7 @@ const SCREENER_COMPOSE_CWD = `${ROOT_DIR}/packages/deposit-screener`;
 const SCREENER_ENV_FILE_PATH = `${ROOT_DIR}/packages/deposit-screener/.env`;
 const SCREENER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: SCREENER_COMPOSE_CWD,
-  commandOptions: [["--build"], ["--force-recreate"], ["--renew-anon-volumes"]],
+  commandOptions: [["--force-recreate"], ["--renew-anon-volumes"]],
   log: true,
 };
 

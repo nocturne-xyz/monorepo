@@ -1,7 +1,6 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { KEYS_TO_WALLETS } from "../src/keys";
 import { ethers } from "ethers";
 import {
   DepositManager,
@@ -52,6 +51,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
+  let deployerEoa: ethers.Wallet;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
   let bundlerEoa: ethers.Wallet;
@@ -87,29 +87,33 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     });
 
-    ({ provider, teardown, wallet, handler, bundlerEoa, depositManager } =
-      testDeployment);
+    ({
+      provider,
+      teardown,
+      wallet,
+      handler,
+      deployerEoa,
+      aliceEoa,
+      bobEoa,
+      bundlerEoa,
+      depositManager,
+    } = testDeployment);
 
-    const [deployer, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
-
-    aliceEoa = _aliceEoa;
-    bobEoa = _bobEoa;
-
-    [erc20, erc20Asset] = await deployERC20(deployer);
+    [erc20, erc20Asset] = await deployERC20(deployerEoa);
     console.log("ERC20 'shitcoin' deployed at: ", erc20.address);
 
     [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
 
     {
       let ctor;
-      [erc721, ctor] = await deployERC721(deployer);
+      [erc721, ctor] = await deployERC721(deployerEoa);
       erc721Asset = ctor(0n);
       console.log("ERC721 'monkey' deployed at: ", erc721.address);
     }
 
     {
       let ctor;
-      [erc1155, ctor] = await deployERC1155(deployer);
+      [erc1155, ctor] = await deployERC1155(deployerEoa);
       erc1155Asset = ctor(0n);
       console.log("ERC1155 'plutocracy' deployed at: ", erc1155.address);
     }

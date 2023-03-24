@@ -87,8 +87,12 @@ export interface NocturneTestDeployment {
   handler: Handler;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
+  deployerEoa: ethers.Wallet;
+  aliceEoa: ethers.Wallet;
+  bobEoa: ethers.Wallet;
   bundlerEoa: ethers.Wallet;
   subtreeUpdaterEoa: ethers.Wallet;
+  screenerEoa: ethers.Wallet;
   teardown: () => Promise<void>;
 }
 
@@ -161,8 +165,14 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa, bundlerEoa, subtreeUpdaterEoa, screenerEoa] =
-    KEYS_TO_WALLETS(provider);
+  const [
+    deployerEoa,
+    aliceEoa,
+    bobEoa,
+    bundlerEoa,
+    subtreeUpdaterEoa,
+    screenerEoa,
+  ] = KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -297,8 +307,12 @@ export async function setupTestDeployment(
     contractDeployment,
     provider,
     teardown,
+    deployerEoa,
+    aliceEoa,
+    bobEoa,
     bundlerEoa,
     subtreeUpdaterEoa,
+    screenerEoa,
   };
 }
 
