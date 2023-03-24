@@ -108,7 +108,9 @@ const REDIS_URL_BUNDLER = "redis://redis:6379";
 const REDIS_URL_SCREENER = "redis://redis:6380";
 const REDIS_PASSWORD = "baka";
 
-const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {};
+const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
+  blockTimeSecs: 1,
+};
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,

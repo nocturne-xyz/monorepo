@@ -146,8 +146,9 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
+    console.log("Alice pre-of nextMerkleIndex", await nocturneDBAlice.nextMerkleIndex());
 
-    console.log("Create post-proof operation with NocturneWalletSDK");
+    console.log("prepare, sign, and prove operation with NocturneWalletSDK");
     const preSign = await nocturneWalletSDKAlice.prepareOperation(
       operationRequest
     );
@@ -155,6 +156,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const operation = await proveOperation(joinSplitProver, signed);
 
     await submitAndProcessOperation(operation);
+    // wait for subgraph to catch up
+    await sleep(10_000);
 
     await contractChecks();
     await offchainChecks();
@@ -171,9 +174,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
-
-    console.log("wait for subtreee update");
-    await sleep(10_000);
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
@@ -203,9 +203,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
-
-    console.log("wait for subtreee update");
-    await sleep(10_000);
 
     console.log("Encode transfer erc20 action");
     const encodedFunction =
@@ -312,8 +309,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
-    console.log("wait for subtreee update");
-    await sleep(10_000);
 
     console.log("Encode reserve erc721 action");
     const erc721ReserveCalldata =

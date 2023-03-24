@@ -36,7 +36,7 @@ export async function depositFundsMultiToken(
     }
   }
 
-  await sleep(20_000); // wait for deposit screener to complete
+  await sleep(20_000); // wait for deposit screener and subtree update
   return notes;
 }
 
@@ -64,7 +64,7 @@ export async function depositFundsSingleToken(
     notes.push(await deposit(token, amount, i));
   }
 
-  await sleep(20_000); // wait for deposit screener to complete
+  await sleep(20_000); // wait for deposit screener and subtree update
   return notes;
 }
 

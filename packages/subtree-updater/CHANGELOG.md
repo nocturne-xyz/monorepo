@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- get rid of mutex on submitter
+- add `tx.wait` to submitter
 - Sync tree events from `handler` contract instead of wallet post-contract-separation
 - move `packToSolidityProof`, `unpackFromSolidityProof`, and `SolidityProof` into `proof/utils`
 - Rename `SUBMITTER_SECRET_KEY` to `TX_SIGNER_KEY`

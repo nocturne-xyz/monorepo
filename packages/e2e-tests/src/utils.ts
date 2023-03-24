@@ -144,6 +144,11 @@ export async function runCommand(
       console.log(stdout);
       resolve([stdout, stderr]);
     });
+
+    // kill child if parent exits first
+    process.on('exit', () => {
+      child.kill();
+    })
   });
 }
 
@@ -223,6 +228,11 @@ export function runCommandDetached(
       console.log(msg);
     }
   });
+
+  // kill child if parent exits first
+  process.on('exit', () => {
+    child.kill();
+  })
 
   return () => {
     child.kill();

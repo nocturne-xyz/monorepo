@@ -48,7 +48,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         to = min(to, latestIndexedBlock);
 
         // Exceeded tip, sleep
-        if (latestIndexedBlock <= from) {
+        if (from > latestIndexedBlock) {
           await sleep(5_000);
           continue;
         }
