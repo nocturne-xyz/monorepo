@@ -21,11 +21,7 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: Run Foundryup 
-        run: foundryup
+        run: curl -L https://foundry.paradigm.xyz | bash && source /home/runner/.bashrc && foundryup
       - name: Yarn install
         run: |
           yarn install --immutable

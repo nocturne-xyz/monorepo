@@ -18,11 +18,7 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
       - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: Run Foundryup 
-        run: foundryup
+        run: curl -L https://foundry.paradigm.xyz | bash && source /home/runner/.bashrc && foundryup
       - name: Install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
       - name: Yarn install
