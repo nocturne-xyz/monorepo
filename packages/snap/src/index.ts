@@ -18,7 +18,7 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 
-const WALLET_ADDRESS = "";
+const HANDLER_ADDRESS = "";
 const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
@@ -37,12 +37,12 @@ const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   },
   walletProxy: {
     kind: "Transparent",
-    proxy: WALLET_ADDRESS,
+    proxy: "0x0000000000000000000000000000000000000000",
     implementation: "0x0000000000000000000000000000000000000000",
   },
   handlerProxy: {
     kind: "Transparent",
-    proxy: "0x0000000000000000000000000000000000000000",
+    proxy: HANDLER_ADDRESS,
     implementation: "0x0000000000000000000000000000000000000000",
   },
   depositManagerProxy: {
