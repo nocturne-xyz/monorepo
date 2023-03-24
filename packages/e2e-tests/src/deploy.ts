@@ -131,7 +131,7 @@ const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
-  "walletAddress" | "txSignerKey"
+  "handlerAddress" | "txSignerKey"
 > = {
   rpcUrl: HH_FROM_DOCKER_URL,
 };
@@ -214,7 +214,7 @@ export async function setupTestDeployment(
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
-      walletAddress: walletProxy.proxy,
+      handlerAddress: handlerProxy.proxy,
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 

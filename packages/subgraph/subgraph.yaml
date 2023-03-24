@@ -3,14 +3,14 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: Wallet
+    name: Handler
     network: mainnet
     source:
       # address: "0x57551a36C99528e4E19EA954C037d81c39fFdE4C"
       address: "0xA3183498b579bd228aa2B62101C40CC1da978F24"
       # startBlock: 8412194
       startBlock: 0
-      abi: Wallet
+      abi: Handler
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -22,8 +22,8 @@ dataSources:
         - TreeInsertion
         - SubtreeCommit
       abis:
-        - name: Wallet
-          file: ./abis/Wallet.json
+        - name: Handler
+          file: ./abis/Handler.json
       eventHandlers:
         - event: JoinSplitProcessed(indexed uint256,indexed uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256)))
           handler: handleJoinSplit
@@ -31,7 +31,7 @@ dataSources:
           handler: handleRefund
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
-      file: ./src/wallet.ts
+      file: ./src/handler.ts
   - kind: ethereum
     name: DepositManager
     network: mainnet

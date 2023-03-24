@@ -8,7 +8,7 @@ const ROOT_DIR = findWorkspaceRoot()!;
 const SUBTREE_UPDATER_IMAGE = "mock-subtree-updater";
 
 export interface SubtreeUpdaterConfig {
-  walletAddress: string;
+  handlerAddress: string;
   rpcUrl: string;
   txSignerKey: string;
 }
@@ -24,8 +24,8 @@ export async function startSubtreeUpdater(
     Cmd: [
       `--use-mock-prover`,
       `--fill-batches`,
-      `--wallet-address`,
-      `${config.walletAddress}`,
+      `--handler-address`,
+      `${config.handlerAddress}`,
       `--zkey-path`,
       `${ROOT_DIR}/circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey`,
       `--vkey-path`,
