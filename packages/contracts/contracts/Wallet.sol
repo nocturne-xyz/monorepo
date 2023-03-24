@@ -128,8 +128,8 @@ contract Wallet is
       1. gas cost of `OperationUtils.computeOperationDigests` and
       `_verifyAllProofsMetered` can be estimated based on length of op.joinSplits
       and overall size of op
-      2. maxmimum gas cost of each processOperation can be estimated using op
-      (refer to inline docs for `processOperation`)
+      2. maxmimum gas cost of each handleOperation can be estimated using op
+      (refer to inline docs for `handleOperation`)
     */
     function processBundle(
         Bundle calldata bundle
@@ -150,7 +150,7 @@ contract Wallet is
         OperationResult[] memory opResults = new OperationResult[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
             try
-                _handler.processOperation(
+                _handler.handleOperation(
                     ops[i],
                     perJoinSplitVerifyGas,
                     msg.sender

@@ -645,7 +645,7 @@ export class Handler__executeActionsInputOpEncodedGasAssetStruct extends ethereu
   }
 }
 
-export class Handler__processOperationResultOpResultStruct extends ethereum.Tuple {
+export class Handler__handleOperationResultOpResultStruct extends ethereum.Tuple {
   get opProcessed(): boolean {
     return this[0].toBoolean();
   }
@@ -675,35 +675,33 @@ export class Handler__processOperationResultOpResultStruct extends ethereum.Tupl
   }
 }
 
-export class Handler__processOperationInputOpStruct extends ethereum.Tuple {
-  get joinSplits(): Array<Handler__processOperationInputOpJoinSplitsStruct> {
+export class Handler__handleOperationInputOpStruct extends ethereum.Tuple {
+  get joinSplits(): Array<Handler__handleOperationInputOpJoinSplitsStruct> {
     return this[0].toTupleArray<
-      Handler__processOperationInputOpJoinSplitsStruct
+      Handler__handleOperationInputOpJoinSplitsStruct
     >();
   }
 
-  get refundAddr(): Handler__processOperationInputOpRefundAddrStruct {
-    return changetype<Handler__processOperationInputOpRefundAddrStruct>(
+  get refundAddr(): Handler__handleOperationInputOpRefundAddrStruct {
+    return changetype<Handler__handleOperationInputOpRefundAddrStruct>(
       this[1].toTuple()
     );
   }
 
   get encodedRefundAssets(): Array<
-    Handler__processOperationInputOpEncodedRefundAssetsStruct
+    Handler__handleOperationInputOpEncodedRefundAssetsStruct
   > {
     return this[2].toTupleArray<
-      Handler__processOperationInputOpEncodedRefundAssetsStruct
+      Handler__handleOperationInputOpEncodedRefundAssetsStruct
     >();
   }
 
-  get actions(): Array<Handler__processOperationInputOpActionsStruct> {
-    return this[3].toTupleArray<
-      Handler__processOperationInputOpActionsStruct
-    >();
+  get actions(): Array<Handler__handleOperationInputOpActionsStruct> {
+    return this[3].toTupleArray<Handler__handleOperationInputOpActionsStruct>();
   }
 
-  get encodedGasAsset(): Handler__processOperationInputOpEncodedGasAssetStruct {
-    return changetype<Handler__processOperationInputOpEncodedGasAssetStruct>(
+  get encodedGasAsset(): Handler__handleOperationInputOpEncodedGasAssetStruct {
+    return changetype<Handler__handleOperationInputOpEncodedGasAssetStruct>(
       this[4].toTuple()
     );
   }
@@ -721,7 +719,7 @@ export class Handler__processOperationInputOpStruct extends ethereum.Tuple {
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpJoinSplitsStruct extends ethereum.Tuple {
   get commitmentTreeRoot(): BigInt {
     return this[0].toBigInt();
   }
@@ -746,9 +744,9 @@ export class Handler__processOperationInputOpJoinSplitsStruct extends ethereum.T
     return this[5].toBigIntArray();
   }
 
-  get encodedAsset(): Handler__processOperationInputOpJoinSplitsEncodedAssetStruct {
+  get encodedAsset(): Handler__handleOperationInputOpJoinSplitsEncodedAssetStruct {
     return changetype<
-      Handler__processOperationInputOpJoinSplitsEncodedAssetStruct
+      Handler__handleOperationInputOpJoinSplitsEncodedAssetStruct
     >(this[6].toTuple());
   }
 
@@ -756,20 +754,20 @@ export class Handler__processOperationInputOpJoinSplitsStruct extends ethereum.T
     return this[7].toBigInt();
   }
 
-  get newNoteAEncrypted(): Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedStruct {
+  get newNoteAEncrypted(): Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedStruct {
     return changetype<
-      Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedStruct
+      Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedStruct
     >(this[8].toTuple());
   }
 
-  get newNoteBEncrypted(): Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedStruct {
+  get newNoteBEncrypted(): Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedStruct {
     return changetype<
-      Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedStruct
+      Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedStruct
     >(this[9].toTuple());
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsEncodedAssetStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpJoinSplitsEncodedAssetStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -779,10 +777,10 @@ export class Handler__processOperationInputOpJoinSplitsEncodedAssetStruct extend
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedStruct extends ethereum.Tuple {
-  get owner(): Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct {
+export class Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedStruct extends ethereum.Tuple {
+  get owner(): Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct {
     return changetype<
-      Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct
+      Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct
     >(this[0].toTuple());
   }
 
@@ -799,7 +797,7 @@ export class Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedStruct e
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -817,10 +815,10 @@ export class Handler__processOperationInputOpJoinSplitsNewNoteAEncryptedOwnerStr
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedStruct extends ethereum.Tuple {
-  get owner(): Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct {
+export class Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedStruct extends ethereum.Tuple {
+  get owner(): Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct {
     return changetype<
-      Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct
+      Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct
     >(this[0].toTuple());
   }
 
@@ -837,7 +835,7 @@ export class Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedStruct e
   }
 }
 
-export class Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -855,7 +853,7 @@ export class Handler__processOperationInputOpJoinSplitsNewNoteBEncryptedOwnerStr
   }
 }
 
-export class Handler__processOperationInputOpRefundAddrStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpRefundAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -873,7 +871,7 @@ export class Handler__processOperationInputOpRefundAddrStruct extends ethereum.T
   }
 }
 
-export class Handler__processOperationInputOpEncodedRefundAssetsStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpEncodedRefundAssetsStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -883,7 +881,7 @@ export class Handler__processOperationInputOpEncodedRefundAssetsStruct extends e
   }
 }
 
-export class Handler__processOperationInputOpActionsStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpActionsStruct extends ethereum.Tuple {
   get contractAddress(): Address {
     return this[0].toAddress();
   }
@@ -893,7 +891,7 @@ export class Handler__processOperationInputOpActionsStruct extends ethereum.Tupl
   }
 }
 
-export class Handler__processOperationInputOpEncodedGasAssetStruct extends ethereum.Tuple {
+export class Handler__handleOperationInputOpEncodedGasAssetStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -1113,6 +1111,51 @@ export class Handler extends ethereum.SmartContract {
     );
   }
 
+  handleOperation(
+    op: Handler__handleOperationInputOpStruct,
+    perJoinSplitVerifyGas: BigInt,
+    bundler: Address
+  ): Handler__handleOperationResultOpResultStruct {
+    let result = super.call(
+      "handleOperation",
+      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256),uint256,address):((bool,string,bool[],bytes[],uint256,uint256,uint256))",
+      [
+        ethereum.Value.fromTuple(op),
+        ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
+        ethereum.Value.fromAddress(bundler)
+      ]
+    );
+
+    return changetype<Handler__handleOperationResultOpResultStruct>(
+      result[0].toTuple()
+    );
+  }
+
+  try_handleOperation(
+    op: Handler__handleOperationInputOpStruct,
+    perJoinSplitVerifyGas: BigInt,
+    bundler: Address
+  ): ethereum.CallResult<Handler__handleOperationResultOpResultStruct> {
+    let result = super.tryCall(
+      "handleOperation",
+      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256),uint256,address):((bool,string,bool[],bytes[],uint256,uint256,uint256))",
+      [
+        ethereum.Value.fromTuple(op),
+        ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
+        ethereum.Value.fromAddress(bundler)
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<Handler__handleOperationResultOpResultStruct>(
+        value[0].toTuple()
+      )
+    );
+  }
+
   onERC1155BatchReceived(
     param0: Address,
     param1: Address,
@@ -1263,51 +1306,6 @@ export class Handler extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
-  processOperation(
-    op: Handler__processOperationInputOpStruct,
-    perJoinSplitVerifyGas: BigInt,
-    bundler: Address
-  ): Handler__processOperationResultOpResultStruct {
-    let result = super.call(
-      "processOperation",
-      "processOperation(((uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256),uint256,address):((bool,string,bool[],bytes[],uint256,uint256,uint256))",
-      [
-        ethereum.Value.fromTuple(op),
-        ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
-        ethereum.Value.fromAddress(bundler)
-      ]
-    );
-
-    return changetype<Handler__processOperationResultOpResultStruct>(
-      result[0].toTuple()
-    );
-  }
-
-  try_processOperation(
-    op: Handler__processOperationInputOpStruct,
-    perJoinSplitVerifyGas: BigInt,
-    bundler: Address
-  ): ethereum.CallResult<Handler__processOperationResultOpResultStruct> {
-    let result = super.tryCall(
-      "processOperation",
-      "processOperation(((uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256),uint256,address):((bool,string,bool[],bytes[],uint256,uint256,uint256))",
-      [
-        ethereum.Value.fromTuple(op),
-        ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
-        ethereum.Value.fromAddress(bundler)
-      ]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(
-      changetype<Handler__processOperationResultOpResultStruct>(
-        value[0].toTuple()
-      )
-    );
   }
 
   reentrancyGuardStage(): BigInt {
@@ -1831,6 +1829,304 @@ export class HandleDepositCallDepositDepositAddrStruct extends ethereum.Tuple {
   }
 }
 
+export class HandleOperationCall extends ethereum.Call {
+  get inputs(): HandleOperationCall__Inputs {
+    return new HandleOperationCall__Inputs(this);
+  }
+
+  get outputs(): HandleOperationCall__Outputs {
+    return new HandleOperationCall__Outputs(this);
+  }
+}
+
+export class HandleOperationCall__Inputs {
+  _call: HandleOperationCall;
+
+  constructor(call: HandleOperationCall) {
+    this._call = call;
+  }
+
+  get op(): HandleOperationCallOpStruct {
+    return changetype<HandleOperationCallOpStruct>(
+      this._call.inputValues[0].value.toTuple()
+    );
+  }
+
+  get perJoinSplitVerifyGas(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get bundler(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+}
+
+export class HandleOperationCall__Outputs {
+  _call: HandleOperationCall;
+
+  constructor(call: HandleOperationCall) {
+    this._call = call;
+  }
+
+  get opResult(): HandleOperationCallOpResultStruct {
+    return changetype<HandleOperationCallOpResultStruct>(
+      this._call.outputValues[0].value.toTuple()
+    );
+  }
+}
+
+export class HandleOperationCallOpStruct extends ethereum.Tuple {
+  get joinSplits(): Array<HandleOperationCallOpJoinSplitsStruct> {
+    return this[0].toTupleArray<HandleOperationCallOpJoinSplitsStruct>();
+  }
+
+  get refundAddr(): HandleOperationCallOpRefundAddrStruct {
+    return changetype<HandleOperationCallOpRefundAddrStruct>(this[1].toTuple());
+  }
+
+  get encodedRefundAssets(): Array<
+    HandleOperationCallOpEncodedRefundAssetsStruct
+  > {
+    return this[2].toTupleArray<
+      HandleOperationCallOpEncodedRefundAssetsStruct
+    >();
+  }
+
+  get actions(): Array<HandleOperationCallOpActionsStruct> {
+    return this[3].toTupleArray<HandleOperationCallOpActionsStruct>();
+  }
+
+  get encodedGasAsset(): HandleOperationCallOpEncodedGasAssetStruct {
+    return changetype<HandleOperationCallOpEncodedGasAssetStruct>(
+      this[4].toTuple()
+    );
+  }
+
+  get executionGasLimit(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get maxNumRefunds(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get gasPrice(): BigInt {
+    return this[7].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsStruct extends ethereum.Tuple {
+  get commitmentTreeRoot(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get nullifierA(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get nullifierB(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get newNoteACommitment(): BigInt {
+    return this[3].toBigInt();
+  }
+
+  get newNoteBCommitment(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get proof(): Array<BigInt> {
+    return this[5].toBigIntArray();
+  }
+
+  get encodedAsset(): HandleOperationCallOpJoinSplitsEncodedAssetStruct {
+    return changetype<HandleOperationCallOpJoinSplitsEncodedAssetStruct>(
+      this[6].toTuple()
+    );
+  }
+
+  get publicSpend(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get newNoteAEncrypted(): HandleOperationCallOpJoinSplitsNewNoteAEncryptedStruct {
+    return changetype<HandleOperationCallOpJoinSplitsNewNoteAEncryptedStruct>(
+      this[8].toTuple()
+    );
+  }
+
+  get newNoteBEncrypted(): HandleOperationCallOpJoinSplitsNewNoteBEncryptedStruct {
+    return changetype<HandleOperationCallOpJoinSplitsNewNoteBEncryptedStruct>(
+      this[9].toTuple()
+    );
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsEncodedAssetStruct extends ethereum.Tuple {
+  get encodedAssetAddr(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get encodedAssetId(): BigInt {
+    return this[1].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsNewNoteAEncryptedStruct extends ethereum.Tuple {
+  get owner(): HandleOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct {
+    return changetype<
+      HandleOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct
+    >(this[0].toTuple());
+  }
+
+  get encappedKey(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get encryptedNonce(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get encryptedValue(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsNewNoteBEncryptedStruct extends ethereum.Tuple {
+  get owner(): HandleOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct {
+    return changetype<
+      HandleOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct
+    >(this[0].toTuple());
+  }
+
+  get encappedKey(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get encryptedNonce(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get encryptedValue(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpRefundAddrStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpEncodedRefundAssetsStruct extends ethereum.Tuple {
+  get encodedAssetAddr(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get encodedAssetId(): BigInt {
+    return this[1].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpActionsStruct extends ethereum.Tuple {
+  get contractAddress(): Address {
+    return this[0].toAddress();
+  }
+
+  get encodedFunction(): Bytes {
+    return this[1].toBytes();
+  }
+}
+
+export class HandleOperationCallOpEncodedGasAssetStruct extends ethereum.Tuple {
+  get encodedAssetAddr(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get encodedAssetId(): BigInt {
+    return this[1].toBigInt();
+  }
+}
+
+export class HandleOperationCallOpResultStruct extends ethereum.Tuple {
+  get opProcessed(): boolean {
+    return this[0].toBoolean();
+  }
+
+  get failureReason(): string {
+    return this[1].toString();
+  }
+
+  get callSuccesses(): Array<boolean> {
+    return this[2].toBooleanArray();
+  }
+
+  get callResults(): Array<Bytes> {
+    return this[3].toBytesArray();
+  }
+
+  get verificationGas(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get executionGas(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get numRefunds(): BigInt {
+    return this[6].toBigInt();
+  }
+}
+
 export class InitializeCall extends ethereum.Call {
   get inputs(): InitializeCall__Inputs {
     return new InitializeCall__Inputs(this);
@@ -2008,306 +2304,6 @@ export class OnERC721ReceivedCall__Outputs {
 
   get value0(): Bytes {
     return this._call.outputValues[0].value.toBytes();
-  }
-}
-
-export class ProcessOperationCall extends ethereum.Call {
-  get inputs(): ProcessOperationCall__Inputs {
-    return new ProcessOperationCall__Inputs(this);
-  }
-
-  get outputs(): ProcessOperationCall__Outputs {
-    return new ProcessOperationCall__Outputs(this);
-  }
-}
-
-export class ProcessOperationCall__Inputs {
-  _call: ProcessOperationCall;
-
-  constructor(call: ProcessOperationCall) {
-    this._call = call;
-  }
-
-  get op(): ProcessOperationCallOpStruct {
-    return changetype<ProcessOperationCallOpStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-
-  get perJoinSplitVerifyGas(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get bundler(): Address {
-    return this._call.inputValues[2].value.toAddress();
-  }
-}
-
-export class ProcessOperationCall__Outputs {
-  _call: ProcessOperationCall;
-
-  constructor(call: ProcessOperationCall) {
-    this._call = call;
-  }
-
-  get opResult(): ProcessOperationCallOpResultStruct {
-    return changetype<ProcessOperationCallOpResultStruct>(
-      this._call.outputValues[0].value.toTuple()
-    );
-  }
-}
-
-export class ProcessOperationCallOpStruct extends ethereum.Tuple {
-  get joinSplits(): Array<ProcessOperationCallOpJoinSplitsStruct> {
-    return this[0].toTupleArray<ProcessOperationCallOpJoinSplitsStruct>();
-  }
-
-  get refundAddr(): ProcessOperationCallOpRefundAddrStruct {
-    return changetype<ProcessOperationCallOpRefundAddrStruct>(
-      this[1].toTuple()
-    );
-  }
-
-  get encodedRefundAssets(): Array<
-    ProcessOperationCallOpEncodedRefundAssetsStruct
-  > {
-    return this[2].toTupleArray<
-      ProcessOperationCallOpEncodedRefundAssetsStruct
-    >();
-  }
-
-  get actions(): Array<ProcessOperationCallOpActionsStruct> {
-    return this[3].toTupleArray<ProcessOperationCallOpActionsStruct>();
-  }
-
-  get encodedGasAsset(): ProcessOperationCallOpEncodedGasAssetStruct {
-    return changetype<ProcessOperationCallOpEncodedGasAssetStruct>(
-      this[4].toTuple()
-    );
-  }
-
-  get executionGasLimit(): BigInt {
-    return this[5].toBigInt();
-  }
-
-  get maxNumRefunds(): BigInt {
-    return this[6].toBigInt();
-  }
-
-  get gasPrice(): BigInt {
-    return this[7].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsStruct extends ethereum.Tuple {
-  get commitmentTreeRoot(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get nullifierA(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get nullifierB(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get newNoteACommitment(): BigInt {
-    return this[3].toBigInt();
-  }
-
-  get newNoteBCommitment(): BigInt {
-    return this[4].toBigInt();
-  }
-
-  get proof(): Array<BigInt> {
-    return this[5].toBigIntArray();
-  }
-
-  get encodedAsset(): ProcessOperationCallOpJoinSplitsEncodedAssetStruct {
-    return changetype<ProcessOperationCallOpJoinSplitsEncodedAssetStruct>(
-      this[6].toTuple()
-    );
-  }
-
-  get publicSpend(): BigInt {
-    return this[7].toBigInt();
-  }
-
-  get newNoteAEncrypted(): ProcessOperationCallOpJoinSplitsNewNoteAEncryptedStruct {
-    return changetype<ProcessOperationCallOpJoinSplitsNewNoteAEncryptedStruct>(
-      this[8].toTuple()
-    );
-  }
-
-  get newNoteBEncrypted(): ProcessOperationCallOpJoinSplitsNewNoteBEncryptedStruct {
-    return changetype<ProcessOperationCallOpJoinSplitsNewNoteBEncryptedStruct>(
-      this[9].toTuple()
-    );
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsNewNoteAEncryptedStruct extends ethereum.Tuple {
-  get owner(): ProcessOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct {
-    return changetype<
-      ProcessOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct
-    >(this[0].toTuple());
-  }
-
-  get encappedKey(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get encryptedNonce(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get encryptedValue(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get h1Y(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsNewNoteBEncryptedStruct extends ethereum.Tuple {
-  get owner(): ProcessOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct {
-    return changetype<
-      ProcessOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct
-    >(this[0].toTuple());
-  }
-
-  get encappedKey(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get encryptedNonce(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get encryptedValue(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpJoinSplitsNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get h1Y(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpRefundAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get h1Y(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpEncodedRefundAssetsStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpActionsStruct extends ethereum.Tuple {
-  get contractAddress(): Address {
-    return this[0].toAddress();
-  }
-
-  get encodedFunction(): Bytes {
-    return this[1].toBytes();
-  }
-}
-
-export class ProcessOperationCallOpEncodedGasAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class ProcessOperationCallOpResultStruct extends ethereum.Tuple {
-  get opProcessed(): boolean {
-    return this[0].toBoolean();
-  }
-
-  get failureReason(): string {
-    return this[1].toString();
-  }
-
-  get callSuccesses(): Array<boolean> {
-    return this[2].toBooleanArray();
-  }
-
-  get callResults(): Array<Bytes> {
-    return this[3].toBytesArray();
-  }
-
-  get verificationGas(): BigInt {
-    return this[4].toBigInt();
-  }
-
-  get executionGas(): BigInt {
-    return this[5].toBigInt();
-  }
-
-  get numRefunds(): BigInt {
-    return this[6].toBigInt();
   }
 }
 

@@ -29,7 +29,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
         _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
     }
 
-    function processOperation(
+    function handleOperation(
         Operation calldata, // op
         uint256, // perJoinSplitVerifyGas
         address // bundler

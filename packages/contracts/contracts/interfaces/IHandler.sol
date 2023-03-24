@@ -5,7 +5,7 @@ pragma abicoder v2;
 import "../libs/Types.sol";
 
 interface IHandler {
-    function processOperation(
+    function handleOperation(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas,
         address bundler

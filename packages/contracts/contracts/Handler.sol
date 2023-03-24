@@ -56,14 +56,14 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
       op.maxNumRefunds
       The bundler should estimate the gas cost functions in 1 and 3 offchain.
     */
-    function processOperation(
+    function handleOperation(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas,
         address bundler
     )
         external
         onlyWallet
-        processOperationGuard
+        handleOperationGuard
         returns (OperationResult memory opResult)
     {
         // Handle all joinsplit transctions.
@@ -102,7 +102,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     }
 
     /**
-      @dev This function will only be message-called from `processOperation`.
+      @dev This function will only be message-called from `handleOperation`.
       The call gas given is the execution gas specified by the operation.
     */
     function executeActions(

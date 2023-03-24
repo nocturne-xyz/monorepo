@@ -676,18 +676,18 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Encode action for wallet to call itself via processOperation
+        // Encode action for wallet to call itself via handleOperation
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
             contractAddress: address(handler),
             encodedFunction: abi.encodeWithSelector(
-                handler.processOperation.selector,
+                handler.handleOperation.selector,
                 internalOp
             )
         });
 
         // Nest internal op into action where wallet call itself via
-        // processOperation
+        // handleOperation
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -717,7 +717,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(BOB);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        // One op, processed = true, call[0] failed, processOperation only
+        // One op, processed = true, call[0] failed, handleOperation only
         // callable by wallet
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
@@ -1286,11 +1286,11 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Attempt to call processOperation directly with ALICE as caller not
+        // Attempt to call handleOperation directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
         vm.expectRevert("Only wallet");
-        handler.processOperation(op, 0, ALICE);
+        handler.handleOperation(op, 0, ALICE);
     }
 
     function testExecuteActionsNotHandlerCaller() public {
