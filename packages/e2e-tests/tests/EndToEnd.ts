@@ -332,7 +332,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
-        [wallet.address, erc721Asset.id]
+        [handler.address, erc721Asset.id]
       );
 
     console.log("Encode reserve erc1155 action");
@@ -340,7 +340,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
+        [handler.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
       );
 
     // unwrap 1 erc20 to satisfy gas token requirement
