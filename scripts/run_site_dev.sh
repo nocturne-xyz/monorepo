@@ -148,7 +148,7 @@ EOM
 popd
 
 # run subtree updater
-docker run --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --wallet-address "$WALLET_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
+docker run --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --handler-address "$HANDLER_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"
@@ -157,12 +157,13 @@ SNAP_INDEX_TS="$SCRIPT_DIR/../packages/snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 
-# Set snap wallet contract address
-sed -i '' -r -e "s/const HANDLER_ADDRESS = \"0x[0-9a-faA-F]+\";/const WALLET_ADDRESS = \"$HANDLER_CONTRACT_ADDRESS\";/g" $SNAP_INDEX_TS
+# Set snap handler contract address
+sed -i '' -r -e "s/const HANDLER_ADDRESS = \"0x[0-9a-faA-F]+\";/const HANDLER_ADDRESS = \"$HANDLER_CONTRACT_ADDRESS\";/g" $SNAP_INDEX_TS
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
 
 # Set snap gas token addresses
-sed -i '' -r -e "s/const GAS_TOKEN_ADDRS = \[\"0x[0-9a-faA-F]+\", \"0x[0-9a-faA-F]+\"\];/const GAS_TOKEN_ADDRS = [\"$TOKEN_CONTRACT_ADDR1\", \"$TOKEN_CONTRACT_ADDR2\"];/g" $SNAP_INDEX_TS
+sed -i '' -r -e "s/const GAS_TOKEN1 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN1 = \"$TOKEN_CONTRACT_ADDR1\";/g" $SNAP_INDEX_TS
+sed -i '' -r -e "s/const GAS_TOKEN2 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN2 = \"$TOKEN_CONTRACT_ADDR2\";/g" $SNAP_INDEX_TS
 
 # Set site wallet address
 sed -i '' -r -e "s/export const WALLET_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const WALLET_CONTRACT_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
