@@ -228,10 +228,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const bundlerBalanceBefore = (
       await gasToken.balanceOf(await bundlerEoa.getAddress())
     ).toBigInt();
-    const walletGasTokenBefore = (
-      await gasToken.balanceOf(wallet.address)
-    ).toBigInt();
-    console.log("wallet gas asset before op:", walletGasTokenBefore);
     console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
 
     const contractChecks = async () => {
@@ -298,16 +294,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
-      const walletGasTokenAfter = (
-        await gasToken.balanceOf(wallet.address)
-      ).toBigInt();
-      const handlerGasTokenAfter = (
-        await gasToken.balanceOf(handler.address)
-      ).toBigInt();
 
-      console.log("wallet gas asset after op:", walletGasTokenAfter);
       console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
-      console.log("handler gas asset after op:", handlerGasTokenAfter);
       // for some reason, mocha `.gte` doesn't work here
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };

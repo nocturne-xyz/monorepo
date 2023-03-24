@@ -63,6 +63,8 @@ contract BalanceManagerTest is Test {
             address(subtreeUpdateVerifier)
         );
 
+        // NOTE: TestBalanceManager implements IHandler so we can test with
+        // wallet
         wallet.initialize(address(balanceManager), address(joinSplitVerifier));
         wallet.setDepositSourcePermission(ALICE, true);
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Make syncing rely on `handler` contract after contract separation work
 - Export `IterSync` opts for `deposit-screener` package to use as well
 - `iterStateDiffs` returns `ClosableAsyncIterator` not `Promise<ClosableAsyncIterator>`
 - fetch latest block number subgraph has indexed in `SubgraphSyncAdapter` and don't fetch at block heights beyond that

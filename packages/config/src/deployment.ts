@@ -14,6 +14,7 @@ export interface NocturneContractDeployment {
   owners: {
     proxyAdminOwner: Address;
     walletOwner: Address;
+    handlerOwner: Address;
     depositManagerOwner: Address;
   };
   proxyAdmin: Address;

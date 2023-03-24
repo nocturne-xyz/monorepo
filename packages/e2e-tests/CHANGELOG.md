@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Modify deployment and setup code to work with handler <> wallet separation
 - in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
 - add `subtreeBatchFillers` param to `NocturneDeployArgs`
 - make `deployAndDeposit` script take optional `SUBTREE_BATCH_FILLER` key from env

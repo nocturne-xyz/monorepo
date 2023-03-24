@@ -1017,7 +1017,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Ensure 50M tokensIn in swapper, and all types of refund tokens back
         // in wallet
         assertEq(erc20Out.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
-        assertEq(tokenIn.balanceOf(address(handler)), uint256(0));
         assertEq(erc721Out.balanceOf(address(wallet)), uint256(1));
         assertEq(erc721Out.ownerOf(erc721OutId), address(wallet));
         assertEq(

@@ -6,6 +6,7 @@
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "walletOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
     "depositManagerProxy": {

@@ -23,6 +23,7 @@ import { Address } from "./utils";
 export interface NocturneDeployArgs {
   proxyAdminOwner: Address;
   walletOwner: Address;
+  handlerOwner: Address;
   depositManagerOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
@@ -134,10 +135,16 @@ export async function deployNocturne(
     );
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
-  console.log("Relinquishing control of wallet and deposit manager\n");
+  console.log(
+    "Relinquishing control of wallet, handler, and deposit manager\n"
+  );
   const walletTransferOwnershipTx =
     await proxiedWallet.contract.transferOwnership(args.walletOwner);
   await walletTransferOwnershipTx.wait(opts?.confirmations);
+
+  const handlerTransferOwnershipTx =
+    await proxiedHandler.contract.transferOwnership(args.handlerOwner);
+  await handlerTransferOwnershipTx.wait(opts?.confirmations);
 
   const depositManagerTransferOwnershipTx =
     await proxiedDepositManager.contract.transferOwnership(
@@ -154,6 +161,7 @@ export async function deployNocturne(
     owners: {
       proxyAdminOwner: args.proxyAdminOwner,
       walletOwner: args.walletOwner,
+      handlerOwner: args.handlerOwner,
       depositManagerOwner: args.depositManagerOwner,
     },
     proxyAdmin: proxyAdmin.address,

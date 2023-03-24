@@ -3,9 +3,10 @@ pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
 import "../../libs/OperationUtils.sol";
+import {IHandler} from "../../interfaces/IHandler.sol";
 import {BalanceManager} from "../../BalanceManager.sol";
 
-contract TestBalanceManager is BalanceManager {
+contract TestBalanceManager is IHandler, BalanceManager {
     using OperationLib for Operation;
 
     function initialize(
@@ -20,11 +21,20 @@ contract TestBalanceManager is BalanceManager {
         _;
     }
 
+    // Stub to make testing between Wallet<>BalanceManager easier
     function handleDeposit(
         DepositRequest calldata deposit
-    ) external onlyWallet {
+    ) external override onlyWallet {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
+    }
+
+    function processOperation(
+        Operation calldata, // op
+        uint256, // perJoinSplitVerifyGas
+        address // bundler
+    ) external pure override returns (OperationResult memory) {
+        revert("Should not call this on TestBalanceManager");
     }
 
     function processJoinSplitsReservingFee(

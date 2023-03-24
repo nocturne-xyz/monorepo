@@ -89,7 +89,7 @@ contract Wallet is
     }
 
     modifier onlyHandler() {
-        require(msg.sender == address(_handler), "Not called from Wallet");
+        require(msg.sender == address(_handler), "Only handler");
         _;
     }
 

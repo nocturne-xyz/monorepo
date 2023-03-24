@@ -325,6 +325,7 @@ export async function deployContractsWithDummyAdmins(
     {
       proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      handlerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       screeners: args.screeners,
       subtreeBatchFillers: args.subtreeBatchFillers,

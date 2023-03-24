@@ -2,14 +2,11 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {Versioned} from "./upgrade/Versioned.sol";
-import {IWallet} from "./interfaces/IWallet.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
-import {Groth16} from "./libs/OperationUtils.sol";
+import {Groth16} from "./libs/Groth16.sol";
 import {BalanceManager} from "./BalanceManager.sol";
 import "./libs/Types.sol";
 
@@ -18,6 +15,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         address wallet,
         address subtreeUpdateVerifier
     ) external initializer {
+        __Ownable_init();
         __BalanceManager_init(wallet, subtreeUpdateVerifier);
     }
 

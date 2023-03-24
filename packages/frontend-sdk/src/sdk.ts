@@ -272,7 +272,7 @@ export class NocturneFrontendSDK {
 
 /**
  * Load a `NocturneFrontendSDK` instance, provided a wallet contract
- * address, and paths to local prover's wasm, zkey, and
+ * address and paths to local prover's wasm, zkey, and
  * vkey. Circuit file paths default to caller's current directory (joinsplit.
  * wasm, joinsplit.zkey, joinSplitVkey.json).
  *

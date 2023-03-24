@@ -2,7 +2,8 @@
 
 ### Unreleased
 
-- remove "sync" buttons from test site 
+- Remove hardcoded vault address after wallet <> handler separation
+- remove "sync" buttons from test site
 - use unified `sync` method from SDK in playground
 - update callsites for updated frontend SDK
 - use builder in index.ts

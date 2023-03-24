@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- Have `TestBalanceManager` implement `IHandler` for ease of unit testing with wallet
+- Rename `WalletUtils` `OperationUtils` now that both Wallet and Handler use it
+- Separate `Wallet` functionality into `Wallet` (proof verification, entrypoint) and `Handler` (processing/executing operations, commitment tree)
+- Remove vault contract entirely
+- Fix bug where balance manager initialize was `public` not `internal`
 - Add permission gate to `fillBatchWithZeros`
 - Add fixture check against deposit request hash in `DepositManagerBase` unit tests
 - Rename `processDeposit` and `DepositProcessed` to `completeDeposit` and `DepositCompleted`
