@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
+import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 import "./OperationReentrancyGuard.sol";
 
@@ -191,10 +191,8 @@ contract BalanceManager is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
             _wallet.requestAsset(encodedGasAsset, gasAssetAmount);
 
-            uint256 bundlerPayout = WalletUtils.calculateBundlerGasAssetPayout(
-                op,
-                opResult
-            );
+            uint256 bundlerPayout = OperationUtils
+                .calculateBundlerGasAssetPayout(op, opResult);
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
         }
     }

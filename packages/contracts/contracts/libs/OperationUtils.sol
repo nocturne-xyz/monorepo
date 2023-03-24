@@ -4,10 +4,8 @@ import {Groth16} from "../libs/Groth16.sol";
 import {Utils} from "../libs/Utils.sol";
 import "../libs/Types.sol";
 
-// Helpers for Wallet.sol
-library WalletUtils {
-    using BundleLib for Bundle;
-
+// Helpers for extracting data / formatting operations
+library OperationUtils {
     function computeOperationDigests(
         Operation[] calldata ops
     ) internal pure returns (uint256[] memory) {
@@ -170,13 +168,6 @@ library WalletUtils {
                 verificationGas: 0,
                 numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
             });
-    }
-
-    function verificationGasForOp(
-        Operation calldata op,
-        uint256 perJoinSplitVerifyGas
-    ) internal pure returns (uint256) {
-        return perJoinSplitVerifyGas * op.joinSplits.length;
     }
 
     function calculateBundlerGasAssetPayout(

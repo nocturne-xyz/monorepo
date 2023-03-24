@@ -12,7 +12,7 @@ import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
-import {WalletUtils} from "../libs/WalletUtils.sol";
+import {OperationUtils} from "../libs/OperationUtils.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
 import "./utils/NocturneUtils.sol";

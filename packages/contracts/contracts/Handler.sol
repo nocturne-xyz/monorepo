@@ -8,8 +8,8 @@ import {Versioned} from "./upgrade/Versioned.sol";
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {Utils} from "./libs/Utils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
-import {Groth16} from "./libs/WalletUtils.sol";
+import {OperationUtils} from "./libs/OperationUtils.sol";
+import {Groth16} from "./libs/OperationUtils.sol";
 import {BalanceManager} from "./BalanceManager.sol";
 import "./libs/Types.sol";
 
@@ -78,16 +78,13 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         ) {
             opResult = result;
         } catch (bytes memory reason) {
-            opResult = WalletUtils.failOperationWithReason(
+            opResult = OperationUtils.failOperationWithReason(
                 Utils.getRevertMsg(reason)
             );
         }
 
         // Set verification and execution gas after getting opResult
-        opResult.verificationGas = WalletUtils.verificationGasForOp(
-            op,
-            perJoinSplitVerifyGas
-        );
+        opResult.verificationGas = perJoinSplitVerifyGas * op.joinSplits.length;
         opResult.executionGas = preExecutionGas - gasleft();
 
         // Gather reserved gas asset and process gas payment to bundler

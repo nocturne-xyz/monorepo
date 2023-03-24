@@ -19,8 +19,8 @@ import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
-import {Groth16} from "./libs/WalletUtils.sol";
+import {OperationUtils} from "./libs/OperationUtils.sol";
+import {Groth16} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
 // TODO: use SafeERC20 library
@@ -125,7 +125,7 @@ contract Wallet is
       Process a bundle of operations.
 
       @dev The maximum gas cost of a call can be estimated without eth_estimateGas
-      1. gas cost of `WalletUtils.computeOperationDigests` and
+      1. gas cost of `OperationUtils.computeOperationDigests` and
       `_verifyAllProofsMetered` can be estimated based on length of op.joinSplits
       and overall size of op
       2. maxmimum gas cost of each processOperation can be estimated using op
@@ -135,7 +135,9 @@ contract Wallet is
         Bundle calldata bundle
     ) external override nonReentrant returns (OperationResult[] memory) {
         Operation[] calldata ops = bundle.operations;
-        uint256[] memory opDigests = WalletUtils.computeOperationDigests(ops);
+        uint256[] memory opDigests = OperationUtils.computeOperationDigests(
+            ops
+        );
 
         (bool success, uint256 perJoinSplitVerifyGas) = _verifyAllProofsMetered(
             ops,
@@ -156,7 +158,7 @@ contract Wallet is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = WalletUtils.failOperationWithReason(
+                opResults[i] = OperationUtils.failOperationWithReason(
                     Utils.getRevertMsg(reason)
                 );
             }
@@ -180,8 +182,10 @@ contract Wallet is
     ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
-        (Groth16.Proof[] memory proofs, uint256[][] memory allPis) = WalletUtils
-            .extractJoinSplitProofsAndPis(ops, opDigests);
+        (
+            Groth16.Proof[] memory proofs,
+            uint256[][] memory allPis
+        ) = OperationUtils.extractJoinSplitProofsAndPis(ops, opDigests);
 
         // if there is only one proof, use the single proof verification
         if (proofs.length == 1) {
