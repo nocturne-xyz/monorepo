@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 import {
   DepositManager,
+  Handler,
   SimpleERC20Token__factory,
-  Wallet,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
@@ -23,7 +23,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
   let subtreeUpdaterEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let wallet: Wallet;
+  let handler: Handler;
   let token: SimpleERC20Token;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
   let server: SubtreeUpdateServer;
@@ -40,7 +40,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     });
 
     teardown = testDeployment.teardown;
-    ({ wallet, depositManager } = testDeployment);
+    ({ handler, depositManager } = testDeployment);
     const { provider, contractDeployment } = testDeployment;
 
     const [deployerEoa, _aliceEoa, _subtreeUpdaterEoa] =
@@ -69,7 +69,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     const prover = getSubtreeUpdateProver();
     const server = new SubtreeUpdateServer(
       prover,
-      wallet.address,
+      handler.address,
       serverDBPath,
       subtreeUpdaterEoa,
       { interval: 1_000 }
@@ -99,7 +99,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 
-    await wallet.fillBatchWithZeros();
+    await handler.fillBatchWithZeros();
 
     await sleep(getSubtreeUpdaterDelay());
     await server.stop();

@@ -5,11 +5,11 @@ import { KEYS_TO_WALLETS } from "../src/keys";
 import { ethers } from "ethers";
 import {
   DepositManager,
+  Handler,
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
   Wallet,
-  Handler,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -224,6 +224,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const bundlerBalanceBefore = (
       await gasToken.balanceOf(await bundlerEoa.getAddress())
     ).toBigInt();
+    const walletGasTokenBefore = (
+      await gasToken.balanceOf(wallet.address)
+    ).toBigInt();
+    console.log("wallet gas asset before op:", walletGasTokenBefore);
     console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
 
     const contractChecks = async () => {
@@ -245,9 +249,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(wallet.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(0n);
     };
 
     const offchainChecks = async () => {
@@ -289,7 +294,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
+      const walletGasTokenAfter = (
+        await gasToken.balanceOf(wallet.address)
+      ).toBigInt();
+      const handlerGasTokenAfter = (
+        await gasToken.balanceOf(handler.address)
+      ).toBigInt();
+
+      console.log("wallet gas asset after op:", walletGasTokenAfter);
       console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
+      console.log("handler gas asset after op:", handlerGasTokenAfter);
       // for some reason, mocha `.gte` doesn't work here
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };

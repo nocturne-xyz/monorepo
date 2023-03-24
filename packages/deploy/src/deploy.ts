@@ -86,16 +86,16 @@ export async function deployNocturne(
   const proxiedWallet = await deployProxiedContract(
     new Wallet__factory(connectedSigner),
     proxyAdmin,
-    [proxiedHandler.address, subtreeUpdateVerifier.address]
+    [proxiedHandler.address, joinSplitVerifier.address]
   );
   console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
-  console.log("Initializing proxied Vault");
-  const vaultInitTx = await proxiedHandler.contract.initialize(
+  console.log("Initializing proxied Handler");
+  const handlerInitTx = await proxiedHandler.contract.initialize(
     proxiedWallet.address,
-    proxiedHandler.address
+    subtreeUpdateVerifier.address
   );
-  await vaultInitTx.wait(opts?.confirmations);
+  await handlerInitTx.wait(opts?.confirmations);
 
   console.log("\nDeploying proxied DepositManager");
   const proxiedDepositManager = await deployProxiedContract(

@@ -360,14 +360,13 @@ export async function setupTestClient(
     new Map(Object.entries({}))
   );
 
-  const { walletProxy } = contractDeployment;
-  const wallet = Wallet__factory.connect(walletProxy.proxy, provider);
+  const { handlerProxy } = contractDeployment;
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
     syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
   } else {
-    syncAdapter = new RPCSDKSyncAdapter(provider, wallet.address);
+    syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
   }
 
   console.log("Create NocturneWalletSDKAlice");

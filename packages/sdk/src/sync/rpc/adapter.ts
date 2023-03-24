@@ -26,14 +26,14 @@ import { ethers } from "ethers";
 const RPC_MAX_CHUNK_SIZE = 1000;
 
 export class RPCSDKSyncAdapter implements SDKSyncAdapter {
-  private handleContract: Handler;
+  private handlerContract: Handler;
 
   constructor(
     provider: ethers.providers.Provider,
-    handleContractAddress: Address
+    handlerContractAddress: Address
   ) {
-    this.handleContract = Handler__factory.connect(
-      handleContractAddress,
+    this.handlerContract = Handler__factory.connect(
+      handlerContractAddress,
       provider
     );
   }
@@ -48,9 +48,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     const endBlock = opts?.endBlock;
     let closed = false;
 
-    const handleContract = this.handleContract;
+    const handlerContract = this.handlerContract;
     const generator = async function* () {
-      let nextMerkleIndex = (await handleContract.count()).toNumber();
+      let nextMerkleIndex = (await handlerContract.count()).toNumber();
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
@@ -59,7 +59,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         }
 
         // if `to` > current block number, want to only fetch up to current block number
-        to = min(to, await handleContract.provider.getBlockNumber());
+        to = min(to, await handlerContract.provider.getBlockNumber());
 
         // if `from` >= `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
@@ -73,9 +73,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // fetch event data from chain
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
           await Promise.all([
-            fetchNotesFromRefunds(handleContract, from, to),
-            fetchJoinSplits(handleContract, from, to),
-            fetchSubtreeUpdateCommits(handleContract, from, to),
+            fetchNotesFromRefunds(handlerContract, from, to),
+            fetchJoinSplits(handlerContract, from, to),
+            fetchSubtreeUpdateCommits(handlerContract, from, to),
           ]);
 
         // extract notes and nullifiers

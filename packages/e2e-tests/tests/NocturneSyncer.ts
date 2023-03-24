@@ -3,8 +3,8 @@ import { ethers } from "ethers";
 import { open } from "lmdb";
 import {
   DepositManager,
+  Handler,
   SimpleERC20Token__factory,
-  Wallet,
 } from "@nocturne-xyz/contracts";
 import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
@@ -55,7 +55,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let aliceEoa: ethers.Wallet;
 
     let depositManager: DepositManager;
-    let wallet: Wallet;
+    let handler: Handler;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
@@ -73,7 +73,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         },
       });
 
-      ({ teardown, provider, wallet, depositManager } = testDeployment);
+      ({ teardown, provider, depositManager, handler } = testDeployment);
 
       const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
@@ -99,13 +99,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     async function newSubtreeUpdater() {
       const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
       const prover = getSubtreeUpdateProver();
-      const submitter = new SyncSubtreeSubmitter(wallet);
-      updater = new SubtreeUpdater(wallet, serverDB, prover, submitter);
+      const submitter = new SyncSubtreeSubmitter(handler);
+      updater = new SubtreeUpdater(handler, serverDB, prover, submitter);
       await updater.init();
     }
 
     async function applySubtreeUpdate() {
-      const tx = await wallet.fillBatchWithZeros();
+      const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
       await updater.pollInsertionsAndTryMakeBatch();
       await updater.tryGenAndSubmitProofs();

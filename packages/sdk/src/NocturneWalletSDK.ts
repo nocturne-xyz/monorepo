@@ -48,7 +48,7 @@ export class NocturneWalletSDK {
 
     this.signer = signer;
     this.handlerContract = Handler__factory.connect(
-      config.walletAddress(),
+      config.handlerAddress(),
       provider
     );
     this.merkleProver = merkleProver;

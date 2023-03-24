@@ -85,7 +85,7 @@ export default async function main(): Promise<void> {
 
   console.log("rpcUrl", rpcUrl);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-  const signer = new ethers.handler(submitterSecretKey, provider);
+  const signer = new ethers.Wallet(submitterSecretKey, provider);
 
   let prover;
   if (useMockProver) {

@@ -2,8 +2,8 @@ import { deployContractsWithDummyAdmins } from "../src/deploy";
 import { ethers } from "ethers";
 import {
   DepositManager__factory,
+  Handler__factory,
   SimpleERC20Token__factory,
-  Wallet__factory,
 } from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
@@ -62,7 +62,7 @@ const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLE
       screeners: [DEPOSIT_SCREENER],
       subtreeBatchFillers,
     });
-  const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
+  const handler = Handler__factory.connect(handlerProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
     depositManagerProxy.proxy,
     deployerEoa
@@ -134,5 +134,5 @@ const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLE
     }
   }
 
-  await wallet.connect(deployerEoa).fillBatchWithZeros();
+  await handler.connect(deployerEoa).fillBatchWithZeros();
 })();

@@ -1326,4 +1326,5 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     }
 
     // TODO: test handler re-entering wallet ("Cannot call the Nocturne wallet")
+    // TODO: test bundler compensation success case
 }

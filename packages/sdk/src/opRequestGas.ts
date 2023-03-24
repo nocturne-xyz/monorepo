@@ -272,12 +272,13 @@ async function simulateOperation(
   const verificationGasForOp = 0n;
   const bundler = handlerContract.address;
 
+  const walletAddress = await handlerContract._wallet();
   const result = await handlerContract.callStatic.processOperation(
     provenOp,
     verificationGasForOp,
     bundler,
     {
-      from: handlerContract.address,
+      from: walletAddress,
     }
   );
   const {

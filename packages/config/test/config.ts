@@ -17,7 +17,7 @@ describe("Config", async () => {
     expect(config.contracts.proxyAdmin).to.not.be.undefined;
     expect(config.contracts.depositManagerProxy).to.not.be.undefined;
     expect(config.contracts.walletProxy).to.not.be.undefined;
-    expect(config.contracts.vaultProxy).to.not.be.undefined;
+    expect(config.contracts.handlerProxy).to.not.be.undefined;
     expect(config.contracts.joinSplitVerifierAddress).to.not.be.undefined;
     expect(config.contracts.subtreeUpdateVerifierAddress).to.not.be.undefined;
     expect(config.contracts.depositSources).to.not.be.undefined;
