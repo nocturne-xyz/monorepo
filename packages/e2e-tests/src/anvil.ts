@@ -27,10 +27,10 @@ export async function startAnvil(
   };
 
   const stop = runCommandDetached(cmd, args, cmdOpts);
-  await sleep(100);
+  await sleep(1_000);
   return async () => {
     stop();
     // wait a bit for anvil to stop stops and unbind from port
-    await sleep(100);
+    await sleep(1_000);
   };
 }
