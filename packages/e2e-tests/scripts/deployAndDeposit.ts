@@ -11,6 +11,7 @@ import {
   CanonAddress,
   DepositRequest,
   StealthAddressTrait,
+  zip,
 } from "@nocturne-xyz/sdk";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -22,6 +23,8 @@ const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
 
 // anvil account #6
 const DEPOSIT_SCREENER = "0x976EA74026E726554dB657fA54763abd0C3a0aa9";
+const TEN_GWEI= 10n * 10n ** 9n;
+const GAS_TOKEN_AMOUNT = 10000000n ** 9n * TEN_GWEI;
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [
@@ -62,16 +65,19 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     deployerEoa
   );
 
+  const tokenAmount = ethers.utils.parseEther("10.0").toBigInt();
   const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
   const tokens: SimpleERC20Token[] = [];
+  const amounts: bigint[] = [];
   for (let i = 0; i < 2; i++) {
     const token = await tokenFactory.deploy();
     await token.deployed();
     console.log(`Token ${i + 1} deployed at: ${token.address}`);
     tokens.push(token);
+    amounts.push(tokenAmount);
   }
 
-  for (const token of tokens) {
+  for (const [token, amount] of zip(tokens, amounts)) {
     // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`
     for (const addr of TEST_ETH_ADDRS) {
       console.log(`Sending ETH and tokens to ${addr}`);
@@ -83,13 +89,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
         await tx.wait(1);
       } 
       {
-        const tx = await token.reserveTokens(addr, ethers.utils.parseEther("10.0"));
+        const tx = await token.reserveTokens(addr, amount);
         await tx.wait(1);
       }
     }
 
     // Reserve and approve tokens for nocturne addr deployer
-    const reserveAmount = ethers.utils.parseEther("1000.0");
+    const reserveAmount = amount * 100n;
     {
       const tx = await token
         .connect(deployerEoa)
@@ -116,18 +122,17 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
     StealthAddressTrait.fromCanonAddress
   );
-  const perNoteAmount = ethers.utils.parseEther("10.0");
-  for (const encodedAsset of encodedAssets) {
+  for (const [encodedAsset, amount] of zip(encodedAssets, amounts)) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
-      console.log(`depositing 1 ${perNoteAmount} note to`, addr, `from ${deployerEoa.address}`);
+      console.log(`depositing 1 ${amount} note to`, addr, `from ${deployerEoa.address}`);
 
       const nonce = await depositManager._nonces(deployerEoa.address);
       const depositRequest: DepositRequest = {
         chainId,
         spender: deployerEoa.address,
         encodedAsset,
-        value: perNoteAmount.toBigInt(),
+        value: amount,
         depositAddr: addr,
         nonce: nonce.toBigInt(),
         gasCompensation: BigInt(0),

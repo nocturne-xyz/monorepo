@@ -70,6 +70,7 @@ read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})
 read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 popd
 
 sleep 10

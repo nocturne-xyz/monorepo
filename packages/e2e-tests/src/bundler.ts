@@ -47,7 +47,7 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
 
-  await sleep(3_000);
+  await sleep(10_000);
 }
 
 export async function stopBundler(): Promise<void> {
@@ -55,5 +55,5 @@ export async function stopBundler(): Promise<void> {
     cwd: BUNDLER_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
-  await sleep(3_000);
+  await sleep(10_000);
 }

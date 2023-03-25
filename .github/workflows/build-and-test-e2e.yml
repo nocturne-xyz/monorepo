@@ -8,7 +8,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Cache dependencies
+      - name: cache dependencies
         uses: actions/cache@v2
         with:
           path: '**/node_modules'
@@ -18,16 +18,18 @@ jobs:
         with:
           node-version: "v18.12.1"
           cache: "yarn"
-      - name: Enable Corepack
+      - name: enable Corepack
         run: corepack enable
-      - name: Install Foundry
-        run: curl -L https://foundry.paradigm.xyz | bash && /home/runner/.foundry/bin/foundryup
-      - name: Yarn install
+      - name: install foundryup
+        run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
+      - name: install foundry
+        run: foundryup
+      - name: yarn install
         run: |
           yarn install --immutable
-      - name: Yarn build
+      - name: yarn build
         run: |
           yarn build
-      - name: Yarn test:e2e
+      - name: yarn test:e2e
         run: |
           yarn test:e2e

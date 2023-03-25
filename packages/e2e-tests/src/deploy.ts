@@ -277,7 +277,7 @@ export async function setupTestDeployment(
       const teardown = async () => {
         await subtreeUpdaterContainer?.stop();
         await subtreeUpdaterContainer?.remove();
-        await sleep(3000);
+        await sleep(10_000);
       };
       proms.push(teardown());
     }
@@ -287,6 +287,7 @@ export async function setupTestDeployment(
     if (config.include.subgraph) {
       await stopSubgraph();
     }
+
 
     // teardown anvil node
     await stopAnvil();
