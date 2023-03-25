@@ -288,7 +288,6 @@ export async function setupTestDeployment(
       await stopSubgraph();
     }
 
-
     // teardown anvil node
     await stopAnvil();
   };

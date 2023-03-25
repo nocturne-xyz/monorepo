@@ -177,6 +177,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    // wait for subgraph
+    await sleep(3_000);
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
@@ -206,6 +208,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    // wait for subgraph
+    await sleep(3_000);
 
     console.log("Encode transfer erc20 action");
     const encodedFunction =
@@ -312,6 +316,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
+    // wait for subgraph
+    await sleep(3_000);
 
     console.log("Encode reserve erc721 action");
     const erc721ReserveCalldata =

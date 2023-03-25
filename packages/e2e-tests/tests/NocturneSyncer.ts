@@ -127,6 +127,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [100n, 100n]
       );
+      // wait for subgraph
+      await sleep(3_000);
 
       // sync SDK
       await nocturneWalletSDKAlice.sync();
@@ -150,6 +152,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
         [100n, 100n]
       );
+      // wait for subgraph
+      await sleep(3_000);
 
       const ncs = depositedNotes.map(NoteTrait.toCommitment);
 
@@ -187,6 +191,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         aliceEoa,
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
       );
+      // wait for subgraph
+      await sleep(3_000);
 
       // apply subtree update and sync SDK...
       console.log("applying subtree update...");
