@@ -60,6 +60,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
     event DepositSourcePermissionSet(address source, bool permission);
 
+    event SubtreeBatchFillerPermissionSet(address filler, bool permission);
+
+    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
+
     event RefundProcessed(
         StealthAddress refundAddr,
         uint256 nonce,
@@ -187,7 +191,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         handler.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
-    function testSetDepositSourcePermission() public {
+    function testSetDepositSourcePermissionWallet() public {
         vm.prank(BOB); // not owner
         vm.expectRevert("Ownable: caller is not the owner");
         wallet.setDepositSourcePermission(address(0x123), true);
@@ -197,6 +201,53 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         emit DepositSourcePermissionSet(address(0x123), true);
         vm.prank(address(this));
         wallet.setDepositSourcePermission(address(0x123), true);
+    }
+
+    function testAddToAssetPrefillHandler() public {
+        SimpleERC20Token token = ERC20s[0];
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            ERC20_ID
+        );
+
+        token.reserveTokens(address(this), 100);
+        token.reserveTokens(BOB, 100);
+
+        vm.startPrank(BOB); // not owner
+        token.approve(address(wallet), 1);
+        vm.expectRevert("Ownable: caller is not the owner");
+        handler.addToAssetPrefill(encodedAsset, 1);
+        vm.stopPrank();
+
+        // Send from owner, succeeds
+        vm.startPrank(address(this));
+        token.approve(address(handler), 1);
+        vm.expectEmit(true, true, true, true);
+        emit UpdatedAssetPrefill(encodedAsset, 1);
+        handler.addToAssetPrefill(encodedAsset, 1);
+
+        assertEq(
+            handler._prefilledAssetBalances(
+                AssetUtils.hashEncodedAsset(encodedAsset)
+            ),
+            1
+        );
+        vm.stopPrank();
+    }
+
+    function testSetSubtreeBatchFillerHandler() public {
+        vm.expectRevert("Only subtree batch filler");
+        vm.prank(ALICE);
+        handler.fillBatchWithZeros();
+
+        vm.expectEmit(true, true, true, true);
+        emit SubtreeBatchFillerPermissionSet(ALICE, true);
+        handler.setSubtreeBatchFillerPermission(ALICE, true);
+
+        vm.prank(ALICE);
+        handler.fillBatchWithZeros();
+        assertEq(handler.totalCount(), 16);
     }
 
     function testDepositNotDepositSource() public {
@@ -733,7 +784,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
-    function testProcessBundleFailureReentrancyProcessOperationHandlerCaller()
+    // TODO: move to Handler.t.sol
+    function testProcessBundleFailureReentrancyHandleOperationHandlerCaller()
         public
     {
         // Alice starts with 2 * 50M tokens in wallet
@@ -824,6 +876,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
+    // TODO: move to Handler.t.sol
     function testProcessBundleFailureReentrancyExecuteActionsHandlerCaller()
         public
     {
@@ -1326,7 +1379,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(ALICE)), 0);
     }
 
-    function testProcessOperationNotWalletCaller() public {
+    // TODO: move to Handler.t.sol
+    function testHandleOperationNotWalletCaller() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1357,6 +1411,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         handler.handleOperation(op, 0, ALICE);
     }
 
+    // TODO: move to Handler.t.sol
     function testExecuteActionsNotHandlerCaller() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
