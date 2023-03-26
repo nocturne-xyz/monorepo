@@ -262,16 +262,24 @@ export async function setupTestDeployment(
   await Promise.all(proms);
 
   const teardown = async () => {
-    console.log("tearing down offchain actors...")
+    console.log("tearing down offchain actors...");
     // teardown offchain actors
     const proms = [];
 
     if (config.include.bundler) {
-      proms.push(stopBundler());
+      proms.push(
+        stopBundler().catch((err) =>
+          console.error("error tearing down bundler: ", err)
+        )
+      );
     }
 
     if (config.include.depositScreener) {
-      proms.push(stopDepositScreener());
+      proms.push(
+        stopDepositScreener().catch((err) =>
+          console.error("error tearing down deposit screener: ", err)
+        )
+      );
     }
 
     if (subtreeUpdaterContainer) {
@@ -279,29 +287,28 @@ export async function setupTestDeployment(
         await subtreeUpdaterContainer?.stop();
         await subtreeUpdaterContainer?.remove();
       };
-      proms.push(teardown());
+      proms.push(
+        teardown().catch((err) =>
+          console.error("error tearing down subtree updater: ", err)
+        )
+      );
     }
 
-    try {
-      await Promise.all(proms);
-    } catch (err) {
-      console.error("error when tearing down offchain actors: ", err);
-      throw err;
-    }
+    await Promise.all(proms);
 
     // wait for actors to teardown
     await sleep(10_000);
 
     // teradown subgraph
     if (config.include.subgraph) {
-      console.log("tearing down subgraph...")
+      console.log("tearing down subgraph...");
       await stopSubgraph();
     }
 
     // wait for subgraph to tear down
     await sleep(10_000);
 
-    console.log("tearing down anvil...")
+    console.log("tearing down anvil...");
     // teardown anvil node
     await stopAnvil();
 
