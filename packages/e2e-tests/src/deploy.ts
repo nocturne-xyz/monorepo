@@ -281,7 +281,13 @@ export async function setupTestDeployment(
       };
       proms.push(teardown());
     }
-    await Promise.all(proms);
+
+    try {
+      await Promise.all(proms);
+    } catch (err) {
+      console.error("error when tearing down offchain actors: ", err);
+      throw err;
+    }
 
     // wait for actors to teardown
     await sleep(10_000);
