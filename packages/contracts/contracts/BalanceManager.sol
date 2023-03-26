@@ -235,12 +235,12 @@ contract BalanceManager is
 
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
-        StealthAddress memory refundAddr
+        StealthAddress calldata refundAddr
     ) internal {
         uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
         if (value != 0) {
             AssetUtils.transferAssetTo(encodedAsset, address(_wallet), value);
-            _handleRefundNote(refundAddr, encodedAsset, value);
+            _handleRefundNote(encodedAsset, refundAddr, value);
         }
     }
 }

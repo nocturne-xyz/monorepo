@@ -26,7 +26,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
         DepositRequest calldata deposit
     ) external override onlyWallet {
         StealthAddress calldata depositAddr = deposit.depositAddr;
-        _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
+        _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }
 
     function handleOperation(

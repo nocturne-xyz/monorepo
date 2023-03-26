@@ -155,8 +155,8 @@ contract CommitmentTreeManager is Initializable {
     }
 
     function _handleRefundNote(
-        StealthAddress memory refundAddr,
         EncodedAsset memory encodedAsset,
+        StealthAddress calldata refundAddr,
         uint256 value
     ) internal {
         uint128 index = _merkle.getTotalCount();
