@@ -226,6 +226,11 @@ export function runCommandDetached(
       }
 
       console.log(msg);
+
+      if (stderr) {
+        console.log("STDERR:");
+        console.log(stderr);
+      }
     }
   });
 
