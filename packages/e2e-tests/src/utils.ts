@@ -240,6 +240,8 @@ export function runCommandDetached(
   });
 
   return () => {
-    child.kill("SIGINT");
+    console.log(`killing child process ${processName}`);
+    const res = child.kill("SIGINT");
+    console.log("success: ", res);
   };
 }
