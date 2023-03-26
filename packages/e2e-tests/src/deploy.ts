@@ -295,7 +295,7 @@ export async function setupTestDeployment(
 
     // teardown anvil node
     await stopAnvil();
-    
+
     // wait for anvil to tear down
     await sleep(5_000);
   };
