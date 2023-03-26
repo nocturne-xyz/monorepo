@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Sync tree events from `handler` contract instead of wallet post-contract-separation
 - move `packToSolidityProof`, `unpackFromSolidityProof`, and `SolidityProof` into `proof/utils`
 - Rename `SUBMITTER_SECRET_KEY` to `TX_SIGNER_KEY`
 - Add separate script for building mock docker

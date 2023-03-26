@@ -1,15 +1,14 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { KEYS_TO_WALLETS } from "../src/keys";
 import { ethers } from "ethers";
 import {
   DepositManager,
+  Handler,
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
   Wallet,
-  Vault,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -52,13 +51,14 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
+  let deployerEoa: ethers.Wallet;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
   let bundlerEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
   let wallet: Wallet;
-  let vault: Vault;
+  let handler: Handler;
   let nocturneDBAlice: NocturneDB;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
   let nocturneDBBob: NocturneDB;
@@ -87,29 +87,33 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       },
     });
 
-    ({ provider, teardown, wallet, vault, bundlerEoa, depositManager } =
-      testDeployment);
+    ({
+      provider,
+      teardown,
+      wallet,
+      handler,
+      deployerEoa,
+      aliceEoa,
+      bobEoa,
+      bundlerEoa,
+      depositManager,
+    } = testDeployment);
 
-    const [deployer, _aliceEoa, _bobEoa] = KEYS_TO_WALLETS(provider);
-
-    aliceEoa = _aliceEoa;
-    bobEoa = _bobEoa;
-
-    [erc20, erc20Asset] = await deployERC20(deployer);
+    [erc20, erc20Asset] = await deployERC20(deployerEoa);
     console.log("ERC20 'shitcoin' deployed at: ", erc20.address);
 
     [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
 
     {
       let ctor;
-      [erc721, ctor] = await deployERC721(deployer);
+      [erc721, ctor] = await deployERC721(deployerEoa);
       erc721Asset = ctor(0n);
       console.log("ERC721 'monkey' deployed at: ", erc721.address);
     }
 
     {
       let ctor;
-      [erc1155, ctor] = await deployERC1155(deployer);
+      [erc1155, ctor] = await deployERC1155(deployerEoa);
       erc1155Asset = ctor(0n);
       console.log("ERC1155 'plutocracy' deployed at: ", erc1155.address);
     }
@@ -245,9 +249,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       expect(
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20.balanceOf(vault.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(wallet.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(0n);
     };
 
     const offchainChecks = async () => {
@@ -289,6 +294,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       const bundlerBalanceAfter = (
         await gasToken.balanceOf(await bundlerEoa.getAddress())
       ).toBigInt();
+
       console.log("bundler gas asset balance after op:", bundlerBalanceAfter);
       // for some reason, mocha `.gte` doesn't work here
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
@@ -314,7 +320,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
         // mint a ERC721 token directly to the wallet contract
-        [wallet.address, erc721Asset.id]
+        [handler.address, erc721Asset.id]
       );
 
     console.log("Encode reserve erc1155 action");
@@ -322,7 +328,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
         // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
-        [wallet.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
+        [handler.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
       );
 
     // unwrap 1 erc20 to satisfy gas token requirement

@@ -15,6 +15,9 @@ dotenv.config();
   const walletOwner = process.env.WALLET_OWNER;
   if (!walletOwner) throw new Error("Missing WALLET_OWNER");
 
+  const handlerOwner = process.env.HANDLER_OWNER;
+  if (!handlerOwner) throw new Error("Missing HANDLER_OWNER");
+
   const depositManagerOwner = process.env.DEPOSIT_MANAGER_OWNER;
   if (!depositManagerOwner) throw new Error("Missing DEPOSIT_MANAGER_OWNER");
 
@@ -44,6 +47,7 @@ dotenv.config();
     {
       proxyAdminOwner,
       walletOwner,
+      handlerOwner,
       depositManagerOwner,
       screeners,
       subtreeBatchFillers,

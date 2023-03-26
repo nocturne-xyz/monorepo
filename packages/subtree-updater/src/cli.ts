@@ -12,8 +12,8 @@ export default async function main(): Promise<void> {
 
   program
     .requiredOption(
-      "--wallet-address <string>",
-      "address of the wallet contract"
+      "--handler-address <string>",
+      "address of the handler contract"
     )
     .requiredOption(
       "--zkey-path <string>",
@@ -66,7 +66,7 @@ export default async function main(): Promise<void> {
     vkeyPath,
     proverPath,
     witnessGeneratorPath,
-    walletAddress,
+    handlerAddress,
     useMockProver,
     interval,
     indexingStartBlock,
@@ -107,7 +107,7 @@ export default async function main(): Promise<void> {
 
   const server = new SubtreeUpdateServer(
     prover,
-    walletAddress,
+    handlerAddress,
     dbPath,
     signer,
     { indexingStartBlock, interval, fillBatches }

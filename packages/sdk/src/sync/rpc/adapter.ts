@@ -12,7 +12,7 @@ import {
   IterSyncOpts,
   SDKSyncAdapter,
 } from "../syncAdapter";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { maxArray, sleep } from "../../utils";
 import {
   fetchJoinSplits,
@@ -26,14 +26,14 @@ import { ethers } from "ethers";
 const RPC_MAX_CHUNK_SIZE = 1000;
 
 export class RPCSDKSyncAdapter implements SDKSyncAdapter {
-  private walletContract: Wallet;
+  private handlerContract: Handler;
 
   constructor(
     provider: ethers.providers.Provider,
-    walletContractAddress: Address
+    handlerContractAddress: Address
   ) {
-    this.walletContract = Wallet__factory.connect(
-      walletContractAddress,
+    this.handlerContract = Handler__factory.connect(
+      handlerContractAddress,
       provider
     );
   }
@@ -48,9 +48,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     const endBlock = opts?.endBlock;
     let closed = false;
 
-    const walletContract = this.walletContract;
+    const handlerContract = this.handlerContract;
     const generator = async function* () {
-      let nextMerkleIndex = (await walletContract.count()).toNumber();
+      let nextMerkleIndex = (await handlerContract.count()).toNumber();
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
@@ -59,7 +59,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         }
 
         // if `to` > current block number, want to only fetch up to current block number
-        to = min(to, await walletContract.provider.getBlockNumber());
+        to = min(to, await handlerContract.provider.getBlockNumber());
 
         // if `from` >= `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
@@ -73,9 +73,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // fetch event data from chain
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
           await Promise.all([
-            fetchNotesFromRefunds(walletContract, from, to),
-            fetchJoinSplits(walletContract, from, to),
-            fetchSubtreeUpdateCommits(walletContract, from, to),
+            fetchNotesFromRefunds(handlerContract, from, to),
+            fetchJoinSplits(handlerContract, from, to),
+            fetchSubtreeUpdateCommits(handlerContract, from, to),
           ]);
 
         // extract notes and nullifiers

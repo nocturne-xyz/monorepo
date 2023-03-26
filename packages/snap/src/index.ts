@@ -18,10 +18,13 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 
-const WALLET_ADDRESS = "";
+const HANDLER_ADDRESS = "0x51a240271AB8AB9f9a21C82d9a85396b704E164d";
 const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
+
+const GAS_TOKEN1 = "0xbfce6B877Ebff977bB6e80B24FbBb7bC4eBcA4df";
+const GAS_TOKEN2 = "0xcd75Ad7AC9C9325105f798c476E84176648F391A";
 
 const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   startBlock: 0,
@@ -30,29 +33,36 @@ const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
     chainId: 31337,
   },
   proxyAdmin: "0x0000000000000000000000000000000000000000",
-  proxyAdminOwner: "0x0000000000000000000000000000000000000000",
-  walletProxy: {
-    kind: "Transparent",
-    proxy: WALLET_ADDRESS,
-    implementation: "0x0000000000000000000000000000000000000000",
+  owners: {
+    proxyAdminOwner: "0x0000000000000000000000000000000000000000",
+    walletOwner: "0x0000000000000000000000000000000000000000",
+    handlerOwner: "0x0000000000000000000000000000000000000000",
+    depositManagerOwner: "0x0000000000000000000000000000000000000000",
   },
-  vaultProxy: {
+  walletProxy: {
     kind: "Transparent",
     proxy: "0x0000000000000000000000000000000000000000",
     implementation: "0x0000000000000000000000000000000000000000",
   },
-  joinSplitVerifier: "0x0000000000000000000000000000000000000000",
-  subtreeUpdateVerifier: "0x0000000000000000000000000000000000000000",
+  handlerProxy: {
+    kind: "Transparent",
+    proxy: HANDLER_ADDRESS,
+    implementation: "0x0000000000000000000000000000000000000000",
+  },
+  depositManagerProxy: {
+    kind: "Transparent",
+    proxy: "0x0000000000000000000000000000000000000000",
+    implementation: "0x0000000000000000000000000000000000000000",
+  },
+  joinSplitVerifierAddress: "0x0000000000000000000000000000000000000000",
+  subtreeUpdateVerifierAddress: "0x0000000000000000000000000000000000000000",
+  depositSources: ["0x0000000000000000000000000000000000000000"],
+  screeners: ["0x0000000000000000000000000000000000000000"],
 };
-
-const GAS_TOKEN_ADDRS = [
-  "0x4e3df2073bf4b43B9944b8e5A463b1E185D6448C",
-  "0xbfce6B877Ebff977bB6e80B24FbBb7bC4eBcA4df",
-];
 
 const DUMMY_CONFIG = new NocturneConfig(
   DUMMY_CONTRACT_DEPLOYMENT,
-  new Map(GAS_TOKEN_ADDRS.map((addr, i) => [`TOKEN-${i}`, addr])),
+  new Map([GAS_TOKEN1, GAS_TOKEN2].map((addr, i) => [`TOKEN-${i}`, addr])),
   new Map()
 );
 

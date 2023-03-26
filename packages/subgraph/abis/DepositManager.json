@@ -487,19 +487,6 @@
   },
   {
     "inputs": [],
-    "name": "_vault",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "_wallet",
     "outputs": [
       {
@@ -615,11 +602,6 @@
       {
         "internalType": "address",
         "name": "wallet",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "vault",
         "type": "address"
       }
     ],

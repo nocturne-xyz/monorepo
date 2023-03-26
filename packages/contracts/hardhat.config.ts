@@ -90,8 +90,8 @@ module.exports = {
       'IPoseidonT7',
       'IJoinSplitVerifier',
       'ISubtreeUpdateVerifier',
-      'IVault',
       'IWallet',
+      'IHandler',
       // TODO: deduplicate these in an automated way somehow
       'PoseidonHasherT3',
       'PoseidonHasherT4',
@@ -100,7 +100,7 @@ module.exports = {
       'PoseidonHasherT7',
       'DepositManager',
       'Wallet',
-      'Vault',
+      'Handler',
       'CommitmentTreeManager',
       'BalanceManager',
       'JoinSplitVerifier',

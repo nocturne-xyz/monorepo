@@ -2,8 +2,8 @@ import { ethers } from "ethers";
 import * as fs from "fs";
 import {
   Wallet__factory,
-  Vault__factory,
-  Vault,
+  Handler__factory,
+  Handler,
   Wallet,
   DepositManager,
   DepositManager__factory,
@@ -84,11 +84,15 @@ export interface TestActorsConfig {
 export interface NocturneTestDeployment {
   depositManager: DepositManager;
   wallet: Wallet;
-  vault: Vault;
+  handler: Handler;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
+  deployerEoa: ethers.Wallet;
+  aliceEoa: ethers.Wallet;
+  bobEoa: ethers.Wallet;
   bundlerEoa: ethers.Wallet;
   subtreeUpdaterEoa: ethers.Wallet;
+  screenerEoa: ethers.Wallet;
   teardown: () => Promise<void>;
 }
 
@@ -131,7 +135,7 @@ const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
-  "walletAddress" | "txSignerKey"
+  "handlerAddress" | "txSignerKey"
 > = {
   rpcUrl: HH_FROM_DOCKER_URL,
 };
@@ -161,8 +165,14 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
-  const [deployerEoa, bundlerEoa, subtreeUpdaterEoa, screenerEoa] =
-    KEYS_TO_WALLETS(provider);
+  const [
+    deployerEoa,
+    aliceEoa,
+    bobEoa,
+    bundlerEoa,
+    subtreeUpdaterEoa,
+    screenerEoa,
+  ] = KEYS_TO_WALLETS(provider);
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -173,11 +183,11 @@ export async function setupTestDeployment(
     deployerEoa.provider
   );
 
-  const { depositManagerProxy, walletProxy, vaultProxy } = contractDeployment;
-  const [depositManager, wallet, vault] = await Promise.all([
+  const { depositManagerProxy, walletProxy, handlerProxy } = contractDeployment;
+  const [depositManager, wallet, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, deployerEoa),
     Wallet__factory.connect(walletProxy.proxy, deployerEoa),
-    Vault__factory.connect(vaultProxy.proxy, deployerEoa),
+    Handler__factory.connect(handlerProxy.proxy, deployerEoa),
   ]);
 
   // Deploy subgraph first, as other services depend on it
@@ -214,7 +224,7 @@ export async function setupTestDeployment(
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
-      walletAddress: walletProxy.proxy,
+      handlerAddress: handlerProxy.proxy,
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 
@@ -293,12 +303,16 @@ export async function setupTestDeployment(
   return {
     depositManager,
     wallet,
-    vault,
+    handler,
     contractDeployment,
     provider,
     teardown,
+    deployerEoa,
+    aliceEoa,
+    bobEoa,
     bundlerEoa,
     subtreeUpdaterEoa,
+    screenerEoa,
   };
 }
 
@@ -311,6 +325,7 @@ export async function deployContractsWithDummyAdmins(
     {
       proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      handlerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       screeners: args.screeners,
       subtreeBatchFillers: args.subtreeBatchFillers,
@@ -324,7 +339,7 @@ export async function deployContractsWithDummyAdmins(
 
   // Log for dev site script
   console.log("Wallet address:", deployment.walletProxy.proxy);
-  console.log("Vault address:", deployment.vaultProxy.proxy);
+  console.log("Handler address:", deployment.handlerProxy.proxy);
   console.log("DepositManager address:", deployment.depositManagerProxy.proxy);
   return deployment;
 }
@@ -360,14 +375,13 @@ export async function setupTestClient(
     new Map(Object.entries({}))
   );
 
-  const { walletProxy } = contractDeployment;
-  const wallet = Wallet__factory.connect(walletProxy.proxy, provider);
+  const { handlerProxy } = contractDeployment;
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
     syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
   } else {
-    syncAdapter = new RPCSDKSyncAdapter(provider, wallet.address);
+    syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
   }
 
   console.log("Create NocturneWalletSDKAlice");

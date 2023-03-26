@@ -10,7 +10,7 @@ import {NocturneUtils} from "./utils/NocturneUtils.sol";
 import {ParseUtils} from "./utils/ParseUtils.sol";
 import {AssetUtils} from "../libs/AssetUtils.sol";
 import {TestDepositManager} from "./harnesses/TestDepositManager.sol";
-import {Vault} from "../Vault.sol";
+import {Handler} from "../Handler.sol";
 import {Wallet} from "../Wallet.sol";
 import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
@@ -20,7 +20,7 @@ import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
 
 contract DepositManagerTest is Test, ParseUtils {
     Wallet public wallet;
-    Vault public vault;
+    Handler public handler;
     TestDepositManager public depositManager;
 
     SimpleERC20Token[3] ERC20s;
@@ -69,26 +69,21 @@ contract DepositManagerTest is Test, ParseUtils {
     );
 
     function setUp() public virtual {
-        // TODO: extract wallet/vault deployment into NocturneUtils
-        vault = new Vault();
+        // TODO: extract wallet/handler deployment into NocturneUtils
+        wallet = new Wallet();
+        handler = new Handler();
+
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        wallet = new Wallet();
-        wallet.initialize(
-            address(vault),
-            address(joinSplitVerifier),
-            address(subtreeUpdateVerifier)
-        );
-
-        vault.initialize(address(wallet));
+        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
+        wallet.initialize(address(handler), address(joinSplitVerifier));
 
         depositManager = new TestDepositManager();
         depositManager.initialize(
             CONTRACT_NAME,
             CONTRACT_VERSION,
-            address(wallet),
-            address(vault)
+            address(wallet)
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
@@ -375,8 +370,8 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(SCREENER);
         depositManager.completeDeposit(deposit, signature);
 
-        // Ensure vault now has ALICE's tokens
-        assertEq(token.balanceOf(address(vault)), RESERVE_AMOUNT);
+        // Ensure wallet now has ALICE's tokens
+        assertEq(token.balanceOf(address(wallet)), RESERVE_AMOUNT);
         assertEq(token.balanceOf(address(ALICE)), 0);
 
         // TODO: We want to check that some gas went to screener and rest went

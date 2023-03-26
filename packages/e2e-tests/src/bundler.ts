@@ -10,7 +10,7 @@ const BUNDLER_COMPOSE_CWD = `${ROOT_DIR}/packages/bundler`;
 const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
 const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
   cwd: BUNDLER_COMPOSE_CWD,
-  commandOptions: [["--build"], ["--force-recreate"], ["--renew-anon-volumes"]],
+  commandOptions: [["--force-recreate"], ["--renew-anon-volumes"]],
 };
 
 export interface BundlerConfig {

@@ -1,5 +1,6 @@
 import {
   DepositManager__factory,
+  Handler__factory,
   ProxyAdmin__factory,
   Wallet__factory,
 } from "@nocturne-xyz/contracts";
@@ -12,6 +13,19 @@ export async function checkNocturneContractDeployment(
   deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
+  const walletContract = Wallet__factory.connect(
+    deployment.walletProxy.proxy,
+    provider
+  );
+  const handlerContract = Handler__factory.connect(
+    deployment.handlerProxy.proxy,
+    provider
+  );
+  const depositManagerContract = DepositManager__factory.connect(
+    deployment.depositManagerProxy.proxy,
+    provider
+  );
+
   // Proxy admin owner matches deployment
   const proxyAdminContract = ProxyAdmin__factory.connect(
     deployment.proxyAdmin,
@@ -33,14 +47,14 @@ export async function checkNocturneContractDeployment(
     "Wallet proxy admin incorrectly set"
   );
 
-  // Vault proxy admin matches deployment proxy admin
-  const vaultProxyAdmin = await proxyAdmin(
+  // Handler proxy admin matches deployment proxy admin
+  const handlerProxyAdmin = await proxyAdmin(
     provider,
-    deployment.vaultProxy.proxy
+    deployment.handlerProxy.proxy
   );
   assertOrErr(
-    vaultProxyAdmin === deployment.proxyAdmin,
-    "Vault proxy admin incorrectly set"
+    handlerProxyAdmin === deployment.proxyAdmin,
+    "Handler proxy admin incorrectly set"
   );
 
   // Wallet proxy implementation matches deployment
@@ -53,19 +67,14 @@ export async function checkNocturneContractDeployment(
     "Wallet proxy implementation does not match deployment"
   );
 
-  // Vault proxy implementation matches deployment
-  const vaultProxyImplementation = await proxyImplementation(
+  // Handler proxy implementation matches deployment
+  const handlerProxyImplementation = await proxyImplementation(
     provider,
-    deployment.vaultProxy.proxy
+    deployment.handlerProxy.proxy
   );
   assertOrErr(
-    vaultProxyImplementation === deployment.vaultProxy.implementation,
-    "Vault proxy implementation does not match deployment"
-  );
-
-  const walletContract = Wallet__factory.connect(
-    deployment.walletProxy.proxy,
-    provider
+    handlerProxyImplementation === deployment.handlerProxy.implementation,
+    "Handler proxy implementation does not match deployment"
   );
 
   // Wallet joinsplit verifier matches deployment
@@ -73,11 +82,6 @@ export async function checkNocturneContractDeployment(
   assertOrErr(
     walletJoinSplitVerifier === deployment.joinSplitVerifierAddress,
     "Wallet joinsplit verifier does not match deployment"
-  );
-
-  const depositManagerContract = DepositManager__factory.connect(
-    deployment.depositManagerProxy.proxy,
-    provider
   );
 
   // Wallet whitelisted deposit manager as source
@@ -103,6 +107,12 @@ export async function checkNocturneContractDeployment(
   assertOrErr(
     walletOwner == deployment.owners.walletOwner,
     "On-chain wallet owner doesn't match config wallet owner"
+  );
+
+  const handlerOwner = await handlerContract.owner();
+  assertOrErr(
+    handlerOwner == deployment.owners.handlerOwner,
+    "On-chain handler owner doesn't match config handler owner"
   );
 
   const depositManagerOwner = await depositManagerContract.owner();

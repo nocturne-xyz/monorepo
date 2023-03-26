@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Snap takes handler contract addr for SDK not wallet
 - if op doesn't have `gasPrice` set, set it to chain's current gas price
 - set `gasAssets` in `DUMMY_CONFIG`
 - use new `NocturneWalletSDK` instead of `NocturneContext`

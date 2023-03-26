@@ -264,36 +264,18 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "operationDigest",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
       },
       {
         "indexed": true,
-        "internalType": "bool",
-        "name": "opProcessed",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "failureReason",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool[]",
-        "name": "callSuccesses",
-        "type": "bool[]"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes[]",
-        "name": "callResults",
-        "type": "bytes[]"
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
       }
     ],
-    "name": "OperationProcessed",
+    "name": "OwnershipTransferred",
     "type": "event"
   },
   {
@@ -420,73 +402,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "VERSION",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "joinSplitVerifier",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "subtreeUpdateVerifier",
-        "type": "address"
-      }
-    ],
-    "name": "__BalanceManager__init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "joinSplitVerifier",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "subtreeUpdateVerifier",
-        "type": "address"
-      }
-    ],
-    "name": "__CommitmentTreeManager_init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "_joinSplitVerifier",
-    "outputs": [
-      {
-        "internalType": "contract IJoinSplitVerifier",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -550,10 +465,10 @@
   },
   {
     "inputs": [],
-    "name": "_vault",
+    "name": "_wallet",
     "outputs": [
       {
-        "internalType": "contract IVault",
+        "internalType": "contract IWallet",
         "name": "",
         "type": "address"
       }
@@ -597,19 +512,346 @@
       {
         "components": [
           {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "commitmentTreeRoot",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nullifierA",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "nullifierB",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "newNoteACommitment",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "newNoteBCommitment",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256[8]",
+                "name": "proof",
+                "type": "uint256[8]"
+              },
+              {
+                "components": [
+                  {
+                    "internalType": "uint256",
+                    "name": "encodedAssetAddr",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encodedAssetId",
+                    "type": "uint256"
+                  }
+                ],
+                "internalType": "struct EncodedAsset",
+                "name": "encodedAsset",
+                "type": "tuple"
+              },
+              {
+                "internalType": "uint256",
+                "name": "publicSpend",
+                "type": "uint256"
+              },
+              {
+                "components": [
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint256",
+                        "name": "h1X",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h1Y",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h2X",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h2Y",
+                        "type": "uint256"
+                      }
+                    ],
+                    "internalType": "struct StealthAddress",
+                    "name": "owner",
+                    "type": "tuple"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encappedKey",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encryptedNonce",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encryptedValue",
+                    "type": "uint256"
+                  }
+                ],
+                "internalType": "struct EncryptedNote",
+                "name": "newNoteAEncrypted",
+                "type": "tuple"
+              },
+              {
+                "components": [
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint256",
+                        "name": "h1X",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h1Y",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h2X",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "h2Y",
+                        "type": "uint256"
+                      }
+                    ],
+                    "internalType": "struct StealthAddress",
+                    "name": "owner",
+                    "type": "tuple"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encappedKey",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encryptedNonce",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "encryptedValue",
+                    "type": "uint256"
+                  }
+                ],
+                "internalType": "struct EncryptedNote",
+                "name": "newNoteBEncrypted",
+                "type": "tuple"
+              }
+            ],
+            "internalType": "struct JoinSplit[]",
+            "name": "joinSplits",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "h1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h1Y",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2Y",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct StealthAddress",
+            "name": "refundAddr",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetAddr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetId",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct EncodedAsset[]",
+            "name": "encodedRefundAssets",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "contractAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "encodedFunction",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct Action[]",
+            "name": "actions",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetAddr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetId",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct EncodedAsset",
+            "name": "encodedGasAsset",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "executionGasLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxNumRefunds",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gasPrice",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Operation",
+        "name": "op",
+        "type": "tuple"
+      }
+    ],
+    "name": "executeActions",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "opProcessed",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "failureReason",
+            "type": "string"
+          },
+          {
+            "internalType": "bool[]",
+            "name": "callSuccesses",
+            "type": "bool[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "callResults",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "verificationGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "executionGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "numRefunds",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct OperationResult",
+        "name": "opResult",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fillBatchWithZeros",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          },
+          {
             "internalType": "address",
             "name": "spender",
             "type": "address"
           },
           {
-            "internalType": "uint256",
-            "name": "encodedAssetAddr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetId",
-            "type": "uint256"
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetAddr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetId",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct EncodedAsset",
+            "name": "encodedAsset",
+            "type": "tuple"
           },
           {
             "internalType": "uint256",
@@ -642,14 +884,24 @@
             "internalType": "struct StealthAddress",
             "name": "depositAddr",
             "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gasCompensation",
+            "type": "uint256"
           }
         ],
-        "internalType": "struct Deposit",
+        "internalType": "struct DepositRequest",
         "name": "deposit",
         "type": "tuple"
       }
     ],
-    "name": "depositFunds",
+    "name": "handleDeposit",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -877,6 +1129,23 @@
             "type": "tuple[]"
           },
           {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetAddr",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encodedAssetId",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct EncodedAsset",
+            "name": "encodedGasAsset",
+            "type": "tuple"
+          },
+          {
             "internalType": "uint256",
             "name": "executionGasLimit",
             "type": "uint256"
@@ -895,9 +1164,19 @@
         "internalType": "struct Operation",
         "name": "op",
         "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "perJoinSplitVerifyGas",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "bundler",
+        "type": "address"
       }
     ],
-    "name": "executeActions",
+    "name": "handleOperation",
     "outputs": [
       {
         "components": [
@@ -946,22 +1225,10 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "fillBatchWithZeros",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "joinSplitVerifier",
+        "name": "wallet",
         "type": "address"
       },
       {
@@ -1088,602 +1355,16 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "commitmentTreeRoot",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "nullifierA",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "nullifierB",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "newNoteACommitment",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "newNoteBCommitment",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256[8]",
-                    "name": "proof",
-                    "type": "uint256[8]"
-                  },
-                  {
-                    "components": [
-                      {
-                        "internalType": "uint256",
-                        "name": "encodedAssetAddr",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encodedAssetId",
-                        "type": "uint256"
-                      }
-                    ],
-                    "internalType": "struct EncodedAsset",
-                    "name": "encodedAsset",
-                    "type": "tuple"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "publicSpend",
-                    "type": "uint256"
-                  },
-                  {
-                    "components": [
-                      {
-                        "components": [
-                          {
-                            "internalType": "uint256",
-                            "name": "h1X",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h1Y",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h2X",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h2Y",
-                            "type": "uint256"
-                          }
-                        ],
-                        "internalType": "struct StealthAddress",
-                        "name": "owner",
-                        "type": "tuple"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encappedKey",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encryptedNonce",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encryptedValue",
-                        "type": "uint256"
-                      }
-                    ],
-                    "internalType": "struct EncryptedNote",
-                    "name": "newNoteAEncrypted",
-                    "type": "tuple"
-                  },
-                  {
-                    "components": [
-                      {
-                        "components": [
-                          {
-                            "internalType": "uint256",
-                            "name": "h1X",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h1Y",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h2X",
-                            "type": "uint256"
-                          },
-                          {
-                            "internalType": "uint256",
-                            "name": "h2Y",
-                            "type": "uint256"
-                          }
-                        ],
-                        "internalType": "struct StealthAddress",
-                        "name": "owner",
-                        "type": "tuple"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encappedKey",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encryptedNonce",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "encryptedValue",
-                        "type": "uint256"
-                      }
-                    ],
-                    "internalType": "struct EncryptedNote",
-                    "name": "newNoteBEncrypted",
-                    "type": "tuple"
-                  }
-                ],
-                "internalType": "struct JoinSplit[]",
-                "name": "joinSplits",
-                "type": "tuple[]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "h1X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h1Y",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2Y",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct StealthAddress",
-                "name": "refundAddr",
-                "type": "tuple"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "encodedAssetAddr",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encodedAssetId",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct EncodedAsset[]",
-                "name": "encodedRefundAssets",
-                "type": "tuple[]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "contractAddress",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "bytes",
-                    "name": "encodedFunction",
-                    "type": "bytes"
-                  }
-                ],
-                "internalType": "struct Action[]",
-                "name": "actions",
-                "type": "tuple[]"
-              },
-              {
-                "internalType": "uint256",
-                "name": "executionGasLimit",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "maxNumRefunds",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "gasPrice",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct Operation[]",
-            "name": "operations",
-            "type": "tuple[]"
-          }
-        ],
-        "internalType": "struct Bundle",
-        "name": "bundle",
-        "type": "tuple"
-      }
-    ],
-    "name": "processBundle",
+    "inputs": [],
+    "name": "owner",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "opProcessed",
-            "type": "bool"
-          },
-          {
-            "internalType": "string",
-            "name": "failureReason",
-            "type": "string"
-          },
-          {
-            "internalType": "bool[]",
-            "name": "callSuccesses",
-            "type": "bool[]"
-          },
-          {
-            "internalType": "bytes[]",
-            "name": "callResults",
-            "type": "bytes[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "verificationGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "executionGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "numRefunds",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct OperationResult[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "commitmentTreeRoot",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nullifierA",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "nullifierB",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "newNoteACommitment",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "newNoteBCommitment",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256[8]",
-                "name": "proof",
-                "type": "uint256[8]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "encodedAssetAddr",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encodedAssetId",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct EncodedAsset",
-                "name": "encodedAsset",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "publicSpend",
-                "type": "uint256"
-              },
-              {
-                "components": [
-                  {
-                    "components": [
-                      {
-                        "internalType": "uint256",
-                        "name": "h1X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
-                        "type": "uint256"
-                      }
-                    ],
-                    "internalType": "struct StealthAddress",
-                    "name": "owner",
-                    "type": "tuple"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encappedKey",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encryptedNonce",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encryptedValue",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct EncryptedNote",
-                "name": "newNoteAEncrypted",
-                "type": "tuple"
-              },
-              {
-                "components": [
-                  {
-                    "components": [
-                      {
-                        "internalType": "uint256",
-                        "name": "h1X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
-                        "type": "uint256"
-                      }
-                    ],
-                    "internalType": "struct StealthAddress",
-                    "name": "owner",
-                    "type": "tuple"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encappedKey",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encryptedNonce",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "encryptedValue",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct EncryptedNote",
-                "name": "newNoteBEncrypted",
-                "type": "tuple"
-              }
-            ],
-            "internalType": "struct JoinSplit[]",
-            "name": "joinSplits",
-            "type": "tuple[]"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "h1X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct StealthAddress",
-            "name": "refundAddr",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetAddr",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetId",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncodedAsset[]",
-            "name": "encodedRefundAssets",
-            "type": "tuple[]"
-          },
-          {
-            "components": [
-              {
-                "internalType": "address",
-                "name": "contractAddress",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes",
-                "name": "encodedFunction",
-                "type": "bytes"
-              }
-            ],
-            "internalType": "struct Action[]",
-            "name": "actions",
-            "type": "tuple[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "executionGasLimit",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "maxNumRefunds",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasPrice",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct Operation",
-        "name": "op",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint256",
-        "name": "perJoinSplitVerifyGas",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "bundler",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "processOperation",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "opProcessed",
-            "type": "bool"
-          },
-          {
-            "internalType": "string",
-            "name": "failureReason",
-            "type": "string"
-          },
-          {
-            "internalType": "bool[]",
-            "name": "callSuccesses",
-            "type": "bool[]"
-          },
-          {
-            "internalType": "bytes[]",
-            "name": "callResults",
-            "type": "bytes[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "verificationGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "executionGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "numRefunds",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct OperationResult",
-        "name": "opResult",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1697,6 +1378,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1742,6 +1430,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

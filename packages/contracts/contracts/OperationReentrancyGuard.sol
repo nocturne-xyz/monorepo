@@ -18,10 +18,10 @@ contract OperationReentrancyGuard is Initializable {
         _operationStage = NO_OPERATION_ENTERED;
     }
 
-    modifier processOperationGuard() {
+    modifier handleOperationGuard() {
         require(
             _operationStage == NO_OPERATION_ENTERED,
-            "Reentry into processOperation"
+            "Reentry into handleOperation"
         );
         _operationStage = ENTERED_PROCESS_OPERATION;
 

@@ -2,25 +2,39 @@
 pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
-import "../../libs/WalletUtils.sol";
+import "../../libs/OperationUtils.sol";
+import {IHandler} from "../../interfaces/IHandler.sol";
 import {BalanceManager} from "../../BalanceManager.sol";
 
-contract TestBalanceManager is BalanceManager {
+contract TestBalanceManager is IHandler, BalanceManager {
     using OperationLib for Operation;
 
     function initialize(
-        address vault,
-        address joinSplitVerifier,
+        address wallet,
         address subtreeUpdateVerifier
     ) external initializer {
-        __BalanceManager__init(vault, joinSplitVerifier, subtreeUpdateVerifier);
+        __BalanceManager_init(wallet, subtreeUpdateVerifier);
     }
 
-    function makeDeposit(
-        DepositRequest calldata deposit,
-        address source
-    ) public {
-        _makeDeposit(deposit, source);
+    modifier onlyWallet() {
+        require(msg.sender == address(_wallet), "Only wallet");
+        _;
+    }
+
+    // Stub to make testing between Wallet<>BalanceManager easier
+    function handleDeposit(
+        DepositRequest calldata deposit
+    ) external override onlyWallet {
+        StealthAddress calldata depositAddr = deposit.depositAddr;
+        _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
+    }
+
+    function handleOperation(
+        Operation calldata, // op
+        uint256, // perJoinSplitVerifyGas
+        address // bundler
+    ) external pure override returns (OperationResult memory) {
+        revert("Should not call this on TestBalanceManager");
     }
 
     function processJoinSplitsReservingFee(
@@ -55,7 +69,7 @@ contract TestBalanceManager is BalanceManager {
         Operation calldata op,
         OperationResult memory opResult
     ) public pure returns (uint256) {
-        return WalletUtils.calculateBundlerGasAssetPayout(op, opResult);
+        return OperationUtils.calculateBundlerGasAssetPayout(op, opResult);
     }
 
     function handleAllRefunds(Operation calldata op) public {

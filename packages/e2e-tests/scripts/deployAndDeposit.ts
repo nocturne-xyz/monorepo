@@ -2,8 +2,8 @@ import { deployContractsWithDummyAdmins } from "../src/deploy";
 import { ethers } from "ethers";
 import {
   DepositManager__factory,
+  Handler__factory,
   SimpleERC20Token__factory,
-  Wallet__factory,
 } from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
@@ -16,6 +16,9 @@ import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 const HH_URL = "http://localhost:8545";
+
+// Corresponds to privkey 0x000...005
+const SUBTREE_BATCH_FILLER = "0xe1AB8145F7E55DC933d51a18c793F901A3A0b276";
 
 // Corresponds to privkey 0x000...006
 const DEPOSIT_SCREENER = "0xE57bFE9F44b819898F47BF37E5AF72a0783e1141";
@@ -42,27 +45,18 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   },
 ];
 
-const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLER;
-
 (async () => {
   console.log("deploying contracts with dummy proxy admin...");
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
   const chainId = BigInt((await provider.getNetwork()).chainId);
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
-  const subtreeBatchFillers = [deployerEoa.address];
-  if (SUBTREE_BATCH_FILLER) {
-    subtreeBatchFillers.push(SUBTREE_BATCH_FILLER);
-  }
-
-  console.log("subtree batch fillers:", subtreeBatchFillers);
-
-  const { depositManagerProxy, walletProxy } =
+  const { depositManagerProxy, handlerProxy } =
     await deployContractsWithDummyAdmins(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
-      subtreeBatchFillers,
+      subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
     });
-  const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
+  const handler = Handler__factory.connect(handlerProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
     depositManagerProxy.proxy,
     deployerEoa
@@ -134,5 +128,5 @@ const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLE
     }
   }
 
-  await wallet.connect(deployerEoa).fillBatchWithZeros();
+  await handler.connect(deployerEoa).fillBatchWithZeros();
 })();

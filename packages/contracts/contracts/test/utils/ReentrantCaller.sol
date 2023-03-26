@@ -2,11 +2,13 @@
 pragma solidity ^0.8.17;
 
 import {Wallet} from "../../Wallet.sol";
+import {Handler} from "../../Handler.sol";
 import "./NocturneUtils.sol";
 import "../../libs/Types.sol";
 
 contract ReentrantCaller {
     Wallet _wallet;
+    Handler _handler;
     SimpleERC20Token _token;
 
     uint256 public constant PER_NOTE_AMOUNT = 50_000_000;
@@ -17,8 +19,9 @@ contract ReentrantCaller {
         _;
     }
 
-    constructor(Wallet wallet, SimpleERC20Token token) {
+    constructor(Wallet wallet, Handler handler, SimpleERC20Token token) {
         _wallet = wallet;
+        _handler = handler;
         _token = token;
     }
 
@@ -28,7 +31,7 @@ contract ReentrantCaller {
                 FormatOperationArgs({
                     joinSplitToken: _token,
                     gasToken: _token,
-                    root: _wallet.root(),
+                    root: _handler.root(),
                     publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
                     numJoinSplits: 6,
                     encodedRefundAssets: new EncodedAsset[](0),
@@ -45,20 +48,20 @@ contract ReentrantCaller {
             );
     }
 
-    function reentrantProcessBundle() external onlyWallet {
+    function reentrantProcessBundle() external {
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatOperation();
         _wallet.processBundle(bundle);
     }
 
-    function reentrantProcessOperation() external onlyWallet {
+    function reentrantProcessOperation() external {
         Operation memory op = formatOperation();
-        _wallet.processOperation(op, 0, address(0x0));
+        _handler.handleOperation(op, 0, address(0x0));
     }
 
-    function reentrantExecuteActions() external onlyWallet {
+    function reentrantExecuteActions() external {
         Operation memory op = formatOperation();
-        _wallet.executeActions(op);
+        _handler.executeActions(op);
     }
 }

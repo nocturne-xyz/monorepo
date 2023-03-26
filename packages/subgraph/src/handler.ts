@@ -2,7 +2,7 @@ import {
   JoinSplitProcessed,
   RefundProcessed,
   SubtreeUpdate,
-} from "../generated/Wallet/Wallet";
+} from "../generated/Handler/Handler";
 import {
   EncodedNote,
   EncodedOrEncryptedNote,

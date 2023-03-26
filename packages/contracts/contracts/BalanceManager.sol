@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 import "./CommitmentTreeManager.sol";
-import {IVault} from "./interfaces/IVault.sol";
+import {IWallet} from "./interfaces/IWallet.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
-import {WalletUtils} from "./libs/WalletUtils.sol";
+import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 import "./OperationReentrancyGuard.sol";
 
@@ -23,21 +23,20 @@ contract BalanceManager is
 {
     using OperationLib for Operation;
 
-    IVault public _vault;
+    IWallet public _wallet;
 
     EncodedAsset[] public _receivedAssets;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
-    function __BalanceManager__init(
-        address vault,
-        address joinSplitVerifier,
+    function __BalanceManager_init(
+        address wallet,
         address subtreeUpdateVerifier
-    ) public onlyInitializing {
+    ) internal onlyInitializing {
         __OperationReentrancyGuard_init();
-        __CommitmentTreeManager_init(joinSplitVerifier, subtreeUpdateVerifier);
-        _vault = IVault(vault);
+        __CommitmentTreeManager_init(subtreeUpdateVerifier);
+        _wallet = IWallet(wallet);
     }
 
     function onERC721Received(
@@ -80,7 +79,7 @@ contract BalanceManager is
             );
         }
 
-        // ENTERED_PROCESS is ok because this is when vault funds wallet
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -110,7 +109,7 @@ contract BalanceManager is
             }
         }
 
-        // ENTERED_PROCESS is ok because this is when vault funds wallet
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
@@ -123,23 +122,12 @@ contract BalanceManager is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    function _makeDeposit(
-        DepositRequest calldata deposit,
-        address source
-    ) internal {
-        StealthAddress calldata depositAddr = deposit.depositAddr;
-
-        _handleRefundNote(depositAddr, deposit.encodedAsset, deposit.value);
-
-        _vault.makeDeposit(deposit, source);
-    }
-
     /**
       Process all joinSplits and request all declared publicSpend from the
-      vault, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
+      wallet, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from vault with the same encodedAsset as
+      to request maxGasAssetCost from wallet with the same encodedAsset as
       joinSplits[0].
     */
     function _processJoinSplitsReservingFee(
@@ -155,7 +143,7 @@ contract BalanceManager is
             // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
 
-            // Defaults to requesting all publicSpend from vault
+            // Defaults to requesting all publicSpend from wallet
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
             // If we still need to reserve more gas and the current
             // `joinSplit` is spending the gasAsset, then reserve what we can
@@ -178,7 +166,7 @@ contract BalanceManager is
 
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
-                _vault.requestAsset(
+                _wallet.requestAsset(
                     op.joinSplits[i].encodedAsset,
                     valueToTransfer
                 );
@@ -198,15 +186,13 @@ contract BalanceManager is
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
-            // Request reserved gasAssetAmount from vault.
+            // Request reserved gasAssetAmount from wallet.
             /// @dev This is safe because _processJoinSplitsReservingFee is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
-            _vault.requestAsset(encodedGasAsset, gasAssetAmount);
+            _wallet.requestAsset(encodedGasAsset, gasAssetAmount);
 
-            uint256 bundlerPayout = WalletUtils.calculateBundlerGasAssetPayout(
-                op,
-                opResult
-            );
+            uint256 bundlerPayout = OperationUtils
+                .calculateBundlerGasAssetPayout(op, opResult);
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
         }
     }
@@ -249,12 +235,12 @@ contract BalanceManager is
 
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
-        StealthAddress memory refundAddr
+        StealthAddress calldata refundAddr
     ) internal {
         uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
         if (value != 0) {
-            AssetUtils.transferAssetTo(encodedAsset, address(_vault), value);
-            _handleRefundNote(refundAddr, encodedAsset, value);
+            AssetUtils.transferAssetTo(encodedAsset, address(_wallet), value);
+            _handleRefundNote(encodedAsset, refundAddr, value);
         }
     }
 }

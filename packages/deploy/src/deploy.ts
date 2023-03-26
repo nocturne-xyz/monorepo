@@ -7,7 +7,7 @@ import {
   TestSubtreeUpdateVerifier,
   TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
-  Vault__factory,
+  Handler__factory,
   Wallet__factory,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
@@ -23,6 +23,7 @@ import { Address } from "./utils";
 export interface NocturneDeployArgs {
   proxyAdminOwner: Address;
   walletOwner: Address;
+  handlerOwner: Address;
   depositManagerOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
@@ -55,13 +56,13 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  // Deploy vault proxy, un-initialized
-  console.log("\nDeploying proxied Vault");
-  const proxiedVault = await deployProxiedContract(
-    new Vault__factory(connectedSigner),
+  // Deploy handler proxy, un-initialized
+  console.log("\nDeploying proxied Handler");
+  const proxiedHandler = await deployProxiedContract(
+    new Handler__factory(connectedSigner),
     proxyAdmin
   );
-  console.log("Deployed proxied Vault:", proxiedVault.proxyAddresses);
+  console.log("Deployed proxied Handler:", proxiedHandler.proxyAddresses);
 
   console.log("\nDeploying JoinSplitVerifier");
   const joinSplitVerifier = await new JoinSplitVerifier__factory(
@@ -86,30 +87,22 @@ export async function deployNocturne(
   const proxiedWallet = await deployProxiedContract(
     new Wallet__factory(connectedSigner),
     proxyAdmin,
-    [
-      proxiedVault.address,
-      joinSplitVerifier.address,
-      subtreeUpdateVerifier.address,
-    ]
+    [proxiedHandler.address, joinSplitVerifier.address]
   );
   console.log("Deployed proxied Wallet:", proxiedWallet.proxyAddresses);
 
-  console.log("Initializing proxied Vault");
-  const vaultInitTx = await proxiedVault.contract.initialize(
-    proxiedWallet.address
+  console.log("Initializing proxied Handler");
+  const handlerInitTx = await proxiedHandler.contract.initialize(
+    proxiedWallet.address,
+    subtreeUpdateVerifier.address
   );
-  await vaultInitTx.wait(opts?.confirmations);
+  await handlerInitTx.wait(opts?.confirmations);
 
   console.log("\nDeploying proxied DepositManager");
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
-    [
-      "NocturneDepositManager",
-      "v1",
-      proxiedWallet.address,
-      proxiedVault.address,
-    ]
+    ["NocturneDepositManager", "v1", proxiedWallet.address]
   );
   console.log(
     "Deployed proxied DepositManager:",
@@ -127,7 +120,7 @@ export async function deployNocturne(
 
   console.log("setting subtre batch fillers\n");
   for (const filler of args.subtreeBatchFillers) {
-    const tx = await proxiedWallet.contract.setSubtreeBatchFillerPermission(
+    const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
       filler,
       true
     );
@@ -142,10 +135,16 @@ export async function deployNocturne(
     );
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
-  console.log("Relinquishing control of wallet and deposit manager\n");
+  console.log(
+    "Relinquishing control of wallet, handler, and deposit manager\n"
+  );
   const walletTransferOwnershipTx =
     await proxiedWallet.contract.transferOwnership(args.walletOwner);
   await walletTransferOwnershipTx.wait(opts?.confirmations);
+
+  const handlerTransferOwnershipTx =
+    await proxiedHandler.contract.transferOwnership(args.handlerOwner);
+  await handlerTransferOwnershipTx.wait(opts?.confirmations);
 
   const depositManagerTransferOwnershipTx =
     await proxiedDepositManager.contract.transferOwnership(
@@ -162,12 +161,13 @@ export async function deployNocturne(
     owners: {
       proxyAdminOwner: args.proxyAdminOwner,
       walletOwner: args.walletOwner,
+      handlerOwner: args.handlerOwner,
       depositManagerOwner: args.depositManagerOwner,
     },
     proxyAdmin: proxyAdmin.address,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
     walletProxy: proxiedWallet.proxyAddresses,
-    vaultProxy: proxiedVault.proxyAddresses,
+    handlerProxy: proxiedHandler.proxyAddresses,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
     screeners: args.screeners,

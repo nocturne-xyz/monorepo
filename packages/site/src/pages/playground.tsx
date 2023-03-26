@@ -9,7 +9,7 @@ import {
   AssetBalancesDisplay,
   DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
-import { VAULT_CONTRACT_ADDRESS, WALLET_CONTRACT_ADDRESS } from "../config";
+import { WALLET_CONTRACT_ADDRESS } from "../config";
 import { BUNDLER_ENDPOINT } from "../config/bundler";
 
 const Container = styled.div`
@@ -62,14 +62,12 @@ const Playground = () => {
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
-    loadNocturneFrontendSDK(
-      BUNDLER_ENDPOINT,
-      WALLET_CONTRACT_ADDRESS,
-      VAULT_CONTRACT_ADDRESS
-    ).then((sdk) => {
-      console.log("Instantiated frontend sdk");
-      setFrontendSDK(sdk);
-    });
+    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, WALLET_CONTRACT_ADDRESS).then(
+      (sdk) => {
+        console.log("Instantiated frontend sdk");
+        setFrontendSDK(sdk);
+      }
+    );
   }, [loadNocturneFrontendSDK, state.installedSnap]);
 
   const sync = async () => {

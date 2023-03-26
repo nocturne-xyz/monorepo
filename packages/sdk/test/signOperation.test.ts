@@ -13,7 +13,7 @@ import { signOperation } from "../src/signOperation";
 
 describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
-    const [nocturneDB, merkleProver, signer, walletContract] = await setup(
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n],
       [shitcoin, shitcoin]
     );
@@ -22,7 +22,7 @@ describe("signOperation", () => {
       gasAssets: testGasAssets,
       merkle: merkleProver,
       viewer: signer,
-      walletContract,
+      handlerContract,
     };
 
     const receiverSk = generateRandomSpendingKey();

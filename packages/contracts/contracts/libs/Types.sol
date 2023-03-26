@@ -122,18 +122,6 @@ struct DepositRequest {
     uint256 gasCompensation;
 }
 
-library BundleLib {
-    function totalNumJoinSplits(
-        Bundle calldata self
-    ) internal pure returns (uint256) {
-        uint256 total = 0;
-        for (uint256 i = 0; i < self.operations.length; i++) {
-            total += self.operations[i].joinSplits.length;
-        }
-        return total;
-    }
-}
-
 library OperationLib {
     function maxGasLimit(
         Operation calldata self,
