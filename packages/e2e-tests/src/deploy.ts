@@ -262,6 +262,7 @@ export async function setupTestDeployment(
   await Promise.all(proms);
 
   const teardown = async () => {
+    console.log("tearing down offchain actors...")
     // teardown offchain actors
     const proms = [];
 
@@ -287,12 +288,14 @@ export async function setupTestDeployment(
 
     // teradown subgraph
     if (config.include.subgraph) {
+      console.log("tearing down subgraph...")
       await stopSubgraph();
     }
 
     // wait for subgraph to tear down
     await sleep(10_000);
 
+    console.log("tearing down anvil...")
     // teardown anvil node
     await stopAnvil();
 
