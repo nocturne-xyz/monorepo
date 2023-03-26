@@ -45,6 +45,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
     address constant ALICE = address(1);
     address constant BOB = address(2);
+    address constant BUNDLER = address(3);
     address constant DEPOSIT_SOURCE = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
@@ -224,12 +225,12 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.stopPrank();
     }
 
-    function testProcessBundleTransferSingleJoinSplit() public {
-        // Alice starts with 2 * 50M tokens in wallet
+    function testProcessBundleTransferSingleJoinSplitWithBundlerComp() public {
+        // Alice starts with 50M tokens in wallet
         SimpleERC20Token token = ERC20s[0];
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
-        // Create operation to transfer 50M tokens to bob
+        // Create operation to transfer 25M tokens to bob of 50M note
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -241,20 +242,17 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
-                gasPrice: 0,
+                gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
                     token,
                     BOB,
-                    PER_NOTE_AMOUNT
+                    PER_NOTE_AMOUNT / 2
                 ),
                 joinSplitsFailureType: JoinSplitsFailureType.NONE
             })
         );
 
-        assertEq(
-            token.balanceOf(address(wallet)),
-            uint256(2 * PER_NOTE_AMOUNT)
-        );
+        assertEq(token.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
@@ -263,6 +261,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             ExpectOperationProcessedArgs({maybeFailureReason: ""})
         );
 
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
@@ -272,12 +271,17 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
 
-        // Expect BOB to have the 50M sent by alice
-        // Expect wallet to have alice's remaining 50M
-        assertEq(token.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
+        // Expect BOB to have the 25M sent by alice
+        // Expect wallet to have alice's remaining 25M - gasComp
+        // Expect BUNDLER to have > 0 gas tokens
+        assertLt(
+            token.balanceOf(address(wallet)),
+            uint256(PER_NOTE_AMOUNT / 2)
+        );
+        assertGt(token.balanceOf(BUNDLER), 0);
         assertEq(token.balanceOf(address(handler)), uint256(0));
-        assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(ALICE), uint256(0));
+        assertEq(token.balanceOf(BOB), uint256(PER_NOTE_AMOUNT / 2));
     }
 
     function testProcessBundleTransferThreeJoinSplit() public {
@@ -620,7 +624,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -636,17 +640,15 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Alice lost some private balance due to bundler comp. Bob (acting as
-        // bundler) has a little bit of tokens. Can't calculate exact amount
-        // because verification uses mock verifiers + small amount of gas paid
-        // out for failed transfer action.
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
         assertLt(
             token.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     function testProcessBundleFailureReentrancyProcessBundleDirect() public {
@@ -712,7 +714,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = false
@@ -720,17 +722,15 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "Cannot call the Nocturne wallet");
 
-        // Alice lost some private balance due to bundler comp. Bob (acting as
-        // bundler) has a little bit of tokens. Can't calculate exact amount
-        // because verification uses mock verifiers + small amount of gas paid
-        // out for failed transfer action.
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens
         assertLt(
             token.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     function testProcessBundleFailureReentrancyProcessOperationHandlerCaller()
@@ -796,7 +796,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, call[0] failed, handleOperation only
@@ -813,17 +813,15 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Alice lost some private balance due to bundler comp. Bob (acting as
-        // bundler) has a little bit of tokens. Can't calculate exact amount
-        // because verification uses mock verifiers + small amount of gas paid
-        // out for failed transfer action.
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
         assertLt(
             token.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     function testProcessBundleFailureReentrancyExecuteActionsHandlerCaller()
@@ -889,7 +887,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         );
 
         // Op was processed but call result has reentry failure message
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -905,17 +903,15 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Alice lost some private balance due to bundler comp. Bob (acting as
-        // bundler) has a little bit of tokens. Can't calculate exact amount
-        // because verification uses mock verifiers + small amount of gas paid
-        // out for failed transfer action.
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
         assertLt(
             token.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     // Test failing calls
@@ -960,7 +956,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         );
 
         // Use Bob as bundler for this call
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
@@ -976,17 +972,15 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Alice lost some private balance due to bundler comp. Bob (acting as
-        // bundler) has a little bit of tokens. Can't calculate exact amount
-        // because verification uses mock verifiers + small amount of gas paid
-        // out for failed transfer action.
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
         assertLt(
             token.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BOB)), uint256(0)); // Bob gained funds
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     function testProcessBundleSuccessfulAllRefunds() public {
@@ -1194,7 +1188,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vm.prank(BOB);
+        vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = false, call[0] failed (too many refunds)
@@ -1207,13 +1201,13 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Wallet lost some tokenIn to BOB due to bundler gas fee, but otherwise
+        // Wallet lost some tokenIn to BUNDLER due to bundler gas fee, but otherwise
         // no state changes
         assertLt(
             tokenIn.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertGt(tokenIn.balanceOf(BOB), 0);
+        assertGt(tokenIn.balanceOf(BUNDLER), 0);
         assertEq(erc20Out.balanceOf(address(wallet)), uint256(0));
         assertEq(erc721Out.balanceOf(address(wallet)), uint256(0));
         assertEq(
@@ -1393,6 +1387,4 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.expectRevert("Only this");
         handler.executeActions(op);
     }
-
-    // TODO: test bundler compensation success case
 }
