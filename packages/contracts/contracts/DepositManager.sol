@@ -21,6 +21,9 @@ contract DepositManager is
     mapping(address => uint256) public _nonces;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
 
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
     event ScreenerPermissionSet(address screener, bool permission);
 
     event DepositInstantiated(

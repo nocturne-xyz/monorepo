@@ -11,6 +11,13 @@ import {BalanceManager} from "./BalanceManager.sol";
 import "./libs/Types.sol";
 
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
+    mapping(address => bool) public _subtreeBatchFiller;
+
+    // gap for upgrade safety
+    uint256[50] private __GAP;
+
+    event SubtreeBatchFillerPermissionSet(address filler, bool permission);
+
     function initialize(
         address wallet,
         address subtreeUpdateVerifier
@@ -27,6 +34,24 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     modifier onlyWallet() {
         require(msg.sender == address(_wallet), "Only wallet");
         _;
+    }
+
+    modifier onlySubtreeBatchFiller() {
+        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
+        _;
+    }
+
+    // Gives an address permission to call `fillBatchesWithZeros`
+    function setSubtreeBatchFillerPermission(
+        address filler,
+        bool permission
+    ) external onlyOwner {
+        _subtreeBatchFiller[filler] = permission;
+        emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
+    function fillBatchWithZeros() external onlySubtreeBatchFiller {
+        _fillBatchWithZeros();
     }
 
     function handleDeposit(

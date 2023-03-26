@@ -120,7 +120,7 @@ export async function deployNocturne(
 
   console.log("setting subtre batch fillers\n");
   for (const filler of args.subtreeBatchFillers) {
-    const tx = await proxiedWallet.contract.setSubtreeBatchFillerPermission(
+    const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
       filler,
       true
     );

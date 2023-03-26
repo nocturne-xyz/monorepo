@@ -23,8 +23,8 @@ const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
-const GAS_TOKEN1 = "0x510C6297cC30A058F41eb4AF1BFC9953EaD8b577";
-const GAS_TOKEN2 = "0xcbD945E77ADB65651F503723aC322591f3435cC5";
+const GAS_TOKEN1 = "0xbfce6B877Ebff977bB6e80B24FbBb7bC4eBcA4df";
+const GAS_TOKEN2 = "0xcd75Ad7AC9C9325105f798c476E84176648F391A";
 
 const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   startBlock: 0,

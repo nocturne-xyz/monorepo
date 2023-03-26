@@ -86,7 +86,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         handler.initialize(address(wallet), address(subtreeUpdateVerifier));
         wallet.initialize(address(handler), address(joinSplitVerifier));
+
         wallet.setDepositSourcePermission(DEPOSIT_SOURCE, true);
+        handler.setSubtreeBatchFillerPermission(address(this), true);
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));

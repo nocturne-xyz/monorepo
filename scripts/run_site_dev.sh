@@ -53,9 +53,10 @@ SUBTREE_UPDATER_ADDRESS="0xe1AB8145F7E55DC933d51a18c793F901A3A0b276"
 
 # Eth address: 0xE57bFE9F44b819898F47BF37E5AF72a0783e1141
 SCREENER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000006"
+
 # deposit
 echo "Running deposit funds script..."
-SUBTREE_BATCH_FILLER="$SUBTREE_UPDATER_ADDRESS" yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
+yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
 
 # read config variables from logs
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
