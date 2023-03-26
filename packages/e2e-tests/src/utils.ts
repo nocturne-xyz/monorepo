@@ -236,10 +236,10 @@ export function runCommandDetached(
 
   // kill child if parent exits first
   process.on("exit", () => {
-    child.kill();
+    child.kill("SIGINT");
   });
 
   return () => {
-    child.kill();
+    child.kill("SIGINT");
   };
 }
