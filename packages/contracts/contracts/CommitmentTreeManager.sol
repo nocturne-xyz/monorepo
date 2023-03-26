@@ -140,7 +140,7 @@ contract CommitmentTreeManager is Initializable {
         emit InsertNotes(notes);
     }
 
-    function fillBatchWithZeros() external {
+    function _fillBatchWithZeros() internal {
         uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
         uint256[] memory zeros = new uint256[](numToInsert);
         insertNoteCommitments(zeros);

@@ -42,14 +42,25 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   },
 ];
 
+const SUBTREE_BATCH_FILLER: string | undefined = process.env.SUBTREE_BATCH_FILLER;
+
 (async () => {
   console.log("deploying contracts with dummy proxy admin...");
   const provider = new ethers.providers.JsonRpcProvider(HH_URL);
   const chainId = BigInt((await provider.getNetwork()).chainId);
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
+
+  const subtreeBatchFillers = [deployerEoa.address];
+  if (SUBTREE_BATCH_FILLER) {
+    subtreeBatchFillers.push(SUBTREE_BATCH_FILLER);
+  }
+
+  console.log("subtree batch fillers:", subtreeBatchFillers);
+
   const { depositManagerProxy, walletProxy } =
     await deployContractsWithDummyAdmins(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
+      subtreeBatchFillers,
     });
   const wallet = Wallet__factory.connect(walletProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(

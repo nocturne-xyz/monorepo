@@ -186,9 +186,24 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         uint256 root = path[path.length - 1];
 
         // fill the tree batch
+        wallet.setSubtreeBatchFillerPermission(address(this), true);
         wallet.fillBatchWithZeros();
 
         wallet.applySubtreeUpdate(root, NocturneUtils.dummyProof());
+    }
+
+    function testFillBatchWithZerosNotFiller() public {
+        vm.expectRevert("Only subtree batch filler");
+        vm.prank(ALICE);
+        wallet.fillBatchWithZeros();
+    }
+
+    function testFillBatchWithZeros() public {
+        wallet.setSubtreeBatchFillerPermission(ALICE, true);
+        vm.prank(ALICE);
+        wallet.fillBatchWithZeros();
+
+        assertEq(wallet.totalCount(), 16);
     }
 
     function testDepositNotDepositSource() public {

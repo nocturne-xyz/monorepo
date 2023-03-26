@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- have site script pass in subtree updater address to deploy script
 - site script works with deposit screener
 - site script feeds snap gas tokens
 - Site script logs deposit manager
