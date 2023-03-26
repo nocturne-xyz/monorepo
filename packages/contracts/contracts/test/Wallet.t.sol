@@ -57,6 +57,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
 
+    event DepositSourcePermissionSet(address source, bool permission);
+
     event RefundProcessed(
         StealthAddress refundAddr,
         uint256 nonce,
@@ -182,6 +184,18 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // fill the tree batch
         handler.fillBatchWithZeros();
         handler.applySubtreeUpdate(root, NocturneUtils.dummyProof());
+    }
+
+    function testSetDepositSourcePermission() public {
+        vm.prank(BOB); // not owner
+        vm.expectRevert("Ownable: caller is not the owner");
+        wallet.setDepositSourcePermission(address(0x123), true);
+
+        // Send from owner, succeeds
+        vm.expectEmit(true, true, true, true);
+        emit DepositSourcePermissionSet(address(0x123), true);
+        vm.prank(address(this));
+        wallet.setDepositSourcePermission(address(0x123), true);
     }
 
     function testDepositNotDepositSource() public {

@@ -27,8 +27,13 @@ contract BalanceManager is
 
     EncodedAsset[] public _receivedAssets;
 
+    // Mapping of encoded asset hash => prefilled balance
+    mapping(bytes32 => uint256) public _prefilledAssetBalances;
+
     // gap for upgrade safety
     uint256[50] private __GAP;
+
+    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
 
     function __BalanceManager_init(
         address wallet,
@@ -39,87 +44,18 @@ contract BalanceManager is
         _wallet = IWallet(wallet);
     }
 
-    function onERC721Received(
-        address, // operator
-        address, // from
-        uint256 id,
-        bytes calldata // data
-    ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
-        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
-            return 0;
-        }
+    function _addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) internal {
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        _prefilledAssetBalances[assetHash] += value;
 
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            _receivedAssets.push(
-                AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
-            );
-        }
-        // Accept the transfer when _operation_stage != _NOT_ENTERED
-        return IERC721ReceiverUpgradeable.onERC721Received.selector;
-    }
-
-    function onERC1155Received(
-        address, // operator
-        address, // from
-        uint256 id,
-        uint256, // value
-        bytes calldata // data
-    ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
-        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
-            return 0;
-        }
-
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            _receivedAssets.push(
-                AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
-            );
-        }
-
-        // ENTERED_PROCESS is ok because this is when wallet funds handler
-        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address, // operator
-        address, // from
-        uint256[] calldata ids,
-        uint256[] calldata, // values
-        bytes calldata // data
-    ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
-        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
-            return 0;
-        }
-
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            uint256 numIds = ids.length;
-            for (uint256 i = 0; i < numIds; i++) {
-                _receivedAssets.push(
-                    AssetUtils.encodeAsset(
-                        AssetType.ERC1155,
-                        msg.sender,
-                        ids[i]
-                    )
-                );
-            }
-        }
-
-        // ENTERED_PROCESS is ok because this is when wallet funds handler
-        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
-    }
-
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external pure override returns (bool) {
-        return
-            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
-            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
-            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
+        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
+        emit UpdatedAssetPrefill(
+            encodedAsset,
+            _prefilledAssetBalances[assetHash]
+        );
     }
 
     /**
@@ -237,10 +173,102 @@ contract BalanceManager is
         EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr
     ) internal {
-        uint256 value = AssetUtils.balanceOfAsset(encodedAsset);
-        if (value != 0) {
-            AssetUtils.transferAssetTo(encodedAsset, address(_wallet), value);
-            _handleRefundNote(encodedAsset, refundAddr, value);
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        uint256 preFilledBalance = _prefilledAssetBalances[assetHash];
+
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+        if (currentBalance > preFilledBalance) {
+            uint256 difference = currentBalance - preFilledBalance;
+            AssetUtils.transferAssetTo(
+                encodedAsset,
+                address(_wallet),
+                difference
+            );
+            _handleRefundNote(encodedAsset, refundAddr, difference);
         }
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        bytes calldata // data
+    ) external override returns (bytes4) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            _receivedAssets.push(
+                AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
+            );
+        }
+
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        uint256, // value
+        bytes calldata // data
+    ) external override returns (bytes4) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            _receivedAssets.push(
+                AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
+            );
+        }
+
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata ids,
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external override returns (bytes4) {
+        // Must reject the transfer outside of an operation processing
+        if (reentrancyGuardStage() == NO_OPERATION_ENTERED) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            uint256 numIds = ids.length;
+            for (uint256 i = 0; i < numIds; i++) {
+                _receivedAssets.push(
+                    AssetUtils.encodeAsset(
+                        AssetType.ERC1155,
+                        msg.sender,
+                        ids[i]
+                    )
+                );
+            }
+        }
+
+        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
+            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
+            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 }

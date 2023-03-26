@@ -21,6 +21,13 @@ contract TestBalanceManager is IHandler, BalanceManager {
         _;
     }
 
+    function addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) public {
+        _addToAssetPrefill(encodedAsset, value);
+    }
+
     // Stub to make testing between Wallet<>BalanceManager easier
     function handleDeposit(
         DepositRequest calldata deposit
