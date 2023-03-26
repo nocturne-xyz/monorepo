@@ -30,7 +30,5 @@ export async function startAnvil(
   await sleep(5_000);
   return async () => {
     stop();
-    // wait a bit for anvil to stop stops and unbind from port
-    await sleep(5_000);
   };
 }

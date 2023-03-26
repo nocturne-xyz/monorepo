@@ -277,19 +277,27 @@ export async function setupTestDeployment(
       const teardown = async () => {
         await subtreeUpdaterContainer?.stop();
         await subtreeUpdaterContainer?.remove();
-        await sleep(10_000);
       };
       proms.push(teardown());
     }
     await Promise.all(proms);
+
+    // wait for actors to teardown
+    await sleep(10_000);
 
     // teradown subgraph
     if (config.include.subgraph) {
       await stopSubgraph();
     }
 
+    // wait for subgraph to tear down
+    await sleep(10_000);
+
     // teardown anvil node
     await stopAnvil();
+    
+    // wait for anvil to tear down
+    await sleep(5_000);
   };
 
   return {

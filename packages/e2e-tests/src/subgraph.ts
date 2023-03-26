@@ -48,5 +48,4 @@ export async function stopSubgraph(): Promise<void> {
     cwd: GRAPH_NODE_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
-  await sleep(20_000);
 }

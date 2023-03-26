@@ -55,5 +55,4 @@ export async function stopBundler(): Promise<void> {
     cwd: BUNDLER_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
-  await sleep(10_000);
 }
