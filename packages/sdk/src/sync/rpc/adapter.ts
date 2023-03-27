@@ -61,11 +61,11 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // if `to` > current block number, want to only fetch up to current block number
         to = min(to, await handlerContract.provider.getBlockNumber());
 
-        // if `from` >= `to`, we've caught up to the tip of the chain
+        // if `from` > `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
         // and no new blocks were produced since then
         // sleep for a bit and re-try to avoid spamming the RPC endpoint
-        if (from >= to) {
+        if (from > to) {
           await sleep(5_000);
           continue;
         }
