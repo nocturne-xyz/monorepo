@@ -815,7 +815,7 @@ contract BalanceManagerTest is Test {
         vm.prank(ALICE);
         refundToken.transfer(address(balanceManager), refundAmount);
 
-        // Assert we have sent amount + 1 from prefill before handling refunds
+        // Assert balance manager has amount + 1 before handling refunds
         assertEq(
             joinSplitToken.balanceOf(address(balanceManager)),
             PER_NOTE_AMOUNT + 1
@@ -825,7 +825,7 @@ contract BalanceManagerTest is Test {
             refundAmount + 1
         );
 
-        // Expect all refund tokens to be refunded to vault barring the
+        // Expect all refund tokens to be refunded to wallet barring the
         // prefilled 1s
         balanceManager.handleAllRefunds(op);
 
