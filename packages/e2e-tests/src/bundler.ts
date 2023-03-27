@@ -1,4 +1,4 @@
-import { sleep, makeRedisInstance } from "./utils";
+import { makeRedisInstance } from "./utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -25,7 +25,6 @@ export async function startBundler(
   const stopServer = startBundlerServer(config, redis);
   const stopBatcher = startBundlerBatcher(config, redis);
   const stopSubmitter = startBundlerSubmitter(config, redis);
-  await sleep(10_000);
 
   return async () => {
     await Promise.all([stopServer(), stopBatcher(), stopSubmitter()]);

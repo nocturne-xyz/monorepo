@@ -41,7 +41,6 @@ import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
-import Dockerode from "dockerode";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -130,8 +129,6 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
   startBlock: 0,
 };
-
-const docker = new Dockerode();
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
@@ -230,6 +227,8 @@ export async function setupTestDeployment(
   }
 
   const actorTeardownFns = await Promise.all(proms);
+  // wait for them all to start up
+  await sleep(3_000);
 
   const teardown = async () => {
     console.log("tearing down offchain actors...");
@@ -237,7 +236,7 @@ export async function setupTestDeployment(
     await Promise.all(actorTeardownFns.map((fn) => fn()));
 
     // wait for actors to teardown
-    await sleep(10_000);
+    await sleep(3_000);
 
     // teradown subgraph
     if (stopSubgraph) {
@@ -253,7 +252,7 @@ export async function setupTestDeployment(
     await stopAnvil();
 
     // wait for anvil to tear down
-    await sleep(5_000);
+    await sleep(1_000);
   };
 
   return {

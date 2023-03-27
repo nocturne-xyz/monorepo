@@ -1,4 +1,3 @@
-import { sleep } from "./utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
@@ -28,8 +27,6 @@ export async function startSubtreeUpdater(
 
   await updater.init();
   updater.start();
-
-  await sleep(5_000);
 
   return async () => {
     await updater.stop();

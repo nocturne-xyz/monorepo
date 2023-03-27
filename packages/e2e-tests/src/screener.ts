@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { makeRedisInstance, sleep } from "./utils";
+import { makeRedisInstance } from "./utils";
 import {
   DepositScreenerProcessor,
   SubgraphScreenerSyncAdapter,
@@ -38,13 +38,10 @@ export async function startDepositScreener(
     await getRedis()
   );
 
-  const [processorProm, stopProcessor] = processor.start();
-
-  await sleep(10_000);
-
+  const [processorProm, stopProcessor] = await processor.start();
   return async () => {
     await stopProcessor();
-    await processorProm();
+    await processorProm;
     await clearRedis();
   };
 }
