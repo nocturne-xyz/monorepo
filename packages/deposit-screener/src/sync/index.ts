@@ -1,2 +1,2 @@
 export * from "./syncAdapter";
-export { SubgraphScreenerSyncAdapter } from "./subgraph"
+export { SubgraphScreenerSyncAdapter } from "./subgraph";

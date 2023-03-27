@@ -86,33 +86,37 @@ export class DepositScreenerProcessor {
       { maxChunkSize: 10_000 }
     );
 
-    const screenerProm = this.runScreener(depositEvents)
-      .catch(err => {
-        console.error("error in deposit processor screener: ", err);
-        throw new Error("error in deposit processor screener: " + err)
-      });
+    const screenerProm = this.runScreener(depositEvents).catch((err) => {
+      console.error("error in deposit processor screener: ", err);
+      throw new Error("error in deposit processor screener: " + err);
+    });
 
     const submitter = this.makeSubmitter();
 
-    console.log('starting submitter...');
-    console.log(`DepositManager contract: ${this.depositManagerContract.address}.`)
-    const submitterProm = submitter.run()
-      .catch(err => {
-        console.error("error in deposit processor submitter: ", err);
-        throw new Error("error in deposit processor submitter: " + err)
-      });
+    console.log("starting submitter...");
+    console.log(
+      `DepositManager contract: ${this.depositManagerContract.address}.`
+    );
+    const submitterProm = submitter.run().catch((err) => {
+      console.error("error in deposit processor submitter: ", err);
+      throw new Error("error in deposit processor submitter: " + err);
+    });
 
     return [
-      (async () => { await Promise.all([screenerProm, submitterProm]) })(),
+      (async () => {
+        await Promise.all([screenerProm, submitterProm]);
+      })(),
       async () => {
         await depositEvents.close();
         await screenerProm;
         await submitter.close();
-      }
-    ]
+      },
+    ];
   }
 
-  async runScreener(depositEvents: ClosableAsyncIterator<DepositEventsBatch>): Promise<void> {
+  async runScreener(
+    depositEvents: ClosableAsyncIterator<DepositEventsBatch>
+  ): Promise<void> {
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
         console.log(`Received deposit events: ${JSON.stringify(event)}`);

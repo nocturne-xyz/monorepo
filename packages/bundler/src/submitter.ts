@@ -55,13 +55,14 @@ export class BundlerSubmitter {
       `Submitter running. Wallet contract: ${this.walletContract.address}.`
     );
 
-
     return [
-      (async () => { await worker.run() })(),
+      (async () => {
+        await worker.run();
+      })(),
       async () => {
         await worker.close();
-      }
-    ]
+      },
+    ];
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {

@@ -53,7 +53,7 @@ export class SubtreeUpdateServer {
     await this.updater.init();
   }
 
-  public start() {
+  public start(): void {
     this.stopped = false;
     const prom = new Promise<void>((resolve, reject) => {
       const poll = async () => {

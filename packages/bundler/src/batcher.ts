@@ -49,7 +49,7 @@ export class BundlerBatcher {
     let intervalId: NodeJS.Timer;
     const batcherProm = new Promise<void>(() => {
       intervalId = setInterval(async () => {
-        // if 
+        // if
         if (stopped) {
           clearInterval(intervalId);
           return;
@@ -100,7 +100,6 @@ export class BundlerBatcher {
           counterSeconds += 1;
         }
       }, 1000);
-
     });
 
     // in the case of an early failure, clearTimeout
@@ -140,16 +139,18 @@ export class BundlerBatcher {
     );
 
     return [
-      (async () => { await queuer.run() })(),
+      (async () => {
+        await queuer.run();
+      })(),
       async () => {
-        if (stopped) { 
+        if (stopped) {
           return;
         }
 
         stopped = true;
 
         await Promise.all([queuer.close(), batcherProm]);
-      }
-    ]
+      },
+    ];
   }
 }

@@ -254,7 +254,6 @@ interface RedisHandle {
   clearRedis: () => Promise<void>;
 }
 
-
 export function makeRedisInstance(): RedisHandle {
   const redisThunk = thunk(async () => {
     const server = await RedisMemoryServer.create();
@@ -268,6 +267,6 @@ export function makeRedisInstance(): RedisHandle {
     clearRedis: async () => {
       const redis = await redisThunk();
       redis.flushall();
-    }
-  }
-} 
+    },
+  };
+}

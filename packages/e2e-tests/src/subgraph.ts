@@ -19,7 +19,9 @@ export interface SubgraphConfig {
 
 // NOTE: `_config` here is actually unused - it just uses what's currently hardcoded in `subgraph.yaml`
 // TODO: parse / modify / backup subgraph.yaml or find a way to do this through CLI (doubtful) so we can actually set this config
-export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
+export async function startSubgraph(
+  _config: SubgraphConfig
+): Promise<() => Promise<void>> {
   // start graph node
   console.log("starting graph node...");
   const res = await compose.upAll(GRAPH_NODE_COMPOSE_OPTS);
@@ -41,11 +43,11 @@ export async function startSubgraph(_config: SubgraphConfig): Promise<void> {
     console.error(err);
     throw err;
   }
-}
 
-export async function stopSubgraph(): Promise<void> {
-  await compose.down({
-    cwd: GRAPH_NODE_COMPOSE_CWD,
-    commandOptions: [["--volumes"]],
-  });
+  return async () => {
+    await compose.down({
+      cwd: GRAPH_NODE_COMPOSE_CWD,
+      commandOptions: [["--volumes"]],
+    });
+  };
 }

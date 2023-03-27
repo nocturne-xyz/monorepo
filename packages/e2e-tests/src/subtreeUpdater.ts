@@ -7,7 +7,7 @@ export interface SubtreeUpdaterConfig {
   handlerAddress: string;
   rpcUrl: string;
   txSignerKey: string;
-  interval?: number
+  interval?: number;
 }
 
 export async function startSubtreeUpdater(
@@ -34,5 +34,5 @@ export async function startSubtreeUpdater(
   return async () => {
     await updater.stop();
     await updater.dropDB();
-  }
+  };
 }

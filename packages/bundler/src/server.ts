@@ -35,10 +35,11 @@ export class BundlerServer {
       console.log(`Bundler server listening at ${os.hostname()}:${port}`);
     });
 
-    return () => new Promise((resolve) => {
-      server.close(() => {
-        resolve();
+    return () =>
+      new Promise((resolve) => {
+        server.close(() => {
+          resolve();
+        });
       });
-    });
   }
 }

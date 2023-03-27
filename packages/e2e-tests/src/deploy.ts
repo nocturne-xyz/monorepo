@@ -36,14 +36,10 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 import { AnvilNetworkConfig, startAnvil } from "./anvil";
-import { BundlerConfig, startBundler, stopBundler } from "./bundler";
-import {
-  DepositScreenerConfig,
-  startDepositScreener,
-  stopDepositScreener,
-} from "./screener";
+import { BundlerConfig, startBundler } from "./bundler";
+import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
-import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
+import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
 import Dockerode from "dockerode";
 
@@ -104,20 +100,14 @@ const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 const SUBGRAPH_FROM_DOCKER_URL =
   "http://host.docker.internal:8000/subgraphs/name/nocturne-test";
 
-const REDIS_URL_BUNDLER = "redis://redis:6379";
-const REDIS_URL_SCREENER = "redis://redis:6380";
-const REDIS_PASSWORD = "baka";
-
 const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
   blockTimeSecs: 1,
 };
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
-  "walletAddress" | "txSignerKey"
+  "walletAddress" | "txSignerKey" | "ignoreGas"
 > = {
-  redisUrl: REDIS_URL_BUNDLER,
-  redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
   rpcUrl: ANVIL_FROM_DOCKER_URL,
 };
@@ -126,8 +116,6 @@ const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
   DepositScreenerConfig,
   "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
 > = {
-  redisUrl: REDIS_URL_SCREENER,
-  redisPassword: REDIS_PASSWORD,
   rpcUrl: ANVIL_FROM_DOCKER_URL,
   subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
 };
@@ -189,6 +177,7 @@ export async function setupTestDeployment(
   ]);
 
   // Deploy subgraph first, as other services depend on it
+  let stopSubgraph: undefined | (() => Promise<void>);
   if (config.include.subgraph) {
     const givenSubgraphConfig = config.configs?.subgraph ?? {};
     const subgraphConfig = {
@@ -197,12 +186,11 @@ export async function setupTestDeployment(
       walletAddress: walletProxy.proxy,
     };
 
-    await startSubgraph(subgraphConfig);
+    stopSubgraph = await startSubgraph(subgraphConfig);
   }
 
   // deploy everything else
   const proms = [];
-  let stopBundler: () => Promise<void> = async () => {};
   if (config.include.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
     const bundlerConfig: BundlerConfig = {
@@ -216,7 +204,6 @@ export async function setupTestDeployment(
   }
 
   // deploy subtree updater if requested
-  let subtreeUpdaterContainer: Dockerode.Container | undefined;
   if (config.include.subtreeUpdater) {
     const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
@@ -253,7 +240,7 @@ export async function setupTestDeployment(
     await sleep(10_000);
 
     // teradown subgraph
-    if (config.include.subgraph) {
+    if (stopSubgraph) {
       console.log("tearing down subgraph...");
       await stopSubgraph();
     }

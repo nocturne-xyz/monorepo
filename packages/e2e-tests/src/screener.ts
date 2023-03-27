@@ -1,6 +1,9 @@
 import { ethers } from "ethers";
 import { makeRedisInstance, sleep } from "./utils";
-import { DepositScreenerProcessor, SubgraphScreenerSyncAdapter } from "@nocturne-xyz/deposit-screener";
+import {
+  DepositScreenerProcessor,
+  SubgraphScreenerSyncAdapter,
+} from "@nocturne-xyz/deposit-screener";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -43,5 +46,5 @@ export async function startDepositScreener(
     await stopProcessor();
     await processorProm();
     await clearRedis();
-  }
+  };
 }
