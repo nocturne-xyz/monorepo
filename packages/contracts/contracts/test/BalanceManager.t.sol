@@ -835,7 +835,4 @@ contract BalanceManagerTest is Test {
         assertEq(refundToken.balanceOf(address(balanceManager)), 1);
         assertEq(refundToken.balanceOf(address(wallet)), refundAmount);
     }
-
-    // TODO: add handler unit test for adding subtree batch filler
-    // TODO: add handler unit test for adding asset prefill
 }

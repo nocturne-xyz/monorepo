@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Add missing handler unit tests for setting subtree filler and adding to asset prefill
+- Add missing wallet unit tests for bundler comp success and direct handler reentrancy into wallet
 - Add balance manager token balance gas optimization, which allows for prefilling balances so we're not clearing token balance storage slots to 0 each time
 - Have `TestBalanceManager` implement `IHandler` for ease of unit testing with wallet
 - Rename `WalletUtils` `OperationUtils` now that both Wallet and Handler use it

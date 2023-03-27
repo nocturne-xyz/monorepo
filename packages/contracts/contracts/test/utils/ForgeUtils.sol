@@ -6,8 +6,7 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 
 struct ExpectOperationProcessedArgs {
-    bool wasProcessed;
-    string failureReason;
+    string maybeFailureReason;
 }
 
 contract ForgeUtils is Test {
@@ -24,12 +23,13 @@ contract ForgeUtils is Test {
     ) internal {
         vm.expectEmit(false, true, true, false);
         bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = true;
         bytes[] memory callResults = new bytes[](1);
+
         emit OperationProcessed(
             uint256(0),
-            args.wasProcessed,
-            args.failureReason,
+            keccak256((abi.encodePacked(args.maybeFailureReason))) ==
+                keccak256(abi.encodePacked("")),
+            args.maybeFailureReason,
             callSuccesses,
             callResults
         );

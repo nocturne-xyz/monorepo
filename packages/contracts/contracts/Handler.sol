@@ -41,13 +41,6 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         _;
     }
 
-    function addToAssetPrefill(
-        EncodedAsset calldata encodedAsset,
-        uint256 value
-    ) external onlyOwner {
-        _addToAssetPrefill(encodedAsset, value);
-    }
-
     // Gives an address permission to call `fillBatchesWithZeros`
     function setSubtreeBatchFillerPermission(
         address filler,
@@ -55,6 +48,13 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     ) external onlyOwner {
         _subtreeBatchFiller[filler] = permission;
         emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
+    function addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) external onlyOwner {
+        _addToAssetPrefill(encodedAsset, value);
     }
 
     function fillBatchWithZeros() external onlySubtreeBatchFiller {
