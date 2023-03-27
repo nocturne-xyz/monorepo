@@ -202,7 +202,7 @@ export async function setupTestDeployment(
 
   // deploy everything else
   const proms = [];
-
+  let stopBundler: () => Promise<void> = async () => {};
   if (config.include.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
     const bundlerConfig: BundlerConfig = {
@@ -226,24 +226,7 @@ export async function setupTestDeployment(
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 
-    const startContainerWithLogs = async () => {
-      const container = await startSubtreeUpdater(docker, subtreeUpdaterConfig);
-      container.logs(
-        { follow: true, stdout: true, stderr: true },
-        (err, stream) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-
-          stream!.pipe(process.stdout);
-        }
-      );
-
-      subtreeUpdaterContainer = container;
-    };
-
-    proms.push(startContainerWithLogs());
+    proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
   }
 
   if (config.include.depositScreener) {
@@ -259,42 +242,12 @@ export async function setupTestDeployment(
     proms.push(startDepositScreener(depositScreenerConfig));
   }
 
-  await Promise.all(proms);
+  const actorTeardownFns = await Promise.all(proms);
 
   const teardown = async () => {
     console.log("tearing down offchain actors...");
     // teardown offchain actors
-    const proms = [];
-
-    if (config.include.bundler) {
-      proms.push(
-        stopBundler().catch((err) =>
-          console.error("error tearing down bundler: ", err)
-        )
-      );
-    }
-
-    if (config.include.depositScreener) {
-      proms.push(
-        stopDepositScreener().catch((err) =>
-          console.error("error tearing down deposit screener: ", err)
-        )
-      );
-    }
-
-    if (subtreeUpdaterContainer) {
-      const teardown = async () => {
-        await subtreeUpdaterContainer?.stop();
-        await subtreeUpdaterContainer?.remove();
-      };
-      proms.push(
-        teardown().catch((err) =>
-          console.error("error tearing down subtree updater: ", err)
-        )
-      );
-    }
-
-    await Promise.all(proms);
+    await Promise.all(actorTeardownFns.map((fn) => fn()));
 
     // wait for actors to teardown
     await sleep(10_000);
