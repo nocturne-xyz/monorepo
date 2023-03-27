@@ -40,55 +40,21 @@ export class BundlerBatcher {
     });
   }
 
-  async run(): Promise<void> {
-    const queuerPromise = this.runInboundQueuer();
-    const batcherPromise = this.runOutboundBundlerBatcher();
+  start(): [Promise<void>, () => Promise<void>] {
+    let stopped = false;
+    console.log("batcher starting...");
 
-    console.log("Batcher running...");
-    await Promise.all([queuerPromise, batcherPromise]);
-  }
-
-  async runInboundQueuer(): Promise<void> {
-    const worker = new Worker(
-      PROVEN_OPERATION_QUEUE,
-      async (job: Job<ProvenOperationJobData>) => {
-        const provenOperation = JSON.parse(
-          job.data.operationJson
-        ) as ProvenOperation;
-
-        const batcherAddTransaction =
-          this.batcherDB.getAddTransaction(provenOperation);
-        const setJobStatusTransaction =
-          this.statusDB.getSetJobStatusTransaction(
-            job.id!,
-            OperationStatus.PRE_BATCH
-          );
-        const allTransactions = [batcherAddTransaction].concat([
-          setJobStatusTransaction,
-        ]);
-        await this.redis.multi(allTransactions).exec((maybeErr) => {
-          if (maybeErr) {
-            throw new Error(
-              `Failed to execute batcher add and set job status transaction: ${maybeErr}`
-            );
-          }
-        });
-      },
-      {
-        connection: this.redis,
-        autorun: false,
-      }
-    );
-
-    await worker.run();
-  }
-
-  async runOutboundBundlerBatcher(): Promise<void> {
+    // **** BATCHER ****
     let counterSeconds = 0;
     let intervalId: NodeJS.Timer;
-
-    const prom = new Promise<void>(() => {
+    const batcherProm = new Promise<void>(() => {
       intervalId = setInterval(async () => {
+        // if 
+        if (stopped) {
+          clearInterval(intervalId);
+          return;
+        }
+
         const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
         if (batch) {
           if (
@@ -134,8 +100,56 @@ export class BundlerBatcher {
           counterSeconds += 1;
         }
       }, 1000);
+
     });
 
-    prom.finally(() => clearTimeout(intervalId));
+    // in the case of an early failure, clearTimeout
+    // if we've stopped due to the teardown function, this will be a no-op
+    batcherProm.finally(() => clearTimeout(intervalId));
+
+    // **** QUEUER ****
+    const queuer = new Worker(
+      PROVEN_OPERATION_QUEUE,
+      async (job: Job<ProvenOperationJobData>) => {
+        const provenOperation = JSON.parse(
+          job.data.operationJson
+        ) as ProvenOperation;
+
+        const batcherAddTransaction =
+          this.batcherDB.getAddTransaction(provenOperation);
+        const setJobStatusTransaction =
+          this.statusDB.getSetJobStatusTransaction(
+            job.id!,
+            OperationStatus.PRE_BATCH
+          );
+        const allTransactions = [batcherAddTransaction].concat([
+          setJobStatusTransaction,
+        ]);
+        await this.redis.multi(allTransactions).exec((maybeErr) => {
+          if (maybeErr) {
+            throw new Error(
+              `Failed to execute batcher add and set job status transaction: ${maybeErr}`
+            );
+          }
+        });
+      },
+      {
+        connection: this.redis,
+        autorun: false,
+      }
+    );
+
+    return [
+      (async () => { await queuer.run() })(),
+      async () => {
+        if (stopped) { 
+          return;
+        }
+
+        stopped = true;
+
+        await Promise.all([queuer.close(), batcherProm]);
+      }
+    ]
   }
 }

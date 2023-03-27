@@ -37,7 +37,7 @@ export class BundlerSubmitter {
     );
   }
 
-  async run(): Promise<void> {
+  start(): [Promise<void>, () => Promise<void>] {
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {
@@ -54,7 +54,14 @@ export class BundlerSubmitter {
     console.log(
       `Submitter running. Wallet contract: ${this.walletContract.address}.`
     );
-    await worker.run();
+
+
+    return [
+      (async () => { await worker.run() })(),
+      async () => {
+        await worker.close();
+      }
+    ]
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {

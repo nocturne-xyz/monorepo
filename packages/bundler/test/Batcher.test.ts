@@ -71,7 +71,7 @@ describe("BundlerBatcher", async () => {
     );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const batcherPromise = batcher.run();
+    const [batcherPromise] = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -111,7 +111,7 @@ describe("BundlerBatcher", async () => {
     );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const batcherPromise = batcher.run();
+    const [batcherPromise] = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {

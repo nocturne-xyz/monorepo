@@ -20,7 +20,7 @@ const runServer = new Command("server")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
     const server = new BundlerServer(walletAddress, provider, getRedis());
-    server.run(port);
+    server.start(port);
   });
 
 export default runServer;

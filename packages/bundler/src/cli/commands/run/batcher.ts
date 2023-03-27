@@ -13,7 +13,8 @@ const runBatcher = new Command("batcher")
   .action(async (options) => {
     const { maxLatency, batchSize } = options;
     const batcher = new BundlerBatcher(getRedis(), maxLatency, batchSize);
-    await batcher.run();
+    const [prom] = batcher.start();
+    await prom;
   });
 
 export default runBatcher;
