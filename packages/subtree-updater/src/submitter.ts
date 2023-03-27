@@ -24,7 +24,10 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
     const solidityProof = packToSolidityProof(proof);
     try {
       console.log("submitting tx...");
-      const tx = await this.handlerContract.applySubtreeUpdate(newRoot, solidityProof)
+      const tx = await this.handlerContract.applySubtreeUpdate(
+        newRoot,
+        solidityProof
+      );
       await tx.wait(1);
       console.log("successfully updated root to", newRoot);
     } catch (err: any) {

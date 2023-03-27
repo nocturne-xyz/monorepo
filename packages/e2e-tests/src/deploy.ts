@@ -170,7 +170,7 @@ export async function setupTestDeployment(
     subtreeUpdaterEoa,
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
-  console.log("deploying contracts...")
+  console.log("deploying contracts...");
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],

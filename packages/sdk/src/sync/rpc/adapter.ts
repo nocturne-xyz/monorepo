@@ -65,7 +65,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
         // and no new blocks were produced since then
         // sleep for a bit and re-try to avoid spamming the RPC endpoint
-        if (from > to) {
+        if (from >= to) {
           await sleep(5_000);
           continue;
         }

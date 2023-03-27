@@ -129,7 +129,7 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  console.log("Adding deposit manager to wallet deposit sources...");
+  console.log("adding deposit manager to wallet deposit sources...");
   const enrollDepositManagerTx =
     await proxiedWallet.contract.setDepositSourcePermission(
       proxiedDepositManager.address,
