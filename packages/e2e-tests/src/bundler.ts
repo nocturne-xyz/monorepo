@@ -14,7 +14,7 @@ export interface BundlerConfig {
 }
 
 export async function startBundler(config: BundlerConfig): Promise<() => Promise<void>> {
-  const { redis, clearRedis } = await startRedis();
+  const { redis, clearRedis } = await getRedis();
 
   const stopServer = startBundlerServer(config, redis);
   const stopBatcher = startBundlerBatcher(config, redis);
@@ -43,7 +43,7 @@ const redisThunk = thunk(async () => {
   return new IORedis(port, host);
 })
 
-async function startRedis(): Promise<RedisHandle> {
+async function getRedis(): Promise<RedisHandle> {
   const redis = await redisThunk();
   return {
     redis,
@@ -64,7 +64,7 @@ function startBundlerSubmitter(config: BundlerConfig, redis: IORedis): () => Pro
 
   const [prom, stop] = submitter.start();
   prom.catch(err => {
-    console.error("Bundler submitter error", err);
+    console.error("bundler submitter error", err);
     throw err;
   });
 
@@ -75,7 +75,7 @@ function startBundlerBatcher(config: BundlerConfig, redis: IORedis): () => Promi
   const batcher = new BundlerBatcher(redis, config.maxLatency);
   const [prom, stop] = batcher.start();
   prom.catch(err => {
-    console.error("Bundler batcher error", err);
+    console.error("bundler batcher error", err);
     throw err;
   });
 
