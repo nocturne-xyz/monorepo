@@ -1,9 +1,7 @@
-import { sleep } from "./utils";
+import { sleep, makeRedisInstance } from "./utils";
 import { BundlerBatcher, BundlerServer, BundlerSubmitter } from "@nocturne-xyz/bundler";
 import { ethers } from "ethers";
 import IORedis from "ioredis";
-import { RedisMemoryServer } from "redis-memory-server";
-import { thunk } from "@nocturne-xyz/sdk";
 
 export interface BundlerConfig {
   walletAddress: string;
@@ -13,8 +11,10 @@ export interface BundlerConfig {
   ignoreGas: boolean;
 }
 
+const { getRedis, clearRedis } = makeRedisInstance();
+
 export async function startBundler(config: BundlerConfig): Promise<() => Promise<void>> {
-  const { redis, clearRedis } = await getRedis();
+  const redis = await getRedis();
 
   const stopServer = startBundlerServer(config, redis);
   const stopBatcher = startBundlerBatcher(config, redis);
@@ -30,28 +30,6 @@ export async function startBundler(config: BundlerConfig): Promise<() => Promise
     await clearRedis();
   }
 }
-
-interface RedisHandle {
-  redis: IORedis;
-  clearRedis: () => Promise<void>;
-}
-
-const redisThunk = thunk(async () => {
-  const server = await RedisMemoryServer.create();
-  const host = await server.getHost();
-  const port = await server.getPort();
-  return new IORedis(port, host);
-})
-
-async function getRedis(): Promise<RedisHandle> {
-  const redis = await redisThunk();
-  return {
-    redis,
-    clearRedis: async () => {
-      redis.flushall();
-    }
-  }
-} 
 
 function startBundlerSubmitter(config: BundlerConfig, redis: IORedis): () => Promise<void> {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);

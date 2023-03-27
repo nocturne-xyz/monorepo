@@ -12,6 +12,9 @@ import * as path from "path";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
+import IORedis from "ioredis";
+import { RedisMemoryServer } from "redis-memory-server";
+import { thunk } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -245,3 +248,26 @@ export function runCommandDetached(
     console.log("success: ", res);
   };
 }
+
+interface RedisHandle {
+  getRedis: () => Promise<IORedis>;
+  clearRedis: () => Promise<void>;
+}
+
+
+export function makeRedisInstance(): RedisHandle {
+  const redisThunk = thunk(async () => {
+    const server = await RedisMemoryServer.create();
+    const host = await server.getHost();
+    const port = await server.getPort();
+    return new IORedis(port, host);
+  });
+
+  return {
+    getRedis: async () => await redisThunk(),
+    clearRedis: async () => {
+      const redis = await redisThunk();
+      redis.flushall();
+    }
+  }
+} 

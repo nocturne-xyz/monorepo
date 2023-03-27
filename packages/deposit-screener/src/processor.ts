@@ -4,6 +4,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import {
   Address,
+  ClosableAsyncIterator,
   DepositRequest,
   parseEventsFromContractReceipt,
 } from "@nocturne-xyz/sdk";
@@ -12,7 +13,7 @@ import { ethers } from "ethers";
 import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
-import { ScreenerSyncAdapter } from "./sync/syncAdapter";
+import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
@@ -73,13 +74,7 @@ export class DepositScreenerProcessor {
     this.delayCalculator = new DummyDelayCalculator();
   }
 
-  async run(): Promise<void> {
-    await Promise.all([this.runScreener(), this.runSubmitter()]).catch((e) => {
-      throw new Error(e);
-    });
-  }
-
-  async runScreener(): Promise<void> {
+  async start(): Promise<[Promise<void>, () => Promise<void>]> {
     const nextBlockToSync = await this.db.getNextBlock();
     console.log(
       `processing deposit requests starting from block ${nextBlockToSync}`
@@ -91,6 +86,33 @@ export class DepositScreenerProcessor {
       { maxChunkSize: 10_000 }
     );
 
+    const screenerProm = this.runScreener(depositEvents)
+      .catch(err => {
+        console.error("error in deposit processor screener: ", err);
+        throw new Error("error in deposit processor screener: " + err)
+      });
+
+    const submitter = this.makeSubmitter();
+
+    console.log('starting submitter...');
+    console.log(`DepositManager contract: ${this.depositManagerContract.address}.`)
+    const submitterProm = submitter.run()
+      .catch(err => {
+        console.error("error in deposit processor submitter: ", err);
+        throw new Error("error in deposit processor submitter: " + err)
+      });
+
+    return [
+      (async () => { await Promise.all([screenerProm, submitterProm]) })(),
+      async () => {
+        await depositEvents.close();
+        await screenerProm;
+        await submitter.close();
+      }
+    ]
+  }
+
+  async runScreener(depositEvents: ClosableAsyncIterator<DepositEventsBatch>): Promise<void> {
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
         console.log(`Received deposit events: ${JSON.stringify(event)}`);
@@ -132,8 +154,8 @@ export class DepositScreenerProcessor {
     return DepositRequestStatus.Enqueued;
   }
 
-  async runSubmitter(): Promise<void> {
-    const worker = new Worker(
+  makeSubmitter(): Worker<DelayedDepositJobData, any, string> {
+    return new Worker(
       DELAYED_DEPOSIT_QUEUE,
       async (job: Job<DelayedDepositJobData>) => {
         const depositRequest: DepositRequest = JSON.parse(
@@ -141,12 +163,12 @@ export class DepositScreenerProcessor {
         );
 
         const hash = hashDepositRequest(depositRequest);
-        console.log("Hash of deposit request post-queue:", hash);
+        console.log("hash of deposit request post-queue:", hash);
         const inSet =
           await this.depositManagerContract._outstandingDepositHashes(hash);
         if (!inSet) {
           console.log(
-            `Deposit already retrieved or completed. ${JSON.stringify(
+            `deposit already retrieved or completed. ${JSON.stringify(
               depositRequest
             )}`
           );
@@ -158,7 +180,7 @@ export class DepositScreenerProcessor {
         );
         if (!valid) {
           console.log(
-            `Deposit no longer passes screening. ${JSON.stringify(
+            `deposit no longer passes screening. ${JSON.stringify(
               depositRequest
             )}`
           );
@@ -172,11 +194,6 @@ export class DepositScreenerProcessor {
       },
       { connection: this.redis, autorun: false }
     );
-
-    console.log(
-      `Submitter running. DepositManager contract: ${this.depositManagerContract.address}.`
-    );
-    await worker.run();
   }
 
   async signAndSubmitDeposit(depositRequest: DepositRequest): Promise<void> {

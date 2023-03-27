@@ -48,7 +48,8 @@ const runProcess = new Command("processor")
       getRedis()
     );
 
-    await processor.run();
+    const [prom] = await processor.start();
+    await prom;
   });
 
 export default runProcess;
