@@ -737,4 +737,105 @@ contract BalanceManagerTest is Test {
         assertEq(erc1155.balanceOf(address(balanceManager), erc1155Id), 0);
         assertEq(erc1155.balanceOf(address(wallet), erc1155Id), erc1155Amount);
     }
+
+    function testPrefillAssetAndHandleRefundsJoinSplitAndRefundTokens() public {
+        SimpleERC20Token joinSplitToken = ERC20s[0];
+        SimpleERC20Token refundToken = ERC20s[1];
+
+        // Joinsplit asset
+        EncodedAsset memory joinSplitAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(joinSplitToken),
+            ERC20_ID
+        );
+
+        // Refund asset
+        EncodedAsset[] memory refundAssets = new EncodedAsset[](1);
+        EncodedAsset memory refundAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(refundToken),
+            ERC20_ID
+        );
+        refundAssets[0] = refundAsset;
+
+        // Reserve prefill tokens for alice
+        joinSplitToken.reserveTokens(address(ALICE), 1);
+        refundToken.reserveTokens(address(ALICE), 1);
+
+        // Prefill with 1 unit of each token
+        vm.startPrank(ALICE);
+        joinSplitToken.approve(address(balanceManager), 1);
+        refundToken.approve(address(balanceManager), 1);
+
+        balanceManager.addToAssetPrefill(joinSplitAsset, 1);
+        balanceManager.addToAssetPrefill(refundAsset, 1);
+        vm.stopPrank();
+
+        // Assert mappings and balances reflect the +1s
+        assertEq(
+            balanceManager._prefilledAssetBalances(
+                AssetUtils.hashEncodedAsset(joinSplitAsset)
+            ),
+            1
+        );
+        assertEq(
+            balanceManager._prefilledAssetBalances(
+                AssetUtils.hashEncodedAsset(refundAsset)
+            ),
+            1
+        );
+        assertEq(joinSplitToken.balanceOf(address(balanceManager)), 1);
+        assertEq(refundToken.balanceOf(address(balanceManager)), 1);
+
+        // Dummy operation, we manually send 10M joinsplit tokens to balance
+        // manager directly because no actual unwrapping occurs
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: joinSplitToken,
+                gasToken: joinSplitToken,
+                root: balanceManager.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: refundAssets,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 2,
+                gasPrice: 0,
+                actions: new Action[](0),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        joinSplitToken.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        vm.prank(ALICE);
+        joinSplitToken.transfer(address(balanceManager), PER_NOTE_AMOUNT);
+
+        // Send refund tokens to balance manager
+        uint256 refundAmount = 10_000_000;
+        refundToken.reserveTokens(ALICE, refundAmount);
+        vm.prank(ALICE);
+        refundToken.transfer(address(balanceManager), refundAmount);
+
+        // Assert balance manager has amount + 1 before handling refunds
+        assertEq(
+            joinSplitToken.balanceOf(address(balanceManager)),
+            PER_NOTE_AMOUNT + 1
+        );
+        assertEq(
+            refundToken.balanceOf(address(balanceManager)),
+            refundAmount + 1
+        );
+
+        // Expect all refund tokens to be refunded to wallet barring the
+        // prefilled 1s
+        balanceManager.handleAllRefunds(op);
+
+        assertEq(joinSplitToken.balanceOf(address(balanceManager)), 1);
+        assertEq(joinSplitToken.balanceOf(address(wallet)), PER_NOTE_AMOUNT);
+
+        assertEq(refundToken.balanceOf(address(balanceManager)), 1);
+        assertEq(refundToken.balanceOf(address(wallet)), refundAmount);
+    }
+
+    // TODO: add handler unit test for adding subtree batch filler
+    // TODO: add handler unit test for adding asset prefill
 }

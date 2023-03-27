@@ -47,6 +47,7 @@ contract Wallet is
     uint256[50] private __GAP;
 
     event DepositSourcePermissionSet(address source, bool permission);
+
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event OperationProcessed(

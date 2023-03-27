@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add balance manager token balance gas optimization, which allows for prefilling balances so we're not clearing token balance storage slots to 0 each time
 - Have `TestBalanceManager` implement `IHandler` for ease of unit testing with wallet
 - Rename `WalletUtils` `OperationUtils` now that both Wallet and Handler use it
 - Separate `Wallet` functionality into `Wallet` (proof verification, entrypoint) and `Handler` (processing/executing operations, commitment tree)

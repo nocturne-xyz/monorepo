@@ -88,6 +88,18 @@ library AssetUtils {
             });
     }
 
+    function hashEncodedAsset(
+        EncodedAsset memory encodedAsset
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    encodedAsset.encodedAssetAddr,
+                    encodedAsset.encodedAssetId
+                )
+            );
+    }
+
     function balanceOfAsset(
         EncodedAsset memory encodedAsset
     ) internal view returns (uint256) {
