@@ -27,7 +27,7 @@ contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
         );
 
         // Override chainid, bytecode, and storage for fixture.contractAddress
-        vm.chainId(fixture.depositRequest.chainId);
+        // vm.chainId(fixture.depositRequest.chainId);
         vm.etch(fixture.contractAddress, address(depositManagerBase).code);
         vm.store(
             fixture.contractAddress,

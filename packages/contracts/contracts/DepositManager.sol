@@ -82,7 +82,6 @@ contract DepositManager is
         StealthAddress calldata depositAddr
     ) external payable nonReentrant {
         DepositRequest memory req = DepositRequest({
-            chainId: block.chainid,
             spender: msg.sender,
             encodedAsset: encodedAsset,
             value: value,
@@ -100,7 +99,7 @@ contract DepositManager is
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
         emit DepositInstantiated(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -131,7 +130,7 @@ contract DepositManager is
         AddressUpgradeable.sendValue(payable(msg.sender), req.gasCompensation);
 
         emit DepositRetrieved(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -184,7 +183,7 @@ contract DepositManager is
         }
 
         emit DepositCompleted(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,

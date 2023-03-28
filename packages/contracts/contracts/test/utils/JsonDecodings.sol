@@ -108,7 +108,6 @@ contract JsonDecodings is Test, ParseUtils {
                 contractVersion: contractVersion,
                 screenerAddress: screenerAddress,
                 depositRequest: DepositRequest({
-                    chainId: simpleTypes.chainId,
                     spender: simpleTypes.spender,
                     encodedAsset: encodedAsset,
                     value: simpleTypes.value,
