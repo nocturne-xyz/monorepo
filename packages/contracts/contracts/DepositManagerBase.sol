@@ -54,7 +54,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashDepositRequest(
-        DepositRequest calldata req
+        DepositRequest memory req
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -72,7 +72,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashEncodedAsset(
-        EncodedAsset calldata encodedAsset
+        EncodedAsset memory encodedAsset
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -85,7 +85,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashStealthAddress(
-        StealthAddress calldata stealthAddress
+        StealthAddress memory stealthAddress
     ) internal pure returns (bytes32) {
         return
             keccak256(
