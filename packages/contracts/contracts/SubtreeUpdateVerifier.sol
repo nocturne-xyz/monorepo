@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {ISubtreeUpdateVerifier} from "./interfaces/ISubtreeUpdateVerifier.sol";
 
 contract SubtreeUpdateVerifier is ISubtreeUpdateVerifier {
     function verifyingKey()

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `Pausable` to wallet and handler + deps (balance manager & commitment tree)
 - `BalanceManager` revokes prefills for erc721s and enables for 1155s
 - Rename `OperationReentrancyGuard` to `NocturneReentrancyGuard` and add `addAssetToPrefillGuard` to account for erc1155 prefills
 - Add missing handler unit tests for setting subtree filler and adding to asset prefill

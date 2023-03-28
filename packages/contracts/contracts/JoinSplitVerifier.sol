@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 import {Pairing} from "./libs/Pairing.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
 
 contract JoinSplitVerifier is IJoinSplitVerifier {
     function verifyingKey()

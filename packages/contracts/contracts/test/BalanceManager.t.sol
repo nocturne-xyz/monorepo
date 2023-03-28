@@ -39,7 +39,7 @@ contract BalanceManagerTest is Test {
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 170_000;
 
     // Check storage layout file
-    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 74;
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 174;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
 
     TestBalanceManager balanceManager;

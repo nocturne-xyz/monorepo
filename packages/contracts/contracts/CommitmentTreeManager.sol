@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
-
-import {IWallet} from "./interfaces/IWallet.sol";
-import {Groth16} from "./libs/Groth16.sol";
+// External
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+// Internal
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
-import {QueueLib} from "./libs/Queue.sol";
 import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
 import "./libs/Types.sol";
 
-contract CommitmentTreeManager is Initializable {
+contract CommitmentTreeManager is Initializable, PausableUpgradeable {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
     // past roots of the merkle tree
@@ -50,6 +48,7 @@ contract CommitmentTreeManager is Initializable {
     function __CommitmentTreeManager_init(
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
+        __Pausable_init();
         _merkle.initialize(subtreeUpdateVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
@@ -144,7 +143,7 @@ contract CommitmentTreeManager is Initializable {
     function applySubtreeUpdate(
         uint256 newRoot,
         uint256[8] calldata proof
-    ) external {
+    ) external whenNotPaused {
         require(!_pastRoots[newRoot], "newRoot already a past root");
 
         uint256 subtreeIndex = _merkle.getCount();
