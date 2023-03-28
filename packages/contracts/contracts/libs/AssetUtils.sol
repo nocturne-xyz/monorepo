@@ -9,7 +9,7 @@ import {Utils} from "../libs/Utils.sol";
 import "../libs/Types.sol";
 
 library AssetUtils {
-    function _decodeAsset(
+    function decodeAsset(
         EncodedAsset memory encodedAsset
     )
         internal
@@ -104,7 +104,7 @@ library AssetUtils {
         EncodedAsset memory encodedAsset
     ) internal view returns (uint256) {
         (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
-            ._decodeAsset(encodedAsset);
+            .decodeAsset(encodedAsset);
         uint256 value;
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
@@ -126,7 +126,7 @@ library AssetUtils {
         address receiver,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
+        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
             encodedAsset
         );
         if (assetType == AssetType.ERC20) {
@@ -159,7 +159,7 @@ library AssetUtils {
         address spender,
         uint256 value
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
+        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
             encodedAsset
         );
         if (assetType == AssetType.ERC20) {
@@ -192,7 +192,7 @@ library AssetUtils {
         address spender,
         uint256 amount
     ) internal {
-        (AssetType assetType, address assetAddr, uint256 id) = _decodeAsset(
+        (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
             encodedAsset
         );
 

@@ -204,35 +204,84 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     }
 
     function testAddToAssetPrefillHandler() public {
-        SimpleERC20Token token = ERC20s[0];
-        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+        SimpleERC20Token erc20 = ERC20s[0];
+        SimpleERC721Token erc721 = ERC721s[0];
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+
+        // Transfer ownership to alice so she can be prefiller and receive
+        // reserved erc 721/1155s
+        handler.transferOwnership(ALICE);
+
+        // Reserve tokens for ALICE and BOB
+        erc20.reserveTokens(ALICE, 100);
+        erc20.reserveTokens(BOB, 100);
+        erc1155.reserveTokens(ALICE, 1, 100);
+        erc1155.reserveTokens(BOB, 2, 100);
+        erc721.reserveToken(ALICE, 1);
+
+        EncodedAsset memory encodedErc20 = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(token),
+            address(erc20),
             ERC20_ID
         );
+        EncodedAsset memory encodedErc721ALICE = AssetUtils.encodeAsset(
+            AssetType.ERC721,
+            address(erc721),
+            1
+        );
+        EncodedAsset memory encodedErc1155BOB = AssetUtils.encodeAsset(
+            AssetType.ERC1155,
+            address(erc1155),
+            2
+        );
+        EncodedAsset memory encodedErc1155ALICE = AssetUtils.encodeAsset(
+            AssetType.ERC1155,
+            address(erc1155),
+            1
+        );
 
-        token.reserveTokens(address(this), 100);
-        token.reserveTokens(BOB, 100);
+        // BOB attempts to prefill for erc20 and erc1155, reverts because he's
+        // not owner
+        vm.startPrank(BOB);
+        erc20.approve(address(handler), 1);
+        erc1155.setApprovalForAll(address(handler), true);
 
-        vm.startPrank(BOB); // not owner
-        token.approve(address(wallet), 1);
         vm.expectRevert("Ownable: caller is not the owner");
-        handler.addToAssetPrefill(encodedAsset, 1);
+        handler.addToAssetPrefill(encodedErc20, 1);
+        vm.expectRevert("Ownable: caller is not the owner");
+        handler.addToAssetPrefill(encodedErc1155BOB, 1);
         vm.stopPrank();
 
-        // Send from owner, succeeds
-        vm.startPrank(address(this));
-        token.approve(address(handler), 1);
+        // ALICE (owner) prefills for erc20 and erc1155
+        vm.startPrank(ALICE);
+        erc20.approve(address(handler), 1);
+        erc1155.setApprovalForAll(address(handler), true);
+
         vm.expectEmit(true, true, true, true);
-        emit UpdatedAssetPrefill(encodedAsset, 1);
-        handler.addToAssetPrefill(encodedAsset, 1);
+        emit UpdatedAssetPrefill(encodedErc20, 1);
+        handler.addToAssetPrefill(encodedErc20, 1);
+        vm.expectEmit(true, true, true, true);
+        emit UpdatedAssetPrefill(encodedErc1155ALICE, 1);
+        handler.addToAssetPrefill(encodedErc1155ALICE, 1);
 
         assertEq(
             handler._prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(encodedAsset)
+                AssetUtils.hashEncodedAsset(encodedErc20)
             ),
             1
         );
+        assertEq(
+            handler._prefilledAssetBalances(
+                AssetUtils.hashEncodedAsset(encodedErc1155ALICE)
+            ),
+            1
+        );
+
+        // erc721 prefill reverts since they are not allowed
+        erc721.approve(address(handler), 1);
+        vm.expectRevert("not erc721");
+        handler.addToAssetPrefill(encodedErc721ALICE, 1);
+
         vm.stopPrank();
     }
 
