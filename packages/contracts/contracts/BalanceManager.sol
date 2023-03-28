@@ -201,8 +201,12 @@ contract BalanceManager is
         uint256 id,
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
-        if (reentrancyGuardStage() == NOT_ENTERED) {
+        // Must reject the transfer outside of an operation handling. We also
+        // reject erc721s for prefills.
+        if (
+            reentrancyGuardStage() == NOT_ENTERED ||
+            reentrancyGuardStage() == ENTERED_PREFILL
+        ) {
             return 0;
         }
 
@@ -224,7 +228,7 @@ contract BalanceManager is
         uint256, // value
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
+        // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
         }
@@ -236,7 +240,7 @@ contract BalanceManager is
             );
         }
 
-        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -247,7 +251,7 @@ contract BalanceManager is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override returns (bytes4) {
-        // Must reject the transfer outside of an operation processing
+        // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
         }
@@ -266,7 +270,7 @@ contract BalanceManager is
             }
         }
 
-        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 

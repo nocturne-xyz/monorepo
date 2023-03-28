@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 contract NocturneReentrancyGuard is Initializable {
     uint256 public constant NOT_ENTERED = 1;
     uint256 public constant ENTERED_PREFILL = 2;
-    uint256 public constant ENTERED_PROCESS_OPERATION = 3;
+    uint256 public constant ENTERED_HANDLE_OPERATION = 3;
     uint256 public constant ENTERED_EXECUTE_ACTIONS = 4;
 
     uint256 private _operationStage;
@@ -33,7 +33,7 @@ contract NocturneReentrancyGuard is Initializable {
 
     modifier handleOperationGuard() {
         require(_operationStage == NOT_ENTERED, "Reentry into handleOperation");
-        _operationStage = ENTERED_PROCESS_OPERATION;
+        _operationStage = ENTERED_HANDLE_OPERATION;
 
         _;
 
@@ -42,14 +42,14 @@ contract NocturneReentrancyGuard is Initializable {
 
     modifier executeActionsGuard() {
         require(
-            _operationStage == ENTERED_PROCESS_OPERATION,
+            _operationStage == ENTERED_HANDLE_OPERATION,
             "Reentry into executeActions"
         );
         _operationStage = ENTERED_EXECUTE_ACTIONS;
 
         _;
 
-        _operationStage = ENTERED_PROCESS_OPERATION;
+        _operationStage = ENTERED_HANDLE_OPERATION;
     }
 
     /**
