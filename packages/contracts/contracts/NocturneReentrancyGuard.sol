@@ -19,7 +19,7 @@ contract NocturneReentrancyGuard is Initializable {
         _operationStage = NOT_ENTERED;
     }
 
-    modifier prefillGuard() {
+    modifier addToAssetPrefillGuard() {
         require(
             _operationStage == NOT_ENTERED,
             "Reentry into addAssetToPrefill"
