@@ -1,10 +1,10 @@
 {
   "contractAddress": "0x1111111111111111111111111111111111111111",
   "contractName": "NocturneDepositManager",
+  "chainId": "123",
   "contractVersion": "v1",
   "screenerAddress": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
   "depositRequest": {
-    "chainId": "123",
     "spender": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
     "encodedAsset": { "encodedAssetAddr": "291", "encodedAssetId": "0" },
     "value": "1000",
@@ -12,10 +12,10 @@
     "nonce": "0",
     "gasCompensation": "50"
   },
-  "depositRequestHash": "0x04b9df8160b9cd2a00c2a76b38fd4e21f52b9b90ac0a2b6f761580e20c5f8c3e",
+  "depositRequestHash": "0x22953a4bfd7702965341de15d0feac9ebe37bd5e93442708bdad99043d9dc44d",
   "signature": {
-    "r": "0x4a877f0bfc701c03caaa1231c55466125aff3c4ccb704d3bf0d922fa6b566578",
-    "s": "0x48dccd101dfd5545f36c06a7fbbfd864c3d92d78dda2322a4b49fab4bc2c5272",
+    "r": "0xa5a5fcef5263a57e2fccc5a31f73d0dde7ac9fcc07055877fcae10ceaa44968d",
+    "s": "0x5ee16c867be44ac548b30d536d18358e15d34da1f00d074d0e02bbb054bb7367",
     "v": 28
   }
 }

@@ -23,6 +23,7 @@ struct SignedDepositRequestFixture {
     address contractAddress;
     string contractName;
     string contractVersion;
+    uint256 chainId;
     address screenerAddress;
     DepositRequest depositRequest;
     bytes32 depositRequestHash;
@@ -40,8 +41,16 @@ struct BaseProof {
 contract JsonDecodings is Test, ParseUtils {
     using stdJson for string;
 
-    struct SimpleSignedDepositRequestTypes {
+    struct SimpleDepositRequestFixtureTypes {
+        address contractAddress;
+        string contractName;
+        string contractVersion;
         uint256 chainId;
+        address screenerAddress;
+        bytes32 depositRequestHash;
+    }
+
+    struct SimpleSignedDepositRequestTypes {
         address spender;
         uint256 value;
         uint256 nonce;
@@ -74,28 +83,16 @@ contract JsonDecodings is Test, ParseUtils {
         string memory path
     ) public returns (SignedDepositRequestFixture memory) {
         string memory json = loadFixtureJson(path);
-        bytes memory contractAddressBytes = json.parseRaw(".contractAddress");
-        bytes memory contractNameBytes = json.parseRaw(".contractName");
-        bytes memory contractVersionBytes = json.parseRaw(".contractVersion");
-        bytes memory screenerAddressBytes = json.parseRaw(".screenerAddress");
-        bytes memory depositRequestHashBytes = json.parseRaw(
-            ".depositRequestHash"
-        );
-        address contractAddress = abi.decode(contractAddressBytes, (address));
-        string memory contractName = abi.decode(contractNameBytes, (string));
-        string memory contractVersion = abi.decode(
-            contractVersionBytes,
-            (string)
-        );
-        address screenerAddress = abi.decode(screenerAddressBytes, (address));
-        bytes32 depositRequestHash = abi.decode(
-            depositRequestHashBytes,
-            (bytes32)
-        );
 
         // NOTE: helper struct only used to reduce stack usage
+        SimpleDepositRequestFixtureTypes
+            memory simpleFixtureTypes = extractSimpleDepositRequestFixtureTypes(
+                json
+            );
         SimpleSignedDepositRequestTypes
-            memory simpleTypes = extractSimpleSignedDepositRequestTypes(json);
+            memory simpleDepositRequestTypes = extractSimpleSignedDepositRequestTypes(
+                json
+            );
 
         EncodedAsset memory encodedAsset = extractEncodedAsset(json);
         StealthAddress memory depositAddr = extractDepositAddr(json);
@@ -103,27 +100,48 @@ contract JsonDecodings is Test, ParseUtils {
 
         return
             SignedDepositRequestFixture({
+                contractAddress: simpleFixtureTypes.contractAddress,
+                contractName: simpleFixtureTypes.contractName,
+                contractVersion: simpleFixtureTypes.contractVersion,
+                chainId: simpleFixtureTypes.chainId,
+                screenerAddress: simpleFixtureTypes.screenerAddress,
+                depositRequest: DepositRequest({
+                    spender: simpleDepositRequestTypes.spender,
+                    encodedAsset: encodedAsset,
+                    value: simpleDepositRequestTypes.value,
+                    depositAddr: depositAddr,
+                    nonce: simpleDepositRequestTypes.nonce,
+                    gasCompensation: simpleDepositRequestTypes.gasCompensation
+                }),
+                depositRequestHash: simpleFixtureTypes.depositRequestHash,
+                signature: signature
+            });
+    }
+
+    function extractSimpleDepositRequestFixtureTypes(
+        string memory json
+    ) public returns (SimpleDepositRequestFixtureTypes memory) {
+        address contractAddress = json.readAddress(".contractAddress");
+        string memory contractName = json.readString(".contractName");
+        string memory contractVersion = json.readString(".contractVersion");
+        uint256 chainId = parseInt(json.readString(".chainId"));
+        address screenerAddress = json.readAddress(".screenerAddress");
+        bytes32 depositRequestHash = json.readBytes32(".depositRequestHash");
+
+        return
+            SimpleDepositRequestFixtureTypes({
                 contractAddress: contractAddress,
                 contractName: contractName,
                 contractVersion: contractVersion,
+                chainId: chainId,
                 screenerAddress: screenerAddress,
-                depositRequest: DepositRequest({
-                    spender: simpleTypes.spender,
-                    encodedAsset: encodedAsset,
-                    value: simpleTypes.value,
-                    depositAddr: depositAddr,
-                    nonce: simpleTypes.nonce,
-                    gasCompensation: simpleTypes.gasCompensation
-                }),
-                depositRequestHash: depositRequestHash,
-                signature: signature
+                depositRequestHash: depositRequestHash
             });
     }
 
     function extractSimpleSignedDepositRequestTypes(
         string memory json
     ) public returns (SimpleSignedDepositRequestTypes memory) {
-        uint256 chainId = parseInt(json.readString(".depositRequest.chainId"));
         address spender = json.readAddress(".depositRequest.spender");
         uint256 value = parseInt(json.readString(".depositRequest.value"));
         uint256 nonce = parseInt(json.readString(".depositRequest.nonce"));
@@ -133,7 +151,6 @@ contract JsonDecodings is Test, ParseUtils {
 
         return
             SimpleSignedDepositRequestTypes({
-                chainId: chainId,
                 spender: spender,
                 value: value,
                 nonce: nonce,

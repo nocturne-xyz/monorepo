@@ -8,7 +8,7 @@ import { ethers } from "ethers";
 const DEPOSIT_REQUEST_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
-    "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)",
+    "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)",
   ]
 );
 
@@ -29,7 +29,6 @@ export function hashDepositRequest(req: DepositRequest): string {
       ethers.utils.defaultAbiCoder.encode(
         [
           "bytes32",
-          "uint256",
           "address",
           "bytes32",
           "uint256",
@@ -39,7 +38,6 @@ export function hashDepositRequest(req: DepositRequest): string {
         ],
         [
           DEPOSIT_REQUEST_TYPEHASH,
-          req.chainId,
           req.spender,
           hashEncodedAsset(req.encodedAsset),
           req.value,

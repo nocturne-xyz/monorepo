@@ -48,7 +48,6 @@ function toObject(obj: any) {
   });
 
   const depositRequest: DepositRequest = {
-    chainId,
     spender: await signer.getAddress(),
     encodedAsset,
     value: 1000n,
@@ -81,6 +80,7 @@ function toObject(obj: any) {
     toObject({
       contractAddress: depositManagerAddress,
       contractName: DEPOSIT_MANAGER_CONTRACT_NAME,
+      chainId,
       contractVersion: DEPOSIT_MANAGER_CONTRACT_VERSION,
       screenerAddress: await signer.getAddress(),
       depositRequest,
