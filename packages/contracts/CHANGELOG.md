@@ -3,6 +3,10 @@
 ### Unreleased
 
 - Add `Pausable` to wallet and handler + deps (balance manager & commitment tree)
+  - Wallet: all non-admin external methods `whenNotPaused` (`depositFunds`, `processBundle`, `requestAsset`)
+  - Handler: all non-admin external methods `whenNotPaused` (`handleDeposit`, `handleOperation`, `executeActions`)
+    - BalanceManager: all onReceived hooks `whenNotPaused`
+    - CommitmentTreeManager: `applySubtreeUpdate` made `whenNotPaused
 - `BalanceManager` revokes prefills for erc721s and enables for 1155s
 - Rename `OperationReentrancyGuard` to `NocturneReentrancyGuard` and add `addAssetToPrefillGuard` to account for erc1155 prefills
 - Add missing handler unit tests for setting subtree filler and adding to asset prefill
