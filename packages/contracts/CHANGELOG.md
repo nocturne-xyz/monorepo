@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- `BalanceManager` revokes prefills for erc721s and enables for 1155s
+- Rename `OperationReentrancyGuard` to `NocturneReentrancyGuard` and add `addAssetToPrefillGuard` to account for erc1155 prefills
 - Add missing handler unit tests for setting subtree filler and adding to asset prefill
 - Add missing wallet unit tests for bundler comp success and direct handler reentrancy into wallet
 - Add balance manager token balance gas optimization, which allows for prefilling balances so we're not clearing token balance storage slots to 0 each time

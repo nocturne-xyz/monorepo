@@ -53,7 +53,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     function addToAssetPrefill(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external onlyOwner {
+    ) external onlyOwner addToAssetPrefillGuard {
         _addToAssetPrefill(encodedAsset, value);
     }
 

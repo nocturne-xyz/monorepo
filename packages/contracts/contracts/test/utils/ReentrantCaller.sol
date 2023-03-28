@@ -55,7 +55,7 @@ contract ReentrantCaller {
         _wallet.processBundle(bundle);
     }
 
-    function reentrantProcessOperation() external {
+    function reentrantHandleOperation() external {
         Operation memory op = formatOperation();
         _handler.handleOperation(op, 0, address(0x0));
     }
