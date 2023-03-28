@@ -191,6 +191,149 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         handler.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
+    function testWalletPauseUnpauseOnlyCallableByOwner() public {
+        vm.startPrank(BOB); // Not owner
+        vm.expectRevert("Ownable: caller is not the owner");
+        wallet.pause();
+        vm.expectRevert("Ownable: caller is not the owner");
+        wallet.unpause();
+        vm.stopPrank();
+
+        vm.startPrank(address(this));
+        wallet.pause();
+        assertEq(wallet.paused(), true);
+
+        wallet.unpause();
+        assertEq(wallet.paused(), false);
+        vm.stopPrank();
+    }
+
+    function testHandlerPauseUnpauseOnlyCallableByOwner() public {
+        vm.startPrank(BOB); // Not owner
+        vm.expectRevert("Ownable: caller is not the owner");
+        handler.pause();
+        vm.expectRevert("Ownable: caller is not the owner");
+        handler.unpause();
+        vm.stopPrank();
+
+        vm.startPrank(address(this));
+        handler.pause();
+        assertEq(handler.paused(), true);
+        handler.unpause();
+        assertEq(handler.paused(), false);
+        vm.stopPrank();
+    }
+
+    function testPausableWorksOnWallet() public {
+        vm.prank(address(this));
+        wallet.pause();
+
+        SimpleERC20Token token = ERC20s[0];
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            ERC20_ID
+        );
+
+        // Create dummy deposit
+        DepositRequest memory deposit = DepositRequest({
+            chainId: 0,
+            spender: ALICE,
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(token),
+                ERC20_ID
+            ),
+            value: PER_NOTE_AMOUNT,
+            depositAddr: NocturneUtils.defaultStealthAddress(),
+            nonce: 0,
+            gasCompensation: 0
+        });
+
+        // Create dummy operation
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 1,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT / 2
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        vm.expectRevert("Pausable: paused");
+        wallet.depositFunds(deposit);
+        vm.expectRevert("Pausable: paused");
+        wallet.processBundle(bundle);
+        vm.expectRevert("Pausable: paused");
+        vm.prank(address(handler));
+        wallet.requestAsset(encodedToken, 100);
+    }
+
+    function testPausableWorksOnHandler() public {
+        vm.prank(address(this));
+        handler.pause();
+
+        SimpleERC20Token token = ERC20s[0];
+
+        // Create dummy deposit
+        DepositRequest memory deposit = DepositRequest({
+            chainId: 0,
+            spender: ALICE,
+            encodedAsset: AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(token),
+                ERC20_ID
+            ),
+            value: PER_NOTE_AMOUNT,
+            depositAddr: NocturneUtils.defaultStealthAddress(),
+            nonce: 0,
+            gasCompensation: 0
+        });
+
+        // Create dummy operation
+        Operation memory operation = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 1,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT / 2
+                ),
+                joinSplitsFailureType: JoinSplitsFailureType.NONE
+            })
+        );
+
+        vm.expectRevert("Pausable: paused");
+        vm.prank(address(wallet));
+        handler.handleDeposit(deposit);
+        vm.expectRevert("Pausable: paused");
+        vm.prank(address(wallet));
+        handler.handleOperation(operation, 100, ALICE);
+        vm.expectRevert("Pausable: paused");
+        vm.prank(address(handler));
+        handler.executeActions(operation);
+    }
+
     function testSetDepositSourcePermissionWalletFailsNotOwner() public {
         vm.prank(BOB); // not owner
         vm.expectRevert("Ownable: caller is not the owner");
