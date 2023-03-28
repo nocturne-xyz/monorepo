@@ -2,7 +2,8 @@
 
 ### Unreleased
 
-- Move all poseidon and hasher references into tests (IHasher, IPoseidon, PoseidonHashers all go into tests because not used in production code)
+- Move `BinaryMerkle` into `test/utils`
+- Move all poseidon and hasher references into `test/utils` (IHasher, IPoseidon, PoseidonHashers all go into tests because not used in production code)
 - Add `Pausable` to wallet and handler + deps (balance manager & commitment tree)
   - Wallet: all non-admin external methods `whenNotPaused` (`depositFunds`, `processBundle`, `requestAsset`)
   - Handler: all non-admin external methods `whenNotPaused` (`handleDeposit`, `handleOperation`, `executeActions`)
