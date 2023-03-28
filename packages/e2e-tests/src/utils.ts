@@ -144,5 +144,104 @@ export async function runCommand(
       console.log(stdout);
       resolve([stdout, stderr]);
     });
+
+    // kill child if parent exits first
+    process.on("exit", () => {
+      child.kill();
+    });
   });
+}
+
+export interface RunCommandDetachedOpts {
+  cwd?: string;
+  processName?: string;
+  onStdOut?: (data: string) => void;
+  onStdErr?: (data: string) => void;
+  onError?: (stderr: string) => void;
+  onExit?: (
+    stdout: string,
+    stderr: string,
+    code: number | null,
+    signal: NodeJS.Signals | null
+  ) => void;
+}
+
+// runs a command in the child process without waiting for completion
+// instead, returns a teardown function that can be used to kill the process
+// NOTE: there is a potential race condition when killing the process:
+//   if the process has already exited and the OS re-allocated the PID,
+//   then the teardown function may attempt to kill that other process.
+export function runCommandDetached(
+  cmd: string,
+  args: string[],
+  opts?: RunCommandDetachedOpts
+): () => void {
+  const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
+  const child = spawn(cmd, args, { cwd });
+  let stdout = "";
+  let stderr = "";
+
+  child.stdout.on("data", (data) => {
+    const output = data.toString();
+    stdout += output;
+
+    if (onStdOut) {
+      onStdOut(output);
+    }
+  });
+
+  child.stderr.on("data", (data) => {
+    const output = data.toString();
+    stderr += output;
+
+    if (onStdErr) {
+      onStdErr(output);
+    }
+  });
+
+  child.on("error", () => {
+    if (onError) {
+      onError(stderr);
+    } else {
+      console.error(stderr);
+    }
+  });
+
+  child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
+    if (onExit) {
+      onExit(stdout, stderr, code, signal);
+    } else {
+      let msg = "";
+      if (processName) {
+        msg += `${processName} (${child.pid}) exited`;
+      } else {
+        msg += `child process ${child.pid} exited`;
+      }
+
+      if (code) {
+        msg += ` with code ${code}`;
+      }
+      if (signal) {
+        msg += ` on signal ${signal}`;
+      }
+
+      console.log(msg);
+
+      if (stderr) {
+        console.log("STDERR:");
+        console.log(stderr);
+      }
+    }
+  });
+
+  // kill child if parent exits first
+  process.on("exit", () => {
+    child.kill("SIGINT");
+  });
+
+  return () => {
+    console.log(`killing child process ${processName}`);
+    const res = child.kill("SIGINT");
+    console.log("success: ", res);
+  };
 }

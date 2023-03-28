@@ -5,23 +5,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Cache dependencies
+      - name: cache dependencies
         uses: actions/cache@v2
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: Use Node.js
+      - name: use Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "v18.12.1"
           cache: "yarn"
-      - name: Enable Corepack
+      - name: enable Corepack
         run: corepack enable
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-      - name: Install Rapidsnark dependencies
+      - name: install foundryup
+        run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
+      - name: install foundry
+        run: foundryup
+      - name: install Rapidsnark dependencies
         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
       - name: Yarn install
         run: |
@@ -29,15 +29,15 @@ jobs:
       - name: Yarn lint
         run: |
           yarn lint
-      - name: Yarn prettier
+      - name: yarn prettier
         run: |
           yarn prettier:check
-      - name: Yarn build
+      - name: yarn build
         run: |
           yarn build
-      - name: Yarn test:unit
+      - name: yarn test:unit
         run: |
           yarn test:unit
-      - name: Yarn test:ci
+      - name: yarn test:ci
         run: |
           yarn test:ci

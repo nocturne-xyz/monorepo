@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+- kill children in `runCommand` when parent process exits
+- make `deployAndDeposit` reserve 1000 eth instead of 100 eth to deployer
+- make `deployAndDeposit` wait for one confirmation on each tx
+- get rid of `startHardhat`` script`
+- rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
+- add `runCommandDetatched` util that returns a function that can be called to kill the child`
+- reduce some unnecessarily-long sleeps
+- move sleeps into inner actor setup / teardown fns
+- switch from hh node to anvil
 - Modify deployment and setup code to work with handler <> wallet separation
 - in `setupTestDeployment`, give deployer EOA and subtree updater EOA subtree batch filler permission
 - add `subtreeBatchFillers` param to `NocturneDeployArgs`

@@ -43,6 +43,6 @@ export async function startSubtreeUpdater(
   });
   await container.start();
   console.log("Started subtree updater");
-  await sleep(3_000);
+  await sleep(10_000);
   return container;
 }

@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add foundryup to ci workflow
+- reduce sleeps
+- site script uses anvil test accounts
+- site script uses anvil instead of hardhat
+- site script starts anvil instead of using start
 - Site script works with wallet<>handler separation
 - have site script pass in subtree updater address to deploy script
 - site script works with deposit screener

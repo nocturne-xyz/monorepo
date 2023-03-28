@@ -6,8 +6,7 @@ dataSources:
     name: Handler
     network: mainnet
     source:
-      # address: "0x57551a36C99528e4E19EA954C037d81c39fFdE4C"
-      address: "0x51a240271AB8AB9f9a21C82d9a85396b704E164d"
+      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
       # startBlock: 8412194
       startBlock: 0
       abi: Handler
@@ -36,7 +35,7 @@ dataSources:
     name: DepositManager
     network: mainnet
     source:
-      address: "0x00De48310d77A4d56aa400248b0B1613508f5B73"
+      address: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
       startBlock: 0
       abi: DepositManager
     mapping:

@@ -166,6 +166,7 @@ export class DepositScreenerProcessor {
         }
 
         await this.signAndSubmitDeposit(depositRequest).catch((e) => {
+          console.error(e);
           throw new Error(e);
         });
       },
@@ -203,6 +204,7 @@ export class DepositScreenerProcessor {
     const tx = await this.depositManagerContract
       .completeDeposit(depositRequest, signature)
       .catch((e) => {
+        console.error(e);
         throw new Error(e);
       });
 

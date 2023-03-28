@@ -52,7 +52,7 @@ export async function startDepositScreener(
   console.log("Writing to screener env file:\n", envFile);
   fs.writeFileSync(SCREENER_ENV_FILE_PATH, envFile);
   await compose.upAll(SCREENER_COMPOSE_OPTS);
-  await sleep(3_000);
+  await sleep(10_000);
 }
 
 export async function stopDepositScreener(): Promise<void> {
@@ -60,4 +60,5 @@ export async function stopDepositScreener(): Promise<void> {
     cwd: SCREENER_COMPOSE_CWD,
     commandOptions: [["--volumes"]],
   });
+  await sleep(10_000);
 }

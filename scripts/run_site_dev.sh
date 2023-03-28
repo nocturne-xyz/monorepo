@@ -29,44 +29,51 @@ yarn start &
 SNAP_PID=$!
 popd
 
-# start the hardhat node
+# start anvil
 pushd packages/e2e-tests
-echo "starting hardhat node..."
-yarn hh-node &> "$LOG_DIR/hh-node" &
-HH_NODE_PID=$!
+echo "starting anvil..."
+anvil &> "$LOG_DIR/anvil" &
+ANVIL_PID=$!
 
-sleep 10
+sleep 1
 
 # start graph node
 echo "starting graph node..."
 yarn graph-node &> "$LOG_DIR/graph-node" &
+GRAPH_NODE_PID=$!
+
+# deposit
+echo "Running deposit funds script..."
+yarn anvil-deposit &> "$LOG_DIR/anvil-deposit" || { echo 'anvil-deposit failed' ; exit 1; }
 
 START_BLOCK=0
-BUNDLER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000004"
-SUBTREE_UPDATER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000005"
-# ran the following script to get this:
-# import { ethers } from "ethers";
-# const sk = "0x0000000000000000000000000000000000000000000000000000000000000005";
-# const signer = new ethers.Wallet(sk)
-# console.log(signer.address);
-SUBTREE_UPDATER_ADDRESS="0xe1AB8145F7E55DC933d51a18c793F901A3A0b276"
 
-# Eth address: 0xE57bFE9F44b819898F47BF37E5AF72a0783e1141
-SCREENER_TX_SIGNER_KEY="0x0000000000000000000000000000000000000000000000000000000000000006"
+# anvil account #4
+# eth address: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
+BUNDLER_TX_SIGNER_KEY="0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a"
+
+# anvil account #5
+# eth address: 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc
+SUBTREE_UPDATER_TX_SIGNER_KEY="0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba"
+
+# anvil account #6
+# eth address: 0x976EA74026E726554dB657fA54763abd0C3a0aa9
+SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e"
 
 # deposit
 echo "Running deposit funds script..."
 yarn hh-node-deposit &> "$LOG_DIR/hh-node-deposit" || { echo 'hh-node-deposit failed' ; exit 1; }
 
 # read config variables from logs
-read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
-read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
-read HANDLER_CONTRACT_ADDRESS < <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
-read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
-read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hh-node-deposit)
+read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 popd
 
-sleep 20
+sleep 10
 
 # deploy subgraph
 pushd packages/subgraph
@@ -177,5 +184,6 @@ wait $SITE_PID
 wait $SNAP_PID
 wait $BUNDLER_PID
 wait $SCREENER_PID
-wait $HH_NODE_PID
 wait $SUBTREE_UPDATER_PID
+wait $GRAPH_NODE_PID
+wait $ANVIL_PID

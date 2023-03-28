@@ -46,7 +46,8 @@ export async function startBundler(config: BundlerConfig): Promise<void> {
   console.log("Writing to bundler env file:\n", envFile);
   fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
   await compose.upAll(BUNDLER_COMPOSE_OPTS);
-  await sleep(3_000);
+
+  await sleep(10_000);
 }
 
 export async function stopBundler(): Promise<void> {

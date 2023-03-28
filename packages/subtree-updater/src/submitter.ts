@@ -1,6 +1,5 @@
 import { Handler } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
-import { Mutex } from "async-mutex";
 
 export interface SubtreeUpdateSubmitter {
   submitProof(
@@ -17,22 +16,19 @@ export interface SubtreeUpdateSubmitter {
 export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   handlerContract: Handler;
 
-  // HACK: use a mutex to prevent nonces from colliding
-  mutex: Mutex;
-
   constructor(handlerContract: Handler) {
     this.handlerContract = handlerContract;
-    this.mutex = new Mutex();
   }
 
   async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
     try {
       console.log("submitting tx...");
-      const tx = await this.mutex.runExclusive(() =>
-        this.handlerContract.applySubtreeUpdate(newRoot, solidityProof)
+      const tx = await this.handlerContract.applySubtreeUpdate(
+        newRoot,
+        solidityProof
       );
-      await tx.wait();
+      await tx.wait(1);
       console.log("successfully updated root to", newRoot);
     } catch (err: any) {
       // ignore errors that are due to duplicate submissions
@@ -46,9 +42,8 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
   }
 
   async fillBatch(): Promise<void> {
-    await this.mutex.runExclusive(() =>
-      this.handlerContract.fillBatchWithZeros()
-    );
+    const tx = await this.handlerContract.fillBatchWithZeros();
+    await tx.wait(1);
   }
 
   async dropDB(): Promise<void> {}

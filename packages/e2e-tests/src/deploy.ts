@@ -20,6 +20,7 @@ import {
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
   Address,
+  sleep,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -34,7 +35,7 @@ import {
   NocturneConfig,
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
-import { HardhatNetworkConfig, startHardhatNetwork } from "./hardhat";
+import { AnvilNetworkConfig, startAnvil } from "./anvil";
 import { BundlerConfig, startBundler, stopBundler } from "./bundler";
 import {
   DepositScreenerConfig,
@@ -43,9 +44,8 @@ import {
 } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
-import { KEYS, KEYS_TO_WALLETS } from "./keys";
+import { KEYS_TO_WALLETS } from "./keys";
 import Dockerode from "dockerode";
-import { sleep } from "./utils";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -73,7 +73,7 @@ export interface TestActorsConfig {
   // specify configs for actors to deploy
   // if non-skipped actors don't have a config, one of the defaults below will be used
   configs?: {
-    hhNode?: Partial<HardhatNetworkConfig>;
+    anvil?: Partial<AnvilNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
     depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
@@ -97,8 +97,8 @@ export interface NocturneTestDeployment {
 }
 
 // defaults for actor deployments
-const HH_URL = "http://localhost:8545";
-const HH_FROM_DOCKER_URL = "http://host.docker.internal:8545";
+const ANVIL_URL = "http://127.0.0.1:8545";
+const ANVIL_FROM_DOCKER_URL = "http://host.docker.internal:8545";
 
 const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 const SUBGRAPH_FROM_DOCKER_URL =
@@ -108,9 +108,8 @@ const REDIS_URL_BUNDLER = "redis://redis:6379";
 const REDIS_URL_SCREENER = "redis://redis:6380";
 const REDIS_PASSWORD = "baka";
 
-const DEFAULT_HH_NETWORK_CONFIG: HardhatNetworkConfig = {
-  blockTime: 3_000,
-  keys: KEYS,
+const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
+  blockTimeSecs: 1,
 };
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
@@ -120,7 +119,7 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   redisUrl: REDIS_URL_BUNDLER,
   redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
 };
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
@@ -129,7 +128,7 @@ const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
 > = {
   redisUrl: REDIS_URL_SCREENER,
   redisPassword: REDIS_PASSWORD,
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
   subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
 };
 
@@ -137,7 +136,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "handlerAddress" | "txSignerKey"
 > = {
-  rpcUrl: HH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_FROM_DOCKER_URL,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
@@ -151,20 +150,18 @@ const docker = new Dockerode();
 export async function setupTestDeployment(
   config: TestActorsConfig
 ): Promise<NocturneTestDeployment> {
-  // hh node has to go up first,
+  // anvil has to go up first,
   // then contracts,
   // then everything else can go up in any order
 
-  // spin up hh node
-  const givenHHConfig = config.configs?.hhNode ?? {};
-  const hhConfig = { ...DEFAULT_HH_NETWORK_CONFIG, ...givenHHConfig };
-  const hhContainer = await startHardhatNetwork(docker, hhConfig);
-
-  // sliep while the container starts up
-  await sleep(5_000);
+  // spin up anvil
+  const givenAnvilConfig = config.configs?.anvil ?? {};
+  const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
+  console.log("starting anvil...");
+  const stopAnvil = await startAnvil(anvilConfig);
 
   // deploy contracts
-  const provider = new ethers.providers.JsonRpcProvider(HH_URL);
+  const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
   const [
     deployerEoa,
     aliceEoa,
@@ -173,6 +170,7 @@ export async function setupTestDeployment(
     subtreeUpdaterEoa,
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
+  console.log("deploying contracts...");
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
     subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -264,15 +262,24 @@ export async function setupTestDeployment(
   await Promise.all(proms);
 
   const teardown = async () => {
+    console.log("tearing down offchain actors...");
     // teardown offchain actors
     const proms = [];
 
     if (config.include.bundler) {
-      proms.push(stopBundler());
+      proms.push(
+        stopBundler().catch((err) =>
+          console.error("error tearing down bundler: ", err)
+        )
+      );
     }
 
     if (config.include.depositScreener) {
-      proms.push(stopDepositScreener());
+      proms.push(
+        stopDepositScreener().catch((err) =>
+          console.error("error tearing down deposit screener: ", err)
+        )
+      );
     }
 
     if (subtreeUpdaterContainer) {
@@ -280,23 +287,32 @@ export async function setupTestDeployment(
         await subtreeUpdaterContainer?.stop();
         await subtreeUpdaterContainer?.remove();
       };
-      proms.push(teardown());
-    }
-
-    if (config.include.subgraph) {
-      proms.push(stopSubgraph());
+      proms.push(
+        teardown().catch((err) =>
+          console.error("error tearing down subtree updater: ", err)
+        )
+      );
     }
 
     await Promise.all(proms);
 
-    // wait for all of the actors to finish teardown before tearing down hh node
+    // wait for actors to teardown
     await sleep(10_000);
 
-    // teardown hh node
-    await hhContainer.stop();
-    await hhContainer.remove();
+    // teradown subgraph
+    if (config.include.subgraph) {
+      console.log("tearing down subgraph...");
+      await stopSubgraph();
+    }
 
-    // wait a bit to ensure hh node is torn down before next test is allowed to run
+    // wait for subgraph to tear down
+    await sleep(10_000);
+
+    console.log("tearing down anvil...");
+    // teardown anvil node
+    await stopAnvil();
+
+    // wait for anvil to tear down
     await sleep(5_000);
   };
 
