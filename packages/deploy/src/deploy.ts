@@ -151,7 +151,7 @@ export async function deployNocturne(
     "relinquishing control of wallet, handler, and deposit manager..."
   );
   console.log();
-  
+
   const walletTransferOwnershipTx =
     await proxiedWallet.contract.transferOwnership(args.walletOwner);
   await walletTransferOwnershipTx.wait(opts?.confirmations);
