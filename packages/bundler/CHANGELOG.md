@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make server, batcher, and submitter stoppable by renaming `run` to `start` and returning a "close" function
 - Move env var parsing to CLI
 - add `ignoreGas` option to validator
 - Remove `verificationGasLimit` from `Operation`
