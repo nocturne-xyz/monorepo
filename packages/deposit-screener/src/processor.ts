@@ -102,7 +102,7 @@ export class DepositScreenerProcessor {
       submitter.on("closed", () => {
         console.log("[SCREENER TEARDOWN] submitter closed");
         resolve();
-      })
+      });
     });
 
     return [
@@ -203,10 +203,10 @@ export class DepositScreenerProcessor {
         await this.signAndSubmitDeposit(depositRequest).catch((e) => {
           // console.error(e);
           // throw new Error(e);
-          throw new Error("failed to sign and submit deposit")
+          throw new Error("failed to sign and submit deposit");
         });
       },
-      { connection: this.redis, autorun: true}
+      { connection: this.redis, autorun: true }
     );
   }
 
@@ -237,7 +237,7 @@ export class DepositScreenerProcessor {
       .catch((e) => {
         // console.error(e);
         // throw new Error(e);
-        throw new Error("failed to complete deposit")
+        throw new Error("failed to complete deposit");
       });
 
     console.log("Waiting for receipt...");

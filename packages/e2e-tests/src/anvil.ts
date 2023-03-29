@@ -33,9 +33,15 @@ export async function startAnvil(
 
   const provider = new ethers.providers.JsonRpcProvider("http://0.0.0.0:8545");
   // get snapshot with empty chain state
-  const snapshotId = await provider.send("evm_snapshot", []);
+  let snapshotId = await provider.send("evm_snapshot", []);
   return async () => {
-    const provider = new ethers.providers.JsonRpcProvider("http://0.0.0.0:8545");
-    await provider.send("evm_revert", [snapshotId]);
-  }
+    const provider = new ethers.providers.JsonRpcProvider(
+      "http://0.0.0.0:8545"
+    );
+    const success = await provider.send("evm_revert", [snapshotId]);
+    console.log("reset anvil success: ", success);
+
+    await sleep(1_000);
+    snapshotId = await provider.send("evm_snapshot", []);
+  };
 }

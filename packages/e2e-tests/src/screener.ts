@@ -46,6 +46,6 @@ export async function startDepositScreener(
     await processorProm;
     console.log("[SCREENER TEARDOWN] await clearRedis...");
     await clearRedis();
-    console.log("[SCREENER TEARDOWN] done"); 
+    console.log("[SCREENER TEARDOWN] done");
   };
 }

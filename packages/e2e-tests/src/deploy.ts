@@ -22,7 +22,6 @@ import {
   Address,
   sleep,
   thunk,
-  Thunk,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -245,10 +244,11 @@ export async function setupTestDeployment(
       await sleep(10_000);
     }
 
-
     console.log("resetting anvil...");
     // reset anvil node
     await resetAnvil();
+    // wait for anvil to reset
+    await sleep(1_000);
   };
 
   return {

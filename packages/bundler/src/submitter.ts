@@ -56,20 +56,20 @@ export class BundlerSubmitter {
     );
 
     const prom = new Promise<void>((resolve, _reject) => {
-      worker.on('closed', () => {
-        console.log("[BUNDLER-SUBMITTER TEARDOWN] worker closed")
+      worker.on("closed", () => {
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] worker closed");
         resolve();
-      })
+      });
     });
 
     return [
       prom,
       async () => {
-        console.log("[BUNDLER-SUBMITTER TEARDOWN] await worker.close()")
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] await worker.close()");
         await worker.close();
-        console.log("[BUNDLER-SUBMITTER TEARDOWN] await prom")
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] await prom");
         await prom;
-        console.log("[BUNDLER-SUBMITTER TEARDOWN] done")
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] done");
       },
     ];
   }
