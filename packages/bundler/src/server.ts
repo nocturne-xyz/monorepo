@@ -37,7 +37,9 @@ export class BundlerServer {
 
     return () =>
       new Promise((resolve) => {
+        console.log("[BUNDLER_SERVER TEARDOWN] server.close()...")
         server.close(() => {
+          console.log("[BUNDLER_SERVER TEARDOWN] resolve...")
           resolve();
         });
       });

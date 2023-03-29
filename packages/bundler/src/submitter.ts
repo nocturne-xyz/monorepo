@@ -48,19 +48,28 @@ export class BundlerSubmitter {
           throw new Error(e);
         });
       },
-      { connection: this.redis, autorun: false }
+      { connection: this.redis, autorun: true }
     );
 
     console.log(
       `Submitter running. Wallet contract: ${this.walletContract.address}.`
     );
 
+    const prom = new Promise<void>((resolve, _reject) => {
+      worker.on('closed', () => {
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] worker closed")
+        resolve();
+      })
+    });
+
     return [
-      (async () => {
-        await worker.run();
-      })(),
+      prom,
       async () => {
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] await worker.close()")
         await worker.close();
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] await prom")
+        await prom;
+        console.log("[BUNDLER-SUBMITTER TEARDOWN] done")
       },
     ];
   }

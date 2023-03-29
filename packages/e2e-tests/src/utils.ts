@@ -174,11 +174,11 @@ export interface RunCommandDetachedOpts {
 // NOTE: there is a potential race condition when killing the process:
 //   if the process has already exited and the OS re-allocated the PID,
 //   then the teardown function may attempt to kill that other process.
-export function runCommandDetached(
+export function runCommandBackground(
   cmd: string,
   args: string[],
   opts?: RunCommandDetachedOpts
-): () => void {
+) {
   const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
   const child = spawn(cmd, args, { cwd });
   let stdout = "";
@@ -210,7 +210,7 @@ export function runCommandDetached(
     }
   });
 
-  child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
+  child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
     if (onExit) {
       onExit(stdout, stderr, code, signal);
     } else {
@@ -239,14 +239,8 @@ export function runCommandDetached(
 
   // kill child if parent exits first
   process.on("exit", () => {
-    child.kill("SIGINT");
+    child.kill();
   });
-
-  return () => {
-    console.log(`killing child process ${processName}`);
-    const res = child.kill("SIGINT");
-    console.log("success: ", res);
-  };
 }
 
 interface RedisHandle {

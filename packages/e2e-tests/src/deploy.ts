@@ -21,6 +21,8 @@ import {
   SubgraphSDKSyncAdapter,
   Address,
   sleep,
+  thunk,
+  Thunk,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -68,7 +70,6 @@ export interface TestActorsConfig {
   // specify configs for actors to deploy
   // if non-skipped actors don't have a config, one of the defaults below will be used
   configs?: {
-    anvil?: Partial<AnvilNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
     depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
@@ -92,12 +93,8 @@ export interface NocturneTestDeployment {
 }
 
 // defaults for actor deployments
-const ANVIL_URL = "http://127.0.0.1:8545";
-const ANVIL_FROM_DOCKER_URL = "http://host.docker.internal:8545";
-
-const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
-const SUBGRAPH_FROM_DOCKER_URL =
-  "http://host.docker.internal:8000/subgraphs/name/nocturne-test";
+const ANVIL_URL = "http://0.0.0.0:8545";
+const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne-test";
 
 const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
   blockTimeSecs: 1,
@@ -108,27 +105,30 @@ const DEFAULT_BUNDLER_CONFIG: Omit<
   "walletAddress" | "txSignerKey" | "ignoreGas"
 > = {
   maxLatency: 1,
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
 };
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
   DepositScreenerConfig,
   "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
 > = {
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
-  subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
+  subgraphUrl: SUBGRAPH_URL,
 };
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "handlerAddress" | "txSignerKey"
 > = {
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
   startBlock: 0,
 };
+
+// we want to only start anvil once, so we wrap `startAnvil` in a thunk
+const anvilThunk = thunk(() => startAnvil(DEFAULT_ANVIL_CONFIG));
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
@@ -140,10 +140,8 @@ export async function setupTestDeployment(
   // then everything else can go up in any order
 
   // spin up anvil
-  const givenAnvilConfig = config.configs?.anvil ?? {};
-  const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
   console.log("starting anvil...");
-  const stopAnvil = await startAnvil(anvilConfig);
+  const resetAnvil = await anvilThunk();
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
@@ -184,6 +182,7 @@ export async function setupTestDeployment(
     };
 
     stopSubgraph = await startSubgraph(subgraphConfig);
+    await sleep(10_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else
@@ -242,17 +241,14 @@ export async function setupTestDeployment(
     if (stopSubgraph) {
       console.log("tearing down subgraph...");
       await stopSubgraph();
+      // wait for subgraph to tear down
+      await sleep(10_000);
     }
 
-    // wait for subgraph to tear down
-    await sleep(10_000);
 
-    console.log("tearing down anvil...");
-    // teardown anvil node
-    await stopAnvil();
-
-    // wait for anvil to tear down
-    await sleep(1_000);
+    console.log("resetting anvil...");
+    // reset anvil node
+    await resetAnvil();
   };
 
   return {

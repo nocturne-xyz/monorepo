@@ -87,19 +87,22 @@ export class DepositScreenerProcessor {
     );
 
     const screenerProm = this.runScreener(depositEvents).catch((err) => {
-      console.error("error in deposit processor screener: ", err);
-      throw new Error("error in deposit processor screener: " + err);
+      // console.error("error in deposit processor screener: ", err);
+      // throw new Error("error in deposit processor screener: " + err);
+      throw new Error("error in deposit processor screener");
     });
-
-    const submitter = this.makeSubmitter();
 
     console.log("starting submitter...");
     console.log(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );
-    const submitterProm = submitter.run().catch((err) => {
-      console.error("error in deposit processor submitter: ", err);
-      throw new Error("error in deposit processor submitter: " + err);
+    const submitter = this.startSubmitter();
+
+    const submitterProm = new Promise<void>((resolve, _reject) => {
+      submitter.on("closed", () => {
+        console.log("[SCREENER TEARDOWN] submitter closed");
+        resolve();
+      })
     });
 
     return [
@@ -107,9 +110,15 @@ export class DepositScreenerProcessor {
         await Promise.all([screenerProm, submitterProm]);
       })(),
       async () => {
+        console.log("[INNER SCREENER TEARDOWN] await depositEvents.close()...");
         await depositEvents.close();
+        console.log("[INNER SCREENER TEARDOWN] await screenerProm...");
         await screenerProm;
+        console.log("[INNER SCREENER TEARDOWN] await submitter.close() ...");
         await submitter.close();
+        console.log("[INNER SCREENER TEARDOWN] await submitterProm...");
+        await submitterProm;
+        console.log("[INNER SCREENER TEARDOWN] done");
       },
     ];
   }
@@ -158,7 +167,7 @@ export class DepositScreenerProcessor {
     return DepositRequestStatus.Enqueued;
   }
 
-  makeSubmitter(): Worker<DelayedDepositJobData, any, string> {
+  startSubmitter(): Worker<DelayedDepositJobData, any, string> {
     return new Worker(
       DELAYED_DEPOSIT_QUEUE,
       async (job: Job<DelayedDepositJobData>) => {
@@ -192,11 +201,12 @@ export class DepositScreenerProcessor {
         }
 
         await this.signAndSubmitDeposit(depositRequest).catch((e) => {
-          console.error(e);
-          throw new Error(e);
+          // console.error(e);
+          // throw new Error(e);
+          throw new Error("failed to sign and submit deposit")
         });
       },
-      { connection: this.redis, autorun: false }
+      { connection: this.redis, autorun: true}
     );
   }
 
@@ -225,19 +235,20 @@ export class DepositScreenerProcessor {
     const tx = await this.depositManagerContract
       .completeDeposit(depositRequest, signature)
       .catch((e) => {
-        console.error(e);
-        throw new Error(e);
+        // console.error(e);
+        // throw new Error(e);
+        throw new Error("failed to complete deposit")
       });
 
     console.log("Waiting for receipt...");
     const receipt = await tx.wait(1);
-    console.log("completeDeposit receipt:", receipt);
+    // console.log("completeDeposit receipt:", receipt);
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")
     ) as DepositCompletedEvent[];
-    console.log("Matching events:", matchingEvents);
+    // console.log("Matching events:", matchingEvents);
 
     if (matchingEvents.length > 0) {
       console.log(

@@ -130,6 +130,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   afterEach(async () => {
+    console.log("[AFTER EACH]");
     await teardown();
   });
 
@@ -147,7 +148,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("Alice pre-op notes:", preOpNotesAlice);
     console.log(
-      "Alice pre-of nextMerkleIndex",
+      "Alice pre-op nextMerkleIndex",
       await nocturneDBAlice.nextMerkleIndex()
     );
 
@@ -188,7 +189,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .gasPrice(1n)
       .build();
 
-    expect(
+    await expect(
       testE2E(
         operationRequest,
         async () => {},

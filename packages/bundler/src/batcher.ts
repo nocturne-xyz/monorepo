@@ -41,20 +41,13 @@ export class BundlerBatcher {
   }
 
   start(): [Promise<void>, () => Promise<void>] {
-    let stopped = false;
     console.log("batcher starting...");
 
     // **** BATCHER ****
-    let counterSeconds = 0;
-    let intervalId: NodeJS.Timer;
-    const batcherProm = new Promise<void>(() => {
-      intervalId = setInterval(async () => {
-        // if
-        if (stopped) {
-          clearInterval(intervalId);
-          return;
-        }
-
+    let stopped = false;
+    const batcherProm = new Promise<void>((resolve, _reject) => {
+      let counterSeconds = 0;
+      const poll = async () => {
         const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
         if (batch) {
           if (
@@ -99,12 +92,16 @@ export class BundlerBatcher {
 
           counterSeconds += 1;
         }
-      }, 1000);
-    });
 
-    // in the case of an early failure, clearTimeout
-    // if we've stopped due to the teardown function, this will be a no-op
-    batcherProm.finally(() => clearTimeout(intervalId));
+        if (stopped) {
+          resolve();
+        } else {
+          setTimeout(poll, 1000);
+        }
+      };
+
+      poll();
+    });
 
     // **** QUEUER ****
     const queuer = new Worker(
@@ -134,22 +131,27 @@ export class BundlerBatcher {
       },
       {
         connection: this.redis,
-        autorun: false,
+        autorun: true,
       }
     );
 
-    return [
-      (async () => {
-        await queuer.run();
-      })(),
-      async () => {
-        if (stopped) {
-          return;
-        }
+    const queuerProm = new Promise<void>((resolve, _reject) => {
+      queuer.on('closed', () => {
+        console.log("[BUNDLER-BATCHER TEARDOWN] queuer closed")
+        resolve();
+      })
+    });
 
+    return [
+      (async () => { await Promise.all([queuerProm, batcherProm])})(),
+      async () => {
         stopped = true;
 
-        await Promise.all([queuer.close(), batcherProm]);
+        console.log("[BUNDLER-BATCHER TEARDOWN] await queuer.close()...")
+        await queuer.close();
+        console.log("[BUNDLER-BATCHER TEARDOWN] await Promise.all([queuerProm, batcherProm])...")
+        await Promise.all([queuerProm, batcherProm]);
+        console.log("[BUNDLER-BATCHER TEARDOWN] done")
       },
     ];
   }

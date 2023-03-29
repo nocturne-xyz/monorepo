@@ -68,7 +68,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const testDeployment = await setupTestDeployment({
         include: {
           bundler: true,
-          subgraph: syncAdapter === SyncAdapterOption.SUBGRAPH,
+          subgraph: true,
           depositScreener: true,
         },
       });
@@ -115,7 +115,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     }
 
     afterEach(async () => {
-      await Promise.all([teardown(), updater.dropDB()]);
+      console.log("[AFTER EACH]");
+      await updater.dropDB();
+      await teardown();
     });
 
     it("syncs notes, not leaves before subtree update", async () => {
