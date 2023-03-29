@@ -42,7 +42,7 @@ export async function startAnvil(
 
     const success = await provider.send("evm_revert", [snapshotId]);
     assertOrErr(success, "failed to revert to snapshot");
-    
+
     await sleep(1_000);
     snapshotId = await provider.send("evm_snapshot", []);
   };

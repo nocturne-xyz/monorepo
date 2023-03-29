@@ -97,7 +97,7 @@ export class DepositScreenerProcessor {
     );
     const submitter = this.startSubmitter();
 
-    const submitterProm = new Promise<void>((resolve, _reject) => {
+    const submitterProm = new Promise<void>((resolve) => {
       submitter.on("closed", () => {
         resolve();
       });

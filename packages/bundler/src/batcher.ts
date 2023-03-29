@@ -45,7 +45,7 @@ export class BundlerBatcher {
 
     // **** BATCHER ****
     let stopped = false;
-    const batcherProm = new Promise<void>((resolve, _reject) => {
+    const batcherProm = new Promise<void>((resolve) => {
       let counterSeconds = 0;
       const poll = async () => {
         const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
@@ -100,7 +100,7 @@ export class BundlerBatcher {
         }
       };
 
-      poll();
+      void poll();
     });
 
     // **** QUEUER ****
@@ -135,7 +135,7 @@ export class BundlerBatcher {
       }
     );
 
-    const queuerProm = new Promise<void>((resolve, _reject) => {
+    const queuerProm = new Promise<void>((resolve) => {
       queuer.on("closed", () => {
         resolve();
       });

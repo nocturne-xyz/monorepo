@@ -55,7 +55,7 @@ export class BundlerSubmitter {
       `Submitter running. Wallet contract: ${this.walletContract.address}.`
     );
 
-    const prom = new Promise<void>((resolve, _reject) => {
+    const prom = new Promise<void>((resolve) => {
       worker.on("closed", () => {
         resolve();
       });
