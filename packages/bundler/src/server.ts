@@ -32,7 +32,7 @@ export class BundlerServer {
     app.use(router);
 
     const server = app.listen(port, () => {
-      console.log(`Bundler server listening at ${os.hostname()}:${port}`);
+      console.log(`bundler server listening at ${os.hostname()}:${port}`);
     });
 
     return () =>

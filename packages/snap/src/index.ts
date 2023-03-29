@@ -18,13 +18,13 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 
-const HANDLER_ADDRESS = "0x51a240271AB8AB9f9a21C82d9a85396b704E164d";
+const HANDLER_ADDRESS = "";
 const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
-const GAS_TOKEN1 = "0xbfce6B877Ebff977bB6e80B24FbBb7bC4eBcA4df";
-const GAS_TOKEN2 = "0xcd75Ad7AC9C9325105f798c476E84176648F391A";
+const GAS_TOKEN1 = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed";
+const GAS_TOKEN2 = "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c";
 
 const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
   startBlock: 0,

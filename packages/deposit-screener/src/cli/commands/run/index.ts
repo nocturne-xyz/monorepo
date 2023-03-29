@@ -2,7 +2,7 @@ import { Command } from "commander";
 import runProcessor from "./processor";
 
 const run = new Command("run").description(
-  "Run a deposit screener component (run server or processor)"
+  "run a deposit screener component (run server or processor)"
 );
 run.addCommand(runProcessor);
 

@@ -5,9 +5,9 @@ import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 
 const runProcess = new Command("processor")
-  .summary("Process deposit requests")
+  .summary("process deposit requests")
   .description(
-    "Must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. Must supply deposit manager contract address as options."
+    "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. must supply deposit manager contract address as options."
   )
   .requiredOption(
     "--deposit-manager-address <string>",
@@ -19,24 +19,24 @@ const runProcess = new Command("processor")
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
     if (!subgraphEndpoint) {
-      throw new Error("Missing SUBGRAPH_URL");
+      throw new Error("missing SUBGRAPH_URL");
     }
     const adapter = new SubgraphScreenerSyncAdapter(subgraphEndpoint);
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
-      throw new Error("Missing RPC_URL");
+      throw new Error("missing RPC_URL");
     }
     const txSignerKey = process.env.TX_SIGNER_KEY;
     if (!txSignerKey) {
-      throw new Error("Missing TX_SIGNER_KEY");
+      throw new Error("missing TX_SIGNER_KEY");
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const txSigner = new ethers.Wallet(txSignerKey, provider);
 
     const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
     if (!attestationSignerKey) {
-      throw new Error("Missing ATTESTATION_SIGNER_KEY");
+      throw new Error("missing ATTESTATION_SIGNER_KEY");
     }
     const attestationSigner = new ethers.Wallet(attestationSignerKey);
 

@@ -51,13 +51,13 @@ export class BundlerRouter {
 
     const operation = errorOrOperation;
 
-    console.log("Checking operation's gas price");
+    console.log("checking operation's gas price");
     const gasPriceErr = await this.validator.checkNotEnoughGasError(operation);
     if (gasPriceErr) {
       res.status(400).json(gasPriceErr);
     }
 
-    console.log("Validating nullifiers");
+    console.log("validating nullifiers");
     const nfConflictErr = await this.validator.checkNullifierConflictError(
       operation
     );
@@ -66,7 +66,7 @@ export class BundlerRouter {
       return;
     }
 
-    console.log("Validating reverts");
+    console.log("validating reverts");
     const revertErr = await this.validator.checkRevertError(operation);
     if (revertErr) {
       res.status(400).json(revertErr);
@@ -83,7 +83,7 @@ export class BundlerRouter {
     if (status) {
       res.json({ status });
     } else {
-      res.status(400).json({ error: "Job doesn't exist" });
+      res.status(400).json({ error: "job doesn't exist" });
     }
   }
 
@@ -109,7 +109,7 @@ export class BundlerRouter {
     await this.redis.multi(allTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `Failed to execute set jobs status + add nfs transaction: ${maybeErr}`
+          `failed to execute set jobs status + add nfs transaction: ${maybeErr}`
         );
       }
     });

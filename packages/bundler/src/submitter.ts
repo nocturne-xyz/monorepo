@@ -52,7 +52,7 @@ export class BundlerSubmitter {
     );
 
     console.log(
-      `Submitter running. Wallet contract: ${this.walletContract.address}.`
+      `submitter starting... wallet contract: ${this.walletContract.address}.`
     );
 
     const prom = new Promise<void>((resolve) => {
@@ -82,7 +82,7 @@ export class BundlerSubmitter {
     await this.redis.multi(inflightStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `Failed to set job status transactions to inflight: ${maybeErr}`
+          `failed to set job status transactions to inflight: ${maybeErr}`
         );
       }
     });
@@ -101,7 +101,7 @@ export class BundlerSubmitter {
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    console.log("Matching events:", matchingEvents);
+    console.log("matching events:", matchingEvents);
 
     const executedStatusTransactions = matchingEvents.map(({ args }) => {
       const digest = args.operationDigest.toBigInt();
@@ -113,7 +113,7 @@ export class BundlerSubmitter {
         : OperationStatus.EXECUTED_FAILED;
 
       console.log(
-        `Setting operation with digest ${digest} to status ${status}`
+        `setting operation with digest ${digest} to status ${status}`
       );
       return this.statusDB.getSetJobStatusTransaction(
         digest.toString(),
@@ -124,7 +124,7 @@ export class BundlerSubmitter {
     await this.redis.multi(executedStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `Failed to set job status transactions post-op: ${maybeErr}`
+          `failed to set job status transactions post-op: ${maybeErr}`
         );
       }
     });
