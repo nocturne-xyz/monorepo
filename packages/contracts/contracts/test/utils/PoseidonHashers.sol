@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./interfaces/IHasher.sol";
-import "./interfaces/IPoseidon.sol";
+import "../interfaces/IHasher.sol";
+import "../interfaces/IPoseidon.sol";
 
 contract PoseidonHasherT3 is IHasherT3 {
     IPoseidonT3 public poseidonT3;
