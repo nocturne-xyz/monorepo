@@ -37,7 +37,7 @@ popd
 # start anvil
 pushd packages/e2e-tests
 echo "starting anvil..."
-anvil &> "$LOG_DIR/anvil" &
+anvil --block-time 1 --host 0.0.0.0 &> "$LOG_DIR/anvil" &
 ANVIL_PID=$!
 
 sleep 1
@@ -68,7 +68,7 @@ SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b
 # read config variables from logs
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read VAULT_CONTRACT_ADDRESS < <(sed -nr 's/^Vault address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
@@ -85,12 +85,12 @@ popd
 # bundler default config variables
 BUNDLER_REDIS_URL="redis://redis:6379"
 REDIS_PASSWORD="baka"
-RPC_URL="http://0.0.0.0:8545"
+RPC_URL="http://host.docker.internal:8545"
 BUNDLER_PORT="3000"
 
 # screener default config variables
 SCREENER_REDIS_URL="redis://redis:6380"
-SUBGRAPH_URL="http://localhost:8000/subgraphs/name/nocturne-test"
+SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne-test"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
 echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"

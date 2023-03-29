@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- site script uses explicit block time instead of automine
+- site script prints handler address
 - add foundryup to ci workflow
 - reduce sleeps
 - site script uses anvil test accounts
