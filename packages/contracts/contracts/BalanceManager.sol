@@ -2,18 +2,20 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-import "./CommitmentTreeManager.sol";
+// External
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+// Internal
 import {IWallet} from "./interfaces/IWallet.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
+import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
+import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
-import "./NocturneReentrancyGuard.sol";
 
 contract BalanceManager is
     IERC721ReceiverUpgradeable,
@@ -200,7 +202,7 @@ contract BalanceManager is
         address, // from
         uint256 id,
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external override whenNotPaused returns (bytes4) {
         // Must reject the transfer outside of an operation handling. We also
         // reject erc721s for prefills.
         if (
@@ -227,7 +229,7 @@ contract BalanceManager is
         uint256 id,
         uint256, // value
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
@@ -250,7 +252,7 @@ contract BalanceManager is
         uint256[] calldata ids,
         uint256[] calldata, // values
         bytes calldata // data
-    ) external override returns (bytes4) {
+    ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;

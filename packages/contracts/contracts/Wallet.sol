@@ -2,18 +2,18 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+// External
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Versioned} from "./upgrade/Versioned.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-
 import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
-
-import {Versioned} from "./upgrade/Versioned.sol";
+// Internal
 import {IWallet} from "./interfaces/IWallet.sol";
 import {IHandler} from "./interfaces/IHandler.sol";
 import {IJoinSplitVerifier} from "./interfaces/IJoinSplitVerifier.sol";
@@ -28,6 +28,7 @@ import "./libs/Types.sol";
 contract Wallet is
     IWallet,
     ReentrancyGuardUpgradeable,
+    PausableUpgradeable,
     OwnableUpgradeable,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
@@ -63,25 +64,9 @@ contract Wallet is
         address joinSplitVerifier
     ) external initializer {
         __Ownable_init();
+        __Pausable_init();
         _handler = IHandler(handler);
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
-    }
-
-    function setDepositSourcePermission(
-        address source,
-        bool permission
-    ) external onlyOwner {
-        _depositSources[source] = permission;
-        emit DepositSourcePermissionSet(source, permission);
-    }
-
-    // gives an address permission to call `fillBatchesWithZeros`
-    function setSubtreeBatchFillerPermission(
-        address filler,
-        bool permission
-    ) external onlyOwner {
-        _subtreeBatchFiller[filler] = permission;
-        emit SubtreeBatchFillerPermissionSet(filler, permission);
     }
 
     modifier onlyThis() {
@@ -104,9 +89,34 @@ contract Wallet is
         _;
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function setDepositSourcePermission(
+        address source,
+        bool permission
+    ) external onlyOwner {
+        _depositSources[source] = permission;
+        emit DepositSourcePermissionSet(source, permission);
+    }
+
+    // gives an address permission to call `fillBatchesWithZeros`
+    function setSubtreeBatchFillerPermission(
+        address filler,
+        bool permission
+    ) external onlyOwner {
+        _subtreeBatchFiller[filler] = permission;
+        emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
     function depositFunds(
         DepositRequest calldata deposit
-    ) external override onlyDepositSource {
+    ) external override whenNotPaused onlyDepositSource {
         _handler.handleDeposit(deposit);
         AssetUtils.transferAssetFrom(
             deposit.encodedAsset,
@@ -118,7 +128,7 @@ contract Wallet is
     function requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) external override onlyHandler {
+    ) external override whenNotPaused onlyHandler {
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
@@ -134,7 +144,13 @@ contract Wallet is
     */
     function processBundle(
         Bundle calldata bundle
-    ) external override nonReentrant returns (OperationResult[] memory) {
+    )
+        external
+        override
+        whenNotPaused
+        nonReentrant
+        returns (OperationResult[] memory)
+    {
         Operation[] calldata ops = bundle.operations;
         uint256[] memory opDigests = OperationUtils.computeOperationDigests(
             ops

@@ -2,7 +2,9 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
+// External
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// Internal
 import {IHandler} from "./interfaces/IHandler.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -41,6 +43,14 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         _;
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     // Gives an address permission to call `fillBatchesWithZeros`
     function setSubtreeBatchFillerPermission(
         address filler,
@@ -63,7 +73,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
 
     function handleDeposit(
         DepositRequest calldata deposit
-    ) external override onlyWallet {
+    ) external override whenNotPaused onlyWallet {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }
@@ -94,6 +104,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         address bundler
     )
         external
+        whenNotPaused
         onlyWallet
         handleOperationGuard
         returns (OperationResult memory opResult)
@@ -141,6 +152,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         Operation calldata op
     )
         external
+        whenNotPaused
         onlyThis
         executeActionsGuard
         returns (OperationResult memory opResult)

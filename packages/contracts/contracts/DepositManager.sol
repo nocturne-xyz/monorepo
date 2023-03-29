@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IWallet} from "./interfaces/IWallet.sol";
-import {DepositManagerBase} from "./DepositManagerBase.sol";
+// External
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+// Internal
+import {IWallet} from "./interfaces/IWallet.sol";
+import {DepositManagerBase} from "./DepositManagerBase.sol";
+import {AssetUtils} from "./libs/AssetUtils.sol";
+import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
-import "./libs/AssetUtils.sol";
-import "./libs/Utils.sol";
 
 contract DepositManager is
     DepositManagerBase,
