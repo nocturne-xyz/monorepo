@@ -29,10 +29,7 @@ export async function startSubtreeUpdater(
   updater.start();
 
   return async () => {
-    console.log("[SUBTREE UPDATER TEARDOWN] await updater.stop()...");
     await updater.stop();
-    console.log("[SUBTREE UPDATER TEARDOWN] await updater.dropDB()...");
     await updater.dropDB();
-    console.log("[SUBTREE UPDATER TEARDOWN] done");
   };
 }

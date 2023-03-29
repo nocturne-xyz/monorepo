@@ -6,6 +6,7 @@
 - instead of stopping anvil every time, reset its state to a snapshot taken at genesis
 - rename `runCommandDetached` to `runCommandBackrgound` and make it non-joinable (it exits when parent node process exists)
 - make `startBundler`, `startScreener`, `startSubtreeUpdater`, `startSubgraph`, `startAnvil` all return "stop" functions
+- remove `yarn prepare`
 - make `startBundler`, `startScreener`, and `startSubtreeUpdater` import and construct actors directly instead of using docker
 - kill children in `runCommand` when parent process exits
 - make `deployAndDeposit` reserve 1000 eth instead of 100 eth to deployer

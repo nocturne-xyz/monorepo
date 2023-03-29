@@ -87,9 +87,8 @@ export class DepositScreenerProcessor {
     );
 
     const screenerProm = this.runScreener(depositEvents).catch((err) => {
-      // console.error("error in deposit processor screener: ", err);
-      // throw new Error("error in deposit processor screener: " + err);
-      throw new Error("error in deposit processor screener");
+      console.error("error in deposit processor screener: ", err);
+      throw new Error("error in deposit processor screener: " + err);
     });
 
     console.log("starting submitter...");
@@ -100,7 +99,6 @@ export class DepositScreenerProcessor {
 
     const submitterProm = new Promise<void>((resolve, _reject) => {
       submitter.on("closed", () => {
-        console.log("[SCREENER TEARDOWN] submitter closed");
         resolve();
       });
     });
@@ -110,15 +108,10 @@ export class DepositScreenerProcessor {
         await Promise.all([screenerProm, submitterProm]);
       })(),
       async () => {
-        console.log("[INNER SCREENER TEARDOWN] await depositEvents.close()...");
         await depositEvents.close();
-        console.log("[INNER SCREENER TEARDOWN] await screenerProm...");
         await screenerProm;
-        console.log("[INNER SCREENER TEARDOWN] await submitter.close() ...");
         await submitter.close();
-        console.log("[INNER SCREENER TEARDOWN] await submitterProm...");
         await submitterProm;
-        console.log("[INNER SCREENER TEARDOWN] done");
       },
     ];
   }
@@ -201,9 +194,8 @@ export class DepositScreenerProcessor {
         }
 
         await this.signAndSubmitDeposit(depositRequest).catch((e) => {
-          // console.error(e);
-          // throw new Error(e);
-          throw new Error("failed to sign and submit deposit");
+          console.error(e);
+          throw new Error(e);
         });
       },
       { connection: this.redis, autorun: true }
@@ -235,20 +227,19 @@ export class DepositScreenerProcessor {
     const tx = await this.depositManagerContract
       .completeDeposit(depositRequest, signature)
       .catch((e) => {
-        // console.error(e);
-        // throw new Error(e);
-        throw new Error("failed to complete deposit");
+        console.error(e);
+        throw new Error(e);
       });
 
     console.log("Waiting for receipt...");
     const receipt = await tx.wait(1);
-    // console.log("completeDeposit receipt:", receipt);
+    console.log("completeDeposit receipt:", receipt);
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")
     ) as DepositCompletedEvent[];
-    // console.log("Matching events:", matchingEvents);
+    console.log("Matching events:", matchingEvents);
 
     if (matchingEvents.length > 0) {
       console.log(

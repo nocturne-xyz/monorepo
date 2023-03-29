@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { RunCommandDetachedOpts, runCommandBackground, sleep } from "./utils";
+import { assertOrErr } from "@nocturne-xyz/deploy/dist/src/utils";
 
 export interface AnvilNetworkConfig {
   blockTimeSecs?: number;
@@ -38,9 +39,10 @@ export async function startAnvil(
     const provider = new ethers.providers.JsonRpcProvider(
       "http://0.0.0.0:8545"
     );
-    const success = await provider.send("evm_revert", [snapshotId]);
-    console.log("reset anvil success: ", success);
 
+    const success = await provider.send("evm_revert", [snapshotId]);
+    assertOrErr(success, "failed to revert to snapshot");
+    
     await sleep(1_000);
     snapshotId = await provider.send("evm_snapshot", []);
   };

@@ -27,13 +27,8 @@ export async function startBundler(
   const stopSubmitter = startBundlerSubmitter(config, redis);
 
   return async () => {
-    console.log(
-      "[BUNDLER TEARDOWN] await Promise.all([stopServer(), stopBatcher(), stopSubmitter()])..."
-    );
     await Promise.all([stopServer(), stopBatcher(), stopSubmitter()]);
-    console.log("[BUNDLER TEARDOWN] await clearRedis...");
     await clearRedis();
-    console.log("[BUNDLER TEARDOWN] done");
   };
 }
 

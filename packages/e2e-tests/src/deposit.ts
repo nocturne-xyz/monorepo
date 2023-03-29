@@ -96,10 +96,10 @@ async function makeDeposit(
       nonce: nonce.toBigInt(),
       gasCompensation: BigInt(0),
     };
-    console.log("Deposit request:", depositRequest);
+    console.log("deposit request:", depositRequest);
 
     console.log(
-      `Instantiating deposit for ${amount} of token ${token.address}`
+      `instantiating deposit for ${amount} of token ${token.address}`
     );
     const instantiateDepositTx = await depositManager
       .connect(eoa)

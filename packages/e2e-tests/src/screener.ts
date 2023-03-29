@@ -40,12 +40,8 @@ export async function startDepositScreener(
 
   const [processorProm, stopProcessor] = await processor.start();
   return async () => {
-    console.log("[SCREENER TEARDOWN] await stopProcessor()...");
     await stopProcessor();
-    console.log("[SCREENER TEARDOWN] await processorProm...");
     await processorProm;
-    console.log("[SCREENER TEARDOWN] await clearRedis...");
     await clearRedis();
-    console.log("[SCREENER TEARDOWN] done");
   };
 }

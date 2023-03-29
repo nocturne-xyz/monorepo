@@ -58,8 +58,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           from,
           to
         );
-        // console.log("yielding deposit events:", depositEvents);
-        console.log(`yielding ${depositEvents.length} deposit events`);
+        console.log("yielding deposit events:", depositEvents);
 
         yield {
           blockNumber: to,

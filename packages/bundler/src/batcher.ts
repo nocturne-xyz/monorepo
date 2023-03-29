@@ -137,7 +137,6 @@ export class BundlerBatcher {
 
     const queuerProm = new Promise<void>((resolve, _reject) => {
       queuer.on("closed", () => {
-        console.log("[BUNDLER-BATCHER TEARDOWN] queuer closed");
         resolve();
       });
     });
@@ -149,13 +148,8 @@ export class BundlerBatcher {
       async () => {
         stopped = true;
 
-        console.log("[BUNDLER-BATCHER TEARDOWN] await queuer.close()...");
         await queuer.close();
-        console.log(
-          "[BUNDLER-BATCHER TEARDOWN] await Promise.all([queuerProm, batcherProm])..."
-        );
         await Promise.all([queuerProm, batcherProm]);
-        console.log("[BUNDLER-BATCHER TEARDOWN] done");
       },
     ];
   }
