@@ -1,5 +1,10 @@
 import { ethers } from "ethers";
-import { RunCommandDetachedOpts, runCommandBackground, sleep } from "./utils";
+import {
+  ResetFn,
+  RunCommandDetachedOpts,
+  runCommandBackground,
+  sleep,
+} from "./utils";
 import { assertOrErr } from "@nocturne-xyz/deploy/dist/src/utils";
 
 export interface AnvilNetworkConfig {
@@ -8,9 +13,7 @@ export interface AnvilNetworkConfig {
 }
 
 // returns snapshotId of empty chain state
-export async function startAnvil(
-  config: AnvilNetworkConfig
-): Promise<() => Promise<void>> {
+export async function startAnvil(config: AnvilNetworkConfig): Promise<ResetFn> {
   const { blockTimeSecs, gasPrice } = config ?? {};
 
   const cmd = "anvil";

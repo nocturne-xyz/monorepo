@@ -29,8 +29,8 @@ const runSubmitter = new Command("submitter")
       signingProvider,
       getRedis()
     );
-    const [prom] = submitter.start();
-    await prom;
+    const { promise } = submitter.start();
+    await promise;
   });
 
 export default runSubmitter;

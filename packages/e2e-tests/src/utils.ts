@@ -27,6 +27,9 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
+export type TeardownFn = () => Promise<void>;
+export type ResetFn = () => Promise<void>;
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

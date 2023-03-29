@@ -14,6 +14,13 @@ import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
 import { StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 
+export interface BundlerSubmitterHandle {
+  // promise that resolves when the service is done
+  promise: Promise<void>;
+  // function to teardown the service
+  teardown: () => Promise<void>;
+}
+
 export class BundlerSubmitter {
   redis: IORedis;
   signingProvider: ethers.Signer;
@@ -37,7 +44,7 @@ export class BundlerSubmitter {
     );
   }
 
-  start(): [Promise<void>, () => Promise<void>] {
+  start(): BundlerSubmitterHandle {
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {
@@ -55,19 +62,19 @@ export class BundlerSubmitter {
       `submitter starting... wallet contract: ${this.walletContract.address}.`
     );
 
-    const prom = new Promise<void>((resolve) => {
+    const promise = new Promise<void>((resolve) => {
       worker.on("closed", () => {
         resolve();
       });
     });
 
-    return [
-      prom,
-      async () => {
+    return {
+      promise,
+      teardown: async () => {
         await worker.close();
-        await prom;
+        await promise;
       },
-    ];
+    };
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {

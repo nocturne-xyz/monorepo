@@ -38,6 +38,13 @@ import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
 
+export interface DepositScreenerProcessorHandle {
+  // promise that resolves when the service is done
+  promise: Promise<void>;
+  // function to teardown the service
+  teardown: () => Promise<void>;
+}
+
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
@@ -74,7 +81,7 @@ export class DepositScreenerProcessor {
     this.delayCalculator = new DummyDelayCalculator();
   }
 
-  async start(): Promise<[Promise<void>, () => Promise<void>]> {
+  async start(): Promise<DepositScreenerProcessorHandle> {
     const nextBlockToSync = await this.db.getNextBlock();
     console.log(
       `processing deposit requests starting from block ${nextBlockToSync}`
@@ -103,17 +110,17 @@ export class DepositScreenerProcessor {
       });
     });
 
-    return [
-      (async () => {
+    return {
+      promise: (async () => {
         await Promise.all([screenerProm, submitterProm]);
       })(),
-      async () => {
+      teardown: async () => {
         await depositEvents.close();
         await screenerProm;
         await submitter.close();
         await submitterProm;
       },
-    ];
+    };
   }
 
   async runScreener(

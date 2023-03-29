@@ -1,4 +1,4 @@
-import { makeRedisInstance } from "./utils";
+import { TeardownFn, makeRedisInstance } from "./utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -17,9 +17,7 @@ export interface BundlerConfig {
 
 const { getRedis, clearRedis } = makeRedisInstance();
 
-export async function startBundler(
-  config: BundlerConfig
-): Promise<() => Promise<void>> {
+export async function startBundler(config: BundlerConfig): Promise<TeardownFn> {
   const redis = await getRedis();
 
   const stopServer = startBundlerServer(config, redis);
@@ -35,38 +33,35 @@ export async function startBundler(
 function startBundlerSubmitter(
   config: BundlerConfig,
   redis: IORedis
-): () => Promise<void> {
+): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const signer = new ethers.Wallet(config.txSignerKey, provider);
   const submitter = new BundlerSubmitter(config.walletAddress, signer, redis);
 
-  const [prom, stop] = submitter.start();
-  prom.catch((err) => {
+  const { promise, teardown } = submitter.start();
+  promise.catch((err) => {
     console.error("bundler submitter error", err);
     throw err;
   });
 
-  return stop;
+  return teardown;
 }
 
 function startBundlerBatcher(
   config: BundlerConfig,
   redis: IORedis
-): () => Promise<void> {
+): TeardownFn {
   const batcher = new BundlerBatcher(redis, config.maxLatency);
-  const [prom, stop] = batcher.start();
-  prom.catch((err) => {
+  const { promise, teardown } = batcher.start();
+  promise.catch((err) => {
     console.error("bundler batcher error", err);
     throw err;
   });
 
-  return stop;
+  return teardown;
 }
 
-function startBundlerServer(
-  config: BundlerConfig,
-  redis: IORedis
-): () => Promise<void> {
+function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const server = new BundlerServer(
     config.walletAddress,

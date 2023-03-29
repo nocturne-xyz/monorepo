@@ -38,10 +38,10 @@ export async function startDepositScreener(
     await getRedis()
   );
 
-  const [processorProm, stopProcessor] = await processor.start();
+  const { promise, teardown } = await processor.start();
   return async () => {
-    await stopProcessor();
-    await processorProm;
+    await teardown();
+    await promise;
     await clearRedis();
   };
 }

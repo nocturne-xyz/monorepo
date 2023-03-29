@@ -15,6 +15,13 @@ import {
 } from "./common";
 import * as JSON from "bigint-json-serialization";
 
+export interface BundlerBatcherHandle {
+  // promise that resolves when the service is done
+  promise: Promise<void>;
+  // function to teardown the service
+  teardown: () => Promise<void>;
+}
+
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
@@ -40,7 +47,7 @@ export class BundlerBatcher {
     });
   }
 
-  start(): [Promise<void>, () => Promise<void>] {
+  start(): BundlerBatcherHandle {
     console.log("batcher starting...");
 
     // **** BATCHER ****
@@ -104,7 +111,28 @@ export class BundlerBatcher {
     });
 
     // **** QUEUER ****
-    const queuer = new Worker(
+    const queuer = this.startQueuer();
+    const queuerProm = new Promise<void>((resolve) => {
+      queuer.on("closed", () => {
+        resolve();
+      });
+    });
+
+    return {
+      promise: (async () => {
+        await Promise.all([queuerProm, batcherProm]);
+      })(),
+      teardown: async () => {
+        stopped = true;
+
+        await queuer.close();
+        await Promise.all([queuerProm, batcherProm]);
+      },
+    };
+  }
+
+  startQueuer(): Worker<ProvenOperationJobData, any, string> {
+    return new Worker(
       PROVEN_OPERATION_QUEUE,
       async (job: Job<ProvenOperationJobData>) => {
         const provenOperation = JSON.parse(
@@ -134,23 +162,5 @@ export class BundlerBatcher {
         autorun: true,
       }
     );
-
-    const queuerProm = new Promise<void>((resolve) => {
-      queuer.on("closed", () => {
-        resolve();
-      });
-    });
-
-    return [
-      (async () => {
-        await Promise.all([queuerProm, batcherProm]);
-      })(),
-      async () => {
-        stopped = true;
-
-        await queuer.close();
-        await Promise.all([queuerProm, batcherProm]);
-      },
-    ];
   }
 }
