@@ -5,7 +5,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
 
-const { makeSubgraphQuery } = SubgraphUtils;
+const { makeSubgraphQuery, entityIdFromBlockNumber } = SubgraphUtils;
 
 export interface DepositEventResponse {
   id: string;

@@ -1,6 +1,6 @@
 import {
   ClosableAsyncIterator,
-  fetchLatestIndexedBlock,
+  SubgraphUtils,
   IterSyncOpts,
   min,
   sleep,
@@ -8,6 +8,8 @@ import {
 import { DepositEventType } from "../../types";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
 import { fetchDepositEvents } from "./fetch";
+
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 const MAX_CHUNK_SIZE = 10000;
 

@@ -1,2 +1,2 @@
 export { SubgraphSDKSyncAdapter } from "./adapter";
-export * as SubgraphUtils from "./fetch";
+export * as SubgraphUtils from "./utils";
