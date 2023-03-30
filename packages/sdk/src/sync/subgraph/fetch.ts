@@ -45,13 +45,13 @@ interface FetchNotesResponse {
 }
 
 interface FetchNotesVars {
-  fromBlock: number;
-  toBlock: number;
+  fromID: string;
+  toID: string;
 }
 
 const notesQuery = `\
-query fetchNotes($fromBlock: Int!, $toBlock: Int!) {
-  encodedOrEncryptedNotes(block: { number: $toBlock, number_gte: $fromBlock }) {
+query fetchNotes($fromID: Bytes!, $toID: Bytes!) {
+  encodedOrEncryptedNotes(where: { id_gte: $fromID, id_lt: $toID}) {
     merkleIndex
     note {
       ownerH1X
@@ -90,7 +90,11 @@ export async function fetchNotes(
     notesQuery,
     "notes"
   );
-  const res = await query({ fromBlock, toBlock });
+
+  const fromID = entityIdWithEntityIndexFromBlockNumber(BigInt(fromBlock));
+  const toID = entityIdWithEntityIndexFromBlockNumber(BigInt(toBlock + 1));
+
+  const res = await query({ fromID, toID });
   return res.data.encodedOrEncryptedNotes.map(
     ({ merkleIndex, note, encryptedNote }) => {
       if (note) {
@@ -228,8 +232,8 @@ interface FetchNullifiersResponse {
 }
 
 interface FetchNullifiersVars {
-  fromBlock: number;
-  toBlock: number;
+  fromID: string;
+  toID: string;
 }
 
 interface NullifierResponse {
@@ -237,8 +241,8 @@ interface NullifierResponse {
 }
 
 const nullifiersQuery = `
-  query fetchNullifiers($fromBlock: Int!, $toBlock: Int!) {
-    nullifiers(block: { number: $toBlock, number_gte: $fromBlock}) {
+  query fetchNullifiers($fromID: Bytes!, $toID: Bytes!) {
+    nullifiers(where: { id_gte: $fromID, id_lt: $toID}) {
       nullifier
     }
   }
@@ -256,7 +260,11 @@ export async function fetchNullifiers(
     nullifiersQuery,
     "nullifiers"
   );
-  const res = await query({ fromBlock, toBlock });
+
+  const fromID = entityIdWithEntityIndexFromBlockNumber(BigInt(fromBlock));
+  const toID = entityIdWithEntityIndexFromBlockNumber(BigInt(toBlock + 1));
+
+  const res = await query({ fromID, toID });
   return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
 }
 
@@ -322,3 +330,14 @@ export const makeSubgraphQuery =
       throw err;
     }
   };
+
+
+export function entityIdFromBlockNumber(blockNumber: bigint): string {
+  return `0x${(blockNumber << 64n).toString(16).padStart(64, "0")}`;
+}
+
+export function entityIdWithEntityIndexFromBlockNumber(
+  blockNumber: bigint
+): string {
+  return `0x${(blockNumber << 96n).toString(16).padStart(64, "0")}`;
+}

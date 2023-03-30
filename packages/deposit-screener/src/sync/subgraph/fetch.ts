@@ -2,6 +2,7 @@ import {
   EncodedAsset,
   StealthAddress,
   makeSubgraphQuery,
+  entityIdFromBlockNumber,
 } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
 
@@ -22,8 +23,8 @@ export interface DepositEventResponse {
 }
 
 interface FetchDepositEventsVars {
-  fromBlock: number;
-  toBlock: number;
+  fromID: string;
+  toID: string
   type: DepositEventType;
 }
 
@@ -34,8 +35,8 @@ interface FetchDepositEventsResponse {
 }
 
 const depositEventsQuery = `\
-  query fetchDepositEvents($fromBlock: Int!, $toBlock: Int!, $type: String!) {
-    depositEvents(block: { number_gte: $fromBlock, number: $toBlock }, where: { type: $type }) {
+  query fetchDepositEvents($fromID: Bytes!, $toID: Bytes!, $type: String!) {
+    depositEvents(where: { id_gte: $fromID, id_lt: $toID, type: $type }) {
       type
       chainId
       spender
@@ -62,7 +63,11 @@ export async function fetchDepositEvents(
     FetchDepositEventsVars,
     FetchDepositEventsResponse
   >(endpoint, depositEventsQuery, "depositEvents");
-  const res = await query({ fromBlock, toBlock, type });
+
+  const fromID = entityIdFromBlockNumber(BigInt(fromBlock));
+  const toID = entityIdFromBlockNumber(BigInt(toBlock + 1));
+
+  const res = await query({ fromID, toID, type });
   return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 
