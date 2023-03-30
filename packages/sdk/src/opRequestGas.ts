@@ -67,6 +67,7 @@ export async function handleGasForOperationRequest(
   opRequest: OperationRequest
 ): Promise<GasAccountedOperationRequest> {
   // estimate gas params for opRequest
+  console.log("Estimating gas for op request");
   const { gasPrice, executionGasLimit, maxNumRefunds } =
     await estimateGasForOperationRequest(deps, opRequest);
 
@@ -222,6 +223,7 @@ async function estimateGasForOperationRequest(
     );
 
     // simulate the operation
+    console.log("Simulating operation");
     const result = await simulateOperation(
       handlerContract,
       simulationOp as PreSignOperation

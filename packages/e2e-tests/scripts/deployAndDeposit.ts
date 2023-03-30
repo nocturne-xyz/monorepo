@@ -9,7 +9,6 @@ import {
   AssetTrait,
   AssetType,
   CanonAddress,
-  DepositRequest,
   StealthAddressTrait,
   zip,
 } from "@nocturne-xyz/sdk";
@@ -49,7 +48,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 (async () => {
   console.log("deploying contracts with dummy proxy admin...");
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
-  const chainId = BigInt((await provider.getNetwork()).chainId);
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
   const { depositManagerProxy, handlerProxy } =
@@ -85,7 +83,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
           value: ethers.utils.parseEther("10.0"),
         });
         await tx.wait(1);
-      } 
+      }
       {
         const tx = await token.reserveTokens(addr, amount);
         await tx.wait(1);
@@ -123,22 +121,14 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   for (const [encodedAsset, amount] of zip(encodedAssets, amounts)) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
-      console.log(`depositing 1 ${amount} note to`, addr, `from ${deployerEoa.address}`);
-
-      const nonce = await depositManager._nonces(deployerEoa.address);
-      const depositRequest: DepositRequest = {
-        chainId,
-        spender: deployerEoa.address,
-        encodedAsset,
-        value: amount,
-        depositAddr: addr,
-        nonce: nonce.toBigInt(),
-        gasCompensation: BigInt(0),
-      };
-
+      console.log(
+        `depositing 1 ${amount} note to`,
+        addr,
+        `from ${deployerEoa.address}`
+      );
       const tx = await depositManager
         .connect(deployerEoa)
-        .instantiateDeposit(depositRequest);
+        .instantiateDeposit(encodedAsset, amount, addr);
       await tx.wait(1);
     }
   }
