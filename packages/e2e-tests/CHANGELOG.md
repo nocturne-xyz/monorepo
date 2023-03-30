@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `chainId` from all deposit events
 - add test for `SubgraphSDKSyncAdapter` block ranges
 - `instantiateDeposit` calls use simplified interface without deposit request
 - add missing `await` in async `expect` assertion in bundler gas test case
