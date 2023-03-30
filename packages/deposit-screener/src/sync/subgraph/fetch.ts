@@ -35,7 +35,6 @@ const depositEventsQuery = `\
   query fetchDepositEvents($fromID: Bytes!, $toID: Bytes!, $type: String!) {
     depositEvents(where: { id_gte: $fromID, id_lt: $toID, type: $type }) {
       type
-      chainId
       spender
       encodedAssetAddr
       encodedAssetId
@@ -72,7 +71,6 @@ function depositEventFromDepositEventResponse(
   depositEventResponse: DepositEventResponse
 ): DepositEvent {
   const type = depositEventResponse.type;
-  const chainId = BigInt(depositEventResponse.chainId);
   const spender = depositEventResponse.spender;
 
   const h1X = BigInt(depositEventResponse.depositAddrH1X);
@@ -99,7 +97,6 @@ function depositEventFromDepositEventResponse(
 
   return {
     type: type as DepositEventType,
-    chainId,
     spender,
     encodedAsset,
     value,
