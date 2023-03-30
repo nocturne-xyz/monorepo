@@ -14,7 +14,7 @@
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
-    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit -g 'Alice deposits two'"
+    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit -g 'pulls only data for the given block range'"
   },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
