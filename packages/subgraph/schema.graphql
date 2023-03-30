@@ -7,7 +7,6 @@ enum DepositEventType {
 type DepositEvent @entity(immutable: true) {
   id: Bytes!
   type: DepositEventType!
-  chainId: BigInt!
   spender: Bytes!
   encodedAssetAddr: BigInt!
   encodedAssetId: BigInt!

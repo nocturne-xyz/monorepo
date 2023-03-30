@@ -39,7 +39,6 @@ contract DepositManagerTest is Test, ParseUtils {
     uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
     event DepositInstantiated(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -49,7 +48,6 @@ contract DepositManagerTest is Test, ParseUtils {
     );
 
     event DepositRetrieved(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -59,7 +57,6 @@ contract DepositManagerTest is Test, ParseUtils {
     );
 
     event DepositCompleted(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -133,7 +130,6 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.expectEmit(true, true, true, true);
         emit DepositInstantiated(
-            block.chainid,
             deposit.spender,
             deposit.encodedAsset,
             deposit.value,
@@ -203,7 +199,6 @@ contract DepositManagerTest is Test, ParseUtils {
         // Call retrieveDeposit
         vm.expectEmit(true, true, true, true);
         emit DepositRetrieved(
-            block.chainid,
             deposit.spender,
             deposit.encodedAsset,
             deposit.value,
@@ -326,7 +321,6 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.expectEmit(true, true, true, true);
         emit DepositCompleted(
-            block.chainid,
             deposit.spender,
             deposit.encodedAsset,
             deposit.value,
