@@ -10,12 +10,6 @@ export {
   RPCSDKSyncAdapter,
 } from "./rpc";
 
-export {
-  SubgraphSDKSyncAdapter,
-  makeSubgraphQuery,
-  fetchLatestIndexedBlock,
-  entityIdFromBlockNumber,
-  entityIdWithEntityIndexFromBlockNumber,
-} from "./subgraph";
+export { SubgraphSDKSyncAdapter, SubgraphUtils } from "./subgraph";
 
 export { IterSyncOpts } from "./syncAdapter";

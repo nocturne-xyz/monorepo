@@ -1,10 +1,11 @@
 import {
   EncodedAsset,
   StealthAddress,
-  makeSubgraphQuery,
-  entityIdFromBlockNumber,
+  SubgraphUtils,
 } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
+
+const { makeSubgraphQuery } = SubgraphUtils;
 
 export interface DepositEventResponse {
   id: string;

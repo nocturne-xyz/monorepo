@@ -7,10 +7,10 @@ import {
 } from "../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
-  fetchLatestIndexedBlock,
   fetchNotes,
   fetchNullifiers,
 } from "./fetch";
+import { fetchLatestIndexedBlock } from "./utils";
 
 const MAX_CHUNK_SIZE = 10000;
 
