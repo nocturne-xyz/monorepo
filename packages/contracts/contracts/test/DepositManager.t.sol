@@ -101,9 +101,11 @@ contract DepositManagerTest is Test, ParseUtils {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
+        uint256 depositAmount = RESERVE_AMOUNT / 2;
+
         // Approve 25M tokens for deposit
         vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+        token.approve(address(depositManager), depositAmount);
 
         EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
             AssetType.ERC20,
@@ -114,7 +116,7 @@ contract DepositManagerTest is Test, ParseUtils {
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
-            RESERVE_AMOUNT / 2,
+            depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
@@ -142,7 +144,7 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(ALICE);
         depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
             encodedToken,
-            RESERVE_AMOUNT / 2,
+            depositAmount,
             NocturneUtils.defaultStealthAddress()
         );
 
