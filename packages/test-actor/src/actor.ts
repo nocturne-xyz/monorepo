@@ -14,9 +14,17 @@ import {
   proveOperation,
   AssetTrait,
   AssetType,
+  EncodedAsset,
+  StealthAddress,
 } from "@nocturne-xyz/sdk";
 import { randomInt } from "crypto";
 import * as JSON from "bigint-json-serialization";
+
+interface DepositToDispatch {
+  encodedAsset: EncodedAsset;
+  value: bigint;
+  depositAddr: StealthAddress;
+}
 
 export class TestActor {
   wallet: Wallet;
@@ -25,7 +33,7 @@ export class TestActor {
   prover: JoinSplitProver;
   bundlerEndpoint: string;
 
-  depositRequests: Omit<DepositRequest, "nonce">[];
+  depositRequests: DepositToDispatch[];
   opRequests: OperationRequest[];
 
   constructor(
@@ -91,19 +99,10 @@ export class TestActor {
 
   private async deposit() {
     // choose a random deposit request and set its nonce
-    const depositRequestWithoutNonce = randomElem(this.depositRequests);
-
-    // set its nonce
-    const nonce = await this.depositManager._nonces(
-      depositRequestWithoutNonce.spender
-    );
-    const depositRequest: DepositRequest = {
-      ...depositRequestWithoutNonce,
-      nonce: nonce.toBigInt(),
-    };
+    const deposit = randomElem(this.depositRequests);
 
     // approve asset to depositManager
-    const asset = AssetTrait.decode(depositRequest.encodedAsset);
+    const asset = AssetTrait.decode(deposit.encodedAsset);
     switch (asset.assetType) {
       case AssetType.ERC20: {
         const contract = SimpleERC20Token__factory.connect(
@@ -112,7 +111,7 @@ export class TestActor {
         );
         const tx = await contract.approve(
           this.depositManager.address,
-          depositRequest.value
+          deposit.value
         );
         await tx.wait(1);
         break;
@@ -145,11 +144,11 @@ export class TestActor {
     }
 
     // submit
-    console.log(
-      `instantiating deposit request ${JSON.stringify(depositRequest)}`
-    );
+    console.log(`instantiating deposit request ${JSON.stringify(deposit)}`);
     const instantiateDepositTx = await this.depositManager.instantiateDeposit(
-      depositRequest
+      deposit.encodedAsset,
+      deposit.value,
+      deposit.depositAddr
     );
     await instantiateDepositTx.wait(1);
 
