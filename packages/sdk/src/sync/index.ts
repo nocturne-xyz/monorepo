@@ -15,7 +15,7 @@ export {
   makeSubgraphQuery,
   fetchLatestIndexedBlock,
   entityIdFromBlockNumber,
-  entityIdWithEntityIndexFromBlockNumber
+  entityIdWithEntityIndexFromBlockNumber,
 } from "./subgraph";
 
 export { IterSyncOpts } from "./syncAdapter";

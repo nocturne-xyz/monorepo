@@ -24,7 +24,7 @@ export interface DepositEventResponse {
 
 interface FetchDepositEventsVars {
   fromID: string;
-  toID: string
+  toID: string;
   type: DepositEventType;
 }
 

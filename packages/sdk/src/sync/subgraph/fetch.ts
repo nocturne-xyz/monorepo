@@ -331,7 +331,6 @@ export const makeSubgraphQuery =
     }
   };
 
-
 export function entityIdFromBlockNumber(blockNumber: bigint): string {
   return `0x${(blockNumber << 64n).toString(16).padStart(64, "0")}`;
 }
