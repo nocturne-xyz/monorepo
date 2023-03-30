@@ -20,9 +20,9 @@ export function actorChain(...actors: ActorHandle[]): ActorHandle {
         await actor.teardown();
       }
 
-      await promise;      
-    }
-  }
+      await promise;
+    },
+  };
 }
 
 export function parseRequestBody(body: any): any {

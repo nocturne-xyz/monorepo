@@ -16,7 +16,6 @@ import {
 import * as JSON from "bigint-json-serialization";
 import { ActorHandle, actorChain } from "./utils";
 
-
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
@@ -42,7 +41,7 @@ export class BundlerBatcher {
     });
   }
 
-  start(): ActorHandle{
+  start(): ActorHandle {
     const batcher = this.startBatcher();
     const queuer = this.startQueuer();
     return actorChain(batcher, queuer);
@@ -115,8 +114,8 @@ export class BundlerBatcher {
       teardown: async () => {
         stopped = true;
         await promise;
-      }
-    }
+      },
+    };
   }
 
   startQueuer(): ActorHandle {
@@ -162,7 +161,7 @@ export class BundlerBatcher {
       teardown: async () => {
         await queuer.close();
         await promise;
-      }
-    }
+      },
+    };
   }
 }
