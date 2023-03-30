@@ -3130,7 +3130,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.11-alpha
+    "@nocturne-xyz/contracts": 1.0.12-alpha
     "@nocturne-xyz/sdk": 1.0.86-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3210,7 +3210,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.11-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.12-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3241,16 +3241,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@npm:1.0.10-alpha":
-  version: 1.0.10-alpha
-  resolution: "@nocturne-xyz/contracts@npm:1.0.10-alpha"
-  dependencies:
-    "@openzeppelin/contracts": 4.8.2
-    "@openzeppelin/contracts-upgradeable": 4.8.2
-  checksum: c4d6e8ac657aba2690d5c65ccc2094952dc0cabb46636c27c30b50c2629e1669a291c5651785131ac8e73b9ac242982e5da052ac15d3ef08e6a241f0ff532d19
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deploy@workspace:packages/deploy"
@@ -3278,7 +3268,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.10-alpha
+    "@nocturne-xyz/contracts": 1.0.12-alpha
     "@nocturne-xyz/sdk": 1.0.86-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3544,7 +3534,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
-    "@nocturne-xyz/contracts": 1.0.11-alpha
+    "@nocturne-xyz/contracts": 1.0.12-alpha
     "@nocturne-xyz/sdk": 1.0.86-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
