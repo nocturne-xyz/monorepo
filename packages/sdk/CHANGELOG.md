@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Remove `chainId` from `DepositRequest` (already included in eip712 domain)
 - Make syncing rely on `handler` contract after contract separation work
 - Export `IterSync` opts for `deposit-screener` package to use as well
 - `iterStateDiffs` returns `ClosableAsyncIterator` not `Promise<ClosableAsyncIterator>`

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Update eip712 signing to not include `chainId` in `DepositRequest` (already included in eip712 domain)
 - make processor stoppable by renaming `run` to `start` and returning a "close" function
 - print errors in console
 - Fix bug where `depositRequest.depositAddr` was being incorrectly copied over from subgraph

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- `instantiateDeposit` calls use simplified interface without deposit request
 - add missing `await` in async `expect` assertion in bundler gas test case
 - instead of stopping anvil every time, reset its state to a snapshot taken at genesis
 - rename `runCommandDetached` to `runCommandBackrgound` and make it non-joinable (it exits when parent node process exists)
@@ -11,7 +12,7 @@
 - kill children in `runCommand` when parent process exits
 - make `deployAndDeposit` reserve 1000 eth instead of 100 eth to deployer
 - make `deployAndDeposit` wait for one confirmation on each tx
-- get rid of `startHardhat`` script`
+- get rid of ` startHardhat`` script `
 - rename `hh-node` and `hh-node-deposit` to `anvil-node` and `anvil-deposit`
 - add `runCommandDetatched` util that returns a function that can be called to kill the child`
 - reduce some unnecessarily-long sleeps
