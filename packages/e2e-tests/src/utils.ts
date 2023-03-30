@@ -12,6 +12,9 @@ import * as path from "path";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
+import IORedis from "ioredis";
+import { RedisMemoryServer } from "redis-memory-server";
+import { thunk } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -23,6 +26,9 @@ const TMP_PATH = `${ARTIFACTS_DIR}/subtreeupdate/`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 const MOCK_SUBTREE_UPDATER_DELAY = 2100;
+
+export type TeardownFn = () => Promise<void>;
+export type ResetFn = () => Promise<void>;
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -171,11 +177,11 @@ export interface RunCommandDetachedOpts {
 // NOTE: there is a potential race condition when killing the process:
 //   if the process has already exited and the OS re-allocated the PID,
 //   then the teardown function may attempt to kill that other process.
-export function runCommandDetached(
+export function runCommandBackground(
   cmd: string,
   args: string[],
   opts?: RunCommandDetachedOpts
-): () => void {
+) {
   const { cwd, onStdOut, onStdErr, onError, onExit, processName } = opts ?? {};
   const child = spawn(cmd, args, { cwd });
   let stdout = "";
@@ -207,7 +213,7 @@ export function runCommandDetached(
     }
   });
 
-  child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
+  child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
     if (onExit) {
       onExit(stdout, stderr, code, signal);
     } else {
@@ -236,12 +242,28 @@ export function runCommandDetached(
 
   // kill child if parent exits first
   process.on("exit", () => {
-    child.kill("SIGINT");
+    child.kill();
+  });
+}
+
+interface RedisHandle {
+  getRedis: () => Promise<IORedis>;
+  clearRedis: () => Promise<void>;
+}
+
+export function makeRedisInstance(): RedisHandle {
+  const redisThunk = thunk(async () => {
+    const server = await RedisMemoryServer.create();
+    const host = await server.getHost();
+    const port = await server.getPort();
+    return new IORedis(port, host);
   });
 
-  return () => {
-    console.log(`killing child process ${processName}`);
-    const res = child.kill("SIGINT");
-    console.log("success: ", res);
+  return {
+    getRedis: async () => await redisThunk(),
+    clearRedis: async () => {
+      const redis = await redisThunk();
+      redis.flushall();
+    },
   };
 }

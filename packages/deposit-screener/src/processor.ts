@@ -4,6 +4,7 @@ import {
 } from "@nocturne-xyz/contracts";
 import {
   Address,
+  ClosableAsyncIterator,
   DepositRequest,
   parseEventsFromContractReceipt,
 } from "@nocturne-xyz/sdk";
@@ -12,7 +13,7 @@ import { ethers } from "ethers";
 import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
 import { DummyScreeningApi, ScreeningApi } from "./screening";
-import { ScreenerSyncAdapter } from "./sync/syncAdapter";
+import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
@@ -36,6 +37,13 @@ import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositM
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
+
+export interface DepositScreenerProcessorHandle {
+  // promise that resolves when the service is done
+  promise: Promise<void>;
+  // function to teardown the service
+  teardown: () => Promise<void>;
+}
 
 export class DepositScreenerProcessor {
   adapter: ScreenerSyncAdapter;
@@ -73,13 +81,7 @@ export class DepositScreenerProcessor {
     this.delayCalculator = new DummyDelayCalculator();
   }
 
-  async run(): Promise<void> {
-    await Promise.all([this.runScreener(), this.runSubmitter()]).catch((e) => {
-      throw new Error(e);
-    });
-  }
-
-  async runScreener(): Promise<void> {
+  async start(): Promise<DepositScreenerProcessorHandle> {
     const nextBlockToSync = await this.db.getNextBlock();
     console.log(
       `processing deposit requests starting from block ${nextBlockToSync}`
@@ -91,6 +93,39 @@ export class DepositScreenerProcessor {
       { maxChunkSize: 10_000 }
     );
 
+    const screenerProm = this.runScreener(depositEvents).catch((err) => {
+      console.error("error in deposit processor screener: ", err);
+      throw new Error("error in deposit processor screener: " + err);
+    });
+
+    console.log("starting submitter...");
+    console.log(
+      `DepositManager contract: ${this.depositManagerContract.address}.`
+    );
+    const submitter = this.startSubmitter();
+
+    const submitterProm = new Promise<void>((resolve) => {
+      submitter.on("closed", () => {
+        resolve();
+      });
+    });
+
+    return {
+      promise: (async () => {
+        await Promise.all([screenerProm, submitterProm]);
+      })(),
+      teardown: async () => {
+        await depositEvents.close();
+        await screenerProm;
+        await submitter.close();
+        await submitterProm;
+      },
+    };
+  }
+
+  async runScreener(
+    depositEvents: ClosableAsyncIterator<DepositEventsBatch>
+  ): Promise<void> {
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
         console.log(`Received deposit events: ${JSON.stringify(event)}`);
@@ -132,8 +167,8 @@ export class DepositScreenerProcessor {
     return DepositRequestStatus.Enqueued;
   }
 
-  async runSubmitter(): Promise<void> {
-    const worker = new Worker(
+  startSubmitter(): Worker<DelayedDepositJobData, any, string> {
+    return new Worker(
       DELAYED_DEPOSIT_QUEUE,
       async (job: Job<DelayedDepositJobData>) => {
         const depositRequest: DepositRequest = JSON.parse(
@@ -141,12 +176,12 @@ export class DepositScreenerProcessor {
         );
 
         const hash = hashDepositRequest(depositRequest);
-        console.log("Hash of deposit request post-queue:", hash);
+        console.log("hash of deposit request post-queue:", hash);
         const inSet =
           await this.depositManagerContract._outstandingDepositHashes(hash);
         if (!inSet) {
           console.log(
-            `Deposit already retrieved or completed. ${JSON.stringify(
+            `deposit already retrieved or completed. ${JSON.stringify(
               depositRequest
             )}`
           );
@@ -158,7 +193,7 @@ export class DepositScreenerProcessor {
         );
         if (!valid) {
           console.log(
-            `Deposit no longer passes screening. ${JSON.stringify(
+            `deposit no longer passes screening. ${JSON.stringify(
               depositRequest
             )}`
           );
@@ -170,13 +205,8 @@ export class DepositScreenerProcessor {
           throw new Error(e);
         });
       },
-      { connection: this.redis, autorun: false }
+      { connection: this.redis, autorun: true }
     );
-
-    console.log(
-      `Submitter running. DepositManager contract: ${this.depositManagerContract.address}.`
-    );
-    await worker.run();
   }
 
   async signAndSubmitDeposit(depositRequest: DepositRequest): Promise<void> {

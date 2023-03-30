@@ -24,7 +24,7 @@ describe("StatusDB", async () => {
     await redis.flushall();
   });
 
-  it("Sets and gets job status", async () => {
+  it("sets and gets job status", async () => {
     const id = "1234";
     await statusDB.setJobStatus(id, OperationStatus.QUEUED);
     expect(await statusDB.getJobStatus(id)).to.equal(OperationStatus.QUEUED);
@@ -33,7 +33,7 @@ describe("StatusDB", async () => {
     expect(await statusDB.getJobStatus(id)).to.equal(OperationStatus.IN_BATCH);
   });
 
-  it("Produces set job status transaction", async () => {
+  it("produces set job status transaction", async () => {
     const id = "1234";
     const tx = statusDB.getSetJobStatusTransaction(id, OperationStatus.QUEUED);
     await redis.multi([tx]).exec();

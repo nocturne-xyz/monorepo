@@ -3,8 +3,8 @@ import { BundlerBatcher } from "../../../batcher";
 import { getRedis } from "../../utils";
 
 const runBatcher = new Command("batcher")
-  .summary("Run bundler batcher")
-  .description("Must supply .env file with REDIS_URL.")
+  .summary("run bundler batcher")
+  .description("must supply .env file with REDIS_URL.")
   .option("--batch-size <number>", "batch size")
   .option(
     "--max-latency <number>",
@@ -13,7 +13,8 @@ const runBatcher = new Command("batcher")
   .action(async (options) => {
     const { maxLatency, batchSize } = options;
     const batcher = new BundlerBatcher(getRedis(), maxLatency, batchSize);
-    await batcher.run();
+    const { promise } = batcher.start();
+    await promise;
   });
 
 export default runBatcher;

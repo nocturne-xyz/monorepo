@@ -14,6 +14,13 @@ import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
 import { StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 
+export interface BundlerSubmitterHandle {
+  // promise that resolves when the service is done
+  promise: Promise<void>;
+  // function to teardown the service
+  teardown: () => Promise<void>;
+}
+
 export class BundlerSubmitter {
   redis: IORedis;
   signingProvider: ethers.Signer;
@@ -37,7 +44,7 @@ export class BundlerSubmitter {
     );
   }
 
-  async run(): Promise<void> {
+  start(): BundlerSubmitterHandle {
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {
@@ -48,13 +55,26 @@ export class BundlerSubmitter {
           throw new Error(e);
         });
       },
-      { connection: this.redis, autorun: false }
+      { connection: this.redis, autorun: true }
     );
 
     console.log(
-      `Submitter running. Wallet contract: ${this.walletContract.address}.`
+      `submitter starting... wallet contract: ${this.walletContract.address}.`
     );
-    await worker.run();
+
+    const promise = new Promise<void>((resolve) => {
+      worker.on("closed", () => {
+        resolve();
+      });
+    });
+
+    return {
+      promise,
+      teardown: async () => {
+        await worker.close();
+        await promise;
+      },
+    };
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
@@ -69,7 +89,7 @@ export class BundlerSubmitter {
     await this.redis.multi(inflightStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `Failed to set job status transactions to inflight: ${maybeErr}`
+          `failed to set job status transactions to inflight: ${maybeErr}`
         );
       }
     });
@@ -88,7 +108,7 @@ export class BundlerSubmitter {
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    console.log("Matching events:", matchingEvents);
+    console.log("matching events:", matchingEvents);
 
     const executedStatusTransactions = matchingEvents.map(({ args }) => {
       const digest = args.operationDigest.toBigInt();
@@ -100,7 +120,7 @@ export class BundlerSubmitter {
         : OperationStatus.EXECUTED_FAILED;
 
       console.log(
-        `Setting operation with digest ${digest} to status ${status}`
+        `setting operation with digest ${digest} to status ${status}`
       );
       return this.statusDB.getSetJobStatusTransaction(
         digest.toString(),
@@ -111,7 +131,7 @@ export class BundlerSubmitter {
     await this.redis.multi(executedStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `Failed to set job status transactions post-op: ${maybeErr}`
+          `failed to set job status transactions post-op: ${maybeErr}`
         );
       }
     });

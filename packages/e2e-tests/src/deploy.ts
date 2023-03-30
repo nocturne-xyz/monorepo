@@ -21,6 +21,7 @@ import {
   SubgraphSDKSyncAdapter,
   Address,
   sleep,
+  thunk,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -36,16 +37,11 @@ import {
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
 import { AnvilNetworkConfig, startAnvil } from "./anvil";
-import { BundlerConfig, startBundler, stopBundler } from "./bundler";
-import {
-  DepositScreenerConfig,
-  startDepositScreener,
-  stopDepositScreener,
-} from "./screener";
+import { BundlerConfig, startBundler } from "./bundler";
+import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
-import { startSubgraph, stopSubgraph, SubgraphConfig } from "./subgraph";
+import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
-import Dockerode from "dockerode";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -73,7 +69,6 @@ export interface TestActorsConfig {
   // specify configs for actors to deploy
   // if non-skipped actors don't have a config, one of the defaults below will be used
   configs?: {
-    anvil?: Partial<AnvilNetworkConfig>;
     bundler?: Partial<BundlerConfig>;
     depositScreener?: Partial<DepositScreenerConfig>;
     subtreeUpdater?: Partial<SubtreeUpdaterConfig>;
@@ -97,16 +92,8 @@ export interface NocturneTestDeployment {
 }
 
 // defaults for actor deployments
-const ANVIL_URL = "http://127.0.0.1:8545";
-const ANVIL_FROM_DOCKER_URL = "http://host.docker.internal:8545";
-
-const SUBGRAPH_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
-const SUBGRAPH_FROM_DOCKER_URL =
-  "http://host.docker.internal:8000/subgraphs/name/nocturne-test";
-
-const REDIS_URL_BUNDLER = "redis://redis:6379";
-const REDIS_URL_SCREENER = "redis://redis:6380";
-const REDIS_PASSWORD = "baka";
+const ANVIL_URL = "http://0.0.0.0:8545";
+const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne-test";
 
 const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
   blockTimeSecs: 1,
@@ -114,36 +101,33 @@ const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
-  "walletAddress" | "txSignerKey"
+  "walletAddress" | "txSignerKey" | "ignoreGas"
 > = {
-  redisUrl: REDIS_URL_BUNDLER,
-  redisPassword: REDIS_PASSWORD,
   maxLatency: 1,
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
 };
 
 const DEFAULT_DEPOSIT_SCREENER_CONFIG: Omit<
   DepositScreenerConfig,
   "depositManagerAddress" | "txSignerKey" | "attestationSignerKey"
 > = {
-  redisUrl: REDIS_URL_SCREENER,
-  redisPassword: REDIS_PASSWORD,
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
-  subgraphUrl: SUBGRAPH_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
+  subgraphUrl: SUBGRAPH_URL,
 };
 
 const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   SubtreeUpdaterConfig,
   "handlerAddress" | "txSignerKey"
 > = {
-  rpcUrl: ANVIL_FROM_DOCKER_URL,
+  rpcUrl: ANVIL_URL,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
   startBlock: 0,
 };
 
-const docker = new Dockerode();
+// we want to only start anvil once, so we wrap `startAnvil` in a thunk
+const anvilThunk = thunk(() => startAnvil(DEFAULT_ANVIL_CONFIG));
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
@@ -155,10 +139,8 @@ export async function setupTestDeployment(
   // then everything else can go up in any order
 
   // spin up anvil
-  const givenAnvilConfig = config.configs?.anvil ?? {};
-  const anvilConfig = { ...DEFAULT_ANVIL_CONFIG, ...givenAnvilConfig };
   console.log("starting anvil...");
-  const stopAnvil = await startAnvil(anvilConfig);
+  const resetAnvil = await anvilThunk();
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
@@ -189,6 +171,7 @@ export async function setupTestDeployment(
   ]);
 
   // Deploy subgraph first, as other services depend on it
+  let stopSubgraph: undefined | (() => Promise<void>);
   if (config.include.subgraph) {
     const givenSubgraphConfig = config.configs?.subgraph ?? {};
     const subgraphConfig = {
@@ -197,12 +180,12 @@ export async function setupTestDeployment(
       walletAddress: walletProxy.proxy,
     };
 
-    await startSubgraph(subgraphConfig);
+    stopSubgraph = await startSubgraph(subgraphConfig);
+    await sleep(10_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else
   const proms = [];
-
   if (config.include.bundler) {
     const givenBundlerConfig = config.configs?.bundler ?? {};
     const bundlerConfig: BundlerConfig = {
@@ -216,7 +199,6 @@ export async function setupTestDeployment(
   }
 
   // deploy subtree updater if requested
-  let subtreeUpdaterContainer: Dockerode.Container | undefined;
   if (config.include.subtreeUpdater) {
     const givenSubtreeUpdaterConfig = config.configs?.subtreeUpdater ?? {};
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
@@ -226,24 +208,7 @@ export async function setupTestDeployment(
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 
-    const startContainerWithLogs = async () => {
-      const container = await startSubtreeUpdater(docker, subtreeUpdaterConfig);
-      container.logs(
-        { follow: true, stdout: true, stderr: true },
-        (err, stream) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
-
-          stream!.pipe(process.stdout);
-        }
-      );
-
-      subtreeUpdaterContainer = container;
-    };
-
-    proms.push(startContainerWithLogs());
+    proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
   }
 
   if (config.include.depositScreener) {
@@ -259,61 +224,31 @@ export async function setupTestDeployment(
     proms.push(startDepositScreener(depositScreenerConfig));
   }
 
-  await Promise.all(proms);
+  const actorTeardownFns = await Promise.all(proms);
+  // wait for them all to start up
+  await sleep(3_000);
 
   const teardown = async () => {
     console.log("tearing down offchain actors...");
     // teardown offchain actors
-    const proms = [];
-
-    if (config.include.bundler) {
-      proms.push(
-        stopBundler().catch((err) =>
-          console.error("error tearing down bundler: ", err)
-        )
-      );
-    }
-
-    if (config.include.depositScreener) {
-      proms.push(
-        stopDepositScreener().catch((err) =>
-          console.error("error tearing down deposit screener: ", err)
-        )
-      );
-    }
-
-    if (subtreeUpdaterContainer) {
-      const teardown = async () => {
-        await subtreeUpdaterContainer?.stop();
-        await subtreeUpdaterContainer?.remove();
-      };
-      proms.push(
-        teardown().catch((err) =>
-          console.error("error tearing down subtree updater: ", err)
-        )
-      );
-    }
-
-    await Promise.all(proms);
+    await Promise.all(actorTeardownFns.map((fn) => fn()));
 
     // wait for actors to teardown
-    await sleep(10_000);
+    await sleep(3_000);
 
     // teradown subgraph
-    if (config.include.subgraph) {
+    if (stopSubgraph) {
       console.log("tearing down subgraph...");
       await stopSubgraph();
+      // wait for subgraph to tear down
+      await sleep(10_000);
     }
 
-    // wait for subgraph to tear down
-    await sleep(10_000);
-
-    console.log("tearing down anvil...");
-    // teardown anvil node
-    await stopAnvil();
-
-    // wait for anvil to tear down
-    await sleep(5_000);
+    console.log("resetting anvil...");
+    // reset anvil node
+    await resetAnvil();
+    // wait for anvil to reset
+    await sleep(1_000);
   };
 
   return {

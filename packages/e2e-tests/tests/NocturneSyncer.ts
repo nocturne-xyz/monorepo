@@ -115,7 +115,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     }
 
     afterEach(async () => {
-      await Promise.all([teardown(), updater.dropDB()]);
+      console.log("[AFTER EACH]");
+      await updater.dropDB();
+      await teardown();
     });
 
     it("syncs notes, not leaves before subtree update", async () => {

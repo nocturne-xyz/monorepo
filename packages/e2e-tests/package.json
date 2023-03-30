@@ -14,8 +14,7 @@
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
-    "test:e2e": "yarn prepare && yarn test:e2e:no-prepare",
-    "test:e2e:no-prepare": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
+    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",

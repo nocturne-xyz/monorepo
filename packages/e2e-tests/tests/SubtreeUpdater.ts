@@ -59,9 +59,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
 
     server = newServer();
     await server.init();
-    (async () => {
-      await server.start();
-    })();
+    server.start();
   });
 
   function newServer(): SubtreeUpdateServer {

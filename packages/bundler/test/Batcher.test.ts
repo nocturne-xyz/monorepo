@@ -71,7 +71,7 @@ describe("BundlerBatcher", async () => {
     );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const batcherPromise = batcher.run();
+    const { promise } = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -79,7 +79,7 @@ describe("BundlerBatcher", async () => {
       jobIds.push(jobId);
     }
 
-    await Promise.race([sleep(1500), batcherPromise]);
+    await Promise.race([sleep(1500), promise]);
 
     for (const id of jobIds) {
       const status = await statusDB.getJobStatus(id);
@@ -92,7 +92,7 @@ describe("BundlerBatcher", async () => {
       jobIds.push(jobId);
     }
 
-    await Promise.race([sleep(1500), batcherPromise]);
+    await Promise.race([sleep(1500), promise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
@@ -111,7 +111,7 @@ describe("BundlerBatcher", async () => {
     );
 
     expect(await batcher.outboundQueue.count()).to.equal(0);
-    const batcherPromise = batcher.run();
+    const { promise } = batcher.start();
 
     let jobIds: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -120,7 +120,7 @@ describe("BundlerBatcher", async () => {
     }
 
     // Sleep 6 seconds, one more than wait time
-    await Promise.race([sleep(6000), batcherPromise]);
+    await Promise.race([sleep(6000), promise]);
 
     expect(await batcher.outboundQueue.count()).to.equal(1);
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;

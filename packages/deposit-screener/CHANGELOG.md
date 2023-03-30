@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make processor stoppable by renaming `run` to `start` and returning a "close" function
 - print errors in console
 - Fix bug where `depositRequest.depositAddr` was being incorrectly copied over from subgraph
 - Add Dockerfile and docker-compose.yml

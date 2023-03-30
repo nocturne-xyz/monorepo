@@ -14,4 +14,4 @@ export default async function main(): Promise<void> {
   await program.parseAsync(process.argv);
 }
 
-main().catch((e) => console.log(`Bundler exited with error: ${e}`));
+main().catch((e) => console.log(`bundler exited with error: ${e}`));

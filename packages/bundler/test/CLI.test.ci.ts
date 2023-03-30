@@ -44,7 +44,8 @@ describe("Bundler CLI", async () => {
       `--port`,
       `${PORT}`,
     ]);
-    expect(stdout.includes("Bundler server listening")).to.be.true;
+
+    expect(stdout.includes("bundler server listening")).to.be.true;
   });
 
   it("`run batcher` command succeeds", async () => {
@@ -55,7 +56,7 @@ describe("Bundler CLI", async () => {
       `run`,
       `batcher`,
     ]);
-    expect(stdout.includes("Batcher running")).to.be.true;
+    expect(stdout.includes("batcher starting")).to.be.true;
   });
 
   it("`run submitter` command succeeds", async () => {
@@ -68,6 +69,6 @@ describe("Bundler CLI", async () => {
       `--wallet-address`,
       `${WALLET_ADDRESS}`,
     ]);
-    expect(stdout.includes("Submitter running")).to.be.true;
+    expect(stdout.includes("submitter starting")).to.be.true;
   });
 });

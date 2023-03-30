@@ -23,8 +23,6 @@ const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
 
 // anvil account #6
 const DEPOSIT_SCREENER = "0x976EA74026E726554dB657fA54763abd0C3a0aa9";
-const TEN_GWEI= 10n * 10n ** 9n;
-const GAS_TOKEN_AMOUNT = 10000000n ** 9n * TEN_GWEI;
 
 // add MM Flask addresses here
 const TEST_ETH_ADDRS = [

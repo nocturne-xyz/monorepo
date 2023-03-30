@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make `SubtreeUpdateServer.start()` non-async, as it doesn't need to be async
 - get rid of mutex on submitter
 - add `tx.wait` to submitter
 - Sync tree events from `handler` contract instead of wallet post-contract-separation

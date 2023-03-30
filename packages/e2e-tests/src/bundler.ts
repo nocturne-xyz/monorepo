@@ -1,58 +1,74 @@
-import * as envfile from "envfile";
-import { sleep } from "./utils";
-import * as fs from "fs";
-import findWorkspaceRoot from "find-yarn-workspace-root";
-import * as compose from "docker-compose";
-
-const ROOT_DIR = findWorkspaceRoot()!;
-
-const BUNDLER_COMPOSE_CWD = `${ROOT_DIR}/packages/bundler`;
-const BUNDLER_ENV_FILE_PATH = `${ROOT_DIR}/packages/bundler/.env`;
-const BUNDLER_COMPOSE_OPTS: compose.IDockerComposeOptions = {
-  cwd: BUNDLER_COMPOSE_CWD,
-  commandOptions: [["--force-recreate"], ["--renew-anon-volumes"]],
-};
+import { TeardownFn, makeRedisInstance } from "./utils";
+import {
+  BundlerBatcher,
+  BundlerServer,
+  BundlerSubmitter,
+} from "@nocturne-xyz/bundler";
+import { ethers } from "ethers";
+import IORedis from "ioredis";
 
 export interface BundlerConfig {
-  redisUrl: string;
-  redisPassword: string;
   walletAddress: string;
   maxLatency: number;
   rpcUrl: string;
   txSignerKey: string;
+  ignoreGas?: boolean;
 }
 
-export async function startBundler(config: BundlerConfig): Promise<void> {
-  const {
-    redisUrl,
-    redisPassword,
-    walletAddress,
-    maxLatency,
-    rpcUrl,
-    txSignerKey,
-  } = config;
+const { getRedis, clearRedis } = makeRedisInstance();
 
-  const envFile = envfile.stringify({
-    REDIS_URL: redisUrl,
-    REDIS_PASSWORD: redisPassword,
-    WALLET_ADDRESS: walletAddress,
-    MAX_LATENCY: maxLatency,
-    RPC_URL: rpcUrl,
-    TX_SIGNER_KEY: txSignerKey,
-  });
+export async function startBundler(config: BundlerConfig): Promise<TeardownFn> {
+  const redis = await getRedis();
 
-  // TODO: figure out how to NOT override bundler/.env, using --env-file didn't
-  // work
-  console.log("Writing to bundler env file:\n", envFile);
-  fs.writeFileSync(BUNDLER_ENV_FILE_PATH, envFile);
-  await compose.upAll(BUNDLER_COMPOSE_OPTS);
+  const stopServer = startBundlerServer(config, redis);
+  const stopBatcher = startBundlerBatcher(config, redis);
+  const stopSubmitter = startBundlerSubmitter(config, redis);
 
-  await sleep(10_000);
+  return async () => {
+    await Promise.all([stopServer(), stopBatcher(), stopSubmitter()]);
+    await clearRedis();
+  };
 }
 
-export async function stopBundler(): Promise<void> {
-  await compose.down({
-    cwd: BUNDLER_COMPOSE_CWD,
-    commandOptions: [["--volumes"]],
+function startBundlerSubmitter(
+  config: BundlerConfig,
+  redis: IORedis
+): TeardownFn {
+  const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+  const signer = new ethers.Wallet(config.txSignerKey, provider);
+  const submitter = new BundlerSubmitter(config.walletAddress, signer, redis);
+
+  const { promise, teardown } = submitter.start();
+  promise.catch((err) => {
+    console.error("bundler submitter error", err);
+    throw err;
   });
+
+  return teardown;
+}
+
+function startBundlerBatcher(
+  config: BundlerConfig,
+  redis: IORedis
+): TeardownFn {
+  const batcher = new BundlerBatcher(redis, config.maxLatency);
+  const { promise, teardown } = batcher.start();
+  promise.catch((err) => {
+    console.error("bundler batcher error", err);
+    throw err;
+  });
+
+  return teardown;
+}
+
+function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
+  const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+  const server = new BundlerServer(
+    config.walletAddress,
+    provider,
+    redis,
+    config.ignoreGas
+  );
+
+  return server.start(3000);
 }

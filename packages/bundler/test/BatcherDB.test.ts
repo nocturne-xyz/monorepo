@@ -31,7 +31,7 @@ describe("BatcherDB", async () => {
     }
   }
 
-  it("Fills, detects, and pops batch", async () => {
+  it("fills, detects, and pops batch", async () => {
     expect(await batcherDB.getBatch(BATCH_SIZE)).to.be.undefined;
     expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
 
@@ -44,7 +44,7 @@ describe("BatcherDB", async () => {
     expect(await batcherDB.pop(BATCH_SIZE)).to.be.undefined;
   });
 
-  it("Responds to `exact` flag", async () => {
+  it("responds to `exact` flag", async () => {
     await fillBatch();
 
     expect((await batcherDB.getBatch(BATCH_SIZE + 2))!.length).to.equal(
@@ -53,7 +53,7 @@ describe("BatcherDB", async () => {
     expect(await batcherDB.getBatch(BATCH_SIZE + 2, true)).to.be.undefined;
   });
 
-  it("Produces add and pop transactions", async () => {
+  it("produces add and pop transactions", async () => {
     await fillBatch();
     expect((await batcherDB.getBatch(BATCH_SIZE))!.length).to.equal(BATCH_SIZE);
 
