@@ -14,13 +14,8 @@ import {
   PROVEN_OPERATION_QUEUE,
 } from "./common";
 import * as JSON from "bigint-json-serialization";
+import { ActorHandle, actorChain } from "./utils";
 
-export interface BundlerBatcherHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
 
 export class BundlerBatcher {
   redis: IORedis;
@@ -47,12 +42,17 @@ export class BundlerBatcher {
     });
   }
 
-  start(): BundlerBatcherHandle {
+  start(): ActorHandle{
+    const batcher = this.startBatcher();
+    const queuer = this.startQueuer();
+    return actorChain(batcher, queuer);
+  }
+
+  startBatcher(): ActorHandle {
     console.log("batcher starting...");
 
-    // **** BATCHER ****
     let stopped = false;
-    const batcherProm = new Promise<void>((resolve) => {
+    const promise = new Promise<void>((resolve) => {
       let counterSeconds = 0;
       const poll = async () => {
         const batch = await this.batcherDB.getBatch(this.BATCH_SIZE);
@@ -110,29 +110,17 @@ export class BundlerBatcher {
       void poll();
     });
 
-    // **** QUEUER ****
-    const queuer = this.startQueuer();
-    const queuerProm = new Promise<void>((resolve) => {
-      queuer.on("closed", () => {
-        resolve();
-      });
-    });
-
     return {
-      promise: (async () => {
-        await Promise.all([queuerProm, batcherProm]);
-      })(),
+      promise,
       teardown: async () => {
         stopped = true;
-
-        await queuer.close();
-        await Promise.all([queuerProm, batcherProm]);
-      },
-    };
+        await promise;
+      }
+    }
   }
 
-  startQueuer(): Worker<ProvenOperationJobData, any, string> {
-    return new Worker(
+  startQueuer(): ActorHandle {
+    const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,
       async (job: Job<ProvenOperationJobData>) => {
         const provenOperation = JSON.parse(
@@ -162,5 +150,19 @@ export class BundlerBatcher {
         autorun: true,
       }
     );
+
+    const promise = new Promise<void>((resolve) => {
+      queuer.on("closed", () => {
+        resolve();
+      });
+    });
+
+    return {
+      promise,
+      teardown: async () => {
+        await queuer.close();
+        await promise;
+      }
+    }
   }
 }
