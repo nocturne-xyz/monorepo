@@ -1,12 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
-import { open } from "lmdb";
 import {
   DepositManager,
-  Handler,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
-import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
@@ -16,9 +13,8 @@ import {
 } from "@nocturne-xyz/sdk";
 import { setupTestDeployment, SUBGRAPH_URL } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
-import { getSubtreeUpdateProver, sleep } from "../src/utils";
+import { sleep } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { KEYS_TO_WALLETS } from "../src/keys";
 
 describe("SDKSubgraphSyncAdapter", async () => {
@@ -27,9 +23,7 @@ describe("SDKSubgraphSyncAdapter", async () => {
   let aliceEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let handler: Handler;
   let token: SimpleERC20Token;
-  let updater: SubtreeUpdater;
   let syncAdapter: SDKSyncAdapter;
   let viewer: NocturneViewer;
   let provider: ethers.providers.Provider;
@@ -37,7 +31,7 @@ describe("SDKSubgraphSyncAdapter", async () => {
   beforeEach(async () => {
     // only doing deposits, so don't need bundler
     // using standalone subtree updater, so don't need subtree updater
-    ({ teardown, aliceEoa, provider, depositManager, handler, provider } =
+    ({ teardown, aliceEoa, provider, depositManager, provider } =
       await setupTestDeployment({
         include: {
           subgraph: true,
@@ -51,30 +45,9 @@ describe("SDKSubgraphSyncAdapter", async () => {
     const [deployerEoa] = KEYS_TO_WALLETS(provider);
     token = await new SimpleERC20Token__factory(deployerEoa).deploy();
     console.log("Token deployed at: ", token.address);
-
-    await newSubtreeUpdater();
   });
 
-  async function newSubtreeUpdater() {
-    const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
-    const prover = getSubtreeUpdateProver();
-    const submitter = new SyncSubtreeSubmitter(handler);
-    updater = new SubtreeUpdater(handler, serverDB, prover, submitter);
-    await updater.init();
-  }
-
-  async function applySubtreeUpdate() {
-    const tx = await handler.fillBatchWithZeros();
-    await tx.wait(1);
-    await updater.pollInsertionsAndTryMakeBatch();
-    await updater.tryGenAndSubmitProofs();
-
-    // wait for subgraph
-    await sleep(2_000);
-  }
-
   afterEach(async () => {
-    await updater.dropDB();
     await teardown();
   });
 
@@ -87,7 +60,6 @@ describe("SDKSubgraphSyncAdapter", async () => {
       viewer.generateRandomStealthAddress(),
       [100n, 100n, 100n]
     );
-    await applySubtreeUpdate();
     const firstRangeEndBlockExpected = await provider.getBlockNumber();
 
     // wait for subgraph
@@ -124,7 +96,6 @@ describe("SDKSubgraphSyncAdapter", async () => {
       viewer.generateRandomStealthAddress(),
       [200n, 200n, 200n, 200n]
     );
-    await applySubtreeUpdate();
 
     const secondRangeEndBlockExpected = await provider.getBlockNumber();
     // wait for subgraph
