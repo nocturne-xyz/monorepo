@@ -3,7 +3,6 @@ export const DEPOSIT_MANAGER_CONTRACT_VERSION = "v1";
 
 export const DEPOSIT_REQUEST_TYPES = {
   DepositRequest: [
-    { name: "chainId", type: "uint256" },
     { name: "spender", type: "address" },
     { name: "encodedAsset", type: "EncodedAsset" },
     { name: "value", type: "uint256" },

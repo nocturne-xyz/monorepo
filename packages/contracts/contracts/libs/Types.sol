@@ -113,7 +113,6 @@ struct Action {
 }
 
 struct DepositRequest {
-    uint256 chainId;
     address spender;
     EncodedAsset encodedAsset;
     uint256 value;

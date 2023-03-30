@@ -1,12 +1,6 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import {
-  AssetType,
-  AssetTrait,
-  StealthAddress,
-  DepositRequest,
-  Note,
-} from "@nocturne-xyz/sdk";
+import { AssetType, AssetTrait, StealthAddress, Note } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 import { sleep } from "./utils";
 
@@ -75,9 +69,6 @@ async function makeDeposit(
 ): Promise<
   (token: SimpleERC20Token, amount: bigint, noteNonce: number) => Promise<Note>
 > {
-  const chainId = BigInt(await eoa.getChainId());
-  const eoaAddress = await eoa.getAddress();
-
   return async (token: SimpleERC20Token, amount: bigint, noteNonce: number) => {
     const asset = {
       assetType: AssetType.ERC20,
@@ -86,24 +77,12 @@ async function makeDeposit(
     };
     const encodedAsset = AssetTrait.encode(asset);
 
-    const nonce = await depositManager._nonces(eoaAddress);
-    const depositRequest: DepositRequest = {
-      chainId,
-      spender: eoaAddress,
-      encodedAsset,
-      value: amount,
-      depositAddr: stealthAddress,
-      nonce: nonce.toBigInt(),
-      gasCompensation: BigInt(0),
-    };
-    console.log("deposit request:", depositRequest);
-
     console.log(
       `instantiating deposit for ${amount} of token ${token.address}`
     );
     const instantiateDepositTx = await depositManager
       .connect(eoa)
-      .instantiateDeposit(depositRequest);
+      .instantiateDeposit(encodedAsset, amount, stealthAddress);
     await instantiateDepositTx.wait(1);
 
     return {

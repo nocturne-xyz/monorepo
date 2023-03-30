@@ -295,36 +295,32 @@ export class ScreenerPermissionSet__Params {
 }
 
 export class DepositManager___computeDigestInputReqStruct extends ethereum.Tuple {
-  get chainId(): BigInt {
-    return this[0].toBigInt();
-  }
-
   get spender(): Address {
-    return this[1].toAddress();
+    return this[0].toAddress();
   }
 
   get encodedAsset(): DepositManager___computeDigestInputReqEncodedAssetStruct {
     return changetype<DepositManager___computeDigestInputReqEncodedAssetStruct>(
-      this[2].toTuple()
+      this[1].toTuple()
     );
   }
 
   get value(): BigInt {
-    return this[3].toBigInt();
+    return this[2].toBigInt();
   }
 
   get depositAddr(): DepositManager___computeDigestInputReqDepositAddrStruct {
     return changetype<DepositManager___computeDigestInputReqDepositAddrStruct>(
-      this[4].toTuple()
+      this[3].toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this[5].toBigInt();
+    return this[4].toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this[6].toBigInt();
+    return this[5].toBigInt();
   }
 }
 
@@ -433,7 +429,7 @@ export class DepositManager extends ethereum.SmartContract {
   _computeDigest(req: DepositManager___computeDigestInputReqStruct): Bytes {
     let result = super.call(
       "_computeDigest",
-      "_computeDigest((uint256,address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
+      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
       [ethereum.Value.fromTuple(req)]
     );
 
@@ -445,7 +441,7 @@ export class DepositManager extends ethereum.SmartContract {
   ): ethereum.CallResult<Bytes> {
     let result = super.tryCall(
       "_computeDigest",
-      "_computeDigest((uint256,address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
+      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
       [ethereum.Value.fromTuple(req)]
     );
     if (result.reverted) {
@@ -584,36 +580,32 @@ export class CompleteDepositCall__Outputs {
 }
 
 export class CompleteDepositCallReqStruct extends ethereum.Tuple {
-  get chainId(): BigInt {
-    return this[0].toBigInt();
-  }
-
   get spender(): Address {
-    return this[1].toAddress();
+    return this[0].toAddress();
   }
 
   get encodedAsset(): CompleteDepositCallReqEncodedAssetStruct {
     return changetype<CompleteDepositCallReqEncodedAssetStruct>(
-      this[2].toTuple()
+      this[1].toTuple()
     );
   }
 
   get value(): BigInt {
-    return this[3].toBigInt();
+    return this[2].toBigInt();
   }
 
   get depositAddr(): CompleteDepositCallReqDepositAddrStruct {
     return changetype<CompleteDepositCallReqDepositAddrStruct>(
-      this[4].toTuple()
+      this[3].toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this[5].toBigInt();
+    return this[4].toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this[6].toBigInt();
+    return this[5].toBigInt();
   }
 }
 
@@ -700,9 +692,19 @@ export class InstantiateDepositCall__Inputs {
     this._call = call;
   }
 
-  get req(): InstantiateDepositCallReqStruct {
-    return changetype<InstantiateDepositCallReqStruct>(
+  get encodedAsset(): InstantiateDepositCallEncodedAssetStruct {
+    return changetype<InstantiateDepositCallEncodedAssetStruct>(
       this._call.inputValues[0].value.toTuple()
+    );
+  }
+
+  get value(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get depositAddr(): InstantiateDepositCallDepositAddrStruct {
+    return changetype<InstantiateDepositCallDepositAddrStruct>(
+      this._call.inputValues[2].value.toTuple()
     );
   }
 }
@@ -715,41 +717,7 @@ export class InstantiateDepositCall__Outputs {
   }
 }
 
-export class InstantiateDepositCallReqStruct extends ethereum.Tuple {
-  get chainId(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get spender(): Address {
-    return this[1].toAddress();
-  }
-
-  get encodedAsset(): InstantiateDepositCallReqEncodedAssetStruct {
-    return changetype<InstantiateDepositCallReqEncodedAssetStruct>(
-      this[2].toTuple()
-    );
-  }
-
-  get value(): BigInt {
-    return this[3].toBigInt();
-  }
-
-  get depositAddr(): InstantiateDepositCallReqDepositAddrStruct {
-    return changetype<InstantiateDepositCallReqDepositAddrStruct>(
-      this[4].toTuple()
-    );
-  }
-
-  get nonce(): BigInt {
-    return this[5].toBigInt();
-  }
-
-  get gasCompensation(): BigInt {
-    return this[6].toBigInt();
-  }
-}
-
-export class InstantiateDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
+export class InstantiateDepositCallEncodedAssetStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -759,7 +727,7 @@ export class InstantiateDepositCallReqEncodedAssetStruct extends ethereum.Tuple 
   }
 }
 
-export class InstantiateDepositCallReqDepositAddrStruct extends ethereum.Tuple {
+export class InstantiateDepositCallDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -836,36 +804,32 @@ export class RetrieveDepositCall__Outputs {
 }
 
 export class RetrieveDepositCallReqStruct extends ethereum.Tuple {
-  get chainId(): BigInt {
-    return this[0].toBigInt();
-  }
-
   get spender(): Address {
-    return this[1].toAddress();
+    return this[0].toAddress();
   }
 
   get encodedAsset(): RetrieveDepositCallReqEncodedAssetStruct {
     return changetype<RetrieveDepositCallReqEncodedAssetStruct>(
-      this[2].toTuple()
+      this[1].toTuple()
     );
   }
 
   get value(): BigInt {
-    return this[3].toBigInt();
+    return this[2].toBigInt();
   }
 
   get depositAddr(): RetrieveDepositCallReqDepositAddrStruct {
     return changetype<RetrieveDepositCallReqDepositAddrStruct>(
-      this[4].toTuple()
+      this[3].toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this[5].toBigInt();
+    return this[4].toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this[6].toBigInt();
+    return this[5].toBigInt();
   }
 }
 

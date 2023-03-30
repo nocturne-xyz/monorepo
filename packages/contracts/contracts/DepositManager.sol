@@ -77,15 +77,18 @@ contract DepositManager is
     }
 
     function instantiateDeposit(
-        DepositRequest calldata req
+        EncodedAsset calldata encodedAsset,
+        uint256 value,
+        StealthAddress calldata depositAddr
     ) external payable nonReentrant {
-        require(req.chainId == block.chainid, "Wrong chainId");
-        require(msg.sender == req.spender, "Only spender can start deposit");
-        require(req.nonce == _nonces[req.spender], "Invalid nonce");
-        require(
-            msg.value == req.gasCompensation,
-            "msg.value != req.gasCompensation"
-        );
+        DepositRequest memory req = DepositRequest({
+            spender: msg.sender,
+            encodedAsset: encodedAsset,
+            value: value,
+            depositAddr: depositAddr,
+            nonce: _nonces[msg.sender],
+            gasCompensation: msg.value
+        });
 
         bytes32 depositHash = _hashDepositRequest(req);
 
@@ -96,7 +99,7 @@ contract DepositManager is
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
         emit DepositInstantiated(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -127,7 +130,7 @@ contract DepositManager is
         AddressUpgradeable.sendValue(payable(msg.sender), req.gasCompensation);
 
         emit DepositRetrieved(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -180,7 +183,7 @@ contract DepositManager is
         }
 
         emit DepositCompleted(
-            req.chainId,
+            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,

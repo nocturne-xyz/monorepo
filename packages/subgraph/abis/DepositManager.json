@@ -343,11 +343,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
-          {
             "internalType": "address",
             "name": "spender",
             "type": "address"
@@ -503,11 +498,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
-          {
             "internalType": "address",
             "name": "spender",
             "type": "address"
@@ -616,76 +606,49 @@
         "components": [
           {
             "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "spender",
-            "type": "address"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetAddr",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetId",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncodedAsset",
-            "name": "encodedAsset",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "h1X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct StealthAddress",
-            "name": "depositAddr",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
+            "name": "encodedAssetAddr",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "gasCompensation",
+            "name": "encodedAssetId",
             "type": "uint256"
           }
         ],
-        "internalType": "struct DepositRequest",
-        "name": "req",
+        "internalType": "struct EncodedAsset",
+        "name": "encodedAsset",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "h1X",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h1Y",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h2X",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h2Y",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct StealthAddress",
+        "name": "depositAddr",
         "type": "tuple"
       }
     ],
@@ -718,11 +681,6 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
           {
             "internalType": "address",
             "name": "spender",

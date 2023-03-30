@@ -28,7 +28,6 @@ import {
   hashDepositRequest,
   signDepositRequest,
 } from "./typedData";
-import { assert } from "console";
 import {
   DEPOSIT_MANAGER_CONTRACT_NAME,
   DEPOSIT_MANAGER_CONTRACT_VERSION,
@@ -210,16 +209,10 @@ export class DepositScreenerProcessor {
   }
 
   async signAndSubmitDeposit(depositRequest: DepositRequest): Promise<void> {
-    const chainId = BigInt(await this.txSigner.getChainId());
-    assert(
-      chainId == depositRequest.chainId,
-      "connected chainId != deposit.chainId"
-    ); // Should never happen?
-
     const domain: EIP712Domain = {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
-      chainId,
+      chainId: BigInt(await this.txSigner.getChainId()),
       verifyingContract: this.depositManagerContract.address,
     };
 

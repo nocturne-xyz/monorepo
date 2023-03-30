@@ -13,7 +13,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(uint256 chainId,address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
+                "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
             )
         );
 
@@ -54,13 +54,12 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashDepositRequest(
-        DepositRequest calldata req
+        DepositRequest memory req
     ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
                     DEPOSIT_REQUEST_TYPEHASH,
-                    req.chainId,
                     req.spender,
                     _hashEncodedAsset(req.encodedAsset),
                     req.value,
@@ -72,7 +71,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashEncodedAsset(
-        EncodedAsset calldata encodedAsset
+        EncodedAsset memory encodedAsset
     ) internal pure returns (bytes32) {
         return
             keccak256(
@@ -85,7 +84,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     }
 
     function _hashStealthAddress(
-        StealthAddress calldata stealthAddress
+        StealthAddress memory stealthAddress
     ) internal pure returns (bytes32) {
         return
             keccak256(

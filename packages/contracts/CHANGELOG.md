@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Simplify `DepositManager.instantiateDeposit` to only take asset, value, and depositAddr (convert deposit req checks into contract reads)
+- Remove `chainId` from `DepositRequest` (already included in eip712 domain)
 - Move `BinaryMerkle` into `test/utils`
 - Move all poseidon and hasher references into `test/utils` (IHasher, IPoseidon, PoseidonHashers all go into tests because not used in production code)
 - Add `Pausable` to wallet and handler + deps (balance manager & commitment tree)

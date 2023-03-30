@@ -7,6 +7,7 @@ export enum DepositEventType {
 }
 
 export interface DepositEvent extends DepositRequest {
+  chainId: bigint;
   type: DepositEventType;
 }
 

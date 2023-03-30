@@ -6,16 +6,17 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "@nocturne-xyz/contracts#build": {},
     "@nocturne-xyz/config#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
     },
-    "@nocturne-xyz/deploy#build": {
+    "@nocturne-xyz/sdk#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/config#build"
       ]
     },
-    "@nocturne-xyz/sdk#build": {
+    "@nocturne-xyz/deploy#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/config#build"
@@ -30,6 +31,12 @@
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/config#build"
       ]
+    },
+    "@nocturne-xyz/snap#build": {
+      "dependsOn": ["@nocturne-xyz/sdk#build"]
+    },
+    "@nocturne-xyz/local-prover#build": {
+      "dependsOn": ["@nocturne-xyz/sdk#build"]
     },
     "@nocturne-xyz/test-actor#build": {
       "dependsOn": [
@@ -48,6 +55,7 @@
     },
     "@nocturne-xyz/frontend-sdk#build": {
       "dependsOn": [
+        "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/local-prover#build"
       ]
@@ -58,12 +66,6 @@
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/frontend-sdk#build"
       ]
-    },
-    "@nocturne-xyz/snap#build": {
-      "dependsOn": ["@nocturne-xyz/sdk#build"]
-    },
-    "@nocturne-xyz/local-prover#build": {
-      "dependsOn": ["@nocturne-xyz/sdk#build"]
     },
     "@nocturne-xyz/e2e-tests#build": {
       "dependsOn": [

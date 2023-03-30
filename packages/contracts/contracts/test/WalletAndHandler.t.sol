@@ -237,7 +237,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // Create dummy deposit
         DepositRequest memory deposit = DepositRequest({
-            chainId: 0,
             spender: ALICE,
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -289,7 +288,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // Create dummy deposit
         DepositRequest memory deposit = DepositRequest({
-            chainId: 0,
             spender: ALICE,
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -479,7 +477,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.expectRevert("Only deposit source");
         wallet.depositFunds(
             DepositRequest({
-                chainId: 0,
                 spender: ALICE,
                 encodedAsset: AssetUtils.encodeAsset(
                     AssetType.ERC20,

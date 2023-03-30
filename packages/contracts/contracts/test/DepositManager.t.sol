@@ -101,14 +101,22 @@ contract DepositManagerTest is Test, ParseUtils {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
+        uint256 depositAmount = RESERVE_AMOUNT / 2;
+
         // Approve 25M tokens for deposit
         vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
+        token.approve(address(depositManager), depositAmount);
+
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            NocturneUtils.ERC20_ID
+        );
 
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
-            RESERVE_AMOUNT / 2,
+            depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
             depositManager._nonces(ALICE),
@@ -134,88 +142,18 @@ contract DepositManagerTest is Test, ParseUtils {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
+            encodedToken,
+            depositAmount,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
 
         // Token escrowed by manager contract
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
-
-        console.log("Alice remaining eth:", ALICE.balance);
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
-    }
-
-    function testInstantiateDepositFailureWrongChainId() public {
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
-
-        // Approve 25M tokens for deposit
-        vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
-
-        DepositRequest memory deposit = DepositRequest({
-            chainId: 0x123,
-            spender: ALICE,
-            encodedAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(token),
-                NocturneUtils.ERC20_ID
-            ),
-            value: RESERVE_AMOUNT / 2,
-            depositAddr: NocturneUtils.defaultStealthAddress(),
-            nonce: depositManager._nonces(ALICE),
-            gasCompensation: 0 // 0 gas comp
-        });
-
-        vm.expectRevert("Wrong chainId");
-        depositManager.instantiateDeposit(deposit);
-    }
-
-    function testInstantiateDepositFailureWrongSpender() public {
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
-
-        // Approve 25M tokens for deposit
-        vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
-
-        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
-            ALICE,
-            address(token),
-            RESERVE_AMOUNT / 2,
-            NocturneUtils.ERC20_ID,
-            NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
-            0 // 0 gas price
-        );
-
-        vm.prank(BOB); // prank BOB not ALICE
-        vm.expectRevert("Only spender can start deposit");
-        depositManager.instantiateDeposit(deposit);
-    }
-
-    function testInstantiateDepositFailureBadNonce() public {
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
-
-        vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT / 2);
-
-        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
-            ALICE,
-            address(token),
-            RESERVE_AMOUNT / 2,
-            NocturneUtils.ERC20_ID,
-            NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE) + 1, // Invalid nonce
-            0 // 0 gas price
-        );
-
-        // Expect revert
-        vm.expectRevert("Invalid nonce");
-        vm.prank(ALICE);
-        depositManager.instantiateDeposit(deposit);
     }
 
     function testRetrieveDepositSuccess() public {
@@ -225,6 +163,12 @@ contract DepositManagerTest is Test, ParseUtils {
         // Approve all 50M tokens for deposit
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            NocturneUtils.ERC20_ID
+        );
 
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
@@ -240,7 +184,11 @@ contract DepositManagerTest is Test, ParseUtils {
         // Call instantiateDeposit
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
+            encodedToken,
+            RESERVE_AMOUNT,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -286,6 +234,12 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            NocturneUtils.ERC20_ID
+        );
+
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -298,7 +252,11 @@ contract DepositManagerTest is Test, ParseUtils {
 
         // Call instantiateDeposit
         vm.prank(ALICE);
-        depositManager.instantiateDeposit(deposit);
+        depositManager.instantiateDeposit(
+            encodedToken,
+            RESERVE_AMOUNT,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         // Call retrieveDeposit, but prank as BOB
         vm.expectRevert("Only spender can retrieve deposit");
@@ -334,6 +292,12 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            NocturneUtils.ERC20_ID
+        );
+
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -346,7 +310,11 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
+            encodedToken,
+            RESERVE_AMOUNT,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         // Deposit manager has tokens and gas funds
         assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT);
@@ -391,6 +359,12 @@ contract DepositManagerTest is Test, ParseUtils {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
+        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(token),
+            NocturneUtils.ERC20_ID
+        );
+
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -403,7 +377,11 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(deposit);
+        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
+            encodedToken,
+            RESERVE_AMOUNT,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         bytes32 digest = depositManager.computeDigest(deposit);
         uint256 randomPrivkey = 123;

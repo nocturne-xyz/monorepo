@@ -57,7 +57,7 @@ library NocturneUtils {
         StealthAddress memory depositAddr,
         uint256 nonce,
         uint256 gasCompensation
-    ) public view returns (DepositRequest memory) {
+    ) public pure returns (DepositRequest memory) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             asset,
@@ -66,7 +66,6 @@ library NocturneUtils {
 
         return
             DepositRequest({
-                chainId: block.chainid,
                 spender: spender,
                 encodedAsset: encodedAsset,
                 value: value,
