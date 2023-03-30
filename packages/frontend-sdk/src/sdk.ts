@@ -112,7 +112,6 @@ export class NocturneFrontendSDK {
 
     // TODO: currently broken as is, fix once we have deposit screener agent
     return this.walletContract.depositFunds({
-      chainId: 0,
       spender,
       encodedAsset,
       value,
