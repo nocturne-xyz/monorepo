@@ -12,19 +12,13 @@ export async function depositFundsMultiToken(
 ): Promise<Note[]> {
   const deposit = makeDeposit(depositManager, eoa, stealthAddress);
   const notes: Note[] = [];
-  const txs: ContractTransaction[] = []
+  const txs: ContractTransaction[] = [];
   for (const [token, amounts] of tokensWithAmounts) {
     const total = amounts.reduce((sum, a) => sum + a);
 
-    txs.push(
-      await token.reserveTokens(eoa.address, total)
-    );
+    txs.push(await token.reserveTokens(eoa.address, total));
 
-    txs.push(
-      await token
-        .connect(eoa)
-        .approve(depositManager.address, total)
-    );
+    txs.push(await token.connect(eoa).approve(depositManager.address, total));
 
     for (const [i, amount] of amounts.entries()) {
       const [tx, note] = await deposit(token, amount, i);
@@ -33,7 +27,7 @@ export async function depositFundsMultiToken(
     }
   }
 
-  await Promise.all(txs.map(tx => tx.wait(1)));
+  await Promise.all(txs.map((tx) => tx.wait(1)));
   await sleep(15_000); // wait for deposit screener
 
   return notes;
@@ -61,7 +55,7 @@ export async function depositFundsSingleToken(
     notes.push(note);
   }
 
-  await Promise.all(txs.map(tx => tx.wait(1)));
+  await Promise.all(txs.map((tx) => tx.wait(1)));
   await sleep(15_000); // wait for deposit screener
 
   return notes;
@@ -71,7 +65,11 @@ function makeDeposit(
   depositManager: DepositManager,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
-): (token: SimpleERC20Token, amount: bigint, noteNonce: number) => Promise<[ContractTransaction, Note]> {
+): (
+  token: SimpleERC20Token,
+  amount: bigint,
+  noteNonce: number
+) => Promise<[ContractTransaction, Note]> {
   return async (token: SimpleERC20Token, amount: bigint, noteNonce: number) => {
     const asset = {
       assetType: AssetType.ERC20,
@@ -94,7 +92,7 @@ function makeDeposit(
         nonce: BigInt(noteNonce),
         asset,
         value: amount,
-      }
-    ]
+      },
+    ];
   };
 }
