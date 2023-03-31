@@ -4,21 +4,21 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "yarn turbo run build",
-    "build:nocache": "yarn turbo run build --force",
+    "build": "yarn turbo run --no-daemon build",
+    "build:nocache": "yarn turbo run --no-daemon build --force",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "clean": "echo \"\nRunning clean in each package\" && yarn workspaces foreach run clean && echo \"\nDeleting yarn cache\" && rm -rf .yarn/cache && echo \"\nClearing yarn.lock contents\" && cp /dev/null yarn.lock",
     "dev:site": "scripts/run_site_dev.sh",
     "e2e-tests": "yarn workspace @nocturne-xyz/e2e-tests",
-    "lint": "yarn turbo run lint",
+    "lint": "yarn turbo run --no-daemon lint",
     "local-prover:gen-test-cases": "yarn workspaces foreach run gen-test-cases --include @nocturne-xyz/local-prover",
     "prettier:check": "yarn workspaces foreach run prettier:check",
     "prettier:write": "yarn workspaces foreach run prettier:write",
     "rebuild-circuits-and-test-cases": "yarn circuits:build && yarn local-prover:gen-test-cases",
-    "test": "yarn turbo run test --filter=!@nocturne-xyz/circuits...",
-    "test:ci": "yarn turbo run test:ci --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
-    "test:e2e": "yarn turbo run test:e2e --filter=@nocturne-xyz/e2e-tests",
-    "test:unit": "yarn turbo run test:unit"
+    "test": "yarn turbo run --no-daemon test --filter=!@nocturne-xyz/circuits...",
+    "test:ci": "yarn turbo run --no-daemon test:ci --filter=!@nocturne-xyz/circuits... --filter=!@nocturne-xyz/site...",
+    "test:e2e": "yarn turbo run --no-daemon test:e2e --filter=@nocturne-xyz/e2e-tests",
+    "test:unit": "yarn turbo run --no-daemon test:unit"
   },
   "devDependencies": {
     "turbo": "1.6.3"

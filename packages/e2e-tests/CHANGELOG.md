@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add test for `SubgraphSDKSyncAdapter` block ranges
 - `instantiateDeposit` calls use simplified interface without deposit request
 - add missing `await` in async `expect` assertion in bundler gas test case
 - instead of stopping anvil every time, reset its state to a snapshot taken at genesis

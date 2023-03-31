@@ -93,7 +93,8 @@ export interface NocturneTestDeployment {
 
 // defaults for actor deployments
 const ANVIL_URL = "http://0.0.0.0:8545";
-const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne-test";
+export const SUBGRAPH_URL =
+  "http://localhost:8000/subgraphs/name/nocturne-test";
 
 const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
   blockTimeSecs: 1,
