@@ -21,7 +21,7 @@ export async function startSubtreeUpdater(
     signer,
     {
       fillBatches: true,
-      interval: config.interval ?? 8_000,
+      interval: config.interval ?? 3_000,
     }
   );
 
