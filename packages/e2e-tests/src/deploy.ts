@@ -260,6 +260,7 @@ export async function setupTestDeployment(
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
   console.log("disabling automine...");
   await provider.send("evm_setAutomine", [false]);
+  // need to turn interval mining back on, as `setAutomine true` turns off
   await provider.send("evm_setIntervalMining", [1]);
 
   return {
