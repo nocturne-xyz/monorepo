@@ -261,7 +261,9 @@ export async function setupTestDeployment(
   console.log("disabling automine...");
   await provider.send("evm_setAutomine", [false]);
   // need to turn interval mining back on, as `setAutomine true` turns off
-  await provider.send("evm_setIntervalMining", [1]);
+  await provider.send("evm_setIntervalMining", [
+    DEFAULT_ANVIL_CONFIG.blockTimeSecs,
+  ]);
 
   return {
     depositManager,
