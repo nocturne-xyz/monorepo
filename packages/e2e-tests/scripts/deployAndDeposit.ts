@@ -46,8 +46,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  console.log("deploying contracts with dummy proxy admin...");
+  const startTime = Date.now();
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
+  console.log("enabling automine...");
+  await provider.send("evm_setAutomine", [true]);
+
+  console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
   const { depositManagerProxy, handlerProxy } =
@@ -135,4 +139,8 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const tx = await handler.connect(deployerEoa).fillBatchWithZeros();
   await tx.wait(1);
+
+  console.log(`deployAndDeposit script finished in ${Date.now() - startTime}ms.`);
+  console.log('disabling automine...');
+  await provider.send("evm_setAutomine", [false]);
 })();

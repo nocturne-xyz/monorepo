@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- turn on automine at the start of `setupTestDeployment` and disable it at the end
+- turn on automine at the start of `deployAndDeposit` script and disable it at the end
+- add timers for both `deployAndDepositScript` and `setupTestDeployment`
 - Remove `chainId` from all deposit events
 - add test for `SubgraphSDKSyncAdapter` block ranges
 - `instantiateDeposit` calls use simplified interface without deposit request
