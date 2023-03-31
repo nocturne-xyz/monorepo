@@ -30,7 +30,7 @@ export async function depositFundsMultiToken(
     }
   }
 
-  await sleep(5_000); // wait for deposit screener
+  await sleep(6_000); // wait for deposit screener
   return notes;
 }
 
@@ -58,7 +58,7 @@ export async function depositFundsSingleToken(
     notes.push(await deposit(token, amount, i));
   }
 
-  await sleep(5_000); // wait for deposit screener
+  await sleep(6_000); // wait for deposit screener
   return notes;
 }
 
