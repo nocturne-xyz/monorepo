@@ -30,7 +30,7 @@ describe("SDKSubgraphSyncAdapter", async () => {
 
   beforeEach(async () => {
     // only doing deposits, so don't need bundler
-    // only querying notes, so don't need subtree updater
+    // using standalone subtree updater, so don't need subtree updater
     ({ teardown, aliceEoa, provider, depositManager, provider } =
       await setupTestDeployment({
         include: {
