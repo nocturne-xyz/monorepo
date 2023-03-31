@@ -28,6 +28,7 @@ struct FormatOperationArgs {
 
 library NocturneUtils {
     uint256 constant ERC20_ID = 0;
+    uint256 constant DEADLINE_BUFFER = 1000;
 
     function defaultStealthAddress()
         internal
@@ -103,7 +104,7 @@ library NocturneUtils {
 
     function formatOperation(
         FormatOperationArgs memory args
-    ) internal pure returns (Operation memory) {
+    ) internal view returns (Operation memory) {
         JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
         if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
             args.root = 0x12345; // fill with garbage root
@@ -196,7 +197,9 @@ library NocturneUtils {
             ),
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
-            maxNumRefunds: args.maxNumRefunds
+            maxNumRefunds: args.maxNumRefunds,
+            chainId: block.chainid,
+            deadline: block.timestamp + DEADLINE_BUFFER
         });
 
         return op;

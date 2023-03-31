@@ -39,6 +39,8 @@ export function signOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
+    chainId: 0n,
+    deadline: 1000n,
   };
 }
 

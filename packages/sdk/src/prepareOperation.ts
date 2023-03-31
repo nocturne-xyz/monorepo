@@ -66,6 +66,8 @@ export async function prepareOperation(
     joinSplits,
     encodedRefundAssets,
     encodedGasAsset,
+    chainId: 0n,
+    deadline: 1000n,
   };
 
   return op as PreSignOperation;

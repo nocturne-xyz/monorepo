@@ -99,10 +99,15 @@ library OperationUtils {
             refundAddrPayload,
             refundAssetsPayload,
             actionsPayload,
-            gasAssetPayload,
+            gasAssetPayload
+        );
+        payload = abi.encodePacked(
+            payload,
             op.executionGasLimit,
             op.maxNumRefunds,
-            op.gasPrice
+            op.gasPrice,
+            op.chainId,
+            op.deadline
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;

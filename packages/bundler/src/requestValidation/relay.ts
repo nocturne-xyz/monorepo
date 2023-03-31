@@ -104,6 +104,8 @@ export const relaySchema = {
     "executionGasLimit",
     "maxNumRefunds",
     "gasPrice",
+    "chainId",
+    "deadline",
   ],
   properties: {
     joinSplits: joinSplitsType,
@@ -114,6 +116,8 @@ export const relaySchema = {
     executionGasLimit: bigintType,
     maxNumRefunds: bigintType,
     gasPrice: bigintType,
+    chainId: bigintType,
+    deadline: bigintType,
   },
   additionalProperties: false,
 };

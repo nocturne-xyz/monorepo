@@ -94,6 +94,8 @@ function hashOperation(
       "uint256",
       "uint256",
       "uint256",
+      "uint256",
+      "uint256",
     ],
     [
       joinSplitsPayload,
@@ -104,6 +106,8 @@ function hashOperation(
       op.executionGasLimit,
       op.maxNumRefunds,
       op.gasPrice,
+      op.chainId,
+      op.deadline,
     ]
   );
 
