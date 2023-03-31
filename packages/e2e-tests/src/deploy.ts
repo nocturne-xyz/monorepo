@@ -147,7 +147,7 @@ export async function setupTestDeployment(
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
-  console.log("enabling automine...")
+  console.log("enabling automine...");
   await provider.send("evm_setAutomine", [true]);
 
   const [
@@ -258,8 +258,9 @@ export async function setupTestDeployment(
   };
 
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
-  console.log('disabling automine...');
+  console.log("disabling automine...");
   await provider.send("evm_setAutomine", [false]);
+  await provider.send("evm_setIntervalMining", [1]);
 
   return {
     depositManager,

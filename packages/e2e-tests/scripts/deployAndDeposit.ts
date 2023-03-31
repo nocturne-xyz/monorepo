@@ -143,4 +143,5 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log(`deployAndDeposit script finished in ${Date.now() - startTime}ms.`);
   console.log('disabling automine...');
   await provider.send("evm_setAutomine", [false]);
+  await provider.send("evm_setIntervalMining", [1]);
 })();
