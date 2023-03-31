@@ -46,8 +46,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 ];
 
 (async () => {
-  console.log("deploying contracts with dummy proxy admin...");
+  const startTime = Date.now();
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
+  console.log("enabling automine...");
+  await provider.send("evm_setAutomine", [true]);
+
+  console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
   const { depositManagerProxy, handlerProxy } =
@@ -135,4 +139,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   const tx = await handler.connect(deployerEoa).fillBatchWithZeros();
   await tx.wait(1);
+
+  console.log(`deployAndDeposit script finished in ${Date.now() - startTime}ms.`);
+  console.log('disabling automine...');
+  await provider.send("evm_setAutomine", [false]);
+  // need to turn interval mining back on, as `setAutomine true` turns off
+  // note, we need to set the block time here, but we don't have a good way to get the current block time
+  // from anvil, so we just set it to 1 second, which is what the site script sets it to
+  await provider.send("evm_setIntervalMining", [1]);
 })();

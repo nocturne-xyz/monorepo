@@ -139,12 +139,17 @@ export async function setupTestDeployment(
   // then contracts,
   // then everything else can go up in any order
 
+  const startTime = Date.now();
+
   // spin up anvil
   console.log("starting anvil...");
   const resetAnvil = await anvilThunk();
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
+  console.log("enabling automine...");
+  await provider.send("evm_setAutomine", [true]);
+
   const [
     deployerEoa,
     aliceEoa,
@@ -251,6 +256,14 @@ export async function setupTestDeployment(
     // wait for anvil to reset
     await sleep(1_000);
   };
+
+  console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
+  console.log("disabling automine...");
+  await provider.send("evm_setAutomine", [false]);
+  // need to turn interval mining back on, as `setAutomine true` turns off
+  await provider.send("evm_setIntervalMining", [
+    DEFAULT_ANVIL_CONFIG.blockTimeSecs,
+  ]);
 
   return {
     depositManager,
