@@ -23,36 +23,32 @@ export class DepositCompleted__Params {
     this._event = event;
   }
 
-  get chainId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
   get spender(): Address {
-    return this._event.parameters[1].value.toAddress();
+    return this._event.parameters[0].value.toAddress();
   }
 
   get encodedAsset(): DepositCompletedEncodedAssetStruct {
     return changetype<DepositCompletedEncodedAssetStruct>(
-      this._event.parameters[2].value.toTuple()
+      this._event.parameters[1].value.toTuple()
     );
   }
 
   get value(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[2].value.toBigInt();
   }
 
   get depositAddr(): DepositCompletedDepositAddrStruct {
     return changetype<DepositCompletedDepositAddrStruct>(
-      this._event.parameters[4].value.toTuple()
+      this._event.parameters[3].value.toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this._event.parameters[6].value.toBigInt();
+    return this._event.parameters[5].value.toBigInt();
   }
 }
 
@@ -97,36 +93,32 @@ export class DepositInstantiated__Params {
     this._event = event;
   }
 
-  get chainId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
   get spender(): Address {
-    return this._event.parameters[1].value.toAddress();
+    return this._event.parameters[0].value.toAddress();
   }
 
   get encodedAsset(): DepositInstantiatedEncodedAssetStruct {
     return changetype<DepositInstantiatedEncodedAssetStruct>(
-      this._event.parameters[2].value.toTuple()
+      this._event.parameters[1].value.toTuple()
     );
   }
 
   get value(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[2].value.toBigInt();
   }
 
   get depositAddr(): DepositInstantiatedDepositAddrStruct {
     return changetype<DepositInstantiatedDepositAddrStruct>(
-      this._event.parameters[4].value.toTuple()
+      this._event.parameters[3].value.toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this._event.parameters[6].value.toBigInt();
+    return this._event.parameters[5].value.toBigInt();
   }
 }
 
@@ -171,36 +163,32 @@ export class DepositRetrieved__Params {
     this._event = event;
   }
 
-  get chainId(): BigInt {
-    return this._event.parameters[0].value.toBigInt();
-  }
-
   get spender(): Address {
-    return this._event.parameters[1].value.toAddress();
+    return this._event.parameters[0].value.toAddress();
   }
 
   get encodedAsset(): DepositRetrievedEncodedAssetStruct {
     return changetype<DepositRetrievedEncodedAssetStruct>(
-      this._event.parameters[2].value.toTuple()
+      this._event.parameters[1].value.toTuple()
     );
   }
 
   get value(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[2].value.toBigInt();
   }
 
   get depositAddr(): DepositRetrievedDepositAddrStruct {
     return changetype<DepositRetrievedDepositAddrStruct>(
-      this._event.parameters[4].value.toTuple()
+      this._event.parameters[3].value.toTuple()
     );
   }
 
   get nonce(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get gasCompensation(): BigInt {
-    return this._event.parameters[6].value.toBigInt();
+    return this._event.parameters[5].value.toBigInt();
   }
 }
 

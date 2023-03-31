@@ -29,7 +29,6 @@ contract DepositManager is
     event ScreenerPermissionSet(address screener, bool permission);
 
     event DepositInstantiated(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -39,7 +38,6 @@ contract DepositManager is
     );
 
     event DepositRetrieved(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -49,7 +47,6 @@ contract DepositManager is
     );
 
     event DepositCompleted(
-        uint256 indexed chainId,
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
@@ -99,7 +96,6 @@ contract DepositManager is
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
         emit DepositInstantiated(
-            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -130,7 +126,6 @@ contract DepositManager is
         AddressUpgradeable.sendValue(payable(msg.sender), req.gasCompensation);
 
         emit DepositRetrieved(
-            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,
@@ -183,7 +178,6 @@ contract DepositManager is
         }
 
         emit DepositCompleted(
-            block.chainid,
             req.spender,
             req.encodedAsset,
             req.value,

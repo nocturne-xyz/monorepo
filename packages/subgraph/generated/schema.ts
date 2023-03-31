@@ -53,15 +53,6 @@ export class DepositEvent extends Entity {
     this.set("type", Value.fromString(value));
   }
 
-  get chainId(): BigInt {
-    let value = this.get("chainId");
-    return value!.toBigInt();
-  }
-
-  set chainId(value: BigInt) {
-    this.set("chainId", Value.fromBigInt(value));
-  }
-
   get spender(): Bytes {
     let value = this.get("spender");
     return value!.toBytes();

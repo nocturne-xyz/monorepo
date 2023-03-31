@@ -212,6 +212,7 @@ export class DepositScreenerProcessor {
     const domain: EIP712Domain = {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
+      // TODO: fetch from config instead
       chainId: BigInt(await this.txSigner.getChainId()),
       verifyingContract: this.depositManagerContract.address,
     };

@@ -9,7 +9,6 @@ export function handleDepositInstantiated(event: DepositInstantiated): void {
   const deposit = new DepositEvent(id);
 
   deposit.type = "Instantiated";
-  deposit.chainId = event.params.chainId;
   deposit.spender = event.params.spender;
 
   deposit.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
