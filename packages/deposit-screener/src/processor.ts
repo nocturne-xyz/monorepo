@@ -165,7 +165,7 @@ export class DepositScreenerProcessor {
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
       attempts: 5,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 1000,
       },
     });
