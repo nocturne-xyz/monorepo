@@ -1,6 +1,5 @@
 import { NocturneViewer } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import { MerkleProver } from "./merkleProver";
 import {
   ClosableAsyncIterator,
   EncryptedStateDiff,
@@ -8,11 +7,11 @@ import {
   SDKSyncAdapter,
 } from "./sync";
 import { ethers } from "ethers";
-import { IncludedEncryptedNote, IncludedNote, NoteTrait } from "./primitives";
+import { IncludedEncryptedNote, IncludedNote, IncludedNoteCommitment, NoteTrait } from "./primitives";
+import { SparseMerkleProver } from "./SparseMerkleProver";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
-const MERKLE_MAX_CHUNK_SIZE = 10000;
 
 export interface SyncOpts {
   // defaults to `false`.
@@ -30,7 +29,7 @@ export async function syncSDK(
   { provider, viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
-  merkle: MerkleProver,
+  merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
   const nextBlockToSync = await db.nextBlock();
@@ -50,29 +49,16 @@ export async function syncSDK(
   // apply diffs
   for await (const diff of diffs.iter) {
     await db.applyStateDiff(diff);
-  }
+    
+    if (!opts?.skipMerkleProverUpdates) {
+      for (const noteOrCommitment of diff.notesAndCommitments) {
+        const isCommitment = NoteTrait.isCommitment(noteOrCommitment);
+        const { merkleIndex, noteCommitment } = isCommitment ? noteOrCommitment as IncludedNoteCommitment : NoteTrait.toIncludedCommitment(noteOrCommitment as IncludedNote);
 
-  // update merkle tree to current
-  if (!opts?.skipMerkleProverUpdates) {
-    await updateMerkle(db, merkle);
-  }
-}
-
-async function updateMerkle(
-  db: NocturneDB,
-  merkle: MerkleProver
-): Promise<void> {
-  while (true) {
-    const start = await merkle.count();
-    const end = start + MERKLE_MAX_CHUNK_SIZE;
-    const newLeaves = await db.getNoteCommitmentsByIndexRange(start, end);
-
-    if (newLeaves.length === 0) {
-      return;
-    }
-
-    for (const { merkleIndex, noteCommitment } of newLeaves) {
-      await merkle.insert(merkleIndex, noteCommitment);
+        // we only 'care' about notes that are ours, and we've reduced all notes that aren't ours to note commitments
+        merkle.insert(merkleIndex, noteCommitment, !isCommitment);
+      }
+      await merkle.persist();
     }
   }
 }

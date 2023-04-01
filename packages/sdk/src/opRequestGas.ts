@@ -19,8 +19,8 @@ import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
 import { groupByMap } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
-import { MerkleProver } from "./merkleProver";
 import { getJoinSplitRequestTotalValue } from "./utils";
+import { SparseMerkleProver } from "./SparseMerkleProver";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
@@ -43,7 +43,7 @@ export interface HandleOpRequestGasDeps {
   db: NocturneDB;
   handlerContract: Handler;
   gasAssets: Asset[];
-  merkle: MerkleProver;
+  merkle: SparseMerkleProver;
 }
 
 interface GasEstimatedOperationRequest

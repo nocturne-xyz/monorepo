@@ -3,7 +3,6 @@ import {
   JoinSplitRequest,
   GasAccountedOperationRequest,
 } from "./operationRequest";
-import { MerkleProver } from "./merkleProver";
 import {
   PreSignJoinSplit,
   Note,
@@ -27,6 +26,7 @@ import {
   iterChunks,
   getJoinSplitRequestTotalValue,
 } from "./utils";
+import { SparseMerkleProver } from "./SparseMerkleProver";
 
 export const __private = {
   gatherNotes,
@@ -35,7 +35,7 @@ export const __private = {
 export interface PrepareOperationDeps {
   db: NocturneDB;
   viewer: NocturneViewer;
-  merkle: MerkleProver;
+  merkle: SparseMerkleProver;
 }
 
 export async function prepareOperation(
@@ -160,7 +160,7 @@ async function gatherNotes(
 
 async function getJoinSplitsFromNotes(
   viewer: NocturneViewer,
-  merkle: MerkleProver,
+  merkle: SparseMerkleProver,
   notes: IncludedNote[],
   paymentAmount: bigint,
   amountLeftOver: bigint,
@@ -210,7 +210,7 @@ async function getJoinSplitsFromNotes(
 
 async function makeJoinSplit(
   viewer: NocturneViewer,
-  merkle: MerkleProver,
+  merkle: SparseMerkleProver,
   oldNoteA: IncludedNote,
   oldNoteB: IncludedNote,
   paymentAmount: bigint,
@@ -252,7 +252,7 @@ async function makeJoinSplit(
   const newNoteAEncrypted = encryptNote(sender, newNoteA);
   const newNoteBEncrypted = encryptNote(receiver, newNoteB);
 
-  const membershipProof = await merkle.getProof(oldNoteA.merkleIndex);
+  const membershipProof = merkle.getProof(oldNoteA.merkleIndex);
   const commitmentTreeRoot = membershipProof.root;
   const merkleProofA: MerkleProofInput = {
     path: membershipProof.pathIndices.map((n) => BigInt(n)),
@@ -266,7 +266,7 @@ async function makeJoinSplit(
   if (noteBIsDummy) {
     merkleProofB = merkleProofA;
   } else {
-    const membershipProof = await merkle.getProof(oldNoteB.merkleIndex);
+    const membershipProof = merkle.getProof(oldNoteB.merkleIndex);
 
     // ! merkle tree could be asynchronously updated between us getting the first and second merkle proofs
     // TODO: add a `merkle.getManyProofs` method that does it in one go
