@@ -105,7 +105,6 @@ describe("SparseMerkleProver", () => {
     const kv = new InMemoryKVStore();
     const prover = new SparseMerkleProver(kv);
 
-
     let startTime = Date.now();
     // insert a leaf with `include = true`
     prover.insert(0, randomBaseFieldElement(), true);
@@ -141,37 +140,75 @@ describe("SparseMerkleProver", () => {
     expect(prover.leaves.size).to.equal(1 + 4 + 3);
 
     // prune
-    startTime = Date.now();
     prover.prune();
-    console.log(`took ${Date.now() - startTime}ms to prune`);
 
-    // do an inorder traversal of the tree to count the number of leaves
-    let numLeaves = 0;
-    const traverse = (node: TreeNode, depth: number) => {
-      if (depth === MAX_DEPTH) {
-        numLeaves++;
-        return;
-      }
+    const numLeaves = countLeaves(prover);
+    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  });
 
-      if (node.left) {
-        traverse(node.left, depth + 1);
-      }
+  it("doesn't prune the latest leaf the tree has an odd number of nodes", () => {
+    const kv = new InMemoryKVStore();
+    const prover = new SparseMerkleProver(kv);
 
-      if (node.right) {
-        traverse(node.right, depth + 1);
-      }
+    // insert one leaf with `include = true`
+    prover.insert(0, randomBaseFieldElement(), true);
+
+    // insert an even number of leaves with `include = false`
+    for (const idx of range(prover.count(), prover.count() + 100)) {
+      prover.insert(idx, randomBaseFieldElement(), false);
     }
 
-    startTime = Date.now();
-    // @ts-ignore
-    traverse(prover.root, 0);
-    console.log(`took ${Date.now() - startTime}ms to traverse tree`);
+    // insert one more leaf with `include = false`.
+    // This leaf's index will be even and the tree will have an odd number of leaves
+    // This leaf should not be pruned because, if we were to prune it and then insert a new leaf,
+    // we would no longer have the sibling of the leaf we just inserted.
+    prover.insert(prover.count(), randomBaseFieldElement(), false);
 
-    // expect number of leaves to be equal to the number of leaves in the `leaves` map
-    // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
-    // @ts-ignore
-    const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(idx => !prover.leaves.has(idx ^ 1)).length;
-    // @ts-ignore
-    expect(numLeaves).to.equal(prover.leaves.size + numSiblingLeaves);
-  })
+    // prune
+    prover.prune();
+    
+    const numLeaves = countLeaves(prover);
+    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  });
 });
+
+function countLeaves(prover: SparseMerkleProver): number {
+  // do an inorder traversal of the tree to count the number of leaves
+  let numLeaves = 0;
+  const traverse = (node: TreeNode, depth: number) => {
+    if (depth === MAX_DEPTH) {
+      numLeaves++;
+      return;
+    }
+
+    if (node.left) {
+      traverse(node.left, depth + 1);
+    }
+
+    if (node.right) {
+      traverse(node.right, depth + 1);
+    }
+  }
+
+  // @ts-ignore
+  traverse(prover.root, 0);
+
+  return numLeaves;
+}
+
+function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
+  // number of leaves should be equal to the number of leaves in the `leaves` map
+  // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
+  // plus one if the latest leaf's index is odd and it's not in the `leaves` map
+
+  // @ts-ignore
+  const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(idx => !prover.leaves.has(idx ^ 1)).length; 
+
+  // @ts-ignore
+  const includedLeaves = prover.leaves.size;
+
+  // @ts-ignore
+  const additionalLeaf = prover.count() % 2 === 1 && !prover.leaves.has(prover.count() - 1) ? 1 : 0;
+
+  return includedLeaves + numSiblingLeaves + additionalLeaf;
+}

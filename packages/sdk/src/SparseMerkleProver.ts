@@ -128,31 +128,39 @@ export class SparseMerkleProver {
     return smt;
   }
 
-  // returns number of 'included' leaves in the subtree
+  // returns number of leaves in the subtree that we can't prune
   private pruneHelper(root: TreeNode, depth: number, index: number = 0): number {
-    // if the current hasn't been changed, then we can safely assume it's been pruned already
+    // if we're at a branch node and the current node hasn't been changed since last prune
+    // then we can safely assume that it's been pruned already and its
+    // subtree contains contains no leaves that we can't prune
     if (!root.dirty) {
-      return 1;
+      return 0;
     }
 
     // if we're at a leaf, the we can safely prune it if we'll never need it to generate a proof.
     // we'll need a leaf to generate a proof if:
     // 1. it's in the leaves map
-    // 2. it's the sibling of a leaf in the leaves map (
-    // these two cases are not mutually exclusive, but if at least one of them are true,
+    // 2. it's the sibling of a leaf in the leaves map
+    // 3. it's the last leaf in the tree and the tree has an odd number of leaves 
+    //    (in this case, if we were to remove the last leaf, prune, and then append another leaf,
+    //     we'd need the pruned leaf to generate a proof for the new leaf)
+    // these cases are not mutually exclusive, but if at least one of them are true,
     // then we can't prune the leaf
     //
     // we can check the second case by checking the `leaves` map for the sibling of the current leaf, whose
     // index will be the current index with the least significant bit flipped
-    if (depth === MAX_DEPTH && (this.leaves.has(index) || this.leaves.has(index ^ 1))) {
+    if (depth === MAX_DEPTH && (this.leaves.has(index) || this.leaves.has(index ^ 1) || (index === this._count - 1 && this._count % 2 === 1))) {
       root.dirty = false;
       return 1;
     }
 
-    // if we're at a leaf here, then we can safely prune it
+    // if we get here, two cases:
+    // 1. we're at a leaf. if we are, then we can safely prune it because we passed previous checks
+    // 2. we're at an internal node. if we are, recurse and count the number of leaves in our child trees we can't prune
     let leftCount = root.left ? this.pruneHelper(root.left, depth + 1, index << 1) : 0;
     let rightCount = root.right ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1) : 0;
 
+    // if there are no leaves in either of our child trees that we can't prune, then we can prune this node too
     if (leftCount + rightCount === 0) {
       root.dirty = false;
       root.left = undefined;
