@@ -142,7 +142,7 @@ export class OperationRequestBuilder {
     return this;
   }
 
-  // Attach chainId to operation
+  // Attach deadline to operation
   deadline(deadline: bigint): OperationRequestBuilder {
     this.op.deadline = deadline;
     return this;

@@ -94,6 +94,7 @@ library OperationUtils {
             op.encodedGasAsset.encodedAssetId
         );
 
+        // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
             joinSplitsPayload,
             refundAddrPayload,

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add kludge to pass in `chainid` and `deadline` to operation request in test site
 - Remove hardcoded vault address after wallet <> handler separation
 - remove "sync" buttons from test site
 - use unified `sync` method from SDK in playground
