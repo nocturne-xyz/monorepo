@@ -7,7 +7,7 @@ export interface TreeNode {
   left?: TreeNode;
   right?: TreeNode;
   hash: bigint;
-  needsPrune: boolean;
+  dirty: boolean;
 }
 
 export interface SMTDump {
@@ -39,7 +39,7 @@ export class SparseMerkleProver {
   constructor(kv: KVStore) {
     this.root = {
       hash: ZERO_HASHES[0],
-      needsPrune: false,
+      dirty: false,
     };
     this.leaves = new Map();
     this._count = 0;
@@ -54,7 +54,7 @@ export class SparseMerkleProver {
     assertOrErr(index < (2**MAX_DEPTH), "index must be < 2^maxDepth");
     assertOrErr(index >= this._count, "index must be >= tree count");
 
-    this.root = this.insertSparse(this.root, toBitsBE(index), leaf, include);
+    this.root = this.insertInner(this.root, toBitsBE(index), leaf);
 
     if (include) {
       this.leaves.set(index, leaf);
@@ -128,19 +128,33 @@ export class SparseMerkleProver {
     return smt;
   }
 
-  private pruneHelper(root: TreeNode, depth: number): number {
-    if (!root.needsPrune) {
+  // returns number of 'included' leaves in the subtree
+  private pruneHelper(root: TreeNode, depth: number, index: number = 0): number {
+    // if the current hasn't been changed, then we can safely assume it's been pruned already
+    if (!root.dirty) {
       return 1;
-    } else if (depth === MAX_DEPTH - 1) {
-      return 0;
     }
 
+    // if we're at a leaf, the we can safely prune it if we'll never need it to generate a proof.
+    // we'll need a leaf to generate a proof if:
+    // 1. it's in the leaves map
+    // 2. it's the sibling of a leaf in the leaves map (
+    // these two cases are not mutually exclusive, but if at least one of them are true,
+    // then we can't prune the leaf
+    //
+    // we can check the second case by checking the `leaves` map for the sibling of the current leaf, whose
+    // index will be the current index with the least significant bit flipped
+    if (depth === MAX_DEPTH && (this.leaves.has(index) || this.leaves.has(index ^ 1))) {
+      root.dirty = false;
+      return 1;
+    }
 
-    let leftCount = root.left ? this.pruneHelper(root.left, depth + 1) : 0;
-    let rightCount = root.right ? this.pruneHelper(root.right, depth + 1) : 0;
+    // if we're at a leaf here, then we can safely prune it
+    let leftCount = root.left ? this.pruneHelper(root.left, depth + 1, index << 1) : 0;
+    let rightCount = root.right ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1) : 0;
 
     if (leftCount + rightCount === 0) {
-      root.needsPrune = false;
+      root.dirty = false;
       root.left = undefined;
       root.right = undefined;
     }
@@ -183,15 +197,14 @@ export class SparseMerkleProver {
     }
   }
 
-  private insertSparse(
+  private insertInner(
     root: TreeNode,
     path: boolean[],
     leaf: bigint,
-    include: boolean,
   ): TreeNode {
     // we're at the leaf
     if (path.length === 0) {
-      return { hash: leaf, needsPrune: !include };
+      return { hash: leaf, dirty: true };
     }
 
     const [head, ...tail] = path;
@@ -199,23 +212,21 @@ export class SparseMerkleProver {
     // we're not at the leaf
     if (head) {
       // right
-      root.right = this.insertSparse(
-        root.right ?? { hash: ZERO_HASHES[path.length - 1], needsPrune: !include },
+      root.right = this.insertInner(
+        root.right ?? { hash: ZERO_HASHES[path.length - 1], dirty: true },
         tail,
         leaf,
-        include,
       );
     } else {
       // left
-      root.left = this.insertSparse(
-        root.left ?? { hash: ZERO_HASHES[path.length - 1], needsPrune: !include },
+      root.left = this.insertInner(
+        root.left ?? { hash: ZERO_HASHES[path.length - 1], dirty: true},
         tail,
         leaf,
-        include,
       );
     }
 
-    root.needsPrune = !include || root.needsPrune;
+    root.dirty = (root.left?.dirty ?? false) || (root.right?.dirty ?? false);
     root.hash = poseidonBN([
       root.left?.hash ?? ZERO_HASHES[path.length - 1],
       root.right?.hash ?? ZERO_HASHES[path.length - 1],

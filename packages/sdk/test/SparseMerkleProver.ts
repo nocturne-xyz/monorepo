@@ -145,7 +145,7 @@ describe("SparseMerkleProver", () => {
     prover.prune();
     console.log(`took ${Date.now() - startTime}ms to prune`);
 
-    // do an inorder traversal of the tree to check the number of leaves
+    // do an inorder traversal of the tree to count the number of leaves
     let numLeaves = 0;
     const traverse = (node: TreeNode, depth: number) => {
       if (depth === MAX_DEPTH) {
@@ -168,7 +168,10 @@ describe("SparseMerkleProver", () => {
     console.log(`took ${Date.now() - startTime}ms to traverse tree`);
 
     // expect number of leaves to be equal to the number of leaves in the `leaves` map
+    // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
     // @ts-ignore
-    expect(numLeaves).to.equal(prover.leaves.size);
+    const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(idx => !prover.leaves.has(idx ^ 1)).length;
+    // @ts-ignore
+    expect(numLeaves).to.equal(prover.leaves.size + numSiblingLeaves);
   })
 });
