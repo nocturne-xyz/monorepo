@@ -1,7 +1,7 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { AssetType, AssetTrait, StealthAddress, Note } from "@nocturne-xyz/sdk";
-import { ethers } from "ethers";
+import { ethers, ContractTransaction } from "ethers";
 import { sleep } from "./utils";
 
 export async function depositFundsMultiToken(
@@ -10,27 +10,26 @@ export async function depositFundsMultiToken(
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
 ): Promise<Note[]> {
-  const deposit = await makeDeposit(depositManager, eoa, stealthAddress);
+  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
   const notes: Note[] = [];
+  const txs: ContractTransaction[] = [];
   for (const [token, amounts] of tokensWithAmounts) {
     const total = amounts.reduce((sum, a) => sum + a);
-    {
-      const tx = await token.reserveTokens(eoa.address, total);
-      await tx.wait(1);
-    }
-    {
-      const tx = await token
-        .connect(eoa)
-        .approve(depositManager.address, total);
-      await tx.wait(1);
-    }
+
+    txs.push(await token.reserveTokens(eoa.address, total));
+
+    txs.push(await token.connect(eoa).approve(depositManager.address, total));
 
     for (const [i, amount] of amounts.entries()) {
-      notes.push(await deposit(token, amount, i));
+      const [tx, note] = await deposit(token, amount, i);
+      txs.push(tx);
+      notes.push(note);
     }
   }
 
-  await sleep(20_000); // wait for deposit screener
+  await Promise.all(txs.map((tx) => tx.wait(1)));
+  await sleep(15_000); // wait for deposit screener
+
   return notes;
 }
 
@@ -41,34 +40,36 @@ export async function depositFundsSingleToken(
   stealthAddress: StealthAddress,
   amounts: bigint[]
 ): Promise<Note[]> {
+  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
   const total = amounts.reduce((sum, a) => sum + a);
-  {
-    const tx = await token.reserveTokens(eoa.address, total);
-    await tx.wait(1);
-  }
-  {
-    const tx = await token.connect(eoa).approve(depositManager.address, total);
-    await tx.wait(1);
-  }
 
-  const deposit = await makeDeposit(depositManager, eoa, stealthAddress);
-
+  const txs = [
+    await token.reserveTokens(eoa.address, total),
+    await token.connect(eoa).approve(depositManager.address, total),
+  ];
   const notes: Note[] = [];
+
   for (const [i, amount] of amounts.entries()) {
-    notes.push(await deposit(token, amount, i));
+    const [tx, note] = await deposit(token, amount, i);
+    txs.push(tx);
+    notes.push(note);
   }
 
-  await sleep(20_000); // wait for deposit screener
+  await Promise.all(txs.map((tx) => tx.wait(1)));
+  await sleep(15_000); // wait for deposit screener
+
   return notes;
 }
 
-async function makeDeposit(
+function makeDeposit(
   depositManager: DepositManager,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
-): Promise<
-  (token: SimpleERC20Token, amount: bigint, noteNonce: number) => Promise<Note>
-> {
+): (
+  token: SimpleERC20Token,
+  amount: bigint,
+  noteNonce: number
+) => Promise<[ContractTransaction, Note]> {
   return async (token: SimpleERC20Token, amount: bigint, noteNonce: number) => {
     const asset = {
       assetType: AssetType.ERC20,
@@ -83,13 +84,15 @@ async function makeDeposit(
     const instantiateDepositTx = await depositManager
       .connect(eoa)
       .instantiateDeposit(encodedAsset, amount, stealthAddress);
-    await instantiateDepositTx.wait(1);
 
-    return {
-      owner: stealthAddress,
-      nonce: BigInt(noteNonce),
-      asset,
-      value: amount,
-    };
+    return [
+      instantiateDepositTx,
+      {
+        owner: stealthAddress,
+        nonce: BigInt(noteNonce),
+        asset,
+        value: amount,
+      },
+    ];
   };
 }

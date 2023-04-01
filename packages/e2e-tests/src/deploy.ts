@@ -187,7 +187,7 @@ export async function setupTestDeployment(
     };
 
     stopSubgraph = await startSubgraph(subgraphConfig);
-    await sleep(10_000); // wait for subgraph to start up (TODO: better way to do this?)
+    await sleep(5_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- `.wait()` txs in parallel in deposit functions
+- reduce some sleeps
 - turn on automine at the start of `setupTestDeployment` and disable it at the end
 - turn on automine at the start of `deployAndDeposit` script and disable it at the end
 - add timers for both `deployAndDepositScript` and `setupTestDeployment`
