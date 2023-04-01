@@ -5,7 +5,11 @@ export abstract class MerkleProver {
 
   abstract count(): Promise<number>;
 
-  abstract insert(index: number, leaf: bigint): Promise<void>;
+  abstract insert(
+    index: number,
+    leaf: bigint,
+    include?: boolean
+  ): Promise<void>;
 
   isLocal(): boolean {
     return "localTree" in this;

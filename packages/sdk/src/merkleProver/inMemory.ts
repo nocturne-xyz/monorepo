@@ -24,7 +24,7 @@ export class InMemoryMerkleProver extends MerkleProver {
     return this.localTree.getProof(index);
   }
 
-  async insert(index: number, leaf: bigint): Promise<void> {
+  async insert(index: number, leaf: bigint, include?: boolean): Promise<void> {
     assertOrErr(index >= this.localTree.count, "index must be >= tree count");
     while (this.localTree.count < index) {
       this.localTree.insert(0n);
