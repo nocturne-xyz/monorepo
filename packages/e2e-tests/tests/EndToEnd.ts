@@ -47,6 +47,8 @@ const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
 
 const PLUTOCRACY_AMOUNT = 3n;
 
+const ONE_DAY_SECONDS = 60n * 60n * 24n;
+
 describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let teardown: () => Promise<void>;
 
@@ -187,6 +189,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     const operationRequest = new OperationRequestBuilder()
       .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
       .gasPrice(1n)
+      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
       .build();
 
     await expect(
@@ -228,6 +234,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
+      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
       .build();
 
     const bundlerBalanceBefore = (
@@ -342,6 +352,10 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .action(erc1155.address, erc1155ReserveCalldata)
       .unwrap(gasTokenAsset, 1n)
       .gasPrice(GAS_PRICE)
+      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
       .build();
 
     const contractChecks = async () => {

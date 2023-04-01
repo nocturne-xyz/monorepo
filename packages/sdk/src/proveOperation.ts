@@ -26,6 +26,8 @@ export async function proveOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
+    chainId,
+    deadline,
   } = op;
 
   return {
@@ -37,8 +39,8 @@ export async function proveOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
-    chainId: 0n,
-    deadline: 1000n,
+    chainId,
+    deadline,
   };
 }
 

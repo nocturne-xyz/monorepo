@@ -32,6 +32,8 @@ describe("OperationRequestBuilder", () => {
           encodedFunction: getDummyHex(0),
         },
       ],
+      chainId: 1n,
+      deadline: 2n,
     };
 
     const builder = new OperationRequestBuilder();
@@ -39,6 +41,8 @@ describe("OperationRequestBuilder", () => {
       .action("0x1234", getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
+      .chainId(1n)
+      .deadline(2n)
       .build();
 
     expect(opRequest).to.eql(expected);
@@ -67,6 +71,8 @@ describe("OperationRequestBuilder", () => {
           encodedFunction: getDummyHex(0),
         },
       ],
+      chainId: 1n,
+      deadline: 2n,
     };
 
     const builder = new OperationRequestBuilder();
@@ -75,6 +81,8 @@ describe("OperationRequestBuilder", () => {
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
+      .chainId(1n)
+      .deadline(2n)
       .build();
 
     expect(opRequest).to.eql(expected);
@@ -103,6 +111,8 @@ describe("OperationRequestBuilder", () => {
       executionGasLimit: 20n,
       gasPrice: 30n,
       maxNumRefunds: 1n,
+      chainId: 1n,
+      deadline: 2n,
     };
 
     const builder = new OperationRequestBuilder();
@@ -116,6 +126,8 @@ describe("OperationRequestBuilder", () => {
         gasPrice: 30n,
       })
       .maxNumRefunds(1n)
+      .chainId(1n)
+      .deadline(2n)
       .build();
 
     expect(opRequest).to.eql(expected);
@@ -148,12 +160,16 @@ describe("OperationRequestBuilder", () => {
       ],
       refundAssets: [],
       actions: [],
+      chainId: 1n,
+      deadline: 2n,
     };
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
       .confidentialPayment(shitcoin, 1n, receivers[0])
       .confidentialPayment(stablescam, 2n, receivers[1])
+      .chainId(1n)
+      .deadline(2n)
       .build();
 
     // joinSplitRequests may not necessarily be in the same order, sort them by asset
@@ -219,6 +235,8 @@ describe("OperationRequestBuilder", () => {
       refundAssets: [shitcoin, ponzi, stablescam, plutocracy],
       refundAddr: refundAddr,
       actions,
+      chainId: 1n,
+      deadline: 2n,
     };
 
     const builder = new OperationRequestBuilder();
@@ -238,6 +256,8 @@ describe("OperationRequestBuilder", () => {
       .refundAsset(stablescam)
       .refundAsset(plutocracy)
       .refundAddr(refundAddr)
+      .chainId(1n)
+      .deadline(2n)
       .build();
 
     // joinSplitRequests may not necessarily be in the same order, sort them by asset

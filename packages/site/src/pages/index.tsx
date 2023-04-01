@@ -163,7 +163,7 @@ const Index = () => {
       .refundAsset(asset)
       .maxNumRefunds(5n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
-      .build();
+      .build(); // TODO: chainid, deadline
 
     console.log("Operation request: ", operationRequest);
     try {

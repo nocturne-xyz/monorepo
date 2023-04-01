@@ -61,4 +61,6 @@ export const VALID_PROVEN_OPERATION_OBJ = {
   executionGasLimit: "10000000n",
   maxNumRefunds: "2n",
   gasPrice: "10n",
+  chainId: "123n",
+  deadline: "1000n",
 };
