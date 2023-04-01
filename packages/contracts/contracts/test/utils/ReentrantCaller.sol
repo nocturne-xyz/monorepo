@@ -43,7 +43,7 @@ contract ReentrantCaller {
                         address(0x0),
                         PER_NOTE_AMOUNT
                     ),
-                    joinSplitsFailureType: JoinSplitsFailureType.NONE
+                    operationFailureType: OperationFailureType.NONE
                 })
             );
     }

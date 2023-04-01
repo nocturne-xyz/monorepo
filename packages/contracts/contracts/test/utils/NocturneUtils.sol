@@ -5,11 +5,13 @@ import "../../libs/Types.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 
-enum JoinSplitsFailureType {
+enum OperationFailureType {
     NONE,
-    BAD_ROOT,
-    NF_ALREADY_IN_SET,
-    JOINSPLIT_NFS_SAME
+    JOINSPLIT_BAD_ROOT,
+    JOINSPLIT_NF_ALREADY_IN_SET,
+    JOINSPLIT_NFS_SAME,
+    BAD_CHAIN_ID,
+    EXPIRED_DEADLINE
 }
 
 struct FormatOperationArgs {
@@ -23,7 +25,7 @@ struct FormatOperationArgs {
     uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
-    JoinSplitsFailureType joinSplitsFailureType;
+    OperationFailureType operationFailureType;
 }
 
 library NocturneUtils {
@@ -105,15 +107,15 @@ library NocturneUtils {
     function formatOperation(
         FormatOperationArgs memory args
     ) internal view returns (Operation memory) {
-        JoinSplitsFailureType joinSplitsFailure = args.joinSplitsFailureType;
-        if (joinSplitsFailure == JoinSplitsFailureType.BAD_ROOT) {
+        OperationFailureType operationFailure = args.operationFailureType;
+        if (operationFailure == OperationFailureType.JOINSPLIT_BAD_ROOT) {
             args.root = 0x12345; // fill with garbage root
         } else if (
-            joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET
+            operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
         ) {
             require(
                 args.numJoinSplits >= 2,
-                "Must specify at least 2 joinsplits for NF_ALREADY_IN_SET failure type"
+                "Must specify at least 2 joinsplits for JOINSPLIT_NF_ALREADY_IN_SET failure type"
             );
         }
 
@@ -152,17 +154,19 @@ library NocturneUtils {
         for (uint256 i = 0; i < args.numJoinSplits; i++) {
             uint256 nullifierA = 0;
             uint256 nullifierB = 0;
-            if (joinSplitsFailure == JoinSplitsFailureType.JOINSPLIT_NFS_SAME) {
+            if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
                 nullifierA = uint256(2 * 0x1234);
                 nullifierB = uint256(2 * 0x1234);
             } else if (
-                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
+                operationFailure ==
+                OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
                 i + 2 == args.numJoinSplits
             ) {
                 nullifierA = uint256(2 * 0x1234); // Matches last NF B
                 nullifierB = uint256(2 * i + 1);
             } else if (
-                joinSplitsFailure == JoinSplitsFailureType.NF_ALREADY_IN_SET &&
+                operationFailure ==
+                OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
                 i + 1 == args.numJoinSplits
             ) {
                 nullifierA = uint256(2 * i);
@@ -185,6 +189,18 @@ library NocturneUtils {
             });
         }
 
+        uint256 chainId = block.chainid;
+        if (args.operationFailureType == OperationFailureType.BAD_CHAIN_ID) {
+            chainId = block.chainid + 1;
+        }
+
+        uint256 deadline = block.timestamp + DEADLINE_BUFFER;
+        if (
+            args.operationFailureType == OperationFailureType.EXPIRED_DEADLINE
+        ) {
+            deadline = 0;
+        }
+
         Operation memory op = Operation({
             joinSplits: joinSplits,
             refundAddr: defaultStealthAddress(),
@@ -198,8 +214,8 @@ library NocturneUtils {
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,
-            chainId: block.chainid,
-            deadline: block.timestamp + DEADLINE_BUFFER
+            chainId: chainId,
+            deadline: deadline
         });
 
         return op;
