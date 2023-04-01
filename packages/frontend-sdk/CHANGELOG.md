@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add error message for `BUNDLE_REVERTED` to `TransactionTracker`
 - Remove references to `vault` and instead approve `wallet`
 - use `proveOperation` instead of `OpProver`
 - remove separate `syncLeaves` method and rename `syncNotes` to `sync`

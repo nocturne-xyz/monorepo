@@ -35,6 +35,7 @@ enum TxStatusMessage {
   QUEUED = "Waiting to be included in a bundle...",
   IN_BATCH = "Waiting for the bundle to be submitted...",
   IN_FLIGHT = "Waiting for the bundle to be executed...",
+  BUNDLE_REVERTED = "Transaction failed to submit. Please try again in a few minutes.",
   EXECUTED_SUCCESS = "Transaction executed successfully!",
   EXECUTED_FAILED = "Transaction failed to execute",
 };
@@ -50,6 +51,8 @@ function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
       return TxStatusMessage.IN_BATCH;
     case OperationStatus.IN_FLIGHT:
       return TxStatusMessage.IN_FLIGHT;
+    case OperationStatus.BUNDLE_REVERTED:
+      return TxStatusMessage.BUNDLE_REVERTED;
     case OperationStatus.EXECUTED_SUCCESS:
       return TxStatusMessage.EXECUTED_SUCCESS;
     case OperationStatus.EXECUTED_FAILED:
