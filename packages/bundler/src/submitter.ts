@@ -51,7 +51,7 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations).catch((e) => {
+        await this.submitBatch(operations, job).catch((e) => {
           throw new Error(e);
         });
       },
@@ -77,7 +77,9 @@ export class BundlerSubmitter {
     };
   }
 
-  async submitBatch(operations: ProvenOperation[]): Promise<void> {
+  async submitBatch(operations: ProvenOperation[], job: Job<OperationBatchJobData>): Promise<void> {
+    // TODO: this job isn't idempotent. if one step fails, bullmq will re-try which may cause issues
+
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
       const jobId = computeOperationDigest(op).toString();
@@ -96,10 +98,35 @@ export class BundlerSubmitter {
 
     console.log("submitting bundle...");
     // Hardcode gas limit to skip eth_estimateGas
-    const tx = await this.walletContract.processBundle(
-      { operations },
-      { gasLimit: 1_000_000 }
-    );
+    // * there's gotta be a better way to handle this error (error handling logic is async)
+    let tx;
+    try {
+      tx = await this.walletContract.processBundle(
+        { operations },
+        { gasLimit: 1_000_000 }
+      );
+    } catch (err) {
+      console.log("failed to process bundle:", err);
+      const statusTxs = operations.map(op => {
+        const digest = computeOperationDigest(op);
+        console.log(`setting operation with digest ${digest} to BUNDLE_REVERTED`)
+        return this.statusDB.getSetJobStatusTransaction(
+          digest.toString(),
+          OperationStatus.BUNDLE_REVERTED
+        );
+      });
+
+      await this.redis.multi(statusTxs).exec((maybeErr) => {
+        if (maybeErr) {
+          throw new Error(
+            `failed to set job status transactions after bundle reverted: ${maybeErr}`
+          );
+        }
+      });
+
+      return;
+    }
+
     console.log("waiting for confirmation...");
     const receipt = await tx.wait(1);
 
@@ -131,7 +158,7 @@ export class BundlerSubmitter {
     await this.redis.multi(executedStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `failed to set job status transactions post-op: ${maybeErr}`
+          `failed to set job status transactions after bundle executed: ${maybeErr}`
         );
       }
     });
