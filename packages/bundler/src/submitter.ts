@@ -51,7 +51,7 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations, job).catch((e) => {
+        await this.submitBatch(operations).catch((e) => {
           throw new Error(e);
         });
       },
@@ -79,9 +79,10 @@ export class BundlerSubmitter {
 
   async submitBatch(
     operations: ProvenOperation[],
-    job: Job<OperationBatchJobData>
   ): Promise<void> {
     // TODO: this job isn't idempotent. if one step fails, bullmq will re-try which may cause issues
+    // current plan is to mark reverted bundles as failed.
+    // will circle back after further testing and likely re-queue/re-validate ops in the reverted bundle"
 
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
