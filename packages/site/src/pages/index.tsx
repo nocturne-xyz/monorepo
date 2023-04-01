@@ -30,12 +30,14 @@ import {
   NocturneFrontendSDK,
   BundlerOperationID,
   formatTokenAmountEvmRepr,
+  getWindowSigner,
 } from "@nocturne-xyz/frontend-sdk";
 import { WALLET_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed";
+const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 const Container = styled.div`
   display: flex;
@@ -156,6 +158,13 @@ const Index = () => {
         [TOKEN_ADDRESS, amount]
       );
 
+    // Kludge, in real frontend you'd provide chainid and deadline not using wallet
+    const signer = await getWindowSigner();
+    const chainId = BigInt(await signer.getChainId());
+    const deadline = BigInt(
+      (await signer.provider!.getBlock("latest")).timestamp + ONE_DAY_SECONDS
+    );
+
     const builder = new OperationRequestBuilder();
     const operationRequest = builder
       .unwrap(asset, amount)
@@ -163,6 +172,8 @@ const Index = () => {
       .refundAsset(asset)
       .maxNumRefunds(5n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .chainId(chainId)
+      .deadline(deadline)
       .build(); // TODO: chainid, deadline
 
     console.log("Operation request: ", operationRequest);
