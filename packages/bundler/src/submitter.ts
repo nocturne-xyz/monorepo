@@ -77,9 +77,7 @@ export class BundlerSubmitter {
     };
   }
 
-  async submitBatch(
-    operations: ProvenOperation[],
-  ): Promise<void> {
+  async submitBatch(operations: ProvenOperation[]): Promise<void> {
     // TODO: this job isn't idempotent. if one step fails, bullmq will re-try which may cause issues
     // current plan is to mark reverted bundles as failed.
     // will circle back after further testing and likely re-queue/re-validate ops in the reverted bundle"
