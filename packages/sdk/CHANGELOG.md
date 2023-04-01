@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `BUNDLE_REVERTED` op status
 - move shared subgraph utils to their own module
 - fix `SubgraphSDKSyncAdapter` querying entire history instead of only specified range
 - Remove `chainId` from `DepositRequest` (already included in eip712 domain)
