@@ -88,7 +88,7 @@ export class BundlerRouter {
     if (status) {
       res.json({ status });
     } else {
-      res.status(400).json({ error: "job doesn't exist" });
+      res.status(404).json({ error: "operation not found" });
     }
   }
 
