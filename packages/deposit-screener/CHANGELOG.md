@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add 5 retries with exponential backoff to deposit screener
 - fix `SubgraphScreenerSyncAdapter` querying entire history instead of only specified range
 - Update eip712 signing to not include `chainId` in `DepositRequest` (already included in eip712 domain)
 - make processor stoppable by renaming `run` to `start` and returning a "close" function
