@@ -77,7 +77,10 @@ export class BundlerSubmitter {
     };
   }
 
-  async submitBatch(operations: ProvenOperation[], job: Job<OperationBatchJobData>): Promise<void> {
+  async submitBatch(
+    operations: ProvenOperation[],
+    job: Job<OperationBatchJobData>
+  ): Promise<void> {
     // TODO: this job isn't idempotent. if one step fails, bullmq will re-try which may cause issues
 
     // Loop through current batch and set each job status to IN_FLIGHT
@@ -107,9 +110,11 @@ export class BundlerSubmitter {
       );
     } catch (err) {
       console.log("failed to process bundle:", err);
-      const statusTxs = operations.map(op => {
+      const statusTxs = operations.map((op) => {
         const digest = computeOperationDigest(op);
-        console.log(`setting operation with digest ${digest} to BUNDLE_REVERTED`)
+        console.log(
+          `setting operation with digest ${digest} to BUNDLE_REVERTED`
+        );
         return this.statusDB.getSetJobStatusTransaction(
           digest.toString(),
           OperationStatus.BUNDLE_REVERTED

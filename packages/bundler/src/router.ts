@@ -74,11 +74,10 @@ export class BundlerRouter {
     }
 
     // Enqueue operation and add all inflight nullifiers
-    const jobId = await this.postJob(operation)
-      .catch(err => {
-        console.error("error posting job", err);
-        res.status(500).json({ error: "failed to enqueue operation" });
-      });
+    const jobId = await this.postJob(operation).catch((err) => {
+      console.error("error posting job", err);
+      res.status(500).json({ error: "failed to enqueue operation" });
+    });
 
     res.json({ id: jobId });
   }
