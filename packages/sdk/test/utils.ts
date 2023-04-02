@@ -85,7 +85,14 @@ export async function setup(
   const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
-  await nocturneDB.storeNotesAndCommitments(notesWithNullfiers);
+  await nocturneDB.storeNotes(notesWithNullfiers);
+
+  const leaves = notes.map((note) => NoteTrait.toCommitment(note));
+  merkleProver.insertBatch(
+    0,
+    leaves,
+    leaves.map(() => true)
+  );
 
   const dummyHandlerAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();

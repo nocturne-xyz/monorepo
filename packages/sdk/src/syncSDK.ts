@@ -53,18 +53,27 @@ export async function syncSDK(
 
   // apply diffs
   for await (const diff of diffs.iter) {
+    // update notes in DB
     await db.applyStateDiff(diff);
 
+    // update merkle tree
+    // NOTE: the tree will include leaves that haven't yet been committed via subtree updater
+    // TODO: check for uncommitted notes `prepareOperation`
     if (!opts?.skipMerkleProverUpdates) {
+      const startIndex = diff.notesAndCommitments[0].merkleIndex;
+      const leaves = [];
+      const includes = [];
       for (const noteOrCommitment of diff.notesAndCommitments) {
-        const isCommitment = NoteTrait.isCommitment(noteOrCommitment);
-        const { merkleIndex, noteCommitment } = isCommitment
-          ? (noteOrCommitment as IncludedNoteCommitment)
-          : NoteTrait.toIncludedCommitment(noteOrCommitment as IncludedNote);
-
-        // we only 'care' about notes that are ours, and we've reduced all notes that aren't ours to note commitments
-        merkle.insert(merkleIndex, noteCommitment, !isCommitment);
+        if (NoteTrait.isCommitment(noteOrCommitment)) {
+          leaves.push((noteOrCommitment as IncludedNoteCommitment).noteCommitment);
+          includes.push(false);
+        } else {
+          leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+          includes.push(true);
+        }
       }
+
+      merkle.insertBatch(startIndex, leaves, leaves.map(() => true));
       await merkle.persist();
     }
   }

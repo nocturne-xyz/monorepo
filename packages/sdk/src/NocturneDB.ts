@@ -4,10 +4,9 @@ import {
   IncludedNote,
   NoteTrait,
   IncludedNoteWithNullifier,
-  IncludedNoteCommitment,
   Note,
 } from "./primitives";
-import { partition, numberToStringPadded, min, range } from "./utils";
+import { numberToStringPadded } from "./utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./store";
 import { StateDiff } from "./sync";
@@ -31,7 +30,7 @@ export interface NocturneDBOpts {
 
 export class NocturneDB {
   // store the following mappings:
-  //  merkleIndexKey => Note | bigint (note if usable, commitment if it's not. A note is usable IFF the user owns it and it hasn't been nullified yet).
+  //  merkleIndexKey => Note
   //  assetKey => merkleIndex[]
   //  nullifierKey => merkleIndex
   public kv: KVStore;
@@ -72,24 +71,10 @@ export class NocturneDB {
     };
   }
 
-  async storeNotesAndCommitments(
-    notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[]
-  ): Promise<void> {
-    // partition the notes and commitments
-    const [commitmentsPartition, notesPartition] = partition(
-      notesAndCommitments,
-      NoteTrait.isCommitment
-    );
-    const commitments = commitmentsPartition as IncludedNoteCommitment[];
-    const notes = notesPartition as IncludedNoteWithNullifier[];
-
-    // make note and commitment KVs
+  async storeNotes(notes: IncludedNoteWithNullifier[]): Promise<void> {
+    // make note KVs
     const noteKVs: KV[] = notes.map((note) =>
       NocturneDB.makeNoteKV(note.merkleIndex, note)
-    );
-    const commitmentKVs: KV[] = commitments.map(
-      ({ merkleIndex, noteCommitment }) =>
-        NocturneDB.makeCommitmentKV(merkleIndex, noteCommitment)
     );
 
     // make the nullifier => merkleIndex KV pairs
@@ -101,12 +86,7 @@ export class NocturneDB {
     const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
     // write them all into the KV store
-    await this.kv.putMany([
-      ...noteKVs,
-      ...commitmentKVs,
-      ...nullifierKVs,
-      ...assetKVs,
-    ]);
+    await this.kv.putMany([...noteKVs, ...nullifierKVs, ...assetKVs]);
   }
 
   async nullifyNotes(nullifiers: bigint[]): Promise<void> {
@@ -123,20 +103,12 @@ export class NocturneDB {
     );
     const notes = await this.getNotesByMerkleIndices(indices);
 
-    // make the merkleIndex => commitment KV pairs
-    const commitmentKVs: KV[] = notes.map((note) =>
-      NocturneDB.makeCommitmentKV(
-        note.merkleIndex,
-        NoteTrait.toCommitment(note)
-      )
-    );
-
     // get the updated asset => merkleIndex[] KV pairs
     // for each note, remove the note's merkleIndex from its asset's index keys
     const assetKVs = await this.getUpdatedAssetKVsWithNotesRemoved(notes);
 
     // write the new commitment KV pairs and the new asset => merkleIndex[] KV pairs to the KV store
-    await this.kv.putMany([...commitmentKVs, ...assetKVs]);
+    await this.kv.putMany(assetKVs);
   }
 
   /**
@@ -180,35 +152,14 @@ export class NocturneDB {
 
     // TODO: make this all one write
     // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
-    await this.storeNotesAndCommitments(notesAndCommitments);
+    await this.storeNotes(
+      notesAndCommitments.filter(
+        (noteOrCommitment) => !NoteTrait.isCommitment(noteOrCommitment)
+      ) as IncludedNoteWithNullifier[]
+    );
     await this.nullifyNotes(nullifiers);
     await this.setNextMerkleIndex(nextMerkleIndex);
     await this.setNextBlock(blockNumber + 1);
-  }
-
-  // return note commitments corresponding *non-empty* tree leaves
-  // with `merkleIndex` in the range `start..min(end, nextMerkleIndex)`
-  // if `end` is not given, it returns up to `nextMerkleIndex` (non-inclusive)
-  async getNoteCommitmentsByIndexRange(
-    start: number,
-    end?: number
-  ): Promise<IncludedNoteCommitment[]> {
-    const nextMerkleIndex = await this.nextMerkleIndex();
-    if (start >= nextMerkleIndex) {
-      return [];
-    }
-
-    const indices = range(start, min(end ?? nextMerkleIndex, nextMerkleIndex));
-    const notesAndCommitments = await this.getNotesOrCommitmentsByMerkleIndices(
-      indices
-    );
-    return notesAndCommitments.map((noteOrCommitment) => {
-      if (NoteTrait.isCommitment(noteOrCommitment)) {
-        return noteOrCommitment as IncludedNoteCommitment;
-      } else {
-        return NoteTrait.toIncludedCommitment(noteOrCommitment as IncludedNote);
-      }
-    });
   }
 
   /**
@@ -245,10 +196,6 @@ export class NocturneDB {
     }
 
     return allNotes;
-  }
-
-  private static makeCommitmentKV(merkleIndex: number, commitment: bigint): KV {
-    return [NocturneDB.formatIndexKey(merkleIndex), JSON.stringify(commitment)];
   }
 
   private static makeNoteKV<N extends Note>(merkleIndex: number, note: N): KV {
@@ -316,31 +263,15 @@ export class NocturneDB {
     return JSON.parse(value);
   }
 
-  private async getNotesOrCommitmentsByMerkleIndices(
+  private async getNotesByMerkleIndices(
     indices: number[]
-  ): Promise<(IncludedNote | IncludedNoteCommitment)[]> {
+  ): Promise<IncludedNote[]> {
     const idxKeys = indices.map((index) => NocturneDB.formatIndexKey(index));
     const kvs = await this.kv.getMany(idxKeys);
     return kvs.map(([key, value]) => {
       const merkleIndex = NocturneDB.parseIndexKey(key);
-      const noteOrCommitment = JSON.parse(value) as Note | bigint;
-
-      if (NoteTrait.isCommitment(noteOrCommitment)) {
-        const noteCommitment = noteOrCommitment as bigint;
-        return { merkleIndex, noteCommitment };
-      } else {
-        const note = noteOrCommitment as Note;
-        return NoteTrait.toIncludedNote(note, merkleIndex);
-      }
+      const note = JSON.parse(value) as Note;
+      return NoteTrait.toIncludedNote(note, merkleIndex);
     });
-  }
-
-  private async getNotesByMerkleIndices(
-    indices: number[]
-  ): Promise<IncludedNote[]> {
-    const notes = await this.getNotesOrCommitmentsByMerkleIndices(indices);
-    return notes.filter(
-      (note) => !NoteTrait.isCommitment(note)
-    ) as IncludedNote[];
   }
 }

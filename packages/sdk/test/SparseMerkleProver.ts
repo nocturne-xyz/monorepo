@@ -230,14 +230,15 @@ function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
 
   // @ts-ignore
   const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(
+    // @ts-ignore
     (idx) => !prover.leaves.has(idx ^ 1)
   ).length;
 
   // @ts-ignore
   const includedLeaves = prover.leaves.size;
 
-  // @ts-ignore
   const additionalLeaf =
+    // @ts-ignore
     prover.count() % 2 === 1 && !prover.leaves.has(prover.count() - 1) ? 1 : 0;
 
   return includedLeaves + numSiblingLeaves + additionalLeaf;
