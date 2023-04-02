@@ -7,7 +7,12 @@ import {
   SDKSyncAdapter,
 } from "./sync";
 import { ethers } from "ethers";
-import { IncludedEncryptedNote, IncludedNote, IncludedNoteCommitment, NoteTrait } from "./primitives";
+import {
+  IncludedEncryptedNote,
+  IncludedNote,
+  IncludedNoteCommitment,
+  NoteTrait,
+} from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 
 // TODO mess with these
@@ -49,11 +54,13 @@ export async function syncSDK(
   // apply diffs
   for await (const diff of diffs.iter) {
     await db.applyStateDiff(diff);
-    
+
     if (!opts?.skipMerkleProverUpdates) {
       for (const noteOrCommitment of diff.notesAndCommitments) {
         const isCommitment = NoteTrait.isCommitment(noteOrCommitment);
-        const { merkleIndex, noteCommitment } = isCommitment ? noteOrCommitment as IncludedNoteCommitment : NoteTrait.toIncludedCommitment(noteOrCommitment as IncludedNote);
+        const { merkleIndex, noteCommitment } = isCommitment
+          ? (noteOrCommitment as IncludedNoteCommitment)
+          : NoteTrait.toIncludedCommitment(noteOrCommitment as IncludedNote);
 
         // we only 'care' about notes that are ours, and we've reduced all notes that aren't ours to note commitments
         merkle.insert(merkleIndex, noteCommitment, !isCommitment);

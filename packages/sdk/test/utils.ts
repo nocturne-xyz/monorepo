@@ -65,7 +65,7 @@ export interface TestSetupOpts {
 
 export async function setup(
   noteAmounts: bigint[],
-  assets: Asset[],
+  assets: Asset[]
 ): Promise<[NocturneDB, SparseMerkleProver, NocturneSigner, Handler]> {
   const signer = new NocturneSigner(1n);
 

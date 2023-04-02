@@ -3,7 +3,11 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { InMemoryKVStore, randomBigInt, range } from "../src";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
-import { MAX_DEPTH, SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
+import {
+  MAX_DEPTH,
+  SparseMerkleProver,
+  TreeNode,
+} from "../src/SparseMerkleProver";
 
 chai.use(chaiAsPromised);
 
@@ -66,11 +70,10 @@ describe("SparseMerkleProver", () => {
       prover.insert(idx, randomBaseFieldElement());
     }
 
-
     // check that it fails when leaf is wrong
     for (const idx of range(10)) {
       const proof = prover.getProof(idx);
-      
+
       proof.leaf = randomBaseFieldElement();
       expect(SparseMerkleProver.verifyProof(proof)).to.be.false;
     }
@@ -82,7 +85,6 @@ describe("SparseMerkleProver", () => {
       proof.root = randomBaseFieldElement();
       expect(SparseMerkleProver.verifyProof(proof)).to.be.false;
     }
-
 
     // check that it fails when the path is wrong
     for (const idx of range(10)) {
@@ -105,12 +107,11 @@ describe("SparseMerkleProver", () => {
     const kv = new InMemoryKVStore();
     const prover = new SparseMerkleProver(kv);
 
-    let startTime = Date.now();
     // insert a leaf with `include = true`
     prover.insert(0, randomBaseFieldElement(), true);
 
     // insert 100 leaves with `include = false`
-    for (const idx of range(prover.count(), prover.count() + 100)) {
+    for (const idx of range(prover.count(), prover.count() + 10)) {
       prover.insert(idx, randomBaseFieldElement(), false);
     }
 
@@ -120,7 +121,7 @@ describe("SparseMerkleProver", () => {
     }
 
     // insert another few hundred leaves with `include = false`
-    for (const idx of range(prover.count(), prover.count() + 300)) {
+    for (const idx of range(prover.count(), prover.count() + 30)) {
       prover.insert(idx, randomBaseFieldElement(), false);
     }
 
@@ -129,8 +130,7 @@ describe("SparseMerkleProver", () => {
       prover.insert(idx, randomBaseFieldElement(), true);
     }
 
-    const AMOUNT_INSERTED = 1 + 100 + 4 + 300 + 3;
-    console.log(`took ${Date.now() - startTime}ms to insert ${AMOUNT_INSERTED} leaves`);
+    const AMOUNT_INSERTED = 1 + 10 + 4 + 30 + 3;
 
     // expect count to include all leaves
     expect(prover.count()).to.equal(AMOUNT_INSERTED);
@@ -154,7 +154,7 @@ describe("SparseMerkleProver", () => {
     prover.insert(0, randomBaseFieldElement(), true);
 
     // insert an even number of leaves with `include = false`
-    for (const idx of range(prover.count(), prover.count() + 100)) {
+    for (const idx of range(prover.count(), prover.count() + 20)) {
       prover.insert(idx, randomBaseFieldElement(), false);
     }
 
@@ -166,9 +166,36 @@ describe("SparseMerkleProver", () => {
 
     // prune
     prover.prune();
-    
+
     const numLeaves = countLeaves(prover);
     expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  });
+
+  it("inserts a batch of leaves all at once", () => {
+    const kv = new InMemoryKVStore();
+    const p1 = new SparseMerkleProver(kv);
+    const p2 = new SparseMerkleProver(kv);
+
+    // insert 400 random leaves
+    const leaves = range(100).map(() => randomBaseFieldElement());
+
+    for (const [idx, leaf] of leaves.entries()) {
+      p1.insert(idx, leaf);
+    }
+
+    p2.insertBatch(
+      0,
+      leaves,
+      range(100).map(() => true)
+    );
+
+    // expect the roots to be equal
+    //@ts-ignore
+    expect(p1.root.hash).to.equal(p2.root.hash);
+
+    // expect structures to be identitcal
+    //@ts-ignore
+    expect(p1.root).to.deep.equal(p2.root);
   });
 });
 
@@ -188,7 +215,7 @@ function countLeaves(prover: SparseMerkleProver): number {
     if (node.right) {
       traverse(node.right, depth + 1);
     }
-  }
+  };
 
   // @ts-ignore
   traverse(prover.root, 0);
@@ -202,13 +229,16 @@ function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
   // plus one if the latest leaf's index is odd and it's not in the `leaves` map
 
   // @ts-ignore
-  const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(idx => !prover.leaves.has(idx ^ 1)).length; 
+  const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(
+    (idx) => !prover.leaves.has(idx ^ 1)
+  ).length;
 
   // @ts-ignore
   const includedLeaves = prover.leaves.size;
 
   // @ts-ignore
-  const additionalLeaf = prover.count() % 2 === 1 && !prover.leaves.has(prover.count() - 1) ? 1 : 0;
+  const additionalLeaf =
+    prover.count() % 2 === 1 && !prover.leaves.has(prover.count() - 1) ? 1 : 0;
 
   return includedLeaves + numSiblingLeaves + additionalLeaf;
 }

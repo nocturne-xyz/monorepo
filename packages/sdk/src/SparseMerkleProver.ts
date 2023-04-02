@@ -19,7 +19,6 @@ export interface SMTDump {
 // (1 means right, 0 means left)
 type PathIndex = 0 | 1;
 
-
 const SMT_DUMP_KEY = "SMT_DUMP";
 export const MAX_DEPTH: number = 32;
 
@@ -51,10 +50,10 @@ export class SparseMerkleProver {
   }
 
   insert(index: number, leaf: bigint, include: boolean = true): void {
-    assertOrErr(index < (2**MAX_DEPTH), "index must be < 2^maxDepth");
+    assertOrErr(index < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
     assertOrErr(index >= this._count, "index must be >= tree count");
 
-    this.root = this.insertInner(this.root, leaf, bitReverse(index));
+    this.root = this.insertInner(this.root, [leaf], bitReverse(index));
 
     if (include) {
       this.leaves.set(index, leaf);
@@ -63,12 +62,34 @@ export class SparseMerkleProver {
     this._count = max(this._count, index + 1);
   }
 
+  insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]) {
+    assertOrErr(startIndex < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
+    assertOrErr(startIndex >= this._count, "index must be >= tree count");
+    assertOrErr(
+      leaves.length === includes.length,
+      "leaves and includes must be the same length"
+    );
+
+    this.root = this.insertInner(this.root, leaves, bitReverse(startIndex));
+
+    for (const [i, include] of includes.entries()) {
+      if (include) {
+        this.leaves.set(startIndex + i, leaves[i]);
+      }
+    }
+
+    this._count = max(this._count, startIndex + leaves.length);
+  }
+
   getProof(index: number): MerkleProof {
     assertOrErr(
       this.leaves.has(index),
       "leaf is not in the tree or it has been pruned"
     );
-    const [siblings, pathIndices] = this.getSiblings(this.root, bitReverse(index));
+    const [siblings, pathIndices] = this.getSiblings(
+      this.root,
+      bitReverse(index)
+    );
 
     return {
       root: this.root.hash,
@@ -78,7 +99,12 @@ export class SparseMerkleProver {
     };
   }
 
-  static verifyProof({ root, leaf, siblings, pathIndices }: MerkleProof): boolean {
+  static verifyProof({
+    root,
+    leaf,
+    siblings,
+    pathIndices,
+  }: MerkleProof): boolean {
     let currentRoot = leaf;
 
     for (const [sibling, pathIndex] of zip(siblings, pathIndices)) {
@@ -90,7 +116,7 @@ export class SparseMerkleProver {
         // path goes left
         currentRoot = poseidonBN([currentRoot, sibling]);
       } else {
-        // path goes right 
+        // path goes right
         currentRoot = poseidonBN([sibling, currentRoot]);
       }
     }
@@ -129,7 +155,11 @@ export class SparseMerkleProver {
   }
 
   // returns number of leaves in the subtree that we can't prune
-  private pruneHelper(root: TreeNode, depth: number, index: number = 0): number {
+  private pruneHelper(
+    root: TreeNode,
+    depth: number,
+    index: number = 0
+  ): number {
     // if we're at a branch node and the current node hasn't been changed since last prune
     // then we can safely assume that it's been pruned already and its
     // subtree contains contains no leaves that we can't prune
@@ -141,7 +171,7 @@ export class SparseMerkleProver {
     // we'll need a leaf to generate a proof if:
     // 1. it's in the leaves map
     // 2. it's the sibling of a leaf in the leaves map
-    // 3. it's the last leaf in the tree and the tree has an odd number of leaves 
+    // 3. it's the last leaf in the tree and the tree has an odd number of leaves
     //    (in this case, if we were to remove the last leaf, prune, and then append another leaf,
     //     we'd need the pruned leaf to generate a proof for the new leaf)
     // these cases are not mutually exclusive, but if at least one of them are true,
@@ -149,7 +179,12 @@ export class SparseMerkleProver {
     //
     // we can check the second case by checking the `leaves` map for the sibling of the current leaf, whose
     // index will be the current index with the least significant bit flipped
-    if (depth === MAX_DEPTH && (this.leaves.has(index) || this.leaves.has(index ^ 1) || (index === this._count - 1 && this._count % 2 === 1))) {
+    if (
+      depth === MAX_DEPTH &&
+      (this.leaves.has(index) ||
+        this.leaves.has(index ^ 1) ||
+        (index === this._count - 1 && this._count % 2 === 1))
+    ) {
       root.dirty = false;
       return 1;
     }
@@ -157,8 +192,12 @@ export class SparseMerkleProver {
     // if we get here, two cases:
     // 1. we're at a leaf. if we are, then we can safely prune it because we passed previous checks
     // 2. we're at an internal node. if we are, recurse and count the number of leaves in our child trees we can't prune
-    let leftCount = root.left ? this.pruneHelper(root.left, depth + 1, index << 1) : 0;
-    let rightCount = root.right ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1) : 0;
+    let leftCount = root.left
+      ? this.pruneHelper(root.left, depth + 1, index << 1)
+      : 0;
+    let rightCount = root.right
+      ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1)
+      : 0;
 
     // if there are no leaves in either of our child trees that we can't prune, then we can prune this node too
     if (leftCount + rightCount === 0) {
@@ -174,7 +213,7 @@ export class SparseMerkleProver {
   private getSiblings(
     root: TreeNode,
     pathMask: number,
-    depth: number = 0,
+    depth: number = 0
   ): [bigint[], PathIndex[]] {
     if (depth === MAX_DEPTH) {
       return [[], []];
@@ -209,30 +248,78 @@ export class SparseMerkleProver {
 
   private insertInner(
     root: TreeNode,
-    leaf: bigint,
+    leaves: bigint[],
     pathMask: number,
-    depth: number  = 0
+    depth: number = 0
   ): TreeNode {
+    if (leaves.length === 0) return root;
+
     // we're at the leaf
     if (depth === MAX_DEPTH) {
-      return { hash: leaf, dirty: true };
+      return { hash: leaves.shift()!, dirty: true };
     }
 
     // we're not at the leaf
-    if (pathMask& 1) {
+    if (pathMask & 1) {
       // right
       root.right = this.insertInner(
         root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
-        leaf,
+        leaves,
         pathMask >> 1,
         depth + 1
       );
     } else {
       // left
       root.left = this.insertInner(
-        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true},
-        leaf,
+        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+        leaves,
         pathMask >> 1,
+        depth + 1
+      );
+
+      // if there are still leaves to insert, then continue to the right subtree
+      if (leaves.length > 0) {
+        root.right = this.fillLeft(
+          root.right ?? {
+            hash: ZERO_HASHES[MAX_DEPTH - depth - 1],
+            dirty: true,
+          },
+          leaves,
+          depth + 1
+        );
+      }
+    }
+
+    root.dirty = (root.left?.dirty ?? false) || (root.right?.dirty ?? false);
+    root.hash = poseidonBN([
+      root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
+      root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
+    ]);
+
+    return root;
+  }
+
+  // fill a subtree with leaves, starting from the left and stopping once we run out of leaves
+  private fillLeft(root: TreeNode, leaves: bigint[], depth: number): TreeNode {
+    if (leaves.length === 0) return root;
+
+    if (depth === MAX_DEPTH) {
+      return { hash: leaves.shift()!, dirty: true };
+    }
+
+    root.left = this.fillLeft(
+      root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+      leaves,
+      depth + 1
+    );
+
+    // this branch is technically unnecessary
+    // but we include it so that the structure that results from a batch insert
+    // is the same as the structure that results from inserting one by one
+    if (leaves.length > 0) {
+      root.right = this.fillLeft(
+        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+        leaves,
         depth + 1
       );
     }
@@ -251,8 +338,8 @@ export class SparseMerkleProver {
 function bitReverse(x: number) {
   x = ((x >> 1) & 0x55555555) | ((x & 0x55555555) << 1);
   x = ((x >> 2) & 0x33333333) | ((x & 0x33333333) << 2);
-  x = ((x >> 4) & 0x0F0F0F0F) | ((x & 0x0F0F0F0F) << 4);
-  x = ((x >> 8) & 0x00FF00FF) | ((x & 0x00FF00FF) << 8);
+  x = ((x >> 4) & 0x0f0f0f0f) | ((x & 0x0f0f0f0f) << 4);
+  x = ((x >> 8) & 0x00ff00ff) | ((x & 0x00ff00ff) << 8);
   x = (x >>> 16) | (x << 16);
 
   return x >>> 0;
