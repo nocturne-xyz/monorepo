@@ -37,7 +37,7 @@ popd
 # start anvil
 pushd packages/e2e-tests
 echo "starting anvil..."
-anvil --block-time 1 --host 0.0.0.0 &> "$LOG_DIR/anvil" &
+anvil --block-time 1 --host 0.0.0.0 --chain-id 1337 &> "$LOG_DIR/anvil" &
 ANVIL_PID=$!
 
 sleep 1
