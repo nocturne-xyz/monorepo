@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- set operation status to `BUNDLE_REVERTED` when `processBundle` reverts
+- return status code `500` when job enqueue fails
+- return status code `404` when job not found
 - make server, batcher, and submitter stoppable by renaming `run` to `start` and returning a "close" function
 - Move env var parsing to CLI
 - add `ignoreGas` option to validator

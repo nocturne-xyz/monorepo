@@ -162,6 +162,12 @@ export class DepositScreenerProcessor {
 
     await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
       delay: secsToMillis(delaySeconds),
+      // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
+      attempts: 5,
+      backoff: {
+        type: "exponential",
+        delay: 1000,
+      },
     });
     return DepositRequestStatus.Enqueued;
   }
