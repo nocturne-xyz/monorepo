@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -9,6 +10,8 @@ import {Utils} from "../libs/Utils.sol";
 import "../libs/Types.sol";
 
 library AssetUtils {
+    using SafeERC20 for IERC20;
+
     function decodeAsset(
         EncodedAsset memory encodedAsset
     )
@@ -130,10 +133,7 @@ library AssetUtils {
             encodedAsset
         );
         if (assetType == AssetType.ERC20) {
-            require(
-                IERC20(assetAddr).transfer(receiver, value),
-                "ERC20 transfer failed"
-            );
+            IERC20(assetAddr).safeTransfer(receiver, value);
         } else if (assetType == AssetType.ERC721) {
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(address(this), receiver, id);
@@ -163,10 +163,7 @@ library AssetUtils {
             encodedAsset
         );
         if (assetType == AssetType.ERC20) {
-            require(
-                IERC20(assetAddr).transferFrom(spender, address(this), value),
-                "ERC20 transferFrom failed"
-            );
+            IERC20(assetAddr).safeTransferFrom(spender, address(this), value);
         } else if (assetType == AssetType.ERC721) {
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(spender, address(this), id);
@@ -197,10 +194,9 @@ library AssetUtils {
         );
 
         if (assetType == AssetType.ERC20) {
-            require(
-                IERC20(assetAddr).approve(spender, amount),
-                "ERC20 approve failed"
-            );
+            // TODO: next OZ release will add SafeERC20.forceApprove
+            IERC20(assetAddr).approve(spender, 0);
+            IERC20(assetAddr).approve(spender, amount);
         } else if (assetType == AssetType.ERC721) {
             // uncaught revert will be propagated
             IERC721(assetAddr).approve(spender, id);

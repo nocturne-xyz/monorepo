@@ -173,6 +173,7 @@ library OperationUtils {
         return actionsPayload;
     }
 
+    // TODO: properly handle failure case
     function failOperationWithReason(
         string memory reason
     ) internal pure returns (OperationResult memory result) {
@@ -185,27 +186,6 @@ library OperationUtils {
                 executionGas: 0,
                 verificationGas: 0,
                 numRefunds: 0
-            });
-    }
-
-    // TODO: properly process this failure case
-    function unsuccessfulOperation(
-        Operation calldata op,
-        bytes memory result
-    ) internal pure returns (OperationResult memory) {
-        bool[] memory callSuccesses = new bool[](1);
-        callSuccesses[0] = false;
-        bytes[] memory callResults = new bytes[](1);
-        callResults[0] = result;
-        return
-            OperationResult({
-                opProcessed: true,
-                failureReason: "",
-                callSuccesses: callSuccesses,
-                callResults: callResults,
-                executionGas: 0,
-                verificationGas: 0,
-                numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
             });
     }
 
