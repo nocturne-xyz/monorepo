@@ -20,7 +20,7 @@ export interface SMTDump {
 type PathIndex = 0 | 1;
 
 const SMT_DUMP_KEY = "SMT_DUMP";
-export const MAX_DEPTH: number = 32;
+export const MAX_DEPTH = 32;
 
 // TODO: turn these into constants
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
@@ -48,7 +48,7 @@ export class SparseMerkleProver {
     return this._count;
   }
 
-  insert(index: number, leaf: bigint, include: boolean = true): void {
+  insert(index: number, leaf: bigint, include = true): void {
     assertOrErr(index < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
     assertOrErr(index >= this._count, "index must be >= tree count");
 
@@ -61,7 +61,7 @@ export class SparseMerkleProver {
     this._count = index + 1;
   }
 
-  insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]) {
+  insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
     assertOrErr(startIndex < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
     assertOrErr(startIndex >= this._count, "index must be >= tree count");
     assertOrErr(
@@ -163,11 +163,7 @@ export class SparseMerkleProver {
   }
 
   // returns number of leaves in the subtree that we can't prune
-  private pruneHelper(
-    root: TreeNode,
-    depth: number,
-    index: number = 0
-  ): number {
+  private pruneHelper(root: TreeNode, depth: number, index = 0): number {
     // if we're at a leaf, the we can safely prune it if we'll never need it to generate a proof.
     // we'll need a leaf to generate a proof if:
     // 1. it's in the leaves map
@@ -192,10 +188,10 @@ export class SparseMerkleProver {
     // if we get here, two cases:
     // 1. we're at a leaf. if we are, then we can safely prune it because we passed previous checks
     // 2. we're at an internal node. if we are, recurse and count the number of leaves in our child trees we can't prune
-    let leftCount = root.left
+    const leftCount = root.left
       ? this.pruneHelper(root.left, depth + 1, index << 1)
       : 0;
-    let rightCount = root.right
+    const rightCount = root.right
       ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1)
       : 0;
 
@@ -212,7 +208,7 @@ export class SparseMerkleProver {
   private getSiblings(
     root: TreeNode,
     pathMask: number,
-    depth: number = 0
+    depth = 0
   ): [bigint[], PathIndex[]] {
     if (depth === MAX_DEPTH) {
       return [[], []];
@@ -249,7 +245,7 @@ export class SparseMerkleProver {
     root: TreeNode,
     leaves: bigint[],
     pathMask: number,
-    depth: number = 0
+    depth = 0
   ): TreeNode {
     if (leaves.length === 0) return root;
 
@@ -331,7 +327,8 @@ export class SparseMerkleProver {
 }
 
 // a 32-bit bit-reversal
-function bitReverse(x: number) {
+// from https://stackoverflow.com/a/60227327
+function bitReverse(x: number): number {
   x = ((x >> 1) & 0x55555555) | ((x & 0x55555555) << 1);
   x = ((x >> 2) & 0x33333333) | ((x & 0x33333333) << 2);
   x = ((x >> 4) & 0x0f0f0f0f) | ((x & 0x0f0f0f0f) << 4);
