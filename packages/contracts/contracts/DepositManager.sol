@@ -112,7 +112,6 @@ contract DepositManager is
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
-        // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
         require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
@@ -143,7 +142,6 @@ contract DepositManager is
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
-        // TODO: invariant check this condition
         bytes32 depositHash = _hashDepositRequest(req);
         require(_outstandingDepositHashes[depositHash], "deposit !exists");
 

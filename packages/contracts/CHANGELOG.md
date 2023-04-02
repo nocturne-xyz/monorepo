@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Reduce number of local stack vars used in `OperationUtils.computeOperationDigest`
+- Delete unused `OperationUtils.unsuccessfulOperation` method
+- Integrate `SafeERC20` into `AssetUtils`
+  - NOTE: we are still waiting for next release from OZ to use `forceApprove` which is more gas efficient version of setting allowance to 0 then approving
 - Generalize `JoinSplitsFailureType` in testing to `OperationFailureType` and add `BAD_CHAIN_ID` and `EXPIRED_DEADLINE` variants
 - Add `chainId` and `deadline` to operation
 - Re-order packing in `computeOperationDigest` and break into helper fns for stack size limit

@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 // External
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
@@ -126,7 +125,6 @@ contract BalanceManager is
         uint256 perJoinSplitVerifyGas,
         address bundler
     ) internal {
-        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
