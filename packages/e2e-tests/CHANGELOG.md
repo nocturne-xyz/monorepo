@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update tests using `SparseMerkleProver`
+- rename `NocturneSyncer.ts` -> `syncSDK.ts`
 - Pass in `chainId` and `deadline` when building `OperationRequest` after adding fields to op
 - `.wait()` txs in parallel in deposit functions
 - reduce some sleeps
