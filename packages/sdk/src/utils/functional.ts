@@ -107,3 +107,25 @@ export function thunk<T>(fn: () => Promise<T>): Thunk<T> {
     return item;
   };
 }
+
+export function consecutiveChunks<T>(arr: T[], idx: (item: T) => number): T[][] {
+  const chunks = [];
+  let chunk: T[] = [];
+  let prevIdx = -1;
+  for (const item of arr) {
+    const currIdx = idx(item);
+    if (currIdx === prevIdx + 1) {
+      chunk.push(item);
+    } else {
+      if (chunk.length > 0) {
+        chunks.push(chunk);
+      }
+      chunk = [item];
+    }
+    prevIdx = currIdx;
+  }
+  if (chunk.length > 0) {
+    chunks.push(chunk);
+  }
+  return chunks;
+}

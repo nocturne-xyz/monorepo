@@ -122,31 +122,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await teardown();
     });
 
-    it("syncs notes, not leaves before subtree update", async () => {
-      // deposit notes
-      await depositFundsSingleToken(
-        depositManager,
-        token,
-        aliceEoa,
-        nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
-        [100n, 100n]
-      );
-      // wait for subgraph
-      await sleep(3_000);
-
-      // sync SDK
-      await nocturneWalletSDKAlice.sync();
-
-      // check that DB has notes and merkle doesn't
-      //@ts-ignore
-      const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
-      const notes = Array.from(allNotes.values()).flat();
-      expect(notes.length).to.eql(2);
-
-      //@ts-ignore
-      expect(await nocturneWalletSDKAlice.merkleProver.count()).to.eql(0);
-    });
-
     it("syncs notes and latest non-zero leaves after subtree update", async () => {
       // deposit notes...
       const depositedNotes = await depositFundsSingleToken(
@@ -172,14 +147,14 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       expect(notes.length).to.eql(2);
 
       //@ts-ignore
-      expect(await nocturneWalletSDKAlice.merkleProver.count()).to.eql(2);
+      expect(nocturneWalletSDKAlice.merkleProver.count()).to.eql(2);
       expect(
         //@ts-ignore
-        BigInt((await nocturneWalletSDKAlice.merkleProver.getProof(0)).leaf)
+        BigInt((nocturneWalletSDKAlice.merkleProver.getProof(0)).leaf)
       ).to.equal(ncs[0]);
       expect(
         //@ts-ignore
-        BigInt((await nocturneWalletSDKAlice.merkleProver.getProof(1)).leaf)
+        BigInt((nocturneWalletSDKAlice.merkleProver.getProof(1)).leaf)
       ).to.equal(ncs[1]);
     });
 
@@ -262,6 +237,11 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         .filter((note) => note.value > 0n);
 
       expect(nonZeroNotes).to.be.empty;
+
+      // check that the merkle prover marked spent note's commitment for pruning
+      // the spent note was inserted first, at merkle index 0
+      //@ts-ignore
+      expect(nocturneWalletSDKAlice.merkleProver.leaves.has(0)).to.be.false;
     });
   };
 }

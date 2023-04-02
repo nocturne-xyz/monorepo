@@ -89,7 +89,8 @@ export class NocturneDB {
     await this.kv.putMany([...noteKVs, ...nullifierKVs, ...assetKVs]);
   }
 
-  async nullifyNotes(nullifiers: bigint[]): Promise<void> {
+  // returns the merkle indices the notes notes that were nullified
+  async nullifyNotes(nullifiers: bigint[]): Promise<number[]> {
     // delete nullifier => merkleIndex KV pairs
     const nfKeys = nullifiers.map((nullifier) =>
       NocturneDB.formatNullifierKey(nullifier)
@@ -109,6 +110,8 @@ export class NocturneDB {
 
     // write the new commitment KV pairs and the new asset => merkleIndex[] KV pairs to the KV store
     await this.kv.putMany(assetKVs);
+
+    return indices;
   }
 
   /**
@@ -146,7 +149,7 @@ export class NocturneDB {
   }
 
   // applies a single state diff to the DB
-  async applyStateDiff(diff: StateDiff): Promise<void> {
+  async applyStateDiff(diff: StateDiff): Promise<number[]> {
     const { notesAndCommitments, nullifiers, nextMerkleIndex, blockNumber } =
       diff;
 
@@ -157,9 +160,11 @@ export class NocturneDB {
         (noteOrCommitment) => !NoteTrait.isCommitment(noteOrCommitment)
       ) as IncludedNoteWithNullifier[]
     );
-    await this.nullifyNotes(nullifiers);
+    const nfIndices = await this.nullifyNotes(nullifiers);
     await this.setNextMerkleIndex(nextMerkleIndex);
     await this.setNextBlock(blockNumber + 1);
+
+    return nfIndices;
   }
 
   /**

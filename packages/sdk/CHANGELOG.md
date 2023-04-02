@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- use merkle batch insert in `syncSDK`
+- `NocturneDB.nullifyNotes` and `NocturneDB.applyStateDiff` return merkle indices of nullfiied notes
 - remove `getNoteCommitmentsByIndexRange` from `NocturneDB`
 - `NocturneDB` now deletes nullified notes instead of turning them into leaves
 - `NocturneDB` now only stores note

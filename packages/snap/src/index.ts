@@ -1,7 +1,7 @@
 import {
   NocturneWalletSDK,
   NocturneSigner,
-  InMemoryMerkleProver,
+  SparseMerkleProver,
   OperationRequest,
   NocturneDB,
   // RPCSDKSyncAdapter,
@@ -116,7 +116,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const signer = await getNocturneSignerFromBIP44();
   console.log("Snap Nocturne Canonical Address: ", signer.canonicalAddress());
 
-  const merkleProver = new InMemoryMerkleProver();
+  const merkleProver = await SparseMerkleProver.loadFromKV(kvStore);
   // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
   const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
   const context = new NocturneWalletSDK(

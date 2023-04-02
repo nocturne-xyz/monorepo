@@ -197,6 +197,33 @@ describe("SparseMerkleProver", () => {
     //@ts-ignore
     expect(p1.root).to.deep.equal(p2.root);
   });
+
+  it("can mark leaves for pruning", () => {
+    const kv = new InMemoryKVStore();
+    const prover = new SparseMerkleProver(kv);
+
+    // insert a bunch of leaves with `include = false`
+    prover.insertBatch(0, range(100).map(randomBaseFieldElement), range(100).map(() => false));
+
+    // insert a few leaves with `include = true`
+    prover.insertBatch(100, range(10).map(randomBaseFieldElement), range(10).map(() => true));
+
+    // insert another bunch of leaves with `include = false`
+    prover.insertBatch(110, range(100).map(randomBaseFieldElement), range(100).map(() => false));
+
+    // prune
+    prover.prune();
+
+    // mark 103rd leaf for pruning
+    prover.markForPruning(103);
+
+    // prune again
+    prover.prune();
+
+    // check number of leaves 
+    const numLeaves = countLeaves(prover);
+    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  })
 });
 
 function countLeaves(prover: SparseMerkleProver): number {

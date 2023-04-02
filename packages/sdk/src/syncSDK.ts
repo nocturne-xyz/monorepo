@@ -14,6 +14,7 @@ import {
   NoteTrait,
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { consecutiveChunks } from "./utils/functional";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
@@ -54,26 +55,37 @@ export async function syncSDK(
   // apply diffs
   for await (const diff of diffs.iter) {
     // update notes in DB
-    await db.applyStateDiff(diff);
+    const nfIndices = await db.applyStateDiff(diff);
+    console.log("nfIndices", nfIndices);
 
     // update merkle tree
     // NOTE: the tree will include leaves that haven't yet been committed via subtree updater
     // TODO: check for uncommitted notes `prepareOperation`
     if (!opts?.skipMerkleProverUpdates) {
-      const startIndex = diff.notesAndCommitments[0].merkleIndex;
-      const leaves = [];
-      const includes = [];
-      for (const noteOrCommitment of diff.notesAndCommitments) {
-        if (NoteTrait.isCommitment(noteOrCommitment)) {
-          leaves.push((noteOrCommitment as IncludedNoteCommitment).noteCommitment);
-          includes.push(false);
-        } else {
-          leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
-          includes.push(true);
+      // add new leaves
+      const batches = consecutiveChunks(diff.notesAndCommitments, noteOrCommitment => noteOrCommitment.merkleIndex);
+      for (const batch of batches) {
+        const startIndex = batch[0].merkleIndex;
+        const leaves = [];
+        const includes = [];
+        for (const noteOrCommitment of batch) {
+          if (NoteTrait.isCommitment(noteOrCommitment)) {
+            leaves.push((noteOrCommitment as IncludedNoteCommitment).noteCommitment);
+            includes.push(false);
+          } else {
+            leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+            includes.push(true);
+          }
         }
+        merkle.insertBatch(startIndex, leaves, includes);
       }
 
-      merkle.insertBatch(startIndex, leaves, leaves.map(() => true));
+      // mark nullified ones for pruning
+      for (const index of nfIndices) {
+        merkle.markForPruning(index); 
+      }
+
+
       await merkle.persist();
     }
   }

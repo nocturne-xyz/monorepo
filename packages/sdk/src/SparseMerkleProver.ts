@@ -1,5 +1,5 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-import { assertOrErr, max, zip } from "./utils";
+import { assertOrErr, zip } from "./utils";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
@@ -8,7 +8,6 @@ export interface TreeNode {
   left?: TreeNode;
   right?: TreeNode;
   hash: bigint;
-  dirty: boolean;
 }
 
 export interface SMTDump {
@@ -39,7 +38,6 @@ export class SparseMerkleProver {
   constructor(kv: KVStore) {
     this.root = {
       hash: ZERO_HASHES[0],
-      dirty: false,
     };
     this.leaves = new Map();
     this._count = 0;
@@ -60,7 +58,7 @@ export class SparseMerkleProver {
       this.leaves.set(index, leaf);
     }
 
-    this._count = max(this._count, index + 1);
+    this._count = index + 1;
   }
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]) {
@@ -71,7 +69,7 @@ export class SparseMerkleProver {
       "leaves and includes must be the same length"
     );
 
-    this.root = this.insertInner(this.root, leaves, bitReverse(startIndex));
+    this.root = this.insertInner(this.root, [...leaves], bitReverse(startIndex));
 
     for (const [i, include] of includes.entries()) {
       if (include) {
@@ -79,7 +77,12 @@ export class SparseMerkleProver {
       }
     }
 
-    this._count = max(this._count, startIndex + leaves.length);
+    this._count = startIndex + leaves.length;
+  }
+
+  markForPruning(index: number): void {
+    assertOrErr(this.leaves.has(index), "leaf is not in the tree");
+    this.leaves.delete(index);
   }
 
   getProof(index: number): MerkleProof {
@@ -161,13 +164,6 @@ export class SparseMerkleProver {
     depth: number,
     index: number = 0
   ): number {
-    // if we're at a branch node and the current node hasn't been changed since last prune
-    // then we can safely assume that it's been pruned already and its
-    // subtree contains contains no leaves that we can't prune
-    if (!root.dirty) {
-      return 0;
-    }
-
     // if we're at a leaf, the we can safely prune it if we'll never need it to generate a proof.
     // we'll need a leaf to generate a proof if:
     // 1. it's in the leaves map
@@ -186,7 +182,6 @@ export class SparseMerkleProver {
         this.leaves.has(index ^ 1) ||
         (index === this._count - 1 && this._count % 2 === 1))
     ) {
-      root.dirty = false;
       return 1;
     }
 
@@ -202,7 +197,6 @@ export class SparseMerkleProver {
 
     // if there are no leaves in either of our child trees that we can't prune, then we can prune this node too
     if (leftCount + rightCount === 0) {
-      root.dirty = false;
       root.left = undefined;
       root.right = undefined;
     }
@@ -257,14 +251,14 @@ export class SparseMerkleProver {
 
     // we're at the leaf
     if (depth === MAX_DEPTH) {
-      return { hash: leaves.shift()!, dirty: true };
+      return { hash: leaves.shift()! };
     }
 
     // we're not at the leaf
     if (pathMask & 1) {
       // right
       root.right = this.insertInner(
-        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1]},
         leaves,
         pathMask >> 1,
         depth + 1
@@ -272,7 +266,7 @@ export class SparseMerkleProver {
     } else {
       // left
       root.left = this.insertInner(
-        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1]},
         leaves,
         pathMask >> 1,
         depth + 1
@@ -283,7 +277,6 @@ export class SparseMerkleProver {
         root.right = this.fillLeft(
           root.right ?? {
             hash: ZERO_HASHES[MAX_DEPTH - depth - 1],
-            dirty: true,
           },
           leaves,
           depth + 1
@@ -291,7 +284,6 @@ export class SparseMerkleProver {
       }
     }
 
-    root.dirty = (root.left?.dirty ?? false) || (root.right?.dirty ?? false);
     root.hash = poseidonBN([
       root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
       root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
@@ -305,11 +297,11 @@ export class SparseMerkleProver {
     if (leaves.length === 0) return root;
 
     if (depth === MAX_DEPTH) {
-      return { hash: leaves.shift()!, dirty: true };
+      return { hash: leaves.shift()! };
     }
 
     root.left = this.fillLeft(
-      root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+      root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
       leaves,
       depth + 1
     );
@@ -319,13 +311,12 @@ export class SparseMerkleProver {
     // is the same as the structure that results from inserting one by one
     if (leaves.length > 0) {
       root.right = this.fillLeft(
-        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
+        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
         leaves,
         depth + 1
       );
     }
 
-    root.dirty = (root.left?.dirty ?? false) || (root.right?.dirty ?? false);
     root.hash = poseidonBN([
       root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
       root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
