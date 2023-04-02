@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- when `processBundle` reverts, remove the bundle's nullifiers from `NullifierDB`
 - Update operation JSON fixture for request validation after adding `chainId` and `deadline`
 - set operation status to `BUNDLE_REVERTED` when `processBundle` reverts
 - return status code `500` when job enqueue fails
