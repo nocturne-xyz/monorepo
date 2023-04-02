@@ -22,8 +22,6 @@ import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
-// TODO: use SafeERC20 library
-// TODO: do we need IWallet iface?
 contract Wallet is
     IWallet,
     ReentrancyGuardUpgradeable,

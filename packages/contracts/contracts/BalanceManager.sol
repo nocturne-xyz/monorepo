@@ -125,7 +125,6 @@ contract BalanceManager is
         uint256 perJoinSplitVerifyGas,
         address bundler
     ) internal {
-        // Gas asset is assumed to be the asset of the first jointSplitTx by convention
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 

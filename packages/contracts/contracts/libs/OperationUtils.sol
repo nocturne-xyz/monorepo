@@ -66,41 +66,25 @@ library OperationUtils {
         return (proofs, allPis);
     }
 
-    // TODO: do we need a domain in the payload?
-    // TODO: turn encodedFunctions and contractAddresses into their own arrays, so we don't have to call abi.encodePacked for each one
     // Careful about declaring local variables in this function. Stack depth is around the limit.
     function computeOperationDigest(
         Operation calldata op
     ) internal pure returns (uint256) {
-        bytes memory joinSplitsPayload = _createJoinSplitsPayload(
-            op.joinSplits
-        );
-
-        bytes memory refundAddrPayload = abi.encodePacked(
-            op.refundAddr.h1X,
-            op.refundAddr.h1Y,
-            op.refundAddr.h2X,
-            op.refundAddr.h2Y
-        );
-
-        bytes memory refundAssetsPayload = _createRefundAssetsPayload(
-            op.encodedRefundAssets
-        );
-
-        bytes memory actionsPayload = _createActionsPayload(op.actions);
-
-        bytes memory gasAssetPayload = abi.encodePacked(
-            op.encodedGasAsset.encodedAssetAddr,
-            op.encodedGasAsset.encodedAssetId
-        );
-
         // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
-            joinSplitsPayload,
-            refundAddrPayload,
-            refundAssetsPayload,
-            actionsPayload,
-            gasAssetPayload
+            _createJoinSplitsPayload(op.joinSplits),
+            abi.encodePacked(
+                op.refundAddr.h1X,
+                op.refundAddr.h1Y,
+                op.refundAddr.h2X,
+                op.refundAddr.h2Y
+            ),
+            _createRefundAssetsPayload(op.encodedRefundAssets),
+            _createActionsPayload(op.actions),
+            abi.encodePacked(
+                op.encodedGasAsset.encodedAssetAddr,
+                op.encodedGasAsset.encodedAssetId
+            )
         );
         payload = abi.encodePacked(
             payload,
