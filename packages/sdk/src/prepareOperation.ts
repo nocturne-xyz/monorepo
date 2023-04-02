@@ -42,7 +42,7 @@ export async function prepareOperation(
   deps: PrepareOperationDeps,
   opRequest: GasAccountedOperationRequest
 ): Promise<PreSignOperation> {
-  const { refundAssets, joinSplitRequests } = opRequest;
+  const { refundAssets, joinSplitRequests, chainId, deadline } = opRequest;
   const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
@@ -66,6 +66,8 @@ export async function prepareOperation(
     joinSplits,
     encodedRefundAssets,
     encodedGasAsset,
+    chainId,
+    deadline,
   };
 
   return op as PreSignOperation;

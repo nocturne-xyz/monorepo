@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Update operation JSON fixture for request validation after adding `chainId` and `deadline`
 - set operation status to `BUNDLE_REVERTED` when `processBundle` reverts
 - return status code `500` when job enqueue fails
 - return status code `404` when job not found

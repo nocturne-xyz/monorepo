@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Add `.chainId` and `.deadline` methods to `OperationRequestBuilder` and update unit tests
+- Add `chainId` and `deadline` to Operation + OperationRequest
 - add `BUNDLE_REVERTED` op status
 - move shared subgraph utils to their own module
 - fix `SubgraphSDKSyncAdapter` querying entire history instead of only specified range

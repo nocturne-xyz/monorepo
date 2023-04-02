@@ -90,6 +90,8 @@ struct Operation {
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
+    uint256 chainId;
+    uint256 deadline;
 }
 
 // An operation is processed if its joinsplitTxs are processed.

@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- Generalize `JoinSplitsFailureType` in testing to `OperationFailureType` and add `BAD_CHAIN_ID` and `EXPIRED_DEADLINE` variants
+- Add `chainId` and `deadline` to operation
+- Re-order packing in `computeOperationDigest` and break into helper fns for stack size limit
 - Simplify `DepositManager.instantiateDeposit` to only take asset, value, and depositAddr (convert deposit req checks into contract reads)
 - Remove `chainId` from `DepositRequest` (already included in eip712 domain)
 - Move `BinaryMerkle` into `test/utils`

@@ -89,6 +89,8 @@ interface BaseOperation {
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
+  chainId: bigint;
+  deadline: bigint;
 }
 
 export interface PreSignOperation extends BaseOperation {

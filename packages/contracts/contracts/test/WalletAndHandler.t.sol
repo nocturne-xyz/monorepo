@@ -267,7 +267,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -317,7 +317,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -515,7 +515,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -574,7 +574,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -633,7 +633,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     4 * PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -693,7 +693,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.BAD_ROOT
+                operationFailureType: OperationFailureType.JOINSPLIT_BAD_ROOT
             })
         );
 
@@ -753,7 +753,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NF_ALREADY_IN_SET
+                operationFailureType: OperationFailureType
+                    .JOINSPLIT_NF_ALREADY_IN_SET
             })
         );
 
@@ -812,7 +813,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.JOINSPLIT_NFS_SAME
+                operationFailureType: OperationFailureType.JOINSPLIT_NFS_SAME
             })
         );
 
@@ -881,7 +882,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -940,7 +941,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -969,7 +970,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1025,7 +1026,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1054,7 +1055,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1117,7 +1118,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1146,7 +1147,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1207,7 +1208,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1322,7 +1323,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1432,7 +1433,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1, // should be 4 refund assets, 1 too few
                 gasPrice: 50,
                 actions: actions,
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1513,7 +1514,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1568,7 +1569,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1616,7 +1617,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 
@@ -1625,6 +1626,66 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         vm.prank(ALICE);
         vm.expectRevert("Only wallet");
         handler.handleOperation(op, 0, ALICE);
+    }
+
+    function testHandleOperationBadChainId() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Format op with BAD_CHAIN_ID failure type
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                operationFailureType: OperationFailureType.BAD_CHAIN_ID
+            })
+        );
+
+        vm.prank(address(wallet));
+        vm.expectRevert("invalid chainid");
+        handler.handleOperation(op, 0, BUNDLER);
+    }
+
+    function testHandleOperationExpiredDeadline() public {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Format op with EXPIRED_DEADLINE failure type
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 1,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 0,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    PER_NOTE_AMOUNT
+                ),
+                operationFailureType: OperationFailureType.EXPIRED_DEADLINE
+            })
+        );
+
+        vm.prank(address(wallet));
+        vm.expectRevert("expired deadline");
+        handler.handleOperation(op, 0, BUNDLER);
     }
 
     // TODO: move to Handler.t.sol
@@ -1648,7 +1709,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
-                joinSplitsFailureType: JoinSplitsFailureType.NONE
+                operationFailureType: OperationFailureType.NONE
             })
         );
 

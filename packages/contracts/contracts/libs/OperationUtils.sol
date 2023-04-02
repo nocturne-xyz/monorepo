@@ -72,38 +72,9 @@ library OperationUtils {
     function computeOperationDigest(
         Operation calldata op
     ) internal pure returns (uint256) {
-        bytes memory actionPayload;
-
-        Action memory action;
-        uint256 numActions = op.actions.length;
-        for (uint256 i = 0; i < numActions; i++) {
-            action = op.actions[i];
-            actionPayload = abi.encodePacked(
-                actionPayload,
-                action.contractAddress,
-                keccak256(action.encodedFunction)
-            );
-        }
-
-        bytes memory joinSplitsPayload;
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            joinSplitsPayload = abi.encodePacked(
-                joinSplitsPayload,
-                keccak256(
-                    abi.encodePacked(
-                        op.joinSplits[i].commitmentTreeRoot,
-                        op.joinSplits[i].nullifierA,
-                        op.joinSplits[i].nullifierB,
-                        op.joinSplits[i].newNoteACommitment,
-                        op.joinSplits[i].newNoteBCommitment,
-                        op.joinSplits[i].publicSpend,
-                        op.joinSplits[i].encodedAsset.encodedAssetAddr,
-                        op.joinSplits[i].encodedAsset.encodedAssetId
-                    )
-                )
-            );
-        }
+        bytes memory joinSplitsPayload = _createJoinSplitsPayload(
+            op.joinSplits
+        );
 
         bytes memory refundAddrPayload = abi.encodePacked(
             op.refundAddr.h1X,
@@ -112,26 +83,94 @@ library OperationUtils {
             op.refundAddr.h2Y
         );
 
-        bytes memory refundAssetsPayload;
-        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
-            refundAssetsPayload = abi.encodePacked(
-                refundAssetsPayload,
-                op.encodedRefundAssets[i].encodedAssetAddr,
-                op.encodedRefundAssets[i].encodedAssetId
-            );
-        }
+        bytes memory refundAssetsPayload = _createRefundAssetsPayload(
+            op.encodedRefundAssets
+        );
 
+        bytes memory actionsPayload = _createActionsPayload(op.actions);
+
+        bytes memory gasAssetPayload = abi.encodePacked(
+            op.encodedGasAsset.encodedAssetAddr,
+            op.encodedGasAsset.encodedAssetId
+        );
+
+        // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
-            actionPayload,
             joinSplitsPayload,
             refundAddrPayload,
             refundAssetsPayload,
+            actionsPayload,
+            gasAssetPayload
+        );
+        payload = abi.encodePacked(
+            payload,
             op.executionGasLimit,
+            op.maxNumRefunds,
             op.gasPrice,
-            op.maxNumRefunds
+            op.chainId,
+            op.deadline
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
+    }
+
+    function _createJoinSplitsPayload(
+        JoinSplit[] calldata joinSplits
+    ) internal pure returns (bytes memory) {
+        bytes memory joinSplitsPayload;
+        uint256 numJoinSplits = joinSplits.length;
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplitsPayload = abi.encodePacked(
+                joinSplitsPayload,
+                keccak256(
+                    abi.encodePacked(
+                        joinSplits[i].commitmentTreeRoot,
+                        joinSplits[i].nullifierA,
+                        joinSplits[i].nullifierB,
+                        joinSplits[i].newNoteACommitment,
+                        joinSplits[i].newNoteBCommitment,
+                        joinSplits[i].publicSpend,
+                        joinSplits[i].encodedAsset.encodedAssetAddr,
+                        joinSplits[i].encodedAsset.encodedAssetId
+                    )
+                )
+            );
+        }
+
+        return joinSplitsPayload;
+    }
+
+    function _createRefundAssetsPayload(
+        EncodedAsset[] calldata encodedRefundAssets
+    ) internal pure returns (bytes memory) {
+        bytes memory refundAssetsPayload;
+        for (uint256 i = 0; i < encodedRefundAssets.length; i++) {
+            refundAssetsPayload = abi.encodePacked(
+                refundAssetsPayload,
+                encodedRefundAssets[i].encodedAssetAddr,
+                encodedRefundAssets[i].encodedAssetId
+            );
+        }
+
+        return refundAssetsPayload;
+    }
+
+    function _createActionsPayload(
+        Action[] calldata actions
+    ) internal pure returns (bytes memory) {
+        bytes memory actionsPayload;
+        Action memory action;
+        uint256 numActions = actions.length;
+        for (uint256 i = 0; i < numActions; i++) {
+            action = actions[i];
+            actionsPayload = abi.encodePacked(
+                actionsPayload,
+                action.contractAddress,
+                keccak256(action.encodedFunction)
+            );
+        }
+
+        return actionsPayload;
     }
 
     function failOperationWithReason(

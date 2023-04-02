@@ -328,5 +328,7 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
     joinSplits: provenJoinSplits,
+    chainId: op.chainId,
+    deadline: op.deadline,
   };
 }

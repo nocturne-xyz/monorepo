@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Pass in `chainId` and `deadline` when building `OperationRequest` after adding fields to op
 - `.wait()` txs in parallel in deposit functions
 - reduce some sleeps
 - turn on automine at the start of `setupTestDeployment` and disable it at the end

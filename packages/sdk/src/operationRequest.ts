@@ -13,10 +13,12 @@ export interface OperationRequest {
   joinSplitRequests: JoinSplitRequest[];
   refundAssets: Asset[];
   actions: Action[];
+  chainId: bigint;
+  deadline: bigint;
   refundAddr?: StealthAddress;
   executionGasLimit?: bigint;
-  gasPrice?: bigint;
   maxNumRefunds?: bigint;
+  gasPrice?: bigint;
 }
 
 export interface GasAccountedOperationRequest
@@ -58,6 +60,8 @@ export class OperationRequestBuilder {
       joinSplitRequests: [],
       refundAssets: [],
       actions: [],
+      chainId: 0n,
+      deadline: 0n,
     };
 
     this.joinSplitsAndPaymentsByAsset = new Map();
@@ -129,6 +133,18 @@ export class OperationRequestBuilder {
   // returns `this` so it's chainable
   refundAddr(addr: StealthAddress): OperationRequestBuilder {
     this.op.refundAddr = addr;
+    return this;
+  }
+
+  // Attach chainId to operation
+  chainId(chainId: bigint): OperationRequestBuilder {
+    this.op.chainId = chainId;
+    return this;
+  }
+
+  // Attach deadline to operation
+  deadline(deadline: bigint): OperationRequestBuilder {
+    this.op.deadline = deadline;
     return this;
   }
 

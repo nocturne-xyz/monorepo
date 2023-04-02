@@ -23,7 +23,7 @@ const DUMMY_GAS_ASSET: Asset = {
 };
 
 describe("handleGasForOperationRequest", async () => {
-  it("produces an operation request with gas price 0 and dummy gas assset when gasPrice set to 0", async () => {
+  it("produces an operation request with gas price 0 and dummy gas asset when gasPrice set to 0", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n],
       [shitcoin, shitcoin]

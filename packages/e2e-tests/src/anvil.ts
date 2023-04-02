@@ -17,7 +17,7 @@ export async function startAnvil(config: AnvilNetworkConfig): Promise<ResetFn> {
   const { blockTimeSecs, gasPrice } = config ?? {};
 
   const cmd = "anvil";
-  const args = ["--host", "0.0.0.0"];
+  const args = ["--host", "0.0.0.0", "--chain-id", "1337"];
 
   if (blockTimeSecs) {
     args.push("--block-time", blockTimeSecs.toString());

@@ -28,6 +28,8 @@ export function signOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
+    chainId,
+    deadline,
   } = op;
 
   return {
@@ -39,6 +41,8 @@ export function signOperation(
     executionGasLimit,
     gasPrice,
     maxNumRefunds,
+    chainId,
+    deadline,
   };
 }
 

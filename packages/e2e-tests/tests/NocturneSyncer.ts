@@ -38,6 +38,8 @@ const GAS_PRICE = 10n * 10n ** 9n;
 // 10^9 gas
 const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
 
+const ONE_DAY_SECONDS = 60n * 60n * 24n;
+
 describe(
   "Syncing NocturneWalletSDK with RPCSyncAdapter",
   syncTestSuite(SyncAdapterOption.RPC)
@@ -221,6 +223,11 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         .unwrap(asset, 80n)
         .action(token.address, transfer)
         .gasPrice(GAS_PRICE)
+        .chainId(BigInt((await provider.getNetwork()).chainId))
+        .deadline(
+          BigInt((await provider.getBlock("latest")).timestamp) +
+            ONE_DAY_SECONDS
+        )
         .build();
 
       console.log("preparing op...");

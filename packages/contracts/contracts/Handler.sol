@@ -109,6 +109,9 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         handleOperationGuard
         returns (OperationResult memory opResult)
     {
+        require(op.chainId == block.chainid, "invalid chainid");
+        require(block.timestamp <= op.deadline, "expired deadline");
+
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
