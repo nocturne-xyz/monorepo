@@ -1,5 +1,5 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
-import { assertOrErr, max, range, zip } from "./utils";
+import { assertOrErr, max, zip } from "./utils";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 
@@ -54,7 +54,7 @@ export class SparseMerkleProver {
     assertOrErr(index < (2**MAX_DEPTH), "index must be < 2^maxDepth");
     assertOrErr(index >= this._count, "index must be >= tree count");
 
-    this.root = this.insertInner(this.root, toBitsBE(index), leaf);
+    this.root = this.insertInner(this.root, leaf, bitReverse(index));
 
     if (include) {
       this.leaves.set(index, leaf);
@@ -68,7 +68,7 @@ export class SparseMerkleProver {
       this.leaves.has(index),
       "leaf is not in the tree or it has been pruned"
     );
-    const [siblings, pathIndices] = this.getSiblings(this.root, toBitsBE(index));
+    const [siblings, pathIndices] = this.getSiblings(this.root, bitReverse(index));
 
     return {
       root: this.root.hash,
@@ -173,22 +173,23 @@ export class SparseMerkleProver {
   // returns [hashes, pathIndices]
   private getSiblings(
     root: TreeNode,
-    path: boolean[],
+    pathMask: number,
+    depth: number = 0,
   ): [bigint[], PathIndex[]] {
-    if (path.length === 0) {
+    if (depth === MAX_DEPTH) {
       return [[], []];
     }
 
-    const [head, ...tail] = path;
-    if (head) {
+    if (pathMask & 1) {
       // path goes to the right => get the left sibling
       // `root.right` is guaranteed to exist because we checked `this.leaves.has(index)`
       const [siblings, pathIndices] = this.getSiblings(
         root.right!,
-        tail,
+        pathMask >> 1,
+        depth + 1
       );
       return [
-        [...siblings, root.left?.hash ?? ZERO_HASHES[path.length - 1]],
+        [...siblings, root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1]],
         [...pathIndices, 1],
       ];
     } else {
@@ -196,10 +197,11 @@ export class SparseMerkleProver {
       // `root.left` is guaranteed to exist because we checked `this.leaves.has(index)`
       const [siblings, pathIndices] = this.getSiblings(
         root.left!,
-        tail,
+        pathMask >> 1,
+        depth + 1
       );
       return [
-        [...siblings, root.right?.hash ?? ZERO_HASHES[path.length - 1]],
+        [...siblings, root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1]],
         [...pathIndices, 0],
       ];
     }
@@ -207,43 +209,51 @@ export class SparseMerkleProver {
 
   private insertInner(
     root: TreeNode,
-    path: boolean[],
     leaf: bigint,
+    pathMask: number,
+    depth: number  = 0
   ): TreeNode {
     // we're at the leaf
-    if (path.length === 0) {
+    if (depth === MAX_DEPTH) {
       return { hash: leaf, dirty: true };
     }
 
-    const [head, ...tail] = path;
-
     // we're not at the leaf
-    if (head) {
+    if (pathMask& 1) {
       // right
       root.right = this.insertInner(
-        root.right ?? { hash: ZERO_HASHES[path.length - 1], dirty: true },
-        tail,
+        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true },
         leaf,
+        pathMask >> 1,
+        depth + 1
       );
     } else {
       // left
       root.left = this.insertInner(
-        root.left ?? { hash: ZERO_HASHES[path.length - 1], dirty: true},
-        tail,
+        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1], dirty: true},
         leaf,
+        pathMask >> 1,
+        depth + 1
       );
     }
 
     root.dirty = (root.left?.dirty ?? false) || (root.right?.dirty ?? false);
     root.hash = poseidonBN([
-      root.left?.hash ?? ZERO_HASHES[path.length - 1],
-      root.right?.hash ?? ZERO_HASHES[path.length - 1],
+      root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
+      root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
     ]);
 
     return root;
   }
 }
 
-function toBitsBE(x: number): boolean[] {
-  return range(MAX_DEPTH).map(i => ((x >> i) & 1) !== 0).reverse();
+// a 32-bit bit-reversal
+function bitReverse(x: number) {
+  x = ((x >> 1) & 0x55555555) | ((x & 0x55555555) << 1);
+  x = ((x >> 2) & 0x33333333) | ((x & 0x33333333) << 2);
+  x = ((x >> 4) & 0x0F0F0F0F) | ((x & 0x0F0F0F0F) << 4);
+  x = ((x >> 8) & 0x00FF00FF) | ((x & 0x00FF00FF) << 8);
+  x = (x >>> 16) | (x << 16);
+
+  return x >>> 0;
 }
