@@ -203,13 +203,25 @@ describe("SparseMerkleProver", () => {
     const prover = new SparseMerkleProver(kv);
 
     // insert a bunch of leaves with `include = false`
-    prover.insertBatch(0, range(100).map(randomBaseFieldElement), range(100).map(() => false));
+    prover.insertBatch(
+      0,
+      range(100).map(randomBaseFieldElement),
+      range(100).map(() => false)
+    );
 
     // insert a few leaves with `include = true`
-    prover.insertBatch(100, range(10).map(randomBaseFieldElement), range(10).map(() => true));
+    prover.insertBatch(
+      100,
+      range(10).map(randomBaseFieldElement),
+      range(10).map(() => true)
+    );
 
     // insert another bunch of leaves with `include = false`
-    prover.insertBatch(110, range(100).map(randomBaseFieldElement), range(100).map(() => false));
+    prover.insertBatch(
+      110,
+      range(100).map(randomBaseFieldElement),
+      range(100).map(() => false)
+    );
 
     // prune
     prover.prune();
@@ -220,10 +232,10 @@ describe("SparseMerkleProver", () => {
     // prune again
     prover.prune();
 
-    // check number of leaves 
+    // check number of leaves
     const numLeaves = countLeaves(prover);
     expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
-  })
+  });
 });
 
 function countLeaves(prover: SparseMerkleProver): number {

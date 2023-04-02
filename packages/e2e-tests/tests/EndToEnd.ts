@@ -132,7 +132,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   });
 
   afterEach(async () => {
-    console.log("[AFTER EACH]");
     await teardown();
   });
 

@@ -63,17 +63,24 @@ export async function syncSDK(
     // TODO: check for uncommitted notes `prepareOperation`
     if (!opts?.skipMerkleProverUpdates) {
       // add new leaves
-      const batches = consecutiveChunks(diff.notesAndCommitments, noteOrCommitment => noteOrCommitment.merkleIndex);
+      const batches = consecutiveChunks(
+        diff.notesAndCommitments,
+        (noteOrCommitment) => noteOrCommitment.merkleIndex
+      );
       for (const batch of batches) {
         const startIndex = batch[0].merkleIndex;
         const leaves = [];
         const includes = [];
         for (const noteOrCommitment of batch) {
           if (NoteTrait.isCommitment(noteOrCommitment)) {
-            leaves.push((noteOrCommitment as IncludedNoteCommitment).noteCommitment);
+            leaves.push(
+              (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+            );
             includes.push(false);
           } else {
-            leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+            leaves.push(
+              NoteTrait.toCommitment(noteOrCommitment as IncludedNote)
+            );
             includes.push(true);
           }
         }
@@ -82,9 +89,8 @@ export async function syncSDK(
 
       // mark nullified ones for pruning
       for (const index of nfIndices) {
-        merkle.markForPruning(index); 
+        merkle.markForPruning(index);
       }
-
 
       await merkle.persist();
     }

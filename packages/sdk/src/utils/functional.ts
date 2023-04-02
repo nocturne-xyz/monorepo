@@ -108,7 +108,10 @@ export function thunk<T>(fn: () => Promise<T>): Thunk<T> {
   };
 }
 
-export function consecutiveChunks<T>(arr: T[], idx: (item: T) => number): T[][] {
+export function consecutiveChunks<T>(
+  arr: T[],
+  idx: (item: T) => number
+): T[][] {
   const chunks = [];
   let chunk: T[] = [];
   let prevIdx = -1;

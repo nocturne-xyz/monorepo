@@ -117,7 +117,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     }
 
     afterEach(async () => {
-      console.log("[AFTER EACH]");
       await updater.dropDB();
       await teardown();
     });
@@ -150,11 +149,11 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       expect(nocturneWalletSDKAlice.merkleProver.count()).to.eql(2);
       expect(
         //@ts-ignore
-        BigInt((nocturneWalletSDKAlice.merkleProver.getProof(0)).leaf)
+        BigInt(nocturneWalletSDKAlice.merkleProver.getProof(0).leaf)
       ).to.equal(ncs[0]);
       expect(
         //@ts-ignore
-        BigInt((nocturneWalletSDKAlice.merkleProver.getProof(1)).leaf)
+        BigInt(nocturneWalletSDKAlice.merkleProver.getProof(1).leaf)
       ).to.equal(ncs[1]);
     });
 

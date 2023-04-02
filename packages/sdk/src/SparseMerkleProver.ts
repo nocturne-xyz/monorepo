@@ -69,7 +69,11 @@ export class SparseMerkleProver {
       "leaves and includes must be the same length"
     );
 
-    this.root = this.insertInner(this.root, [...leaves], bitReverse(startIndex));
+    this.root = this.insertInner(
+      this.root,
+      [...leaves],
+      bitReverse(startIndex)
+    );
 
     for (const [i, include] of includes.entries()) {
       if (include) {
@@ -258,7 +262,7 @@ export class SparseMerkleProver {
     if (pathMask & 1) {
       // right
       root.right = this.insertInner(
-        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1]},
+        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
         leaves,
         pathMask >> 1,
         depth + 1
@@ -266,7 +270,7 @@ export class SparseMerkleProver {
     } else {
       // left
       root.left = this.insertInner(
-        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1]},
+        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
         leaves,
         pathMask >> 1,
         depth + 1

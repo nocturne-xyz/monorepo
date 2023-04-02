@@ -352,7 +352,7 @@ export async function setupTestClient(
   console.log("Create NocturneWalletSDKAlice");
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
-  const merkleProverAlice = new SparseMerkleProver(aliceKV)
+  const merkleProverAlice = new SparseMerkleProver(aliceKV);
   const nocturneWalletSDKAlice = setupNocturneWalletSDK(
     3n,
     config,
@@ -365,7 +365,7 @@ export async function setupTestClient(
   console.log("Create NocturneWalletSDKBob");
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
-  const merkleProverBob = new SparseMerkleProver(aliceKV)
+  const merkleProverBob = new SparseMerkleProver(aliceKV);
   const nocturneWalletSDKBob = setupNocturneWalletSDK(
     5n,
     config,
