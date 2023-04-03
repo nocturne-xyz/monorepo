@@ -62,39 +62,45 @@ export async function syncSDK(
     // NOTE: the tree will include leaves that haven't yet been committed via subtree updater
     // TODO: check for uncommitted notes `prepareOperation`
     if (!opts?.skipMerkleProverUpdates) {
-      // add new leaves
-      const batches = consecutiveChunks(
-        diff.notesAndCommitments,
-        (noteOrCommitment) => noteOrCommitment.merkleIndex
-      );
-      for (const batch of batches) {
-        const startIndex = batch[0].merkleIndex;
-        const leaves = [];
-        const includes = [];
-        for (const noteOrCommitment of batch) {
-          if (NoteTrait.isCommitment(noteOrCommitment)) {
-            leaves.push(
-              (noteOrCommitment as IncludedNoteCommitment).noteCommitment
-            );
-            includes.push(false);
-          } else {
-            leaves.push(
-              NoteTrait.toCommitment(noteOrCommitment as IncludedNote)
-            );
-            includes.push(true);
-          }
-        }
-        merkle.insertBatch(startIndex, leaves, includes);
-      }
-
-      // mark nullified ones for pruning
-      for (const index of nfIndices) {
-        merkle.markForPruning(index);
-      }
-
-      await merkle.persist();
+      await updateMerkle(merkle, diff.notesAndCommitments, nfIndices);
     }
   }
+}
+
+async function updateMerkle(
+  merkle: SparseMerkleProver,
+  notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
+  nfIndices: number[]
+): Promise<void> {
+  // add new leaves
+  const batches = consecutiveChunks(
+    notesAndCommitments,
+    (noteOrCommitment) => noteOrCommitment.merkleIndex
+  );
+  for (const batch of batches) {
+    const startIndex = batch[0].merkleIndex;
+    const leaves = [];
+    const includes = [];
+    for (const noteOrCommitment of batch) {
+      if (NoteTrait.isCommitment(noteOrCommitment)) {
+        leaves.push(
+          (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+        );
+        includes.push(false);
+      } else {
+        leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+        includes.push(true);
+      }
+    }
+    merkle.insertBatch(startIndex, leaves, includes);
+  }
+
+  // mark nullified ones for pruning
+  for (const index of nfIndices) {
+    merkle.markForPruning(index);
+  }
+
+  await merkle.persist();
 }
 
 function decryptStateDiff(

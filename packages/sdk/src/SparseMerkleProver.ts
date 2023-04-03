@@ -4,6 +4,35 @@ import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 
+// high levl idea:
+// want to sync a local replica of the tree such taht
+// 1. we avoid loading the whole tree into memory at once
+// 2. we avoid iterating over all of the leaves
+// 3. we avoid storing the whole tree persistently
+// 4. all of the above hold in snap, where storage is a single value
+//    (ie we have to serialize all persistent single object and get/store that)
+//
+// `SparseMerkleProver` works as follows:
+// 1. Start with a basic, naive merkle tree implementation with monotonic,
+//    batch insert and point removals
+// 2. Then, add a `leaves` map containing only the leaves that we want to be
+//    able to prove membership for
+// 3. Add a `prune` method that removes every node from the tree that isn't
+//    necessary for proving membership of a leaf in `leaves`
+//
+// then, the course of operation goes like this:
+// 1. pull new leaves from chain and `insert` them into the tree.
+//    set `include` to `true` if we expect to prove membership for it later,
+//    `false` otherwise
+// 2. "nullify" leaves we no longer expect to prove membership for by calling
+//    `markForPruning`
+// 3. when we're done modifying the tree, call `prune` to remove all unnecessary nodes
+// 4. later, we can generate proofs for leaves in `leaves` by calling `genProof`
+//
+// this way, all of the above properties are satisified - we only store / load into memory
+// the minimum possible amount of information (astymptotically at least) and we never
+// have to iterate over all leaves.
+
 export interface TreeNode {
   left?: TreeNode;
   right?: TreeNode;
@@ -16,7 +45,7 @@ export interface SMTDump {
   _count: number;
 }
 
-// (1 means right, 0 means left)
+// (0 means left, 1 means right)
 type PathIndex = 0 | 1;
 
 const SMT_DUMP_KEY = "SMT_DUMP";
@@ -205,6 +234,8 @@ export class SparseMerkleProver {
   }
 
   // returns [hashes, pathIndices]
+  // NOTE: we assume every sibling will exist in the tree structure
+  // because we only prune nodes that we will never need
   private getSiblings(
     root: TreeNode,
     pathMask: number,
