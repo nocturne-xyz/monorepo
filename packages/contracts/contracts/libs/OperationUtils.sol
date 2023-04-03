@@ -157,22 +157,6 @@ library OperationUtils {
         return actionsPayload;
     }
 
-    // TODO: properly handle failure case
-    function failOperationWithReason(
-        string memory reason
-    ) internal pure returns (OperationResult memory result) {
-        return
-            OperationResult({
-                opProcessed: false,
-                failureReason: reason,
-                callSuccesses: new bool[](0),
-                callResults: new bytes[](0),
-                executionGas: 0,
-                verificationGas: 0,
-                numRefunds: 0
-            });
-    }
-
     function calculateBundlerGasAssetPayout(
         Operation calldata op,
         OperationResult memory opResult

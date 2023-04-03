@@ -229,6 +229,7 @@ library NocturneUtils {
         return
             OperationResult({
                 opProcessed: true,
+                bundlerCompensated: true,
                 failureReason: "",
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),

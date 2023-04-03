@@ -158,7 +158,7 @@ contract Wallet is
             opDigests
         );
 
-        require(success, "Batched JoinSplit verify failed.");
+        require(success, "Batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
@@ -172,9 +172,7 @@ contract Wallet is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = OperationUtils.failOperationWithReason(
-                    Utils.getRevertMsg(reason)
-                );
+                opResults[i].failureReason = Utils.getRevertMsg(reason);
             }
             emit OperationProcessed(
                 opDigests[i],

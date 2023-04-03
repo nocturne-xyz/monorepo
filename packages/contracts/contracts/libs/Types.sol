@@ -102,6 +102,7 @@ struct Operation {
 // Bundlers should only be submitting operations that can be processed.
 struct OperationResult {
     bool opProcessed;
+    bool bundlerCompensated;
     string failureReason;
     bool[] callSuccesses;
     bytes[] callResults;

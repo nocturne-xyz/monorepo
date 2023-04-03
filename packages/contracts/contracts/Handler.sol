@@ -116,6 +116,9 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
+        // If reached this point, bundler will be compensated
+        opResult.bundlerCompensated = true;
+
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
             bool[] memory successes,
@@ -127,9 +130,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             opResult.callResults = results;
             opResult.numRefunds = numRefunds;
         } catch (bytes memory reason) {
-            opResult = OperationUtils.failOperationWithReason(
-                Utils.getRevertMsg(reason)
-            );
+            opResult.failureReason = Utils.getRevertMsg(reason);
         }
 
         // Set verification and execution gas after getting opResult
