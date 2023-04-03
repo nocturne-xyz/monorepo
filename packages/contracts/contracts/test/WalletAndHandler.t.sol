@@ -267,6 +267,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -317,6 +318,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -515,6 +517,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -574,6 +577,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -633,6 +637,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     4 * PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -693,6 +698,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_BAD_ROOT
             })
         );
@@ -752,6 +758,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType
                     .JOINSPLIT_NF_ALREADY_IN_SET
             })
@@ -811,6 +818,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_NFS_SAME
             })
         );
@@ -879,6 +887,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -938,6 +947,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -967,6 +977,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1022,6 +1033,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1051,6 +1063,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1114,6 +1127,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1143,6 +1157,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1204,6 +1219,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1319,6 +1335,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1429,6 +1446,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1, // should be 4 refund assets, 1 too few
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1509,6 +1527,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1563,6 +1582,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1610,6 +1630,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1642,6 +1663,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.BAD_CHAIN_ID
             })
         );
@@ -1672,6 +1694,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.EXPIRED_DEADLINE
             })
         );
@@ -1702,6 +1725,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );

@@ -43,6 +43,7 @@ contract ReentrantCaller {
                         address(0x0),
                         PER_NOTE_AMOUNT
                     ),
+                    atomicActions: false,
                     operationFailureType: OperationFailureType.NONE
                 })
             );

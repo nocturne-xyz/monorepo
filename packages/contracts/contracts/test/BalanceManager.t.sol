@@ -251,6 +251,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -284,6 +285,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -328,6 +330,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -371,6 +374,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -438,6 +442,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -478,6 +483,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -509,6 +515,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_BAD_ROOT
             })
         );
@@ -541,6 +548,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType
                     .JOINSPLIT_NF_ALREADY_IN_SET
             })
@@ -573,6 +581,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_NFS_SAME
             })
         );
@@ -604,6 +613,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0, // don't reserve any gas, wallet takes up all
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -650,6 +660,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -683,6 +694,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -802,6 +814,7 @@ contract BalanceManagerTest is Test {
                 maxNumRefunds: 2,
                 gasPrice: 0,
                 actions: new Action[](0),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );

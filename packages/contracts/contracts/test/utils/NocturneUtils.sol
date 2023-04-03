@@ -14,6 +14,11 @@ enum OperationFailureType {
     EXPIRED_DEADLINE
 }
 
+enum ActionAtomicity {
+    ATOMIC,
+    NON_ATOMIC
+}
+
 struct FormatOperationArgs {
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -25,6 +30,7 @@ struct FormatOperationArgs {
     uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
+    bool atomicActions;
     OperationFailureType operationFailureType;
 }
 
@@ -216,7 +222,7 @@ library NocturneUtils {
             maxNumRefunds: args.maxNumRefunds,
             chainId: chainId,
             deadline: deadline,
-            atomicActions: false
+            atomicActions: args.atomicActions
         });
 
         return op;
