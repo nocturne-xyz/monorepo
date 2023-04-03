@@ -130,6 +130,10 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             opResult.callResults = results;
             opResult.numRefunds = numRefunds;
         } catch (bytes memory reason) {
+            // Indicates revert because of too many refunds or because
+            // atomicActions = true and an action failed. Bundler is compensated
+            // and we bubble up failureReason, callSuccesses, callResults,
+            // verificationGas, executionGas, and numRefunds.
             opResult.failureReason = Utils.getRevertMsg(reason);
         }
 

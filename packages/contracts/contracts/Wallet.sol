@@ -172,6 +172,10 @@ contract Wallet is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
+                // Indicates revert because of invalid chainid, expired
+                // deadline, or error processing joinsplits. Bundler is not
+                // compensated and we do not bubble up further OperationResult
+                // info other than failureReason.
                 opResults[i].failureReason = Utils.getRevertMsg(reason);
             }
             emit OperationProcessed(
