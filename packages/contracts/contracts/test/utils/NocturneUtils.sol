@@ -14,11 +14,6 @@ enum OperationFailureType {
     EXPIRED_DEADLINE
 }
 
-enum ActionAtomicity {
-    ATOMIC,
-    NON_ATOMIC
-}
-
 struct FormatOperationArgs {
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
