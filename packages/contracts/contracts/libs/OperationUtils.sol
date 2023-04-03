@@ -163,7 +163,6 @@ library OperationUtils {
     ) internal pure returns (OperationResult memory result) {
         return
             OperationResult({
-                opProcessed: false,
                 failureReason: reason,
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),

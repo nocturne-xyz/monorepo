@@ -215,7 +215,8 @@ library NocturneUtils {
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,
             chainId: chainId,
-            deadline: deadline
+            deadline: deadline,
+            atomicActions: false
         });
 
         return op;
@@ -226,7 +227,6 @@ library NocturneUtils {
     ) internal pure returns (OperationResult memory result) {
         return
             OperationResult({
-                opProcessed: true,
                 failureReason: "",
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),

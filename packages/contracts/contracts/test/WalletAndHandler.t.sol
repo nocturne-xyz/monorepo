@@ -533,7 +533,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -594,7 +594,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -653,7 +653,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -715,7 +715,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "Tree root not past root");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -776,7 +775,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "Nullifier B already used");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -835,7 +833,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -897,7 +894,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -987,7 +984,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "Cannot call the Nocturne wallet");
 
         // Alice lost some private balance due to bundler comp. Bundler has a
@@ -1071,7 +1067,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = true, call[0] failed, handleOperation only
         // callable by wallet
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -1162,7 +1158,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -1231,7 +1227,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -1345,7 +1341,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, approve call and swap call both succeeded
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].failureReason, "");
         assertEq(opResults[0].callSuccesses.length, uint256(2));
         assertEq(opResults[0].callSuccesses[0], true);
         assertEq(opResults[0].callSuccesses[1], true);
@@ -1463,7 +1459,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false, call[0] failed (too many refunds)
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -1533,7 +1528,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = true, call[0] failed (too few gas tokens)
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -1588,7 +1582,6 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
-        assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].failureReason, "Transaction reverted silently");
 
         // ALICE (bundler) was still paid

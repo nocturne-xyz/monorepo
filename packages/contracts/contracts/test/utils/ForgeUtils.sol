@@ -12,7 +12,6 @@ struct ExpectOperationProcessedArgs {
 contract ForgeUtils is Test {
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opProcessed,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
@@ -27,8 +26,6 @@ contract ForgeUtils is Test {
 
         emit OperationProcessed(
             uint256(0),
-            keccak256((abi.encodePacked(args.maybeFailureReason))) ==
-                keccak256(abi.encodePacked("")),
             args.maybeFailureReason,
             callSuccesses,
             callResults

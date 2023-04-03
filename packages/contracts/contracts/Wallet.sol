@@ -50,7 +50,6 @@ contract Wallet is
 
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opProcessed,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
@@ -178,7 +177,6 @@ contract Wallet is
             }
             emit OperationProcessed(
                 opDigests[i],
-                opResults[i].opProcessed,
                 opResults[i].failureReason,
                 opResults[i].callSuccesses,
                 opResults[i].callResults
