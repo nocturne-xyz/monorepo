@@ -122,6 +122,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             bytes[] memory results,
             uint256 numRefunds
         ) {
+            opResult.opProcessed = true;
             opResult.callSuccesses = successes;
             opResult.callResults = results;
             opResult.numRefunds = numRefunds;

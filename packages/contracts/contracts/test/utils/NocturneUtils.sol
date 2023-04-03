@@ -228,6 +228,7 @@ library NocturneUtils {
     ) internal pure returns (OperationResult memory result) {
         return
             OperationResult({
+                opProcessed: true,
                 failureReason: "",
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),

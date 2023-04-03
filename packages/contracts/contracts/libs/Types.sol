@@ -101,6 +101,7 @@ struct Operation {
 // 2. The bundler is compensated verification and execution gas
 // Bundlers should only be submitting operations that can be processed.
 struct OperationResult {
+    bool opProcessed;
     string failureReason;
     bool[] callSuccesses;
     bytes[] callResults;
