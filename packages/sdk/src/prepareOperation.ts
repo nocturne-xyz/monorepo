@@ -68,6 +68,7 @@ export async function prepareOperation(
     encodedGasAsset,
     chainId,
     deadline,
+    atomicActions: true, // always default to atomic until we find reason not to
   };
 
   return op as PreSignOperation;

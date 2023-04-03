@@ -330,5 +330,6 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     joinSplits: provenJoinSplits,
     chainId: op.chainId,
     deadline: op.deadline,
+    atomicActions: op.atomicActions,
   };
 }

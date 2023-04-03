@@ -63,4 +63,5 @@ export const VALID_PROVEN_OPERATION_OBJ = {
   gasPrice: "10n",
   chainId: "123n",
   deadline: "1000n",
+  atomicActions: true,
 };
