@@ -156,6 +156,61 @@ contract DepositManagerTest is Test, ParseUtils {
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
     }
 
+    function testInstantiateETHDepositSuccess() public {
+        uint256 depositAmount = GAS_COMP_AMOUNT;
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(weth),
+            depositAmount,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        // Deposit hash not yet marked true and ETH balance empty
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+        assertEq(address(depositManager).balance, 0);
+
+        // Set ALICE balance to 20M wei, enough for deposit and gas comp
+        vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit DepositInstantiated(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
+        );
+        vm.prank(ALICE);
+        depositManager.instantiateETHDeposit{
+            value: GAS_COMP_AMOUNT + depositAmount
+        }(depositAmount, NocturneUtils.defaultStealthAddress());
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token + eth escrowed by manager contract
+        assertEq(weth.balanceOf(address(depositManager)), depositAmount);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+    }
+
+    function testInstantiateETHDepositNotEnoughETH() public {
+        uint256 depositAmount = GAS_COMP_AMOUNT;
+
+        // Set ALICE balance to 20M wei, enough for deposit and gas comp
+        vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
+        vm.expectRevert("msg.value < value");
+        vm.prank(ALICE);
+        depositManager.instantiateETHDeposit{value: depositAmount - 1}(
+            depositAmount,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
     function testRetrieveDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);

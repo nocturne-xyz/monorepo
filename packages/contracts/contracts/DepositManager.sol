@@ -87,7 +87,7 @@ contract DepositManager is
         uint256 value,
         StealthAddress calldata depositAddr
     ) external payable nonReentrant {
-        require(msg.value > value, "msg.value < value");
+        require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
         DepositRequest memory req = DepositRequest({
@@ -99,7 +99,20 @@ contract DepositManager is
             gasCompensation: msg.value - value
         });
 
-        _handleDepositInstatiation(req);
+        bytes32 depositHash = _hashDepositRequest(req);
+
+        // Update deposit mapping and nonces
+        _outstandingDepositHashes[depositHash] = true;
+        _nonces[req.spender] = req.nonce + 1;
+
+        emit DepositInstantiated(
+            req.spender,
+            req.encodedAsset,
+            req.value,
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
+        );
     }
 
     function instantiateDeposit(
@@ -116,7 +129,22 @@ contract DepositManager is
             gasCompensation: msg.value
         });
 
-        _handleDepositInstatiation(req);
+        bytes32 depositHash = _hashDepositRequest(req);
+
+        // Update deposit mapping and nonces
+        _outstandingDepositHashes[depositHash] = true;
+        _nonces[req.spender] = req.nonce + 1;
+
+        AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
+
+        emit DepositInstantiated(
+            req.spender,
+            req.encodedAsset,
+            req.value,
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
+        );
     }
 
     function retrieveDeposit(
@@ -190,25 +218,6 @@ contract DepositManager is
         }
 
         emit DepositCompleted(
-            req.spender,
-            req.encodedAsset,
-            req.value,
-            req.depositAddr,
-            req.nonce,
-            req.gasCompensation
-        );
-    }
-
-    function _handleDepositInstatiation(DepositRequest memory req) internal {
-        bytes32 depositHash = _hashDepositRequest(req);
-
-        // Update deposit mapping and nonces
-        _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
-
-        AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
-
-        emit DepositInstantiated(
             req.spender,
             req.encodedAsset,
             req.value,
