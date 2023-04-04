@@ -11,7 +11,7 @@ import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
-import { NullifierDB, StatusDB } from "./db";
+import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 
 export interface BundlerSubmitterHandle {
@@ -80,10 +80,33 @@ export class BundlerSubmitter {
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
-    // TODO: this job isn't idempotent. if one step fails, bullmq will re-try which may cause issues
-    // current plan is to mark reverted bundles as failed.
-    // will circle back after further testing and likely re-queue/re-validate ops in the reverted bundle"
+    // TODO: this job isn't idempotent. if one step fails, bullmq will re-try
+    // which may cause issues current plan is to mark reverted bundles as failed.
+    // will circle back after further testing and likely re-queue/re-validate
+    // ops in the reverted bundle
 
+    console.log("setting ops to inflight...");
+    await this.setOpsToInflight(operations);
+
+    console.log("dispatching bundle...");
+    const tx = await this.dispatchBundle(operations);
+
+    if (!tx) {
+      console.log("bundle reverted");
+      return;
+    }
+
+    console.log("waiting for confirmation...");
+    const receipt = await tx.wait(1);
+
+    console.log("performing post-submission bookkeeping");
+    const digestsToOps = new Map(
+      operations.map((op) => [computeOperationDigest(op), op])
+    );
+    await this.updateDBPostSubmission(digestsToOps, receipt);
+  }
+
+  async setOpsToInflight(operations: ProvenOperation[]): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
       const jobId = computeOperationDigest(op).toString();
@@ -99,15 +122,15 @@ export class BundlerSubmitter {
         );
       }
     });
+  }
 
-    console.log("submitting bundle...");
-    // Hardcode gas limit to skip eth_estimateGas
-    // * there's gotta be a better way to handle this error (error handling logic is async)
-    let tx;
+  async dispatchBundle(
+    operations: ProvenOperation[]
+  ): Promise<ethers.ContractTransaction | undefined> {
     try {
-      tx = await this.walletContract.processBundle(
+      return this.walletContract.processBundle(
         { operations },
-        { gasLimit: 1_000_000 }
+        { gasLimit: 1_000_000 } // Hardcode gas limit to skip eth_estimateGas
       );
     } catch (err) {
       console.log("failed to process bundle:", err);
@@ -133,13 +156,14 @@ export class BundlerSubmitter {
           );
         }
       });
-
-      return;
+      return undefined;
     }
+  }
 
-    console.log("waiting for confirmation...");
-    const receipt = await tx.wait(1);
-
+  async updateDBPostSubmission(
+    digestsToOps: Map<bigint, ProvenOperation>,
+    receipt: ethers.ContractReceipt
+  ): Promise<void> {
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
@@ -147,7 +171,7 @@ export class BundlerSubmitter {
 
     console.log("matching events:", matchingEvents);
 
-    const executedStatusTransactions = matchingEvents.map(({ args }) => {
+    const redisTxs = matchingEvents.flatMap(({ args }) => {
       const digest = args.operationDigest.toBigInt();
 
       const callSuccesses = args.callSuccesses.reduce(
@@ -166,16 +190,26 @@ export class BundlerSubmitter {
       console.log(
         `setting operation with digest ${digest} to status ${status}`
       );
-      return this.statusDB.getSetJobStatusTransaction(
-        digest.toString(),
-        status
+
+      const redisTxs: RedisTransaction[] = [];
+      redisTxs.push(
+        this.statusDB.getSetJobStatusTransaction(digest.toString(), status)
       );
+
+      if (status == OperationStatus.OPERATION_PROCESSING_FAILED) {
+        console.log(
+          `op with digest ${args.operationDigest.toBigInt()} failed during processing, removing nfs`
+        );
+        const op = digestsToOps.get(args.operationDigest.toBigInt())!;
+        redisTxs.push(...this.nullifierDB.getRemoveNullifierTransactions(op));
+      }
+      return redisTxs;
     });
 
-    await this.redis.multi(executedStatusTransactions).exec((maybeErr) => {
+    await this.redis.multi(redisTxs).exec((maybeErr) => {
       if (maybeErr) {
         throw new Error(
-          `failed to set job status transactions after bundle executed: ${maybeErr}`
+          `failed to set job status transactions + potential NF removals after bundle executed: ${maybeErr}`
         );
       }
     });
