@@ -17,11 +17,13 @@ import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.s
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
+import {WETH9} from "./tokens/WETH9.sol";
 
 contract DepositManagerTest is Test, ParseUtils {
     Wallet public wallet;
     Handler public handler;
     TestDepositManager public depositManager;
+    WETH9 public weth;
 
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -69,6 +71,7 @@ contract DepositManagerTest is Test, ParseUtils {
         // TODO: extract wallet/handler deployment into NocturneUtils
         wallet = new Wallet();
         handler = new Handler();
+        weth = new WETH9();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -80,7 +83,8 @@ contract DepositManagerTest is Test, ParseUtils {
         depositManager.initialize(
             CONTRACT_NAME,
             CONTRACT_VERSION,
-            address(wallet)
+            address(wallet),
+            address(weth)
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
