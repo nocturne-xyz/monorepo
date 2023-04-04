@@ -13,13 +13,6 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "v18.12.1"
-          cache: "yarn"
-      - name: enable Corepack
-        run: corepack enable
       - name: install foundryup
         run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
       - name: install foundry
