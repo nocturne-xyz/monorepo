@@ -123,24 +123,23 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
             bool[] memory successes,
-            bytes[] memory results,
-            uint256 numRefunds
+            bytes[] memory results
         ) {
             opResult.opProcessed = true;
             opResult.callSuccesses = successes;
             opResult.callResults = results;
-            opResult.numRefunds = numRefunds;
         } catch (bytes memory reason) {
             // Indicates revert because of too many refunds or because
             // atomicActions = true and an action failed. Bundler is compensated
-            // and we bubble up failureReason, callSuccesses, callResults,
-            // verificationGas, executionGas, and numRefunds.
+            // and we bubble up failureReason, verificationGas, executionGas,
+            // and numRefunds.
             opResult.failureReason = Utils.getRevertMsg(reason);
         }
 
         // Set verification and execution gas after getting opResult
         opResult.verificationGas = perJoinSplitVerifyGas * op.joinSplits.length;
         opResult.executionGas = preExecutionGas - gasleft();
+        opResult.numRefunds = _totalNumRefundsToHandle(op);
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -169,11 +168,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         whenNotPaused
         onlyThis
         executeActionsGuard
-        returns (
-            bool[] memory successes,
-            bytes[] memory results,
-            uint256 numRefunds
-        )
+        returns (bool[] memory successes, bytes[] memory results)
     {
         uint256 numActions = op.actions.length;
         successes = new bool[](numActions);
@@ -192,7 +187,6 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
-        numRefunds = numRefundsToHandle;
     }
 
     function _makeExternalCall(
