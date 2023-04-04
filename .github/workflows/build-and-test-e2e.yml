@@ -13,10 +13,6 @@ jobs:
         with:
           path: '**/node_modules'
           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-      - name: install foundryup
-        run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
-      - name: install foundry
-        run: foundryup
       - name: yarn install
         run: |
           yarn install --immutable
