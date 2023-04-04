@@ -116,8 +116,9 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
-        // If reached this point, bundler will be compensated
-        opResult.bundlerCompensated = true;
+        // If reached this point, assets have been unwrapped and will have
+        // refunds to handle
+        opResult.assetsUnwrapped = true;
 
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
