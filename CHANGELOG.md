@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add precommit hooks for lint, prettier, and fresh build
 - add `--no-daemon` workaround to fix turbo (see https://github.com/vercel/turbo/issues/4137)
 - site script uses explicit block time instead of automine
 - site script prints handler address
