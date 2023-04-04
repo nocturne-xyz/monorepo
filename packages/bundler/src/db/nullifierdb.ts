@@ -46,6 +46,22 @@ export class NullifierDB {
     });
   }
 
+  getRemoveNullifierTransactions(
+    operation: ProvenOperation
+  ): RedisTransaction[] {
+    return operation.joinSplits.flatMap(({ nullifierA, nullifierB }) => {
+      return [
+        this.getRemoveNullifierTransaction(nullifierA),
+        this.getRemoveNullifierTransaction(nullifierB),
+      ];
+    });
+  }
+
+  getRemoveNullifierTransaction(nullifier: bigint): RedisTransaction {
+    const key = NullifierDB.nullifierKey(nullifier);
+    return ["del", key];
+  }
+
   getAddNullifierTransaction(
     nullifier: bigint,
     jobId: string
