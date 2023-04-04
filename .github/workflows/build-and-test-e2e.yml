@@ -1,34 +1,8 @@
-name: e2e tests
+name: e2e test
 on: [ push ]
 jobs:
-  start-runner:
-    name: start self-hosted EC2 runner
-    runs-on: ubuntu-latest
-    outputs:
-      label: ${{ steps.start-ec2-runner.outputs.label }}
-      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
-    steps:
-      - name: configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: start EC2 runner
-        id: start-ec2-runner
-        uses: machulav/ec2-github-runner@v2
-        with:
-          mode: start
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          ec2-image-id: ${{ secrets.RUNNER_IMAGE_ID }}
-          ec2-instance-type: t2.xlarge
-          subnet-id: ${{ secrets.RUNNER_SUBNET_ID }}
-          security-group-id: ${{ secrets.RUNNER_SECURITY_GROUP_ID }}
-
   build-and-test-e2e:
-    name: build and test on the runner
-    needs: start-runner # required to start the main job when the runner is ready
-    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+    runs-on: going-merry
     steps:
       - name: checkout repo and get submodules
         uses: actions/checkout@v3
@@ -60,24 +34,3 @@ jobs:
         run: |
           yarn test:e2e
 
-  stop-runner:
-    name: stop self-hosted EC2 runner
-    needs:
-      - start-runner # required to get output from the start-runner job
-      - build-and-test-e2e # required to wait when the main job is done
-    runs-on: ubuntu-latest
-    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
-    steps:
-      - name: configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: stop EC2 runner
-        uses: machulav/ec2-github-runner@v2
-        with:
-          mode: stop
-          github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-          label: ${{ needs.start-runner.outputs.label }}
-          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}

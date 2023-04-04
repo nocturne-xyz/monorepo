@@ -1,43 +1,43 @@
-# name: unit test
-# on: [push]
-# jobs:
-#   build-and-test:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - name: cache dependencies
-#         uses: actions/cache@v2
-#         with:
-#           path: "**/node_modules"
-#           key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-#       - name: use Node.js
-#         uses: actions/setup-node@v3
-#         with:
-#           node-version: "v18.12.1"
-#           cache: "yarn"
-#       - name: enable Corepack
-#         run: corepack enable
-#       - name: install foundryup
-#         run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
-#       - name: install foundry
-#         run: foundryup
-#       - name: install Rapidsnark dependencies
-#         run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
-#       - name: Yarn install
-#         run: |
-#           yarn install --immutable
-#       - name: Yarn lint
-#         run: |
-#           yarn lint
-#       - name: yarn prettier
-#         run: |
-#           yarn prettier:check
-#       - name: yarn build
-#         run: |
-#           yarn build
-#       - name: yarn test:unit
-#         run: |
-#           yarn test:unit
-#       - name: yarn test:ci
-#         run: |
-#           yarn test:ci
+name: unit test
+on: [push]
+jobs:
+  build-and-test:
+    runs-on: going-merry
+    steps:
+      - uses: actions/checkout@v3
+      - name: cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+      - name: use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "v18.12.1"
+          cache: "yarn"
+      - name: enable Corepack
+        run: corepack enable
+      - name: install foundryup
+        run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
+      - name: install foundry
+        run: foundryup
+      - name: install Rapidsnark dependencies
+        run: sudo apt-get install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+      - name: Yarn install
+        run: |
+          yarn install --immutable
+      - name: Yarn lint
+        run: |
+          yarn lint
+      - name: yarn prettier
+        run: |
+          yarn prettier:check
+      - name: yarn build
+        run: |
+          yarn build
+      - name: yarn test:unit
+        run: |
+          yarn test:unit
+      - name: yarn test:ci
+        run: |
+          yarn test:ci
