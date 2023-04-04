@@ -4,8 +4,8 @@ import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 
-// high levl idea:
-// want to sync a local replica of the tree such taht
+// high level idea:
+// want to sync a local replica of the tree such that
 // 1. we avoid loading the whole tree into memory at once
 // 2. we avoid iterating over all of the leaves
 // 3. we avoid storing the whole tree persistently
