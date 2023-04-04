@@ -6,6 +6,7 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 
 struct ExpectOperationProcessedArgs {
+    bool assetsUnwrapped;
     string maybeFailureReason;
 }
 
@@ -13,6 +14,7 @@ contract ForgeUtils is Test {
     event OperationProcessed(
         uint256 indexed operationDigest,
         bool indexed opProcessed,
+        bool indexed assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
@@ -29,6 +31,7 @@ contract ForgeUtils is Test {
             uint256(0),
             keccak256((abi.encodePacked(args.maybeFailureReason))) ==
                 keccak256(abi.encodePacked("")),
+            args.assetsUnwrapped,
             args.maybeFailureReason,
             callSuccesses,
             callResults

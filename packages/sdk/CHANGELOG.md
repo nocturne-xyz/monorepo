@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add `op.atomicActions = true` for current default
 - `NocturneDB.nullifyNotes` and `NocturneDB.applyStateDiff` return merkle indices of nullfiied notes
 - remove `getNoteCommitmentsByIndexRange` from `NocturneDB`
 - `NocturneDB` now deletes nullified notes instead of turning them into leaves

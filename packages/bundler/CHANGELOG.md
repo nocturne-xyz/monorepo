@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Parse `OperationResult.assetsUnwrapped` to differentiate btwn failed op processing and failed op execution
+- Update operation JSON fixture for request validation after adding `atomicActions`
 - when `processBundle` reverts, remove the bundle's nullifiers from `NullifierDB`
 - Update operation JSON fixture for request validation after adding `chainId` and `deadline`
 - set operation status to `BUNDLE_REVERTED` when `processBundle` reverts

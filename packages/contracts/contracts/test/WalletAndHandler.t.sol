@@ -267,6 +267,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -317,6 +318,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -515,6 +517,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -525,7 +528,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         vm.prank(BUNDLER);
@@ -574,6 +580,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -587,7 +594,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -633,6 +643,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     4 * PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -646,7 +657,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -693,6 +707,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_BAD_ROOT
             })
         );
@@ -707,7 +722,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Tree root not past root"
+                maybeFailureReason: "Tree root not past root",
+                assetsUnwrapped: false
             })
         );
 
@@ -716,6 +732,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Tree root not past root");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -753,6 +770,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType
                     .JOINSPLIT_NF_ALREADY_IN_SET
             })
@@ -768,7 +786,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Nullifier B already used"
+                maybeFailureReason: "Nullifier B already used",
+                assetsUnwrapped: false
             })
         );
 
@@ -777,6 +796,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Nullifier B already used");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -813,6 +833,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.JOINSPLIT_NFS_SAME
             })
         );
@@ -827,7 +848,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "2 nfs should !equal"
+                maybeFailureReason: "2 nfs should !equal",
+                assetsUnwrapped: false
             })
         );
 
@@ -836,6 +858,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
@@ -882,13 +905,17 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
 
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -898,6 +925,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -941,6 +969,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -970,6 +999,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -977,7 +1007,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call the Nocturne wallet"
+                maybeFailureReason: "Cannot call the Nocturne wallet",
+                assetsUnwrapped: true
             })
         );
 
@@ -988,6 +1019,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].failureReason, "Cannot call the Nocturne wallet");
 
         // Alice lost some private balance due to bundler comp. Bundler has a
@@ -1026,6 +1058,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1055,13 +1088,17 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
 
         // op processed = false, as reentrancy revert happened before making the call
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -1072,6 +1109,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // callable by wallet
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -1118,6 +1156,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1147,13 +1186,17 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
 
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         // Op was processed but call result has reentry failure message
@@ -1163,6 +1206,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
@@ -1185,7 +1229,9 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
     }
 
     // Test failing calls
-    function testProcessBundleFailureTransferNotEnoughFundsInAction() public {
+    function testProcessBundleFailureTransferNotEnoughFundsInActionNonAtomic()
+        public
+    {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1208,6 +1254,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1222,7 +1269,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
 
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         // Use Bob as bundler for this call
@@ -1232,12 +1282,86 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assertEq(opResults[0].callSuccesses.length, uint256(1));
         assertEq(opResults[0].callSuccesses[0], false);
         assertEq(opResults[0].callResults.length, uint256(1));
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
+                "transfer amount exceeds balance"
+            )
+        );
+
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
+        assertLt(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
+    }
+
+    // Ensure bundle reverts if atomicActions = true and action fails
+    function testProcessBundleFailureTransferNotEnoughFundsInActionAtomic()
+        public
+    {
+        SimpleERC20Token token = ERC20s[0];
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create transaction to send 3 * 50M even though only 2 * 50M is being
+        // taken up by wallet
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 2,
+                gasPrice: 50,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    3 * PER_NOTE_AMOUNT
+                ), // Transfer amount exceeds withdrawn
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        assertEq(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "ERC20: transfer amount exceeds balance",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // op processed = false, whole op reverted
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].failureReason),
                 "transfer amount exceeds balance"
             )
         );
@@ -1323,6 +1447,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1338,7 +1463,10 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
-            ExpectOperationProcessedArgs({maybeFailureReason: ""})
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "",
+                assetsUnwrapped: true
+            })
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1433,6 +1561,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1, // should be 4 refund assets, 1 too few
                 gasPrice: 50,
                 actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1454,7 +1583,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Too many refunds"
+                maybeFailureReason: "Too many refunds",
+                assetsUnwrapped: true
             })
         );
 
@@ -1464,6 +1594,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = false, call[0] failed (too many refunds)
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -1471,8 +1602,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Wallet lost some tokenIn to BUNDLER due to bundler gas fee, but otherwise
-        // no state changes
+        // Wallet lost some tokenIn to BUNDLER due to bundler gas fee, but
+        // otherwise no state changes
         assertLt(
             tokenIn.balanceOf(address(wallet)),
             uint256(2 * PER_NOTE_AMOUNT)
@@ -1514,6 +1645,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1524,7 +1656,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Too few gas tokens"
+                maybeFailureReason: "Too few gas tokens",
+                assetsUnwrapped: false
             })
         );
 
@@ -1534,6 +1667,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // One op, processed = true, call[0] failed (too few gas tokens)
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, false);
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
@@ -1569,6 +1703,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1579,7 +1714,8 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Transaction reverted silently"
+                maybeFailureReason: "Transaction reverted silently",
+                assetsUnwrapped: true
             })
         );
 
@@ -1617,6 +1753,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
@@ -1649,6 +1786,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.BAD_CHAIN_ID
             })
         );
@@ -1679,6 +1817,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.EXPIRED_DEADLINE
             })
         );
@@ -1709,6 +1848,7 @@ contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );

@@ -30,6 +30,7 @@ export function signOperation(
     maxNumRefunds,
     chainId,
     deadline,
+    atomicActions,
   } = op;
 
   return {
@@ -43,6 +44,7 @@ export function signOperation(
     maxNumRefunds,
     chainId,
     deadline,
+    atomicActions,
   };
 }
 

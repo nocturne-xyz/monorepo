@@ -7,7 +7,7 @@ export interface TransactionTrackerProps {
   bundlerEndpoint: string;
   operationID?: string;
   textStyles?: React.CSSProperties;
-  onComplete?: (status: OperationStatus) => void
+  onComplete?: (status: OperationStatus) => void;
   className?: string;
 }
 
@@ -23,8 +23,12 @@ function parseOperationStatus(status: string): OperationStatus {
       return OperationStatus.IN_FLIGHT;
     case OperationStatus.EXECUTED_SUCCESS:
       return OperationStatus.EXECUTED_SUCCESS;
-    case OperationStatus.EXECUTED_FAILED:
-      return OperationStatus.EXECUTED_FAILED;
+    case OperationStatus.OPERATION_PROCESSING_FAILED:
+      return OperationStatus.OPERATION_PROCESSING_FAILED;
+    case OperationStatus.OPERATION_EXECUTION_FAILED:
+      return OperationStatus.OPERATION_EXECUTION_FAILED;
+    case OperationStatus.BUNDLE_REVERTED:
+      return OperationStatus.BUNDLE_REVERTED;
     default:
       throw new Error("Invalid transaction status - should never happen!");
   }
@@ -35,14 +39,14 @@ enum TxStatusMessage {
   QUEUED = "Waiting to be included in a bundle...",
   IN_BATCH = "Waiting for the bundle to be submitted...",
   IN_FLIGHT = "Waiting for the bundle to be executed...",
-  BUNDLE_REVERTED = "Transaction failed to submit. Please try again in a few minutes.",
   EXECUTED_SUCCESS = "Transaction executed successfully!",
-  EXECUTED_FAILED = "Transaction failed to execute",
-};
+  OPERATION_PROCESSING_FAILED = "Operation processing failed.",
+  OPERATION_EXECUTION_FAILED = "Operation execution failed.",
+  BUNDLE_REVERTED = "Transaction failed to submit. Please try again in a few minutes.",
+}
 
 function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
   switch (status) {
-
     // display same message for QUEUED and PRE_BATCHß
     case OperationStatus.QUEUED:
     case OperationStatus.PRE_BATCH:
@@ -51,18 +55,26 @@ function getTxStatusMsg(status: OperationStatus): TxStatusMessage {
       return TxStatusMessage.IN_BATCH;
     case OperationStatus.IN_FLIGHT:
       return TxStatusMessage.IN_FLIGHT;
-    case OperationStatus.BUNDLE_REVERTED:
-      return TxStatusMessage.BUNDLE_REVERTED;
     case OperationStatus.EXECUTED_SUCCESS:
       return TxStatusMessage.EXECUTED_SUCCESS;
-    case OperationStatus.EXECUTED_FAILED:
-      return TxStatusMessage.EXECUTED_FAILED;
+    case OperationStatus.OPERATION_PROCESSING_FAILED:
+      return TxStatusMessage.OPERATION_PROCESSING_FAILED;
+    case OperationStatus.OPERATION_EXECUTION_FAILED:
+      return TxStatusMessage.OPERATION_EXECUTION_FAILED;
+    case OperationStatus.BUNDLE_REVERTED:
+      return TxStatusMessage.BUNDLE_REVERTED;
     default:
       return TxStatusMessage.SUBMITTING;
   }
 }
 
-export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerEndpoint, operationID, textStyles, onComplete, className }) => {
+export const TransactionTracker: React.FC<TransactionTrackerProps> = ({
+  bundlerEndpoint,
+  operationID,
+  textStyles,
+  onComplete,
+  className,
+}) => {
   const [msg, setMsg] = useState<TxStatusMessage>(TxStatusMessage.SUBMITTING);
 
   const getStatusURL = `${bundlerEndpoint}/operations/${operationID}`;
@@ -86,7 +98,12 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
           console.log("result", result);
           const status = parseOperationStatus(result.status);
 
-          if (status === OperationStatus.EXECUTED_FAILED || status === OperationStatus.EXECUTED_SUCCESS) {
+          if (
+            status === OperationStatus.EXECUTED_SUCCESS ||
+            status === OperationStatus.OPERATION_PROCESSING_FAILED ||
+            status === OperationStatus.OPERATION_EXECUTION_FAILED ||
+            status === OperationStatus.BUNDLE_REVERTED
+          ) {
             clearInterval(interval);
 
             if (onComplete) {
@@ -103,7 +120,7 @@ export const TransactionTracker: React.FC<TransactionTrackerProps> = ({ bundlerE
 
   return (
     <div className={`${className} transaction-tracker`}>
-        <span style={textStyles}>{msg}</span> 
+      <span style={textStyles}>{msg}</span>
     </div>
   );
 };

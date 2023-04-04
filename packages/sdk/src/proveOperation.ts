@@ -28,6 +28,7 @@ export async function proveOperation(
     maxNumRefunds,
     chainId,
     deadline,
+    atomicActions,
   } = op;
 
   return {
@@ -41,6 +42,7 @@ export async function proveOperation(
     maxNumRefunds,
     chainId,
     deadline,
+    atomicActions,
   };
 }
 

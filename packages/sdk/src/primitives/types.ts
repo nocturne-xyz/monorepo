@@ -91,6 +91,7 @@ interface BaseOperation {
   gasPrice: bigint;
   chainId: bigint;
   deadline: bigint;
+  atomicActions: boolean;
 }
 
 export interface PreSignOperation extends BaseOperation {
@@ -112,7 +113,8 @@ export enum OperationStatus {
   PRE_BATCH = "PRE_BATCH",
   IN_BATCH = "IN_BATCH",
   IN_FLIGHT = "IN_FLIGHT",
-  BUNDLE_REVERTED = "BUNDLE_REVERTED",
   EXECUTED_SUCCESS = "EXECUTED_SUCCESS",
-  EXECUTED_FAILED = "EXECUTED_FAILED",
+  OPERATION_PROCESSING_FAILED = "OPERATION_PROCESSING_FAILED",
+  OPERATION_EXECUTION_FAILED = "OPERATION_EXECUTION_FAILED",
+  BUNDLE_REVERTED = "BUNDLE_REVERTED",
 }

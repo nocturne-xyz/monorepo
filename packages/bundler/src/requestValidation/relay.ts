@@ -2,6 +2,7 @@ import Ajv from "ajv";
 
 const bigintPattern = "^[0-9]+n$";
 const addressPattern = "^0x[a-fA-F0-9]{40}$";
+const booleanType = { type: "boolean" };
 const bigintType = { type: "string", pattern: bigintPattern };
 const addressType = { type: "string", pattern: addressPattern };
 const solidityProofType = {
@@ -118,6 +119,7 @@ export const relaySchema = {
     gasPrice: bigintType,
     chainId: bigintType,
     deadline: bigintType,
+    atomicActions: booleanType,
   },
   additionalProperties: false,
 };

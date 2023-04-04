@@ -25,6 +25,7 @@ struct FormatOperationArgs {
     uint256 maxNumRefunds;
     uint256 gasPrice;
     Action[] actions;
+    bool atomicActions;
     OperationFailureType operationFailureType;
 }
 
@@ -215,7 +216,8 @@ library NocturneUtils {
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,
             chainId: chainId,
-            deadline: deadline
+            deadline: deadline,
+            atomicActions: args.atomicActions
         });
 
         return op;
@@ -227,6 +229,7 @@ library NocturneUtils {
         return
             OperationResult({
                 opProcessed: true,
+                assetsUnwrapped: true,
                 failureReason: "",
                 callSuccesses: new bool[](0),
                 callResults: new bytes[](0),

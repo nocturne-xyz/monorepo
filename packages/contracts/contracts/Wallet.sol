@@ -51,6 +51,7 @@ contract Wallet is
     event OperationProcessed(
         uint256 indexed operationDigest,
         bool indexed opProcessed,
+        bool indexed assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults
@@ -158,7 +159,7 @@ contract Wallet is
             opDigests
         );
 
-        require(success, "Batched JoinSplit verify failed.");
+        require(success, "Batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);
@@ -172,13 +173,16 @@ contract Wallet is
             returns (OperationResult memory result) {
                 opResults[i] = result;
             } catch (bytes memory reason) {
-                opResults[i] = OperationUtils.failOperationWithReason(
-                    Utils.getRevertMsg(reason)
-                );
+                // Indicates revert because of invalid chainid, expired
+                // deadline, or error processing joinsplits. Bundler is not
+                // compensated and we do not bubble up further OperationResult
+                // info other than failureReason.
+                opResults[i].failureReason = Utils.getRevertMsg(reason);
             }
             emit OperationProcessed(
                 opDigests[i],
                 opResults[i].opProcessed,
+                opResults[i].assetsUnwrapped,
                 opResults[i].failureReason,
                 opResults[i].callSuccesses,
                 opResults[i].callResults

@@ -116,20 +116,30 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
         _processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
+        // If reached this point, assets have been unwrapped and will have
+        // refunds to handle
+        opResult.assetsUnwrapped = true;
+
         uint256 preExecutionGas = gasleft();
         try this.executeActions{gas: op.executionGasLimit}(op) returns (
-            OperationResult memory result
+            bool[] memory successes,
+            bytes[] memory results
         ) {
-            opResult = result;
+            opResult.opProcessed = true;
+            opResult.callSuccesses = successes;
+            opResult.callResults = results;
         } catch (bytes memory reason) {
-            opResult = OperationUtils.failOperationWithReason(
-                Utils.getRevertMsg(reason)
-            );
+            // Indicates revert because of too many refunds or because
+            // atomicActions = true and an action failed. Bundler is compensated
+            // and we bubble up failureReason, verificationGas, executionGas,
+            // and numRefunds.
+            opResult.failureReason = Utils.getRevertMsg(reason);
         }
 
         // Set verification and execution gas after getting opResult
         opResult.verificationGas = perJoinSplitVerifyGas * op.joinSplits.length;
         opResult.executionGas = preExecutionGas - gasleft();
+        opResult.numRefunds = _totalNumRefundsToHandle(op);
 
         // Gather reserved gas asset and process gas payment to bundler
         _gatherReservedGasAssetAndPayBundler(
@@ -158,22 +168,18 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         whenNotPaused
         onlyThis
         executeActionsGuard
-        returns (OperationResult memory opResult)
+        returns (bool[] memory successes, bytes[] memory results)
     {
         uint256 numActions = op.actions.length;
-        opResult.opProcessed = true; // default to true
-        opResult.callSuccesses = new bool[](numActions);
-        opResult.callResults = new bytes[](numActions);
+        successes = new bool[](numActions);
+        results = new bytes[](numActions);
 
         // Execute each external call
-        // TODO: Add sequential call semantic
         for (uint256 i = 0; i < numActions; i++) {
-            (bool success, bytes memory result) = _makeExternalCall(
-                op.actions[i]
-            );
-
-            opResult.callSuccesses[i] = success;
-            opResult.callResults[i] = result;
+            (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
+            if (op.atomicActions && !successes[i]) {
+                revert(Utils.getRevertMsg(results[i]));
+            }
         }
 
         // Ensure number of refunds didn't exceed max specified in op.
@@ -181,8 +187,6 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
-
-        opResult.numRefunds = numRefundsToHandle;
     }
 
     function _makeExternalCall(

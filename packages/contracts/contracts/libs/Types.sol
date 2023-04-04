@@ -92,6 +92,7 @@ struct Operation {
     uint256 gasPrice;
     uint256 chainId;
     uint256 deadline;
+    bool atomicActions;
 }
 
 // An operation is processed if its joinsplitTxs are processed.
@@ -101,6 +102,7 @@ struct Operation {
 // Bundlers should only be submitting operations that can be processed.
 struct OperationResult {
     bool opProcessed;
+    bool assetsUnwrapped;
     string failureReason;
     bool[] callSuccesses;
     bytes[] callResults;

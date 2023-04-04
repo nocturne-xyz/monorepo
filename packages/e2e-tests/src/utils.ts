@@ -107,8 +107,10 @@ export async function submitAndProcessOperation(
       console.log(`Bundler marked operation ${operationDigest} ${status}`);
 
       if (
-        status === OperationStatus.EXECUTED_FAILED ||
-        status === OperationStatus.EXECUTED_SUCCESS
+        status === OperationStatus.EXECUTED_SUCCESS ||
+        status === OperationStatus.OPERATION_PROCESSING_FAILED ||
+        status === OperationStatus.OPERATION_EXECUTION_FAILED ||
+        status === OperationStatus.BUNDLE_REVERTED
       ) {
         return status;
       }

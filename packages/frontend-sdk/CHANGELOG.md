@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Add displays for `OPERATION_PROCESSING_FAILED` AND `OPERATION_EXECUTION_FAILED`
 - add error message for `BUNDLE_REVERTED` to `TransactionTracker`
 - Remove references to `vault` and instead approve `wallet`
 - use `proveOperation` instead of `OpProver`
