@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Add test case for atomic actions + action failure
+- Add `op.atomicActions` flag and revert in `handler.executeActions` if flag set to true and any action fails
+- Add `opResults.assetsUnwrapped` flag to differentiate when joinsplits are processed or not
+- Properly bubble up correct info in `OperationResult` between Wallet and Handler
 - Reduce number of local stack vars used in `OperationUtils.computeOperationDigest`
 - Delete unused `OperationUtils.unsuccessfulOperation` method
 - Integrate `SafeERC20` into `AssetUtils`
