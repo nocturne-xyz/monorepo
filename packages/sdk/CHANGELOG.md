@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- `NocturneDB.nullifyNotes` and `NocturneDB.applyStateDiff` return merkle indices of nullfiied notes
+- remove `getNoteCommitmentsByIndexRange` from `NocturneDB`
+- `NocturneDB` now deletes nullified notes instead of turning them into leaves
+- `NocturneDB` now only stores note
+- add `SparseMerkleProver` that stores leaves
+- remove `MerkleProver` abstraction and corresponding module 
 - Add `.chainId` and `.deadline` methods to `OperationRequestBuilder` and update unit tests
 - Add `chainId` and `deadline` to Operation + OperationRequest
 - add `BUNDLE_REVERTED` op status

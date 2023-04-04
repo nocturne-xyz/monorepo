@@ -26,7 +26,7 @@ export async function startSubgraph(
   console.log("starting graph node...");
   const res = await compose.upAll(GRAPH_NODE_COMPOSE_OPTS);
   console.log(res);
-  await sleep(10_000);
+  await sleep(15_000);
 
   // deploy subgraph
   try {

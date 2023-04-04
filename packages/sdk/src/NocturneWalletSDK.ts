@@ -5,7 +5,6 @@ import {
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
-import { MerkleProver } from "./merkleProver";
 import { prepareOperation } from "./prepareOperation";
 import { OperationRequest } from "./operationRequest";
 import { NocturneDB } from "./NocturneDB";
@@ -17,10 +16,11 @@ import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
+import { SparseMerkleProver } from "./SparseMerkleProver";
 
 export class NocturneWalletSDK {
   protected handlerContract: Handler;
-  protected merkleProver: MerkleProver;
+  protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
 
@@ -31,7 +31,7 @@ export class NocturneWalletSDK {
     signer: NocturneSigner,
     provider: ethers.providers.Provider,
     configOrNetworkName: NocturneConfig | string,
-    merkleProver: MerkleProver,
+    merkleProver: SparseMerkleProver,
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter
   ) {

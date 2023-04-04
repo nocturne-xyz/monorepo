@@ -4,13 +4,11 @@ import {
   AssetTrait,
   AssetType,
   InMemoryKVStore,
-  MerkleProver,
-  MockMerkleProver,
   NoteTrait,
   NocturneDB,
   zip,
   NocturneSigner,
-  InMemoryMerkleProver,
+  SparseMerkleProver,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 
@@ -65,21 +63,15 @@ export interface TestSetupOpts {
   mockMerkle: boolean;
 }
 
-export const defaultTestSetupOpts: TestSetupOpts = {
-  mockMerkle: true,
-};
-
 export async function setup(
   noteAmounts: bigint[],
-  assets: Asset[],
-  opts: TestSetupOpts = defaultTestSetupOpts
-): Promise<[NocturneDB, MerkleProver, NocturneSigner, Handler]> {
-  const { mockMerkle } = opts;
-
+  assets: Asset[]
+): Promise<[NocturneDB, SparseMerkleProver, NocturneSigner, Handler]> {
   const signer = new NocturneSigner(1n);
 
   const kv = new InMemoryKVStore();
   const nocturneDB = new NocturneDB(kv);
+  const merkleProver = new SparseMerkleProver(kv);
 
   const notes = zip(noteAmounts, assets).map(([amount, asset], i) => ({
     owner: signer.generateRandomStealthAddress(),
@@ -93,18 +85,18 @@ export async function setup(
   const notesWithNullfiers = zip(notes, nullifiers).map(([n, nf]) =>
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
-  await nocturneDB.storeNotesAndCommitments(notesWithNullfiers);
+  await nocturneDB.storeNotes(notesWithNullfiers);
+
+  const leaves = notes.map((note) => NoteTrait.toCommitment(note));
+  merkleProver.insertBatch(
+    0,
+    leaves,
+    leaves.map(() => true)
+  );
 
   const dummyHandlerAddr = "0xcd3b766ccdd6ae721141f452c550ca635964ce71";
   const provider = getDefaultProvider();
   const handler = Handler__factory.connect(dummyHandlerAddr, provider);
-
-  let merkleProver: MerkleProver;
-  if (mockMerkle) {
-    merkleProver = new MockMerkleProver();
-  } else {
-    merkleProver = new InMemoryMerkleProver();
-  }
 
   return [nocturneDB, merkleProver, signer, handler];
 }

@@ -6,7 +6,7 @@ import {
 import {
   DepositRequest,
   InMemoryKVStore,
-  InMemoryMerkleProver,
+  SparseMerkleProver,
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
@@ -95,8 +95,8 @@ export const run = new Command("run")
     );
 
     const nocturneSigner = new NocturneSigner(nocturneSK);
-    const merkleProver = new InMemoryMerkleProver();
     const kv = new InMemoryKVStore();
+    const merkleProver = new SparseMerkleProver(kv);
     const db = new NocturneDB(kv);
     const syncAdapter = new SubgraphSDKSyncAdapter(subgraphEndpoint);
     const sdk = new NocturneWalletSDK(

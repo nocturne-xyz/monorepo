@@ -10,7 +10,6 @@ import {
   NocturneViewer,
   range,
   NoteTrait,
-  groupByArr,
   IncludedNoteWithNullifier,
   AssetTrait,
 } from "../src";
@@ -204,17 +203,9 @@ describe("NocturneDB", async () => {
     await db.kv.close();
   });
 
-  it("Stores a batch of notes/commitments with a single asset", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
-
-    await db.storeNotesAndCommitments(notesAndCommitments);
+  it("Stores a batch of notes with a single asset", async () => {
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin);
+    await db.storeNotes(notes);
 
     const map = await db.getAllNotes();
     const assetKey = NocturneDB.formatAssetKey(shitcoin);
@@ -224,17 +215,9 @@ describe("NocturneDB", async () => {
     expect(shitcoinNotes).to.eql(shitcoinNotesExpected);
   });
 
-  it("stores a batch of notes/commitments with a multiple assets", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
-
-    await db.storeNotesAndCommitments(notesAndCommitments);
+  it("stores a batch of notes with multiple assets", async () => {
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    await db.storeNotes(notes);
 
     const map = await db.getAllNotes();
 
@@ -251,16 +234,8 @@ describe("NocturneDB", async () => {
   });
 
   it("nullifies one note", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitments] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitments.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
-
-    await db.storeNotesAndCommitments(notesAndCommitments);
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin);
+    await db.storeNotes(notes);
 
     const noteToNullify = notes[0];
     const nfToApply = noteToNullify.nullifier;
@@ -276,16 +251,8 @@ describe("NocturneDB", async () => {
   });
 
   it("nullifies multiple notes", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin);
-    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
-
-    await db.storeNotesAndCommitments(notesAndCommitments);
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin);
+    await db.storeNotes(notes);
 
     // remove the first 10 notes
     const notesToNullify = notes.slice(10);
@@ -306,18 +273,10 @@ describe("NocturneDB", async () => {
   });
 
   it("nullifies all notes for a given asset", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
-    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
+    await db.storeNotes(notes);
 
-    await db.storeNotesAndCommitments(notesAndCommitments);
-
-    // remove all of the ponzi notes
+    // nullify all of the ponzi notes
     const ponziNotes = notes.filter(
       (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(ponzi)
     );
@@ -340,14 +299,7 @@ describe("NocturneDB", async () => {
   });
 
   it("nullifies multiple notes with different assets", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
 
     const shitcoinNotes = notes.filter(
       (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(shitcoin)
@@ -359,7 +311,7 @@ describe("NocturneDB", async () => {
       (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(stablescam)
     );
 
-    await db.storeNotesAndCommitments(notesAndCommitments);
+    await db.storeNotes(notes);
 
     // nullify a some each asset's notes
     const shitcoinNotesToNullify = shitcoinNotes.filter((_, i) => i % 3 === 0);
@@ -409,16 +361,8 @@ describe("NocturneDB", async () => {
   });
 
   it("gets all notes for a given asset", async () => {
-    const [allNotes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    const [notes, toBeCommitmetns] = groupByArr(allNotes, (n) =>
-      (n.merkleIndex % 2).toString()
-    );
-    const notesAndCommitments = [
-      ...notes,
-      ...toBeCommitmetns.map((note) => NoteTrait.toIncludedCommitment(note)),
-    ];
-
-    await db.storeNotesAndCommitments(notesAndCommitments);
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    await db.storeNotes(notes);
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
       const assetHash = AssetTrait.hash(asset);

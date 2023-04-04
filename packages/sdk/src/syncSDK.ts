@@ -1,6 +1,5 @@
 import { NocturneViewer } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import { MerkleProver } from "./merkleProver";
 import {
   ClosableAsyncIterator,
   EncryptedStateDiff,
@@ -8,11 +7,17 @@ import {
   SDKSyncAdapter,
 } from "./sync";
 import { ethers } from "ethers";
-import { IncludedEncryptedNote, IncludedNote, NoteTrait } from "./primitives";
+import {
+  IncludedEncryptedNote,
+  IncludedNote,
+  IncludedNoteCommitment,
+  NoteTrait,
+} from "./primitives";
+import { SparseMerkleProver } from "./SparseMerkleProver";
+import { consecutiveChunks } from "./utils/functional";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
-const MERKLE_MAX_CHUNK_SIZE = 10000;
 
 export interface SyncOpts {
   // defaults to `false`.
@@ -30,7 +35,7 @@ export async function syncSDK(
   { provider, viewer }: SyncDeps,
   adapter: SDKSyncAdapter,
   db: NocturneDB,
-  merkle: MerkleProver,
+  merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
   const nextBlockToSync = await db.nextBlock();
@@ -49,32 +54,53 @@ export async function syncSDK(
 
   // apply diffs
   for await (const diff of diffs.iter) {
-    await db.applyStateDiff(diff);
-  }
+    // update notes in DB
+    const nfIndices = await db.applyStateDiff(diff);
+    console.log("nfIndices", nfIndices);
 
-  // update merkle tree to current
-  if (!opts?.skipMerkleProverUpdates) {
-    await updateMerkle(db, merkle);
+    // update merkle tree
+    // NOTE: the tree will include leaves that haven't yet been committed via subtree updater
+    // TODO: check for uncommitted notes `prepareOperation`
+    if (!opts?.skipMerkleProverUpdates) {
+      await updateMerkle(merkle, diff.notesAndCommitments, nfIndices);
+    }
   }
 }
 
 async function updateMerkle(
-  db: NocturneDB,
-  merkle: MerkleProver
+  merkle: SparseMerkleProver,
+  notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
+  nfIndices: number[]
 ): Promise<void> {
-  while (true) {
-    const start = await merkle.count();
-    const end = start + MERKLE_MAX_CHUNK_SIZE;
-    const newLeaves = await db.getNoteCommitmentsByIndexRange(start, end);
-
-    if (newLeaves.length === 0) {
-      return;
+  // add new leaves
+  const batches = consecutiveChunks(
+    notesAndCommitments,
+    (noteOrCommitment) => noteOrCommitment.merkleIndex
+  );
+  for (const batch of batches) {
+    const startIndex = batch[0].merkleIndex;
+    const leaves = [];
+    const includes = [];
+    for (const noteOrCommitment of batch) {
+      if (NoteTrait.isCommitment(noteOrCommitment)) {
+        leaves.push(
+          (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+        );
+        includes.push(false);
+      } else {
+        leaves.push(NoteTrait.toCommitment(noteOrCommitment as IncludedNote));
+        includes.push(true);
+      }
     }
-
-    for (const { merkleIndex, noteCommitment } of newLeaves) {
-      await merkle.insert(merkleIndex, noteCommitment);
-    }
+    merkle.insertBatch(startIndex, leaves, includes);
   }
+
+  // mark nullified ones for pruning
+  for (const index of nfIndices) {
+    merkle.markForPruning(index);
+  }
+
+  await merkle.persist();
 }
 
 function decryptStateDiff(
