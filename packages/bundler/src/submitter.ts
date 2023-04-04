@@ -11,7 +11,7 @@ import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
-import { NullifierDB, StatusDB } from "./db";
+import { StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 
 export interface BundlerSubmitterHandle {
@@ -26,7 +26,6 @@ export class BundlerSubmitter {
   signingProvider: ethers.Signer;
   walletContract: Wallet; // TODO: replace with tx manager
   statusDB: StatusDB;
-  nullifierDB: NullifierDB;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -38,7 +37,6 @@ export class BundlerSubmitter {
   ) {
     this.redis = redis;
     this.statusDB = new StatusDB(this.redis);
-    this.nullifierDB = new NullifierDB(this.redis);
     this.signingProvider = signingProvider;
     this.walletContract = Wallet__factory.connect(
       walletAddress,
@@ -111,25 +109,21 @@ export class BundlerSubmitter {
       );
     } catch (err) {
       console.log("failed to process bundle:", err);
-      const redisTxs = operations.flatMap((op) => {
+      const statusTxs = operations.map((op) => {
         const digest = computeOperationDigest(op);
         console.log(
           `setting operation with digest ${digest} to BUNDLE_REVERTED`
         );
-        const statusTx = this.statusDB.getSetJobStatusTransaction(
+        return this.statusDB.getSetJobStatusTransaction(
           digest.toString(),
           OperationStatus.BUNDLE_REVERTED
         );
-
-        const nullifierTx = this.nullifierDB.getRemoveNullifierTransactions(op);
-
-        return [statusTx, nullifierTx];
       });
 
-      await this.redis.multi(redisTxs).exec((maybeErr) => {
+      await this.redis.multi(statusTxs).exec((maybeErr) => {
         if (maybeErr) {
           throw new Error(
-            `failed to set job statuses and/or remove nullifiers after bundle reverted: ${maybeErr}`
+            `failed to set job status transactions after bundle reverted: ${maybeErr}`
           );
         }
       });
