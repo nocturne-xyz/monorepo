@@ -37,7 +37,7 @@ import { ethers } from "ethers";
 import { RPC_URL } from "../config/contracts";
 
 const ERC20_ID = 0n;
-const TOKEN_ADDRESS = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed";
+const TOKEN_ADDRESS = "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c";
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 const Container = styled.div`
