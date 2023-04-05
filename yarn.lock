@@ -3268,8 +3268,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/contracts": "workspace:^"
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/contracts": 1.0.15-alpha
+    "@nocturne-xyz/sdk": 1.0.95-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5

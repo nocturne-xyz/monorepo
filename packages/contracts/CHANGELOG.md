@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add support for instantiating ETH deposits + test case for success and failure
 - Add test case for atomic actions + action failure
 - Add `op.atomicActions` flag and revert in `handler.executeActions` if flag set to true and any action fails
 - Add `opResults.assetsUnwrapped` flag to differentiate when joinsplits are processed or not
