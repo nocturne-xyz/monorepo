@@ -362,6 +362,8 @@ contract DepositManagerTest is Test, ParseUtils {
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
         depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
@@ -369,6 +371,9 @@ contract DepositManagerTest is Test, ParseUtils {
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
 
         // Deposit manager has tokens and gas funds
         assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT);
@@ -390,6 +395,9 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.prank(SCREENER);
         depositManager.completeDeposit(deposit, signature);
+
+        // Deposit hash marked false again
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
 
         // Ensure wallet now has ALICE's tokens
         assertEq(token.balanceOf(address(wallet)), RESERVE_AMOUNT);

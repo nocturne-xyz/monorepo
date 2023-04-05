@@ -182,14 +182,17 @@ contract DepositManager is
     ) external nonReentrant {
         uint256 preDepositGas = gasleft();
 
+        // Recover and check screener signature
+        address recoveredSigner = _recoverDepositRequestSigner(req, signature);
+        require(_screeners[recoveredSigner], "request signer !screener");
+
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
         require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
-        // Recover and check screener signature
-        address recoveredSigner = _recoverDepositRequestSigner(req, signature);
-        require(_screeners[recoveredSigner], "request signer !screener");
+        // Clear deposit hash
+        _outstandingDepositHashes[depositHash] = false;
 
         // Approve wallet for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, address(_wallet), req.value);
