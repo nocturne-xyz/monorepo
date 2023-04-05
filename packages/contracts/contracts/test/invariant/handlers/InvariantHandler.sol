@@ -37,8 +37,13 @@ import "../../../libs/Types.sol";
 contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
 
+    uint256 constant ERC20_ID = 0;
+
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
+
+    uint256 constant ETH_SUPPLY = 120_500_000 ether;
+    uint256 constant GAS_COMPENSATION = 100_000 * 50 gwei;
 
     Wallet wallet;
     Handler handler;
@@ -49,9 +54,11 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     SimpleERC721Token erc721;
     SimpleERC1155Token erc1155;
 
-    uint256 ghost_instantiatedDepositSum = 0;
-    uint256 ghost_retrievedDepositSum = 0;
-    uint256 ghost_completedDepositSum = 0;
+    EncodedAsset encodedErc20;
+
+    uint256 ghost_instantiateDepositSum = 0;
+    uint256 ghost_retrieveDepositSum = 0;
+    uint256 ghost_completeDepositSum = 0;
 
     mapping(bytes32 => uint256) public calls;
 
@@ -100,5 +107,32 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         erc20 = new SimpleERC20Token();
         erc721 = new SimpleERC721Token();
         erc1155 = new SimpleERC1155Token();
+
+        encodedErc20 = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(erc20),
+            ERC20_ID
+        );
+
+        vm.deal(address(this), ETH_SUPPLY);
+        erc20.reserveTokens(address(this), erc20.totalSupply());
+    }
+
+    function instantiateDepositErc20(
+        uint256 amount
+    ) public createActor countCall("instantiateDepositErc20") {
+        amount = bound(amount, 0, erc20.balanceOf(address(this)));
+        erc20.transfer(currentActor, amount);
+
+        deal(currentActor, GAS_COMPENSATION);
+        vm.prank(currentActor);
+
+        depositManager.instantiateDeposit{value: GAS_COMPENSATION}(
+            encodedErc20,
+            amount,
+            NocturneUtils.defaultStealthAddress()
+        );
+
+        ghost_instantiateDepositSum += amount;
     }
 }
