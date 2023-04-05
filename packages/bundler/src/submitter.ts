@@ -80,10 +80,10 @@ export class BundlerSubmitter {
   }
 
   async submitBatch(operations: ProvenOperation[]): Promise<void> {
-    // TODO: this job isn't idempotent. if one step fails, bullmq will re-try
-    // which may cause issues current plan is to mark reverted bundles as failed.
-    // will circle back after further testing and likely re-queue/re-validate
-    // ops in the reverted bundle
+    // TODO: this job isn't idempotent. If one step fails, bullmq will re-try
+    // which may cause issues. Current plan is to mark reverted bundles as
+    // failed. Will circle back after further testing and likely
+    // re-queue/re-validate ops in the reverted bundle.
 
     console.log("setting ops to inflight...");
     await this.setOpsToInflight(operations);
@@ -100,10 +100,7 @@ export class BundlerSubmitter {
     const receipt = await tx.wait(1);
 
     console.log("performing post-submission bookkeeping");
-    const digestsToOps = new Map(
-      operations.map((op) => [computeOperationDigest(op), op])
-    );
-    await this.updateDBPostSubmission(digestsToOps, receipt);
+    await this.performPostSubmissionBookkeeping(operations, receipt);
   }
 
   async setOpsToInflight(operations: ProvenOperation[]): Promise<void> {
@@ -160,10 +157,14 @@ export class BundlerSubmitter {
     }
   }
 
-  async updateDBPostSubmission(
-    digestsToOps: Map<bigint, ProvenOperation>,
+  async performPostSubmissionBookkeeping(
+    operations: ProvenOperation[],
     receipt: ethers.ContractReceipt
   ): Promise<void> {
+    const digestsToOps = new Map(
+      operations.map((op) => [computeOperationDigest(op), op])
+    );
+
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
