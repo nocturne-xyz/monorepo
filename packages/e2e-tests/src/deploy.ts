@@ -7,6 +7,7 @@ import {
   Wallet,
   DepositManager,
   DepositManager__factory,
+  WETH9__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -285,6 +286,8 @@ export async function deployContractsWithDummyAdmins(
   connectedSigner: ethers.Wallet,
   args: NocturneDeployArgs
 ): Promise<NocturneContractDeployment> {
+  const weth = await new WETH9__factory(connectedSigner).deploy();
+
   const deployment = await deployNocturne(
     connectedSigner,
     {
@@ -294,6 +297,7 @@ export async function deployContractsWithDummyAdmins(
       depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
       screeners: args.screeners,
       subtreeBatchFillers: args.subtreeBatchFillers,
+      wethAddress: weth.address,
     },
     {
       useMockSubtreeUpdateVerifier:

@@ -30,6 +30,9 @@ dotenv.config();
     throw new Error("Missing SUBTREE_BATCH_FILLERS");
   const subtreeBatchFillers = subtreeBatchFillersString?.split(",") ?? [];
 
+  const wethAddress = process.env.WETH_ADDRESS;
+  if (!wethAddress) throw new Error("Missing WETH_ADDRESS");
+
   const useMockSubtreeUpdateVerifier =
     process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
 
@@ -51,6 +54,7 @@ dotenv.config();
       depositManagerOwner,
       screeners,
       subtreeBatchFillers,
+      wethAddress,
     },
     {
       useMockSubtreeUpdateVerifier,

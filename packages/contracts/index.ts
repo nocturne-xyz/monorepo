@@ -27,6 +27,7 @@ export { CommitmentTreeManager__factory } from './src/factories/CommitmentTreeMa
 export { SimpleERC20Token__factory } from './src/factories/SimpleERC20Token__factory';
 export { SimpleERC721Token__factory } from './src/factories/SimpleERC721Token__factory';
 export { SimpleERC1155Token__factory } from './src/factories/SimpleERC1155Token__factory';
+export { WETH9__factory } from './src/factories/WETH9__factory';
 
 export { TransparentUpgradeableProxy__factory } from './src/factories/TransparentUpgradeableProxy__factory';
 export { ProxyAdmin__factory } from './src/factories/ProxyAdmin__factory';

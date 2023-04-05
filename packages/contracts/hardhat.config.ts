@@ -25,7 +25,8 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(
         p.includes('TestSubtreeUpdateVerifier') ||
         p.includes('SimpleERC20Token') ||
         p.includes('SimpleERC721Token') ||
-        p.includes('SimpleERC1155Token'),
+        p.includes('SimpleERC1155Token') ||
+        p.includes('WETH9'),
     );
   },
 );
@@ -92,6 +93,7 @@ module.exports = {
       'SimpleERC20Token',
       'SimpleERC721Token',
       'SimpleERC1155Token',
+      'WETH9',
       'TestSubtreeUpdateVerifier',
       'TransparentUpgradeableProxy',
       'ProxyAdmin',
