@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- deploy weth and pass to deposit manager initialization
 - update tests using `SparseMerkleProver`
 - rename `NocturneSyncer.ts` -> `syncSDK.ts`
 - Pass in `chainId` and `deadline` when building `OperationRequest` after adding fields to op

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Pass weth to deposit manager initialization
 - Deploy handler contract and remove vault
 - Add subtree batch fillers args to `NocturneDeployArgs` and give them permission in `deployNocturne`
 - Now deploys deposit manager and connects deposit manager to wallet (+ related checks)

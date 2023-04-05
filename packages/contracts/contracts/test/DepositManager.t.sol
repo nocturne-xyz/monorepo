@@ -17,11 +17,13 @@ import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.s
 import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
+import {WETH9} from "./tokens/WETH9.sol";
 
 contract DepositManagerTest is Test, ParseUtils {
     Wallet public wallet;
     Handler public handler;
     TestDepositManager public depositManager;
+    WETH9 public weth;
 
     SimpleERC20Token[3] ERC20s;
     SimpleERC721Token[3] ERC721s;
@@ -69,6 +71,7 @@ contract DepositManagerTest is Test, ParseUtils {
         // TODO: extract wallet/handler deployment into NocturneUtils
         wallet = new Wallet();
         handler = new Handler();
+        weth = new WETH9();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -80,7 +83,8 @@ contract DepositManagerTest is Test, ParseUtils {
         depositManager.initialize(
             CONTRACT_NAME,
             CONTRACT_VERSION,
-            address(wallet)
+            address(wallet),
+            address(weth)
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
@@ -150,6 +154,61 @@ contract DepositManagerTest is Test, ParseUtils {
         // Token escrowed by manager contract
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+    }
+
+    function testInstantiateETHDepositSuccess() public {
+        uint256 depositAmount = GAS_COMP_AMOUNT;
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(weth),
+            depositAmount,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonces(ALICE),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
+        // Deposit hash not yet marked true and ETH balance empty
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
+        assertEq(address(depositManager).balance, 0);
+
+        // Set ALICE balance to 20M wei, enough for deposit and gas comp
+        vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit DepositInstantiated(
+            deposit.spender,
+            deposit.encodedAsset,
+            deposit.value,
+            deposit.depositAddr,
+            deposit.nonce,
+            deposit.gasCompensation
+        );
+        vm.prank(ALICE);
+        depositManager.instantiateETHDeposit{
+            value: GAS_COMP_AMOUNT + depositAmount
+        }(depositAmount, NocturneUtils.defaultStealthAddress());
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
+
+        // Token + eth escrowed by manager contract
+        assertEq(weth.balanceOf(address(depositManager)), depositAmount);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+    }
+
+    function testInstantiateETHDepositNotEnoughETH() public {
+        uint256 depositAmount = GAS_COMP_AMOUNT;
+
+        // Set ALICE balance to 20M wei, enough for deposit and gas comp
+        vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
+        vm.expectRevert("msg.value < value");
+        vm.prank(ALICE);
+        depositManager.instantiateETHDeposit{value: depositAmount - 1}(
+            depositAmount,
+            NocturneUtils.defaultStealthAddress()
+        );
     }
 
     function testRetrieveDepositSuccess() public {
@@ -303,6 +362,8 @@ contract DepositManagerTest is Test, ParseUtils {
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
+        bytes32 depositHash = depositManager.hashDepositRequest(deposit);
+
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
         depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
@@ -310,6 +371,9 @@ contract DepositManagerTest is Test, ParseUtils {
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
+
+        // Deposit hash marked true
+        assertTrue(depositManager._outstandingDepositHashes(depositHash));
 
         // Deposit manager has tokens and gas funds
         assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT);
@@ -331,6 +395,9 @@ contract DepositManagerTest is Test, ParseUtils {
 
         vm.prank(SCREENER);
         depositManager.completeDeposit(deposit, signature);
+
+        // Deposit hash marked false again
+        assertFalse(depositManager._outstandingDepositHashes(depositHash));
 
         // Ensure wallet now has ALICE's tokens
         assertEq(token.balanceOf(address(wallet)), RESERVE_AMOUNT);

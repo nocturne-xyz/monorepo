@@ -27,6 +27,7 @@ export interface NocturneDeployArgs {
   depositManagerOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
+  wethAddress: Address;
 }
 
 export interface NocturneDeployOpts {
@@ -110,7 +111,7 @@ export async function deployNocturne(
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
-    ["NocturneDepositManager", "v1", proxiedWallet.address]
+    ["NocturneDepositManager", "v1", proxiedWallet.address, args.wethAddress]
   );
   console.log(
     "deployed proxied DepositManager:",

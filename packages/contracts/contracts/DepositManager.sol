@@ -8,6 +8,7 @@ import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Addr
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 // Internal
 import {IWallet} from "./interfaces/IWallet.sol";
+import {IWeth} from "./interfaces/IWeth.sol";
 import {DepositManagerBase} from "./DepositManagerBase.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {Utils} from "./libs/Utils.sol";
@@ -18,7 +19,13 @@ contract DepositManager is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
+    uint256 constant ERC20_ID = 0;
+
     IWallet public _wallet;
+    IWeth public _weth;
+
+    EncodedAsset public _wethEncoded;
+
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
@@ -58,11 +65,14 @@ contract DepositManager is
     function initialize(
         string memory contractName,
         string memory contractVersion,
-        address wallet
+        address wallet,
+        address weth
     ) external initializer {
         __Ownable_init();
         __DepositManagerBase_init(contractName, contractVersion);
         _wallet = IWallet(wallet);
+        _weth = IWeth(weth);
+        _wethEncoded = AssetUtils.encodeAsset(AssetType.ERC20, weth, ERC20_ID);
     }
 
     function setScreenerPermission(
@@ -71,6 +81,38 @@ contract DepositManager is
     ) external onlyOwner {
         _screeners[screener] = permission;
         emit ScreenerPermissionSet(screener, permission);
+    }
+
+    function instantiateETHDeposit(
+        uint256 value,
+        StealthAddress calldata depositAddr
+    ) external payable nonReentrant {
+        require(msg.value >= value, "msg.value < value");
+        _weth.deposit{value: value}();
+
+        DepositRequest memory req = DepositRequest({
+            spender: msg.sender,
+            encodedAsset: _wethEncoded,
+            value: value,
+            depositAddr: depositAddr,
+            nonce: _nonces[msg.sender],
+            gasCompensation: msg.value - value
+        });
+
+        bytes32 depositHash = _hashDepositRequest(req);
+
+        // Update deposit mapping and nonces
+        _outstandingDepositHashes[depositHash] = true;
+        _nonces[req.spender] = req.nonce + 1;
+
+        emit DepositInstantiated(
+            req.spender,
+            req.encodedAsset,
+            req.value,
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
+        );
     }
 
     function instantiateDeposit(
@@ -140,14 +182,17 @@ contract DepositManager is
     ) external nonReentrant {
         uint256 preDepositGas = gasleft();
 
+        // Recover and check screener signature
+        address recoveredSigner = _recoverDepositRequestSigner(req, signature);
+        require(_screeners[recoveredSigner], "request signer !screener");
+
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
         require(_outstandingDepositHashes[depositHash], "deposit !exists");
 
-        // Recover and check screener signature
-        address recoveredSigner = _recoverDepositRequestSigner(req, signature);
-        require(_screeners[recoveredSigner], "request signer !screener");
+        // Clear deposit hash
+        _outstandingDepositHashes[depositHash] = false;
 
         // Approve wallet for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, address(_wallet), req.value);
