@@ -7,21 +7,21 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
-import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
-import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
-import {OperationUtils} from "../libs/OperationUtils.sol";
-import {Wallet} from "../Wallet.sol";
-import {TestBalanceManager} from "./harnesses/TestBalanceManager.sol";
-import "./utils/NocturneUtils.sol";
-import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
-import {Utils} from "../libs/Utils.sol";
-import {AssetUtils} from "../libs/AssetUtils.sol";
-import "../libs/Types.sol";
+import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
+import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {OperationUtils} from "../../libs/OperationUtils.sol";
+import {Wallet} from "../../Wallet.sol";
+import {TestBalanceManager} from "../harnesses/TestBalanceManager.sol";
+import "../utils/NocturneUtils.sol";
+import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
+import {Utils} from "../../libs/Utils.sol";
+import {AssetUtils} from "../../libs/AssetUtils.sol";
+import "../../libs/Types.sol";
 
 contract BalanceManagerTest is Test {
     using OffchainMerkleTree for OffchainMerkleTreeData;

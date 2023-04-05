@@ -6,12 +6,12 @@ import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {JsonDecodings, JoinSplitProofWithPublicSignals} from "./utils/JsonDecodings.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
-import {JoinSplitVerifier} from "../JoinSplitVerifier.sol";
-import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
-import {Groth16} from "../libs/Groth16.sol";
-import {Utils} from "../libs/Utils.sol";
+import {JsonDecodings, JoinSplitProofWithPublicSignals} from "../utils/JsonDecodings.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
+import {JoinSplitVerifier} from "../../JoinSplitVerifier.sol";
+import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
+import {Groth16} from "../../libs/Groth16.sol";
+import {Utils} from "../../libs/Utils.sol";
 
 contract TestJoinSplitVerifier is Test, ParseUtils, JsonDecodings {
     using stdJson for string;

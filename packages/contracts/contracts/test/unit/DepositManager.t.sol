@@ -5,19 +5,20 @@ pragma abicoder v2;
 import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
-import "../libs/Types.sol";
-import {NocturneUtils} from "./utils/NocturneUtils.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
-import {AssetUtils} from "../libs/AssetUtils.sol";
-import {TestDepositManager} from "./harnesses/TestDepositManager.sol";
-import {Handler} from "../Handler.sol";
-import {Wallet} from "../Wallet.sol";
-import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
-import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
-import {WETH9} from "./tokens/WETH9.sol";
+
+import "../../libs/Types.sol";
+import {NocturneUtils} from "../utils/NocturneUtils.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
+import {AssetUtils} from "../../libs/AssetUtils.sol";
+import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
+import {Handler} from "../../Handler.sol";
+import {Wallet} from "../../Wallet.sol";
+import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
+import {WETH9} from "../tokens/WETH9.sol";
 
 contract DepositManagerTest is Test, ParseUtils {
     Wallet public wallet;

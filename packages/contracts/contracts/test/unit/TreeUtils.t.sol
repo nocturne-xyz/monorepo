@@ -2,9 +2,10 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {Utils} from "../libs/Utils.sol";
-import {TreeUtils} from "../libs/TreeUtils.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
+
+import {Utils} from "../../libs/Utils.sol";
+import {TreeUtils} from "../../libs/TreeUtils.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
 
 contract TestTreeUtils is Test, ParseUtils {
     function testEncodePathAndHash() public {

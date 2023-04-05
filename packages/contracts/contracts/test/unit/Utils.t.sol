@@ -2,8 +2,9 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {Utils} from "../libs/Utils.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
+
+import {Utils} from "../../libs/Utils.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
 
 contract ParseUtilsLib is Test, ParseUtils {
     function testSha256FieldElems() public {
