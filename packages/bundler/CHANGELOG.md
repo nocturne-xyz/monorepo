@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Detect ops that reverted during processing and remove their NFs from DB
+- Decompose `Submitter.submitBatch` into setting ops inflight, dispatching bundle, and book-keeping post-submission
 - Parse `OperationResult.assetsUnwrapped` to differentiate btwn failed op processing and failed op execution
 - Update operation JSON fixture for request validation after adding `atomicActions`
 - when `processBundle` reverts, remove the bundle's nullifiers from `NullifierDB`
