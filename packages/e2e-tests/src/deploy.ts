@@ -287,6 +287,7 @@ export async function deployContractsWithDummyAdmins(
   args: NocturneDeployArgs
 ): Promise<NocturneContractDeployment> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
+  console.log("weth address:", weth.address);
 
   const deployment = await deployNocturne(
     connectedSigner,

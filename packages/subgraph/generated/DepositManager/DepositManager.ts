@@ -340,6 +340,31 @@ export class DepositManager___computeDigestInputReqDepositAddrStruct extends eth
   }
 }
 
+export class DepositManager___wethEncodedResult {
+  value0: BigInt;
+  value1: BigInt;
+
+  constructor(value0: BigInt, value1: BigInt) {
+    this.value0 = value0;
+    this.value1 = value1;
+  }
+
+  toMap(): TypedMap<string, ethereum.Value> {
+    let map = new TypedMap<string, ethereum.Value>();
+    map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
+    map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    return map;
+  }
+
+  getEncodedAssetAddr(): BigInt {
+    return this.value0;
+  }
+
+  getEncodedAssetId(): BigInt {
+    return this.value1;
+  }
+}
+
 export class DepositManager extends ethereum.SmartContract {
   static bind(address: Address): DepositManager {
     return new DepositManager("DepositManager", address);
@@ -515,6 +540,52 @@ export class DepositManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  _weth(): Address {
+    let result = super.call("_weth", "_weth():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try__weth(): ethereum.CallResult<Address> {
+    let result = super.tryCall("_weth", "_weth():(address)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  _wethEncoded(): DepositManager___wethEncodedResult {
+    let result = super.call(
+      "_wethEncoded",
+      "_wethEncoded():(uint256,uint256)",
+      []
+    );
+
+    return new DepositManager___wethEncodedResult(
+      result[0].toBigInt(),
+      result[1].toBigInt()
+    );
+  }
+
+  try__wethEncoded(): ethereum.CallResult<DepositManager___wethEncodedResult> {
+    let result = super.tryCall(
+      "_wethEncoded",
+      "_wethEncoded():(uint256,uint256)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new DepositManager___wethEncodedResult(
+        value[0].toBigInt(),
+        value[1].toBigInt()
+      )
+    );
+  }
+
   owner(): Address {
     let result = super.call("owner", "owner():(address)", []);
 
@@ -653,6 +724,10 @@ export class InitializeCall__Inputs {
   get wallet(): Address {
     return this._call.inputValues[2].value.toAddress();
   }
+
+  get weth(): Address {
+    return this._call.inputValues[3].value.toAddress();
+  }
 }
 
 export class InitializeCall__Outputs {
@@ -716,6 +791,60 @@ export class InstantiateDepositCallEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class InstantiateDepositCallDepositAddrStruct extends ethereum.Tuple {
+  get h1X(): BigInt {
+    return this[0].toBigInt();
+  }
+
+  get h1Y(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get h2X(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get h2Y(): BigInt {
+    return this[3].toBigInt();
+  }
+}
+
+export class InstantiateETHDepositCall extends ethereum.Call {
+  get inputs(): InstantiateETHDepositCall__Inputs {
+    return new InstantiateETHDepositCall__Inputs(this);
+  }
+
+  get outputs(): InstantiateETHDepositCall__Outputs {
+    return new InstantiateETHDepositCall__Outputs(this);
+  }
+}
+
+export class InstantiateETHDepositCall__Inputs {
+  _call: InstantiateETHDepositCall;
+
+  constructor(call: InstantiateETHDepositCall) {
+    this._call = call;
+  }
+
+  get value(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get depositAddr(): InstantiateETHDepositCallDepositAddrStruct {
+    return changetype<InstantiateETHDepositCallDepositAddrStruct>(
+      this._call.inputValues[1].value.toTuple()
+    );
+  }
+}
+
+export class InstantiateETHDepositCall__Outputs {
+  _call: InstantiateETHDepositCall;
+
+  constructor(call: InstantiateETHDepositCall) {
+    this._call = call;
+  }
+}
+
+export class InstantiateETHDepositCallDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }

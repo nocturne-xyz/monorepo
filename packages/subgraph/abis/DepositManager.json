@@ -476,6 +476,37 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "_weth",
+    "outputs": [
+      {
+        "internalType": "contract IWeth",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "_wethEncoded",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "encodedAssetAddr",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "encodedAssetId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -575,6 +606,11 @@
         "internalType": "address",
         "name": "wallet",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "weth",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -635,6 +671,46 @@
       }
     ],
     "name": "instantiateDeposit",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "h1X",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h1Y",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h2X",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "h2Y",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct StealthAddress",
+        "name": "depositAddr",
+        "type": "tuple"
+      }
+    ],
+    "name": "instantiateETHDeposit",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
