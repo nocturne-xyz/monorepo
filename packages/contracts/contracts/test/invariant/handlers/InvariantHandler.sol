@@ -25,19 +25,20 @@ import {Wallet} from "../../../Wallet.sol";
 import {Handler} from "../../../Handler.sol";
 import {CommitmentTreeManager} from "../../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
+import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {DepositRequestSet, LibDepositRequestSet} from "../helpers/DepositRequestSet.sol";
+import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
 contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
-    using LibDepositRequestSet for DepositRequestSet;
+    using LibDepositRequestArray for DepositRequest[];
 
     uint256 constant ERC20_ID = 0;
 
@@ -67,7 +68,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     AddressSet internal _actors;
     address internal currentActor;
 
-    DepositRequestSet internal _depositRequestSet;
+    DepositRequest[] internal _depositRequestSet;
 
     modifier createActor() {
         currentActor = msg.sender;
@@ -136,29 +137,26 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         vm.startPrank(currentActor);
         erc20.approve(address(depositManager), amount);
 
+        // Start recording logs and make call
+        vm.recordLogs();
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
-
-        // Save deposit request pre call
-        DepositRequest memory req = DepositRequest({
-            spender: currentActor,
-            encodedAsset: encodedErc20,
-            value: amount,
-            depositAddr: depositAddr,
-            nonce: depositManager._nonces(currentActor),
-            gasCompensation: GAS_COMPENSATION
-        });
-
-        // Make call
         depositManager.instantiateDeposit{value: GAS_COMPENSATION}(
             encodedErc20,
             amount,
             depositAddr
         );
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        Vm.Log memory entry = entries[entries.length - 1];
+        DepositRequest memory req = EventParsing.decodeDepositRequestFromEvent(
+            entry
+        );
+
         vm.stopPrank();
 
         // Update set and sum
-        _depositRequestSet.add(currentActor, req);
+        _depositRequestSet.push(req);
         ghost_instantiateDepositSum += amount;
     }
 
