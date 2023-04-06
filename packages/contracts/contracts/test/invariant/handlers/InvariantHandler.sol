@@ -30,12 +30,14 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
+import {DepositRequestSet, LibDepositRequestSet} from "../helpers/DepositRequestSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
 contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
+    using LibDepositRequestSet for DepositRequestSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -64,6 +66,8 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     AddressSet internal _actors;
     address internal currentActor;
+
+    DepositRequestSet internal _depositRequestSet;
 
     modifier createActor() {
         currentActor = msg.sender;
@@ -115,24 +119,48 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         );
 
         vm.deal(address(this), ETH_SUPPLY);
-        erc20.reserveTokens(address(this), erc20.totalSupply());
+        erc20.reserveTokens(address(this), type(uint256).max);
     }
 
     function instantiateDepositErc20(
         uint256 amount
     ) public createActor countCall("instantiateDepositErc20") {
+        // Bound deposit amount
         amount = bound(amount, 0, erc20.balanceOf(address(this)));
         erc20.transfer(currentActor, amount);
 
+        // Deal gas compensation
         deal(currentActor, GAS_COMPENSATION);
-        vm.prank(currentActor);
 
+        // Approve token
+        vm.startPrank(currentActor);
+        erc20.approve(address(depositManager), amount);
+
+        StealthAddress memory depositAddr = NocturneUtils
+            .defaultStealthAddress();
+
+        // Save deposit request pre call
+        DepositRequest memory req = DepositRequest({
+            spender: currentActor,
+            encodedAsset: encodedErc20,
+            value: amount,
+            depositAddr: depositAddr,
+            nonce: depositManager._nonces(currentActor),
+            gasCompensation: GAS_COMPENSATION
+        });
+
+        // Make call
         depositManager.instantiateDeposit{value: GAS_COMPENSATION}(
             encodedErc20,
             amount,
-            NocturneUtils.defaultStealthAddress()
+            depositAddr
         );
+        vm.stopPrank();
 
+        // Update set and sum
+        _depositRequestSet.add(currentActor, req);
         ghost_instantiateDepositSum += amount;
     }
+
+    function retrieveDepositErc() public countCall("retrieveDepositErc20") {}
 }

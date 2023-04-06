@@ -9,6 +9,7 @@ import "forge-std/console.sol";
 import "../../libs/Types.sol";
 import {NocturneUtils} from "../utils/NocturneUtils.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
+import {EventParsing} from "../utils/EventParsing.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
 import {Handler} from "../../Handler.sol";

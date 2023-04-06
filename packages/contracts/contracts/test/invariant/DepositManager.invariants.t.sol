@@ -35,8 +35,4 @@ contract DepositManagerInvariants is Test {
             invariantHandler.ghost_instantiateDepositSum()
         );
     }
-
-    // function invariant_badInvariantThisShouldFail() public {
-    //     assertTrue(false);
-    // }
 }

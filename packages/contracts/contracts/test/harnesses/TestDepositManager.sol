@@ -17,4 +17,23 @@ contract TestDepositManager is DepositManager {
     ) public pure returns (bytes32) {
         return _hashDepositRequest(req);
     }
+
+    function instantiateDepositRet(
+        EncodedAsset calldata encodedAsset,
+        uint256 value,
+        StealthAddress calldata depositAddr
+    ) public payable returns (DepositRequest memory) {
+        DepositRequest memory req = DepositRequest({
+            spender: msg.sender,
+            encodedAsset: encodedAsset,
+            value: value,
+            depositAddr: depositAddr,
+            nonce: _nonces[msg.sender],
+            gasCompensation: msg.value
+        });
+
+        this.instantiateDeposit(encodedAsset, value, depositAddr);
+
+        return req;
+    }
 }
