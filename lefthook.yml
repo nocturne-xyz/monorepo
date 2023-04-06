@@ -7,5 +7,3 @@ pre-commit:
       run: yarn prettier:check
     lint:
       run: yarn lint
-    fresh-build:
-      run: yarn turbo run --no-daemon build --no-cache --force
