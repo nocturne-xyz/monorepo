@@ -45,20 +45,20 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
     uint256 constant GAS_COMPENSATION = 100_000 * 50 gwei;
 
-    Wallet wallet;
-    Handler handler;
-    DepositManager depositManager;
+    Wallet public wallet;
+    Handler public handler;
+    DepositManager public depositManager;
 
-    WETH9 weth;
-    SimpleERC20Token erc20;
-    SimpleERC721Token erc721;
-    SimpleERC1155Token erc1155;
+    WETH9 public weth;
+    SimpleERC20Token public erc20;
+    SimpleERC721Token public erc721;
+    SimpleERC1155Token public erc1155;
 
-    EncodedAsset encodedErc20;
+    EncodedAsset public encodedErc20;
 
-    uint256 ghost_instantiateDepositSum = 0;
-    uint256 ghost_retrieveDepositSum = 0;
-    uint256 ghost_completeDepositSum = 0;
+    uint256 public ghost_instantiateDepositSum = 0;
+    uint256 public ghost_retrieveDepositSum = 0;
+    uint256 public ghost_completeDepositSum = 0;
 
     mapping(bytes32 => uint256) public calls;
 
