@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-contract ParseUtils {
+library ParseUtils {
     // Convert an hexadecimal character to their value
-    function fromHexChar(uint8 c) public pure returns (uint8) {
+    function fromHexChar(uint8 c) internal pure returns (uint8) {
         if (bytes1(c) >= bytes1("0") && bytes1(c) <= bytes1("9")) {
             return c - uint8(bytes1("0"));
         }
@@ -17,7 +17,7 @@ contract ParseUtils {
     }
 
     // Convert an hexadecimal string to raw bytes
-    function hexToBytes(string memory s) public pure returns (bytes memory) {
+    function hexToBytes(string memory s) internal pure returns (bytes memory) {
         bytes memory ss = bytes(s);
         require(ss.length % 2 == 0); // length must be even
         bytes memory r = new bytes(ss.length / 2);
@@ -35,7 +35,7 @@ contract ParseUtils {
         uint256 r,
         uint256 s,
         uint8 v
-    ) public pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         bytes memory sig = new bytes(65);
         assembly {
             mstore(add(sig, 32), r)
@@ -47,7 +47,7 @@ contract ParseUtils {
     }
 
     // Parse string into int
-    function parseInt(string memory s) public pure returns (uint256) {
+    function parseInt(string memory s) internal pure returns (uint256) {
         bytes memory b = bytes(s);
         uint256 result = 0;
         for (uint256 i = 0; i < b.length; i++) {
@@ -62,7 +62,7 @@ contract ParseUtils {
     function hasSubstring(
         string memory str,
         string memory substr
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         bytes memory strBytes = bytes(str);
         bytes memory substrBytes = bytes(substr);
 

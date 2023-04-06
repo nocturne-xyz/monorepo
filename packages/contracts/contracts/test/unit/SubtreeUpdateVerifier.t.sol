@@ -13,7 +13,7 @@ import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.so
 import {Groth16} from "../../libs/Groth16.sol";
 import {SubtreeUpdateVerifier} from "../../SubtreeUpdateVerifier.sol";
 
-contract TestSubtreeUpdateVerifier is Test, ParseUtils, JsonDecodings {
+contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/subtreeupdateProof.json";

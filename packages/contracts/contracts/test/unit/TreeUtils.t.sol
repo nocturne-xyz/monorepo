@@ -7,7 +7,7 @@ import {Utils} from "../../libs/Utils.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 
-contract TestTreeUtils is Test, ParseUtils {
+contract TestTreeUtils is Test {
     function testEncodePathAndHash() public {
         uint256 idx = 12 * TreeUtils.BATCH_SIZE;
         uint256 accumulatorHash = (1 << 255) - 1;

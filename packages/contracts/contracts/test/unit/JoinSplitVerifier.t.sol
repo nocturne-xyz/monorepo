@@ -13,7 +13,7 @@ import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {Groth16} from "../../libs/Groth16.sol";
 import {Utils} from "../../libs/Utils.sol";
 
-contract TestJoinSplitVerifier is Test, ParseUtils, JsonDecodings {
+contract TestJoinSplitVerifier is Test, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";

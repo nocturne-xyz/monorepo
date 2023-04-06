@@ -4,9 +4,8 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 
 import {Utils} from "../../libs/Utils.sol";
-import {ParseUtils} from "../utils/ParseUtils.sol";
 
-contract ParseUtilsLib is Test, ParseUtils {
+contract ParseUtilsLib is Test {
     function testSha256FieldElems() public {
         uint256[] memory preimage = new uint256[](6);
         preimage[

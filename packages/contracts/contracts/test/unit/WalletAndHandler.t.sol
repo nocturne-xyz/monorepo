@@ -32,7 +32,7 @@ import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
 
-contract WalletTest is Test, ParseUtils, ForgeUtils, PoseidonDeployer {
+contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;

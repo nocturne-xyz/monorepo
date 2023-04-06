@@ -21,7 +21,7 @@ import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 
-contract DepositManagerTest is Test, ParseUtils {
+contract DepositManagerTest is Test {
     Wallet public wallet;
     Handler public handler;
     TestDepositManager public depositManager;
@@ -383,7 +383,11 @@ contract DepositManagerTest is Test, ParseUtils {
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
-        bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
+        bytes memory signature = ParseUtils.rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
 
         vm.expectEmit(true, true, true, true);
         emit DepositCompleted(
@@ -449,7 +453,7 @@ contract DepositManagerTest is Test, ParseUtils {
         bytes32 digest = depositManager.computeDigest(deposit);
         uint256 randomPrivkey = 123;
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomPrivkey, digest);
-        bytes memory badSignature = rsvToSignatureBytes(
+        bytes memory badSignature = ParseUtils.rsvToSignatureBytes(
             uint256(r),
             uint256(s),
             v
@@ -481,7 +485,11 @@ contract DepositManagerTest is Test, ParseUtils {
 
         bytes32 digest = depositManager.computeDigest(deposit);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
-        bytes memory signature = rsvToSignatureBytes(uint256(r), uint256(s), v);
+        bytes memory signature = ParseUtils.rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
 
         vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);

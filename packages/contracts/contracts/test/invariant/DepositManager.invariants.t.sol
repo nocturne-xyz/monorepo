@@ -27,12 +27,22 @@ contract DepositManagerInvariants is Test {
     // Total balance of deposit manager equals total deposits instantiated
     // amount - total retrieval amount - total deposits completed amount
     function invariant_conservationOfErc20() external {
-        // TODO: subtract retrievals and completions
+        // TODO: subtract retrievals
         assertEq(
             invariantHandler.erc20().balanceOf(
                 address(invariantHandler.depositManager())
             ),
-            invariantHandler.ghost_instantiateDepositSum()
+            invariantHandler.ghost_instantiateDepositSum() -
+                invariantHandler.ghost_completeDepositSum()
+        );
+    }
+
+    function invariant_completedDepositSumEqualsWalletBalance() external {
+        assertEq(
+            invariantHandler.erc20().balanceOf(
+                address(invariantHandler.wallet())
+            ),
+            invariantHandler.ghost_completeDepositSum()
         );
     }
 }

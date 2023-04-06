@@ -6,7 +6,7 @@ import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import {ParseUtils} from "./ParseUtils.sol";
 
-contract PoseidonDeployer is Test, ParseUtils {
+contract PoseidonDeployer is Test {
     address poseidonT3;
     address poseidonT4;
     address poseidonT5;
@@ -25,7 +25,7 @@ contract PoseidonDeployer is Test, ParseUtils {
             path = abi.encodePacked(path, ".txt");
 
             string memory bytecodeStr = vm.readFile(string(path));
-            bytes memory bytecode = hexToBytes(bytecodeStr);
+            bytes memory bytecode = ParseUtils.hexToBytes(bytecodeStr);
 
             address deployed;
             assembly {

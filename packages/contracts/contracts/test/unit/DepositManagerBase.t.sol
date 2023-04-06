@@ -10,7 +10,7 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import {JsonDecodings, SignedDepositRequestFixture} from "../utils/JsonDecodings.sol";
 import "../harnesses/TestDepositManagerBase.sol";
 
-contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
+contract DepositManagerBaseTest is Test, JsonDecodings {
     string constant SIGNED_DEPOSIT_REQ_FIXTURE_PATH =
         "/fixtures/signedDepositRequest.json";
 

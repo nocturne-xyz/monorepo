@@ -36,7 +36,7 @@ library EventParsing {
 
         return
             DepositRequest({
-                spender: address(0x1),
+                spender: spender,
                 encodedAsset: EncodedAsset({
                     encodedAssetAddr: encodedAssetAddr,
                     encodedAssetId: encodedAssetId

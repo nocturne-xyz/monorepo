@@ -20,7 +20,7 @@ import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
-import {DepositManager} from "../../../DepositManager.sol";
+import {TestDepositManager} from "../../harnesses/TestDepositManager.sol";
 import {Wallet} from "../../../Wallet.sol";
 import {Handler} from "../../../Handler.sol";
 import {CommitmentTreeManager} from "../../../CommitmentTreeManager.sol";
@@ -48,9 +48,12 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
     uint256 constant GAS_COMPENSATION = 100_000 * 50 gwei;
 
+    uint256 constant SCREENER_PRIVKEY = 1;
+    address SCREENER = vm.addr(SCREENER_PRIVKEY);
+
     Wallet public wallet;
     Handler public handler;
-    DepositManager public depositManager;
+    TestDepositManager public depositManager;
 
     WETH9 public weth;
     SimpleERC20Token public erc20;
@@ -68,7 +71,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     AddressSet internal _actors;
     address internal currentActor;
 
-    DepositRequest[] internal _depositRequestSet;
+    DepositRequest[] internal _depositSet;
 
     modifier createActor() {
         currentActor = msg.sender;
@@ -89,7 +92,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     constructor() {
         wallet = new Wallet();
         handler = new Handler();
-        depositManager = new DepositManager();
+        depositManager = new TestDepositManager();
 
         weth = new WETH9();
 
@@ -147,6 +150,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
             depositAddr
         );
 
+        // Recover deposit request
         Vm.Log[] memory entries = vm.getRecordedLogs();
         Vm.Log memory entry = entries[entries.length - 1];
         DepositRequest memory req = EventParsing.decodeDepositRequestFromEvent(
@@ -156,9 +160,33 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         vm.stopPrank();
 
         // Update set and sum
-        _depositRequestSet.push(req);
+        _depositSet.push(req);
         ghost_instantiateDepositSum += amount;
     }
 
-    function retrieveDepositErc() public countCall("retrieveDepositErc20") {}
+    function completeDepositErc20(
+        uint256 seed
+    ) public countCall("completeDepositErc20") {
+        // Get random request
+        (DepositRequest memory randDepositRequest, uint256 index) = _depositSet
+            .getRandom(seed);
+
+        // Sign with screener
+        bytes32 digest = depositManager.computeDigest(randDepositRequest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        bytes memory signature = ParseUtils.rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
+        );
+
+        // Complete deposit
+        depositManager.completeDeposit(randDepositRequest, signature);
+
+        // Update completed deposit sum and deposit set
+        ghost_completeDepositSum += randDepositRequest.value;
+        _depositSet.pop(index);
+
+        // TODO: track gas compensation
+    }
 }

@@ -38,7 +38,7 @@ struct BaseProof {
     string protocol;
 }
 
-contract JsonDecodings is Test, ParseUtils {
+contract JsonDecodings is Test {
     using stdJson for string;
 
     struct SimpleDepositRequestFixtureTypes {
@@ -68,14 +68,14 @@ contract JsonDecodings is Test, ParseUtils {
         BaseProof memory proof
     ) public pure returns (uint256[8] memory) {
         return [
-            parseInt(proof.pi_a[0]),
-            parseInt(proof.pi_a[1]),
-            parseInt(proof.pi_b[0][1]),
-            parseInt(proof.pi_b[0][0]),
-            parseInt(proof.pi_b[1][1]),
-            parseInt(proof.pi_b[1][0]),
-            parseInt(proof.pi_c[0]),
-            parseInt(proof.pi_c[1])
+            ParseUtils.parseInt(proof.pi_a[0]),
+            ParseUtils.parseInt(proof.pi_a[1]),
+            ParseUtils.parseInt(proof.pi_b[0][1]),
+            ParseUtils.parseInt(proof.pi_b[0][0]),
+            ParseUtils.parseInt(proof.pi_b[1][1]),
+            ParseUtils.parseInt(proof.pi_b[1][0]),
+            ParseUtils.parseInt(proof.pi_c[0]),
+            ParseUtils.parseInt(proof.pi_c[1])
         ];
     }
 
@@ -124,7 +124,7 @@ contract JsonDecodings is Test, ParseUtils {
         address contractAddress = json.readAddress(".contractAddress");
         string memory contractName = json.readString(".contractName");
         string memory contractVersion = json.readString(".contractVersion");
-        uint256 chainId = parseInt(json.readString(".chainId"));
+        uint256 chainId = ParseUtils.parseInt(json.readString(".chainId"));
         address screenerAddress = json.readAddress(".screenerAddress");
         bytes32 depositRequestHash = json.readBytes32(".depositRequestHash");
 
@@ -143,9 +143,13 @@ contract JsonDecodings is Test, ParseUtils {
         string memory json
     ) public returns (SimpleSignedDepositRequestTypes memory) {
         address spender = json.readAddress(".depositRequest.spender");
-        uint256 value = parseInt(json.readString(".depositRequest.value"));
-        uint256 nonce = parseInt(json.readString(".depositRequest.nonce"));
-        uint256 gasCompensation = parseInt(
+        uint256 value = ParseUtils.parseInt(
+            json.readString(".depositRequest.value")
+        );
+        uint256 nonce = ParseUtils.parseInt(
+            json.readString(".depositRequest.nonce")
+        );
+        uint256 gasCompensation = ParseUtils.parseInt(
             json.readString(".depositRequest.gasCompensation")
         );
 
@@ -161,10 +165,10 @@ contract JsonDecodings is Test, ParseUtils {
     function extractEncodedAsset(
         string memory json
     ) public returns (EncodedAsset memory) {
-        uint256 encodedAssetAddr = parseInt(
+        uint256 encodedAssetAddr = ParseUtils.parseInt(
             json.readString(".depositRequest.encodedAsset.encodedAssetAddr")
         );
-        uint256 encodedAssetId = parseInt(
+        uint256 encodedAssetId = ParseUtils.parseInt(
             json.readString(".depositRequest.encodedAsset.encodedAssetId")
         );
 
@@ -178,16 +182,16 @@ contract JsonDecodings is Test, ParseUtils {
     function extractDepositAddr(
         string memory json
     ) public returns (StealthAddress memory) {
-        uint256 h1X = parseInt(
+        uint256 h1X = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h1X")
         );
-        uint256 h1Y = parseInt(
+        uint256 h1Y = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h1Y")
         );
-        uint256 h2X = parseInt(
+        uint256 h2X = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h2X")
         );
-        uint256 h2Y = parseInt(
+        uint256 h2Y = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h2Y")
         );
 
@@ -201,7 +205,7 @@ contract JsonDecodings is Test, ParseUtils {
         uint256 r = json.readUint(".signature.r");
         uint256 s = json.readUint(".signature.s");
         uint8 v = uint8(json.readUint(".signature.v"));
-        bytes memory sig = rsvToSignatureBytes(r, s, v);
+        bytes memory sig = ParseUtils.rsvToSignatureBytes(r, s, v);
 
         console.logBytes(sig);
         return sig;
@@ -224,7 +228,7 @@ contract JsonDecodings is Test, ParseUtils {
 
             bytes memory signalBytes = json.parseRaw(string(jsonSelector));
             string memory signal = abi.decode(signalBytes, (string));
-            publicSignals[i] = parseInt(signal);
+            publicSignals[i] = ParseUtils.parseInt(signal);
         }
 
         return
@@ -251,7 +255,7 @@ contract JsonDecodings is Test, ParseUtils {
 
             bytes memory signalBytes = json.parseRaw(string(jsonSelector));
             string memory signal = abi.decode(signalBytes, (string));
-            publicSignals[i] = parseInt(signal);
+            publicSignals[i] = ParseUtils.parseInt(signal);
         }
 
         return
