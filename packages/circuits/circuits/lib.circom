@@ -47,7 +47,7 @@ template vkIntegrity() {
     // G = vk * H1
     signal GX, GY, GGX, GGY, GG2X, GG2Y, GG4X, GG4Y, GG8X, GG8Y;
     signal G[2];
-    G <== EscalarMulAny(254)(Num2Bits(254)(vk), [H1X, H1Y]);
+    G <== EscalarMulAny(254)(Num2Bits_strict(254)(vk), [H1X, H1Y]);
     // GG = vk * H1 - H2
     (GGX, GGY) <== BabyAdd()(G[0], G[1], -H2X, H2Y);
     (GG2X, GG2Y) <== BabyDbl()(GGX, GGY);
@@ -69,8 +69,8 @@ template SigVerify() {
     ];
     component gz = EscalarMulFix(254, BASE8);
     component pkc = EscalarMulAny(254);
-    component zBits = Num2Bits(254);
-    component cBits = Num2Bits(254);
+    component zBits = Num2Bits_strict(254);
+    component cBits = Num2Bits_strict(254);
 
     zBits.in <== sig[1];
     for (var i = 0; i < 254; i++) {
@@ -102,13 +102,13 @@ template canonAddr() {
         16950150798460657717958625567821834550301663161624707787222815936182638968203
     ];
 
-    addr <== EscalarMulFix(254, BASE8)(Num2Bits(254)(userViewKey));
+    addr <== EscalarMulFix(254, BASE8)(Num2Bits_strict(254)(userViewKey));
 }
 
 // Forces the input signal to be of value between 0 and 2**n - 1
 template BitRange(n) {
     signal input in;
-    signal bits[254] <== Num2Bits(254)(in);
+    signal bits[254] <== Num2Bits_strict(254)(in);
     for (var i = 253; i >= n; i--) {
       bits[i] === 0;
     }
