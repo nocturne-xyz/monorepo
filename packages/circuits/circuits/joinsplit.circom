@@ -79,36 +79,18 @@ template JoinSplit(levels) {
     ];
 
     signal senderCanonAddr[2] <== canonAddr()(userViewKey);
-    
-    // new note A's owner is randomized sender address
-    signal newNoteAOwner[2][2];
-    newNoteAOwner[0] <== EscalarMulFix(254, BASE8)(
-      Num2Bits_strict()(newNoteAOwnerRandomness)
-    );
-    newNoteAOwner[1] <== EscalarMulAny(254)(
-      Num2Bits_strict()(newNoteAOwnerRandomness),
-      senderCanonAddr
-    );
 
-    signal newNoteAOwnerH1X <== newNoteAOwner[0][0];
-    signal newNoteAOwnerH1Y <== newNoteAOwner[0][1];
-    signal newNoteAOwnerH2X <== newNoteAOwner[1][0];
-    signal newNoteAOwnerH2Y <== newNoteAOwner[1][1];
+    // new note A's owner is sender's canonical address
+    signal newNoteAOwnerH1X <== BASE8[0];
+    signal newNoteuAOwnerH1Y <== BASE8[1];
+    signal newNoteAOwnerH2X <== senderCanonAddr[0];
+    signal newNoteAOwnerH2Y <== senderCanonAddr[1];
 
-    // new note B's owner is randomized receiver address
-    signal newNoteBOwner[2][2];
-    newNoteBOwner[0] <== EscalarMulFix(254, BASE8)(
-      Num2Bits_strict()(newNoteBOwnerRandomness)
-    );
-    newNoteBOwner[1] <== EscalarMulAny(254)(
-      Num2Bits_strict()(newNoteBOwnerRandomness),
-      receiverCanonAddr
-    );
-
-    signal newNoteBOwnerH1X <== newNoteBOwner[0][0];
-    signal newNoteBOwnerH1Y <== newNoteBOwner[0][1];
-    signal newNoteBOwnerH2X <== newNoteBOwner[1][0];
-    signal newNoteBOwnerH2Y <== newNoteBOwner[1][1];
+    // new note B's owner is receiver's canonical address
+    signal newNoteBOwnerH1X <== BASE8[0];
+    signal newNoteBOwnerH1Y <== BASE8[1];
+    signal newNoteBOwnerH2X <== receiverCanonAddr[0];
+    signal newNoteBOwnerH2Y <== receiverCanonAddr[1];
 
     // check old note owners are composed of valid babyjubjub points
     BabyCheck()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y);
@@ -205,6 +187,7 @@ template JoinSplit(levels) {
     );
 
     // encrypt sender's canonical address to receiver with el gamal
+    // receiver's public key is receiverCanonAddr
 
     // s := receiverCanonAddr x randomness
     signal sharedSecret[2] <== EscalarMulAny(254)(
