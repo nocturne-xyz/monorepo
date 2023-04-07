@@ -187,7 +187,7 @@ template JoinSplit(levels) {
       newNoteBValue
     );
 
-    // encrypt sender's canonical address to receiver with el gamal
+    // encrypt sender's canonical address to receiver with ElGamal
     // receiver's public key is receiverCanonAddr
 
     // s := receiverCanonAddr x randomness
