@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix deposit screener gas comp to account for cost of eth transfers
 - fix bug in `DepositManager.completeDeposit` where deposit hashes were not being marked false post completion
 - add support for instantiating ETH deposits + test case for success and failure
 - Add test case for atomic actions + action failure
