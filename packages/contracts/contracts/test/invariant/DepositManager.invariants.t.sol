@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {InvariantHandler} from "./handlers/InvariantHandler.sol";
@@ -30,10 +31,7 @@ contract DepositManagerInvariants is Test {
         invariantHandler.callSummary();
     }
 
-    // Total balance of deposit manager equals total deposits instantiated
-    // amount - total retrieval amount - total deposits completed amount
-    function invariant_conservationOfErc20() external {
-        // TODO: subtract retrievals
+    function invariant_depositManagerBalanceEqualsInMinusOut() external {
         assertEq(
             invariantHandler.erc20().balanceOf(
                 address(invariantHandler.depositManager())
@@ -44,7 +42,18 @@ contract DepositManagerInvariants is Test {
         );
     }
 
-    function invariant_completedDepositSumEqualsWalletBalance() external {
+    function invariant_allActorsBalanceSumEqualsRetrieveDepositSum() external {
+        address[] memory allActors = invariantHandler.ghost_AllActors();
+
+        uint256 sum = 0;
+        for (uint256 i = 0; i < allActors.length; i++) {
+            sum += invariantHandler.erc20().balanceOf(allActors[i]);
+        }
+
+        assertEq(sum, invariantHandler.ghost_retrieveDepositSum());
+    }
+
+    function invariant_walletBalanceEqualsCompletedDepositSum() external {
         assertEq(
             invariantHandler.erc20().balanceOf(
                 address(invariantHandler.wallet())

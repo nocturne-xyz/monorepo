@@ -24,6 +24,7 @@
     "test:coverage": "FOUNDRY_PROFILE=contracts forge coverage",
     "test:coverage:report": "FOUNDRY_PROFILE=contracts forge coverage --report lcov",
     "test:gas-report": "yarn test:unit --gas-report",
+    "test:invariant-summary": "yarn test:unit -vv -m invariant_callSummary",
     "test:unit": "forge test"
   },
   "dependencies": {

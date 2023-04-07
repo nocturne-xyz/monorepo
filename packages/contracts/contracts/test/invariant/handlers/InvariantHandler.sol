@@ -31,6 +31,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
+import {DepositSumSet, LibDepositSumSet} from "../helpers/DepositSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -39,6 +40,7 @@ import "../../../libs/Types.sol";
 contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
+    using LibDepositSumSet for DepositSumSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -62,14 +64,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     EncodedAsset public encodedErc20;
 
-    uint256 public ghost_instantiateDepositSum = 0;
-    uint256 public ghost_retrieveDepositSum = 0;
-    uint256 public ghost_completeDepositSum = 0;
-
     mapping(bytes32 => uint256) public calls;
 
     AddressSet internal _actors;
     address internal currentActor;
+
+    DepositSumSet internal _instantiateDepositSumSet;
+    DepositSumSet internal _retrieveDepositSumSet;
+    DepositSumSet internal _completeDepositSumSet;
 
     DepositRequest[] internal _depositSet;
 
@@ -178,9 +180,9 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         vm.stopPrank();
 
-        // Update set and sum
+        // Update sets and sum
         _depositSet.push(req);
-        ghost_instantiateDepositSum += amount;
+        _instantiateDepositSumSet.addToActorSum(currentActor, amount);
     }
 
     function retrieveDepositErc20(
@@ -201,7 +203,10 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         depositManager.retrieveDeposit(randDepositRequest);
 
         // Update completed deposit sum and deposit set
-        ghost_retrieveDepositSum += randDepositRequest.value;
+        _retrieveDepositSumSet.addToActorSum(
+            randDepositRequest.spender,
+            randDepositRequest.value
+        );
         _depositSet.pop(index);
     }
 
@@ -231,9 +236,28 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         depositManager.completeDeposit(randDepositRequest, signature);
 
         // Update completed deposit sum and deposit set
-        ghost_completeDepositSum += randDepositRequest.value;
+        _completeDepositSumSet.addToActorSum(
+            randDepositRequest.spender,
+            randDepositRequest.value
+        );
         _depositSet.pop(index);
 
         // TODO: track gas compensation
+    }
+
+    function ghost_AllActors() public view returns (address[] memory) {
+        return _actors.addresses();
+    }
+
+    function ghost_instantiateDepositSum() public view returns (uint256) {
+        return _instantiateDepositSumSet.getTotalForAll();
+    }
+
+    function ghost_retrieveDepositSum() public view returns (uint256) {
+        return _retrieveDepositSumSet.getTotalForAll();
+    }
+
+    function ghost_completeDepositSum() public view returns (uint256) {
+        return _completeDepositSumSet.getTotalForAll();
     }
 }

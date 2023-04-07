@@ -7,6 +7,12 @@ struct AddressSet {
 }
 
 library LibAddressSet {
+    function addresses(
+        AddressSet storage s
+    ) internal view returns (address[] memory) {
+        return s.addrs;
+    }
+
     function add(AddressSet storage s, address addr) internal {
         if (!s.saved[addr]) {
             s.addrs.push(addr);
