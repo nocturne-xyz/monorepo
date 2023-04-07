@@ -61,6 +61,7 @@ template JoinSplit(levels) {
     signal input newNoteBOwnerRandomness;
 
     // randomness encrypting sender address
+    // must be an element of Fr (251 bits)
     signal input encRandomness;
 
     // Public outputs
@@ -190,13 +191,13 @@ template JoinSplit(levels) {
     // receiver's public key is receiverCanonAddr
 
     // s := receiverCanonAddr x randomness
-    signal sharedSecret[2] <== EscalarMulAny(254)(
-      Num2Bits_strict()(encRandomness),
+    signal sharedSecret[2] <== EscalarMulAny(251)(
+      Num2Bits(251)(encRandomness),
       receiverCanonAddr
     );
     // c1 := basepoint x randomness
-    signal c1[2] <== EscalarMulFix(254, BASE8)(
-      Num2Bits_strict()(encRandomness)
+    signal c1[2] <== EscalarMulFix(251, BASE8)(
+      Num2Bits(251)(encRandomness)
     );
     encSenderCanonAddrH1X <== c1[0];
 

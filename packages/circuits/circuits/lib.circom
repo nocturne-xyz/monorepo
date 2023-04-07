@@ -106,12 +106,12 @@ template canonAddr() {
 }
 
 // Forces the input signal to be of value between 0 and 2**n - 1
+// n must be < 254
 template BitRange(n) {
     signal input in;
-    signal bits[254] <== Num2Bits_strict()(in);
-    for (var i = 253; i >= n; i--) {
-      bits[i] === 0;
-    }
+
+    // Num2Bits does all the work here. All we care is that they're all bits
+    signal bits[n] <== Num2Bits(n)(in);
 }
 
 // Encrypt each input value, using poseidon as as a blockcipher in counter
