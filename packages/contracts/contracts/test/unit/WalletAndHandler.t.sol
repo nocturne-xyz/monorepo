@@ -7,30 +7,33 @@ import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
-import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils/PoseidonHashers.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
-import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
-import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
-import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
-import {ReentrantCaller} from "../utils/ReentrantCaller.sol";
-import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
-import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
-import "../utils/NocturneUtils.sol";
-import "../utils/ForgeUtils.sol";
-import {Handler} from "../../Handler.sol";
-import {Wallet} from "../../Wallet.sol";
-import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
-import {ParseUtils} from "../utils/ParseUtils.sol";
-import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
-import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
-import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
-import {Utils} from "../../libs/Utils.sol";
-import {AssetUtils} from "../../libs/AssetUtils.sol";
-import "../../libs/Types.sol";
+import {IJoinSplitVerifier} from "../interfaces/IJoinSplitVerifier.sol";
+import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
+import {OffchainMerkleTree, OffchainMerkleTreeData} from "../libs/OffchainMerkleTree.sol";
+import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "./utils//PoseidonHashers.sol";
+import {IHasherT3, IHasherT5, IHasherT6} from "./interfaces/IHasher.sol";
+import {PoseidonDeployer} from "./utils/PoseidonDeployer.sol";
+import {IPoseidonT3} from "./interfaces/IPoseidon.sol";
+import {TestJoinSplitVerifier} from "./harnesses/TestJoinSplitVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "./harnesses/TestSubtreeUpdateVerifier.sol";
+import {ReentrantCaller} from "./utils/ReentrantCaller.sol";
+import {TokenSwapper, SwapRequest} from "./utils/TokenSwapper.sol";
+import {TreeTest, TreeTestLib} from "./utils/TreeTest.sol";
+import "./utils/NocturneUtils.sol";
+import "./utils/ForgeUtils.sol";
+import {Handler} from "../Handler.sol";
+import {Wallet} from "../Wallet.sol";
+import {CommitmentTreeManager} from "../CommitmentTreeManager.sol";
+import {ParseUtils} from "./utils/ParseUtils.sol";
+import {SimpleERC20Token} from "./tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "./tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "./tokens/SimpleERC1155Token.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {Utils} from "../libs/Utils.sol";
+import {AssetUtils} from "../libs/AssetUtils.sol";
+import "../libs/Types.sol";
 
 contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
     using OffchainMerkleTree for OffchainMerkleTreeData;
@@ -107,6 +110,17 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            handler.setCallableContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20.approve.selector,
+                true
+            );
+            handler.setCallableContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20.transfer.selector,
+                true
+            );
         }
     }
 
@@ -918,6 +932,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
+        // Whitelist reentrantCaller for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(reentrantCaller),
+            ReentrantCaller.reentrantProcessBundle.selector,
+            true
+        );
+
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1101,6 +1122,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
+        // Whitelist handler for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(handler),
+            Handler.handleOperation.selector,
+            true
+        );
+
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1197,6 +1225,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 maybeFailureReason: "",
                 assetsUnwrapped: true
             })
+        );
+
+        // Whitelist handler for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(handler),
+            Handler.executeActions.selector,
+            true
         );
 
         // Op was processed but call result has reentry failure message
@@ -1469,6 +1504,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
+        // Whitelist token swapper for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            TokenSwapper.swap.selector,
+            true
+        );
+
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // One op, processed = true, approve call and swap call both succeeded
@@ -1586,6 +1628,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 maybeFailureReason: "Too many refunds",
                 assetsUnwrapped: true
             })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            TokenSwapper.swap.selector,
+            true
         );
 
         vm.prank(BUNDLER);

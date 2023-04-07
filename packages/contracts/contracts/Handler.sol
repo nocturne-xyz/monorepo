@@ -15,14 +15,15 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     mapping(address => bool) public _subtreeBatchFiller;
 
-    mapping(address => mapping(bytes4 => bool)) public _callableAllowlist;
+    mapping(address => mapping(bytes4 => bool))
+        public _callableContractAllowlist;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
-    event CallableAllowlistPermissionSet(
+    event CallableContractAllowlistPermissionSet(
         address contractAddress,
         bytes4 selector,
         bool permission
@@ -70,13 +71,13 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
 
     // Gives an handler ability to call function with given selector on the
     // specified protocol
-    function setCallableAllowlistPermission(
+    function setCallableContractAllowlistPermission(
         address contractAddress,
         bytes4 selector,
         bool permission
     ) external onlyOwner {
-        _callableAllowlist[contractAddress][selector] = permission;
-        emit CallableAllowlistPermissionSet(
+        _callableContractAllowlist[contractAddress][selector] = permission;
+        emit CallableContractAllowlistPermissionSet(
             contractAddress,
             selector,
             permission
@@ -220,15 +221,19 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             "Cannot call the Nocturne wallet"
         );
 
-        (bytes4 selector, ) = abi.decode(
-            action.encodedFunction,
-            (bytes4, bytes)
-        );
+        bytes4 selector = _extractFunctionSelector(action.encodedFunction);
         require(
-            _callableAllowlist[action.contractAddress][selector],
-            "Cannot non-allowed protocol"
+            _callableContractAllowlist[action.contractAddress][selector],
+            "Cannot call non-allowed protocol"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    function _extractFunctionSelector(
+        bytes calldata encodedFunctionData
+    ) public pure returns (bytes4 selector) {
+        require(encodedFunctionData.length >= 4, "Invalid encoded fn length");
+        return bytes4(encodedFunctionData[:4]);
     }
 }
