@@ -24,7 +24,7 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "1.0.15-alpha",
+    "@nocturne-xyz/contracts": "1.0.16-alpha",
     "@nocturne-xyz/sdk": "1.0.96-alpha",
     "@types/randombytes": "^2.0.0",
     "big-integer": "^1.6.42",
