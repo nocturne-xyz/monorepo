@@ -72,7 +72,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
 
       newNoteAValue: newNoteA.value,
 
-      receiverAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
+      receiverCanonAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
       newNoteBValue: newNoteB.value,
 
       encRandomness,

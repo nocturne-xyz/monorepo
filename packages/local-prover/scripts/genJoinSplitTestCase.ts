@@ -156,7 +156,10 @@ console.log(joinsplitInputs);
 
 (async () => {
   const prover = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
+  const startTime = Date.now();
   const proof = await prover.proveJoinSplit(joinsplitInputs);
+  console.log("Proof generated in: ", Date.now() - startTime, "ms");
+
   if (!(await prover.verifyJoinSplitProof(proof))) {
     throw new Error("Proof invalid!");
   }
