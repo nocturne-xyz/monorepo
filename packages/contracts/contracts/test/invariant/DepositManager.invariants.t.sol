@@ -31,6 +31,14 @@ contract DepositManagerInvariants is Test {
         invariantHandler.callSummary();
     }
 
+    function invariant_outNeverExceedsIn() external {
+        assertGe(
+            invariantHandler.ghost_instantiateDepositSum(),
+            invariantHandler.ghost_retrieveDepositSum() +
+                invariantHandler.ghost_completeDepositSum()
+        );
+    }
+
     function invariant_depositManagerBalanceEqualsInMinusOut() external {
         assertEq(
             invariantHandler.erc20().balanceOf(
@@ -60,5 +68,27 @@ contract DepositManagerInvariants is Test {
             ),
             invariantHandler.ghost_completeDepositSum()
         );
+    }
+
+    function invariant_actorBalanceAlwaysEqualsRetrieved() external {
+        address[] memory allActors = invariantHandler.ghost_AllActors();
+
+        for (uint256 i = 0; i < allActors.length; i++) {
+            assertEq(
+                invariantHandler.erc20().balanceOf(allActors[i]),
+                invariantHandler.ghost_retrieveDepositSumFor(allActors[i])
+            );
+        }
+    }
+
+    function invariant_actorBalanceNeverExceedsInstantiated() external {
+        address[] memory allActors = invariantHandler.ghost_AllActors();
+
+        for (uint256 i = 0; i < allActors.length; i++) {
+            assertLe(
+                invariantHandler.erc20().balanceOf(allActors[i]),
+                invariantHandler.ghost_instantiateDepositSumFor(allActors[i])
+            );
+        }
     }
 }

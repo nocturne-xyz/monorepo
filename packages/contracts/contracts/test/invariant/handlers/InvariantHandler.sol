@@ -136,6 +136,8 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         erc20.reserveTokens(address(this), type(uint256).max);
     }
 
+    // ______EXTERNAL______
+
     function callSummary() external view {
         console.log("Call summary:");
         console.log("-------------------");
@@ -245,6 +247,8 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         // TODO: track gas compensation
     }
 
+    // ______VIEW______
+
     function ghost_AllActors() public view returns (address[] memory) {
         return _actors.addresses();
     }
@@ -259,5 +263,23 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     function ghost_completeDepositSum() public view returns (uint256) {
         return _completeDepositSumSet.getTotalForAll();
+    }
+
+    function ghost_instantiateDepositSumFor(
+        address actor
+    ) public view returns (uint256) {
+        return _instantiateDepositSumSet.getSumForActor(actor);
+    }
+
+    function ghost_retrieveDepositSumFor(
+        address actor
+    ) public view returns (uint256) {
+        return _retrieveDepositSumSet.getSumForActor(actor);
+    }
+
+    function ghost_completeDepositSumFor(
+        address actor
+    ) public view returns (uint256) {
+        return _completeDepositSumSet.getSumForActor(actor);
     }
 }
