@@ -51,6 +51,7 @@ async function proveJoinSplit(
   signedJoinSplit: PreProofJoinSplit
 ): Promise<ProvenJoinSplit> {
   const { opDigest, proofInputs, ...baseJoinSplit } = signedJoinSplit;
+  console.log("proofInputs: ", proofInputs);
   const proof = await prover.proveJoinSplit(proofInputs);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values

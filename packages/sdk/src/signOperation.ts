@@ -8,7 +8,7 @@ import {
 } from "./primitives";
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
-import { randomFr } from "./crypto/utils";
+import { randomFr } from "./crypto";
 
 export function signOperation(
   signer: NocturneSigner,

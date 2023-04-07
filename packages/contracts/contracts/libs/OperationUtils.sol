@@ -41,14 +41,17 @@ library OperationUtils {
                 allPis[index][3] = op.joinSplits[j].publicSpend;
                 allPis[index][4] = op.joinSplits[j].nullifierA;
                 allPis[index][5] = op.joinSplits[j].nullifierB;
-                allPis[index][6] = digests[i];
-                allPis[index][7] = op
+                allPis[index][6] = op.joinSplits[j].encSenderCanonAddrC1X;
+                allPis[index][7] = op.joinSplits[j].encSenderCanonAddrC2X;
+                allPis[index][8] = digests[i];
+                allPis[index][9] = op
                     .joinSplits[j]
                     .encodedAsset
                     .encodedAssetAddr;
-                allPis[index][8] = op.joinSplits[j].encodedAsset.encodedAssetId;
-                allPis[index][9] = op.joinSplits[j].encSenderCanonAddrC1X;
-                allPis[index][9] = op.joinSplits[j].encSenderCanonAddrC2X;
+                allPis[index][10] = op
+                    .joinSplits[j]
+                    .encodedAsset
+                    .encodedAssetId;
                 index++;
             }
         }

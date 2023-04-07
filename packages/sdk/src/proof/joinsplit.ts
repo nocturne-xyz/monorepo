@@ -68,11 +68,11 @@ export function joinSplitPublicSignalsFromArray(
     publicSpend: publicSignals[3],
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
-    opDigest: publicSignals[6],
-    encodedAssetAddr: publicSignals[7],
-    encodedAssetId: publicSignals[8],
-    encSenderCanonAddrC1X: publicSignals[9],
-    encSenderCanonAddrC2X: publicSignals[10],
+    encSenderCanonAddrC1X: publicSignals[6],
+    encSenderCanonAddrC2X: publicSignals[7],
+    opDigest: publicSignals[8],
+    encodedAssetAddr: publicSignals[9],
+    encodedAssetId: publicSignals[10],
   };
 }
 
