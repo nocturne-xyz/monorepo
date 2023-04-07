@@ -10,6 +10,7 @@ import {
   MerkleProofInput,
   EncodedNote,
   StealthAddressTrait,
+  randomFr,
 } from "@nocturne-xyz/sdk";
 
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -149,6 +150,7 @@ const joinsplitInputs: JoinSplitInputs = {
   newNoteB,
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
+  encRandomness: randomFr(),
 };
 console.log(joinsplitInputs);
 

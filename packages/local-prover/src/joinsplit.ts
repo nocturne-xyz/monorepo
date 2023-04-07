@@ -75,7 +75,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       receiverAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
       newNoteBValue: newNoteB.value,
 
-      encRandomness
+      encRandomness,
     };
 
     const proof = await snarkjs.groth16.fullProve(

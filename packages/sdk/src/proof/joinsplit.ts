@@ -25,7 +25,7 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // nullifierB
     bigint, // operationDigest
     bigint, // encSenderCanonAddrC1X
-    bigint, // encSenderCanonAddrC2X 
+    bigint // encSenderCanonAddrC2X
   ];
 }
 
@@ -78,7 +78,19 @@ export function joinSplitPublicSignalsFromArray(
 
 export function joinSplitPublicSignalsToArray(
   publicSignals: JoinSplitPublicSignals
-): [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint] {
+): [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+] {
   return [
     publicSignals.newNoteACommitment,
     publicSignals.newNoteBCommitment,
