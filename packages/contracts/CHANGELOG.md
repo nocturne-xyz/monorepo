@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+- start invariant tests, beginning with DepositManager tests
+  - add `InvariantHandler.sol` for protocol-wide actor interface
+  - Add helpers for tracking actors, balances, deposits
+  - Add partially complete `DepositManager.invariants.t.sol`
+- move all unit tests to `test/unit`
+- add `EventParsing` test library that currently reads Deposit events into `DepositRequest`
+- make `ParseUtils` library instead of contract
 - fix deposit screener gas comp to account for cost of eth transfers
 - fix bug in `DepositManager.completeDeposit` where deposit hashes were not being marked false post completion
 - add support for instantiating ETH deposits + test case for success and failure
