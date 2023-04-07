@@ -71,8 +71,8 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
-    signal output encSenderCanonAddrH1X;
-    signal output encSenderCanonAddrH2X;
+    signal output encSenderCanonAddrC1X;
+    signal output encSenderCanonAddrC2X;
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -199,7 +199,7 @@ template JoinSplit(levels) {
     signal c1[2] <== EscalarMulFix(251, BASE8)(
       Num2Bits(251)(encRandomness)
     );
-    encSenderCanonAddrH1X <== c1[0];
+    encSenderCanonAddrC1X <== c1[0];
 
     // c2 := senderCanonAddr + s
     component adder = BabyAdd();
@@ -207,7 +207,7 @@ template JoinSplit(levels) {
     adder.y1 <== senderCanonAddr[1];
     adder.x2 <== sharedSecret[0];
     adder.y2 <== sharedSecret[1];
-    encSenderCanonAddrH2X <== adder.xout;
+    encSenderCanonAddrC2X <== adder.xout;
 }
 
 component main { public [encodedAssetAddr, encodedAssetId, operationDigest] } = JoinSplit(32);
