@@ -15,10 +15,18 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     mapping(address => bool) public _subtreeBatchFiller;
 
+    mapping(address => mapping(bytes4 => bool)) public _callableAllowlist;
+
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
+
+    event CallableAllowlistPermissionSet(
+        address contractAddress,
+        bytes4 selector,
+        bool permission
+    );
 
     function initialize(
         address wallet,
@@ -58,6 +66,21 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     ) external onlyOwner {
         _subtreeBatchFiller[filler] = permission;
         emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
+    // Gives an handler ability to call function with given selector on the
+    // specified protocol
+    function setCallableAllowlistPermission(
+        address contractAddress,
+        bytes4 selector,
+        bool permission
+    ) external onlyOwner {
+        _callableAllowlist[contractAddress][selector] = permission;
+        emit CallableAllowlistPermissionSet(
+            contractAddress,
+            selector,
+            permission
+        );
     }
 
     function addToAssetPrefill(
@@ -195,6 +218,15 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         require(
             action.contractAddress != address(_wallet),
             "Cannot call the Nocturne wallet"
+        );
+
+        (bytes4 selector, ) = abi.decode(
+            action.encodedFunction,
+            (bytes4, bytes)
+        );
+        require(
+            _callableAllowlist[action.contractAddress][selector],
+            "Cannot non-allowed protocol"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
