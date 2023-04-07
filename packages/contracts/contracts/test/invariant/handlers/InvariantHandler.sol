@@ -71,9 +71,9 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     AddressSet internal _actors;
     address internal currentActor;
 
-    DepositSumSet internal _instantiateDepositSumSet;
-    DepositSumSet internal _retrieveDepositSumSet;
-    DepositSumSet internal _completeDepositSumSet;
+    DepositSumSet internal _instantiateDepositSumSetErc20;
+    DepositSumSet internal _retrieveDepositSumSetErc20;
+    DepositSumSet internal _completeDepositSumSetErc20;
 
     DepositRequest[] internal _depositSet;
 
@@ -205,7 +205,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Update sets and sum
         _depositSet.push(req);
-        _instantiateDepositSumSet.addToActorSum(currentActor, amount);
+        _instantiateDepositSumSetErc20.addToActorSum(currentActor, amount);
     }
 
     function retrieveDepositErc20(
@@ -225,7 +225,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         vm.prank(randDepositRequest.spender);
         try depositManager.retrieveDeposit(randDepositRequest) {
             // Update completed deposit sum and deposit set
-            _retrieveDepositSumSet.addToActorSum(
+            _retrieveDepositSumSetErc20.addToActorSum(
                 randDepositRequest.spender,
                 randDepositRequest.value
             );
@@ -259,7 +259,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         // Complete deposit
         try depositManager.completeDeposit(randDepositRequest, signature) {
             // Update completed deposit sum and deposit set
-            _completeDepositSumSet.addToActorSum(
+            _completeDepositSumSetErc20.addToActorSum(
                 randDepositRequest.spender,
                 randDepositRequest.value
             );
@@ -277,32 +277,32 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function ghost_instantiateDepositSum() public view returns (uint256) {
-        return _instantiateDepositSumSet.getTotalForAll();
+        return _instantiateDepositSumSetErc20.getTotalForAll();
     }
 
     function ghost_retrieveDepositSum() public view returns (uint256) {
-        return _retrieveDepositSumSet.getTotalForAll();
+        return _retrieveDepositSumSetErc20.getTotalForAll();
     }
 
     function ghost_completeDepositSum() public view returns (uint256) {
-        return _completeDepositSumSet.getTotalForAll();
+        return _completeDepositSumSetErc20.getTotalForAll();
     }
 
     function ghost_instantiateDepositSumFor(
         address actor
     ) public view returns (uint256) {
-        return _instantiateDepositSumSet.getSumForActor(actor);
+        return _instantiateDepositSumSetErc20.getSumForActor(actor);
     }
 
     function ghost_retrieveDepositSumFor(
         address actor
     ) public view returns (uint256) {
-        return _retrieveDepositSumSet.getSumForActor(actor);
+        return _retrieveDepositSumSetErc20.getSumForActor(actor);
     }
 
     function ghost_completeDepositSumFor(
         address actor
     ) public view returns (uint256) {
-        return _completeDepositSumSet.getSumForActor(actor);
+        return _completeDepositSumSetErc20.getSumForActor(actor);
     }
 }
