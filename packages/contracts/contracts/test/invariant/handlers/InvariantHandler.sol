@@ -64,7 +64,9 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     EncodedAsset public encodedErc20;
 
-    mapping(bytes32 => uint256) public calls;
+    mapping(bytes32 => uint256) internal _calls;
+    mapping(string => uint256) internal _reverts;
+    uint256[] internal _depositSizes;
 
     AddressSet internal _actors;
     address internal currentActor;
@@ -75,12 +77,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     DepositRequest[] internal _depositSet;
 
+    uint256 actorNum = 0;
     modifier createActor() {
-        uint256 seed;
-        seed = bound(seed, 1, type(uint160).max);
+        currentActor = msg.sender;
 
-        currentActor = address(uint160(seed));
-        _actors.add(currentActor);
+        if (!_actors.contains(currentActor)) {
+            _actors.add(currentActor);
+            actorNum += 1;
+        }
         _;
     }
 
@@ -90,7 +94,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     }
 
     modifier countCall(bytes32 key) {
-        calls[key]++;
+        _calls[key]++;
         _;
     }
 
@@ -143,10 +147,26 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         console.log("-------------------");
         console.log(
             "instantiateDepositErc20",
-            calls["instantiateDepositErc20"]
+            _calls["instantiateDepositErc20"]
         );
-        console.log("retrieveDepositErc20", calls["retrieveDepositErc20"]);
-        console.log("completeDepositErc20", calls["completeDepositErc20"]);
+        console.log("retrieveDepositErc20", _calls["retrieveDepositErc20"]);
+        console.log("completeDepositErc20", _calls["completeDepositErc20"]);
+
+        console.log("instantiateDepositSum", ghost_instantiateDepositSum());
+        console.log("retrieveDepositSum", ghost_retrieveDepositSum());
+        console.log("completeDepositSum", ghost_completeDepositSum());
+
+        console.log("actorNum", actorNum);
+        console.log("depositSetLength", _depositSet.length);
+
+        console.log(
+            "retrieveDepositErc20 reverts",
+            _reverts["retrieveDepositErc20"]
+        );
+        console.log(
+            "completeDepositErc20 reverts",
+            _reverts["completeDepositErc20"]
+        );
     }
 
     function instantiateDepositErc20(
@@ -155,6 +175,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         // Bound deposit amount
         amount = bound(amount, 0, erc20.balanceOf(address(this)));
         erc20.transfer(currentActor, amount);
+        _depositSizes.push(amount);
 
         // Deal gas compensation
         deal(currentActor, GAS_COMPENSATION);
@@ -202,14 +223,15 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Complete deposit
         vm.prank(randDepositRequest.spender);
-        depositManager.retrieveDeposit(randDepositRequest);
-
-        // Update completed deposit sum and deposit set
-        _retrieveDepositSumSet.addToActorSum(
-            randDepositRequest.spender,
-            randDepositRequest.value
-        );
-        _depositSet.pop(index);
+        try depositManager.retrieveDeposit(randDepositRequest) {
+            // Update completed deposit sum and deposit set
+            _retrieveDepositSumSet.addToActorSum(
+                randDepositRequest.spender,
+                randDepositRequest.value
+            );
+        } catch {
+            _reverts["retrieveDepositErc20"] += 1;
+        }
     }
 
     function completeDepositErc20(
@@ -235,14 +257,15 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         );
 
         // Complete deposit
-        depositManager.completeDeposit(randDepositRequest, signature);
-
-        // Update completed deposit sum and deposit set
-        _completeDepositSumSet.addToActorSum(
-            randDepositRequest.spender,
-            randDepositRequest.value
-        );
-        _depositSet.pop(index);
+        try depositManager.completeDeposit(randDepositRequest, signature) {
+            // Update completed deposit sum and deposit set
+            _completeDepositSumSet.addToActorSum(
+                randDepositRequest.spender,
+                randDepositRequest.value
+            );
+        } catch {
+            _reverts["completeDepositErc20"] += 1;
+        }
 
         // TODO: track gas compensation
     }
