@@ -23,7 +23,9 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // valueLeft
     bigint, // nullifierA
     bigint, // nullifierB
-    bigint // operationDigest
+    bigint, // operationDigest
+    bigint, // encSenderCanonAddrC1X
+    bigint, // encSenderCanonAddrC2X 
   ];
 }
 
@@ -37,6 +39,8 @@ export interface JoinSplitPublicSignals {
   opDigest: bigint;
   encodedAssetAddr: bigint;
   encodedAssetId: bigint;
+  enSenderCanonAddrC1X: bigint;
+  enSenderCanonAddrC2X: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -66,12 +70,14 @@ export function joinSplitPublicSignalsFromArray(
     opDigest: publicSignals[6],
     encodedAssetAddr: publicSignals[7],
     encodedAssetId: publicSignals[8],
+    enSenderCanonAddrC1X: publicSignals[9],
+    enSenderCanonAddrC2X: publicSignals[10],
   };
 }
 
 export function joinSplitPublicSignalsToArray(
   publicSignals: JoinSplitPublicSignals
-): [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint] {
+): [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint] {
   return [
     publicSignals.newNoteACommitment,
     publicSignals.newNoteBCommitment,
@@ -82,5 +88,7 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.opDigest,
     publicSignals.encodedAssetAddr,
     publicSignals.encodedAssetId,
+    publicSignals.enSenderCanonAddrC1X,
+    publicSignals.enSenderCanonAddrC2X,
   ];
 }

@@ -53,12 +53,10 @@ template JoinSplit(levels) {
 
     // New note A
     signal input newNoteAValue;
-    signal input newNoteAOwnerRandomness;
 
     // New note B
     signal input receiverCanonAddr[2];
     signal input newNoteBValue;
-    signal input newNoteBOwnerRandomness;
 
     // randomness encrypting sender address
     // must be an element of Fr (251 bits)
