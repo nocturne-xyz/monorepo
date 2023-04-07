@@ -95,5 +95,7 @@ async function proveJoinSplit(
   return {
     proof: solidityProof,
     ...baseJoinSplit,
+    encSenderCanonAddrC1X: BigInt(publicSignals.encSenderCanonAddrC1X),
+    encSenderCanonAddrC2X: BigInt(publicSignals.encSenderCanonAddrC2X),
   };
 }

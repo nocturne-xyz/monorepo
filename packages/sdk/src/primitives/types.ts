@@ -79,6 +79,8 @@ export interface PreProofJoinSplit extends BaseJoinSplit {
 
 export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
+  encSenderCanonAddrC1X: bigint;
+  encSenderCanonAddrC2X: bigint;
 }
 
 interface BaseOperation {

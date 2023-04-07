@@ -316,6 +316,8 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       publicSpend: joinSplit.publicSpend,
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
+      encSenderCanonAddrC1X: 0n,
+      encSenderCanonAddrC2X: 0n,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
     };
   });
