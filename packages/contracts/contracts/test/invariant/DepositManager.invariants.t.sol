@@ -25,6 +25,9 @@ contract DepositManagerInvariants is Test {
                 selectors: selectors
             })
         );
+
+        excludeSender(address(invariantHandler.wallet()));
+        excludeSender(address(invariantHandler.depositManager()));
     }
 
     function invariant_callSummary() public view {
