@@ -49,7 +49,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant GAS_COMPENSATION = 100_000 * 50 gwei;
 
     uint256 constant SCREENER_PRIVKEY = 1;
-    address SCREENER = vm.addr(SCREENER_PRIVKEY);
+    address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
     Wallet public wallet;
     Handler public handler;
@@ -74,8 +74,11 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     DepositRequest[] internal _depositSet;
 
     modifier createActor() {
-        currentActor = msg.sender;
-        _actors.add(msg.sender);
+        uint256 seed;
+        seed = bound(seed, 1, type(uint160).max);
+
+        currentActor = address(uint160(seed));
+        _actors.add(currentActor);
         _;
     }
 
@@ -88,6 +91,10 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         calls[key]++;
         _;
     }
+
+    receive() external payable {}
+
+    fallback() external payable {}
 
     constructor() {
         wallet = new Wallet();
@@ -111,6 +118,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
             address(wallet),
             address(weth)
         );
+        depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
 
         erc20 = new SimpleERC20Token();
         erc721 = new SimpleERC721Token();
@@ -124,6 +132,17 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         vm.deal(address(this), ETH_SUPPLY);
         erc20.reserveTokens(address(this), type(uint256).max);
+    }
+
+    function callSummary() external view {
+        console.log("Call summary:");
+        console.log("-------------------");
+        console.log(
+            "instantiateDepositErc20",
+            calls["instantiateDepositErc20"]
+        );
+        console.log("retrieveDepositErc20", calls["retrieveDepositErc20"]);
+        console.log("completeDepositErc20", calls["completeDepositErc20"]);
     }
 
     function instantiateDepositErc20(
@@ -164,12 +183,40 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         ghost_instantiateDepositSum += amount;
     }
 
+    function retrieveDepositErc20(
+        uint256 seed
+    ) public countCall("retrieveDepositErc20") {
+        // Get random request
+        uint256 index;
+        if (_depositSet.length > 0) {
+            index = seed % _depositSet.length;
+        } else {
+            return;
+        }
+
+        DepositRequest memory randDepositRequest = _depositSet[index];
+
+        // Complete deposit
+        vm.prank(randDepositRequest.spender);
+        depositManager.retrieveDeposit(randDepositRequest);
+
+        // Update completed deposit sum and deposit set
+        ghost_retrieveDepositSum += randDepositRequest.value;
+        _depositSet.pop(index);
+    }
+
     function completeDepositErc20(
         uint256 seed
     ) public countCall("completeDepositErc20") {
         // Get random request
-        (DepositRequest memory randDepositRequest, uint256 index) = _depositSet
-            .getRandom(seed);
+        uint256 index;
+        if (_depositSet.length > 0) {
+            index = seed % _depositSet.length;
+        } else {
+            return;
+        }
+
+        DepositRequest memory randDepositRequest = _depositSet[index];
 
         // Sign with screener
         bytes32 digest = depositManager.computeDigest(randDepositRequest);

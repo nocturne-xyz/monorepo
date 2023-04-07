@@ -8,7 +8,7 @@ library EventParsing {
     function decodeDepositRequestFromEvent(
         Vm.Log memory entry
     ) public pure returns (DepositRequest memory) {
-        address spender = address(uint160(uint256(entry.topics[0])));
+        address spender = address(uint160(uint256(entry.topics[1])));
         (
             uint256 encodedAssetAddr,
             uint256 encodedAssetId,

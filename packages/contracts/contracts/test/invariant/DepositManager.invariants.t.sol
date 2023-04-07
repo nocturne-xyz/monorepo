@@ -12,8 +12,10 @@ contract DepositManagerInvariants is Test {
     function setUp() public virtual {
         invariantHandler = new InvariantHandler();
 
-        bytes4[] memory selectors = new bytes4[](1);
+        bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = InvariantHandler.instantiateDepositErc20.selector;
+        selectors[1] = InvariantHandler.retrieveDepositErc20.selector;
+        selectors[2] = InvariantHandler.completeDepositErc20.selector;
 
         targetContract(address(invariantHandler));
         targetSelector(
@@ -22,6 +24,10 @@ contract DepositManagerInvariants is Test {
                 selectors: selectors
             })
         );
+    }
+
+    function invariant_callSummary() public view {
+        invariantHandler.callSummary();
     }
 
     // Total balance of deposit manager equals total deposits instantiated
@@ -33,6 +39,7 @@ contract DepositManagerInvariants is Test {
                 address(invariantHandler.depositManager())
             ),
             invariantHandler.ghost_instantiateDepositSum() -
+                invariantHandler.ghost_retrieveDepositSum() -
                 invariantHandler.ghost_completeDepositSum()
         );
     }
