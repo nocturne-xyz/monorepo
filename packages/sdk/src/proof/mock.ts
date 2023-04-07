@@ -50,6 +50,8 @@ export class MockJoinSplitProver implements JoinSplitProver {
         12345n,
         0n,
         0n,
+        0n,
+        0n,
       ],
     };
   }

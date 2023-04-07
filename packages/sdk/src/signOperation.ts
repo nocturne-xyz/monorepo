@@ -8,6 +8,7 @@ import {
 } from "./primitives";
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
+import { randomFr } from "./crypto/utils";
 
 export function signOperation(
   signer: NocturneSigner,
@@ -80,6 +81,7 @@ function makePreProofJoinSplit(
     oldNoteB: NoteTrait.encode(oldNoteB),
     newNoteA: NoteTrait.encode(newNoteA),
     newNoteB: NoteTrait.encode(newNoteB),
+    encRandomness: randomFr(),
   };
   return {
     opDigest,

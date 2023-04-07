@@ -55,6 +55,7 @@ export interface JoinSplitInputs {
   merkleProofB: MerkleProofInput;
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
+  encRandomness: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
