@@ -20,7 +20,7 @@ contract DepositManager is
     OwnableUpgradeable
 {
     uint256 constant ERC20_ID = 0;
-    uint256 constant ETH_TRANSFER_GAS = 25_000;
+    uint256 constant TWO_ETH_TRANSFERS_GAS = 50_000;
 
     IWallet public _wallet;
     IWeth public _weth;
@@ -204,7 +204,7 @@ contract DepositManager is
         // NOTE: only case where screener takes more gas than it actually spent
         // is when gasComp exactly equals req.gasCompensation (can ignore edge
         // case and not over complicate logic)
-        uint256 gasComp = preDepositGas - gasleft() + (2 * ETH_TRANSFER_GAS);
+        uint256 gasComp = preDepositGas - gasleft() + TWO_ETH_TRANSFERS_GAS;
         uint256 actualGasComp = Utils.min(
             gasComp * tx.gasprice,
             req.gasCompensation
