@@ -17,7 +17,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/joinsplitProof.json";
     uint256 constant NUM_PROOFS = 8;
-    uint256 constant NUM_PIS = 9;
+    uint256 constant NUM_PIS = 11;
 
     IJoinSplitVerifier joinSplitVerifier;
 

@@ -186,7 +186,9 @@ library NocturneUtils {
                 newNoteBEncrypted: newNoteBEncrypted,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
-                publicSpend: args.publicSpendPerJoinSplit
+                publicSpend: args.publicSpendPerJoinSplit,
+                encSenderCanonAddrC1X: 0,
+                encSenderCanonAddrC2X: 0
             });
         }
 

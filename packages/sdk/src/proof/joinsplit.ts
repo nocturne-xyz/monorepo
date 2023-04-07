@@ -24,8 +24,8 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // encSenderCanonAddrC1X
     bigint, // encSenderCanonAddrC2X
     bigint, // operationDigest
-    bigint, // encodedAssetAddr 
-    bigint, // encodedAssetId
+    bigint, // encodedAssetAddr
+    bigint // encodedAssetId
   ];
 }
 

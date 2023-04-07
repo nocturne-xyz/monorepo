@@ -34,7 +34,7 @@ library OperationUtils {
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
                 proofs[index] = op.joinSplits[j].proof;
-                allPis[index] = new uint256[](9);
+                allPis[index] = new uint256[](11);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
                 allPis[index][1] = op.joinSplits[j].newNoteBCommitment;
                 allPis[index][2] = op.joinSplits[j].commitmentTreeRoot;
@@ -47,6 +47,8 @@ library OperationUtils {
                     .encodedAsset
                     .encodedAssetAddr;
                 allPis[index][8] = op.joinSplits[j].encodedAsset.encodedAssetId;
+                allPis[index][9] = op.joinSplits[j].encSenderCanonAddrC1X;
+                allPis[index][9] = op.joinSplits[j].encSenderCanonAddrC2X;
                 index++;
             }
         }
