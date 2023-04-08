@@ -15,8 +15,7 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     mapping(address => bool) public _subtreeBatchFiller;
 
-    mapping(address => mapping(bytes4 => bool))
-        public _callableContractAllowlist;
+    mapping(uint192 => bool) public _callableContractAllowlist;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
@@ -76,7 +75,11 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         bytes4 selector,
         bool permission
     ) external onlyOwner {
-        _callableContractAllowlist[contractAddress][selector] = permission;
+        uint192 addressAndSelector = _addressAndSelector(
+            contractAddress,
+            selector
+        );
+        _callableContractAllowlist[addressAndSelector] = permission;
         emit CallableContractAllowlistPermissionSet(
             contractAddress,
             selector,
@@ -222,8 +225,12 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         );
 
         bytes4 selector = _extractFunctionSelector(action.encodedFunction);
+        uint192 addressAndSelector = _addressAndSelector(
+            action.contractAddress,
+            selector
+        );
         require(
-            _callableContractAllowlist[action.contractAddress][selector],
+            _callableContractAllowlist[addressAndSelector],
             "Cannot call non-allowed protocol"
         );
 
@@ -235,5 +242,12 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     ) public pure returns (bytes4 selector) {
         require(encodedFunctionData.length >= 4, "Invalid encoded fn length");
         return bytes4(encodedFunctionData[:4]);
+    }
+
+    function _addressAndSelector(
+        address contractAddress,
+        bytes4 selector
+    ) internal pure returns (uint192) {
+        return (uint192(uint160(contractAddress)) << 32) | uint32(selector);
     }
 }
