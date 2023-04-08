@@ -1412,6 +1412,78 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
+    // Ensure op fails if it calls non-allowed contract
+    function testProcessBundleNonAllowedContract() public {
+        // Deploy new (non-whitelisted) token instead
+        SimpleERC20Token token = new SimpleERC20Token();
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create transaction to send 3 * 50M even though only 2 * 50M is being
+        // taken up by wallet
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 2,
+                gasPrice: 50,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    3 * PER_NOTE_AMOUNT
+                ), // Transfer amount exceeds withdrawn
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        assertEq(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "Cannot call non-allowed protocol",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // op processed = false, whole op reverted
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].failureReason),
+                "Cannot call non-allowed protocol"
+            )
+        );
+
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
+        assertLt(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
+    }
+
     function testProcessBundleSuccessfulAllRefunds() public {
         SimpleERC20Token tokenIn = ERC20s[0];
         reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
