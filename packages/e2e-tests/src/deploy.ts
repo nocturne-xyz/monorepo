@@ -8,9 +8,6 @@ import {
   DepositManager,
   DepositManager__factory,
   WETH9__factory,
-  SimpleERC20Token__factory,
-  SimpleERC721Token__factory,
-  SimpleERC1155Token__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -342,53 +339,18 @@ export async function deployNocturneTestTokens(
   handler: Handler
 ): Promise<NocturneTestDeploymentTokens> {
   // Deploy tokens
-  const [erc20, erc20Asset] = await deployERC20(deployerEoa);
+  const [erc20, erc20Asset] = await deployERC20(deployerEoa, handler);
   console.log("ERC20 deployed at: ", erc20.address);
 
-  const [gasToken, gasTokenAsset] = await deployERC20(deployerEoa);
+  const [gasToken, gasTokenAsset] = await deployERC20(deployerEoa, handler);
 
-  const [erc721, erc721Ctor] = await deployERC721(deployerEoa);
+  const [erc721, erc721Ctor] = await deployERC721(deployerEoa, handler);
   const erc721Asset = erc721Ctor(0n);
   console.log("ERC721 deployed at: ", erc721.address);
 
-  const [erc1155, erc1155Ctor] = await deployERC1155(deployerEoa);
+  const [erc1155, erc1155Ctor] = await deployERC1155(deployerEoa, handler);
   const erc1155Asset = erc1155Ctor(0n);
   console.log("ERC1155 deployed at: ", erc1155.address);
-
-  // Approve methods we call for handler
-  const erc20Iface = SimpleERC20Token__factory.createInterface();
-  await handler
-    .connect(deployerEoa)
-    .setCallableContractAllowlistPermission(
-      erc20.address,
-      erc20Iface.getSighash("approve"),
-      true
-    );
-  await handler
-    .connect(deployerEoa)
-    .setCallableContractAllowlistPermission(
-      erc20.address,
-      erc20Iface.getSighash("transfer"),
-      true
-    );
-
-  const erc721Iface = SimpleERC721Token__factory.createInterface();
-  await handler
-    .connect(deployerEoa)
-    .setCallableContractAllowlistPermission(
-      erc721.address,
-      erc721Iface.getSighash("reserveToken"),
-      true
-    );
-
-  const erc1155Iface = SimpleERC1155Token__factory.createInterface();
-  await handler
-    .connect(deployerEoa)
-    .setCallableContractAllowlistPermission(
-      erc1155.address,
-      erc1155Iface.getSighash("reserveTokens"),
-      true
-    );
 
   return {
     erc20,
