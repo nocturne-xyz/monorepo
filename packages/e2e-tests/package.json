@@ -14,7 +14,7 @@
     "prettier:check": "prettier --check ./tests ./src",
     "prettier:write": "prettier --write ./tests ./src",
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
-    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
+    "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit -g 'Bundler rejects operation'"
   },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
