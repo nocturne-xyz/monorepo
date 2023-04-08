@@ -6,11 +6,11 @@ import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
-import {JsonDecodings, SignedDepositRequestFixture} from "./utils/JsonDecodings.sol";
-import "./harnesses/TestDepositManagerBase.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
+import {JsonDecodings, SignedDepositRequestFixture} from "../utils/JsonDecodings.sol";
+import "../harnesses/TestDepositManagerBase.sol";
 
-contract DepositManagerBaseTest is Test, ParseUtils, JsonDecodings {
+contract DepositManagerBaseTest is Test, JsonDecodings {
     string constant SIGNED_DEPOSIT_REQ_FIXTURE_PATH =
         "/fixtures/signedDepositRequest.json";
 

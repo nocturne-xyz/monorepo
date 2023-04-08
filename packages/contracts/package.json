@@ -23,8 +23,10 @@
     "prepublish": "yarn bootstrap && yarn build",
     "test:coverage": "FOUNDRY_PROFILE=contracts forge coverage",
     "test:coverage:report": "FOUNDRY_PROFILE=contracts forge coverage --report lcov",
+    "test:deep-invariant": "FOUNDRY_PROFILE=deep forge test",
     "test:gas-report": "yarn test:unit --gas-report",
-    "test:unit": "FOUNDRY_PROFILE=contracts forge test"
+    "test:invariant-summary": "yarn test:unit -vv -m invariant_callSummary",
+    "test:unit": "forge test"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.8.2",

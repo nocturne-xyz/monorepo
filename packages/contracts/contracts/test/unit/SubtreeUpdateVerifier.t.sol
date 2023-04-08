@@ -6,14 +6,14 @@ import "forge-std/Test.sol";
 import "forge-std/StdJson.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "./utils/JsonDecodings.sol";
-import {ParseUtils} from "./utils/ParseUtils.sol";
-import {Utils} from "../libs/Utils.sol";
-import {ISubtreeUpdateVerifier} from "../interfaces/ISubtreeUpdateVerifier.sol";
-import {Groth16} from "../libs/Groth16.sol";
-import {SubtreeUpdateVerifier} from "../SubtreeUpdateVerifier.sol";
+import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "../utils/JsonDecodings.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
+import {Utils} from "../../libs/Utils.sol";
+import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
+import {Groth16} from "../../libs/Groth16.sol";
+import {SubtreeUpdateVerifier} from "../../SubtreeUpdateVerifier.sol";
 
-contract TestSubtreeUpdateVerifier is Test, ParseUtils, JsonDecodings {
+contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/subtreeupdateProof.json";
