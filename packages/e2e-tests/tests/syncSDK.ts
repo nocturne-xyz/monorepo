@@ -77,13 +77,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       ({ teardown, provider, depositManager, handler } = testDeployment);
 
-      const [deployerEoa, _aliceEoa] = KEYS_TO_WALLETS(provider);
+      const [_aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
 
-      token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+      token = testDeployment.tokens.erc20;
       console.log("Token deployed at: ", token.address);
 
-      gasToken = await new SimpleERC20Token__factory(deployerEoa).deploy();
+      gasToken = testDeployment.tokens.gasToken;
       console.log("Gas Token deployed at: ", gasToken.address);
 
       ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
