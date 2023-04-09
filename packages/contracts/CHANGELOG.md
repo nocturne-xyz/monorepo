@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- Simplify `Utils` to only contain min function and SNARK_SCALAR_FIELD (no longer an "everything" utils file)
+- Move tree-related utils in `Utils.sol` into `TreeUtils.sol`
+- Encapsulate `Groth16.Proof` struct to Groth16 library so we don't have `Utils.proof8ToStruct` floating around everywhere
+- underscore library methods that are only used internally within library currently
 - resolve compiler build warnings coming from test code
 - Add unit test for calling non allowed protocol
 - Add `callableContractAllowlist` to handler which specifies which protocols + fn selectors users can call from handler
