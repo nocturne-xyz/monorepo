@@ -97,7 +97,8 @@ library OperationUtils {
             op.maxNumRefunds,
             op.gasPrice,
             op.chainId,
-            op.deadline
+            op.deadline,
+            op.atomicActions
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
