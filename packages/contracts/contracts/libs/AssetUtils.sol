@@ -12,51 +12,12 @@ import "../libs/Types.sol";
 library AssetUtils {
     using SafeERC20 for IERC20;
 
-    function decodeAsset(
-        EncodedAsset memory encodedAsset
-    )
-        internal
-        pure
-        returns (AssetType assetType, address assetAddr, uint256 id)
-    {
-        return
-            _decodeAsset(
-                encodedAsset.encodedAssetAddr,
-                encodedAsset.encodedAssetId
-            );
-    }
-
-    function _decodeAsset(
-        uint256 encodedAssetAddr,
-        uint256 encodedAssetId
-    )
-        internal
-        pure
-        returns (AssetType assetType, address assetAddr, uint256 id)
-    {
-        uint256 bitMask_111 = 7;
-        uint256 bitMask_11 = 3;
-        id = (encodedAssetAddr & (bitMask_111 << 250)) | encodedAssetId;
-        assetAddr = address(uint160((encodedAssetAddr << 96) >> 96));
-        uint256 asset_type_bits = (encodedAssetAddr >> 160) & bitMask_11;
-        if (asset_type_bits == 0) {
-            assetType = AssetType.ERC20;
-        } else if (asset_type_bits == 1) {
-            assetType = AssetType.ERC721;
-        } else if (asset_type_bits == 2) {
-            assetType = AssetType.ERC1155;
-        } else {
-            revert("Invalid encodedAssetAddr");
-        }
-        return (assetType, assetAddr, id);
-    }
-
-    function encodeAssetToTuple(
+    function encodeAsset(
         AssetType assetType,
         address assetAddr,
         uint256 id
-    ) internal pure returns (uint256 encodedAssetAddr, uint256 encodedAssetId) {
-        encodedAssetId = (id << 3) >> 3;
+    ) internal pure returns (EncodedAsset memory encodedAsset) {
+        uint256 encodedAssetId = (id << 3) >> 3;
         uint256 asset_type_bits;
         if (assetType == AssetType.ERC20) {
             asset_type_bits = uint256(0);
@@ -67,28 +28,44 @@ library AssetUtils {
         } else {
             revert("Invalid assetType");
         }
-        encodedAssetAddr =
-            ((id >> 253) << 253) |
+        uint256 encodedAssetAddr = ((id >> 253) << 253) |
             uint256(uint160(assetAddr)) |
             (asset_type_bits << 160);
-        return (encodedAssetAddr, encodedAssetId);
-    }
 
-    function encodeAsset(
-        AssetType assetType,
-        address assetAddr,
-        uint256 id
-    ) internal pure returns (EncodedAsset memory encodedAsset) {
-        (uint256 encodedAssetAddr, uint256 encodedAssetId) = encodeAssetToTuple(
-            assetType,
-            assetAddr,
-            id
-        );
         return
             EncodedAsset({
                 encodedAssetAddr: encodedAssetAddr,
                 encodedAssetId: encodedAssetId
             });
+    }
+
+    function decodeAsset(
+        EncodedAsset memory encodedAsset
+    )
+        internal
+        pure
+        returns (AssetType assetType, address assetAddr, uint256 id)
+    {
+        uint256 bitMask_111 = 7;
+        uint256 bitMask_11 = 3;
+        id =
+            (encodedAsset.encodedAssetAddr & (bitMask_111 << 250)) |
+            encodedAsset.encodedAssetId;
+        assetAddr = address(
+            uint160((encodedAsset.encodedAssetAddr << 96) >> 96)
+        );
+        uint256 asset_type_bits = (encodedAsset.encodedAssetAddr >> 160) &
+            bitMask_11;
+        if (asset_type_bits == 0) {
+            assetType = AssetType.ERC20;
+        } else if (asset_type_bits == 1) {
+            assetType = AssetType.ERC721;
+        } else if (asset_type_bits == 2) {
+            assetType = AssetType.ERC1155;
+        } else {
+            revert("Invalid encodedAssetAddr");
+        }
+        return (assetType, assetAddr, id);
     }
 
     function hashEncodedAsset(
