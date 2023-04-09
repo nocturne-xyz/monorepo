@@ -39,14 +39,10 @@ contract Wallet is
 
     mapping(address => bool) public _depositSources;
 
-    mapping(address => bool) public _subtreeBatchFiller;
-
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event DepositSourcePermissionSet(address source, bool permission);
-
-    event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event OperationProcessed(
         uint256 indexed operationDigest,
@@ -82,11 +78,6 @@ contract Wallet is
         _;
     }
 
-    modifier onlySubtreeBatchFiller() {
-        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
-        _;
-    }
-
     function pause() external onlyOwner {
         _pause();
     }
@@ -101,15 +92,6 @@ contract Wallet is
     ) external onlyOwner {
         _depositSources[source] = permission;
         emit DepositSourcePermissionSet(source, permission);
-    }
-
-    // gives an address permission to call `fillBatchesWithZeros`
-    function setSubtreeBatchFillerPermission(
-        address filler,
-        bool permission
-    ) external onlyOwner {
-        _subtreeBatchFiller[filler] = permission;
-        emit SubtreeBatchFillerPermissionSet(filler, permission);
     }
 
     function depositFunds(

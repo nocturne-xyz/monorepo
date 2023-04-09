@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- remove all subtree batch fill refs from wallet
+- make invariant tests exclude invariant handler from sender set
 - start invariant tests, beginning with DepositManager tests
   - add `InvariantHandler.sol` for protocol-wide actor interface
   - Add helpers for tracking actors, balances, deposits

@@ -27,6 +27,7 @@ contract DepositManagerInvariants is Test {
             })
         );
 
+        excludeSender(address(invariantHandler));
         excludeSender(address(invariantHandler.wallet()));
         excludeSender(address(invariantHandler.depositManager()));
     }
