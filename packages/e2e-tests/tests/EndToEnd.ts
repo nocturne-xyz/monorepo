@@ -29,7 +29,6 @@ import {
   depositFundsSingleToken,
 } from "../src/deposit";
 import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
-import { deployERC1155, deployERC20, deployERC721 } from "../src/tokens";
 
 chai.use(chaiAsPromised);
 
@@ -53,7 +52,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
-  let deployerEoa: ethers.Wallet;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
   let bundlerEoa: ethers.Wallet;
@@ -94,31 +92,22 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       teardown,
       wallet,
       handler,
-      deployerEoa,
       aliceEoa,
       bobEoa,
       bundlerEoa,
       depositManager,
     } = testDeployment);
 
-    [erc20, erc20Asset] = await deployERC20(deployerEoa);
-    console.log("ERC20 'shitcoin' deployed at: ", erc20.address);
-
-    [gasToken, gasTokenAsset] = await deployERC20(bundlerEoa);
-
-    {
-      let ctor;
-      [erc721, ctor] = await deployERC721(deployerEoa);
-      erc721Asset = ctor(0n);
-      console.log("ERC721 'monkey' deployed at: ", erc721.address);
-    }
-
-    {
-      let ctor;
-      [erc1155, ctor] = await deployERC1155(deployerEoa);
-      erc1155Asset = ctor(0n);
-      console.log("ERC1155 'plutocracy' deployed at: ", erc1155.address);
-    }
+    ({
+      erc20,
+      erc20Asset,
+      erc721,
+      erc721Asset,
+      erc1155,
+      erc1155Asset,
+      gasToken,
+      gasTokenAsset,
+    } = testDeployment.tokens);
 
     ({
       nocturneDBAlice,

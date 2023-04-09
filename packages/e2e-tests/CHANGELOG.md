@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- Modify token deployment to take handler when so deployer can allowlist appropriate methods
 - deploy weth and pass to deposit manager initialization
 - update tests using `SparseMerkleProver`
 - rename `NocturneSyncer.ts` -> `syncSDK.ts`

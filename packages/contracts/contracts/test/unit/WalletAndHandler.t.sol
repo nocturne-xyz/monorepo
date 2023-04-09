@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils/PoseidonHashers.sol";
+import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils//PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {IPoseidonT3} from "../interfaces/IPoseidon.sol";
@@ -28,6 +28,9 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
@@ -107,6 +110,17 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            handler.setCallableContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20.approve.selector,
+                true
+            );
+            handler.setCallableContractAllowlistPermission(
+                address(ERC20s[i]),
+                ERC20.transfer.selector,
+                true
+            );
         }
     }
 
@@ -918,6 +932,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
+        // Whitelist reentrantCaller for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(reentrantCaller),
+            ReentrantCaller.reentrantProcessBundle.selector,
+            true
+        );
+
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1101,6 +1122,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
+        // Whitelist handler for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(handler),
+            Handler.handleOperation.selector,
+            true
+        );
+
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1197,6 +1225,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 maybeFailureReason: "",
                 assetsUnwrapped: true
             })
+        );
+
+        // Whitelist handler for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(handler),
+            Handler.executeActions.selector,
+            true
         );
 
         // Op was processed but call result has reentry failure message
@@ -1377,6 +1412,78 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
+    // Ensure op fails if it calls non-allowed contract
+    function testProcessBundleNonAllowedContract() public {
+        // Deploy new (non-whitelisted) token instead
+        SimpleERC20Token token = new SimpleERC20Token();
+        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+
+        // Create transaction to send 3 * 50M even though only 2 * 50M is being
+        // taken up by wallet
+        Bundle memory bundle = Bundle({operations: new Operation[](1)});
+        bundle.operations[0] = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: handler.root(),
+                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
+                numJoinSplits: 2,
+                encodedRefundAssets: new EncodedAsset[](0),
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 2,
+                gasPrice: 50,
+                actions: NocturneUtils.formatSingleTransferActionArray(
+                    token,
+                    BOB,
+                    3 * PER_NOTE_AMOUNT
+                ), // Transfer amount exceeds withdrawn
+                atomicActions: true,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        assertEq(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertEq(token.balanceOf(address(BOB)), uint256(0));
+
+        vmExpectOperationProcessed(
+            ExpectOperationProcessedArgs({
+                maybeFailureReason: "Cannot call non-allowed protocol",
+                assetsUnwrapped: true
+            })
+        );
+
+        vm.prank(BUNDLER);
+        OperationResult[] memory opResults = wallet.processBundle(bundle);
+
+        // op processed = false, whole op reverted
+        assertEq(opResults.length, uint256(1));
+        assertEq(opResults[0].opProcessed, false);
+        assertEq(opResults[0].assetsUnwrapped, true);
+        assertEq(opResults[0].callSuccesses.length, uint256(0));
+        assertEq(opResults[0].callResults.length, uint256(0));
+        assert(
+            ParseUtils.hasSubstring(
+                string(opResults[0].failureReason),
+                "Cannot call non-allowed protocol"
+            )
+        );
+
+        // Alice lost some private balance due to bundler comp. Bundler has a
+        // little bit of tokens.
+        assertLt(
+            token.balanceOf(address(wallet)),
+            uint256(2 * PER_NOTE_AMOUNT)
+        );
+        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(ALICE)), uint256(0));
+        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
+    }
+
     function testProcessBundleSuccessfulAllRefunds() public {
         SimpleERC20Token tokenIn = ERC20s[0];
         reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
@@ -1467,6 +1574,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 maybeFailureReason: "",
                 assetsUnwrapped: true
             })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            TokenSwapper.swap.selector,
+            true
         );
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
@@ -1586,6 +1700,13 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 maybeFailureReason: "Too many refunds",
                 assetsUnwrapped: true
             })
+        );
+
+        // Whitelist token swapper for sake of simulation
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            TokenSwapper.swap.selector,
+            true
         );
 
         vm.prank(BUNDLER);

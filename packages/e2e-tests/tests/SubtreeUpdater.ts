@@ -1,10 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
-import {
-  DepositManager,
-  Handler,
-  SimpleERC20Token__factory,
-} from "@nocturne-xyz/contracts";
+import { DepositManager, Handler } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 import { NocturneWalletSDK, NocturneDB } from "@nocturne-xyz/sdk";
@@ -43,8 +39,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     ({ handler, depositManager } = testDeployment);
     const { provider, contractDeployment } = testDeployment;
 
-    const [deployerEoa, _aliceEoa, _subtreeUpdaterEoa] =
-      KEYS_TO_WALLETS(provider);
+    const [_aliceEoa, _subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
     aliceEoa = _aliceEoa;
     subtreeUpdaterEoa = _subtreeUpdaterEoa;
 
@@ -53,8 +48,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
       provider
     ));
 
-    const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
-    token = await tokenFactory.deploy();
+    token = testDeployment.tokens.erc20;
     console.log("Token deployed at: ", token.address);
 
     server = newServer();

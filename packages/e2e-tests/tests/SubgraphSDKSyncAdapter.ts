@@ -1,9 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
-import {
-  DepositManager,
-  SimpleERC20Token__factory,
-} from "@nocturne-xyz/contracts";
+import { DepositManager } from "@nocturne-xyz/contracts";
 import {
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
@@ -15,7 +12,6 @@ import { setupTestDeployment, SUBGRAPH_URL } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import { sleep } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { KEYS_TO_WALLETS } from "../src/keys";
 
 describe("SDKSubgraphSyncAdapter", async () => {
   let teardown: () => Promise<void>;
@@ -31,19 +27,20 @@ describe("SDKSubgraphSyncAdapter", async () => {
   beforeEach(async () => {
     // only doing deposits, so don't need bundler
     // only querying notes, so don't need subtree updater
+    const testDeployment = await setupTestDeployment({
+      include: {
+        subgraph: true,
+        depositScreener: true,
+      },
+    });
+
     ({ teardown, aliceEoa, provider, depositManager, provider } =
-      await setupTestDeployment({
-        include: {
-          subgraph: true,
-          depositScreener: true,
-        },
-      }));
+      testDeployment);
 
     syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
     viewer = new NocturneViewer(2n);
 
-    const [deployerEoa] = KEYS_TO_WALLETS(provider);
-    token = await new SimpleERC20Token__factory(deployerEoa).deploy();
+    token = testDeployment.tokens.erc20;
     console.log("Token deployed at: ", token.address);
   });
 

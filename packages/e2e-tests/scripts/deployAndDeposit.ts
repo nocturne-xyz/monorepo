@@ -3,7 +3,6 @@ import { ethers } from "ethers";
 import {
   DepositManager__factory,
   Handler__factory,
-  SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
@@ -14,6 +13,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { deployAndWhitelistERC20 } from "../src/tokens";
 
 const ANVIL_URL = "http://127.0.0.1:8545";
 
@@ -66,12 +66,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   );
 
   const tokenAmount = ethers.utils.parseEther("10.0").toBigInt();
-  const tokenFactory = new SimpleERC20Token__factory(deployerEoa);
   const tokens: SimpleERC20Token[] = [];
   const amounts: bigint[] = [];
   for (let i = 0; i < 2; i++) {
-    const token = await tokenFactory.deploy();
-    await token.deployed();
+    const [token] = await deployAndWhitelistERC20(deployerEoa, handler);
     console.log(`Token ${i + 1} deployed at: ${token.address}`);
     tokens.push(token);
     amounts.push(tokenAmount);
@@ -140,8 +138,10 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const tx = await handler.connect(deployerEoa).fillBatchWithZeros();
   await tx.wait(1);
 
-  console.log(`deployAndDeposit script finished in ${Date.now() - startTime}ms.`);
-  console.log('disabling automine...');
+  console.log(
+    `deployAndDeposit script finished in ${Date.now() - startTime}ms.`
+  );
+  console.log("disabling automine...");
   await provider.send("evm_setAutomine", [false]);
   // need to turn interval mining back on, as `setAutomine true` turns off
   // note, we need to set the block time here, but we don't have a good way to get the current block time

@@ -15,10 +15,18 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     mapping(address => bool) public _subtreeBatchFiller;
 
+    mapping(uint192 => bool) public _callableContractAllowlist;
+
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
+
+    event CallableContractAllowlistPermissionSet(
+        address contractAddress,
+        bytes4 selector,
+        bool permission
+    );
 
     function initialize(
         address wallet,
@@ -58,6 +66,25 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     ) external onlyOwner {
         _subtreeBatchFiller[filler] = permission;
         emit SubtreeBatchFillerPermissionSet(filler, permission);
+    }
+
+    // Gives an handler ability to call function with given selector on the
+    // specified protocol
+    function setCallableContractAllowlistPermission(
+        address contractAddress,
+        bytes4 selector,
+        bool permission
+    ) external onlyOwner {
+        uint192 addressAndSelector = _addressAndSelector(
+            contractAddress,
+            selector
+        );
+        _callableContractAllowlist[addressAndSelector] = permission;
+        emit CallableContractAllowlistPermissionSet(
+            contractAddress,
+            selector,
+            permission
+        );
     }
 
     function addToAssetPrefill(
@@ -197,6 +224,30 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             "Cannot call the Nocturne wallet"
         );
 
+        bytes4 selector = _extractFunctionSelector(action.encodedFunction);
+        uint192 addressAndSelector = _addressAndSelector(
+            action.contractAddress,
+            selector
+        );
+        require(
+            _callableContractAllowlist[addressAndSelector],
+            "Cannot call non-allowed protocol"
+        );
+
         (success, result) = action.contractAddress.call(action.encodedFunction);
+    }
+
+    function _extractFunctionSelector(
+        bytes calldata encodedFunctionData
+    ) public pure returns (bytes4 selector) {
+        require(encodedFunctionData.length >= 4, "Invalid encoded fn length");
+        return bytes4(encodedFunctionData[:4]);
+    }
+
+    function _addressAndSelector(
+        address contractAddress,
+        bytes4 selector
+    ) internal pure returns (uint192) {
+        return (uint192(uint160(contractAddress)) << 32) | uint32(selector);
     }
 }

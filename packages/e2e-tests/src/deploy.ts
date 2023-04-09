@@ -23,6 +23,7 @@ import {
   Address,
   sleep,
   thunk,
+  Asset,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -43,6 +44,14 @@ import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
 import { startSubgraph, SubgraphConfig } from "./subgraph";
 import { KEYS_TO_WALLETS } from "./keys";
+import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
+import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
+import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
+import {
+  deployAndWhitelistERC1155,
+  deployAndWhitelistERC20,
+  deployAndWhitelistERC721,
+} from "../src/tokens";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -52,7 +61,7 @@ const ZKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/joinsplit.zkey`;
 const VKEY_PATH = `${ARTIFACTS_DIR}/joinsplit/joinsplit_cpp/vkey.json`;
 const VKEY = JSON.parse(fs.readFileSync(VKEY_PATH).toString());
 
-export interface NocturneDeployArgs {
+export interface TestDeployArgs {
   screeners: Address[];
   subtreeBatchFillers: Address[];
 }
@@ -77,10 +86,22 @@ export interface TestActorsConfig {
   };
 }
 
-export interface NocturneTestDeployment {
+export interface TestDeploymentTokens {
+  erc20: SimpleERC20Token;
+  erc20Asset: Asset;
+  erc721: SimpleERC721Token;
+  erc721Asset: Asset;
+  erc1155: SimpleERC1155Token;
+  erc1155Asset: Asset;
+  gasToken: SimpleERC20Token;
+  gasTokenAsset: Asset;
+}
+
+export interface TestDeployment {
   depositManager: DepositManager;
   wallet: Wallet;
   handler: Handler;
+  tokens: TestDeploymentTokens;
   contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
   deployerEoa: ethers.Wallet;
@@ -135,7 +156,7 @@ const anvilThunk = thunk(() => startAnvil(DEFAULT_ANVIL_CONFIG));
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
   config: TestActorsConfig
-): Promise<NocturneTestDeployment> {
+): Promise<TestDeployment> {
   // anvil has to go up first,
   // then contracts,
   // then everything else can go up in any order
@@ -176,6 +197,8 @@ export async function setupTestDeployment(
     Wallet__factory.connect(walletProxy.proxy, deployerEoa),
     Handler__factory.connect(handlerProxy.proxy, deployerEoa),
   ]);
+
+  const tokens = await deployAndWhitelistTestTokens(deployerEoa, handler);
 
   // Deploy subgraph first, as other services depend on it
   let stopSubgraph: undefined | (() => Promise<void>);
@@ -270,6 +293,7 @@ export async function setupTestDeployment(
     depositManager,
     wallet,
     handler,
+    tokens,
     contractDeployment,
     provider,
     teardown,
@@ -284,7 +308,7 @@ export async function setupTestDeployment(
 
 export async function deployContractsWithDummyAdmins(
   connectedSigner: ethers.Wallet,
-  args: NocturneDeployArgs
+  args: TestDeployArgs
 ): Promise<NocturneContractDeployment> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
@@ -292,10 +316,10 @@ export async function deployContractsWithDummyAdmins(
   const deployment = await deployNocturne(
     connectedSigner,
     {
-      proxyAdminOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      walletOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      handlerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
-      depositManagerOwner: "0x3CACa7b48D0573D793d3b0279b5F0029180E83b6",
+      proxyAdminOwner: connectedSigner.address,
+      walletOwner: connectedSigner.address,
+      handlerOwner: connectedSigner.address,
+      depositManagerOwner: connectedSigner.address,
       screeners: args.screeners,
       subtreeBatchFillers: args.subtreeBatchFillers,
       wethAddress: weth.address,
@@ -314,6 +338,48 @@ export async function deployContractsWithDummyAdmins(
   return deployment;
 }
 
+export async function deployAndWhitelistTestTokens(
+  deployerEoa: ethers.Wallet,
+  handler: Handler
+): Promise<TestDeploymentTokens> {
+  // Deploy tokens
+  const [erc20, erc20Asset] = await deployAndWhitelistERC20(
+    deployerEoa,
+    handler
+  );
+  console.log("ERC20 deployed at: ", erc20.address);
+
+  const [gasToken, gasTokenAsset] = await deployAndWhitelistERC20(
+    deployerEoa,
+    handler
+  );
+
+  const [erc721, erc721Ctor] = await deployAndWhitelistERC721(
+    deployerEoa,
+    handler
+  );
+  const erc721Asset = erc721Ctor(0n);
+  console.log("ERC721 deployed at: ", erc721.address);
+
+  const [erc1155, erc1155Ctor] = await deployAndWhitelistERC1155(
+    deployerEoa,
+    handler
+  );
+  const erc1155Asset = erc1155Ctor(0n);
+  console.log("ERC1155 deployed at: ", erc1155.address);
+
+  return {
+    erc20,
+    erc20Asset,
+    erc721,
+    erc721Asset,
+    erc1155,
+    erc1155Asset,
+    gasToken,
+    gasTokenAsset,
+  };
+}
+
 export interface SetupNocturneOpts {
   syncAdapter?: SyncAdapterOption;
   gasAssets?: Map<string, string>;
@@ -324,7 +390,7 @@ export enum SyncAdapterOption {
   SUBGRAPH,
 }
 
-export interface NocturneClientSetup {
+export interface ClientSetup {
   nocturneDBAlice: NocturneDB;
   nocturneWalletSDKAlice: NocturneWalletSDK;
   nocturneDBBob: NocturneDB;
@@ -336,7 +402,7 @@ export async function setupTestClient(
   contractDeployment: NocturneContractDeployment,
   provider: ethers.providers.Provider,
   opts?: SetupNocturneOpts
-): Promise<NocturneClientSetup> {
+): Promise<ClientSetup> {
   const config = new NocturneConfig(
     contractDeployment,
     // TODO: fill with real assets and rate limits in SDK gas asset and deposit

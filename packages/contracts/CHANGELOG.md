@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Add unit test for calling non allowed protocol
+- Add `callableContractAllowlist` to handler which specifies which protocols + fn selectors users can call from handler
 - remove all subtree batch fill refs from wallet
 - make invariant tests exclude invariant handler from sender set
 - start invariant tests, beginning with DepositManager tests
