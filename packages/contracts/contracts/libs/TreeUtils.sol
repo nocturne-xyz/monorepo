@@ -37,7 +37,6 @@ library TreeUtils {
         return sha256(abi.encodePacked(elems));
     }
 
-    // TODO: move this to offchain merkle
     function sha256Note(
         EncodedNote memory note
     ) internal pure returns (uint256) {
@@ -51,14 +50,16 @@ library TreeUtils {
         return uint256(sha256FieldElems(elems));
     }
 
-    // return uint256 as two limbs - one uint256 containing the 3 hi bits, the other containing the lower 253 bits
+    // return uint256 as two limbs - one uint256 containing the 3 hi bits, the
+    // other containing the lower 253 bits
     function uint256ToFieldElemLimbs(
         uint256 n
     ) internal pure returns (uint256, uint256) {
         return _splitUint256ToLimbs(n, 253);
     }
 
-    // split a uint256 into 2 limbs, one containing the high (256 - lowerBits) bits, the other containing the lower `lowerBits` bits
+    // split a uint256 into 2 limbs, one containing the high (256 - lowerBits)
+    // bits, the other containing the lower `lowerBits` bits
     function _splitUint256ToLimbs(
         uint256 n,
         uint256 lowerBits
