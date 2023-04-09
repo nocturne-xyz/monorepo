@@ -6,18 +6,6 @@ import "../libs/Types.sol";
 
 // Helpers for extracting data / formatting operations
 library OperationUtils {
-    function computeOperationDigests(
-        Operation[] calldata ops
-    ) internal pure returns (uint256[] memory) {
-        uint256 numOps = ops.length;
-        uint256[] memory opDigests = new uint256[](numOps);
-        for (uint256 i = 0; i < numOps; i++) {
-            opDigests[i] = computeOperationDigest(ops[i]);
-        }
-
-        return opDigests;
-    }
-
     function extractJoinSplitProofsAndPis(
         Operation[] calldata ops,
         uint256[] memory digests
@@ -66,10 +54,22 @@ library OperationUtils {
         return (proofs, allPis);
     }
 
+    function computeOperationDigests(
+        Operation[] calldata ops
+    ) internal pure returns (uint256[] memory) {
+        uint256 numOps = ops.length;
+        uint256[] memory opDigests = new uint256[](numOps);
+        for (uint256 i = 0; i < numOps; i++) {
+            opDigests[i] = _computeOperationDigest(ops[i]);
+        }
+
+        return opDigests;
+    }
+
     // Careful about declaring local variables in this function. Stack depth is around the limit.
-    function computeOperationDigest(
+    function _computeOperationDigest(
         Operation calldata op
-    ) internal pure returns (uint256) {
+    ) private pure returns (uint256) {
         // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
             _createJoinSplitsPayload(op.joinSplits),
@@ -98,9 +98,25 @@ library OperationUtils {
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
     }
 
+    function calculateBundlerGasAssetPayout(
+        Operation calldata op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
+    }
+
     function _createJoinSplitsPayload(
         JoinSplit[] calldata joinSplits
-    ) internal pure returns (bytes memory) {
+    ) private pure returns (bytes memory) {
         bytes memory joinSplitsPayload;
         uint256 numJoinSplits = joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -126,7 +142,7 @@ library OperationUtils {
 
     function _createRefundAssetsPayload(
         EncodedAsset[] calldata encodedRefundAssets
-    ) internal pure returns (bytes memory) {
+    ) private pure returns (bytes memory) {
         bytes memory refundAssetsPayload;
         for (uint256 i = 0; i < encodedRefundAssets.length; i++) {
             refundAssetsPayload = abi.encodePacked(
@@ -141,7 +157,7 @@ library OperationUtils {
 
     function _createActionsPayload(
         Action[] calldata actions
-    ) internal pure returns (bytes memory) {
+    ) private pure returns (bytes memory) {
         bytes memory actionsPayload;
         Action memory action;
         uint256 numActions = actions.length;
@@ -155,21 +171,5 @@ library OperationUtils {
         }
 
         return actionsPayload;
-    }
-
-    function calculateBundlerGasAssetPayout(
-        Operation calldata op,
-        OperationResult memory opResult
-    ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = op.joinSplits.length *
-            GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
-
-        return
-            op.gasPrice *
-            (opResult.verificationGas +
-                handleJoinSplitGas +
-                opResult.executionGas +
-                handleRefundGas);
     }
 }

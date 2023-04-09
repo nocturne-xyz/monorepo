@@ -49,6 +49,63 @@ library OffchainMerkleTree {
         self.accumulatorQueue.initialize();
     }
 
+    function insertNotes(
+        OffchainMerkleTreeData storage self,
+        EncodedNote[] memory notes
+    ) internal {
+        uint256[] memory hashes = new uint256[](notes.length);
+        for (uint256 i = 0; i < notes.length; i++) {
+            hashes[i] = Utils.sha256Note(notes[i]);
+        }
+
+        _insertUpdates(self, hashes);
+    }
+
+    function insertNote(
+        OffchainMerkleTreeData storage self,
+        EncodedNote memory note
+    ) internal {
+        EncodedNote[] memory notes = new EncodedNote[](1);
+        notes[0] = note;
+        insertNotes(self, notes);
+    }
+
+    function insertNoteCommitments(
+        OffchainMerkleTreeData storage self,
+        uint256[] memory ncs
+    ) internal {
+        _insertUpdates(self, ncs);
+    }
+
+    function insertNoteCommitment(
+        OffchainMerkleTreeData storage self,
+        uint256 nc
+    ) internal {
+        uint256[] memory ncs = new uint256[](1);
+        ncs[0] = nc;
+        insertNoteCommitments(self, ncs);
+    }
+
+    function applySubtreeUpdate(
+        OffchainMerkleTreeData storage self,
+        uint256 newRoot,
+        uint256[8] memory proof
+    ) internal {
+        uint256[] memory pis = _calculatePublicInputs(self, newRoot);
+
+        require(
+            self.subtreeUpdateVerifier.verifyProof(
+                Utils.proof8ToStruct(proof),
+                pis
+            ),
+            "subtree update proof invalid"
+        );
+
+        self.accumulatorQueue.dequeue();
+        self.root = newRoot;
+        self.count += uint128(TreeUtils.BATCH_SIZE);
+    }
+
     // returns the current root of the tree
     function getRoot(
         OffchainMerkleTreeData storage self
@@ -74,34 +131,7 @@ library OffchainMerkleTree {
             uint128(self.accumulatorQueue.length());
     }
 
-    function computeAccumulatorHash(
-        OffchainMerkleTreeData storage self
-    ) internal view returns (uint256) {
-        require(
-            self.batchLen == TreeUtils.BATCH_SIZE,
-            "batchLen != TreeUtils.BATCH_SIZE"
-        );
-
-        uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
-        for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
-            batch[i] = self.batch[i];
-        }
-
-        return uint256(Utils.sha256FieldElems(batch));
-    }
-
-    function accumulate(OffchainMerkleTreeData storage self) internal {
-        require(
-            self.batchLen == TreeUtils.BATCH_SIZE,
-            "batchLen != TreeUtils.BATCH_SIZE"
-        );
-
-        uint256 accumulatorHash = computeAccumulatorHash(self);
-        self.accumulatorQueue.enqueue(accumulatorHash);
-        self.batchLen = 0;
-    }
-
-    function calculatePublicInputs(
+    function _calculatePublicInputs(
         OffchainMerkleTreeData storage self,
         uint256 newRoot
     ) internal view returns (uint256[] memory) {
@@ -123,74 +153,44 @@ library OffchainMerkleTree {
         return pis;
     }
 
-    function applySubtreeUpdate(
-        OffchainMerkleTreeData storage self,
-        uint256 newRoot,
-        uint256[8] memory proof
-    ) internal {
-        uint256[] memory pis = calculatePublicInputs(self, newRoot);
-
+    function _computeAccumulatorHash(
+        OffchainMerkleTreeData storage self
+    ) private view returns (uint256) {
         require(
-            self.subtreeUpdateVerifier.verifyProof(
-                Utils.proof8ToStruct(proof),
-                pis
-            ),
-            "subtree update proof invalid"
+            self.batchLen == TreeUtils.BATCH_SIZE,
+            "batchLen != TreeUtils.BATCH_SIZE"
         );
 
-        self.accumulatorQueue.dequeue();
-        self.root = newRoot;
-        self.count += uint128(TreeUtils.BATCH_SIZE);
+        uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
+        for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
+            batch[i] = self.batch[i];
+        }
+
+        return uint256(Utils.sha256FieldElems(batch));
     }
 
-    function insertUpdates(
+    function _accumulate(OffchainMerkleTreeData storage self) private {
+        require(
+            self.batchLen == TreeUtils.BATCH_SIZE,
+            "batchLen != TreeUtils.BATCH_SIZE"
+        );
+
+        uint256 accumulatorHash = _computeAccumulatorHash(self);
+        self.accumulatorQueue.enqueue(accumulatorHash);
+        self.batchLen = 0;
+    }
+
+    function _insertUpdates(
         OffchainMerkleTreeData storage self,
         uint256[] memory updates
-    ) internal {
+    ) private {
         for (uint256 i = 0; i < updates.length; i++) {
             self.batch[self.batchLen] = updates[i];
             self.batchLen += 1;
 
             if (self.batchLen == TreeUtils.BATCH_SIZE) {
-                accumulate(self);
+                _accumulate(self);
             }
         }
-    }
-
-    function insertNotes(
-        OffchainMerkleTreeData storage self,
-        EncodedNote[] memory notes
-    ) internal {
-        uint256[] memory hashes = new uint256[](notes.length);
-        for (uint256 i = 0; i < notes.length; i++) {
-            hashes[i] = Utils.sha256Note(notes[i]);
-        }
-
-        insertUpdates(self, hashes);
-    }
-
-    function insertNote(
-        OffchainMerkleTreeData storage self,
-        EncodedNote memory note
-    ) internal {
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = note;
-        insertNotes(self, notes);
-    }
-
-    function insertNoteCommitments(
-        OffchainMerkleTreeData storage self,
-        uint256[] memory ncs
-    ) internal {
-        insertUpdates(self, ncs);
-    }
-
-    function insertNoteCommitment(
-        OffchainMerkleTreeData storage self,
-        uint256 nc
-    ) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        insertNoteCommitments(self, ncs);
     }
 }
