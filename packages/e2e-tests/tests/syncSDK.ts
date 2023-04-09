@@ -36,7 +36,7 @@ import { KEYS_TO_WALLETS } from "../src/keys";
 // 10^9 (e.g. 10 gwei if this was eth)
 const GAS_PRICE = 10n * 10n ** 9n;
 // 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
+const GAS_FAUCET_DEFAULT_AMOUNT = 1000n ** 9n * GAS_PRICE;
 
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 

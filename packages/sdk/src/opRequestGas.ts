@@ -19,7 +19,7 @@ import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
 import { groupByMap } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
-import { assertOrErr, getJoinSplitRequestTotalValue } from "./utils";
+import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
@@ -35,20 +35,9 @@ const DUMMY_GAS_ASSET: Asset = {
   id: ERC20_ID,
 };
 
-const BATCH_VERIFY_GAS = 550_000n;
-const SINGLE_VERIFY_GAS = 300_000n;
-const PER_REFUND_GAS = 80_000n;
-
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-// return the amount of gas needed to pay for the given number of joinsplits
-function estimateWorstCaseGasForJoinSplits(numJoinSplits: number) {
-  assertOrErr(numJoinSplits > 0, "numJoinSplits must be > 0");
-  if (numJoinSplits === 1) {
-    return SINGLE_VERIFY_GAS;
-  } else {
-    return BATCH_VERIFY_GAS;
-  }
-}
+const PER_JOINSPLIT_GAS = 550_000;
+const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
@@ -98,56 +87,44 @@ export async function handleGasForOperationRequest(
     };
   } else {
     // Otherwise, we need to add gas compensation to the operation request
-    // the way this works, is we first estimate the total amount of gas the op will cost
-    // then, we see if we need to add additional gas compensation to the op
-    // if we do, we'll do so, possibly adding more JoinSplits
-    // if we add more joinSplits, this will increase the total gas cost of the op,
-    // because we'll need to do more joinSplit proofs, which requires an updated estimate
-    // and an updated set of joinsplits. We'll repeat this process unitl no new joinsplits are needed
 
-    let numJoinSplits = gasEstimatedOpRequest.joinSplitRequests.length;
-    let maxNumRefunds = gasEstimatedOpRequest.maxNumRefunds;
-    while (true) {
-      console.log("numJoinSplits");
-      // compute an estimate of the total amount of gas the op will cost given the gas params
-      // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
-      const totalGasEstimate =
-        gasPrice *
-        (executionGasLimit
-          + estimateWorstCaseGasForJoinSplits(numJoinSplits)
-          + (maxNumRefunds + 1n) * PER_REFUND_GAS);
+    // compute an estimate of the total amount of gas the op will cost given the gas params
+    // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
+    const totalGasEstimate =
+      gasPrice *
+      (executionGasLimit +
+        BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
+          PER_JOINSPLIT_GAS +
+        (maxNumRefunds + 1n) * PER_REFUND_GAS);
 
-      const { gasAssets, db } = deps;
+    const { gasAssets, db } = deps;
 
-      // attempt to update the joinSplitRequests with gas compensation
-      // gasAsset will be `undefined` if the user's too broke to pay for gas
-      const [joinSplitRequests, gasAsset] =
-        await tryUpdateJoinSplitRequestsForGasEstimate(
-          gasAssets,
-          db,
-          gasEstimatedOpRequest.joinSplitRequests,
-          totalGasEstimate
-        );
+    // attempt to update the joinSplitRequests with gas compensation
+    // gasAsset will be `undefined` if the user's too broke to pay for gas
+    const [joinSplitRequests, gasAsset] =
+      await tryUpdateJoinSplitRequestsForGasEstimate(
+        gasAssets,
+        db,
+        gasEstimatedOpRequest.joinSplitRequests,
+        totalGasEstimate
+      );
 
-      if (!gasAsset) {
-        throw new Error("Not enough owned gas tokens pay for op");
-      }
-
-      // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
-      if (
-        joinSplitRequests.length > numJoinSplits 
-      ) {
-        maxNumRefunds += 1n;
-        numJoinSplits = joinSplitRequests.length;
-      } else {
-        return {
-          ...gasEstimatedOpRequest,
-          maxNumRefunds,
-          joinSplitRequests,
-          gasAsset,
-        };
-      }
+    // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
+    if (
+      joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
+    ) {
+      gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
+
+    if (!gasAsset) {
+      throw new Error("Not enough owned gas tokens pay for op");
+    }
+
+    return {
+      ...gasEstimatedOpRequest,
+      joinSplitRequests,
+      gasAsset,
+    };
   }
 }
 
@@ -339,8 +316,6 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       publicSpend: joinSplit.publicSpend,
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
-      encSenderCanonAddrC1X: 0n,
-      encSenderCanonAddrC2X: 0n,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
     };
   });
