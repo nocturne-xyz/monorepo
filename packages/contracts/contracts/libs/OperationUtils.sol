@@ -120,12 +120,13 @@ library OperationUtils {
     }
 
     // From https://ethereum.stackexchange.com/questions/83528
+    // returns empty string if no revert message
     function getRevertMsg(
         bytes memory reason
     ) internal pure returns (string memory) {
         // If the _res length is less than 68, then the transaction failed silently (without a revert message)
         if (reason.length < 68) {
-            return "Transaction reverted silently";
+            return "";
         }
 
         assembly {

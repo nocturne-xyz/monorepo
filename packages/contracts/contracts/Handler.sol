@@ -160,7 +160,12 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             // atomicActions = true and an action failed. Bundler is compensated
             // and we bubble up failureReason, verificationGas, executionGas,
             // and numRefunds.
-            opResult.failureReason = OperationUtils.getRevertMsg(reason);
+            string memory revertMsg = OperationUtils.getRevertMsg(reason);
+            if (bytes(revertMsg).length == 0) {
+                opResult.failureReason = "Too many refunds";
+            } else {
+                opResult.failureReason = OperationUtils.getRevertMsg(reason);
+            }
         }
 
         // Set verification and execution gas after getting opResult
@@ -180,7 +185,6 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // actions creating the refunds were reverted too, so numRefunds would =
         // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
-
         return opResult;
     }
 
@@ -205,7 +209,13 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         for (uint256 i = 0; i < numActions; i++) {
             (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
             if (op.atomicActions && !successes[i]) {
-                revert(OperationUtils.getRevertMsg(results[i]));
+                string memory revertMsg = OperationUtils.getRevertMsg(results[i]);
+                if (bytes(revertMsg).length == 0) {
+                    // TODO say which action
+                    revert("action failed");
+                } else {
+                    revert(revertMsg);
+                }
             }
         }
 

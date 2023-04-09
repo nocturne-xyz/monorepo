@@ -36,7 +36,7 @@ const DUMMY_GAS_ASSET: Asset = {
 };
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 550_000n;
+const PER_JOINSPLIT_GAS = 580_000n;
 const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
