@@ -60,16 +60,16 @@ library OperationUtils {
         uint256 numOps = ops.length;
         uint256[] memory opDigests = new uint256[](numOps);
         for (uint256 i = 0; i < numOps; i++) {
-            opDigests[i] = _computeOperationDigest(ops[i]);
+            opDigests[i] = computeOperationDigest(ops[i]);
         }
 
         return opDigests;
     }
 
     // Careful about declaring local variables in this function. Stack depth is around the limit.
-    function _computeOperationDigest(
+    function computeOperationDigest(
         Operation calldata op
-    ) private pure returns (uint256) {
+    ) internal pure returns (uint256) {
         // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
             _createJoinSplitsPayload(op.joinSplits),
@@ -116,7 +116,7 @@ library OperationUtils {
 
     function _createJoinSplitsPayload(
         JoinSplit[] calldata joinSplits
-    ) private pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         bytes memory joinSplitsPayload;
         uint256 numJoinSplits = joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -142,7 +142,7 @@ library OperationUtils {
 
     function _createRefundAssetsPayload(
         EncodedAsset[] calldata encodedRefundAssets
-    ) private pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         bytes memory refundAssetsPayload;
         for (uint256 i = 0; i < encodedRefundAssets.length; i++) {
             refundAssetsPayload = abi.encodePacked(
@@ -157,7 +157,7 @@ library OperationUtils {
 
     function _createActionsPayload(
         Action[] calldata actions
-    ) private pure returns (bytes memory) {
+    ) internal pure returns (bytes memory) {
         bytes memory actionsPayload;
         Action memory action;
         uint256 numActions = actions.length;

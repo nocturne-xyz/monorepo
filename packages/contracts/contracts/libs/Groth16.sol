@@ -53,7 +53,7 @@ library Groth16 {
         Proof[] memory proofs,
         uint256[][] memory allPis
     )
-        private
+        internal
         view
         returns (
             Pairing.G1Point[] memory proofAsandAggegateC,
@@ -140,7 +140,7 @@ library Groth16 {
     function _prepareBatch(
         VerifyingKey memory vk,
         uint256[] memory publicInputAccumulators
-    ) private view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
+    ) internal view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
         // Compute the linear combination vk_x using accumulator
 
         // Performs an MSM(vkIC, publicInputAccumulators)

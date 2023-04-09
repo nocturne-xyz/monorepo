@@ -27,7 +27,7 @@ contract ParseUtilsLib is Test {
 
     function testSplitUint256ToLimbs() public {
         uint256 n = 5 | (5 << 128);
-        (uint256 hi, uint256 lo) = Utils.splitUint256ToLimbs(n, 128);
+        (uint256 hi, uint256 lo) = Utils._splitUint256ToLimbs(n, 128);
 
         assertEq(5, hi);
         assertEq(5, lo);

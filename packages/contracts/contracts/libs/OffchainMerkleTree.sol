@@ -155,7 +155,7 @@ library OffchainMerkleTree {
 
     function _computeAccumulatorHash(
         OffchainMerkleTreeData storage self
-    ) private view returns (uint256) {
+    ) internal view returns (uint256) {
         require(
             self.batchLen == TreeUtils.BATCH_SIZE,
             "batchLen != TreeUtils.BATCH_SIZE"
@@ -169,7 +169,7 @@ library OffchainMerkleTree {
         return uint256(Utils.sha256FieldElems(batch));
     }
 
-    function _accumulate(OffchainMerkleTreeData storage self) private {
+    function _accumulate(OffchainMerkleTreeData storage self) internal {
         require(
             self.batchLen == TreeUtils.BATCH_SIZE,
             "batchLen != TreeUtils.BATCH_SIZE"
@@ -183,7 +183,7 @@ library OffchainMerkleTree {
     function _insertUpdates(
         OffchainMerkleTreeData storage self,
         uint256[] memory updates
-    ) private {
+    ) internal {
         for (uint256 i = 0; i < updates.length; i++) {
             self.batch[self.batchLen] = updates[i];
             self.batchLen += 1;

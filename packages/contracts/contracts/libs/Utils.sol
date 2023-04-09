@@ -22,21 +22,11 @@ library Utils {
         return sha256(abi.encodePacked(elems));
     }
 
-    // split a uint256 into 2 limbs, one containing the high (256 - lowerBits) bits, the other containing the lower `lowerBits` bits
-    function splitUint256ToLimbs(
-        uint256 n,
-        uint256 lowerBits
-    ) internal pure returns (uint256, uint256) {
-        uint256 hi = n >> lowerBits;
-        uint256 lo = n & ((1 << lowerBits) - 1);
-        return (hi, lo);
-    }
-
     // return uint256 as two limbs - one uint256 containing the 3 hi bits, the other containing the lower 253 bits
     function uint256ToFieldElemLimbs(
         uint256 n
     ) internal pure returns (uint256, uint256) {
-        return splitUint256ToLimbs(n, 253);
+        return _splitUint256ToLimbs(n, 253);
     }
 
     function sha256Note(
@@ -77,5 +67,15 @@ library Utils {
             reason := add(reason, 0x04)
         }
         return abi.decode(reason, (string)); // All that remains is the revert string
+    }
+
+    // split a uint256 into 2 limbs, one containing the high (256 - lowerBits) bits, the other containing the lower `lowerBits` bits
+    function _splitUint256ToLimbs(
+        uint256 n,
+        uint256 lowerBits
+    ) internal pure returns (uint256, uint256) {
+        uint256 hi = n >> lowerBits;
+        uint256 lo = n & ((1 << lowerBits) - 1);
+        return (hi, lo);
     }
 }

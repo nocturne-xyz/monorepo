@@ -68,11 +68,11 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         );
     }
 
-    function testBasicVerify() public {
+    function testBasicVerify() public view {
         verifyFixture(BASIC_FIXTURE_PATH);
     }
 
-    function testBatchVerify() public {
+    function testBatchVerify() public view {
         batchVerifyFixture(BASIC_FIXTURE_PATH);
     }
 }
