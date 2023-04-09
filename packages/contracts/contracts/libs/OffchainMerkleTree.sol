@@ -94,10 +94,7 @@ library OffchainMerkleTree {
         uint256[] memory pis = _calculatePublicInputs(self, newRoot);
 
         require(
-            self.subtreeUpdateVerifier.verifyProof(
-                Utils.proof8ToStruct(proof),
-                pis
-            ),
+            self.subtreeUpdateVerifier.verifyProof(proof, pis),
             "subtree update proof invalid"
         );
 

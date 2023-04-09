@@ -182,10 +182,8 @@ contract Wallet is
     ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
-        (
-            Groth16.Proof[] memory proofs,
-            uint256[][] memory allPis
-        ) = OperationUtils.extractJoinSplitProofsAndPis(ops, opDigests);
+        (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
+            .extractJoinSplitProofsAndPis(ops, opDigests);
 
         // if there is only one proof, use the single proof verification
         if (proofs.length == 1) {

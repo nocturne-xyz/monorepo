@@ -12,7 +12,7 @@ library OperationUtils {
     )
         internal
         pure
-        returns (Groth16.Proof[] memory proofs, uint256[][] memory allPis)
+        returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
         uint256 numOps = ops.length;
 
@@ -22,7 +22,7 @@ library OperationUtils {
             numJoinSplits += ops[i].joinSplits.length;
         }
 
-        proofs = new Groth16.Proof[](numJoinSplits);
+        proofs = new uint256[8][](numJoinSplits);
         allPis = new uint256[][](numJoinSplits);
 
         // current index into proofs and pis
@@ -33,7 +33,7 @@ library OperationUtils {
             Operation memory op = ops[i];
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                proofs[index] = Utils.proof8ToStruct(op.joinSplits[j].proof);
+                proofs[index] = op.joinSplits[j].proof;
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
                 allPis[index][1] = op.joinSplits[j].newNoteBCommitment;

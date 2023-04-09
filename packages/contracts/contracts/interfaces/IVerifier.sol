@@ -8,14 +8,14 @@ interface IVerifier {
     /// @param proof: the proof to verify
     /// @param pis: an array of containing the public inputs for the proof
     function verifyProof(
-        Groth16.Proof memory proof,
+        uint256[8] memory proof,
         uint256[] memory pis
     ) external view returns (bool);
 
     /// @param proofs: an array containing the proofs to verify
     /// @param pis: an array of length `NUM_PIS * numProofs` containing the PIs for each proof concatenated together
     function batchVerifyProofs(
-        Groth16.Proof[] memory proofs,
+        uint256[8][] memory proofs,
         uint256[][] memory pis
     ) external view returns (bool);
 }
