@@ -28,7 +28,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
 
     function loadJoinSplitProof(
         string memory path
-    ) internal returns (Groth16.Proof memory proof, uint256[] memory pis) {
+    ) internal view returns (Groth16.Proof memory proof, uint256[] memory pis) {
         JoinSplitProofWithPublicSignals
             memory proofWithPIs = loadJoinSplitProofFromFixture(path);
         proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
@@ -40,7 +40,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         return (proof, pis);
     }
 
-    function verifyFixture(string memory path) public {
+    function verifyFixture(string memory path) public view {
         (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
             path
         );
@@ -48,7 +48,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         require(joinSplitVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
-    function batchVerifyFixture(string memory path) public {
+    function batchVerifyFixture(string memory path) public view {
         Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
         uint256[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
@@ -61,7 +61,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         );
     }
 
-    function testBatchVerifySingle() public {
+    function testBatchVerifySingle() public view {
         (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
             BASIC_FIXTURE_PATH
         );
@@ -77,11 +77,11 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
         );
     }
 
-    function testBasicVerify() public {
+    function testBasicVerify() public view {
         verifyFixture(BASIC_FIXTURE_PATH);
     }
 
-    function testBatchVerify() public {
+    function testBatchVerify() public view {
         batchVerifyFixture(BASIC_FIXTURE_PATH);
     }
 }

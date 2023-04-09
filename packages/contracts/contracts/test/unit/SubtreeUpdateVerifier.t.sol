@@ -30,7 +30,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
 
     function loadSubtreeUpdateProof(
         string memory path
-    ) internal returns (Groth16.Proof memory proof, uint256[] memory pis) {
+    ) internal view returns (Groth16.Proof memory proof, uint256[] memory pis) {
         SubtreeUpdateProofWithPublicSignals
             memory proofWithPIs = loadSubtreeUpdateProofFromFixture(path);
         proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
@@ -42,7 +42,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         return (proof, pis);
     }
 
-    function verifyFixture(string memory path) public {
+    function verifyFixture(string memory path) public view {
         (
             Groth16.Proof memory proof,
             uint[] memory pis
@@ -50,7 +50,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
-    function batchVerifyFixture(string memory path) public {
+    function batchVerifyFixture(string memory path) public view {
         Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
         uint[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {

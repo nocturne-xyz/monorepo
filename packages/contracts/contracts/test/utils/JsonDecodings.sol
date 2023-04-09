@@ -59,7 +59,7 @@ contract JsonDecodings is Test {
 
     function loadFixtureJson(
         string memory path
-    ) public returns (string memory) {
+    ) public view returns (string memory) {
         string memory root = vm.projectRoot();
         return vm.readFile(string(abi.encodePacked(bytes(root), bytes(path))));
     }
@@ -81,7 +81,7 @@ contract JsonDecodings is Test {
 
     function loadSignedDepositRequestFixture(
         string memory path
-    ) public returns (SignedDepositRequestFixture memory) {
+    ) public view returns (SignedDepositRequestFixture memory) {
         string memory json = loadFixtureJson(path);
 
         // NOTE: helper struct only used to reduce stack usage
@@ -120,7 +120,7 @@ contract JsonDecodings is Test {
 
     function extractSimpleDepositRequestFixtureTypes(
         string memory json
-    ) public returns (SimpleDepositRequestFixtureTypes memory) {
+    ) public pure returns (SimpleDepositRequestFixtureTypes memory) {
         address contractAddress = json.readAddress(".contractAddress");
         string memory contractName = json.readString(".contractName");
         string memory contractVersion = json.readString(".contractVersion");
@@ -141,7 +141,7 @@ contract JsonDecodings is Test {
 
     function extractSimpleSignedDepositRequestTypes(
         string memory json
-    ) public returns (SimpleSignedDepositRequestTypes memory) {
+    ) public pure returns (SimpleSignedDepositRequestTypes memory) {
         address spender = json.readAddress(".depositRequest.spender");
         uint256 value = ParseUtils.parseInt(
             json.readString(".depositRequest.value")
@@ -164,7 +164,7 @@ contract JsonDecodings is Test {
 
     function extractEncodedAsset(
         string memory json
-    ) public returns (EncodedAsset memory) {
+    ) public pure returns (EncodedAsset memory) {
         uint256 encodedAssetAddr = ParseUtils.parseInt(
             json.readString(".depositRequest.encodedAsset.encodedAssetAddr")
         );
@@ -181,7 +181,7 @@ contract JsonDecodings is Test {
 
     function extractDepositAddr(
         string memory json
-    ) public returns (StealthAddress memory) {
+    ) public pure returns (StealthAddress memory) {
         uint256 h1X = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h1X")
         );
@@ -201,7 +201,7 @@ contract JsonDecodings is Test {
     // NOTE: we encode to rsv because foundry cannot parse 132 char byte string
     function extractSignature(
         string memory json
-    ) public returns (bytes memory) {
+    ) public view returns (bytes memory) {
         uint256 r = json.readUint(".signature.r");
         uint256 s = json.readUint(".signature.s");
         uint8 v = uint8(json.readUint(".signature.v"));
@@ -213,7 +213,7 @@ contract JsonDecodings is Test {
 
     function loadJoinSplitProofFromFixture(
         string memory path
-    ) public returns (JoinSplitProofWithPublicSignals memory) {
+    ) public view returns (JoinSplitProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
@@ -240,7 +240,7 @@ contract JsonDecodings is Test {
 
     function loadSubtreeUpdateProofFromFixture(
         string memory path
-    ) public returns (SubtreeUpdateProofWithPublicSignals memory) {
+    ) public view returns (SubtreeUpdateProofWithPublicSignals memory) {
         string memory json = loadFixtureJson(path);
         bytes memory proofBytes = json.parseRaw(".proof");
         BaseProof memory proof = abi.decode(proofBytes, (BaseProof));
