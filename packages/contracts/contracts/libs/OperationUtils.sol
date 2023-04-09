@@ -114,6 +114,22 @@ library OperationUtils {
                 handleRefundGas);
     }
 
+    // From https://ethereum.stackexchange.com/questions/83528
+    function getRevertMsg(
+        bytes memory reason
+    ) internal pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (reason.length < 68) {
+            return "Transaction reverted silently";
+        }
+
+        assembly {
+            // Slice the sighash.
+            reason := add(reason, 0x04)
+        }
+        return abi.decode(reason, (string)); // All that remains is the revert string
+    }
+
     function _createJoinSplitsPayload(
         JoinSplit[] calldata joinSplits
     ) internal pure returns (bytes memory) {

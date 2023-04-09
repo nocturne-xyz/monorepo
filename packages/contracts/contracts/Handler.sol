@@ -160,7 +160,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             // atomicActions = true and an action failed. Bundler is compensated
             // and we bubble up failureReason, verificationGas, executionGas,
             // and numRefunds.
-            opResult.failureReason = Utils.getRevertMsg(reason);
+            opResult.failureReason = OperationUtils.getRevertMsg(reason);
         }
 
         // Set verification and execution gas after getting opResult
@@ -205,7 +205,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         for (uint256 i = 0; i < numActions; i++) {
             (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
             if (op.atomicActions && !successes[i]) {
-                revert(Utils.getRevertMsg(results[i]));
+                revert(OperationUtils.getRevertMsg(results[i]));
             }
         }
 

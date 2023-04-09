@@ -159,7 +159,9 @@ contract Wallet is
                 // deadline, or error processing joinsplits. Bundler is not
                 // compensated and we do not bubble up further OperationResult
                 // info other than failureReason.
-                opResults[i].failureReason = Utils.getRevertMsg(reason);
+                opResults[i].failureReason = OperationUtils.getRevertMsg(
+                    reason
+                );
             }
             emit OperationProcessed(
                 opDigests[i],

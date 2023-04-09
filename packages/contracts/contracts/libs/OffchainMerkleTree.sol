@@ -55,7 +55,7 @@ library OffchainMerkleTree {
     ) internal {
         uint256[] memory hashes = new uint256[](notes.length);
         for (uint256 i = 0; i < notes.length; i++) {
-            hashes[i] = Utils.sha256Note(notes[i]);
+            hashes[i] = TreeUtils.sha256Note(notes[i]);
         }
 
         _insertUpdates(self, hashes);
@@ -133,7 +133,7 @@ library OffchainMerkleTree {
         uint256 newRoot
     ) internal view returns (uint256[] memory) {
         uint256 accumulatorHash = self.accumulatorQueue.peek();
-        (uint256 hi, uint256 lo) = Utils.uint256ToFieldElemLimbs(
+        (uint256 hi, uint256 lo) = TreeUtils.uint256ToFieldElemLimbs(
             accumulatorHash
         );
         uint256 encodedPathAndHash = TreeUtils.encodePathAndHash(
@@ -163,7 +163,7 @@ library OffchainMerkleTree {
             batch[i] = self.batch[i];
         }
 
-        return uint256(Utils.sha256FieldElems(batch));
+        return uint256(TreeUtils.sha256FieldElems(batch));
     }
 
     function _accumulate(OffchainMerkleTreeData storage self) internal {
