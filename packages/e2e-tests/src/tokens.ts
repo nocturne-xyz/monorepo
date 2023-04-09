@@ -11,7 +11,7 @@ import { Asset, AssetType } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 
 // returns [token, asset]
-export async function deployERC20(
+export async function deployAndWhitelistERC20(
   eoa: ethers.Wallet,
   handler: Handler
 ): Promise<[SimpleERC20Token, Asset]> {
@@ -47,7 +47,7 @@ export async function deployERC20(
 }
 
 // returns [token, assetConstructor]
-export async function deployERC721(
+export async function deployAndWhitelistERC721(
   eoa: ethers.Wallet,
   handler: Handler
 ): Promise<[SimpleERC721Token, (id: bigint) => Asset]> {
@@ -76,7 +76,7 @@ export async function deployERC721(
 }
 
 // returns [token, assetConstructor]
-export async function deployERC1155(
+export async function deployAndWhitelistERC1155(
   eoa: ethers.Wallet,
   handler: Handler
 ): Promise<[SimpleERC1155Token, (id: bigint) => Asset]> {

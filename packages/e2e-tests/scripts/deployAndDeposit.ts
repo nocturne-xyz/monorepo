@@ -13,7 +13,7 @@ import {
 } from "@nocturne-xyz/sdk";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { deployERC20 } from "../src/tokens";
+import { deployAndWhitelistERC20 } from "../src/tokens";
 
 const ANVIL_URL = "http://127.0.0.1:8545";
 
@@ -69,7 +69,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const tokens: SimpleERC20Token[] = [];
   const amounts: bigint[] = [];
   for (let i = 0; i < 2; i++) {
-    const [token] = await deployERC20(deployerEoa, handler);
+    const [token] = await deployAndWhitelistERC20(deployerEoa, handler);
     console.log(`Token ${i + 1} deployed at: ${token.address}`);
     tokens.push(token);
     amounts.push(tokenAmount);
