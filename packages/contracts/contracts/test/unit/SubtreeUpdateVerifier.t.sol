@@ -29,7 +29,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
 
     function loadSubtreeUpdateProof(
         string memory path
-    ) internal view returns (uint256[8] memory proof, uint256[] memory pis) {
+    ) internal returns (uint256[8] memory proof, uint256[] memory pis) {
         SubtreeUpdateProofWithPublicSignals
             memory proofWithPIs = loadSubtreeUpdateProofFromFixture(path);
         proof = baseProofTo8(proofWithPIs.proof);
@@ -41,14 +41,14 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         return (proof, pis);
     }
 
-    function verifyFixture(string memory path) public view {
+    function verifyFixture(string memory path) public {
         (uint256[8] memory proof, uint[] memory pis) = loadSubtreeUpdateProof(
             path
         );
         require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
-    function batchVerifyFixture(string memory path) public view {
+    function batchVerifyFixture(string memory path) public {
         uint256[8][] memory proofs = new uint256[8][](NUM_PROOFS);
         uint[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
@@ -66,11 +66,11 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         );
     }
 
-    function testBasicVerify() public view {
+    function testBasicVerify() public {
         verifyFixture(BASIC_FIXTURE_PATH);
     }
 
-    function testBatchVerify() public view {
+    function testBatchVerify() public {
         batchVerifyFixture(BASIC_FIXTURE_PATH);
     }
 }
