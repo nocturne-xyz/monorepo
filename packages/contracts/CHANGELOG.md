@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- Remove unused fns in `Queue.sol`
+- Simplify `AssetUtils` to not have pass through fns
 - Simplify `Utils` to only contain min function and SNARK_SCALAR_FIELD (no longer an "everything" utils file)
 - Move tree-related utils in `Utils.sol` into `TreeUtils.sol`
 - Encapsulate `Groth16.Proof` struct to Groth16 library so we don't have `Utils.proof8ToStruct` floating around everywhere
