@@ -45,7 +45,7 @@ const oldNoteA: EncodedNote = {
   encodedAssetId: 5n,
   value: 100n,
 };
-console.log("OLD NOTE A: ", oldNoteA);
+console.log("old note A: ", oldNoteA);
 
 const oldNoteAOwnerHash = StealthAddressTrait.hash(stealthAddrA);
 const oldNoteACommitment = poseidonBN([
@@ -55,7 +55,7 @@ const oldNoteACommitment = poseidonBN([
   oldNoteA.encodedAssetId,
   oldNoteA.value,
 ]);
-console.log("OLD NOTE COMMITMENT A: ", oldNoteACommitment);
+console.log("old note commitment A: ", oldNoteACommitment);
 
 const oldNoteB: EncodedNote = {
   owner: stealthAddrB,
@@ -64,7 +64,7 @@ const oldNoteB: EncodedNote = {
   encodedAssetId: 5n,
   value: 50n,
 };
-console.log("OLD NOTE B: ", oldNoteB);
+console.log("old note B: ", oldNoteB);
 
 const oldNoteBOwnerHash = StealthAddressTrait.hash(stealthAddrB);
 const oldNoteBCommitment = poseidonBN([
@@ -74,7 +74,7 @@ const oldNoteBCommitment = poseidonBN([
   oldNoteB.encodedAssetId,
   oldNoteB.value,
 ]);
-console.log("OLD NOTE COMMITMENT B: ", oldNoteBCommitment);
+console.log("old note commitment B: ", oldNoteBCommitment);
 
 // Generate valid merkle proofs
 const tree = new BinaryPoseidonTree();
@@ -84,8 +84,8 @@ tree.insert(oldNoteBCommitment);
 const merkleProofA = tree.getProof(0);
 const merkleProofB = tree.getProof(1);
 
-console.log("MERKLE ROOT A: ", merkleProofA.root);
-console.log("MERKLE ROOT B: ", merkleProofB.root);
+console.log("merkle root A: ", merkleProofA.root);
+console.log("merkle root B: ", merkleProofB.root);
 
 const merkleProofAInput: MerkleProofInput = {
   path: merkleProofA.pathIndices.map((n) => BigInt(n)),
@@ -104,7 +104,7 @@ const newNoteA: EncodedNote = {
   encodedAssetId: 5n,
   value: 75n,
 };
-console.log("NEW NOTE A: ", newNoteA);
+console.log("new note A: ", newNoteA);
 
 const newNoteB: EncodedNote = {
   owner: stealthAddrA,
@@ -113,7 +113,7 @@ const newNoteB: EncodedNote = {
   encodedAssetId: 5n,
   value: 75n,
 };
-console.log("NEW NOTE B: ", newNoteB);
+console.log("new note B: ", newNoteB);
 
 const newNoteACommitment = poseidonBN([
   oldNoteAOwnerHash,
@@ -122,7 +122,7 @@ const newNoteACommitment = poseidonBN([
   newNoteA.encodedAssetId,
   newNoteA.value,
 ]);
-console.log("NEW NOTE COMMITMENT A: ", newNoteACommitment);
+console.log("new note commitment A: ", newNoteACommitment);
 
 const newNoteBCommitment = poseidonBN([
   oldNoteBOwnerHash,
@@ -131,7 +131,7 @@ const newNoteBCommitment = poseidonBN([
   newNoteB.encodedAssetId,
   newNoteB.value,
 ]);
-console.log("NEW NOTE COMMITMENT B: ", newNoteBCommitment);
+console.log("new note commitment B: ", newNoteBCommitment);
 
 // Sign operation hash
 const operationDigest = BigInt(12345);
@@ -161,7 +161,7 @@ console.log(joinsplitInputs);
   console.log("Proof generated in: ", Date.now() - startTime, "ms");
 
   if (!(await prover.verifyJoinSplitProof(proof))) {
-    throw new Error("Proof invalid!");
+    throw new Error("proof invalid!");
   }
   const json = JSON.stringify(proof);
   console.log(json);
