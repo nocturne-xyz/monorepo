@@ -1835,7 +1835,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "executeActions silently failed - this is likely due to `executionGasLimit` or `maxNumRefunds` being too low",
+                maybeFailureReason: "exceeded `executionGasLimit`",
                 assetsUnwrapped: true
             })
         );
@@ -1846,10 +1846,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(
-            opResults[0].failureReason,
-            "executeActions silently failed - this is likely due to `executionGasLimit` or `maxNumRefunds` being too low"
-        );
+        assertEq(opResults[0].failureReason, "exceeded `executionGasLimit`");
 
         // ALICE (bundler) was still paid
         assertLt(token.balanceOf(address(wallet)), 2 * PER_NOTE_AMOUNT);

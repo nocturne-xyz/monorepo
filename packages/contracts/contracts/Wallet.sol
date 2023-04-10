@@ -161,7 +161,8 @@ contract Wallet is
                 // info other than failureReason.
                 string memory revertMsg = OperationUtils.getRevertMsg(reason);
                 if (bytes(revertMsg).length == 0) {
-                    opResults[i].failureReason = "handleOperation failed";
+                    opResults[i]
+                        .failureReason = "handleOperation failed silently";
                 } else {
                     opResults[i].failureReason = revertMsg;
                 }

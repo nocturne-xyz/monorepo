@@ -161,13 +161,11 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context (i.e. while not making an external call)
             // 3. `atomicActions = true` and an action failed.
 
-            // we bubble up failureReason, verificationGas, executionGas,
-            // and numRefunds. If `executeActions` failed silently, then 1 or 2 occurred
-            // because we give reason `action failed silently` when an action fails siltenly
+            // we explicitly catch cases 1 and 3 in `executeActions`, so if `executeActions` failed silently,
+            // then it must be case 2.
             string memory revertMsg = OperationUtils.getRevertMsg(reason);
             if (bytes(revertMsg).length == 0) {
-                opResult
-                    .failureReason = "executeActions silently failed - this is likely due to `executionGasLimit` or `maxNumRefunds` being too low";
+                opResult.failureReason = "exceeded `executionGasLimit`";
             } else {
                 opResult.failureReason = revertMsg;
             }
