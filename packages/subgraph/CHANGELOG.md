@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update ABI after adding encrypted sender addr to joinsplit struct
 - Update ABI after adding eth deposit support and change contract addr after needing to deploy weth in e2e tests
 - Remove `chainId` from fetching deposit events
 - Update deposit manager address

@@ -125,6 +125,16 @@
             "type": "uint256"
           },
           {
+            "internalType": "uint256",
+            "name": "encSenderCanonAddrC1X",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encSenderCanonAddrC2X",
+            "type": "uint256"
+          },
+          {
             "internalType": "uint256[8]",
             "name": "proof",
             "type": "uint256[8]"
@@ -282,6 +292,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "uint256",
@@ -348,6 +371,25 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "filler",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "permission",
+        "type": "bool"
+      }
+    ],
+    "name": "SubtreeBatchFillerPermissionSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "newRoot",
         "type": "uint256"
@@ -360,6 +402,50 @@
       }
     ],
     "name": "SubtreeUpdate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "encodedAssetAddr",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encodedAssetId",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EncodedAsset",
+        "name": "encodedAsset",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdatedAssetPrefill",
     "type": "event"
   },
   {
@@ -377,7 +463,7 @@
   },
   {
     "inputs": [],
-    "name": "ENTERED_PROCESS_OPERATION",
+    "name": "ENTERED_HANDLE_OPERATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -390,7 +476,20 @@
   },
   {
     "inputs": [],
-    "name": "NO_OPERATION_ENTERED",
+    "name": "ENTERED_PREFILL",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "NOT_ENTERED",
     "outputs": [
       {
         "internalType": "uint256",
@@ -442,6 +541,25 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "_prefilledAssetBalances",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -464,6 +582,25 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "_subtreeBatchFiller",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "_wallet",
     "outputs": [
@@ -474,6 +611,36 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "encodedAssetAddr",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encodedAssetId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct EncodedAsset",
+        "name": "encodedAsset",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "addToAssetPrefill",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -536,6 +703,16 @@
               {
                 "internalType": "uint256",
                 "name": "newNoteBCommitment",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encSenderCanonAddrC1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encSenderCanonAddrC2X",
                 "type": "uint256"
               },
               {
@@ -760,6 +937,21 @@
             "internalType": "uint256",
             "name": "gasPrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "atomicActions",
+            "type": "bool"
           }
         ],
         "internalType": "struct Operation",
@@ -770,46 +962,14 @@
     "name": "executeActions",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "opProcessed",
-            "type": "bool"
-          },
-          {
-            "internalType": "string",
-            "name": "failureReason",
-            "type": "string"
-          },
-          {
-            "internalType": "bool[]",
-            "name": "callSuccesses",
-            "type": "bool[]"
-          },
-          {
-            "internalType": "bytes[]",
-            "name": "callResults",
-            "type": "bytes[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "verificationGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "executionGas",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "numRefunds",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct OperationResult",
-        "name": "opResult",
-        "type": "tuple"
+        "internalType": "bool[]",
+        "name": "successes",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "results",
+        "type": "bytes[]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -826,11 +986,6 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "uint256",
-            "name": "chainId",
-            "type": "uint256"
-          },
           {
             "internalType": "address",
             "name": "spender",
@@ -938,6 +1093,16 @@
                 "type": "uint256"
               },
               {
+                "internalType": "uint256",
+                "name": "encSenderCanonAddrC1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "encSenderCanonAddrC2X",
+                "type": "uint256"
+              },
+              {
                 "internalType": "uint256[8]",
                 "name": "proof",
                 "type": "uint256[8]"
@@ -1159,6 +1324,21 @@
             "internalType": "uint256",
             "name": "gasPrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deadline",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "atomicActions",
+            "type": "bool"
           }
         ],
         "internalType": "struct Operation",
@@ -1183,6 +1363,11 @@
           {
             "internalType": "bool",
             "name": "opProcessed",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "assetsUnwrapped",
             "type": "bool"
           },
           {
@@ -1369,6 +1554,26 @@
   },
   {
     "inputs": [],
+    "name": "pause",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "reentrancyGuardStage",
     "outputs": [
       {
@@ -1398,6 +1603,24 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "filler",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "permission",
+        "type": "bool"
+      }
+    ],
+    "name": "setSubtreeBatchFillerPermission",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1441,6 +1664,13 @@
       }
     ],
     "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

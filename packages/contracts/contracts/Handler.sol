@@ -211,8 +211,8 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             if (op.atomicActions && !successes[i]) {
                 string memory revertMsg = OperationUtils.getRevertMsg(results[i]);
                 if (bytes(revertMsg).length == 0) {
-                    // TODO say which action
-                    revert("action failed");
+                    // TODO maybe say which action?
+                    revert("action silently reverted");
                 } else {
                     revert(revertMsg);
                 }

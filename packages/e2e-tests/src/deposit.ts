@@ -28,7 +28,7 @@ export async function depositFundsMultiToken(
   }
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
-  await sleep(15_000); // wait for deposit screener
+  await sleep(10_000); // wait for deposit screener
 
   return notes;
 }
@@ -56,7 +56,7 @@ export async function depositFundsSingleToken(
   }
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
-  await sleep(15_000); // wait for deposit screener
+  await sleep(10_000); // wait for deposit screener
 
   return notes;
 }

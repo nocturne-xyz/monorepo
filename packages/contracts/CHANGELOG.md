@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- give different revert message if action reverts silently than if `handleOption` reverts
 - Add 2 PIs for encrypted sender canonical address (`encSenderCanonAddrC1X`, `encSenderCanonAddrC2X`) to joinsplit verification logic
 - add encrypted sender canonical address to `JoinSplit` struct
 - Remove unused fns in `Queue.sol`
