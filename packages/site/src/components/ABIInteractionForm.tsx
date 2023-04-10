@@ -72,7 +72,7 @@ function getInitialFormDataForInput(
 ): ABIInteractionParamFormData {
   if (input.type === "tuple") {
     if (input.components === undefined)
-      throw new Error("Tuple input type must have components");
+      throw new Error("tuple input type must have components");
 
     const res: ABIInteractionParamFormData = {};
     for (const component of input.components) {
@@ -172,11 +172,11 @@ const ABIMethodParamInput = ({
     // it the param is a struct, recursively render each field
     case "tuple": {
       if (param.components === undefined) {
-        throw new Error("Tuple type must have components");
+        throw new Error("tuple type must have components");
       }
 
       if (typeof value !== "object") {
-        throw new Error("Tuple type must have object value");
+        throw new Error("tuple type must have object value");
       }
 
       const tupleInputs = param.components.map((component, i) => (
@@ -199,7 +199,7 @@ const ABIMethodParamInput = ({
     // otherwise, render a single input field
     default: {
       if (param.components !== undefined) {
-        throw new Error("Non-tuple type must not have components");
+        throw new Error("non-tuple type must not have components");
       }
 
       return (
