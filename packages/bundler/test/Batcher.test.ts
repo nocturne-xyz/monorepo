@@ -62,7 +62,7 @@ describe("BundlerBatcher", async () => {
     return jobId;
   }
 
-  it("Batches 8 inbound jobs as full batch", async () => {
+  it("batches 8 inbound jobs as full batch", async () => {
     const inboundQueue = new Queue<ProvenOperationJobData>(
       PROVEN_OPERATION_QUEUE,
       {
@@ -102,7 +102,7 @@ describe("BundlerBatcher", async () => {
     }
   });
 
-  it("Batches 6 inbound jobs after passing wait time", async () => {
+  it("batches 6 inbound jobs after passing wait time", async () => {
     const inboundQueue = new Queue<ProvenOperationJobData>(
       PROVEN_OPERATION_QUEUE,
       {

@@ -31,7 +31,7 @@ library AssetUtils {
         } else if (assetType == AssetType.ERC1155) {
             asset_type_bits = uint256(2);
         } else {
-            revert("Invalid assetType");
+            revert("invalid assetType");
         }
         uint256 encodedAssetAddr = ((id >> 253) << 253) |
             uint256(uint160(assetAddr)) |
@@ -66,7 +66,7 @@ library AssetUtils {
         } else if (asset_type_bits == 2) {
             assetType = AssetType.ERC1155;
         } else {
-            revert("Invalid encodedAssetAddr");
+            revert("invalid encodedAssetAddr");
         }
         return (assetType, assetAddr, id);
     }
@@ -127,7 +127,7 @@ library AssetUtils {
                 ""
             );
         } else {
-            revert("Invalid asset");
+            revert("invalid asset");
         }
     }
 
@@ -157,7 +157,7 @@ library AssetUtils {
                 ""
             );
         } else {
-            revert("Invalid asset");
+            revert("invalid asset");
         }
     }
 
@@ -184,7 +184,7 @@ library AssetUtils {
             // uncaught revert will be propagated
             IERC1155(assetAddr).setApprovalForAll(spender, true);
         } else {
-            revert("Invalid asset");
+            revert("invalid asset");
         }
     }
 

@@ -88,7 +88,7 @@ export class BundlerBatcher {
             await this.redis.multi(allTransactions).exec((maybeErr) => {
               if (maybeErr) {
                 throw Error(
-                  `BatcherDB job status + pop txs failed: ${maybeErr}`
+                  `batcherDB job status + pop txs failed: ${maybeErr}`
                 );
               }
             });
@@ -139,7 +139,7 @@ export class BundlerBatcher {
         await this.redis.multi(allTransactions).exec((maybeErr) => {
           if (maybeErr) {
             throw new Error(
-              `Failed to execute batcher add and set job status transaction: ${maybeErr}`
+              `failed to execute batcher add and set job status transaction: ${maybeErr}`
             );
           }
         });
