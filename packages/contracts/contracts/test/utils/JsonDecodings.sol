@@ -66,7 +66,7 @@ contract JsonDecodings is Test {
 
     function baseProofTo8(
         BaseProof memory proof
-    ) public pure returns (uint256[8] memory) {
+    ) public returns (uint256[8] memory) {
         return [
             ParseUtils.parseInt(proof.pi_a[0]),
             ParseUtils.parseInt(proof.pi_a[1]),

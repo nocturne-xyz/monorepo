@@ -6,25 +6,13 @@ import "../libs/Types.sol";
 
 // Helpers for extracting data / formatting operations
 library OperationUtils {
-    function computeOperationDigests(
-        Operation[] calldata ops
-    ) internal pure returns (uint256[] memory) {
-        uint256 numOps = ops.length;
-        uint256[] memory opDigests = new uint256[](numOps);
-        for (uint256 i = 0; i < numOps; i++) {
-            opDigests[i] = computeOperationDigest(ops[i]);
-        }
-
-        return opDigests;
-    }
-
     function extractJoinSplitProofsAndPis(
         Operation[] calldata ops,
         uint256[] memory digests
     )
         internal
         pure
-        returns (Groth16.Proof[] memory proofs, uint256[][] memory allPis)
+        returns (uint256[8][] memory proofs, uint256[][] memory allPis)
     {
         uint256 numOps = ops.length;
 
@@ -34,7 +22,7 @@ library OperationUtils {
             numJoinSplits += ops[i].joinSplits.length;
         }
 
-        proofs = new Groth16.Proof[](numJoinSplits);
+        proofs = new uint256[8][](numJoinSplits);
         allPis = new uint256[][](numJoinSplits);
 
         // current index into proofs and pis
@@ -45,7 +33,7 @@ library OperationUtils {
             Operation memory op = ops[i];
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
-                proofs[index] = Utils.proof8ToStruct(op.joinSplits[j].proof);
+                proofs[index] = op.joinSplits[j].proof;
                 allPis[index] = new uint256[](9);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
                 allPis[index][1] = op.joinSplits[j].newNoteBCommitment;
@@ -64,6 +52,18 @@ library OperationUtils {
         }
 
         return (proofs, allPis);
+    }
+
+    function computeOperationDigests(
+        Operation[] calldata ops
+    ) internal pure returns (uint256[] memory) {
+        uint256 numOps = ops.length;
+        uint256[] memory opDigests = new uint256[](numOps);
+        for (uint256 i = 0; i < numOps; i++) {
+            opDigests[i] = computeOperationDigest(ops[i]);
+        }
+
+        return opDigests;
     }
 
     // Careful about declaring local variables in this function. Stack depth is around the limit.
@@ -96,6 +96,38 @@ library OperationUtils {
         );
 
         return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
+    }
+
+    function calculateBundlerGasAssetPayout(
+        Operation calldata op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
+    }
+
+    // From https://ethereum.stackexchange.com/questions/83528
+    function getRevertMsg(
+        bytes memory reason
+    ) internal pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (reason.length < 68) {
+            return "Transaction reverted silently";
+        }
+
+        assembly {
+            // Slice the sighash.
+            reason := add(reason, 0x04)
+        }
+        return abi.decode(reason, (string)); // All that remains is the revert string
     }
 
     function _createJoinSplitsPayload(
@@ -155,21 +187,5 @@ library OperationUtils {
         }
 
         return actionsPayload;
-    }
-
-    function calculateBundlerGasAssetPayout(
-        Operation calldata op,
-        OperationResult memory opResult
-    ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = op.joinSplits.length *
-            GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
-
-        return
-            op.gasPrice *
-            (opResult.verificationGas +
-                handleJoinSplitGas +
-                opResult.executionGas +
-                handleRefundGas);
     }
 }

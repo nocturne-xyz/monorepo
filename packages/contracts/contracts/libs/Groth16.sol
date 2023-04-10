@@ -21,7 +21,7 @@ library Groth16 {
     // Verifying a single Groth16 proof
     function verifyProof(
         VerifyingKey memory vk,
-        Proof memory proof,
+        uint256[8] memory proof8,
         uint256[] memory pi
     ) internal view returns (bool) {
         require(vk.IC.length == pi.length + 1, "Public input length mismatch.");
@@ -36,6 +36,9 @@ library Groth16 {
                 Pairing.scalar_mul(vk.IC[i + 1], pi[i])
             );
         }
+
+        Proof memory proof = _proof8ToStruct(proof8);
+
         return
             Pairing.pairingProd4(
                 Pairing.negate(proof.A),
@@ -137,47 +140,20 @@ library Groth16 {
         return (proofAsandAggegateC, publicInputAccumulators);
     }
 
-    function prepareBatch(
-        VerifyingKey memory vk,
-        uint256[] memory publicInputAccumulators
-    ) internal view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
-        // Compute the linear combination vk_x using accumulator
-
-        // Performs an MSM(vkIC, publicInputAccumulators)
-        Pairing.G1Point memory msmProduct = Pairing.scalar_mul(
-            vk.IC[0],
-            publicInputAccumulators[0]
-        );
-        for (uint256 i = 1; i < publicInputAccumulators.length; i++) {
-            Pairing.G1Point memory product = Pairing.scalar_mul(
-                vk.IC[i],
-                publicInputAccumulators[i]
-            );
-            msmProduct = Pairing.addition(msmProduct, product);
-        }
-
-        finalVKAlphaAndX[1] = msmProduct;
-
-        // add one extra memory slot for scalar for multiplication usage
-        Pairing.G1Point memory finalVKalpha = vk.alpha1;
-        finalVKalpha = Pairing.scalar_mul(
-            finalVKalpha,
-            publicInputAccumulators[0]
-        );
-        finalVKAlphaAndX[0] = finalVKalpha;
-
-        return finalVKAlphaAndX;
-    }
-
     function batchVerifyProofs(
         VerifyingKey memory vk,
-        Proof[] memory proofs,
+        uint256[8][] memory proof8s,
         uint256[][] memory allPis
     ) internal view returns (bool success) {
         require(
-            allPis.length == proofs.length,
+            allPis.length == proof8s.length,
             "Invalid inputs length for a batch"
         );
+
+        Proof[] memory proofs = new Proof[](proof8s.length);
+        for (uint256 i = 0; i < proof8s.length; i++) {
+            proofs[i] = _proof8ToStruct(proof8s[i]);
+        }
 
         // strategy is to accumulate entropy separately for some proof elements
         // (accumulate only for G1, can't in G2) of the pairing equation, as well as input verification key,
@@ -190,7 +166,7 @@ library Groth16 {
             uint256[] memory publicInputAccumulators
         ) = accumulate(proofs, allPis);
 
-        Pairing.G1Point[2] memory finalVKAlphaAndX = prepareBatch(
+        Pairing.G1Point[2] memory finalVKAlphaAndX = _prepareBatch(
             vk,
             publicInputAccumulators
         );
@@ -223,5 +199,48 @@ library Groth16 {
         p2s[proofs.length + 2] = vk.delta2;
 
         return Pairing.pairing(p1s, p2s);
+    }
+
+    function _prepareBatch(
+        VerifyingKey memory vk,
+        uint256[] memory publicInputAccumulators
+    ) internal view returns (Pairing.G1Point[2] memory finalVKAlphaAndX) {
+        // Compute the linear combination vk_x using accumulator
+
+        // Performs an MSM(vkIC, publicInputAccumulators)
+        Pairing.G1Point memory msmProduct = Pairing.scalar_mul(
+            vk.IC[0],
+            publicInputAccumulators[0]
+        );
+        for (uint256 i = 1; i < publicInputAccumulators.length; i++) {
+            Pairing.G1Point memory product = Pairing.scalar_mul(
+                vk.IC[i],
+                publicInputAccumulators[i]
+            );
+            msmProduct = Pairing.addition(msmProduct, product);
+        }
+
+        finalVKAlphaAndX[1] = msmProduct;
+
+        // add one extra memory slot for scalar for multiplication usage
+        Pairing.G1Point memory finalVKalpha = vk.alpha1;
+        finalVKalpha = Pairing.scalar_mul(
+            finalVKalpha,
+            publicInputAccumulators[0]
+        );
+        finalVKAlphaAndX[0] = finalVKalpha;
+
+        return finalVKAlphaAndX;
+    }
+
+    function _proof8ToStruct(
+        uint256[8] memory proof
+    ) internal pure returns (Proof memory) {
+        return
+            Groth16.Proof(
+                Pairing.G1Point(proof[0], proof[1]),
+                Pairing.G2Point([proof[2], proof[3]], [proof[4], proof[5]]),
+                Pairing.G1Point(proof[6], proof[7])
+            );
     }
 }

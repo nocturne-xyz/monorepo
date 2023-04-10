@@ -159,7 +159,9 @@ contract Wallet is
                 // deadline, or error processing joinsplits. Bundler is not
                 // compensated and we do not bubble up further OperationResult
                 // info other than failureReason.
-                opResults[i].failureReason = Utils.getRevertMsg(reason);
+                opResults[i].failureReason = OperationUtils.getRevertMsg(
+                    reason
+                );
             }
             emit OperationProcessed(
                 opDigests[i],
@@ -182,10 +184,8 @@ contract Wallet is
     ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
         uint256 preVerificationGasLeft = gasleft();
 
-        (
-            Groth16.Proof[] memory proofs,
-            uint256[][] memory allPis
-        ) = OperationUtils.extractJoinSplitProofsAndPis(ops, opDigests);
+        (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
+            .extractJoinSplitProofsAndPis(ops, opDigests);
 
         // if there is only one proof, use the single proof verification
         if (proofs.length == 1) {

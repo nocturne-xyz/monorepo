@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
 
+// Derived from: https://github.com/nomad-xyz/monorepo/blob/main/packages/contracts-core/contracts/libs/Queue.sol
 library QueueLib {
     /**
      * @notice Queue struct
@@ -49,7 +50,7 @@ library QueueLib {
     function dequeue(Queue storage self) internal returns (uint256 item) {
         uint128 last = self.last;
         uint128 first = self.first;
-        require(length(last, first) != 0, "Empty");
+        require(_length(last, first) != 0, "Empty");
         item = self.queue[first];
         if (item != uint256(0)) {
             // saves gas if we're dequeuing 0
@@ -79,71 +80,29 @@ library QueueLib {
     }
 
     /**
-     * @notice Batch dequeues 2 elements
-     * @dev Reverts if `number` > queue length
+     * @notice Batch dequeues `_number` elements
+     * @dev Reverts if `_number` > queue length
+     * @param _number Number of elements to dequeue
      * @return Array of dequeued elements
      **/
-    function dequeue2(Queue storage self) internal returns (uint256[2] memory) {
-        uint128 last = self.last;
-        uint128 first = self.first;
+    function dequeue(
+        Queue storage _q,
+        uint256 _number
+    ) internal returns (uint256[] memory) {
+        uint128 _last = _q.last;
+        uint128 _first = _q.first;
         // Cannot underflow unless state is corrupted
-        require(length(last, first) >= 2, "Insufficient");
+        require(_length(_last, _first) >= _number, "Insufficient");
 
-        uint256[2] memory items;
+        uint256[] memory _items = new uint256[](_number);
 
-        for (uint256 i = 0; i < 2; i++) {
-            items[i] = self.queue[first];
-            delete self.queue[first];
-            first++;
+        for (uint256 i = 0; i < _number; i++) {
+            _items[i] = _q.queue[_first];
+            delete _q.queue[_first];
+            _first++;
         }
-        self.first = first;
-        return items;
-    }
-
-    /**
-     * @notice Batch dequeues 8 elements
-     * @dev Reverts if `number` > queue length
-     * @return Array of dequeued elements
-     **/
-    function dequeue8(Queue storage self) internal returns (uint256[8] memory) {
-        uint128 last = self.last;
-        uint128 first = self.first;
-        // Cannot underflow unless state is corrupted
-        require(length(last, first) >= 8, "Insufficient");
-
-        uint256[8] memory items;
-
-        for (uint256 i = 0; i < 8; i++) {
-            items[i] = self.queue[first];
-            delete self.queue[first];
-            first++;
-        }
-        self.first = first;
-        return items;
-    }
-
-    /**
-     * @notice Batch dequeues 16 elements
-     * @dev Reverts if `number` > queue length
-     * @return Array of dequeued elements
-     **/
-    function dequeue16(
-        Queue storage self
-    ) internal returns (uint256[16] memory) {
-        uint128 last = self.last;
-        uint128 first = self.first;
-        // Cannot underflow unless state is corrupted
-        require(length(last, first) >= 16, "Insufficient");
-
-        uint256[16] memory items;
-
-        for (uint256 i = 0; i < 16; i++) {
-            items[i] = self.queue[first];
-            delete self.queue[first];
-            first++;
-        }
-        self.first = first;
-        return items;
+        _q.first = _first;
+        return _items;
     }
 
     /**
@@ -187,11 +146,11 @@ library QueueLib {
         uint128 last = self.last;
         uint128 first = self.first;
         // Cannot underflow unless state is corrupted
-        return length(last, first);
+        return _length(last, first);
     }
 
     /// @notice Returns number of elements between `last` and `first` (used internally)
-    function length(
+    function _length(
         uint128 last,
         uint128 first
     ) internal pure returns (uint256) {

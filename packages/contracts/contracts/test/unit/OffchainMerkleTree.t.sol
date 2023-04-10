@@ -184,7 +184,7 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
 
         assertEq(newRoot, _newRoot);
 
-        uint256[] memory pis = merkle.calculatePublicInputs(newRoot);
+        uint256[] memory pis = merkle._calculatePublicInputs(newRoot);
         assertEq(
             pis[0],
             21443572485391568159800782191812935835534334817699172242223315142338162256601

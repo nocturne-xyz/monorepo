@@ -10,7 +10,6 @@ import {JsonDecodings, SubtreeUpdateProofWithPublicSignals} from "../utils/JsonD
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {Utils} from "../../libs/Utils.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
-import {Groth16} from "../../libs/Groth16.sol";
 import {SubtreeUpdateVerifier} from "../../SubtreeUpdateVerifier.sol";
 
 contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
@@ -30,10 +29,10 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
 
     function loadSubtreeUpdateProof(
         string memory path
-    ) internal returns (Groth16.Proof memory proof, uint256[] memory pis) {
+    ) internal returns (uint256[8] memory proof, uint256[] memory pis) {
         SubtreeUpdateProofWithPublicSignals
             memory proofWithPIs = loadSubtreeUpdateProofFromFixture(path);
-        proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
+        proof = baseProofTo8(proofWithPIs.proof);
         pis = new uint256[](NUM_PIS);
         for (uint256 i = 0; i < NUM_PIS; i++) {
             pis[i] = proofWithPIs.publicSignals[i];
@@ -43,19 +42,18 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
     }
 
     function verifyFixture(string memory path) public {
-        (
-            Groth16.Proof memory proof,
-            uint[] memory pis
-        ) = loadSubtreeUpdateProof(path);
+        (uint256[8] memory proof, uint[] memory pis) = loadSubtreeUpdateProof(
+            path
+        );
         require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {
-        Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
+        uint256[8][] memory proofs = new uint256[8][](NUM_PROOFS);
         uint[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
             (
-                Groth16.Proof memory proof,
+                uint256[8] memory proof,
                 uint[] memory _pis
             ) = loadSubtreeUpdateProof(path);
             proofs[i] = proof;

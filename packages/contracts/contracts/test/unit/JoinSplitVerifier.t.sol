@@ -10,7 +10,6 @@ import {JsonDecodings, JoinSplitProofWithPublicSignals} from "../utils/JsonDecod
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {JoinSplitVerifier} from "../../JoinSplitVerifier.sol";
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
-import {Groth16} from "../../libs/Groth16.sol";
 import {Utils} from "../../libs/Utils.sol";
 
 contract TestJoinSplitVerifier is Test, JsonDecodings {
@@ -28,10 +27,10 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
 
     function loadJoinSplitProof(
         string memory path
-    ) internal returns (Groth16.Proof memory proof, uint256[] memory pis) {
+    ) internal returns (uint256[8] memory proof, uint256[] memory pis) {
         JoinSplitProofWithPublicSignals
             memory proofWithPIs = loadJoinSplitProofFromFixture(path);
-        proof = Utils.proof8ToStruct(baseProofTo8(proofWithPIs.proof));
+        proof = baseProofTo8(proofWithPIs.proof);
         pis = new uint256[](NUM_PIS);
         for (uint256 i = 0; i < NUM_PIS; i++) {
             pis[i] = proofWithPIs.publicSignals[i];
@@ -41,7 +40,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
     }
 
     function verifyFixture(string memory path) public {
-        (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
+        (uint256[8] memory proof, uint256[] memory pis) = loadJoinSplitProof(
             path
         );
 
@@ -49,7 +48,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
     }
 
     function batchVerifyFixture(string memory path) public {
-        Groth16.Proof[] memory proofs = new Groth16.Proof[](NUM_PROOFS);
+        uint256[8][] memory proofs = new uint256[8][](NUM_PROOFS);
         uint256[][] memory pis = new uint256[][](NUM_PROOFS);
         for (uint256 i = 0; i < NUM_PROOFS; i++) {
             (proofs[i], pis[i]) = loadJoinSplitProof(path);
@@ -62,10 +61,10 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
     }
 
     function testBatchVerifySingle() public {
-        (Groth16.Proof memory proof, uint256[] memory pis) = loadJoinSplitProof(
+        (uint256[8] memory proof, uint256[] memory pis) = loadJoinSplitProof(
             BASIC_FIXTURE_PATH
         );
-        Groth16.Proof[] memory proofs = new Groth16.Proof[](1);
+        uint256[8][] memory proofs = new uint256[8][](1);
         uint256[][] memory allPis = new uint256[][](1);
 
         proofs[0] = proof;
