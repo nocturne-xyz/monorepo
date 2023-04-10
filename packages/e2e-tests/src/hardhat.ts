@@ -9,7 +9,7 @@ import { assertOrErr } from "@nocturne-xyz/deploy/dist/src/utils";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
 const ROOT_DIR = findWorkspaceRoot()!;
-const CONTRACTS_DIR = `${ROOT_DIR}/packages/e2e-tests`;
+const E2E_TESTS_DIR = `${ROOT_DIR}/packages/e2e-tests`;
 
 // returns snapshotId of empty chain state
 export async function startHardhat(): Promise<ResetFn> {
@@ -17,7 +17,7 @@ export async function startHardhat(): Promise<ResetFn> {
   const args = ["hardhat", "node", "--hostname", "0.0.0.0"];
 
   const cmdOpts: RunCommandDetachedOpts = {
-    cwd: CONTRACTS_DIR,
+    cwd: E2E_TESTS_DIR,
     processName: "hardhat",
     onError: console.error,
   };
