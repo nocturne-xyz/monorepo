@@ -28,7 +28,7 @@ export const AssetBalancesDisplay: React.FC<AssetBalancesDisplayProps> = ({
   const fetchData = async () => {
     if (!frontendSDK) return;
 
-    console.log("Syncing snap balances...");
+    console.log("syncing snap balances...");
     const provider = frontendSDK.walletContract.provider;
     const data = await frontendSDK.getAllBalances();
     const abbreviated = await Promise.all(
