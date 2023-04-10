@@ -137,8 +137,8 @@ template JoinSplit(levels) {
     BitRange(252)(newNoteBValue);
 
     // check that old note values are in range [0, 2**252]
-    BitRange(252)(newNoteAValue);
-    BitRange(252)(newNoteBValue);
+    BitRange(252)(oldNoteAValue);
+    BitRange(252)(oldNoteBValue);
 
     // check that the sum of old and new note values are in range [0, 2**252)
     // this can't overflow because all four note values are in range [0, 2**252) and field is 254 bits
