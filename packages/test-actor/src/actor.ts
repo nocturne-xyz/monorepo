@@ -90,7 +90,7 @@ export class TestActor {
     const resJSON = await res.json();
     if (!res.ok) {
       throw new Error(
-        `Failed to submit proven operation to bundler: ${JSON.stringify(
+        `failed to submit proven operation to bundler: ${JSON.stringify(
           resJSON
         )}`
       );
