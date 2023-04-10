@@ -12,6 +12,11 @@ import "../libs/Types.sol";
 library AssetUtils {
     using SafeERC20 for IERC20;
 
+    uint256 constant MASK_111 = 7;
+    uint256 constant MASK_11 = 3;
+    uint256 constant ENCODED_ASSET_ID_IN_ADDR_MASK = MASK_111 << 250;
+    uint256 constant ENCODED_ASSET_ADDR_MASK = (1 << 160) - 1;
+
     function encodeAsset(
         AssetType assetType,
         address assetAddr,
@@ -46,16 +51,14 @@ library AssetUtils {
         pure
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
-        uint256 bitMask_111 = 7;
-        uint256 bitMask_11 = 3;
         id =
-            (encodedAsset.encodedAssetAddr & (bitMask_111 << 250)) |
+            (encodedAsset.encodedAssetAddr & ENCODED_ASSET_ID_IN_ADDR_MASK) |
             encodedAsset.encodedAssetId;
         assetAddr = address(
-            uint160((encodedAsset.encodedAssetAddr << 96) >> 96)
+            uint160(encodedAsset.encodedAssetAddr & ENCODED_ASSET_ADDR_MASK)
         );
         uint256 asset_type_bits = (encodedAsset.encodedAssetAddr >> 160) &
-            bitMask_11;
+            MASK_11;
         if (asset_type_bits == 0) {
             assetType = AssetType.ERC20;
         } else if (asset_type_bits == 1) {
