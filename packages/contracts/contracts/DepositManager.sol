@@ -151,12 +151,12 @@ contract DepositManager is
     function retrieveDeposit(
         DepositRequest calldata req
     ) external nonReentrant {
-        require(msg.sender == req.spender, "Only spender can retrieve deposit");
+        require(msg.sender == req.spender, "only spender can retrieve deposit");
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
-        require(_outstandingDepositHashes[depositHash], "deposit !exists");
+        require(_outstandingDepositHashes[depositHash], "deposit DNE");
 
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
@@ -185,12 +185,15 @@ contract DepositManager is
 
         // Recover and check screener signature
         address recoveredSigner = _recoverDepositRequestSigner(req, signature);
-        require(_screeners[recoveredSigner], "request signer !screener");
+        require(
+            _screeners[recoveredSigner],
+            "request signer does not have screener permission"
+        );
 
         // If _outstandingDepositHashes has request, implies all checks (e.g.
         // chainId, nonce, etc) already passed upon instantiation
         bytes32 depositHash = _hashDepositRequest(req);
-        require(_outstandingDepositHashes[depositHash], "deposit !exists");
+        require(_outstandingDepositHashes[depositHash], "deposit DNE");
 
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;

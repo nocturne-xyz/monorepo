@@ -35,10 +35,13 @@ library BinaryMerkle {
         uint256 zero,
         IHasherT3 hasherT3
     ) internal {
-        require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(
+            zero < SNARK_SCALAR_FIELD,
+            "leaf must be < BN254 field modulus"
+        );
         require(
             depth > 0 && depth <= MAX_DEPTH,
-            "Depth must be between 1 and 32"
+            "depth must be between 1 and 32"
         );
 
         self.depth = depth;
@@ -56,11 +59,11 @@ library BinaryMerkle {
     /// @param self: Tree data.
     /// @param leaf: Leaf to be inserted.
     function insert(IncrementalTreeData storage self, uint256 leaf) internal {
-        require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
-            self.numberOfLeaves < 2 ** self.depth,
-            "BinaryTree: tree is full"
+            leaf < SNARK_SCALAR_FIELD,
+            "leaf must be < BN254 scalar field modulus"
         );
+        require(self.numberOfLeaves < 2 ** self.depth, "tree is full");
 
         uint256 index = self.numberOfLeaves;
         uint256 hash = leaf;
@@ -87,13 +90,10 @@ library BinaryMerkle {
         for (uint256 i = 0; i < 2; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
-                "Leaf must be < snark field"
+                "leaf must be < BN254 scalar field modulus"
             );
         }
-        require(
-            self.numberOfLeaves + 2 <= 2 ** self.depth,
-            "BinaryTree: tree is full"
-        );
+        require(self.numberOfLeaves + 2 <= 2 ** self.depth, "tree is full");
 
         uint256 index = self.numberOfLeaves / 2;
         uint256 hash = self.hasherT3.hash(leaves);
@@ -120,13 +120,10 @@ library BinaryMerkle {
         for (uint256 i = 0; i < 8; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
-                "Leaf must be < snark field"
+                "Leaf must be < BN254 scalar field modulus"
             );
         }
-        require(
-            self.numberOfLeaves + 8 <= 2 ** self.depth,
-            "BinaryTree: tree is full"
-        );
+        require(self.numberOfLeaves + 8 <= 2 ** self.depth, "tree is full");
 
         uint256 index = self.numberOfLeaves / 8;
 
@@ -155,13 +152,10 @@ library BinaryMerkle {
         for (uint256 i = 0; i < 16; i++) {
             require(
                 leaves[i] < SNARK_SCALAR_FIELD,
-                "Leaf must be < snark field"
+                "leaf must be < BN254 scalar field modulus"
             );
         }
-        require(
-            self.numberOfLeaves + 16 <= 2 ** self.depth,
-            "BinaryTree: tree is full"
-        );
+        require(self.numberOfLeaves + 16 <= 2 ** self.depth, "tree is full");
 
         uint256 hash = getRootFrom16(self, leaves);
         uint256 index = self.numberOfLeaves / 16;

@@ -204,7 +204,7 @@ contract BalanceManager is
                 );
             }
         }
-        require(gasAssetToReserve == 0, "Too few gas tokens");
+        require(gasAssetToReserve == 0, "too few gas tokens");
     }
 
     function _gatherReservedGasAssetAndPayBundler(

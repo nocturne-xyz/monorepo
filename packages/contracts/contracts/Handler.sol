@@ -37,17 +37,26 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     }
 
     modifier onlyThis() {
-        require(msg.sender == address(this), "Only this");
+        require(
+            msg.sender == address(this),
+            "only `this` may call this method"
+        );
         _;
     }
 
     modifier onlyWallet() {
-        require(msg.sender == address(_wallet), "Only wallet");
+        require(
+            msg.sender == address(_wallet),
+            "only wallet may call this method"
+        );
         _;
     }
 
     modifier onlySubtreeBatchFiller() {
-        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
+        require(
+            _subtreeBatchFiller[msg.sender],
+            "only subtree batch fillers may call this method"
+        );
         _;
     }
 
@@ -228,7 +237,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // If it did, executeActions is reverts and all action state changes
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
-        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+        require(op.maxNumRefunds >= numRefundsToHandle, "too many refunds");
     }
 
     function _makeExternalCall(
@@ -236,7 +245,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     ) internal returns (bool success, bytes memory result) {
         require(
             action.contractAddress != address(_wallet),
-            "Cannot call the Nocturne wallet"
+            "cannot call the Nocturne wallet"
         );
 
         bytes4 selector = _extractFunctionSelector(action.encodedFunction);
@@ -246,7 +255,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         );
         require(
             _callableContractAllowlist[addressAndSelector],
-            "Cannot call non-allowed protocol"
+            "cannot call non-allowed protocol"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
@@ -255,7 +264,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     function _extractFunctionSelector(
         bytes calldata encodedFunctionData
     ) public pure returns (bytes4 selector) {
-        require(encodedFunctionData.length >= 4, "Invalid encoded fn length");
+        require(encodedFunctionData.length >= 4, "invalid encoded fn length");
         return bytes4(encodedFunctionData[:4]);
     }
 

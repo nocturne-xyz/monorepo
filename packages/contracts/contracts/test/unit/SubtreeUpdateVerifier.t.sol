@@ -45,7 +45,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         (uint256[8] memory proof, uint[] memory pis) = loadSubtreeUpdateProof(
             path
         );
-        require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
+        require(subtreeUpdateVerifier.verifyProof(proof, pis), "invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {
@@ -62,7 +62,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
 
         require(
             subtreeUpdateVerifier.batchVerifyProofs(proofs, pis),
-            "Invalid proof"
+            "invalid proof"
         );
     }
 

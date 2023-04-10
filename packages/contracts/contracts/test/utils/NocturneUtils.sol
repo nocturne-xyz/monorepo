@@ -116,7 +116,7 @@ library NocturneUtils {
         ) {
             require(
                 args.numJoinSplits >= 2,
-                "Must specify at least 2 joinsplits for JOINSPLIT_NF_ALREADY_IN_SET failure type"
+                "must specify at least 2 joinsplits for JOINSPLIT_NF_ALREADY_IN_SET failure type"
             );
         }
 

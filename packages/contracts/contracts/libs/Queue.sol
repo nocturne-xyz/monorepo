@@ -50,7 +50,10 @@ library QueueLib {
     function dequeue(Queue storage self) internal returns (uint256 item) {
         uint128 last = self.last;
         uint128 first = self.first;
-        require(_length(last, first) != 0, "Empty");
+        require(
+            _length(last, first) != 0,
+            "attempted to dequeue from empty queue"
+        );
         item = self.queue[first];
         if (item != uint256(0)) {
             // saves gas if we're dequeuing 0
@@ -92,7 +95,10 @@ library QueueLib {
         uint128 _last = _q.last;
         uint128 _first = _q.first;
         // Cannot underflow unless state is corrupted
-        require(_length(_last, _first) >= _number, "Insufficient");
+        require(
+            _length(_last, _first) >= 2,
+            "attempted to dequeue more elements than exists in queue"
+        );
 
         uint256[] memory _items = new uint256[](_number);
 
@@ -132,7 +138,7 @@ library QueueLib {
     /// @notice Returns element at front of queue without removing element
     /// @dev Reverts if queue is empty
     function peek(Queue storage self) internal view returns (uint256 item) {
-        require(!isEmpty(self), "Queue is empty");
+        require(!isEmpty(self), "attempted to peek at empty queue");
         item = self.queue[self.first];
     }
 

@@ -457,7 +457,7 @@ contract BalanceManagerTest is Test {
         assertGt(totalFeeReserved, PER_NOTE_AMOUNT);
 
         // Expect revert due to not having enough to pay fee
-        vm.expectRevert("Too few gas tokens");
+        vm.expectRevert("too few gas tokens");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
@@ -521,7 +521,7 @@ contract BalanceManagerTest is Test {
         );
 
         // Expect revert for processing joinsplits
-        vm.expectRevert("Tree root not past root");
+        vm.expectRevert("tree root not past root");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
@@ -555,7 +555,7 @@ contract BalanceManagerTest is Test {
         );
 
         // Expect revert for processing joinsplits
-        vm.expectRevert("Nullifier B already used");
+        vm.expectRevert("nullifier B already used");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
@@ -587,7 +587,7 @@ contract BalanceManagerTest is Test {
         );
 
         // Expect revert for processing joinsplits
-        vm.expectRevert("2 nfs should !equal");
+        vm.expectRevert("joinsplit has identical nullifiers");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS

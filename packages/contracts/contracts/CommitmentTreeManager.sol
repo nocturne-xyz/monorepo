@@ -88,19 +88,19 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         // Check validity of both nullifiers
         require(
             _pastRoots[joinSplit.commitmentTreeRoot],
-            "Tree root not past root"
+            "tree root not past root"
         );
         require(
             !_nullifierSet[joinSplit.nullifierA],
-            "Nullifier A already used"
+            "nullifier A already used"
         );
         require(
             !_nullifierSet[joinSplit.nullifierB],
-            "Nullifier B already used"
+            "nullifier B already used"
         );
         require(
             joinSplit.nullifierA != joinSplit.nullifierB,
-            "2 nfs should !equal"
+            "joinsplit has identical nullifiers"
         );
 
         // Mark nullifiers as used

@@ -64,17 +64,26 @@ contract Wallet is
     }
 
     modifier onlyThis() {
-        require(msg.sender == address(this), "Only wallet");
+        require(
+            msg.sender == address(this),
+            "only wallet may call this method"
+        );
         _;
     }
 
     modifier onlyHandler() {
-        require(msg.sender == address(_handler), "Only handler");
+        require(
+            msg.sender == address(_handler),
+            "only handler may call this method"
+        );
         _;
     }
 
     modifier onlyDepositSource() {
-        require(_depositSources[msg.sender], "Only deposit source");
+        require(
+            _depositSources[msg.sender],
+            "only deposit sources may call this method"
+        );
         _;
     }
 
@@ -141,7 +150,7 @@ contract Wallet is
             opDigests
         );
 
-        require(success, "Batch JoinSplit verify failed");
+        require(success, "batch JoinSplit verify failed");
 
         uint256 numOps = ops.length;
         OperationResult[] memory opResults = new OperationResult[](numOps);

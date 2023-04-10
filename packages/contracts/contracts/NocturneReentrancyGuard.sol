@@ -22,7 +22,7 @@ contract NocturneReentrancyGuard is Initializable {
     modifier addToAssetPrefillGuard() {
         require(
             _operationStage == NOT_ENTERED,
-            "Reentry into addAssetToPrefill"
+            "reentry into addAssetToPrefill"
         );
         _operationStage = ENTERED_PREFILL;
 
@@ -32,7 +32,7 @@ contract NocturneReentrancyGuard is Initializable {
     }
 
     modifier handleOperationGuard() {
-        require(_operationStage == NOT_ENTERED, "Reentry into handleOperation");
+        require(_operationStage == NOT_ENTERED, "reentry into handleOperation");
         _operationStage = ENTERED_HANDLE_OPERATION;
 
         _;
@@ -43,7 +43,7 @@ contract NocturneReentrancyGuard is Initializable {
     modifier executeActionsGuard() {
         require(
             _operationStage == ENTERED_HANDLE_OPERATION,
-            "Reentry into executeActions"
+            "reentry into executeActions"
         );
         _operationStage = ENTERED_EXECUTE_ACTIONS;
 

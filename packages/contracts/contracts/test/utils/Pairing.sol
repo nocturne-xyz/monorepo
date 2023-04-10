@@ -46,7 +46,7 @@ library Pairing {
         if (p.X == 0 && p.Y == 0) return G1Point(0, 0);
         // Validate input or revert
         if (p.X >= BASE_MODULUS || p.Y >= BASE_MODULUS)
-            revert("Pairing invalid proof");
+            revert("invalid G1 point in `negate`");
         // We know p.Y > 0 and p.Y < BASE_MODULUS.
         return G1Point(p.X, BASE_MODULUS - p.Y);
     }
@@ -68,7 +68,7 @@ library Pairing {
         assembly {
             success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
         }
-        if (!success) revert("Pairing invalid proof");
+        if (!success) revert("G1 addition failed");
     }
 
     /// @return r the product of a point on G1 and a scalar, i.e.
@@ -79,7 +79,8 @@ library Pairing {
     ) internal view returns (G1Point memory r) {
         // By EIP-196 the values p.X and p.Y are verified to less than the BASE_MODULUS and
         // form a valid point on the curve. But the scalar is not verified, so we do that explicitelly.
-        if (s >= SCALAR_MODULUS) revert("Pairing invalid proof");
+        if (s >= SCALAR_MODULUS)
+            revert("scalar must be less than BN254 scalar field modulus");
         uint256[3] memory input;
         input[0] = p.X;
         input[1] = p.Y;
@@ -89,7 +90,7 @@ library Pairing {
         assembly {
             success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
         }
-        if (!success) revert("Pairing invalid proof");
+        if (!success) revert("G1 scalar mul failed");
     }
 
     /// Asserts the pairing check
@@ -101,7 +102,8 @@ library Pairing {
     ) internal view {
         // By EIP-197 all input is verified to be less than the BASE_MODULUS and form elements in their
         // respective groups of the right order.
-        if (p1.length != p2.length) revert("Pairing invalid proof");
+        if (p1.length != p2.length)
+            revert("LHS and RHS of pairing check have different lengths");
         uint256 elements = p1.length;
         uint256 inputSize = elements * 6;
         uint256[] memory input = new uint256[](inputSize);
@@ -126,6 +128,6 @@ library Pairing {
                 0x20
             )
         }
-        if (!success || out[0] != 1) revert("Pairing invalid proof");
+        if (!success || out[0] != 1) revert("pairing check failed");
     }
 }
