@@ -153,7 +153,6 @@ const hhThunk = thunk(() => startHardhat());
 export async function setupTestDeployment(
   config: TestActorsConfig
 ): Promise<TestDeployment> {
-
   // hardhat has to go up first,
   // then contracts,
   // then everything else can go up in any order

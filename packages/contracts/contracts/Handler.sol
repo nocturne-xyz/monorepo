@@ -156,15 +156,20 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             opResult.callSuccesses = successes;
             opResult.callResults = results;
         } catch (bytes memory reason) {
-            // Indicates revert because of too many refunds or because
-            // atomicActions = true and an action failed. Bundler is compensated
-            // and we bubble up failureReason, verificationGas, executionGas,
-            // and numRefunds.
+            // Indicates revert because of one of the following reasons:
+            // 1. `executeActions` attempted to process more refunds than `maxNumRefunds`
+            // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context (i.e. while not making an external call)
+            // 3. `atomicActions = true` and an action failed.
+
+            // we bubble up failureReason, verificationGas, executionGas,
+            // and numRefunds. If `executeActions` failed silently, then 1 or 2 occurred
+            // because we give reason `action failed silently` when an action fails siltenly
             string memory revertMsg = OperationUtils.getRevertMsg(reason);
             if (bytes(revertMsg).length == 0) {
-                opResult.failureReason = "Too many refunds";
+                opResult
+                    .failureReason = "executeActions silently failed - this is likely due to `executionGasLimit` or `maxNumRefunds` being too low";
             } else {
-                opResult.failureReason = OperationUtils.getRevertMsg(reason);
+                opResult.failureReason = revertMsg;
             }
         }
 
