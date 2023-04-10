@@ -34,7 +34,7 @@ yarn start &
 SNAP_PID=$!
 popd
 
-# start anvil
+# start hardhat
 pushd packages/e2e-tests
 echo "starting anvil..."
 anvil --block-time 1 --host 0.0.0.0 --chain-id 1337 &> "$LOG_DIR/anvil" &
