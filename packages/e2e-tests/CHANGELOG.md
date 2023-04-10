@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- install hardhat and run out of `e2e-tests` package
 - switch back to hardhat due to very strange contract bug
 - increase gas faucet amount in `EndToEnd.ts`
 - Modify token deployment to take handler when so deployer can allowlist appropriate methods
