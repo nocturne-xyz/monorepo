@@ -117,7 +117,7 @@ export async function handleGasForOperationRequest(
     }
 
     if (!gasAsset) {
-      throw new Error("Not enough owned gas tokens pay for op");
+      throw new Error("not enough owned gas tokens pay for op");
     }
 
     return {
@@ -229,7 +229,7 @@ async function estimateGasForOperationRequest(
       simulationOp as PreSignOperation
     );
     if (!result.opProcessed) {
-      throw Error("Cannot estimate gas with Error: " + result.failureReason);
+      throw Error("cannot estimate gas with Error: " + result.failureReason);
     }
 
     // set executionGasLimit with 20% buffer above the simulation result

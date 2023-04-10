@@ -86,7 +86,7 @@ async function proveJoinSplit(
     });
 
     throw new Error(
-      `SnarkJS generated public input differs from precomputed ones`
+      `snarkjs generated public input differs from precomputed ones`
     );
   }
 

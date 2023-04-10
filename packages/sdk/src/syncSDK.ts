@@ -40,7 +40,9 @@ export async function syncSDK(
 ): Promise<void> {
   const nextBlockToSync = await db.nextBlock();
   const currentBlock = await provider.getBlockNumber();
-  console.log(`Syncing from block ${nextBlockToSync} to ${currentBlock}...`);
+  console.log(
+    `syncing SDK from block ${nextBlockToSync} to ${currentBlock}...`
+  );
 
   const newDiffs = adapter.iterStateDiffs(nextBlockToSync, {
     maxChunkSize: NOTES_MAX_CHUNK_SIZE,

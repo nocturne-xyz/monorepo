@@ -198,7 +198,7 @@ describe("SparseMerkleProver", () => {
     expect(p1.root).to.deep.equal(p2.root);
   });
 
-  it("can mark leaves for pruning", () => {
+  it("marks leaves for pruning", () => {
     const kv = new InMemoryKVStore();
     const prover = new SparseMerkleProver(kv);
 

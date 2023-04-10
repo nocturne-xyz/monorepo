@@ -49,14 +49,14 @@ export const makeSubgraphQuery =
 
       if (!response.ok) {
         const text = await response.text();
-        console.error(`Failed to query ${dataLabel} from subgraph: ${text}`);
+        console.error(`failed to query ${dataLabel} from subgraph: ${text}`);
 
-        throw new Error(`Failed to query ${dataLabel} from subgraph: ${text}`);
+        throw new Error(`failed to query ${dataLabel} from subgraph: ${text}`);
       }
 
       return (await response.json()) as U;
     } catch (err) {
-      console.error(`Error when querying ${dataLabel} from subgraph`);
+      console.error(`error when querying ${dataLabel} from subgraph`);
       throw err;
     }
   };

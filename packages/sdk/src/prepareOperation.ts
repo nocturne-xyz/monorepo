@@ -112,7 +112,7 @@ async function gatherNotes(
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
     throw new Error(
-      `Attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
+      `attempted to spend more funds than owned. Address: ${asset.assetAddr}. Attempted: ${requestedAmount}. Owned: ${balance}.`
     );
   }
 
@@ -273,7 +273,7 @@ async function makeJoinSplit(
     // TODO: add a `merkle.getManyProofs` method that does it in one go
     if (membershipProof.root !== commitmentTreeRoot) {
       throw Error(
-        "MerkleProver was updated between getting the first and second merkle proofs!"
+        "merkleProver was updated between getting the first and second merkle proofs!"
       );
     }
 

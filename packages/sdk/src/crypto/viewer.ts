@@ -41,7 +41,9 @@ export class NocturneViewer {
 
   createNullifier<N extends Note>(note: N): bigint {
     if (!this.isOwnAddress(note.owner)) {
-      throw Error("Attempted to create nullifier for note you do not own");
+      throw Error(
+        "attempted to create nullifier for a note that is not owned by signer"
+      );
     }
 
     return poseidonBN([NoteTrait.toCommitment(note), this.vk]);
@@ -72,7 +74,7 @@ export class NocturneViewer {
     asset: Asset
   ): IncludedNote {
     if (!this.isOwnAddress(encryptedNote.owner)) {
-      throw Error("Cannot decrypt a note that is not owned by signer.");
+      throw Error("cannot decrypt a note that is not owned by signer");
     }
 
     const note = decryptNote(

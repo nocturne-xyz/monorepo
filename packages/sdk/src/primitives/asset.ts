@@ -41,7 +41,7 @@ export class AssetTrait {
       case 2:
         return AssetType.ERC1155;
       default:
-        throw new Error(`Invalid asset type: ${type}`);
+        throw new Error(`invalid asset type: ${type}`);
     }
   }
 
