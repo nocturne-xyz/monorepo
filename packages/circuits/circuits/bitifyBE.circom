@@ -14,6 +14,18 @@ template Num2BitsBE(n) {
 	}
 }
 
+template Num2BitsBE_strict() {
+    signal input in;
+    signal output out[254];
+	
+	component le = Num2Bits_strict();
+	le.in <== in;
+	
+	for (var i = 0; i < 254; i++) {
+		out[254 - i - 1] <== le.out[i];
+	}
+}
+
 template Bits2NumBE(n) {
     signal input in[n];
     signal output out;
