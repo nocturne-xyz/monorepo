@@ -16,7 +16,7 @@ export async function deployAndWhitelistERC20(
   handler: Handler
 ): Promise<[SimpleERC20Token, Asset]> {
   if ((await handler.owner()) != eoa.address) {
-    throw new Error("Token deployer must be handler owner");
+    throw new Error("token deployer must be handler owner");
   }
 
   const erc20 = await new SimpleERC20Token__factory(eoa).deploy();
@@ -52,7 +52,7 @@ export async function deployAndWhitelistERC721(
   handler: Handler
 ): Promise<[SimpleERC721Token, (id: bigint) => Asset]> {
   if ((await handler.owner()) != eoa.address) {
-    throw new Error("Token deployer must be handler owner");
+    throw new Error("token deployer must be handler owner");
   }
 
   const erc721 = await new SimpleERC721Token__factory(eoa).deploy();
@@ -81,7 +81,7 @@ export async function deployAndWhitelistERC1155(
   handler: Handler
 ): Promise<[SimpleERC1155Token, (id: bigint) => Asset]> {
   if ((await handler.owner()) != eoa.address) {
-    throw new Error("Token deployer must be handler owner");
+    throw new Error("token deployer must be handler owner");
   }
 
   const erc1155 = await new SimpleERC1155Token__factory(eoa).deploy();

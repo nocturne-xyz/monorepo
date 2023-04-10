@@ -48,7 +48,7 @@ const PLUTOCRACY_AMOUNT = 3n;
 
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
-describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
+describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
@@ -129,16 +129,16 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     contractChecks: () => Promise<void>,
     offchainChecks: () => Promise<void>
   ): Promise<void> {
-    console.log("Alice: Sync SDK");
+    console.log("alice: Sync SDK");
     await nocturneWalletSDKAlice.sync();
 
-    console.log("Bob: Sync SDK");
+    console.log("bob: Sync SDK");
     await nocturneWalletSDKBob.sync();
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
-    console.log("Alice pre-op notes:", preOpNotesAlice);
+    console.log("alice pre-op notes:", preOpNotesAlice);
     console.log(
-      "Alice pre-op nextMerkleIndex",
+      "alice pre-op nextMerkleIndex",
       await nocturneDBAlice.nextMerkleIndex()
     );
 
@@ -157,8 +157,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await offchainChecks();
   }
 
-  it("Bundler rejects operation with gas price < chain's gas price", async () => {
-    console.log("Deposit funds");
+  it("bundler rejects operation with gas price < chain's gas price", async () => {
+    console.log("deposit funds");
     await depositFundsMultiToken(
       depositManager,
       [
@@ -190,8 +190,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     ).to.eventually.be.rejectedWith("gas price too low");
   });
 
-  it(`Alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
-    console.log("Deposit funds and commit note commitments");
+  it(`alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
+    console.log("deposit funds and commit note commitments");
     await depositFundsMultiToken(
       depositManager,
       [
@@ -202,7 +202,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
 
-    console.log("Encode transfer erc20 action");
+    console.log("encode transfer erc20 action");
     const encodedFunction =
       SimpleERC20Token__factory.createInterface().encodeFunctionData(
         "transfer",
@@ -230,7 +230,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     console.log("bundler gas asset balance before op:", bundlerBalanceBefore);
 
     const contractChecks = async () => {
-      console.log("Check for OperationProcessed event");
+      console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
         wallet,
@@ -255,7 +255,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     };
 
     const offchainChecks = async () => {
-      console.log("Alice: Sync SDK post-operation");
+      console.log("alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset
@@ -263,7 +263,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
       expect(nonZeroNotesAlice.length).to.equal(2);
-      console.log("Alice post-op notes:", nonZeroNotesAlice);
+      console.log("alice post-op notes:", nonZeroNotesAlice);
 
       // alice should have a note with refund value from public spendk
       let foundNotesAlice = nonZeroNotesAlice.filter(
@@ -279,7 +279,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       );
       expect(foundNotesAlice.length).to.equal(1);
 
-      console.log("Bob: Sync SDK post-operation");
+      console.log("bob: Sync SDK post-operation");
       await nocturneWalletSDKBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
@@ -302,8 +302,8 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     await testE2E(operationRequest, contractChecks, offchainChecks);
   });
 
-  it(`Alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
-    console.log("Deposit funds and commit note commitments");
+  it(`alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
+    console.log("deposit funds and commit note commitments");
     await depositFundsSingleToken(
       depositManager,
       gasToken,
@@ -312,7 +312,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
 
-    console.log("Encode reserve erc721 action");
+    console.log("encode reserve erc721 action");
     const erc721ReserveCalldata =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
@@ -320,7 +320,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
         [handler.address, erc721Asset.id]
       );
 
-    console.log("Encode reserve erc1155 action");
+    console.log("encode reserve erc1155 action");
     const erc1155ReserveCalldata =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
@@ -341,7 +341,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       .build();
 
     const contractChecks = async () => {
-      console.log("Check for OperationProcessed event");
+      console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
         wallet,
@@ -356,7 +356,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
     };
 
     const offchainChecks = async () => {
-      console.log("Alice: Sync SDK post-operation");
+      console.log("alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
 
       // Alice should have a note for minted ERC721 token

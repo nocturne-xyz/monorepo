@@ -66,12 +66,12 @@ SUBTREE_UPDATER_TX_SIGNER_KEY="0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d
 SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e"
 
 # read config variables from logs
-read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^ERC20 token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^ERC20 token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
 popd
 
 sleep 10

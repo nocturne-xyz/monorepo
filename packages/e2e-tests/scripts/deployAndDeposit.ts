@@ -71,7 +71,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const amounts: bigint[] = [];
   for (let i = 0; i < 2; i++) {
     const [token] = await deployAndWhitelistERC20(deployerEoa, handler);
-    console.log(`Token ${i + 1} deployed at: ${token.address}`);
+    console.log(`ERC20 token ${i + 1} deployed at: ${token.address}`);
     tokens.push(token);
     amounts.push(tokenAmount);
   }
@@ -79,7 +79,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   for (const [token, amount] of zip(tokens, amounts)) {
     // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`
     for (const addr of TEST_ETH_ADDRS) {
-      console.log(`Sending ETH and tokens to ${addr}`);
+      console.log(`sending ETH and tokens to ${addr}`);
       {
         const tx = await deployerEoa.sendTransaction({
           to: addr,

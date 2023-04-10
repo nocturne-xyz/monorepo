@@ -41,11 +41,11 @@ const GAS_FAUCET_DEFAULT_AMOUNT = 1000n ** 9n * GAS_PRICE;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
 describe(
-  "Syncing NocturneWalletSDK with RPCSyncAdapter",
+  "syncing NocturneWalletSDK with RPCSyncAdapter",
   syncTestSuite(SyncAdapterOption.RPC)
 );
 describe(
-  "Syncing NocturneWalletSDK with SubgraphSyncAdapter",
+  "syncing NocturneWalletSDK with SubgraphSyncAdapter",
   syncTestSuite(SyncAdapterOption.SUBGRAPH)
 );
 
@@ -81,10 +81,10 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       aliceEoa = _aliceEoa;
 
       token = testDeployment.tokens.erc20;
-      console.log("Token deployed at: ", token.address);
+      console.log("token deployed at: ", token.address);
 
       gasToken = testDeployment.tokens.gasToken;
-      console.log("Gas Token deployed at: ", gasToken.address);
+      console.log("gas Token deployed at: ", gasToken.address);
 
       ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
         testDeployment.contractDeployment,
