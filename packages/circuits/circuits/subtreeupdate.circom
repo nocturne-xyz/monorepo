@@ -80,22 +80,22 @@ template NoteCommitmentHash() {
 
     signal ownerHash;
 
-    elemBits[0] = Num2BitsBE(254);
+    elemBits[0] = Num2BitsBE_strict();
     elemBits[0].in <== ownerH1;
 
-    elemBits[1] = Num2BitsBE(254);
+    elemBits[1] = Num2BitsBE_strict();
     elemBits[1].in <== ownerH2;
 
-    elemBits[2] = Num2BitsBE(254);
+    elemBits[2] = Num2BitsBE_strict();
     elemBits[2].in <== nonce;
 
-    elemBits[3] = Num2BitsBE(254);
+    elemBits[3] = Num2BitsBE_strict();
     elemBits[3].in <== encodedAssetAddr;
 
-    elemBits[4] = Num2BitsBE(254);
+    elemBits[4] = Num2BitsBE_strict();
     elemBits[4].in <== encodedAssetId;
 
-    elemBits[5] = Num2BitsBE(254);
+    elemBits[5] = Num2BitsBE_strict();
     elemBits[5].in <== value;
 
     for (var i = 0; i < 6; i++) {
@@ -184,7 +184,7 @@ template SubtreeUpdate(r, s) {
 
         bitmap[i] * (noteHashers[i].noteCommitment - leaves[i]) === 0;
 
-        leafBits[i] = Num2BitsBE(254);
+        leafBits[i] = Num2BitsBE_strict();
         leafBits[i].in <== leaves[i];
         for (var j = 0; j < 254; j++) {
             tmp2[i][j + 2] <== (1 - bitmap[i]) * leafBits[i].out[j];

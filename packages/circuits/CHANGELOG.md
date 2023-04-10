@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- use `Num2BitsBE_strict` in subtree update circuit when necessary
+- add `Num2BitsBE_strict`
 - add 2^16 ptau as changes take us up a power of two
 - encrypt sender's canonical address in joinsplit circuit and expose it as a PI
 - clean up visual separation of joinsplit circuit & improve comments
