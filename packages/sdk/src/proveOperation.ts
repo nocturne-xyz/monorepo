@@ -51,6 +51,7 @@ async function proveJoinSplit(
   signedJoinSplit: PreProofJoinSplit
 ): Promise<ProvenJoinSplit> {
   const { opDigest, proofInputs, ...baseJoinSplit } = signedJoinSplit;
+  console.log("proofInputs: ", proofInputs);
   const proof = await prover.proveJoinSplit(proofInputs);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values
@@ -95,5 +96,7 @@ async function proveJoinSplit(
   return {
     proof: solidityProof,
     ...baseJoinSplit,
+    encSenderCanonAddrC1X: BigInt(publicSignals.encSenderCanonAddrC1X),
+    encSenderCanonAddrC2X: BigInt(publicSignals.encSenderCanonAddrC2X),
   };
 }

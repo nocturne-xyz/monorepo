@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- switch back to hardhat due to very strange contract bug
+- increase gas faucet amount in `EndToEnd.ts`
 - Modify token deployment to take handler when so deployer can allowlist appropriate methods
 - deploy weth and pass to deposit manager initialization
 - update tests using `SparseMerkleProver`

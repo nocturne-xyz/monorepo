@@ -3,11 +3,9 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
-import randomBytes from "randombytes";
 import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
-
-const Fr = BabyJubJub.ScalarField;
+import { randomFr } from "./utils";
 
 export interface StealthAddress {
   h1X: bigint;
@@ -86,8 +84,7 @@ export class StealthAddressTrait {
 
   static randomize(address: StealthAddress): StealthAddress {
     const points = StealthAddressTrait.toPoints(address);
-    const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Fr.fromBytes(r_buf);
+    const r = randomFr();
 
     const h1 = BabyJubJub.scalarMul(points.h1, r);
     const h2 = BabyJubJub.scalarMul(points.h2, r);

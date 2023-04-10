@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add encrypted sender address fields to relay validator
 - Detect ops that reverted during processing and remove their NFs from DB
 - Decompose `Submitter.submitBatch` into setting ops inflight, dispatching bundle, and book-keeping post-submission
 - Parse `OperationResult.assetsUnwrapped` to differentiate btwn failed op processing and failed op execution

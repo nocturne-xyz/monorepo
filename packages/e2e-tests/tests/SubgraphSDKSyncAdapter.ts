@@ -10,7 +10,6 @@ import {
 } from "@nocturne-xyz/sdk";
 import { setupTestDeployment, SUBGRAPH_URL } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
-import { sleep } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
 describe("SDKSubgraphSyncAdapter", async () => {
@@ -57,10 +56,9 @@ describe("SDKSubgraphSyncAdapter", async () => {
       viewer.generateRandomStealthAddress(),
       [100n, 100n, 100n]
     );
-    const firstRangeEndBlockExpected = await provider.getBlockNumber();
 
-    // wait for subgraph
-    await sleep(3_000);
+    const firstRangeEndBlockExpected = await provider.getBlockNumber();
+    console.log("firstRangeEndBlockExpected: ", firstRangeEndBlockExpected);
 
     // check that diffs include 3 notes
     // check that there's no duplicate notes
@@ -95,8 +93,7 @@ describe("SDKSubgraphSyncAdapter", async () => {
     );
 
     const secondRangeEndBlockExpected = await provider.getBlockNumber();
-    // wait for subgraph
-    await sleep(3_000);
+    console.log("firstRangeEndBlockExpected: ", firstRangeEndBlockExpected);
 
     // check that diffs include 4 notes
     // check that there's no duplicate notes

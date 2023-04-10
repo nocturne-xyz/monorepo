@@ -56,8 +56,8 @@
     "@nocturne-xyz/frontend-sdk#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/sdk#build",
-        "@nocturne-xyz/local-prover#build"
+        "@nocturne-xyz/local-prover#build",
+        "@nocturne-xyz/sdk#build"
       ]
     },
     "@nocturne-xyz/site#build": {

@@ -18,12 +18,14 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // newNoteACommitment
     bigint, // newNoteBCommitment
     bigint, // anchor
-    bigint, // asset
-    bigint, // id
-    bigint, // valueLeft
+    bigint, // publicSpend
     bigint, // nullifierA
     bigint, // nullifierB
-    bigint // operationDigest
+    bigint, // encSenderCanonAddrC1X
+    bigint, // encSenderCanonAddrC2X
+    bigint, // operationDigest
+    bigint, // encodedAssetAddr
+    bigint // encodedAssetId
   ];
 }
 
@@ -37,6 +39,8 @@ export interface JoinSplitPublicSignals {
   opDigest: bigint;
   encodedAssetAddr: bigint;
   encodedAssetId: bigint;
+  encSenderCanonAddrC1X: bigint;
+  encSenderCanonAddrC2X: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -51,6 +55,7 @@ export interface JoinSplitInputs {
   merkleProofB: MerkleProofInput;
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
+  encRandomness: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -63,15 +68,29 @@ export function joinSplitPublicSignalsFromArray(
     publicSpend: publicSignals[3],
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
-    opDigest: publicSignals[6],
-    encodedAssetAddr: publicSignals[7],
-    encodedAssetId: publicSignals[8],
+    encSenderCanonAddrC1X: publicSignals[6],
+    encSenderCanonAddrC2X: publicSignals[7],
+    opDigest: publicSignals[8],
+    encodedAssetAddr: publicSignals[9],
+    encodedAssetId: publicSignals[10],
   };
 }
 
 export function joinSplitPublicSignalsToArray(
   publicSignals: JoinSplitPublicSignals
-): [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint] {
+): [
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint,
+  bigint
+] {
   return [
     publicSignals.newNoteACommitment,
     publicSignals.newNoteBCommitment,
@@ -79,6 +98,8 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.publicSpend,
     publicSignals.nullifierA,
     publicSignals.nullifierB,
+    publicSignals.encSenderCanonAddrC1X,
+    publicSignals.encSenderCanonAddrC2X,
     publicSignals.opDigest,
     publicSignals.encodedAssetAddr,
     publicSignals.encodedAssetId,

@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- `genJoinSplitTestCase` prints out proving time
+- add `encRandomness` to `genJoinSplitTestCase`
+- add `encSenderCanonAddrC1X`, `encSenderCanonAddrC2X` to public signals
+- add `encRandomness` to inputs
 - clean up module hierarchy, remove unnecessary exports, and make exports explicit
 - use `poseidonBN` from `@nocturne-xyz/circuit-utils`
 - Rename 

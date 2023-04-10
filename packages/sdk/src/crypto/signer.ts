@@ -3,9 +3,9 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
-import randomBytes from "randombytes";
 import { SpendingKey, spendPkFromFromSk, vkFromSpendPk } from "./keys";
 import { NocturneViewer } from "./viewer";
+import { randomFr } from "./utils";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -35,8 +35,7 @@ export class NocturneSigner extends NocturneViewer {
 
   sign(m: bigint): NocturneSignature {
     // TODO: make this deterministic
-    const r_buf = randomBytes(Math.floor(256 / 8));
-    const r = Fr.fromBytes(r_buf);
+    const r = randomFr();
     const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
     const c = poseidonBN([R.x, R.y, m]);
 

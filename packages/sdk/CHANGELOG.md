@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- make randomBigInt sample 32 random bytes, not 8 (bruh moment) 
+- add util `randomFr` to `crypto` module
+- add `encRandomness` to `JoinSplitInputs`
+- add `encSenderAddrC1X` and `encSenderAddrC2X` to `JoinSplitPublicSignals`
 - Add `op.atomicActions = true` for current default
 - `NocturneDB.nullifyNotes` and `NocturneDB.applyStateDiff` return merkle indices of nullfiied notes
 - remove `getNoteCommitmentsByIndexRange` from `NocturneDB`

@@ -125,6 +125,7 @@ export class BundlerSubmitter {
     operations: ProvenOperation[]
   ): Promise<ethers.ContractTransaction | undefined> {
     try {
+      console.log("num operations:", operations.length);
       return this.walletContract.processBundle(
         { operations },
         { gasLimit: 1_000_000 } // Hardcode gas limit to skip eth_estimateGas

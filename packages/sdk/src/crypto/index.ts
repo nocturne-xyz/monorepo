@@ -10,4 +10,4 @@ export {
   SpendingKey,
   ViewingKey,
 } from "./keys";
-export { randomBigInt } from "./utils";
+export { randomBigInt, randomFr } from "./utils";

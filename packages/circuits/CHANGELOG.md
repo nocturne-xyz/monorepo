@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add 2^16 ptau as changes take us up a power of two
+- encrypt sender's canonical address in joinsplit circuit and expose it as a PI
+- clean up visual separation of joinsplit circuit & improve comments
+- add range check for old note values before checking totals
+- use `Num2Bits_strict` for 254-bit decomps
 - Fix regression in subtree update circuit
 - Rename encodedAsset to encodedAssetAddr and encodedId to encodedAssetId
 - fix endianness bug in subtree update circuit's membership proofs

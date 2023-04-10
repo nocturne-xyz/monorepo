@@ -38,7 +38,7 @@ import {
   NocturneConfig,
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
-import { AnvilNetworkConfig, startAnvil } from "./anvil";
+import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
@@ -118,10 +118,6 @@ const ANVIL_URL = "http://0.0.0.0:8545";
 export const SUBGRAPH_URL =
   "http://localhost:8000/subgraphs/name/nocturne-test";
 
-const DEFAULT_ANVIL_CONFIG: AnvilNetworkConfig = {
-  blockTimeSecs: 1,
-};
-
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
   "walletAddress" | "txSignerKey" | "ignoreGas"
@@ -150,27 +146,25 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
 };
 
 // we want to only start anvil once, so we wrap `startAnvil` in a thunk
-const anvilThunk = thunk(() => startAnvil(DEFAULT_ANVIL_CONFIG));
+const hhThunk = thunk(() => startHardhat());
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
 export async function setupTestDeployment(
   config: TestActorsConfig
 ): Promise<TestDeployment> {
-  // anvil has to go up first,
+  // hardhat has to go up first,
   // then contracts,
   // then everything else can go up in any order
 
   const startTime = Date.now();
 
   // spin up anvil
-  console.log("starting anvil...");
-  const resetAnvil = await anvilThunk();
+  console.log("starting hardhat...");
+  const resetHardhat = await hhThunk();
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
-  console.log("enabling automine...");
-  await provider.send("evm_setAutomine", [true]);
 
   const [
     deployerEoa,
@@ -274,20 +268,15 @@ export async function setupTestDeployment(
       await sleep(10_000);
     }
 
-    console.log("resetting anvil...");
-    // reset anvil node
-    await resetAnvil();
-    // wait for anvil to reset
+    console.log("resetting hardhat...");
+    // reset hardhat node
+    await resetHardhat();
+
+    // wait for hardhad to reset
     await sleep(1_000);
   };
 
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
-  console.log("disabling automine...");
-  await provider.send("evm_setAutomine", [false]);
-  // need to turn interval mining back on, as `setAutomine true` turns off
-  await provider.send("evm_setIntervalMining", [
-    DEFAULT_ANVIL_CONFIG.blockTimeSecs,
-  ]);
 
   return {
     depositManager,

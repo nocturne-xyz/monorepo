@@ -155,6 +155,8 @@ export class NocturneFrontendSDK {
           opDigest,
           encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
           encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
+          encSenderCanonAddrC1X: joinSplit.encSenderCanonAddrC1X,
+          encSenderCanonAddrC2X: joinSplit.encSenderCanonAddrC2X,
         });
 
         const proof = unpackFromSolidityProof(joinSplit.proof);

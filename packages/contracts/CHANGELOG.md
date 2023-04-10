@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- make `handleOperation` default revert reason more helpful
+- give different revert message if action reverts silently than if `handleOption` reverts
+- Add 2 PIs for encrypted sender canonical address (`encSenderCanonAddrC1X`, `encSenderCanonAddrC2X`) to joinsplit verification logic
+- add encrypted sender canonical address to `JoinSplit` struct
 - Remove unused fns in `Queue.sol`
 - Simplify `AssetUtils` to not have pass through fns
 - Simplify `Utils` to only contain min function and SNARK_SCALAR_FIELD (no longer an "everything" utils file)

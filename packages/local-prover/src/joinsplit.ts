@@ -34,7 +34,9 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       merkleProofB,
       newNoteA,
       newNoteB,
+      encRandomness,
     } = inputs;
+
     const signals = {
       userViewKey: vk,
 
@@ -70,8 +72,10 @@ export class WasmJoinSplitProver implements JoinSplitProver {
 
       newNoteAValue: newNoteA.value,
 
-      receiverAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
+      receiverCanonAddr: [newNoteB.owner.h2X, newNoteB.owner.h2Y],
       newNoteBValue: newNoteB.value,
+
+      encRandomness,
     };
 
     const proof = await snarkjs.groth16.fullProve(

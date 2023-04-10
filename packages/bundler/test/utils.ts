@@ -34,6 +34,8 @@ export const VALID_PROVEN_OPERATION_OBJ = {
         encryptedNonce: "0n",
         encryptedValue: "0n",
       },
+      encSenderCanonAddrC1X: "0n",
+      encSenderCanonAddrC2X: "0n",
     },
   ],
   refundAddr: {

@@ -74,6 +74,8 @@ const joinSplitType = {
     "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
+    "encSenderCanonAddrC1X",
+    "encSenderCanonAddrC2X",
   ],
   properties: {
     proof: solidityProofType,
@@ -86,6 +88,8 @@ const joinSplitType = {
     publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
+    encSenderCanonAddrC1X: bigintType,
+    encSenderCanonAddrC2X: bigintType,
   },
   additionalProperties: false,
 };

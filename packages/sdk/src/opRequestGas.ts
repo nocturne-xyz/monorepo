@@ -36,7 +36,7 @@ const DUMMY_GAS_ASSET: Asset = {
 };
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
-const PER_JOINSPLIT_GAS = 525_000n;
+const PER_JOINSPLIT_GAS = 580_000n;
 const PER_REFUND_GAS = 80_000n;
 
 export interface HandleOpRequestGasDeps {
@@ -317,6 +317,8 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
+      encSenderCanonAddrC1X: 0n,
+      encSenderCanonAddrC2X: 0n,
     };
   });
   return {

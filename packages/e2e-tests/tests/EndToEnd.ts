@@ -42,7 +42,7 @@ const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 // 10^9 (e.g. 10 gwei if this was eth)
 const GAS_PRICE = 10n * 10n ** 9n;
 // 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = 10n ** 9n * GAS_PRICE;
+const GAS_FAUCET_DEFAULT_AMOUNT = 100000n ** 9n * GAS_PRICE;
 
 const PLUTOCRACY_AMOUNT = 3n;
 
@@ -151,7 +151,7 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
 
     await submitAndProcessOperation(operation);
     // wait for subgraph to catch up
-    await sleep(10_000);
+    await sleep(5_000);
 
     await contractChecks();
     await offchainChecks();
@@ -168,8 +168,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
-    // wait for subgraph
-    await sleep(3_000);
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
@@ -203,8 +201,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
-    // wait for subgraph
-    await sleep(3_000);
 
     console.log("Encode transfer erc20 action");
     const encodedFunction =
@@ -315,8 +311,6 @@ describe("Wallet, Context, Bundler, and SubtreeUpdater", async () => {
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
-    // wait for subgraph
-    await sleep(3_000);
 
     console.log("Encode reserve erc721 action");
     const erc721ReserveCalldata =

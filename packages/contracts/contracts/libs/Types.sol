@@ -48,6 +48,8 @@ struct JoinSplit {
     uint256 nullifierB;
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
+    uint256 encSenderCanonAddrC1X;
+    uint256 encSenderCanonAddrC2X;
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;

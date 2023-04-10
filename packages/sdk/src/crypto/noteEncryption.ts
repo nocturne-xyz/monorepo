@@ -7,7 +7,7 @@ import {
   BabyJubJub,
   poseidonBN,
 } from "@nocturne-xyz/circuit-utils";
-import randomBytes from "randombytes";
+import { randomFr } from "./utils";
 
 const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;
@@ -23,8 +23,7 @@ const Fr = BabyJubJub.ScalarField;
  * The viewing key corresponding to the receiver's canonical address is the decryption key
  */
 export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
-  const r_buf = randomBytes(Math.floor(256 / 8));
-  const r = Fr.fromBytes(r_buf);
+  const r = randomFr();
   const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
 
   const encryptedNonce = F.add(

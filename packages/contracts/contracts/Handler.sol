@@ -156,11 +156,19 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             opResult.callSuccesses = successes;
             opResult.callResults = results;
         } catch (bytes memory reason) {
-            // Indicates revert because of too many refunds or because
-            // atomicActions = true and an action failed. Bundler is compensated
-            // and we bubble up failureReason, verificationGas, executionGas,
-            // and numRefunds.
-            opResult.failureReason = OperationUtils.getRevertMsg(reason);
+            // Indicates revert because of one of the following reasons:
+            // 1. `executeActions` attempted to process more refunds than `maxNumRefunds`
+            // 2. `executeActions` exceeded `executionGasLimit`, but in its outer call context (i.e. while not making an external call)
+            // 3. `atomicActions = true` and an action failed.
+
+            // we explicitly catch cases 1 and 3 in `executeActions`, so if `executeActions` failed silently,
+            // then it must be case 2.
+            string memory revertMsg = OperationUtils.getRevertMsg(reason);
+            if (bytes(revertMsg).length == 0) {
+                opResult.failureReason = "exceeded `executionGasLimit`";
+            } else {
+                opResult.failureReason = revertMsg;
+            }
         }
 
         // Set verification and execution gas after getting opResult
@@ -180,7 +188,6 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // actions creating the refunds were reverted too, so numRefunds would =
         // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
-
         return opResult;
     }
 
@@ -205,7 +212,15 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         for (uint256 i = 0; i < numActions; i++) {
             (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
             if (op.atomicActions && !successes[i]) {
-                revert(OperationUtils.getRevertMsg(results[i]));
+                string memory revertMsg = OperationUtils.getRevertMsg(
+                    results[i]
+                );
+                if (bytes(revertMsg).length == 0) {
+                    // TODO maybe say which action?
+                    revert("action silently reverted");
+                } else {
+                    revert(revertMsg);
+                }
             }
         }
 
