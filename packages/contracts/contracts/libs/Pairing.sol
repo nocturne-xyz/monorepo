@@ -116,7 +116,10 @@ library Pairing {
         G1Point[] memory p1,
         G2Point[] memory p2
     ) internal view returns (bool) {
-        require(p1.length == p2.length, "LHS and RHS of pairing check have different lengths");
+        require(
+            p1.length == p2.length,
+            "LHS and RHS of pairing check have different lengths"
+        );
         uint256 elements = p1.length;
         uint256 inputSize = elements * 6;
         uint256[] memory input = new uint256[](inputSize);
