@@ -53,7 +53,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           continue;
         }
 
-        console.log(`Fetching deposit events from ${from} to ${to}...`);
+        console.log(`fetching deposit events from ${from} to ${to}...`);
         const depositEvents = await fetchDepositEvents(
           endpoint,
           type,
