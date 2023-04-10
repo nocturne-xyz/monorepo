@@ -43,7 +43,7 @@ export async function deployNocturne(
   opts?: NocturneDeployOpts
 ): Promise<NocturneContractDeployment> {
   if (!connectedSigner.provider)
-    throw new Error("Wallet must be connected to provider");
+    throw new Error("ethers.Wallet must be connected to provider");
 
   console.log("getting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();

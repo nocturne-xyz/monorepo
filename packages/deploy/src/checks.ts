@@ -34,7 +34,7 @@ export async function checkNocturneContractDeployment(
   const proxyAdminOwnerActual = await proxyAdminContract.owner();
   assertOrErr(
     proxyAdminOwnerActual === deployment.owners.proxyAdminOwner,
-    "Proxy admin owner inconsistent"
+    "proxy admin owner inconsistent"
   );
 
   // Wallet proxy admin matches deployment proxy admin
@@ -44,7 +44,7 @@ export async function checkNocturneContractDeployment(
   );
   assertOrErr(
     walletProxyAdmin === deployment.proxyAdmin,
-    "Wallet proxy admin incorrectly set"
+    "wallet proxy admin incorrectly set"
   );
 
   // Handler proxy admin matches deployment proxy admin
@@ -54,7 +54,7 @@ export async function checkNocturneContractDeployment(
   );
   assertOrErr(
     handlerProxyAdmin === deployment.proxyAdmin,
-    "Handler proxy admin incorrectly set"
+    "handler proxy admin incorrectly set"
   );
 
   // Wallet proxy implementation matches deployment
@@ -64,7 +64,7 @@ export async function checkNocturneContractDeployment(
   );
   assertOrErr(
     walletProxyImplementation === deployment.walletProxy.implementation,
-    "Wallet proxy implementation does not match deployment"
+    "wallet proxy implementation does not match deployment"
   );
 
   // Handler proxy implementation matches deployment
@@ -74,14 +74,14 @@ export async function checkNocturneContractDeployment(
   );
   assertOrErr(
     handlerProxyImplementation === deployment.handlerProxy.implementation,
-    "Handler proxy implementation does not match deployment"
+    "handler proxy implementation does not match deployment"
   );
 
   // Wallet joinsplit verifier matches deployment
   const walletJoinSplitVerifier = await walletContract._joinSplitVerifier();
   assertOrErr(
     walletJoinSplitVerifier === deployment.joinSplitVerifierAddress,
-    "Wallet joinsplit verifier does not match deployment"
+    "wallet joinsplit verifier does not match deployment"
   );
 
   // Wallet whitelisted deposit manager as source
@@ -90,7 +90,7 @@ export async function checkNocturneContractDeployment(
   );
   assertOrErr(
     hasDepositManager,
-    "Wallet did not whitelist deposit manager as deposit source"
+    "wallet did not whitelist deposit manager as deposit source"
   );
 
   // Deposit manager whitelisted screeners
@@ -98,7 +98,7 @@ export async function checkNocturneContractDeployment(
     const hasScreener = await depositManagerContract._screeners(screener);
     assertOrErr(
       hasScreener,
-      `DepositManager did not whitelist screener ${screener}`
+      `depositManager did not whitelist screener ${screener}`
     );
   }
 
@@ -106,19 +106,19 @@ export async function checkNocturneContractDeployment(
   const walletOwner = await walletContract.owner();
   assertOrErr(
     walletOwner == deployment.owners.walletOwner,
-    "On-chain wallet owner doesn't match config wallet owner"
+    "on-chain wallet owner doesn't match config wallet owner"
   );
 
   const handlerOwner = await handlerContract.owner();
   assertOrErr(
     handlerOwner == deployment.owners.handlerOwner,
-    "On-chain handler owner doesn't match config handler owner"
+    "on-chain handler owner doesn't match config handler owner"
   );
 
   const depositManagerOwner = await depositManagerContract.owner();
   assertOrErr(
     depositManagerOwner == deployment.owners.depositManagerOwner,
-    "On-chain deposit manager owner doesn't match config deposit manager owner"
+    "on-chain deposit manager owner doesn't match config deposit manager owner"
   );
 
   // TODO: is there a way to check subtree update verifier?
