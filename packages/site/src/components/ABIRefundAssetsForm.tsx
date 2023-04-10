@@ -22,7 +22,7 @@ export const ABIRefundAssetsForm = ({
       };
       handleNewRefundAsset(asset);
     } else {
-      alert("Invalid output token address");
+      alert("invalid output token address");
     }
   };
 
