@@ -212,7 +212,9 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         for (uint256 i = 0; i < numActions; i++) {
             (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
             if (op.atomicActions && !successes[i]) {
-                string memory revertMsg = OperationUtils.getRevertMsg(results[i]);
+                string memory revertMsg = OperationUtils.getRevertMsg(
+                    results[i]
+                );
                 if (bytes(revertMsg).length == 0) {
                     // TODO maybe say which action?
                     revert("action silently reverted");
