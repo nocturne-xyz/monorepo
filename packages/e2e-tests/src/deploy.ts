@@ -38,7 +38,7 @@ import {
   NocturneConfig,
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
-import { startHardhat } from "./hardhat";
+import { startAnvil } from "./anvil";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
 import { startSubtreeUpdater, SubtreeUpdaterConfig } from "./subtreeUpdater";
@@ -146,7 +146,7 @@ const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
 };
 
 // we want to only start anvil once, so we wrap `startAnvil` in a thunk
-const hhThunk = thunk(() => startHardhat());
+const anvilThunk = thunk(() => startAnvil());
 
 // returns an async function that should be called for teardown
 // if include is not given, no off-chain actors will be deployed
@@ -160,11 +160,13 @@ export async function setupTestDeployment(
   const startTime = Date.now();
 
   // spin up anvil
-  console.log("starting hardhat...");
-  const resetHardhat = await hhThunk();
+  console.log("starting anvil...");
+  const resetAnvil = await anvilThunk();
 
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
+  console.log("enabling automine...");
+  await provider.send("evm_setAutomine", [true]);
 
   const [
     deployerEoa,
@@ -174,6 +176,7 @@ export async function setupTestDeployment(
     subtreeUpdaterEoa,
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
+
   console.log("deploying contracts...");
   const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
     screeners: [screenerEoa.address],
@@ -268,15 +271,16 @@ export async function setupTestDeployment(
       await sleep(10_000);
     }
 
-    console.log("resetting hardhat...");
-    // reset hardhat node
-    await resetHardhat();
-
-    // wait for hardhad to reset
-    await sleep(1_000);
+    console.log("resetting anvil...");
+    // reset anvil
+    await resetAnvil();
   };
 
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
+  console.log("disabling automine...");
+  await provider.send("evm_setAutomine", [false]);
+  // need to turn interval mining back on as well
+  await provider.send("evm_setIntervalMining", [1]);
 
   return {
     depositManager,
