@@ -23,7 +23,7 @@ export async function startHardhat(): Promise<ResetFn> {
   };
 
   runCommandBackground(cmd, args, cmdOpts);
-  await sleep(3_000);
+  await sleep(5_000);
 
   const provider = new ethers.providers.JsonRpcProvider("http://0.0.0.0:8545");
   // enable interval mining with 10ms block time
