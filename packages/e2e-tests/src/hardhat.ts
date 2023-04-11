@@ -26,8 +26,8 @@ export async function startHardhat(): Promise<ResetFn> {
   await sleep(8_000);
 
   const provider = new ethers.providers.JsonRpcProvider("http://0.0.0.0:8545");
-  // enable interval mining with 100ms block time
-  await provider.send("evm_setIntervalMining", [100]);
+  // enable interval mining with 1000ms block time
+  await provider.send("evm_setIntervalMining", [1000]);
 
   // get snapshot with empty chain state
   let snapshotId = await provider.send("evm_snapshot", []);
