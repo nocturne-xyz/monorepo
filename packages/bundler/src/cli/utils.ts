@@ -16,7 +16,7 @@ export function getRedis(): IORedis {
 // if `consoleLevel` is defined, logs at least as important `consoleLevel` will be emitted to console
 export function makeLogger(
   logDir: string,
-  processName: string,
+  process: string,
   consoleLevel?: string
 ): Logger {
   const logTransports: Transport[] = [
@@ -50,7 +50,7 @@ export function makeLogger(
   return createLogger({
     format: format.combine(format.timestamp(), format.json()),
     // add metadata saying which process this log is coming from
-    defaultMeta: { service: "bundler", process: processName },
+    defaultMeta: { service: "bundler", process },
     // write all uncaught exceptions to `uncaughtExceptions.log`
     exceptionHandlers: [
       new transports.File({ filename: "uncaughtExpections.log" }),

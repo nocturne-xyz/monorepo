@@ -3397,6 +3397,7 @@ __metadata:
     mocha: ^10.1.0
     prettier: ^2.8.0
     uuid: ^9.0.0
+    winston-humanize-formatter: ^0.1.4
   languageName: unknown
   linkType: soft
 
@@ -27519,6 +27520,17 @@ __metadata:
   bin:
     window-size: cli.js
   checksum: a85e2acf156cfa194301294809867bdadd8a48ee5d972d9fa8e3e1b3420a1d0201b13ac8eb0348a0d14bbf2c3316565b6a749749c2384c5d286caf8a064c4f90
+  languageName: node
+  linkType: hard
+
+"winston-humanize-formatter@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "winston-humanize-formatter@npm:0.1.4"
+  dependencies:
+    triple-beam: ^1.3.0
+  peerDependencies:
+    winston: ^3.2.1
+  checksum: 157059b325611b68f8043e253f5b3e04e9f2ab31b6fab641d4a922a50d847813527f188935f9f822f2003b41eb85684e834d2e2dac95f4a8e5f929cb26844b5a
   languageName: node
   linkType: hard
 

@@ -69,6 +69,7 @@ export const relayHandler =
       if (gasPriceErr) {
         logValidationFailure(gasPriceErr);
         res.status(400).json(gasPriceErr);
+        return;
       }
     }
 
@@ -109,6 +110,7 @@ export const relayHandler =
       const msg = "failed to enqueue operation";
       logger.error(msg, err);
       res.status(500).json({ error: msg });
+      return;
     });
 
     res.json({ id: jobId });
