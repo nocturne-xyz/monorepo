@@ -42,7 +42,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   },
   {
     x: 19799258522113603135363272915180271151480541087034599231341141852585629320603n,
-    y: 8749027578620186155044097344182564177881015597171155166755502239772218892911n
+    y: 8749027578620186155044097344182564177881015597171155166755502239772218892911n,
   },
 ];
 
@@ -139,7 +139,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const tx = await handler.connect(deployerEoa).fillBatchWithZeros();
   await tx.wait(1);
 
-  await provider.send("evm_setIntervalMining", [100]);
+  await provider.send("evm_setIntervalMining", [1000]);
 
   console.log(
     `deployAndDeposit script finished in ${Date.now() - startTime}ms.`
