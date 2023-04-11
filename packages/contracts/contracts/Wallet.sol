@@ -179,31 +179,6 @@ contract Wallet is
         return opResults;
     }
 
-    // Verifies the joinsplit proofs of a bundle of transactions
-    // Also returns the gas used to verify per joinsplit
-    // DOES NOT check if nullifiers in each transaction has not been used
-    function _verifyAllProofsMetered(
-        Operation[] calldata ops,
-        uint256[] memory opDigests
-    ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
-        uint256 preVerificationGasLeft = gasleft();
-
-        (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
-            .extractJoinSplitProofsAndPis(ops, opDigests);
-
-        // if there is only one proof, use the single proof verification
-        if (proofs.length == 1) {
-            success = _joinSplitVerifier.verifyProof(proofs[0], allPis[0]);
-        } else {
-            success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
-        }
-
-        perJoinSplitVerifyGas =
-            (preVerificationGasLeft - gasleft()) /
-            proofs.length;
-        return (success, perJoinSplitVerifyGas);
-    }
-
     function onERC721Received(
         address, // operator
         address, // from
@@ -240,5 +215,30 @@ contract Wallet is
             (interfaceId == type(IERC165Upgradeable).interfaceId) ||
             (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
+    }
+
+    // Verifies the joinsplit proofs of a bundle of transactions
+    // Also returns the gas used to verify per joinsplit
+    // DOES NOT check if nullifiers in each transaction has not been used
+    function _verifyAllProofsMetered(
+        Operation[] calldata ops,
+        uint256[] memory opDigests
+    ) internal view returns (bool success, uint256 perJoinSplitVerifyGas) {
+        uint256 preVerificationGasLeft = gasleft();
+
+        (uint256[8][] memory proofs, uint256[][] memory allPis) = OperationUtils
+            .extractJoinSplitProofsAndPis(ops, opDigests);
+
+        // if there is only one proof, use the single proof verification
+        if (proofs.length == 1) {
+            success = _joinSplitVerifier.verifyProof(proofs[0], allPis[0]);
+        } else {
+            success = _joinSplitVerifier.batchVerifyProofs(proofs, allPis);
+        }
+
+        perJoinSplitVerifyGas =
+            (preVerificationGasLeft - gasleft()) /
+            proofs.length;
+        return (success, perJoinSplitVerifyGas);
     }
 }

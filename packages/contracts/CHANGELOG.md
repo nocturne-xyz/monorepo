@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move external methods to top in wallet / balance manager
 - Change `InsertNotes` event to `InsertNote` (singular)
 - Remove `insertNotes` (plural) and `insertNoteCommitment` (singular) + related events since both are dead code
 - include `op.atomicActions` in op digest calculation
