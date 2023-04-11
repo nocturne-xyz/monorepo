@@ -315,7 +315,7 @@ contract DepositManagerTest is Test {
         );
 
         // Call retrieveDeposit, but prank as BOB
-        vm.expectRevert("only spender can retrieve deposit");
+        vm.expectRevert("Only spender can retrieve deposit");
         vm.prank(BOB);
         depositManager.retrieveDeposit(deposit);
     }
@@ -335,7 +335,7 @@ contract DepositManagerTest is Test {
             0
         );
 
-        vm.expectRevert("deposit DNE");
+        vm.expectRevert("deposit !exists");
         vm.prank(ALICE);
         depositManager.retrieveDeposit(deposit);
     }
@@ -459,7 +459,7 @@ contract DepositManagerTest is Test {
             v
         );
 
-        vm.expectRevert("request signer does not have screener permission");
+        vm.expectRevert("request signer !screener");
         vm.prank(SCREENER);
         depositManager.completeDeposit(deposit, badSignature);
     }
@@ -491,7 +491,7 @@ contract DepositManagerTest is Test {
             v
         );
 
-        vm.expectRevert("deposit DNE");
+        vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);
         depositManager.completeDeposit(deposit, signature);
     }

@@ -470,7 +470,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testSetSubtreeBatchFillerHandler() public {
-        vm.expectRevert("only subtree batch fillers may call this method");
+        vm.expectRevert("Only subtree batch filler");
         vm.prank(ALICE);
         handler.fillBatchWithZeros();
 
@@ -490,7 +490,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         token.approve(address(wallet), PER_NOTE_AMOUNT);
 
         vm.startPrank(ALICE); // msg.sender made to be ALICE not DEPOSIT_SOURCE
-        vm.expectRevert("only deposit sources may call this method");
+        vm.expectRevert("Only deposit source");
         wallet.depositFunds(
             DepositRequest({
                 spender: ALICE,
@@ -736,7 +736,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "tree root not past root",
+                maybeFailureReason: "Tree root not past root",
                 assetsUnwrapped: false
             })
         );
@@ -747,7 +747,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "tree root not past root");
+        assertEq(opResults[0].failureReason, "Tree root not past root");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -800,7 +800,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "nullifier B already used",
+                maybeFailureReason: "Nullifier B already used",
                 assetsUnwrapped: false
             })
         );
@@ -811,7 +811,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "nullifier B already used");
+        assertEq(opResults[0].failureReason, "Nullifier B already used");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -862,7 +862,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "joinsplit has identical nullifiers",
+                maybeFailureReason: "2 nfs should !equal",
                 assetsUnwrapped: false
             })
         );
@@ -873,10 +873,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(
-            opResults[0].failureReason,
-            "joinsplit has identical nullifiers"
-        );
+        assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
         // No tokens are lost from wallet because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -1031,7 +1028,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "cannot call the Nocturne wallet",
+                maybeFailureReason: "Cannot call the Nocturne wallet",
                 assetsUnwrapped: true
             })
         );
@@ -1044,7 +1041,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].failureReason, "cannot call the Nocturne wallet");
+        assertEq(opResults[0].failureReason, "Cannot call the Nocturne wallet");
 
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens
@@ -1147,7 +1144,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
-                "only wallet may call this method"
+                "Only wallet"
             )
         );
 
@@ -1251,7 +1248,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
-                "reentry into executeActions"
+                "Reentry into executeActions"
             )
         );
 
@@ -1455,7 +1452,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "cannot call non-allowed protocol",
+                maybeFailureReason: "Cannot call non-allowed protocol",
                 assetsUnwrapped: true
             })
         );
@@ -1472,7 +1469,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
-                "cannot call non-allowed protocol"
+                "Cannot call non-allowed protocol"
             )
         );
 
@@ -1700,7 +1697,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "too many refunds",
+                maybeFailureReason: "Too many refunds",
                 assetsUnwrapped: true
             })
         );
@@ -1722,7 +1719,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
-                "too many refunds"
+                "Too many refunds"
             )
         );
 
@@ -1780,7 +1777,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "too few gas tokens",
+                maybeFailureReason: "Too few gas tokens",
                 assetsUnwrapped: false
             })
         );
@@ -1795,7 +1792,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
-                "too few gas tokens"
+                "Too few gas tokens"
             )
         );
 
@@ -1885,7 +1882,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // Attempt to call handleOperation directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
-        vm.expectRevert("only wallet may call this method");
+        vm.expectRevert("Only wallet");
         handler.handleOperation(op, 0, ALICE);
     }
 
@@ -1980,7 +1977,7 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         // Attempt to call executeActions directly with ALICE as caller not
         // wallet
         vm.prank(ALICE);
-        vm.expectRevert("only `this` may call this method");
+        vm.expectRevert("Only this");
         handler.executeActions(op);
     }
 }

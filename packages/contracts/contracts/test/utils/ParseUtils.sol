@@ -13,7 +13,7 @@ library ParseUtils {
         if (bytes1(c) >= bytes1("A") && bytes1(c) <= bytes1("F")) {
             return 10 + c - uint8(bytes1("A"));
         }
-        revert("character is not a hex character");
+        revert("Hex to char failed");
     }
 
     // Convert an hexadecimal string to raw bytes

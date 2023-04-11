@@ -44,7 +44,7 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
             path
         );
 
-        require(joinSplitVerifier.verifyProof(proof, pis), "invalid proof");
+        require(joinSplitVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
     function batchVerifyFixture(string memory path) public {

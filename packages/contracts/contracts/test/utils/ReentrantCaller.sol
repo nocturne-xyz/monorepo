@@ -15,10 +15,7 @@ contract ReentrantCaller {
     uint256 public constant DEFAULT_GAS_LIMIT = 500_000;
 
     modifier onlyWallet() {
-        require(
-            msg.sender == address(_wallet),
-            "only wallet may call this method"
-        );
+        require(msg.sender == address(_wallet), "Only wallet");
         _;
     }
 

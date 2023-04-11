@@ -82,7 +82,7 @@ library Pairing {
                 invalid()
             }
         }
-        require(success, "G1 addition failed");
+        require(success, "pairing-add-failed");
     }
 
     /// @return r the product of a point on G1 and a scalar, i.e.
@@ -105,7 +105,7 @@ library Pairing {
                 invalid()
             }
         }
-        require(success, "G1 scalar multiplication failed");
+        require(success, "pairing-mul-failed");
     }
 
     /// @return the result of computing the pairing check
@@ -116,10 +116,7 @@ library Pairing {
         G1Point[] memory p1,
         G2Point[] memory p2
     ) internal view returns (bool) {
-        require(
-            p1.length == p2.length,
-            "LHS and RHS of pairing check have different lengths"
-        );
+        require(p1.length == p2.length, "pairing-lengths-failed");
         uint256 elements = p1.length;
         uint256 inputSize = elements * 6;
         uint256[] memory input = new uint256[](inputSize);
@@ -149,7 +146,7 @@ library Pairing {
                 invalid()
             }
         }
-        require(success, "pairing check failed");
+        require(success, "pairing-opcode-failed");
         return out[0] != 0;
     }
 

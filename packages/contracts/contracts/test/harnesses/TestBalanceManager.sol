@@ -17,7 +17,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
     }
 
     modifier onlyWallet() {
-        require(msg.sender == address(_wallet), "only wallet");
+        require(msg.sender == address(_wallet), "Only wallet");
         _;
     }
 
@@ -41,7 +41,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
         uint256, // perJoinSplitVerifyGas
         address // bundler
     ) external pure override returns (OperationResult memory) {
-        revert("should not call this on TestBalanceManager");
+        revert("Should not call this on TestBalanceManager");
     }
 
     function processJoinSplitsReservingFee(

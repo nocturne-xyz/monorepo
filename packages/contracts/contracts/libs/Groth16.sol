@@ -24,15 +24,12 @@ library Groth16 {
         uint256[8] memory proof8,
         uint256[] memory pi
     ) internal view returns (bool) {
-        require(
-            vk.IC.length == pi.length + 1,
-            "number of public inputs does not match verifying key"
-        );
+        require(vk.IC.length == pi.length + 1, "Public input length mismatch.");
         Pairing.G1Point memory vk_x = vk.IC[0];
         for (uint i = 0; i < pi.length; i++) {
             require(
                 pi[i] < Utils.SNARK_SCALAR_FIELD,
-                "malformed public input."
+                "Malformed public input."
             );
             vk_x = Pairing.addition(
                 vk_x,
@@ -70,7 +67,7 @@ library Groth16 {
         for (uint256 i = 1; i < allPis.length; i++) {
             require(
                 numPublicInputs == allPis[i].length,
-                "number of public inputs does not match verifying key"
+                "Public input mismatch during batch verification."
             );
         }
         uint256[] memory entropy = new uint256[](proofs.length);
@@ -90,7 +87,7 @@ library Groth16 {
                 );
                 entropy[proofIndex] = challengerState;
             }
-            require(entropy[proofIndex] != 0, "entropy should not be zero");
+            require(entropy[proofIndex] != 0, "Entropy should not be zero");
             // here multiplication by 1 is implied
             publicInputAccumulators[0] = addmod(
                 publicInputAccumulators[0],
@@ -100,7 +97,7 @@ library Groth16 {
             for (uint256 i = 0; i < numPublicInputs; i++) {
                 require(
                     allPis[proofIndex][i] < Utils.SNARK_SCALAR_FIELD,
-                    "malformed public input"
+                    "Malformed public input"
                 );
                 // accumulate the exponent with extra entropy mod Utils.SNARK_SCALAR_FIELD
                 publicInputAccumulators[i + 1] = addmod(
@@ -150,7 +147,7 @@ library Groth16 {
     ) internal view returns (bool success) {
         require(
             allPis.length == proof8s.length,
-            "number of proofs does not match number of sets of public inputs"
+            "Invalid inputs length for a batch"
         );
 
         Proof[] memory proofs = new Proof[](proof8s.length);
