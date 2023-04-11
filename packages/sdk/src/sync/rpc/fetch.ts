@@ -10,7 +10,7 @@ import {
   JoinSplitProcessedEvent,
   SubtreeUpdateEvent,
   InsertNoteCommitmentsEvent,
-  InsertNotesEvent,
+  InsertNoteEvent,
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
@@ -222,9 +222,9 @@ export async function fetchInsertions(
     from,
     to
   );
-  const noteEventsProm: Promise<InsertNotesEvent[]> = queryEvents(
+  const noteEventsProm: Promise<InsertNoteEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNotes(),
+    contract.filters.InsertNote(),
     from,
     to
   );
@@ -251,35 +251,35 @@ export async function fetchInsertions(
   }
 
   for (const event of noteEvents) {
-    for (const noteValues of event.args.notes) {
-      const owner = {
-        h1X: noteValues.ownerH1.toBigInt(),
-        h2X: noteValues.ownerH2.toBigInt(),
-        h1Y: 0n,
-        h2Y: 0n,
-      };
+    const noteValues = event.args.note;
 
-      const encoddAsset: EncodedAsset = {
-        encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-        encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-      };
+    const owner = {
+      h1X: noteValues.ownerH1.toBigInt(),
+      h2X: noteValues.ownerH2.toBigInt(),
+      h1Y: 0n,
+      h2Y: 0n,
+    };
 
-      const asset = AssetTrait.decode(encoddAsset);
+    const encoddAsset: EncodedAsset = {
+      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
+      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
+    };
 
-      const note: Note = {
-        owner,
-        nonce: noteValues.nonce.toBigInt(),
-        asset,
-        value: noteValues.value.toBigInt(),
-      };
+    const asset = AssetTrait.decode(encoddAsset);
 
-      insertions.push({
-        insertion: note,
-        blockNumber: event.blockNumber,
-        txIdx: event.transactionIndex,
-        logIdx: event.logIndex,
-      });
-    }
+    const note: Note = {
+      owner,
+      nonce: noteValues.nonce.toBigInt(),
+      asset,
+      value: noteValues.value.toBigInt(),
+    };
+
+    insertions.push({
+      insertion: note,
+      blockNumber: event.blockNumber,
+      txIdx: event.transactionIndex,
+      logIdx: event.logIndex,
+    });
   }
 
   insertions = insertions.sort(

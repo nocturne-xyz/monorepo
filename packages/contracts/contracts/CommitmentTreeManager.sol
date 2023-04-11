@@ -39,6 +39,8 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         JoinSplit joinSplit
     );
 
+    event InsertNote(EncodedNote note);
+
     event InsertNoteCommitments(uint256[] commitments);
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
@@ -158,6 +160,7 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
 
     function _insertNote(EncodedNote memory note) internal {
         _merkle.insertNote(note);
+        emit InsertNote(note);
     }
 
     function _insertNoteCommitments(uint256[] memory ncs) internal {

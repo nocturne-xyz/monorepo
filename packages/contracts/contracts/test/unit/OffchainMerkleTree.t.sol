@@ -26,7 +26,7 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
 
     event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(EncodedNote[] notes);
+    event InsertNote(EncodedNote note);
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries

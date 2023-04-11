@@ -10,6 +10,32 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class CallableContractAllowlistPermissionSet extends ethereum.Event {
+  get params(): CallableContractAllowlistPermissionSet__Params {
+    return new CallableContractAllowlistPermissionSet__Params(this);
+  }
+}
+
+export class CallableContractAllowlistPermissionSet__Params {
+  _event: CallableContractAllowlistPermissionSet;
+
+  constructor(event: CallableContractAllowlistPermissionSet) {
+    this._event = event;
+  }
+
+  get contractAddress(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get selector(): Bytes {
+    return this._event.parameters[1].value.toBytes();
+  }
+
+  get permission(): boolean {
+    return this._event.parameters[2].value.toBoolean();
+  }
+}
+
 export class Initialized extends ethereum.Event {
   get params(): Initialized__Params {
     return new Initialized__Params(this);
@@ -28,45 +54,27 @@ export class Initialized__Params {
   }
 }
 
-export class InsertNoteCommitments extends ethereum.Event {
-  get params(): InsertNoteCommitments__Params {
-    return new InsertNoteCommitments__Params(this);
+export class InsertNote extends ethereum.Event {
+  get params(): InsertNote__Params {
+    return new InsertNote__Params(this);
   }
 }
 
-export class InsertNoteCommitments__Params {
-  _event: InsertNoteCommitments;
+export class InsertNote__Params {
+  _event: InsertNote;
 
-  constructor(event: InsertNoteCommitments) {
+  constructor(event: InsertNote) {
     this._event = event;
   }
 
-  get commitments(): Array<BigInt> {
-    return this._event.parameters[0].value.toBigIntArray();
+  get note(): InsertNoteNoteStruct {
+    return changetype<InsertNoteNoteStruct>(
+      this._event.parameters[0].value.toTuple()
+    );
   }
 }
 
-export class InsertNotes extends ethereum.Event {
-  get params(): InsertNotes__Params {
-    return new InsertNotes__Params(this);
-  }
-}
-
-export class InsertNotes__Params {
-  _event: InsertNotes;
-
-  constructor(event: InsertNotes) {
-    this._event = event;
-  }
-
-  get notes(): Array<InsertNotesNotesStruct> {
-    return this._event.parameters[0].value.toTupleArray<
-      InsertNotesNotesStruct
-    >();
-  }
-}
-
-export class InsertNotesNotesStruct extends ethereum.Tuple {
+export class InsertNoteNoteStruct extends ethereum.Tuple {
   get ownerH1(): BigInt {
     return this[0].toBigInt();
   }
@@ -89,6 +97,24 @@ export class InsertNotesNotesStruct extends ethereum.Tuple {
 
   get value(): BigInt {
     return this[5].toBigInt();
+  }
+}
+
+export class InsertNoteCommitments extends ethereum.Event {
+  get params(): InsertNoteCommitments__Params {
+    return new InsertNoteCommitments__Params(this);
+  }
+}
+
+export class InsertNoteCommitments__Params {
+  _event: InsertNoteCommitments;
+
+  constructor(event: InsertNoteCommitments) {
+    this._event = event;
+  }
+
+  get commitments(): Array<BigInt> {
+    return this._event.parameters[0].value.toBigIntArray();
   }
 }
 
@@ -1127,6 +1153,54 @@ export class Handler extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  _callableContractAllowlist(param0: BigInt): boolean {
+    let result = super.call(
+      "_callableContractAllowlist",
+      "_callableContractAllowlist(uint192):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)]
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try__callableContractAllowlist(param0: BigInt): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "_callableContractAllowlist",
+      "_callableContractAllowlist(uint192):(bool)",
+      [ethereum.Value.fromUnsignedBigInt(param0)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  _extractFunctionSelector(encodedFunctionData: Bytes): Bytes {
+    let result = super.call(
+      "_extractFunctionSelector",
+      "_extractFunctionSelector(bytes):(bytes4)",
+      [ethereum.Value.fromBytes(encodedFunctionData)]
+    );
+
+    return result[0].toBytes();
+  }
+
+  try__extractFunctionSelector(
+    encodedFunctionData: Bytes
+  ): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "_extractFunctionSelector",
+      "_extractFunctionSelector(bytes):(bytes4)",
+      [ethereum.Value.fromBytes(encodedFunctionData)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   _nullifierSet(param0: BigInt): boolean {
@@ -2630,6 +2704,44 @@ export class RenounceOwnershipCall__Outputs {
   _call: RenounceOwnershipCall;
 
   constructor(call: RenounceOwnershipCall) {
+    this._call = call;
+  }
+}
+
+export class SetCallableContractAllowlistPermissionCall extends ethereum.Call {
+  get inputs(): SetCallableContractAllowlistPermissionCall__Inputs {
+    return new SetCallableContractAllowlistPermissionCall__Inputs(this);
+  }
+
+  get outputs(): SetCallableContractAllowlistPermissionCall__Outputs {
+    return new SetCallableContractAllowlistPermissionCall__Outputs(this);
+  }
+}
+
+export class SetCallableContractAllowlistPermissionCall__Inputs {
+  _call: SetCallableContractAllowlistPermissionCall;
+
+  constructor(call: SetCallableContractAllowlistPermissionCall) {
+    this._call = call;
+  }
+
+  get contractAddress(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get selector(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+
+  get permission(): boolean {
+    return this._call.inputValues[2].value.toBoolean();
+  }
+}
+
+export class SetCallableContractAllowlistPermissionCall__Outputs {
+  _call: SetCallableContractAllowlistPermissionCall;
+
+  constructor(call: SetCallableContractAllowlistPermissionCall) {
     this._call = call;
   }
 }
