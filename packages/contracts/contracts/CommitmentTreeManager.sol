@@ -41,8 +41,6 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
 
     event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(EncodedNote[] notes);
-
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
     function __CommitmentTreeManager_init(
@@ -112,26 +110,13 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         return _merkle.getTotalCount();
     }
 
-    function insertNoteCommitment(uint256 nc) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        insertNoteCommitments(ncs);
+    function insertNote(EncodedNote memory note) internal {
+        _merkle.insertNote(note);
     }
 
     function insertNoteCommitments(uint256[] memory ncs) internal {
         _merkle.insertNoteCommitments(ncs);
         emit InsertNoteCommitments(ncs);
-    }
-
-    function insertNote(EncodedNote memory note) internal {
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = note;
-        insertNotes(notes);
-    }
-
-    function insertNotes(EncodedNote[] memory notes) internal {
-        _merkle.insertNotes(notes);
-        emit InsertNotes(notes);
     }
 
     function _fillBatchWithZeros() internal {
