@@ -58,7 +58,7 @@ export class BundlerBatcher {
   }
 
   startBatcher(logger: Logger): ActorHandle {
-    logger.info("starting...");
+    logger.info("starting batcher...");
 
     let stopped = false;
     const promise = new Promise<void>((resolve) => {
@@ -131,7 +131,7 @@ export class BundlerBatcher {
   }
 
   startQueuer(logger: Logger): ActorHandle {
-    logger.info("starting...");
+    logger.info("starting queuer...");
     const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,
       async (job: Job<ProvenOperationJobData>) => {
