@@ -34,11 +34,11 @@ yarn start &
 SNAP_PID=$!
 popd
 
-# start anvil 
+# start hardhat 
 pushd packages/e2e-tests
-echo "starting anvil..."
-anvil --block-time 1 --host 0.0.0.0 --chain-id 1337 &> "$LOG_DIR/anvil" &
-ANVIL_PID=$!
+echo "starting hardhat..."
+npx hardhat node &> "$LOG_DIR/hardhat" &
+HARDHAT_PID=$!
 
 sleep 1
 
@@ -49,29 +49,29 @@ GRAPH_NODE_PID=$!
 
 # deposit
 echo "Running deposit funds script..."
-yarn anvil-deposit &> "$LOG_DIR/anvil-deposit" || { echo 'anvil-deposit failed' ; exit 1; }
+yarn hardhat-deposit &> "$LOG_DIR/hardhat-deposit" || { echo 'hardhat-deposit failed' ; exit 1; }
 
 START_BLOCK=0
 
-# anvil account #4
+# hardhat account #4
 # eth address: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
 BUNDLER_TX_SIGNER_KEY="0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a"
 
-# anvil account #5
+# hardhat account #5
 # eth address: 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc
 SUBTREE_UPDATER_TX_SIGNER_KEY="0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba"
 
-# anvil account #6
+# hardhat account #6
 # eth address: 0x976EA74026E726554dB657fA54763abd0C3a0aa9
 SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e"
 
 # read config variables from logs
-read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
-read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/anvil-deposit)
+read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 popd
 
 sleep 10
@@ -187,4 +187,4 @@ wait $BUNDLER_PID
 wait $SCREENER_PID
 wait $SUBTREE_UPDATER_PID
 wait $GRAPH_NODE_PID
-wait $ANVIL_PID
+wait $HARDHAT_PID

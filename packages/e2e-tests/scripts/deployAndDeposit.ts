@@ -142,10 +142,4 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log(
     `deployAndDeposit script finished in ${Date.now() - startTime}ms.`
   );
-  console.log("disabling automine...");
-  await provider.send("evm_setAutomine", [false]);
-  // need to turn interval mining back on, as `setAutomine true` turns off
-  // note, we need to set the block time here, but we don't have a good way to get the current block time
-  // from anvil, so we just set it to 1 second, which is what the site script sets it to
-  await provider.send("evm_setIntervalMining", [1]);
 })();
