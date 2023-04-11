@@ -3177,7 +3177,7 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
-    "@nocturne-xyz/sdk": 1.0.99-alpha
+    "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3315,7 +3315,7 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
-    "@nocturne-xyz/sdk": 1.0.99-alpha
+    "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3436,7 +3436,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.99-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.100-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3582,7 +3582,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
-    "@nocturne-xyz/sdk": 1.0.99-alpha
+    "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
