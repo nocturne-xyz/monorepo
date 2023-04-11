@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- include `op.atomicActions` in op digest calculation
 - make randomBigInt sample 32 random bytes, not 8 (bruh moment) 
 - add util `randomFr` to `crypto` module
 - add `encRandomness` to `JoinSplitInputs`
@@ -12,7 +13,7 @@
 - `NocturneDB` now deletes nullified notes instead of turning them into leaves
 - `NocturneDB` now only stores note
 - add `SparseMerkleProver` that stores leaves
-- remove `MerkleProver` abstraction and corresponding module 
+- remove `MerkleProver` abstraction and corresponding module
 - Add `.chainId` and `.deadline` methods to `OperationRequestBuilder` and update unit tests
 - Add `chainId` and `deadline` to Operation + OperationRequest
 - add `BUNDLE_REVERTED` op status

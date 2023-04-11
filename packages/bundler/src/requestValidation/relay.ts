@@ -111,6 +111,7 @@ export const relaySchema = {
     "gasPrice",
     "chainId",
     "deadline",
+    "atomicActions",
   ],
   properties: {
     joinSplits: joinSplitsType,

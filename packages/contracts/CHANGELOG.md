@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- include `op.atomicActions` in op digest calculation
 - make `handleOperation` default revert reason more helpful
 - give different revert message if action reverts silently than if `handleOption` reverts
 - Add 2 PIs for encrypted sender canonical address (`encSenderCanonAddrC1X`, `encSenderCanonAddrC2X`) to joinsplit verification logic
