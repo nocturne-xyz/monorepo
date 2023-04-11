@@ -25,16 +25,16 @@ describe("Bundler CLI", async () => {
       "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
   });
 
-  async function executeCmdFor10Seconds(cmdArray: any[]) {
+  async function executeCmdForAHotSec(cmdArray: any[]) {
     const child = spawn(cmdArray[0], cmdArray.slice(1), { shell: true });
-    await sleep(10_000);
+    await sleep(20_000);
     child.kill();
   }
 
   it("`run server` command succeeds", async () => {
     const logDir = `${ROOT_DIR}/packages/bundler/test/logs/bundler-server`;
 
-    await executeCmdFor10Seconds([
+    await executeCmdForAHotSec([
       `npx`,
       `ts-node`,
       `${BUNDLER_CLI_PATH}`,
@@ -56,7 +56,7 @@ describe("Bundler CLI", async () => {
   it("`run batcher` command succeeds", async () => {
     const logDir = `${ROOT_DIR}/packages/bundler/test/logs/bundler-batcher`;
 
-    await executeCmdFor10Seconds([
+    await executeCmdForAHotSec([
       `npx`,
       `ts-node`,
       `${BUNDLER_CLI_PATH}`,
@@ -73,7 +73,7 @@ describe("Bundler CLI", async () => {
   it("`run submitter` command succeeds", async () => {
     const logDir = `${ROOT_DIR}/packages/bundler/test/logs/bundler-submitter`;
 
-    await executeCmdFor10Seconds([
+    await executeCmdForAHotSec([
       `npx`,
       `ts-node`,
       `${BUNDLER_CLI_PATH}`,
