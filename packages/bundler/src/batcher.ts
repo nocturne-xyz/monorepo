@@ -50,14 +50,13 @@ export class BundlerBatcher {
   }
 
   start(): ActorHandle {
-    const batcher = this.startBatcher(
-      this._logger.child({ function: "batcher" })
-    );
-    const queuer = this.startQueuer(this._logger.child({ function: "queuer" }));
+    const batcher = this.startBatcher();
+    const queuer = this.startQueuer();
     return actorChain(batcher, queuer);
   }
 
-  startBatcher(logger: Logger): ActorHandle {
+  startBatcher(): ActorHandle {
+    const logger = this._logger.child({ function: "batcher" });
     logger.info("starting batcher...");
 
     let stopped = false;
@@ -130,7 +129,8 @@ export class BundlerBatcher {
     };
   }
 
-  startQueuer(logger: Logger): ActorHandle {
+  startQueuer(): ActorHandle {
+    const logger = this._logger.child({ function: "queuer" });
     logger.info("starting queuer...");
     const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,
