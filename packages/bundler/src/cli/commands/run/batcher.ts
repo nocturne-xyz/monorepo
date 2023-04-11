@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { BundlerBatcher } from "../../../batcher";
 import { getRedis, makeLogger } from "../../utils";
-import * as fs from "fs";
 
 const runBatcher = new Command("batcher")
   .summary("run bundler batcher")
@@ -18,8 +17,6 @@ const runBatcher = new Command("batcher")
   )
   .action(async (options) => {
     const { maxLatency, batchSize, logDir } = options;
-
-    fs.mkdirSync(logDir, { recursive: true });
 
     const logger = makeLogger(logDir, "batcher");
     const batcher = new BundlerBatcher(

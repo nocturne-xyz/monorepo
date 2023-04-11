@@ -53,11 +53,15 @@ export function makeLogger(
     defaultMeta: { service: "bundler", process },
     // write all uncaught exceptions to `uncaughtExceptions.log`
     exceptionHandlers: [
-      new transports.File({ filename: "uncaughtExpections.log" }),
+      new transports.File({
+        filename: path.join(logDir, "uncaughtExpections.log"),
+      }),
     ],
     // write all uncaught promise rejections to `uncaughtRejections.log`
     rejectionHandlers: [
-      new transports.File({ filename: "uncaughtRejections.log" }),
+      new transports.File({
+        filename: path.join(logDir, "uncaughtRejections.log"),
+      }),
     ],
     transports: logTransports,
   });

@@ -2,7 +2,6 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerServer } from "../../../server";
 import { getRedis, makeLogger } from "../../utils";
-import * as fs from "fs";
 
 const runServer = new Command("server")
   .summary("run bundler server")
@@ -24,8 +23,6 @@ const runServer = new Command("server")
       throw new Error("missing RPC_URL");
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-
-    fs.mkdirSync(logDir, { recursive: true });
 
     const logger = makeLogger(logDir, "server");
     const server = new BundlerServer(

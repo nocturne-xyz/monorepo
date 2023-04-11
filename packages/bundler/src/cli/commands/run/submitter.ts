@@ -2,7 +2,6 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
 import { getRedis, makeLogger } from "../../utils";
-import fs from "fs";
 
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
@@ -29,8 +28,6 @@ const runSubmitter = new Command("submitter")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
-
-    fs.mkdirSync(logDir, { recursive: true });
 
     const logger = makeLogger(logDir, "submitter");
     const submitter = new BundlerSubmitter(
