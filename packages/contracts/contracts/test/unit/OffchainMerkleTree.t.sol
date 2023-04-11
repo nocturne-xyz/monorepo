@@ -137,17 +137,21 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
         uint256 nc = treeTest.computeNoteCommitment(note);
         merkle.insertNote(note);
 
-        // Insert 5 note
-        for (uint256 i = 0; i < 5; i++) {
+        // Insert 4 note
+        for (uint256 i = 0; i < 4; i++) {
             merkle.insertNote(note);
         }
 
-        // Insert 10 ncs
+        // Insert 9 ncs
         uint256[] memory ncs = new uint256[](10);
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             ncs[i] = nc;
         }
         merkle.insertNoteCommitments(ncs);
+
+        // Insert 2 note
+        merkle.insertNote(note);
+        merkle.insertNote(note);
 
         uint256[] memory batch = new uint256[](16);
         for (uint256 i = 0; i < 16; i++) {
@@ -170,10 +174,10 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
             pis[1],
             2148530186383747530821653986434349341874407543492575165183948509644419849075
         );
-        assertEq(pis[2], 805306368);
+        assertEq(pis[2], 1073741824);
         assertEq(
             pis[3],
-            14107635856823964757170274164259547430752493123869153100697144261772048072211
+            4369603618049527331146763788699655885066799772437199894124267345370035181946
         );
     }
 
