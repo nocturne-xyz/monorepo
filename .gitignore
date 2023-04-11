@@ -51,3 +51,4 @@ circuit-artifacts/**/*.*
 circuit-artifacts/subtreeupdate
 
 .idea/
+.nvmrc
