@@ -49,41 +49,21 @@ library OffchainMerkleTree {
         self.accumulatorQueue.initialize();
     }
 
-    function insertNotes(
-        OffchainMerkleTreeData storage self,
-        EncodedNote[] memory notes
-    ) internal {
-        uint256[] memory hashes = new uint256[](notes.length);
-        for (uint256 i = 0; i < notes.length; i++) {
-            hashes[i] = TreeUtils.sha256Note(notes[i]);
-        }
-
-        _insertUpdates(self, hashes);
-    }
-
     function insertNote(
         OffchainMerkleTreeData storage self,
         EncodedNote memory note
     ) internal {
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = note;
-        insertNotes(self, notes);
+        uint256 hashedNote = TreeUtils.sha256Note(note);
+        _insertUpdate(self, hashedNote);
     }
 
     function insertNoteCommitments(
         OffchainMerkleTreeData storage self,
         uint256[] memory ncs
     ) internal {
-        _insertUpdates(self, ncs);
-    }
-
-    function insertNoteCommitment(
-        OffchainMerkleTreeData storage self,
-        uint256 nc
-    ) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        insertNoteCommitments(self, ncs);
+        for (uint256 i = 0; i < ncs.length; i++) {
+            _insertUpdate(self, ncs[i]);
+        }
     }
 
     function applySubtreeUpdate(
@@ -177,17 +157,15 @@ library OffchainMerkleTree {
         self.batchLen = 0;
     }
 
-    function _insertUpdates(
+    function _insertUpdate(
         OffchainMerkleTreeData storage self,
-        uint256[] memory updates
+        uint256 update
     ) internal {
-        for (uint256 i = 0; i < updates.length; i++) {
-            self.batch[self.batchLen] = updates[i];
-            self.batchLen += 1;
+        self.batch[self.batchLen] = update;
+        self.batchLen += 1;
 
-            if (self.batchLen == TreeUtils.BATCH_SIZE) {
-                _accumulate(self);
-            }
+        if (self.batchLen == TreeUtils.BATCH_SIZE) {
+            _accumulate(self);
         }
     }
 }

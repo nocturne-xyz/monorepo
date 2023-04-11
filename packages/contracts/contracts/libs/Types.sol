@@ -17,22 +17,11 @@ struct EncodedAsset {
     uint256 encodedAssetId;
 }
 
-struct Signature {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
-}
-
 struct StealthAddress {
     uint256 h1X;
     uint256 h1Y;
     uint256 h2X;
     uint256 h2Y;
-}
-
-struct EncodedStealthAddress {
-    uint256 h1X;
-    uint256 h2X;
 }
 
 struct EncryptedNote {
@@ -66,17 +55,13 @@ struct EncodedNote {
     uint256 value;
 }
 
-struct SubtreeUpdateArgs {
-    uint256 oldRoot;
-    uint256 newRoot;
-    uint256[8] proof;
-}
-
-struct WalletBalanceInfo {
-    mapping(address => uint256[]) erc721Ids;
-    address[] erc721Addresses;
-    mapping(address => uint256[]) erc1155Ids;
-    address[] erc1155Addresses;
+struct DepositRequest {
+    address spender;
+    EncodedAsset encodedAsset;
+    uint256 value;
+    StealthAddress depositAddr;
+    uint256 nonce;
+    uint256 gasCompensation;
 }
 
 struct Bundle {
@@ -116,15 +101,6 @@ struct OperationResult {
 struct Action {
     address contractAddress;
     bytes encodedFunction;
-}
-
-struct DepositRequest {
-    address spender;
-    EncodedAsset encodedAsset;
-    uint256 value;
-    StealthAddress depositAddr;
-    uint256 nonce;
-    uint256 gasCompensation;
 }
 
 library OperationLib {

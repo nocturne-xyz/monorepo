@@ -39,9 +39,9 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         JoinSplit joinSplit
     );
 
-    event InsertNoteCommitments(uint256[] commitments);
+    event InsertNote(EncodedNote note);
 
-    event InsertNotes(EncodedNote[] notes);
+    event InsertNoteCommitments(uint256[] commitments);
 
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
@@ -51,6 +51,31 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         __Pausable_init();
         _merkle.initialize(subtreeUpdateVerifier);
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
+    }
+
+    function applySubtreeUpdate(
+        uint256 newRoot,
+        uint256[8] calldata proof
+    ) external whenNotPaused {
+        require(!_pastRoots[newRoot], "newRoot already a past root");
+
+        uint256 subtreeIndex = _merkle.getCount();
+        _merkle.applySubtreeUpdate(newRoot, proof);
+        _pastRoots[newRoot] = true;
+
+        emit SubtreeUpdate(newRoot, subtreeIndex);
+    }
+
+    function root() public view returns (uint256) {
+        return _merkle.getRoot();
+    }
+
+    function count() public view returns (uint256) {
+        return _merkle.getCount();
+    }
+
+    function totalCount() public view returns (uint256) {
+        return _merkle.getTotalCount();
     }
 
     /**
@@ -89,7 +114,7 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
         uint256[] memory noteCommitments = new uint256[](2);
         noteCommitments[0] = joinSplit.newNoteACommitment;
         noteCommitments[1] = joinSplit.newNoteBCommitment;
-        insertNoteCommitments(noteCommitments);
+        _insertNoteCommitments(noteCommitments);
 
         emit JoinSplitProcessed(
             joinSplit.nullifierA,
@@ -98,59 +123,6 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
             newNoteIndexB,
             joinSplit
         );
-    }
-
-    function root() public view returns (uint256) {
-        return _merkle.getRoot();
-    }
-
-    function count() public view returns (uint256) {
-        return _merkle.getCount();
-    }
-
-    function totalCount() public view returns (uint256) {
-        return _merkle.getTotalCount();
-    }
-
-    function insertNoteCommitment(uint256 nc) internal {
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = nc;
-        insertNoteCommitments(ncs);
-    }
-
-    function insertNoteCommitments(uint256[] memory ncs) internal {
-        _merkle.insertNoteCommitments(ncs);
-        emit InsertNoteCommitments(ncs);
-    }
-
-    function insertNote(EncodedNote memory note) internal {
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = note;
-        insertNotes(notes);
-    }
-
-    function insertNotes(EncodedNote[] memory notes) internal {
-        _merkle.insertNotes(notes);
-        emit InsertNotes(notes);
-    }
-
-    function _fillBatchWithZeros() internal {
-        uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
-        uint256[] memory zeros = new uint256[](numToInsert);
-        insertNoteCommitments(zeros);
-    }
-
-    function applySubtreeUpdate(
-        uint256 newRoot,
-        uint256[8] calldata proof
-    ) external whenNotPaused {
-        require(!_pastRoots[newRoot], "newRoot already a past root");
-
-        uint256 subtreeIndex = _merkle.getCount();
-        _merkle.applySubtreeUpdate(newRoot, proof);
-        _pastRoots[newRoot] = true;
-
-        emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
     function _handleRefundNote(
@@ -168,7 +140,7 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
             value: value
         });
 
-        insertNote(note);
+        _insertNote(note);
 
         emit RefundProcessed(
             refundAddr,
@@ -178,5 +150,21 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
             value,
             index
         );
+    }
+
+    function _fillBatchWithZeros() internal {
+        uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
+        uint256[] memory zeros = new uint256[](numToInsert);
+        _insertNoteCommitments(zeros);
+    }
+
+    function _insertNote(EncodedNote memory note) internal {
+        _merkle.insertNote(note);
+        emit InsertNote(note);
+    }
+
+    function _insertNoteCommitments(uint256[] memory ncs) internal {
+        _merkle.insertNoteCommitments(ncs);
+        emit InsertNoteCommitments(ncs);
     }
 }

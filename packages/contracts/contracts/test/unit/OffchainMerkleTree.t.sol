@@ -26,7 +26,7 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
 
     event InsertNoteCommitments(uint256[] commitments);
 
-    event InsertNotes(EncodedNote[] notes);
+    event InsertNote(EncodedNote note);
 
     function setUp() public virtual {
         // Deploy poseidon hasher libraries
@@ -76,7 +76,7 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
         assertEq(path[0], treeTest.computeSubtreeRoot(batch));
     }
 
-    function testInsertSingle() public {
+    function testInsertSingleNote() public {
         uint256[] memory batch = new uint256[](2);
         // insert 1 note and 1 commitment
         EncodedNote[] memory notes = new EncodedNote[](1);
@@ -88,19 +88,9 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
         assertEq(uint256(merkle.getTotalCount()), 1);
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
-        uint256[] memory ncs = new uint256[](1);
-        ncs[0] = 2;
-        batch[1] = ncs[0];
-
-        merkle.insertNoteCommitment(ncs[0]);
-
-        assertEq(uint256(merkle.getCount()), 0);
-        assertEq(uint256(merkle.getTotalCount()), 2);
-        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
-
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
-        uint256[] memory zeros = new uint256[](14);
+        uint256[] memory zeros = new uint256[](15);
         merkle.insertNoteCommitments(zeros);
 
         assertEq(uint256(merkle.getCount()), 0);
@@ -117,25 +107,12 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
         assertEq(merkle.getRoot(), newRoot);
     }
 
-    function testInsertMultiple() public {
-        // insert 5 notes and 11 commitments
+    function testInsertMultipleCommitments() public {
         uint256[] memory batch = new uint256[](16);
-        EncodedNote[] memory notes = new EncodedNote[](5);
-        for (uint256 i = 0; i < 5; i++) {
-            notes[i] = dummyNote();
-            batch[i] = treeTest.computeNoteCommitment(notes[i]);
-        }
-
-        merkle.insertNotes(notes);
-
-        assertEq(uint256(merkle.getCount()), 0);
-        assertEq(uint256(merkle.getTotalCount()), 5);
-        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
-
-        uint256[] memory ncs = new uint256[](11);
-        for (uint256 i = 0; i < 11; i++) {
+        uint256[] memory ncs = new uint256[](16);
+        for (uint256 i = 0; i < 16; i++) {
             ncs[i] = i;
-            batch[i + 5] = ncs[i];
+            batch[i] = ncs[i];
         }
 
         merkle.insertNoteCommitments(ncs);
@@ -155,22 +132,26 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
     }
 
     function testCalculatePublicInputs() public {
+        // Insert 1 note
         EncodedNote memory note = dummyNote();
         uint256 nc = treeTest.computeNoteCommitment(note);
         merkle.insertNote(note);
-        merkle.insertNoteCommitment(nc);
 
-        for (uint256 i = 2; i < 7; i++) {
+        // Insert 4 note
+        for (uint256 i = 0; i < 4; i++) {
             merkle.insertNote(note);
         }
 
-        merkle.insertNoteCommitment(nc);
+        // Insert 9 ncs
+        uint256[] memory ncs = new uint256[](10);
+        for (uint256 i = 0; i < 9; i++) {
+            ncs[i] = nc;
+        }
+        merkle.insertNoteCommitments(ncs);
+
+        // Insert 2 note
         merkle.insertNote(note);
-        merkle.insertNoteCommitment(nc);
-
-        for (uint256 i = 10; i < 16; i++) {
-            merkle.insertNote(note);
-        }
+        merkle.insertNote(note);
 
         uint256[] memory batch = new uint256[](16);
         for (uint256 i = 0; i < 16; i++) {
@@ -193,10 +174,10 @@ contract TestOffchainMerkleTree is Test, PoseidonDeployer {
             pis[1],
             2148530186383747530821653986434349341874407543492575165183948509644419849075
         );
-        assertEq(pis[2], 805306368);
+        assertEq(pis[2], 1073741824);
         assertEq(
             pis[3],
-            14107635856823964757170274164259547430752493123869153100697144261772048072211
+            4369603618049527331146763788699655885066799772437199894124267345370035181946
         );
     }
 

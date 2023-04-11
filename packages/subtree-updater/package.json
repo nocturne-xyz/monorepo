@@ -20,8 +20,8 @@
     "test:unit": "yarn setup-rapidsnark && mocha --timeout 16000 --require ts-node/register --exit test/**"
   },
   "dependencies": {
-    "@nocturne-xyz/contracts": "1.0.19-alpha",
-    "@nocturne-xyz/sdk": "1.0.98-alpha",
+    "@nocturne-xyz/contracts": "1.0.20-alpha",
+    "@nocturne-xyz/sdk": "1.0.100-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^9.4.1",

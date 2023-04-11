@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- remove unused types in `Types.sol`
+- move external methods to top in wallet / balance manager
+- Change `InsertNotes` event to `InsertNote` (singular)
+- Remove `insertNotes` (plural) and `insertNoteCommitment` (singular) + related events since both are dead code
 - include `op.atomicActions` in op digest calculation
 - make `handleOperation` default revert reason more helpful
 - give different revert message if action reverts silently than if `handleOption` reverts
