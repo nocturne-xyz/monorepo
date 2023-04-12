@@ -188,6 +188,8 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // actions creating the refunds were reverted too, so numRefunds would =
         // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
+        revert("BRUH");
+        
         return opResult;
     }
 
