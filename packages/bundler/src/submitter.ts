@@ -150,10 +150,20 @@ export class BundlerSubmitter {
     operations: ProvenOperation[]
   ): Promise<ethers.ContractTransaction | undefined> {
     try {
+      // Estimate gas first
+      const data = this.walletContract.interface.encodeFunctionData(
+        "processBundle",
+        [{ operations }]
+      );
+      const est = await this.walletContract.provider.estimateGas({
+        to: this.walletContract.address,
+        data,
+      });
+
       logger.info(`submtting bundle with ${operations.length} operations`);
       return this.walletContract.processBundle(
         { operations },
-        { gasLimit: 1_000_000 } // Hardcode gas limit to skip eth_estimateGas
+        { gasLimit: est.toBigInt() + 1_000_000n } // Add gas est buffer
       );
     } catch (err) {
       logger.error("failed to process bundle:", err);

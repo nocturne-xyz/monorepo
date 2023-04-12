@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add invariant tests for offchain merkle lib
 - remove unused types in `Types.sol`
 - move external methods to top in wallet / balance manager
 - Change `InsertNotes` event to `InsertNote` (singular)

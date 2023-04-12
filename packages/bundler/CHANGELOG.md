@@ -2,10 +2,11 @@
 
 ### Unreleased
 
+- remove gas hardcode in submitter `processBundle`
 - add `--log-dir` option to CLI with defaults
 - add winston logging
-	- replace validator with functions
-	- replace router with functions
+  - replace validator with functions
+  - replace router with functions
 - add encrypted sender address fields to relay validator
 - Detect ops that reverted during processing and remove their NFs from DB
 - Decompose `Submitter.submitBatch` into setting ops inflight, dispatching bundle, and book-keeping post-submission
