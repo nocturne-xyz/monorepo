@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add `ProtocolInvariants.t.sol`, which inherits `InvariantsBase` and groups up related assertions into single invariants (more efficient use of test runs to check all assertions on every run)
+- convert `DepositManagerInvariants.invariants.t.sol` into `InvariantsBase.sol` which only exports assertions and summary printing and itself does not run tests
+- move state and instantiation logic out of `DepositManagerHandler` into the actual invariant test files
+- rename `handlers` folder to `actors`
+- rename `OffchainMerkleInvariants.invariants.t.sol` to just `OffchainMerkleInvariants.t.sol`
 - add invariant tests for offchain merkle lib
 - remove unused types in `Types.sol`
 - move external methods to top in wallet / balance manager
