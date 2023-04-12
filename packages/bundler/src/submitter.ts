@@ -57,7 +57,16 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations).catch((e) => {
+
+        const opDigests = operations.map((op) =>
+          computeOperationDigest(op).toString()
+        );
+        const logger = this.logger.child({
+          function: "submitBatch",
+          bundle: opDigests,
+        });
+
+        await this.submitBatch(logger, operations).catch((e) => {
           throw new Error(e);
         });
       },
@@ -84,37 +93,43 @@ export class BundlerSubmitter {
     };
   }
 
-  async submitBatch(operations: ProvenOperation[]): Promise<void> {
+  async submitBatch(
+    logger: Logger,
+    operations: ProvenOperation[]
+  ): Promise<void> {
     // TODO: this job isn't idempotent. If one step fails, bullmq will re-try
     // which may cause issues. Current plan is to mark reverted bundles as
     // failed. Will circle back after further testing and likely
     // re-queue/re-validate ops in the reverted bundle.
 
-    this.logger.info("setting ops to inflight...");
-    await this.setOpsToInflight(operations);
+    logger.info("submitting bundle...");
 
-    this.logger.info("dispatching bundle...");
-    const tx = await this.dispatchBundle(operations);
+    logger.debug("setting ops to inflight...");
+    await this.setOpsToInflight(logger, operations);
+
+    logger.debug("dispatching bundle...");
+    const tx = await this.dispatchBundle(logger, operations);
 
     if (!tx) {
-      this.logger.error("bundle reverted");
+      logger.error("bundle reverted");
       return;
     }
 
-    this.logger.info("waiting for confirmation...");
+    logger.debug("waiting for confirmation...");
     const receipt = await tx.wait(1);
 
-    this.logger.info("performing post-submission bookkeeping");
-    await this.performPostSubmissionBookkeeping(operations, receipt);
+    logger.debug("performing post-submission bookkeeping");
+    await this.performPostSubmissionBookkeeping(logger, operations, receipt);
   }
 
-  async setOpsToInflight(operations: ProvenOperation[]): Promise<void> {
+  async setOpsToInflight(
+    logger: Logger,
+    operations: ProvenOperation[]
+  ): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
       const jobId = computeOperationDigest(op).toString();
-      this.logger.debug(
-        `setting operation with digest ${jobId} to status IN_FLIGHT`
-      );
+      logger.info(`setting operation with digest ${jobId} to status IN_FLIGHT`);
       return this.statusDB.getSetJobStatusTransaction(
         jobId,
         OperationStatus.IN_FLIGHT
@@ -124,28 +139,27 @@ export class BundlerSubmitter {
     await this.redis.multi(inflightStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
         const msg = `failed to set job status transactions to IN_FLIGHT: ${maybeErr}`;
-        this.logger.error(msg);
+        logger.error(msg);
         throw new Error(msg);
       }
     });
   }
 
   async dispatchBundle(
+    logger: Logger,
     operations: ProvenOperation[]
   ): Promise<ethers.ContractTransaction | undefined> {
     try {
-      this.logger.debug(
-        `submtting bundle with ${operations.length} operations`
-      );
+      logger.info(`submtting bundle with ${operations.length} operations`);
       return this.walletContract.processBundle(
         { operations },
         { gasLimit: 1_000_000 } // Hardcode gas limit to skip eth_estimateGas
       );
     } catch (err) {
-      this.logger.debug("failed to process bundle:", err);
+      logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
         const digest = computeOperationDigest(op);
-        this.logger.debug(
+        logger.info(
           `setting operation with digest ${digest} to status BUNDLE_REVERTED`
         );
         const statusTx = this.statusDB.getSetJobStatusTransaction(
@@ -161,7 +175,7 @@ export class BundlerSubmitter {
       await this.redis.multi(redisTxs).exec((maybeErr) => {
         if (maybeErr) {
           const msg = `failed to update operation statuses to BUNDLE_REVERTED and/or remove their nullifiers from DB: ${maybeErr}`;
-          this.logger.error(msg);
+          logger.error(msg);
           throw new Error(msg);
         }
       });
@@ -170,6 +184,7 @@ export class BundlerSubmitter {
   }
 
   async performPostSubmissionBookkeeping(
+    logger: Logger,
     operations: ProvenOperation[],
     receipt: ethers.ContractReceipt
   ): Promise<void> {
@@ -177,13 +192,13 @@ export class BundlerSubmitter {
       operations.map((op) => [computeOperationDigest(op), op])
     );
 
-    this.logger.debug("looking for OperationProcessed events...");
+    logger.debug("looking for OperationProcessed events...");
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    this.logger.debug("matching events:", matchingEvents);
+    logger.info("matching events:", matchingEvents);
 
     const redisTxs = matchingEvents.flatMap(({ args }) => {
       const digest = args.operationDigest.toBigInt();
@@ -201,7 +216,7 @@ export class BundlerSubmitter {
         status = OperationStatus.EXECUTED_SUCCESS;
       }
 
-      this.logger.debug(
+      logger.info(
         `setting operation with digest ${digest} to status ${status}`
       );
 
@@ -211,7 +226,7 @@ export class BundlerSubmitter {
       );
 
       if (status == OperationStatus.OPERATION_PROCESSING_FAILED) {
-        this.logger.debug(
+        logger.warn(
           `op with digest ${args.operationDigest.toBigInt()} failed during handleOperation. removing nullifers from DB...`
         );
         const op = digestsToOps.get(args.operationDigest.toBigInt())!;
@@ -223,7 +238,7 @@ export class BundlerSubmitter {
     await this.redis.multi(redisTxs).exec((maybeErr) => {
       if (maybeErr) {
         const msg = `failed to set operation statuses and/or remove nullfiers after bundle executed: ${maybeErr}`;
-        this.logger.error(msg);
+        logger.error(msg);
         throw new Error(msg);
       }
     });

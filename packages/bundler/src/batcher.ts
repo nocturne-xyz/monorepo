@@ -22,7 +22,7 @@ export class BundlerBatcher {
   statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
-  _logger: Logger;
+  logger: Logger;
   readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
@@ -41,7 +41,7 @@ export class BundlerBatcher {
     }
 
     this.redis = redis;
-    this._logger = logger;
+    this.logger = logger;
     this.statusDB = new StatusDB(redis);
     this.batcherDB = new BatcherDB(redis);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
@@ -56,7 +56,7 @@ export class BundlerBatcher {
   }
 
   startBatcher(): ActorHandle {
-    const logger = this._logger.child({ function: "batcher" });
+    const logger = this.logger.child({ function: "batcher" });
     logger.info("starting batcher...");
 
     let stopped = false;
@@ -130,7 +130,7 @@ export class BundlerBatcher {
   }
 
   startQueuer(): ActorHandle {
-    const logger = this._logger.child({ function: "queuer" });
+    const logger = this.logger.child({ function: "queuer" });
     logger.info("starting queuer...");
     const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,

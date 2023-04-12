@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 import { ProvenOperationJobData, PROVEN_OPERATION_JOB_TAG } from "./common";
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
   computeOperationDigest,
@@ -30,22 +30,21 @@ export interface HandleRelayDeps {
   opts: { ignoreGas?: boolean };
 }
 
-export const relayHandler =
-  ({
-    queue,
-    statusDB,
-    nullifierDB,
-    redis,
-    walletContract,
-    provider,
-    logger,
-    opts,
-  }: HandleRelayDeps) =>
-  async (req: Request, res: Response): Promise<void> => {
-    logger.info("validating request");
+export function relayHandler({
+  queue,
+  statusDB,
+  nullifierDB,
+  redis,
+  walletContract,
+  provider,
+  logger,
+  opts,
+}: HandleRelayDeps): RequestHandler {
+  return async (req: Request, res: Response) => {
+    logger.debug("validating request");
     const errorOrOperation = tryParseRelayRequest(req.body);
     if (typeof errorOrOperation == "string") {
-      logger.info("request validation failed", errorOrOperation);
+      logger.warn("request validation failed", errorOrOperation);
       res.statusMessage = errorOrOperation;
       res.status(400).json(errorOrOperation);
       return;
@@ -53,12 +52,12 @@ export const relayHandler =
 
     const operation = errorOrOperation;
     const digest = computeOperationDigest(operation);
-    logger = logger.child({ opDigest: digest });
+    const childLogger = logger.child({ opDigest: digest });
 
     const logValidationFailure = (msg: string) =>
-      logger.info(`failed to validate operation `, msg);
+      childLogger.warn(`failed to validate operation `, msg);
 
-    logger.info("checking operation's gas price");
+    childLogger.debug("checking operation's gas price");
 
     if (!opts.ignoreGas) {
       const gasPriceErr = await checkNotEnoughGasError(
@@ -73,10 +72,10 @@ export const relayHandler =
       }
     }
 
-    logger.info("validating nullifiers");
+    childLogger.debug("validating nullifiers");
     const nfConflictErr = await checkNullifierConflictError(
       nullifierDB,
-      logger,
+      childLogger,
       operation
     );
     if (nfConflictErr) {
@@ -85,11 +84,11 @@ export const relayHandler =
       return;
     }
 
-    logger.info("validating reverts");
+    childLogger.debug("validating reverts");
     const revertErr = await checkRevertError(
       walletContract,
       provider,
-      logger,
+      childLogger,
       operation
     );
     if (revertErr) {
@@ -104,38 +103,42 @@ export const relayHandler =
       statusDB,
       nullifierDB,
       redis,
-      logger,
+      childLogger,
       operation
     ).catch((err) => {
       const msg = "failed to enqueue operation";
-      logger.error(msg, err);
+      childLogger.error(msg, err);
       res.status(500).json({ error: msg });
       return;
     });
 
     res.json({ id: jobId });
   };
+}
 
 export interface HandleGetOperationStatusDeps {
   statusDB: StatusDB;
   logger: Logger;
 }
 
-export const getOperationStatusHandler =
-  ({ statusDB, logger }: HandleGetOperationStatusDeps) =>
-  async (req: Request, res: Response): Promise<void> => {
-    logger = logger.child({ opDigest: req.params.id });
+export function getOperationStatusHandler({
+  statusDB,
+  logger,
+}: HandleGetOperationStatusDeps): RequestHandler {
+  return async (req: Request, res: Response) => {
+    const childLogger = logger.child({ opDigest: req.params.id });
     const status = await statusDB.getJobStatus(req.params.id);
     if (status) {
-      logger.info(
+      childLogger.info(
         `found operation with digest ${req.params.id} with status: ${status}`
       );
       res.json({ status });
     } else {
-      logger.info(`could not find operation with digest ${req.params.id}`);
+      childLogger.warn(`could not find operation with digest ${req.params.id}`);
       res.status(404).json({ error: "operation not found" });
     }
   };
+}
 
 async function postJob(
   queue: Queue<ProvenOperationJobData>,
@@ -150,6 +153,9 @@ async function postJob(
   const jobData: ProvenOperationJobData = {
     operationJson,
   };
+
+  logger.info("posting op to queue");
+  logger.debug("posting op to queue:", { jobData });
 
   // TODO: race condition between queue.add and redis transaction
   await queue.add(PROVEN_OPERATION_JOB_TAG, jobData, {

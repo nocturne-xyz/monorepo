@@ -19,19 +19,39 @@ export function makeLogger(
   process: string,
   consoleLevel?: string
 ): Logger {
+  const infoOrWarnFilter = format((info) => {
+    return info.level === "info" || info.level === "warn" ? info : false;
+  });
+
+  const errorFilter = format((info) => {
+    return info.level === "error" ? info : false;
+  });
+
+  const debugFilter = format((info) => {
+    return info.level === "debug" ? info : false;
+  });
+
   const logTransports: Transport[] = [
-    // write all logs at least as important as `error` to `error.log`
+    // write `error` logs to `error.log`
     new transports.File({
+      format: format.combine(errorFilter(), format.timestamp(), format.json()),
       filename: path.join(logDir, "error.log"),
       level: "error",
     }),
-    // write all logs at least as important as `info` to `info.log`
+
+    // write `warn` and `info` logs to `info.log`
     new transports.File({
+      format: format.combine(
+        infoOrWarnFilter(),
+        format.timestamp(),
+        format.json()
+      ),
       filename: path.join(logDir, "info.log"),
       level: "info",
     }),
-    // write all logs at least as important as `debug` `debug.log`
+    // write `debug` logs `debug.log`
     new transports.File({
+      format: (debugFilter(), format.timestamp(), format.json()),
       filename: path.join(logDir, "debug.log"),
       level: "debug",
     }),
@@ -48,6 +68,7 @@ export function makeLogger(
   }
 
   return createLogger({
+    // default format
     format: format.combine(format.timestamp(), format.json()),
     // add metadata saying which process this log is coming from
     defaultMeta: { service: "bundler", process },
