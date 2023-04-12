@@ -2,16 +2,6 @@
 pragma solidity ^0.8.17;
 
 library ParseUtils {
-    function bytes32ToString(
-        bytes32 _bytes32
-    ) public pure returns (string memory) {
-        bytes memory bytesArray = new bytes(32);
-        for (uint256 i; i < 32; i++) {
-            bytesArray[i] = _bytes32[i];
-        }
-        return string(bytesArray);
-    }
-
     // Convert an hexadecimal character to their value
     function fromHexChar(uint8 c) internal pure returns (uint8) {
         if (bytes1(c) >= bytes1("0") && bytes1(c) <= bytes1("9")) {

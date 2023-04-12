@@ -47,8 +47,6 @@ contract OffchainMerkleInvariantHandler is CommonBase, StdCheats, StdUtils {
         preCallGetAccumulatorQueueLen = accumulatorQueueLength();
     }
 
-    // ______EXTERNAL______
-
     function callSummary() external view {
         console.log("Call summary:");
         console.log("-------------------");
