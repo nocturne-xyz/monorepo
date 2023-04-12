@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add `--log-dir` option to CLI with defaults
+- add winston logging
 - make `SubtreeUpdateServer.start()` non-async, as it doesn't need to be async
 - get rid of mutex on submitter
 - add `tx.wait` to submitter
