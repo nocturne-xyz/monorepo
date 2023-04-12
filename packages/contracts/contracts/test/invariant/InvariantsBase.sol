@@ -21,7 +21,7 @@ import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {Utils} from "../../libs/Utils.sol";
 import "../../libs/Types.sol";
 
-contract DepositManagerInvariants is Test {
+contract InvariantsBase is Test {
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
     uint256 constant SCREENER_PRIVKEY = 1;
@@ -38,69 +38,13 @@ contract DepositManagerInvariants is Test {
     SimpleERC721Token public erc721;
     SimpleERC1155Token public erc1155;
 
-    function setUp() public virtual {
-        wallet = new Wallet();
-        handler = new Handler();
-        depositManager = new TestDepositManager();
-
-        weth = new WETH9();
-
-        TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
-        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
-
-        wallet.setDepositSourcePermission(address(depositManager), true);
-        handler.setSubtreeBatchFillerPermission(address(this), true);
-
-        depositManager.initialize(
-            CONTRACT_NAME,
-            CONTRACT_VERSION,
-            address(wallet),
-            address(weth)
-        );
-        depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
-
-        erc20 = new SimpleERC20Token();
-        erc721 = new SimpleERC721Token();
-        erc1155 = new SimpleERC1155Token();
-
-        depositManagerHandler = new DepositManagerHandler(
-            depositManager,
-            erc20,
-            erc721,
-            erc1155
-        );
-        erc20.reserveTokens(address(depositManagerHandler), type(uint256).max);
-
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
-        selectors[1] = depositManagerHandler.instantiateDepositErc20.selector;
-        selectors[2] = depositManagerHandler.retrieveDepositErc20.selector;
-        selectors[3] = depositManagerHandler.completeDepositErc20.selector;
-
-        targetContract(address(depositManagerHandler));
-        targetSelector(
-            FuzzSelector({
-                addr: address(depositManagerHandler),
-                selectors: selectors
-            })
-        );
-
-        excludeSender(address(depositManagerHandler));
-        excludeSender(address(wallet));
-        excludeSender(address(depositManager));
-        excludeSender(address(weth));
-    }
-
-    function invariant_callSummary() public view {
+    function print_callSummary() internal view {
         depositManagerHandler.callSummary();
     }
 
-    // _______________ETH_______________
+    // _______________DEPOSIT_ETH_______________
 
-    function invariant_outNeverExceedsInETH() external {
+    function assert_deposit_outNeverExceedsInETH() internal {
         assertGe(
             depositManagerHandler.ghost_instantiateDepositSumETH(),
             depositManagerHandler.ghost_retrieveDepositSumETH() +
@@ -108,7 +52,9 @@ contract DepositManagerInvariants is Test {
         );
     }
 
-    function invariant_depositManagerBalanceEqualsInMinusOutETH() external {
+    function assert_deposit_depositManagerBalanceEqualsInMinusOutETH()
+        internal
+    {
         assertEq(
             weth.balanceOf(address(depositManagerHandler.depositManager())),
             depositManagerHandler.ghost_instantiateDepositSumETH() -
@@ -117,8 +63,8 @@ contract DepositManagerInvariants is Test {
         );
     }
 
-    function invariant_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
-        external
+    function assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
+        internal
     {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
@@ -130,14 +76,16 @@ contract DepositManagerInvariants is Test {
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumETH());
     }
 
-    function invariant_walletBalanceEqualsCompletedDepositSumETH() external {
+    function assert_deposit_walletBalanceEqualsCompletedDepositSumETH()
+        internal
+    {
         assertEq(
             weth.balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
 
-    function invariant_actorBalanceAlwaysEqualsRetrievedETH() external {
+    function assert_deposit_actorBalanceAlwaysEqualsRetrievedETH() internal {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
@@ -150,7 +98,7 @@ contract DepositManagerInvariants is Test {
         }
     }
 
-    function invariant_actorBalanceNeverExceedsInstantiatedETH() external {
+    function assert_deposit_actorBalanceNeverExceedsInstantiatedETH() internal {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
@@ -163,9 +111,9 @@ contract DepositManagerInvariants is Test {
         }
     }
 
-    // _______________ERC20_______________
+    // _______________DEPOSIT_ERC20_______________
 
-    function invariant_outNeverExceedsInErc20() external {
+    function assert_deposit_outNeverExceedsInErc20() internal {
         assertGe(
             depositManagerHandler.ghost_instantiateDepositSumErc20(),
             depositManagerHandler.ghost_retrieveDepositSumErc20() +
@@ -173,7 +121,9 @@ contract DepositManagerInvariants is Test {
         );
     }
 
-    function invariant_depositManagerBalanceEqualsInMinusOutErc20() external {
+    function assert_deposit_depositManagerBalanceEqualsInMinusOutErc20()
+        internal
+    {
         assertEq(
             depositManagerHandler.erc20().balanceOf(
                 address(depositManagerHandler.depositManager())
@@ -184,8 +134,8 @@ contract DepositManagerInvariants is Test {
         );
     }
 
-    function invariant_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
-        external
+    function assert_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
+        internal
     {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
@@ -197,14 +147,16 @@ contract DepositManagerInvariants is Test {
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
     }
 
-    function invariant_walletBalanceEqualsCompletedDepositSumErc20() external {
+    function assert_deposit_walletBalanceEqualsCompletedDepositSumErc20()
+        internal
+    {
         assertEq(
             depositManagerHandler.erc20().balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumErc20()
         );
     }
 
-    function invariant_actorBalanceAlwaysEqualsRetrievedErc20() external {
+    function assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20() internal {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
@@ -217,7 +169,9 @@ contract DepositManagerInvariants is Test {
         }
     }
 
-    function invariant_actorBalanceNeverExceedsInstantiatedErc20() external {
+    function assert_deposit_actorBalanceNeverExceedsInstantiatedErc20()
+        internal
+    {
         address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
