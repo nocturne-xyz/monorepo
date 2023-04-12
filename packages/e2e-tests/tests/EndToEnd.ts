@@ -150,8 +150,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const operation = await proveOperation(joinSplitProver, signed);
 
     await submitAndProcessOperation(operation);
-    // wait for subgraph to catch up
-    await sleep(5_000);
+    // wait for subgraph / subtree updater to catch up
+    await sleep(7_000);
 
     await contractChecks();
     await offchainChecks();
