@@ -5,99 +5,103 @@ import {Test} from "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
-import {InvariantHandler} from "./handlers/InvariantHandler.sol";
+import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
 
 contract DepositManagerInvariants is Test {
-    InvariantHandler public invariantHandler;
+    DepositManagerHandler public depositManagerHandler;
 
     function setUp() public virtual {
-        invariantHandler = new InvariantHandler();
+        depositManagerHandler = new DepositManagerHandler();
 
         bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = InvariantHandler.instantiateDepositETH.selector;
-        selectors[1] = InvariantHandler.instantiateDepositErc20.selector;
-        selectors[2] = InvariantHandler.retrieveDepositErc20.selector;
-        selectors[3] = InvariantHandler.completeDepositErc20.selector;
+        selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
+        selectors[1] = depositManagerHandler.instantiateDepositErc20.selector;
+        selectors[2] = depositManagerHandler.retrieveDepositErc20.selector;
+        selectors[3] = depositManagerHandler.completeDepositErc20.selector;
 
-        targetContract(address(invariantHandler));
+        targetContract(address(depositManagerHandler));
         targetSelector(
             FuzzSelector({
-                addr: address(invariantHandler),
+                addr: address(depositManagerHandler),
                 selectors: selectors
             })
         );
 
-        excludeSender(address(invariantHandler));
-        excludeSender(address(invariantHandler.wallet()));
-        excludeSender(address(invariantHandler.depositManager()));
-        excludeSender(address(invariantHandler.weth()));
+        excludeSender(address(depositManagerHandler));
+        excludeSender(address(depositManagerHandler.wallet()));
+        excludeSender(address(depositManagerHandler.depositManager()));
+        excludeSender(address(depositManagerHandler.weth()));
     }
 
     function invariant_callSummary() public view {
-        invariantHandler.callSummary();
+        depositManagerHandler.callSummary();
     }
 
     // _______________ETH_______________
 
     function invariant_outNeverExceedsInETH() external {
         assertGe(
-            invariantHandler.ghost_instantiateDepositSumETH(),
-            invariantHandler.ghost_retrieveDepositSumETH() +
-                invariantHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_instantiateDepositSumETH(),
+            depositManagerHandler.ghost_retrieveDepositSumETH() +
+                depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
 
     function invariant_depositManagerBalanceEqualsInMinusOutETH() external {
         assertEq(
-            invariantHandler.weth().balanceOf(
-                address(invariantHandler.depositManager())
+            depositManagerHandler.weth().balanceOf(
+                address(depositManagerHandler.depositManager())
             ),
-            invariantHandler.ghost_instantiateDepositSumETH() -
-                invariantHandler.ghost_retrieveDepositSumETH() -
-                invariantHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_instantiateDepositSumETH() -
+                depositManagerHandler.ghost_retrieveDepositSumETH() -
+                depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
 
     function invariant_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
         external
     {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         uint256 sum = 0;
         for (uint256 i = 0; i < allActors.length; i++) {
-            sum += invariantHandler.weth().balanceOf(allActors[i]);
+            sum += depositManagerHandler.weth().balanceOf(allActors[i]);
         }
 
-        assertEq(sum, invariantHandler.ghost_retrieveDepositSumETH());
+        assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumETH());
     }
 
     function invariant_walletBalanceEqualsCompletedDepositSumETH() external {
         assertEq(
-            invariantHandler.weth().balanceOf(
-                address(invariantHandler.wallet())
+            depositManagerHandler.weth().balanceOf(
+                address(depositManagerHandler.wallet())
             ),
-            invariantHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
 
     function invariant_actorBalanceAlwaysEqualsRetrievedETH() external {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                invariantHandler.weth().balanceOf(allActors[i]),
-                invariantHandler.ghost_retrieveDepositSumETHFor(allActors[i])
+                depositManagerHandler.weth().balanceOf(allActors[i]),
+                depositManagerHandler.ghost_retrieveDepositSumETHFor(
+                    allActors[i]
+                )
             );
         }
     }
 
     function invariant_actorBalanceNeverExceedsInstantiatedETH() external {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
-                invariantHandler.weth().balanceOf(allActors[i]),
-                invariantHandler.ghost_instantiateDepositSumETHFor(allActors[i])
+                depositManagerHandler.weth().balanceOf(allActors[i]),
+                depositManagerHandler.ghost_instantiateDepositSumETHFor(
+                    allActors[i]
+                )
             );
         }
     }
@@ -106,63 +110,65 @@ contract DepositManagerInvariants is Test {
 
     function invariant_outNeverExceedsInErc20() external {
         assertGe(
-            invariantHandler.ghost_instantiateDepositSumErc20(),
-            invariantHandler.ghost_retrieveDepositSumErc20() +
-                invariantHandler.ghost_completeDepositSumErc20()
+            depositManagerHandler.ghost_instantiateDepositSumErc20(),
+            depositManagerHandler.ghost_retrieveDepositSumErc20() +
+                depositManagerHandler.ghost_completeDepositSumErc20()
         );
     }
 
     function invariant_depositManagerBalanceEqualsInMinusOutErc20() external {
         assertEq(
-            invariantHandler.erc20().balanceOf(
-                address(invariantHandler.depositManager())
+            depositManagerHandler.erc20().balanceOf(
+                address(depositManagerHandler.depositManager())
             ),
-            invariantHandler.ghost_instantiateDepositSumErc20() -
-                invariantHandler.ghost_retrieveDepositSumErc20() -
-                invariantHandler.ghost_completeDepositSumErc20()
+            depositManagerHandler.ghost_instantiateDepositSumErc20() -
+                depositManagerHandler.ghost_retrieveDepositSumErc20() -
+                depositManagerHandler.ghost_completeDepositSumErc20()
         );
     }
 
     function invariant_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
         external
     {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         uint256 sum = 0;
         for (uint256 i = 0; i < allActors.length; i++) {
-            sum += invariantHandler.erc20().balanceOf(allActors[i]);
+            sum += depositManagerHandler.erc20().balanceOf(allActors[i]);
         }
 
-        assertEq(sum, invariantHandler.ghost_retrieveDepositSumErc20());
+        assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
     }
 
     function invariant_walletBalanceEqualsCompletedDepositSumErc20() external {
         assertEq(
-            invariantHandler.erc20().balanceOf(
-                address(invariantHandler.wallet())
+            depositManagerHandler.erc20().balanceOf(
+                address(depositManagerHandler.wallet())
             ),
-            invariantHandler.ghost_completeDepositSumErc20()
+            depositManagerHandler.ghost_completeDepositSumErc20()
         );
     }
 
     function invariant_actorBalanceAlwaysEqualsRetrievedErc20() external {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                invariantHandler.erc20().balanceOf(allActors[i]),
-                invariantHandler.ghost_retrieveDepositSumErc20For(allActors[i])
+                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositManagerHandler.ghost_retrieveDepositSumErc20For(
+                    allActors[i]
+                )
             );
         }
     }
 
     function invariant_actorBalanceNeverExceedsInstantiatedErc20() external {
-        address[] memory allActors = invariantHandler.ghost_AllActors();
+        address[] memory allActors = depositManagerHandler.ghost_AllActors();
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
-                invariantHandler.erc20().balanceOf(allActors[i]),
-                invariantHandler.ghost_instantiateDepositSumErc20For(
+                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositManagerHandler.ghost_instantiateDepositSumErc20For(
                     allActors[i]
                 )
             );

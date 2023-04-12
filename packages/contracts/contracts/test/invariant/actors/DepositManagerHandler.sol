@@ -37,7 +37,7 @@ import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
-contract InvariantHandler is CommonBase, StdCheats, StdUtils {
+contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
     using LibDepositSumSet for DepositSumSet;
@@ -53,6 +53,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
+    // ______PUBLIC______
     Wallet public wallet;
     Handler public handler;
     TestDepositManager public depositManager;
@@ -65,12 +66,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     EncodedAsset public encodedErc20;
 
     bytes32 public lastCall;
+
+    // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
     uint256[] internal _depositSizes;
-
     AddressSet internal _actors;
-    address internal currentActor;
+    address internal _currentActor;
+    uint256 internal _actorNum = 0;
 
     DepositSumSet internal _instantiateDepositSumSetETH;
     DepositSumSet internal _retrieveDepositSumSetETH;
@@ -81,32 +84,6 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     DepositSumSet internal _completeDepositSumSetErc20;
 
     DepositRequest[] internal _depositSet;
-
-    uint256 actorNum = 0;
-    modifier createActor() {
-        currentActor = msg.sender;
-
-        if (!_actors.contains(currentActor)) {
-            _actors.add(currentActor);
-            actorNum += 1;
-        }
-        _;
-    }
-
-    modifier useActor(uint256 actorIndexSeed) {
-        currentActor = _actors.rand(actorIndexSeed);
-        _;
-    }
-
-    modifier trackCall(bytes32 key) {
-        lastCall = key;
-        _calls[key]++;
-        _;
-    }
-
-    receive() external payable {}
-
-    fallback() external payable {}
 
     constructor() {
         wallet = new Wallet();
@@ -145,6 +122,31 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         erc20.reserveTokens(address(this), type(uint256).max);
     }
 
+    modifier createActor() {
+        _currentActor = msg.sender;
+
+        if (!_actors.contains(_currentActor)) {
+            _actors.add(_currentActor);
+            _actorNum += 1;
+        }
+        _;
+    }
+
+    modifier useActor(uint256 actorIndexSeed) {
+        _currentActor = _actors.rand(actorIndexSeed);
+        _;
+    }
+
+    modifier trackCall(bytes32 key) {
+        lastCall = key;
+        _calls[key]++;
+        _;
+    }
+
+    receive() external payable {}
+
+    fallback() external payable {}
+
     // ______EXTERNAL______
 
     function callSummary() external view {
@@ -165,7 +167,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         console.log("retrieveDepositSumErc20", ghost_retrieveDepositSumErc20());
         console.log("completeDepositSumErc20", ghost_completeDepositSumErc20());
 
-        console.log("actorNum", actorNum);
+        console.log("_actorNum", _actorNum);
         console.log("depositSetLength", _depositSet.length);
 
         console.log(
@@ -186,9 +188,9 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         _depositSizes.push(amount);
 
         // Deal gas compensation
-        vm.deal(currentActor, amount + GAS_COMPENSATION);
+        vm.deal(_currentActor, amount + GAS_COMPENSATION);
 
-        vm.startPrank(currentActor);
+        vm.startPrank(_currentActor);
 
         // Start recording logs and make call
         vm.recordLogs();
@@ -210,7 +212,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Update sets and sum
         _depositSet.push(req);
-        _instantiateDepositSumSetETH.addToActorSum(currentActor, amount);
+        _instantiateDepositSumSetETH.addToActorSum(_currentActor, amount);
     }
 
     function instantiateDepositErc20(
@@ -218,14 +220,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     ) public createActor trackCall("instantiateDepositErc20") {
         // Bound deposit amount
         amount = bound(amount, 0, erc20.balanceOf(address(this)));
-        erc20.transfer(currentActor, amount);
+        erc20.transfer(_currentActor, amount);
         _depositSizes.push(amount);
 
         // Deal gas compensation
-        vm.deal(currentActor, GAS_COMPENSATION);
+        vm.deal(_currentActor, GAS_COMPENSATION);
 
         // Approve token
-        vm.startPrank(currentActor);
+        vm.startPrank(_currentActor);
         erc20.approve(address(depositManager), amount);
 
         // Start recording logs and make call
@@ -249,7 +251,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Update sets and sum
         _depositSet.push(req);
-        _instantiateDepositSumSetErc20.addToActorSum(currentActor, amount);
+        _instantiateDepositSumSetErc20.addToActorSum(_currentActor, amount);
     }
 
     function retrieveDepositErc20(

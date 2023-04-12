@@ -5,45 +5,51 @@ import {Test} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {console} from "forge-std/console.sol";
 
-import {OffchainMerkleInvariantHandler} from "./handlers/OffchainMerkleInvariantHandler.sol";
+import {OffchainMerkleHandler} from "./actors/OffchainMerkleHandler.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 
 contract OffchainMerkleInvariants is Test {
-    OffchainMerkleInvariantHandler public invariantHandler;
+    OffchainMerkleHandler public offchainMerkleHandler;
 
     function setUp() public virtual {
-        invariantHandler = new OffchainMerkleInvariantHandler();
+        offchainMerkleHandler = new OffchainMerkleHandler();
     }
 
     function invariant_callSummary() public view {
-        invariantHandler.callSummary();
+        offchainMerkleHandler.callSummary();
     }
 
     function invariant_insertedNotesPlusInsertedNoteCommitmentsEqualsTotalCount()
         external
     {
         assertEq(
-            invariantHandler.getCount(),
-            invariantHandler.getTotalCount() -
-                (invariantHandler.accumulatorQueueLength() *
+            offchainMerkleHandler.getCount(),
+            offchainMerkleHandler.getTotalCount() -
+                (offchainMerkleHandler.accumulatorQueueLength() *
                     TreeUtils.BATCH_SIZE) -
-                invariantHandler.batchLen()
+                offchainMerkleHandler.batchLen()
         );
     }
 
     function invariant_getCountAlwaysMultipleOfBatchSize() external {
-        assertEq(invariantHandler.getCount() % TreeUtils.BATCH_SIZE, 0);
+        assertEq(offchainMerkleHandler.getCount() % TreeUtils.BATCH_SIZE, 0);
     }
 
     function invariant_batchLengthNotExceedingBatchSize() external {
-        assertLt(invariantHandler.batchLen(), TreeUtils.BATCH_SIZE);
+        assertLt(offchainMerkleHandler.batchLen(), TreeUtils.BATCH_SIZE);
     }
 
     function invariant_rootUpdatedAfterSubtreeUpdate() external {
-        if (invariantHandler.lastCall() == bytes32("applySubtreeUpdate")) {
-            assert(invariantHandler.preCallRoot() != invariantHandler.root());
+        if (offchainMerkleHandler.lastCall() == bytes32("applySubtreeUpdate")) {
+            assert(
+                offchainMerkleHandler.preCallRoot() !=
+                    offchainMerkleHandler.root()
+            );
         } else {
-            assertEq(invariantHandler.preCallRoot(), invariantHandler.root());
+            assertEq(
+                offchainMerkleHandler.preCallRoot(),
+                offchainMerkleHandler.root()
+            );
         }
     }
 }
