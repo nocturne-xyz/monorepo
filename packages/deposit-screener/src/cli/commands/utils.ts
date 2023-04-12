@@ -75,7 +75,7 @@ export function makeLogger(
     // default format
     format: format.combine(format.timestamp(), format.json()),
     // add metadata saying which process this log is coming from
-    defaultMeta: { service: "bundler", process },
+    defaultMeta: { service: "deposit-screener", process },
     // write all uncaught exceptions to `uncaughtExceptions.log`
     exceptionHandlers: [
       new transports.File({

@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerProcessor } from "../../../processor";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
-import { getRedis } from "../utils";
+import { getRedis, makeLogger } from "../utils";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -13,8 +13,13 @@ const runProcess = new Command("processor")
     "--deposit-manager-address <string>",
     "deposit manager contract address"
   )
+  .option(
+    "--log-dir <string>",
+    "directory to write logs to",
+    "./logs/deposit-screener-processor"
+  )
   .action(async (options) => {
-    const { depositManagerAddress } = options;
+    const { depositManagerAddress, logDir } = options;
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
@@ -40,12 +45,14 @@ const runProcess = new Command("processor")
     }
     const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
+    const logger = makeLogger(logDir, "processor");
     const processor = new DepositScreenerProcessor(
       adapter,
       depositManagerAddress,
       attestationSigner,
       txSigner,
-      getRedis()
+      getRedis(),
+      logger
     );
 
     const { promise } = await processor.start();
