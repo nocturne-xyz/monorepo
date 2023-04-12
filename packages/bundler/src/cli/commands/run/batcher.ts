@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { BundlerBatcher } from "../../../batcher";
-import { getRedis } from "../../utils";
+import { getRedis, makeLogger } from "../../utils";
 
 const runBatcher = new Command("batcher")
   .summary("run bundler batcher")
@@ -10,9 +10,22 @@ const runBatcher = new Command("batcher")
     "--max-latency <number>",
     "max latency bundler will wait until creating a bundle"
   )
+  .option(
+    "--log-dir <string>",
+    "directory to write logs to",
+    "./logs/bundler-server"
+  )
   .action(async (options) => {
-    const { maxLatency, batchSize } = options;
-    const batcher = new BundlerBatcher(getRedis(), maxLatency, batchSize);
+    const { maxLatency, batchSize, logDir } = options;
+
+    const logger = makeLogger(logDir, "batcher");
+    const batcher = new BundlerBatcher(
+      getRedis(),
+      logger,
+      maxLatency,
+      batchSize
+    );
+
     const { promise } = batcher.start();
     await promise;
   });

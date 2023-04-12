@@ -9,7 +9,7 @@ import {
   ProvenOperationJobData,
   PROVEN_OPERATION_JOB_TAG,
 } from "../src/common";
-import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
+import { VALID_PROVEN_OPERATION_OBJ, makeLogger } from "./utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
@@ -24,6 +24,7 @@ describe("BundlerBatcher", async () => {
   let statusDB: StatusDB;
   let batcherDB: BatcherDB<ProvenOperationJobData>;
   let batcher: BundlerBatcher;
+  const logger = makeLogger();
 
   before(async () => {
     server = await RedisMemoryServer.create();
@@ -34,7 +35,12 @@ describe("BundlerBatcher", async () => {
 
     statusDB = new StatusDB(redis);
     batcherDB = new BatcherDB(redis);
-    batcher = new BundlerBatcher(redis, MAX_BATCH_LATENCY_SECS, BATCH_SIZE); // 6 second wait time
+    batcher = new BundlerBatcher(
+      redis,
+      logger,
+      MAX_BATCH_LATENCY_SECS,
+      BATCH_SIZE
+    ); // 6 second wait time
   });
 
   beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { TeardownFn, makeRedisInstance } from "./utils";
+import { TeardownFn, makeLogger, makeRedisInstance } from "./utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -36,7 +36,13 @@ function startBundlerSubmitter(
 ): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const signer = new ethers.Wallet(config.txSignerKey, provider);
-  const submitter = new BundlerSubmitter(config.walletAddress, signer, redis);
+  const logger = makeLogger("bundler", "submitter");
+  const submitter = new BundlerSubmitter(
+    config.walletAddress,
+    signer,
+    redis,
+    logger
+  );
 
   const { promise, teardown } = submitter.start();
   promise.catch((err) => {
@@ -51,7 +57,8 @@ function startBundlerBatcher(
   config: BundlerConfig,
   redis: IORedis
 ): TeardownFn {
-  const batcher = new BundlerBatcher(redis, config.maxLatency);
+  const logger = makeLogger("bundler", "batcher");
+  const batcher = new BundlerBatcher(redis, logger, config.maxLatency);
   const { promise, teardown } = batcher.start();
   promise.catch((err) => {
     console.error("bundler batcher error", err);
@@ -63,10 +70,12 @@ function startBundlerBatcher(
 
 function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+  const logger = makeLogger("bundler", "server");
   const server = new BundlerServer(
     config.walletAddress,
     provider,
     redis,
+    logger,
     config.ignoreGas
   );
 

@@ -15,16 +15,23 @@ import {
 } from "./common";
 import * as JSON from "bigint-json-serialization";
 import { ActorHandle, actorChain } from "./utils";
+import { Logger } from "winston";
 
 export class BundlerBatcher {
   redis: IORedis;
   statusDB: StatusDB;
   batcherDB: BatcherDB<ProvenOperation>;
   outboundQueue: Queue<OperationBatchJobData>;
+  logger: Logger;
   readonly MAX_BATCH_LATENCY_SECS: number = 60;
   readonly BATCH_SIZE: number = 8;
 
-  constructor(redis: IORedis, maxLatencySeconds?: number, batchSize?: number) {
+  constructor(
+    redis: IORedis,
+    logger: Logger,
+    maxLatencySeconds?: number,
+    batchSize?: number
+  ) {
     if (batchSize) {
       this.BATCH_SIZE = batchSize;
     }
@@ -34,6 +41,7 @@ export class BundlerBatcher {
     }
 
     this.redis = redis;
+    this.logger = logger;
     this.statusDB = new StatusDB(redis);
     this.batcherDB = new BatcherDB(redis);
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
@@ -48,7 +56,8 @@ export class BundlerBatcher {
   }
 
   startBatcher(): ActorHandle {
-    console.log("batcher starting...");
+    const logger = this.logger.child({ function: "batcher" });
+    logger.info("starting batcher...");
 
     let stopped = false;
     const promise = new Promise<void>((resolve) => {
@@ -87,9 +96,9 @@ export class BundlerBatcher {
             ]);
             await this.redis.multi(allTransactions).exec((maybeErr) => {
               if (maybeErr) {
-                throw Error(
-                  `batcherDB job status + pop txs failed: ${maybeErr}`
-                );
+                const msg = `failed to set operation job and/or remove batch from DB: ${maybeErr}`;
+                logger.error(msg);
+                throw Error(msg);
               }
             });
 
@@ -100,6 +109,7 @@ export class BundlerBatcher {
         }
 
         if (stopped) {
+          logger.info("stopping...");
           resolve();
         } else {
           setTimeout(poll, 1000);
@@ -114,11 +124,14 @@ export class BundlerBatcher {
       teardown: async () => {
         stopped = true;
         await promise;
+        logger.info("teardown complete");
       },
     };
   }
 
   startQueuer(): ActorHandle {
+    const logger = this.logger.child({ function: "queuer" });
+    logger.info("starting queuer...");
     const queuer = new Worker(
       PROVEN_OPERATION_QUEUE,
       async (job: Job<ProvenOperationJobData>) => {
@@ -138,9 +151,9 @@ export class BundlerBatcher {
         ]);
         await this.redis.multi(allTransactions).exec((maybeErr) => {
           if (maybeErr) {
-            throw new Error(
-              `failed to execute batcher add and set job status transaction: ${maybeErr}`
-            );
+            const msg = `failed to execute batcher add and set job status transaction: ${maybeErr}`;
+            logger.error(msg);
+            throw new Error(msg);
           }
         });
       },
@@ -152,6 +165,7 @@ export class BundlerBatcher {
 
     const promise = new Promise<void>((resolve) => {
       queuer.on("closed", () => {
+        logger.info("stopping...");
         resolve();
       });
     });
@@ -161,6 +175,7 @@ export class BundlerBatcher {
       teardown: async () => {
         await queuer.close();
         await promise;
+        logger.info("teardown complete");
       },
     };
   }

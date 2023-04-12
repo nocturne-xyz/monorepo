@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerServer } from "../../../server";
-import { getRedis } from "../../utils";
+import { getRedis, makeLogger } from "../../utils";
 
 const runServer = new Command("server")
   .summary("run bundler server")
@@ -10,8 +10,13 @@ const runServer = new Command("server")
   )
   .requiredOption("--wallet-address <string>", "wallet contract address")
   .requiredOption("--port <number>", "server port", parseInt)
+  .option(
+    "--log-dir <string>",
+    "directory to write logs to",
+    "./logs/bundler-server"
+  )
   .action(async (options) => {
-    const { walletAddress, port } = options;
+    const { walletAddress, port, logDir } = options;
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
@@ -19,7 +24,13 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-    const server = new BundlerServer(walletAddress, provider, getRedis());
+    const logger = makeLogger(logDir, "server");
+    const server = new BundlerServer(
+      walletAddress,
+      provider,
+      getRedis(),
+      logger
+    );
     server.start(port);
   });
 

@@ -13,6 +13,7 @@ import { ethers } from "ethers";
 import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
 import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
+import { Logger } from "winston";
 
 export interface BundlerSubmitterHandle {
   // promise that resolves when the service is done
@@ -27,6 +28,7 @@ export class BundlerSubmitter {
   walletContract: Wallet; // TODO: replace with tx manager
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
+  logger: Logger;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -34,9 +36,11 @@ export class BundlerSubmitter {
   constructor(
     walletAddress: Address,
     signingProvider: ethers.Signer,
-    redis: IORedis
+    redis: IORedis,
+    logger: Logger
   ) {
     this.redis = redis;
+    this.logger = logger;
     this.statusDB = new StatusDB(this.redis);
     this.nullifierDB = new NullifierDB(this.redis);
     this.signingProvider = signingProvider;
@@ -53,19 +57,29 @@ export class BundlerSubmitter {
         const operations: ProvenOperation[] = JSON.parse(
           job.data.operationBatchJson
         );
-        await this.submitBatch(operations).catch((e) => {
+
+        const opDigests = operations.map((op) =>
+          computeOperationDigest(op).toString()
+        );
+        const logger = this.logger.child({
+          function: "submitBatch",
+          bundle: opDigests,
+        });
+
+        await this.submitBatch(logger, operations).catch((e) => {
           throw new Error(e);
         });
       },
       { connection: this.redis, autorun: true }
     );
 
-    console.log(
+    this.logger.info(
       `submitter starting... wallet contract: ${this.walletContract.address}.`
     );
 
     const promise = new Promise<void>((resolve) => {
       worker.on("closed", () => {
+        this.logger.info("submitter stopped.");
         resolve();
       });
     });
@@ -79,63 +93,74 @@ export class BundlerSubmitter {
     };
   }
 
-  async submitBatch(operations: ProvenOperation[]): Promise<void> {
+  async submitBatch(
+    logger: Logger,
+    operations: ProvenOperation[]
+  ): Promise<void> {
     // TODO: this job isn't idempotent. If one step fails, bullmq will re-try
     // which may cause issues. Current plan is to mark reverted bundles as
     // failed. Will circle back after further testing and likely
     // re-queue/re-validate ops in the reverted bundle.
 
-    console.log("setting ops to inflight...");
-    await this.setOpsToInflight(operations);
+    logger.info("submitting bundle...");
 
-    console.log("dispatching bundle...");
-    const tx = await this.dispatchBundle(operations);
+    logger.debug("setting ops to inflight...");
+    await this.setOpsToInflight(logger, operations);
+
+    logger.debug("dispatching bundle...");
+    const tx = await this.dispatchBundle(logger, operations);
 
     if (!tx) {
-      console.log("bundle reverted");
+      logger.error("bundle reverted");
       return;
     }
 
-    console.log("waiting for confirmation...");
+    logger.debug("waiting for confirmation...");
     const receipt = await tx.wait(1);
 
-    console.log("performing post-submission bookkeeping");
-    await this.performPostSubmissionBookkeeping(operations, receipt);
+    logger.debug("performing post-submission bookkeeping");
+    await this.performPostSubmissionBookkeeping(logger, operations, receipt);
   }
 
-  async setOpsToInflight(operations: ProvenOperation[]): Promise<void> {
+  async setOpsToInflight(
+    logger: Logger,
+    operations: ProvenOperation[]
+  ): Promise<void> {
     // Loop through current batch and set each job status to IN_FLIGHT
     const inflightStatusTransactions = operations.map((op) => {
       const jobId = computeOperationDigest(op).toString();
+      logger.info(`setting operation with digest ${jobId} to status IN_FLIGHT`);
       return this.statusDB.getSetJobStatusTransaction(
         jobId,
         OperationStatus.IN_FLIGHT
       );
     });
+
     await this.redis.multi(inflightStatusTransactions).exec((maybeErr) => {
       if (maybeErr) {
-        throw new Error(
-          `failed to set job status transactions to inflight: ${maybeErr}`
-        );
+        const msg = `failed to set job status transactions to IN_FLIGHT: ${maybeErr}`;
+        logger.error(msg);
+        throw new Error(msg);
       }
     });
   }
 
   async dispatchBundle(
+    logger: Logger,
     operations: ProvenOperation[]
   ): Promise<ethers.ContractTransaction | undefined> {
     try {
-      console.log("num operations:", operations.length);
+      logger.info(`submtting bundle with ${operations.length} operations`);
       return this.walletContract.processBundle(
         { operations },
         { gasLimit: 1_000_000 } // Hardcode gas limit to skip eth_estimateGas
       );
     } catch (err) {
-      console.log("failed to process bundle:", err);
+      logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
         const digest = computeOperationDigest(op);
-        console.log(
-          `setting operation with digest ${digest} to BUNDLE_REVERTED`
+        logger.error(
+          `setting operation with digest ${digest} to status BUNDLE_REVERTED`
         );
         const statusTx = this.statusDB.getSetJobStatusTransaction(
           digest.toString(),
@@ -149,9 +174,9 @@ export class BundlerSubmitter {
 
       await this.redis.multi(redisTxs).exec((maybeErr) => {
         if (maybeErr) {
-          throw new Error(
-            `failed to set job statuses and/or remove nullifiers after bundle reverted: ${maybeErr}`
-          );
+          const msg = `failed to update operation statuses to BUNDLE_REVERTED and/or remove their nullifiers from DB: ${maybeErr}`;
+          logger.error(msg);
+          throw new Error(msg);
         }
       });
       return undefined;
@@ -159,6 +184,7 @@ export class BundlerSubmitter {
   }
 
   async performPostSubmissionBookkeeping(
+    logger: Logger,
     operations: ProvenOperation[],
     receipt: ethers.ContractReceipt
   ): Promise<void> {
@@ -166,12 +192,13 @@ export class BundlerSubmitter {
       operations.map((op) => [computeOperationDigest(op), op])
     );
 
+    logger.debug("looking for OperationProcessed events...");
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.walletContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
-    console.log("matching events:", matchingEvents);
+    logger.info("matching events:", matchingEvents);
 
     const redisTxs = matchingEvents.flatMap(({ args }) => {
       const digest = args.operationDigest.toBigInt();
@@ -189,7 +216,7 @@ export class BundlerSubmitter {
         status = OperationStatus.EXECUTED_SUCCESS;
       }
 
-      console.log(
+      logger.info(
         `setting operation with digest ${digest} to status ${status}`
       );
 
@@ -199,8 +226,8 @@ export class BundlerSubmitter {
       );
 
       if (status == OperationStatus.OPERATION_PROCESSING_FAILED) {
-        console.log(
-          `op with digest ${args.operationDigest.toBigInt()} failed during processing, removing nfs`
+        logger.warn(
+          `op with digest ${args.operationDigest.toBigInt()} failed during handleOperation. removing nullifers from DB...`
         );
         const op = digestsToOps.get(args.operationDigest.toBigInt())!;
         redisTxs.push(...this.nullifierDB.getRemoveNullifierTransactions(op));
@@ -210,9 +237,9 @@ export class BundlerSubmitter {
 
     await this.redis.multi(redisTxs).exec((maybeErr) => {
       if (maybeErr) {
-        throw new Error(
-          `failed to set job status transactions + potential NF removals after bundle executed: ${maybeErr}`
-        );
+        const msg = `failed to set operation statuses and/or remove nullfiers after bundle executed: ${maybeErr}`;
+        logger.error(msg);
+        throw new Error(msg);
       }
     });
   }
