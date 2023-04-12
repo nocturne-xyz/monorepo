@@ -20,10 +20,8 @@ jobs:
           cache: "yarn"
       - name: enable Corepack
         run: corepack enable
-      - name: install foundryup
-        run: curl -L https://foundry.paradigm.xyz | bash && echo "$PATH:/home/runner/.foundry/bin" >> $GITHUB_PATH
       - name: install foundry
-        run: foundryup
+        uses: foundry-rs/foundry-toolchain@v1
       - name: yarn install
         run: |
           yarn install --immutable
