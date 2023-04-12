@@ -12,6 +12,7 @@ import { RootDatabase, Database } from "lmdb";
 import { Handler } from "@nocturne-xyz/contracts";
 import { SubtreeUpdateSubmitter } from "./submitter";
 import * as JSON from "bigint-json-serialization";
+import { Logger } from "winston";
 
 export { SubtreeUpdateServer } from "./server";
 export { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
@@ -52,7 +53,7 @@ export class SubtreeUpdater {
   private insertions: (Note | bigint)[];
   private batches: SubtreeUpdateBatch[];
   private tree: BinaryPoseidonTree;
-  private indexingStartBlock: number;
+  indexingStartBlock: number;
 
   constructor(
     handlerContract: Handler,
@@ -72,22 +73,26 @@ export class SubtreeUpdater {
     this.submitter = submitter;
 
     this.indexingStartBlock = indexingStartBlock;
-    console.log("indexing start block:", this.indexingStartBlock);
   }
 
-  public async init(): Promise<void> {
-    await this.recoverPersisedState();
+  public async init(logger: Logger): Promise<void> {
+    await this.recoverPersisedState(logger);
   }
 
-  public async tryGenAndSubmitProofs(): Promise<void> {
+  public async tryGenAndSubmitProofs(logger: Logger): Promise<void> {
+    logger.debug("generating and submitting proofs for queued batches");
     for (const { batch, newRoot, subtreeIndex } of this.batches) {
+      const childLogger = logger.child({ subtreeIndex, batch, newRoot });
+      childLogger.info("generating proof for batch...");
+
       const proof = await this.genProof(batch, subtreeIndex);
-      await this.submitter.submitProof(proof, newRoot, subtreeIndex);
+      childLogger.debug("proof generated. submitting...");
+      await this.submitter.submitProof(childLogger, proof, newRoot);
     }
   }
 
   // return true if at least one batch was filled
-  public async pollInsertionsAndTryMakeBatch(): Promise<boolean> {
+  public async pollInsertionsAndTryMakeBatch(logger: Logger): Promise<boolean> {
     const currentBlockNumber =
       await this.handlerContract.provider.getBlockNumber();
     const nextBlockToIndex = await this.getNextBlockToIndex();
@@ -95,9 +100,13 @@ export class SubtreeUpdater {
       return false;
     }
 
-    console.log(
-      `indexing. From: ${nextBlockToIndex}. To: ${currentBlockNumber}.`
+    logger.info(
+      `polling insertions from ${nextBlockToIndex} to ${currentBlockNumber}`
     );
+    logger = logger.child({
+      rangeStart: nextBlockToIndex,
+      rangeEnd: currentBlockNumber,
+    });
 
     const [newInsertions, newCommits] = await Promise.all([
       fetchInsertions(
@@ -112,7 +121,7 @@ export class SubtreeUpdater {
       ),
     ]);
 
-    console.log("fetched", newInsertions.length, "new insertions");
+    logger.info("fetched", newInsertions.length, "new insertions");
 
     const lastCommit =
       newCommits.length > 0 ? newCommits[newCommits.length - 1] : undefined;
@@ -143,10 +152,11 @@ export class SubtreeUpdater {
 
     this.insertions.push(...newInsertions);
     if (lastCommit !== undefined) {
+      logger.info("pruning batches up to", lastCommit.subtreeIndex);
       this.pruneBatchesUpTo(lastCommit.subtreeIndex);
     }
 
-    return await this.tryMakeBatches();
+    return await this.tryMakeBatches(logger);
   }
 
   public async fillBatch(): Promise<void> {
@@ -167,10 +177,12 @@ export class SubtreeUpdater {
     return lastCommitedIndex !== undefined && subtreeIndex <= lastCommitedIndex;
   }
 
-  private async tryMakeBatches(): Promise<boolean> {
+  private async tryMakeBatches(logger: Logger): Promise<boolean> {
     let madeBatch = false;
     while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
       const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
+      logger.info("making batch", batch);
+
       this.applyBatch(batch);
 
       const subtreeIndex = this.tree.count - batch.length;
@@ -240,7 +252,7 @@ export class SubtreeUpdater {
     );
   }
 
-  private static parseInsertion(value: string): Note | bigint {
+  private static parseInsertion(logger: Logger, value: string): Note | bigint {
     const insertion = JSON.parse(value);
     if (typeof insertion === "bigint") {
       // it's a commitment
@@ -250,11 +262,13 @@ export class SubtreeUpdater {
       return insertion as Note;
     } else {
       // TODO: can remove this once DB wrapper is added
-      throw new Error("invalid insertion type read from DB");
+      const msg = `invalid insertion type read from DB: ${insertion}`;
+      logger.error(msg);
+      throw new Error(msg);
     }
   }
 
-  private async recoverPersisedState(): Promise<void> {
+  private async recoverPersisedState(logger: Logger): Promise<void> {
     const nextInsertionIndex = await this.getNextInsertionIndex();
     const lastCommitedIndex = (await this.getLastCommittedIndex()) ?? 0;
     if (nextInsertionIndex === 0) {
@@ -266,13 +280,15 @@ export class SubtreeUpdater {
 
     for (const { key, value } of this.db.getRange({ start, end })) {
       if (value === undefined) {
-        throw new Error(`DB entry not found: ${key}`);
+        const msg = `DB entry not found: ${key}`;
+        logger.error(msg);
+        throw new Error(msg);
       }
 
-      const insertion = SubtreeUpdater.parseInsertion(value);
+      const insertion = SubtreeUpdater.parseInsertion(logger, value);
       this.insertions.push(insertion);
     }
 
-    await this.tryMakeBatches();
+    await this.tryMakeBatches(logger);
   }
 }

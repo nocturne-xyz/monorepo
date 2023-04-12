@@ -6,6 +6,9 @@ import { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
+import { createLogger, format, transports, Logger } from "winston";
+import * as Transport from "winston-transport";
+import path from "path";
 
 export default async function main(): Promise<void> {
   dotenv.config();
@@ -55,7 +58,12 @@ export default async function main(): Promise<void> {
       "block to start indexing at",
       parseInt
     )
-    .option("--dbPath <string>", "path to the store DB files", "./db");
+    .option("--dbPath <string>", "path to the store DB files", "./db")
+    .option(
+      "--log-dir <string>",
+      "directory to write logs to",
+      "./logs/subtree-updater"
+    );
 
   program.parse();
 
@@ -71,6 +79,7 @@ export default async function main(): Promise<void> {
     interval,
     indexingStartBlock,
     fillBatches,
+    logDir,
   } = program.opts();
 
   const rpcUrl = process.env.RPC_URL;
@@ -105,15 +114,93 @@ export default async function main(): Promise<void> {
     );
   }
 
+  const logger = makeLogger(logDir, "server");
   const server = new SubtreeUpdateServer(
     prover,
     handlerAddress,
     dbPath,
     signer,
+    logger,
     { indexingStartBlock, interval, fillBatches }
   );
 
   await server.start();
+}
+
+// if `consoleLevel` is undefined, no logs will be emitted to console
+// if `consoleLevel` is defined, logs at least as important `consoleLevel` will be emitted to console
+export function makeLogger(
+  logDir: string,
+  process: string,
+  consoleLevel?: string
+): Logger {
+  const infoOrWarnFilter = format((info) => {
+    return info.level === "info" || info.level === "warn" ? info : false;
+  });
+
+  const errorFilter = format((info) => {
+    return info.level === "error" ? info : false;
+  });
+
+  const debugFilter = format((info) => {
+    return info.level === "debug" ? info : false;
+  });
+
+  const logTransports: Transport[] = [
+    // write `error` logs to `error.log`
+    new transports.File({
+      format: format.combine(errorFilter(), format.timestamp(), format.json()),
+      filename: path.join(logDir, "error.log"),
+      level: "error",
+    }),
+
+    // write `warn` and `info` logs to `info.log`
+    new transports.File({
+      format: format.combine(
+        infoOrWarnFilter(),
+        format.timestamp(),
+        format.json()
+      ),
+      filename: path.join(logDir, "info.log"),
+      level: "info",
+    }),
+    // write `debug` logs `debug.log`
+    new transports.File({
+      format: (debugFilter(), format.timestamp(), format.json()),
+      filename: path.join(logDir, "debug.log"),
+      level: "debug",
+    }),
+
+    // in the future, we'll add a transport for our logging service (datadog, axiom, etc) here
+  ];
+
+  if (consoleLevel) {
+    logTransports.push(
+      new transports.Console({
+        level: consoleLevel,
+      })
+    );
+  }
+
+  return createLogger({
+    // default format
+    format: format.combine(format.timestamp(), format.json()),
+    // add metadata saying which process this log is coming from
+    defaultMeta: { service: "subtree-updater", process },
+    // write all uncaught exceptions to `uncaughtExceptions.log`
+    exceptionHandlers: [
+      new transports.File({
+        filename: path.join(logDir, "uncaughtExpections.log"),
+      }),
+    ],
+    // write all uncaught promise rejections to `uncaughtRejections.log`
+    rejectionHandlers: [
+      new transports.File({
+        filename: path.join(logDir, "uncaughtRejections.log"),
+      }),
+    ],
+    transports: logTransports,
+  });
 }
 
 main().catch((e) => console.log(`subtree updater exited with error: ${e}`));

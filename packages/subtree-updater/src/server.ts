@@ -5,6 +5,7 @@ import { Handler__factory } from "@nocturne-xyz/contracts";
 import { clearTimeout } from "timers";
 import { SubtreeUpdateProver } from "@nocturne-xyz/sdk";
 import { SyncSubtreeSubmitter } from "./submitter";
+import { Logger } from "winston";
 
 const TWELVE_SECONDS = 12 * 1000;
 
@@ -21,12 +22,14 @@ export class SubtreeUpdateServer {
   private prom?: Promise<void>;
   private timer?: NodeJS.Timeout;
   private fillBatches: boolean;
+  private logger: Logger;
 
   constructor(
     prover: SubtreeUpdateProver,
     handlerContractAddress: string,
     dbPath: string,
     signer: ethers.Signer,
+    logger: Logger,
     opts?: SubtreeUpdaterServerOpts
   ) {
     const handlerContract = Handler__factory.connect(
@@ -46,14 +49,18 @@ export class SubtreeUpdateServer {
       submitter,
       opts?.indexingStartBlock
     );
+    this.logger = logger;
     this.stopped = true;
   }
 
   public async init(): Promise<void> {
-    await this.updater.init();
+    await this.updater.init(this.logger.child({ function: "init" }));
   }
 
   public start(): void {
+    this.logger.info("starting subtree update server...");
+    this.logger.info(`polling from block ${this.updater.indexingStartBlock}`);
+
     this.stopped = false;
     const prom = new Promise<void>((resolve, reject) => {
       const poll = async () => {
@@ -61,24 +68,31 @@ export class SubtreeUpdateServer {
           resolve(undefined);
           return;
         }
-
         try {
-          console.log("polling for batch...");
-          const filledBatch =
-            await this.updater.pollInsertionsAndTryMakeBatch();
+          this.logger.debug("polling for batch...");
+          const filledBatch = await this.updater.pollInsertionsAndTryMakeBatch(
+            this.logger.child({
+              function: "pollInsertionsAndTryMakeBatch",
+            })
+          );
 
           if (filledBatch) {
-            console.log("filled batch!");
-            console.log("generating and submitting proof...");
-            await this.updater.tryGenAndSubmitProofs();
-            console.log("proof submitted!");
+            this.logger.debug("filled batch!");
+
+            await this.updater.tryGenAndSubmitProofs(
+              this.logger.child({
+                function: "tryGenAndSubmitProofs",
+              })
+            );
+
+            this.logger.debug("proof submitted!");
           } else if (this.fillBatches && this.updater.batchNotEmptyOrFull()) {
-            console.log("batch not yet full. filling it with zeros...");
+            this.logger.debug("batch not yet full. filling it with zeros...");
             await this.updater.fillBatch();
             await poll();
           }
         } catch (err) {
-          console.error("subtree update server received an error:", err);
+          this.logger.error("subtree update server received an error:", err);
           reject(err);
         }
       };
