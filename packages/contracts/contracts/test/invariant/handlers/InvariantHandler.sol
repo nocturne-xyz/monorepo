@@ -64,6 +64,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     EncodedAsset public encodedErc20;
 
+    bytes32 public lastCall;
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
     uint256[] internal _depositSizes;
@@ -97,7 +98,8 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         _;
     }
 
-    modifier countCall(bytes32 key) {
+    modifier trackCall(bytes32 key) {
+        lastCall = key;
         _calls[key]++;
         _;
     }
@@ -178,7 +180,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     function instantiateDepositETH(
         uint256 amount
-    ) public createActor countCall("instantiateDepositETH") {
+    ) public createActor trackCall("instantiateDepositETH") {
         // Bound deposit amount
         amount = bound(amount, 0, ETH_SUPPLY);
         _depositSizes.push(amount);
@@ -213,7 +215,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     function instantiateDepositErc20(
         uint256 amount
-    ) public createActor countCall("instantiateDepositErc20") {
+    ) public createActor trackCall("instantiateDepositErc20") {
         // Bound deposit amount
         amount = bound(amount, 0, erc20.balanceOf(address(this)));
         erc20.transfer(currentActor, amount);
@@ -252,7 +254,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     function retrieveDepositErc20(
         uint256 seed
-    ) public countCall("retrieveDepositErc20") {
+    ) public trackCall("retrieveDepositErc20") {
         // Get random request
         uint256 index;
         if (_depositSet.length > 0) {
@@ -288,7 +290,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     function completeDepositErc20(
         uint256 seed
-    ) public countCall("completeDepositErc20") {
+    ) public trackCall("completeDepositErc20") {
         // Get random request
         uint256 index;
         if (_depositSet.length > 0) {
