@@ -20,7 +20,7 @@ export class NullifierDB {
     await this.redis.multi(addNfTransactions).exec((maybeErr) => {
       if (maybeErr) {
         throw Error(
-          `Nullifier set manager add nf transaction failed: ${maybeErr}`
+          `nullifier set manager add nf transaction failed: ${maybeErr}`
         );
       }
     });

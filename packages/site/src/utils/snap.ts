@@ -45,7 +45,7 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
       (snap) => snap.id === SNAP_ID && (!version || snap.version === version)
     );
   } catch (e) {
-    console.log("Failed to obtain installed snap", e);
+    console.log("failed to obtain installed snap", e);
     return undefined;
   }
 };

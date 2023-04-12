@@ -81,13 +81,13 @@ export async function submitAndProcessOperation(
       body: JSON.stringify(op),
     });
     const resJson = await res.json();
-    console.log("Bundler server response: ", resJson);
+    console.log("bundler server response: ", resJson);
 
     if (!res.ok) {
       throw new Error(resJson);
     }
   } catch (err) {
-    console.log("Error submitting operation: ", err);
+    console.log("error submitting operation: ", err);
     throw err;
   }
 
@@ -104,7 +104,7 @@ export async function submitAndProcessOperation(
       });
       const statusRes = await res.json();
       const status = statusRes.status as OperationStatus;
-      console.log(`Bundler marked operation ${operationDigest} ${status}`);
+      console.log(`bundler marked operation ${operationDigest} ${status}`);
 
       if (
         status === OperationStatus.EXECUTED_SUCCESS ||
@@ -115,7 +115,7 @@ export async function submitAndProcessOperation(
         return status;
       }
     } catch (err) {
-      console.log("Error getting operation status: ", err);
+      console.log("error getting operation status: ", err);
       throw err;
     }
 

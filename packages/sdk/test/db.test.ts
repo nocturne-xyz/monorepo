@@ -26,7 +26,7 @@ describe("InMemoryKVStore", async () => {
     await kv.close();
   });
 
-  it("Stores, gets, and removes primitive values in KV", async () => {
+  it("stores, gets, and removes primitive values in KV", async () => {
     await kv.putString("hello", "world");
 
     const val = await kv.getString("hello");
@@ -116,7 +116,7 @@ describe("InMemoryKVStore", async () => {
     }
   });
 
-  it("dumps", async () => {
+  it("dumps to an object", async () => {
     const kvs: KV[] = [
       ["a", "1"],
       ["b", "2"],
@@ -203,7 +203,7 @@ describe("NocturneDB", async () => {
     await db.kv.close();
   });
 
-  it("Stores a batch of notes with a single asset", async () => {
+  it("stores a batch of notes with a single asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
     await db.storeNotes(notes);
 

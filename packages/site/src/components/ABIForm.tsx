@@ -47,7 +47,7 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
     event.preventDefault();
     // validate contract address
     if (!ethers.utils.isAddress(contractAddressText)) {
-      alert("Invalid contract address");
+      alert("invalid contract address");
       return;
     }
 
@@ -57,7 +57,7 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
     const abi = tryParseABI(abiText);
     console.log("abi:", abi);
     if (abi === undefined) {
-      alert("Invalid ABI");
+      alert("invalid ABI");
       return;
     }
     setABI(abi);
@@ -84,10 +84,10 @@ export const ABIForm = ({ sdk, bundlerEndpoint }: ABIFormProps) => {
       actions: actions.map((a) => a.action),
     };
 
-    console.log("Operation request:", operationRequest);
+    console.log("operation request:", operationRequest);
     try {
       const provenOperation = await sdk.signAndProveOperation(operationRequest);
-      console.log("Proven operation:", provenOperation);
+      console.log("proven operation:", provenOperation);
 
       sdk
         .submitProvenOperation(provenOperation)

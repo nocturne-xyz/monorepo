@@ -73,8 +73,8 @@ function toObject(obj: any) {
     depositRequest,
     signature
   );
-  console.log("Recovered:", recoveredAddress);
-  console.log("Actual:", expectedSignerAddress);
+  console.log("recovered:", recoveredAddress);
+  console.log("actual:", expectedSignerAddress);
 
   const json = JSON.stringify(
     toObject({

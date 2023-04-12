@@ -72,7 +72,7 @@ export class SubtreeUpdater {
     this.submitter = submitter;
 
     this.indexingStartBlock = indexingStartBlock;
-    console.log("Indexing start block:", this.indexingStartBlock);
+    console.log("indexing start block:", this.indexingStartBlock);
   }
 
   public async init(): Promise<void> {
@@ -96,7 +96,7 @@ export class SubtreeUpdater {
     }
 
     console.log(
-      `Indexing. From: ${nextBlockToIndex}. To: ${currentBlockNumber}.`
+      `indexing. From: ${nextBlockToIndex}. To: ${currentBlockNumber}.`
     );
 
     const [newInsertions, newCommits] = await Promise.all([

@@ -93,7 +93,7 @@ export default async function main(): Promise<void> {
   } else {
     if (proverPath === undefined || witnessGeneratorPath === undefined) {
       throw new Error(
-        "Must provide --prover-path and --witness-generator-path when not using mock prover"
+        "must provide --prover-path and --witness-generator-path when not using mock prover"
       );
     }
     prover = new RapidsnarkSubtreeUpdateProver(
@@ -116,4 +116,4 @@ export default async function main(): Promise<void> {
   await server.start();
 }
 
-main().catch((e) => console.log(`Subtree updater exited with error: ${e}`));
+main().catch((e) => console.log(`subtree updater exited with error: ${e}`));

@@ -177,7 +177,7 @@ const Index = () => {
       .deadline(deadline)
       .build();
 
-    console.log("Operation request: ", operationRequest);
+    console.log("operation request: ", operationRequest);
     try {
       const provenOperation = await nocturneFrontendSDK!.signAndProveOperation(
         operationRequest

@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
 describe("Config", async () => {
-  it("Loads example config", () => {
+  it("loads example config", () => {
     const jsonConfig = JSON.parse(
       fs.readFileSync(`${__dirname}/../configs/example-network.json`).toString()
     );

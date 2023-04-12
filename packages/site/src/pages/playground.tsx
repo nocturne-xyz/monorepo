@@ -64,7 +64,7 @@ const Playground = () => {
   useEffect(() => {
     loadNocturneFrontendSDK(BUNDLER_ENDPOINT, WALLET_CONTRACT_ADDRESS).then(
       (sdk) => {
-        console.log("Instantiated frontend sdk");
+        console.log("instantiated frontend sdk");
         setFrontendSDK(sdk);
       }
     );
@@ -82,7 +82,7 @@ const Playground = () => {
   useEffect(() => {
     const timeout = setInterval(async () => {
       if (!nocturneFrontendSDK) return;
-      console.log("Syncing and leaves...");
+      console.log("syncing and leaves...");
       await sync();
     }, 20_000);
 

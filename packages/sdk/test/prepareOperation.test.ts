@@ -34,7 +34,7 @@ describe("gatherNotes", () => {
     // attempt request 1000 tokens, more than the user owns
     // expect to throw error
     await expect(gatherNotes(nocturneDB, 1000n, stablescam)).to.be.rejectedWith(
-      "Attempted to spend more funds than owned"
+      "attempted to spend more funds than owned"
     );
   });
 

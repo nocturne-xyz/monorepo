@@ -23,7 +23,7 @@ import * as BigintJSON from "bigint-json-serialization";
 export const run = new Command("run")
   .summary("run test actor")
   .description(
-    "Must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
+    "must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
   )
   .requiredOption(
     "--nocturne-config-path <string>",
@@ -57,28 +57,28 @@ export const run = new Command("run")
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
-      throw new Error("Missing RPC_URL");
+      throw new Error("missing RPC_URL");
     }
 
     const bundlerEndpoint = process.env.BUNDLER_URL;
     if (!bundlerEndpoint) {
-      throw new Error("Missing BUNDLER_URL");
+      throw new Error("missing BUNDLER_URL");
     }
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
     if (!subgraphEndpoint) {
-      throw new Error("Missing SUBGRAPH_URL");
+      throw new Error("missing SUBGRAPH_URL");
     }
 
     const privateKey = process.env.TX_SIGNER_KEY;
     if (!privateKey) {
-      throw new Error("Missing TX_SIGNER_KEY");
+      throw new Error("missing TX_SIGNER_KEY");
     }
 
     const nocturneSKStr = process.env.NOCTURNE_SPENDING_KEY;
     if (!nocturneSKStr) {
-      throw new Error("Missing NOCTURNE_SPENDING_KEY");
+      throw new Error("missing NOCTURNE_SPENDING_KEY");
     }
     const nocturneSK = BigInt(nocturneSKStr);
 

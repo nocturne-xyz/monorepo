@@ -127,7 +127,7 @@ export class DepositScreenerProcessor {
   ): Promise<void> {
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
-        console.log(`Received deposit events: ${JSON.stringify(event)}`);
+        console.log(`received deposit events: ${JSON.stringify(event)}`);
         const result = await this.handleDepositRequest({ ...event });
         await this.db.setDepositRequestStatus({ ...event }, result);
       }
@@ -223,14 +223,14 @@ export class DepositScreenerProcessor {
       verifyingContract: this.depositManagerContract.address,
     };
 
-    console.log("Signing deposit request:", JSON.stringify(depositRequest));
+    console.log("signing deposit request:", JSON.stringify(depositRequest));
     const signature = await signDepositRequest(
       this.attestationSigner,
       domain,
       depositRequest
     );
 
-    console.log("Submitting completeDeposit tx...");
+    console.log("submitting completeDeposit tx...");
     const tx = await this.depositManagerContract
       .completeDeposit(depositRequest, signature)
       .catch((e) => {
@@ -238,7 +238,7 @@ export class DepositScreenerProcessor {
         throw new Error(e);
       });
 
-    console.log("Waiting for receipt...");
+    console.log("waiting for receipt...");
     const receipt = await tx.wait(1);
     console.log("completeDeposit receipt:", receipt);
 
@@ -246,11 +246,11 @@ export class DepositScreenerProcessor {
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")
     ) as DepositCompletedEvent[];
-    console.log("Matching events:", matchingEvents);
+    console.log("matching events:", matchingEvents);
 
     if (matchingEvents.length > 0) {
       console.log(
-        `Deposit signed and submitted. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+        `deposit signed and submitted. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
       );
       await this.db.setDepositRequestStatus(
         depositRequest,
@@ -259,7 +259,7 @@ export class DepositScreenerProcessor {
     } else {
       // NOTE: not sure if possible that tx submission passes but event not found
       console.error(
-        `Deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
+        `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
       );
     }
   }

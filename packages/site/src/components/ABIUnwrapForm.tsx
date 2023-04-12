@@ -39,7 +39,7 @@ export const ABIUnwrapForm = ({
 
   const handleEnqueueUnwrapAsset = async () => {
     if (!isAddress(assetAddress)) {
-      alert("Invalid asset address");
+      alert("invalid asset address");
       return;
     }
 
@@ -47,7 +47,7 @@ export const ABIUnwrapForm = ({
     try {
       id = BigInt(assetID);
     } catch {
-      alert("Invalid asset ID");
+      alert("invalid asset ID");
       return;
     }
 
@@ -55,7 +55,7 @@ export const ABIUnwrapForm = ({
     try {
       unwrapValueDecimals = Number(amount);
     } catch {
-      alert("Invalid amount");
+      alert("invalid amount");
       return;
     }
 

@@ -131,7 +131,7 @@ export class NocturneFrontendSDK {
   ): Promise<ProvenOperation> {
     const op = await this.requestSignOperation(operationRequest);
 
-    console.log("SignedOperation", op);
+    console.log("SignedOperation:", op);
     return await this.proveOperation(op);
   }
 
@@ -140,7 +140,7 @@ export class NocturneFrontendSDK {
   }
 
   async verifyProvenOperation(operation: ProvenOperation): Promise<boolean> {
-    console.log("ProvenOperation", operation);
+    console.log("ProvenOperation:", operation);
     const opDigest = computeOperationDigest(operation);
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =

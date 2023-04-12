@@ -31,7 +31,7 @@ export function getTokenContract(
   } else if (assetType == AssetType.ERC1155) {
     abi = ERC1155;
   } else {
-    throw new Error(`Unknown asset type: ${assetType}`);
+    throw new Error(`unknown asset type: ${assetType}`);
   }
 
   return new ethers.Contract(assetAddress, abi, signerOrProvider);
@@ -42,7 +42,7 @@ export async function getTokenDetails(
   assetAddress: Address,
   signerOrProvider: ethers.Signer | ethers.providers.Provider
 ): Promise<TokenDetails> {
-  console.log("Getting token contract...");
+  console.log("getting token contract...");
   const tokenContract = getTokenContract(
     assetType,
     assetAddress,
@@ -59,7 +59,7 @@ export async function getTokenDetails(
   } else if (assetType == AssetType.ERC1155) {
     return { decimals: 1, symbol: "" };
   } else {
-    throw new Error(`Unknown asset variant: ${assetType}`);
+    throw new Error(`unknown asset variant: ${assetType}`);
   }
 }
 

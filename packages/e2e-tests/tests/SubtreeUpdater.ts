@@ -12,7 +12,7 @@ import { depositFundsSingleToken } from "../src/deposit";
 
 const PER_SPEND_AMOUNT = 100n;
 
-describe("Wallet with standalone SubtreeUpdateServer", async () => {
+describe("subtree updater", async () => {
   let teardown: () => Promise<void>;
 
   let aliceEoa: ethers.Wallet;
@@ -49,7 +49,7 @@ describe("Wallet with standalone SubtreeUpdateServer", async () => {
     ));
 
     token = testDeployment.tokens.erc20;
-    console.log("Token deployed at: ", token.address);
+    console.log("token deployed at: ", token.address);
 
     server = newServer();
     await server.init();

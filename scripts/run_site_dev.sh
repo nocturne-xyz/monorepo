@@ -69,8 +69,8 @@ SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^Token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^Token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^ERC20 token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^ERC20 token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read GAS_TOKEN_CONTRACT_ADDR < <(sed -nr 's/^Gas token deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 popd
 
@@ -121,7 +121,7 @@ popd
 docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
-echo "Bundler running at PID: $BUNDLER_PID"
+echo "bundler running at PID: $BUNDLER_PID"
 
 # write screener's .env file
 pushd packages/deposit-screener
@@ -146,7 +146,7 @@ popd
 docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
 SCREENER_PID=$!
 
-echo "Screener running at PID: $SCREENER_PID"
+echo "screener running at PID: $SCREENER_PID"
 
 # write subtree updater's .env file
 pushd packages/subtree-updater
@@ -160,7 +160,7 @@ popd
 docker run --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --handler-address "$HANDLER_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
-echo "Subtree updater running at PID: $SUBTREE_UPDATER_PID"
+echo "subtree updater running at PID: $SUBTREE_UPDATER_PID"
 
 SNAP_INDEX_TS="$SCRIPT_DIR/../packages/snap/src/index.ts"
 SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
