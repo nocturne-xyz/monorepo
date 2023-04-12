@@ -8,6 +8,7 @@ import {
   NoteTrait,
   IncludedNote,
 } from "@nocturne-xyz/sdk";
+import { sleep } from "../src/utils";
 import { setupTestDeployment, SUBGRAPH_URL } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
@@ -59,6 +60,8 @@ describe("SDKSubgraphSyncAdapter", async () => {
 
     const firstRangeEndBlockExpected = await provider.getBlockNumber();
     console.log("firstRangeEndBlockExpected: ", firstRangeEndBlockExpected);
+    // wait for subgraph
+    await sleep(3_000);
 
     // check that diffs include 3 notes
     // check that there's no duplicate notes
@@ -94,6 +97,8 @@ describe("SDKSubgraphSyncAdapter", async () => {
 
     const secondRangeEndBlockExpected = await provider.getBlockNumber();
     console.log("firstRangeEndBlockExpected: ", firstRangeEndBlockExpected);
+    // wait for subgraph
+    await sleep(3_000);
 
     // check that diffs include 4 notes
     // check that there's no duplicate notes
