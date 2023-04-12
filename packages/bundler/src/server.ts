@@ -9,7 +9,7 @@ import { Queue } from "bullmq";
 import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
 import { NullifierDB, StatusDB } from "./db";
 import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { getOperationStatusHandler, relayHandler } from "./routes";
+import { makeGetOperationStatusHandler, makeRelayHandler } from "./routes";
 
 export class BundlerServer {
   redis: IORedis;
@@ -42,7 +42,7 @@ export class BundlerServer {
     const router = express.Router();
     router.post(
       "/relay",
-      relayHandler({
+      makeRelayHandler({
         queue: this.queue,
         statusDB: this.statusDB,
         nullifierDB: this.nullifierDB,
@@ -59,7 +59,7 @@ export class BundlerServer {
 
     router.get(
       "/operations/:id",
-      getOperationStatusHandler({
+      makeGetOperationStatusHandler({
         statusDB: this.statusDB,
         logger: this.logger.child({
           route: "/operations/:id",

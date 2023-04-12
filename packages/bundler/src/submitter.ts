@@ -159,7 +159,7 @@ export class BundlerSubmitter {
       logger.error("failed to process bundle:", err);
       const redisTxs = operations.flatMap((op) => {
         const digest = computeOperationDigest(op);
-        logger.info(
+        logger.error(
           `setting operation with digest ${digest} to status BUNDLE_REVERTED`
         );
         const statusTx = this.statusDB.getSetJobStatusTransaction(

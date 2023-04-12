@@ -30,7 +30,7 @@ export interface HandleRelayDeps {
   opts: { ignoreGas?: boolean };
 }
 
-export function relayHandler({
+export function makeRelayHandler({
   queue,
   statusDB,
   nullifierDB,
@@ -121,7 +121,7 @@ export interface HandleGetOperationStatusDeps {
   logger: Logger;
 }
 
-export function getOperationStatusHandler({
+export function makeGetOperationStatusHandler({
   statusDB,
   logger,
 }: HandleGetOperationStatusDeps): RequestHandler {
