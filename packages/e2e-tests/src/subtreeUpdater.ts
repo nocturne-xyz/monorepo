@@ -1,6 +1,7 @@
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
+import { makeLogger } from "./utils";
 
 export interface SubtreeUpdaterConfig {
   handlerAddress: string;
@@ -14,11 +15,13 @@ export async function startSubtreeUpdater(
 ): Promise<() => Promise<void>> {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const signer = new ethers.Wallet(config.txSignerKey, provider);
+  const logger = makeLogger("SubtreeUpdater", "server");
   const updater = new SubtreeUpdateServer(
     new MockSubtreeUpdateProver(),
     config.handlerAddress,
     "./db",
     signer,
+    logger,
     {
       fillBatches: true,
       interval: config.interval ?? 4_000,

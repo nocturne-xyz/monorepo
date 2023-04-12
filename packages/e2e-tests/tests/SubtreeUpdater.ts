@@ -5,7 +5,11 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 
 import { NocturneWalletSDK, NocturneDB } from "@nocturne-xyz/sdk";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
+import {
+  getSubtreeUpdateProver,
+  getSubtreeUpdaterDelay,
+  makeLogger,
+} from "../src/utils";
 import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { depositFundsSingleToken } from "../src/deposit";
@@ -64,6 +68,7 @@ describe("subtree updater", async () => {
       handler.address,
       serverDBPath,
       subtreeUpdaterEoa,
+      makeLogger("subtree updater", "server"),
       { interval: 1_000 }
     );
     return server;
