@@ -6,12 +6,73 @@ import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
+import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
+import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import "../utils/NocturneUtils.sol";
+import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
+import {Wallet} from "../../Wallet.sol";
+import {Handler} from "../../Handler.sol";
+import {ParseUtils} from "../utils/ParseUtils.sol";
+import {EventParsing} from "../utils/EventParsing.sol";
+import {WETH9} from "../tokens/WETH9.sol";
+import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
+import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
+import {Utils} from "../../libs/Utils.sol";
+import "../../libs/Types.sol";
 
 contract DepositManagerInvariants is Test {
+    string constant CONTRACT_NAME = "NocturneDepositManager";
+    string constant CONTRACT_VERSION = "v1";
+    uint256 constant SCREENER_PRIVKEY = 1;
+    address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
+
     DepositManagerHandler public depositManagerHandler;
 
+    Wallet public wallet;
+    Handler public handler;
+    TestDepositManager public depositManager;
+    WETH9 public weth;
+
+    SimpleERC20Token public erc20;
+    SimpleERC721Token public erc721;
+    SimpleERC1155Token public erc1155;
+
     function setUp() public virtual {
-        depositManagerHandler = new DepositManagerHandler();
+        wallet = new Wallet();
+        handler = new Handler();
+        depositManager = new TestDepositManager();
+
+        weth = new WETH9();
+
+        TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
+        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
+
+        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
+        wallet.initialize(address(handler), address(joinSplitVerifier));
+
+        wallet.setDepositSourcePermission(address(depositManager), true);
+        handler.setSubtreeBatchFillerPermission(address(this), true);
+
+        depositManager.initialize(
+            CONTRACT_NAME,
+            CONTRACT_VERSION,
+            address(wallet),
+            address(weth)
+        );
+        depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
+
+        erc20 = new SimpleERC20Token();
+        erc721 = new SimpleERC721Token();
+        erc1155 = new SimpleERC1155Token();
+
+        depositManagerHandler = new DepositManagerHandler(
+            depositManager,
+            erc20,
+            erc721,
+            erc1155
+        );
+        erc20.reserveTokens(address(depositManagerHandler), type(uint256).max);
 
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
@@ -28,9 +89,9 @@ contract DepositManagerInvariants is Test {
         );
 
         excludeSender(address(depositManagerHandler));
-        excludeSender(address(depositManagerHandler.wallet()));
-        excludeSender(address(depositManagerHandler.depositManager()));
-        excludeSender(address(depositManagerHandler.weth()));
+        excludeSender(address(wallet));
+        excludeSender(address(depositManager));
+        excludeSender(address(weth));
     }
 
     function invariant_callSummary() public view {
@@ -49,9 +110,7 @@ contract DepositManagerInvariants is Test {
 
     function invariant_depositManagerBalanceEqualsInMinusOutETH() external {
         assertEq(
-            depositManagerHandler.weth().balanceOf(
-                address(depositManagerHandler.depositManager())
-            ),
+            weth.balanceOf(address(depositManagerHandler.depositManager())),
             depositManagerHandler.ghost_instantiateDepositSumETH() -
                 depositManagerHandler.ghost_retrieveDepositSumETH() -
                 depositManagerHandler.ghost_completeDepositSumETH()
@@ -65,7 +124,7 @@ contract DepositManagerInvariants is Test {
 
         uint256 sum = 0;
         for (uint256 i = 0; i < allActors.length; i++) {
-            sum += depositManagerHandler.weth().balanceOf(allActors[i]);
+            sum += weth.balanceOf(allActors[i]);
         }
 
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumETH());
@@ -73,9 +132,7 @@ contract DepositManagerInvariants is Test {
 
     function invariant_walletBalanceEqualsCompletedDepositSumETH() external {
         assertEq(
-            depositManagerHandler.weth().balanceOf(
-                address(depositManagerHandler.wallet())
-            ),
+            weth.balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
@@ -85,7 +142,7 @@ contract DepositManagerInvariants is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                depositManagerHandler.weth().balanceOf(allActors[i]),
+                weth.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_retrieveDepositSumETHFor(
                     allActors[i]
                 )
@@ -98,7 +155,7 @@ contract DepositManagerInvariants is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
-                depositManagerHandler.weth().balanceOf(allActors[i]),
+                weth.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_instantiateDepositSumETHFor(
                     allActors[i]
                 )
@@ -142,9 +199,7 @@ contract DepositManagerInvariants is Test {
 
     function invariant_walletBalanceEqualsCompletedDepositSumErc20() external {
         assertEq(
-            depositManagerHandler.erc20().balanceOf(
-                address(depositManagerHandler.wallet())
-            ),
+            depositManagerHandler.erc20().balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumErc20()
         );
     }

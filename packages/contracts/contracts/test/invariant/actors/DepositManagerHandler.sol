@@ -54,8 +54,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
     // ______PUBLIC______
-    Wallet public wallet;
-    Handler public handler;
     TestDepositManager public depositManager;
 
     WETH9 public weth;
@@ -85,41 +83,22 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     DepositRequest[] internal _depositSet;
 
-    constructor() {
-        wallet = new Wallet();
-        handler = new Handler();
-        depositManager = new TestDepositManager();
-
-        weth = new WETH9();
-
-        TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
-        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
-
-        wallet.setDepositSourcePermission(address(depositManager), true);
-        handler.setSubtreeBatchFillerPermission(address(this), true);
-
-        depositManager.initialize(
-            CONTRACT_NAME,
-            CONTRACT_VERSION,
-            address(wallet),
-            address(weth)
-        );
-        depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
-
-        erc20 = new SimpleERC20Token();
-        erc721 = new SimpleERC721Token();
-        erc1155 = new SimpleERC1155Token();
+    constructor(
+        TestDepositManager _depositManager,
+        SimpleERC20Token _erc20,
+        SimpleERC721Token _erc721,
+        SimpleERC1155Token _erc1155
+    ) {
+        depositManager = _depositManager;
+        erc20 = _erc20;
+        erc721 = _erc721;
+        erc1155 = _erc1155;
 
         encodedErc20 = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(erc20),
+            address(_erc20),
             ERC20_ID
         );
-
-        erc20.reserveTokens(address(this), type(uint256).max);
     }
 
     modifier createActor() {
