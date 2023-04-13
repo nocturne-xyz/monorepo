@@ -3619,7 +3619,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
-    "@nocturne-xyz/offchain-utils": "workspace:^"
+    "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
