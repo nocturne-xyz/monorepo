@@ -2,7 +2,8 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerProcessor } from "../../../processor";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
-import { getRedis, makeLogger } from "../utils";
+import { getRedis } from "../utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -45,7 +46,7 @@ const runProcess = new Command("processor")
     }
     const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
-    const logger = makeLogger(logDir, "processor");
+    const logger = makeLogger(logDir, "deposit-screener", "processor");
     const processor = new DepositScreenerProcessor(
       adapter,
       depositManagerAddress,

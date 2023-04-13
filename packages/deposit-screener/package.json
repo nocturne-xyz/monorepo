@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@nocturne-xyz/contracts": "1.0.20-alpha",
+    "@nocturne-xyz/offchain-utils": "workspace:^",
     "@nocturne-xyz/sdk": "1.0.100-alpha",
     "@types/randombytes": "^2.0.0",
     "big-integer": "^1.6.42",
@@ -37,8 +38,7 @@
     "js-sha256": "^0.9.0",
     "randombytes": "^2.1.0",
     "sorted-btree": "^1.8.1",
-    "winston": "^3.8.2",
-    "winston-transport": "^4.5.0"
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

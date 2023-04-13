@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
-import { makeLogger, makeRedisInstance } from "./utils";
+import { makeRedisInstance } from "./utils";
+import { makeTestLogger } from "@noctune-xyz/offchain-utils";
 import {
   DepositScreenerProcessor,
   SubgraphScreenerSyncAdapter,
@@ -30,7 +31,7 @@ export async function startDepositScreener(
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const txSigner = new ethers.Wallet(txSignerKey, provider);
   const attestationSigner = new ethers.Wallet(attestationSignerKey);
-  const logger = makeLogger("deposit-screener", "processor");
+  const logger = makeTestLogger("deposit-screener", "processor");
   const processor = new DepositScreenerProcessor(
     adapter,
     depositManagerAddress,

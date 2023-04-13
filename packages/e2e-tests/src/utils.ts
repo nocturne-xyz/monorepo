@@ -15,8 +15,6 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/sdk";
-import { createLogger, transports, Logger } from "winston";
-import { presets } from "winston-humanize-formatter";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -270,33 +268,4 @@ export function makeRedisInstance(): RedisHandle {
       redis.flushall();
     },
   };
-}
-
-// configure minimum log importance for console output with `CONSOLE_LOG_LEVEL` env var
-export function makeLogger(service: string, processName: string): Logger {
-  let logLevel = "info";
-  if (process.env.LOG_LEVEL) {
-    logLevel = process.env.LOG_LEVEL;
-  }
-
-  return createLogger({
-    format: presets.cli.dev,
-    // add metadata saying which process this log is coming from
-    defaultMeta: { service, process: processName },
-    exceptionHandlers: [
-      new transports.Console({
-        level: "error",
-      }),
-    ],
-    rejectionHandlers: [
-      new transports.Console({
-        level: "error",
-      }),
-    ],
-    transports: [
-      new transports.Console({
-        level: logLevel,
-      }),
-    ],
-  });
 }

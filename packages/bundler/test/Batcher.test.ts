@@ -9,7 +9,8 @@ import {
   ProvenOperationJobData,
   PROVEN_OPERATION_JOB_TAG,
 } from "../src/common";
-import { VALID_PROVEN_OPERATION_OBJ, makeLogger } from "./utils";
+import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
 import * as JSON from "bigint-json-serialization";
@@ -24,7 +25,7 @@ describe("BundlerBatcher", async () => {
   let statusDB: StatusDB;
   let batcherDB: BatcherDB<ProvenOperationJobData>;
   let batcher: BundlerBatcher;
-  const logger = makeLogger();
+  const logger = makeTestLogger("bundler", "batcher");
 
   before(async () => {
     server = await RedisMemoryServer.create();

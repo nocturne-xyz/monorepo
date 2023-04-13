@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { BundlerBatcher } from "../../../batcher";
-import { getRedis, makeLogger } from "../../utils";
+import { getRedis } from "../../utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 const runBatcher = new Command("batcher")
   .summary("run bundler batcher")
@@ -18,7 +19,7 @@ const runBatcher = new Command("batcher")
   .action(async (options) => {
     const { maxLatency, batchSize, logDir } = options;
 
-    const logger = makeLogger(logDir, "batcher");
+    const logger = makeLogger(logDir, "bundler", "batcher");
     const batcher = new BundlerBatcher(
       getRedis(),
       logger,

@@ -47,6 +47,7 @@
     "node": "18.12.1"
   },
   "dependencies": {
+    "@nocturne-xyz/offchain-utils": "workspace:^",
     "winston-humanize-formatter": "^0.1.4"
   }
 }

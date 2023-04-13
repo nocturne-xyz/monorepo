@@ -1,4 +1,5 @@
-import { TeardownFn, makeLogger, makeRedisInstance } from "./utils";
+import { TeardownFn, makeRedisInstance } from "./utils";
+import { makeTestLogger } from "@noctune-xyz/offchain-utils";
 import {
   BundlerBatcher,
   BundlerServer,
@@ -36,7 +37,7 @@ function startBundlerSubmitter(
 ): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const signer = new ethers.Wallet(config.txSignerKey, provider);
-  const logger = makeLogger("bundler", "submitter");
+  const logger = makeTestLogger("bundler", "submitter");
   const submitter = new BundlerSubmitter(
     config.walletAddress,
     signer,
@@ -57,7 +58,7 @@ function startBundlerBatcher(
   config: BundlerConfig,
   redis: IORedis
 ): TeardownFn {
-  const logger = makeLogger("bundler", "batcher");
+  const logger = makeTestLogger("bundler", "batcher");
   const batcher = new BundlerBatcher(redis, logger, config.maxLatency);
   const { promise, teardown } = batcher.start();
   promise.catch((err) => {
@@ -70,7 +71,7 @@ function startBundlerBatcher(
 
 function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
-  const logger = makeLogger("bundler", "server");
+  const logger = makeTestLogger("bundler", "server");
   const server = new BundlerServer(
     config.walletAddress,
     provider,
