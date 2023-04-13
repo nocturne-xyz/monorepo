@@ -17,6 +17,7 @@ import {
   NocturneConfig,
   NocturneContractDeployment,
 } from "@nocturne-xyz/config";
+import { panel, heading, text } from "@metamask/snaps-ui";
 
 const HANDLER_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 const START_BLOCK = 0;
@@ -68,14 +69,6 @@ const DUMMY_CONFIG = new NocturneConfig(
 
 const Fr = BabyJubJub.ScalarField;
 
-/**
- * Get a message from the origin. For demonstration purposes only.
- *
- * @param originString - The origin string.
- * @returns A message based on the origin.
- */
-const getMessage = (originString: string): string => `Hello, ${originString}!`;
-
 const NOCTURNE_BIP44_COINTYPE = 6789;
 
 async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
@@ -103,7 +96,7 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @param args.request - A validated JSON-RPC request object.
  * @returns `null` if the request succeeded.
  * @throws If the request method is not valid for this snap.
- * @throws If the `snap_confirm` call failed.
+ * @throws If the `snap_dialog` call failed.
  */
 export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
@@ -130,19 +123,6 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   console.log("Switching on method: ", request.method);
   switch (request.method) {
-    case "hello":
-      return await snap.request({
-        method: "snap_confirm",
-        params: [
-          {
-            prompt: getMessage(origin),
-            description:
-              "This custom confirmation is just for display purposes.",
-            textAreaContent:
-              "But you can edit the snap source code to make it do something, if you want to!",
-          },
-        ],
-      });
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
@@ -180,14 +160,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
       // Confirm spend sig auth
       await snap.request({
-        method: "snap_confirm",
-        params: [
-          {
-            prompt: `Confirm Spend Authorization`,
-            description: `${origin}`,
-            textAreaContent: JSON.stringify(operationRequest.joinSplitRequests),
-          },
-        ],
+        method: "snap_dialog",
+        params: {
+          type: "confirmation",
+          // TODO: better confirmation dialog UI
+          content: panel([
+            heading(`${origin} would like to spend funds via Nocturne`),
+            text(JSON.stringify(operationRequest.joinSplitRequests)),
+          ]),
+        },
       });
 
       console.log("Operation request: ", operationRequest);

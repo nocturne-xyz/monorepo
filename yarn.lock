@@ -3203,6 +3203,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metamask/snaps-ui@npm:^0.32.2":
+  version: 0.32.2
+  resolution: "@metamask/snaps-ui@npm:0.32.2"
+  dependencies:
+    "@metamask/utils": ^5.0.0
+    superstruct: ^1.0.3
+  checksum: 98e8900efb63a0f1ec4893624290a1bf2d0fa416f99d57f33532865063f4e4b9b3787b77630629c64d7dc041e3508cac81044eca067ed76a07aa380bc5997db2
+  languageName: node
+  linkType: hard
+
 "@metamask/snaps-utils@npm:^0.30.0":
   version: 0.30.0
   resolution: "@metamask/snaps-utils@npm:0.30.0"
@@ -3723,6 +3733,7 @@ __metadata:
     "@metamask/key-tree": ^6.0.0
     "@metamask/snaps-cli": ^0.30.0
     "@metamask/snaps-types": ^0.30.0
+    "@metamask/snaps-ui": ^0.32.2
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
