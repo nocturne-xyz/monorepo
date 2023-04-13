@@ -153,10 +153,8 @@ export class DepositScreenerProcessor {
           gasCompensation,
         };
 
-        const childLogger = logger.child({ depositRequest });
-
         const result = await this.handleDepositRequest(
-          childLogger,
+          logger.child({ depositRequest }),
           depositRequest
         );
         await this.db.setDepositRequestStatus(depositRequest, result);
@@ -175,7 +173,6 @@ export class DepositScreenerProcessor {
     });
 
     if (status == DepositRequestStatus.PassedScreen) {
-      logger.debug(`checking deposit request`);
       await this.enqueueDepositRequest(logger, depositRequest);
       return DepositRequestStatus.Enqueued;
     } else {
@@ -226,9 +223,11 @@ export class DepositScreenerProcessor {
         );
         const hash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
-          depositRequest,
+          depositRequestSpender: depositRequest.spender,
+          depositReququestNonce: depositRequest.nonce,
           depositRequestHash: hash,
         });
+
         childLogger.info("processing deposit request");
 
         const inSet =
@@ -286,7 +285,7 @@ export class DepositScreenerProcessor {
 
     console.info("waiting for receipt...");
     const receipt = await tx.wait(1);
-    console.debug("completeDeposit receipt:", receipt);
+    console.info("completeDeposit receipt:", receipt);
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
