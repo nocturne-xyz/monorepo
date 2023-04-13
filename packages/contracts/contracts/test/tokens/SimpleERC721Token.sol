@@ -15,4 +15,8 @@ contract SimpleERC721Token is ISimpleERC721Token, ERC721, Ownable {
     ) external virtual override {
         _safeMint(account, tokenId);
     }
+
+    function exists(uint256 tokenId) external view returns (bool) {
+        return _exists(tokenId);
+    }
 }

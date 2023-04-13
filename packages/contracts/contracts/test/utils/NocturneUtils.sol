@@ -18,8 +18,7 @@ struct FormatOperationArgs {
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
     uint256 root;
-    uint256 publicSpendPerJoinSplit;
-    uint256 numJoinSplits;
+    uint256[] joinSplitPublicSpends;
     EncodedAsset[] encodedRefundAssets;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
@@ -51,6 +50,17 @@ library NocturneUtils {
         for (uint256 i = 0; i < 8; i++) {
             _values[i] = uint256(4757829);
         }
+    }
+
+    function fillJoinSplitPublicSpends(
+        uint256 perJoinSplitPublicSpend,
+        uint256 numJoinSplits
+    ) internal pure returns (uint256[] memory) {
+        uint256[] memory joinSplitPublicSpends = new uint256[](numJoinSplits);
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplitPublicSpends[i] = perJoinSplitPublicSpend;
+        }
+        return joinSplitPublicSpends;
     }
 
     function formatDepositRequest(
@@ -115,7 +125,7 @@ library NocturneUtils {
             operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
         ) {
             require(
-                args.numJoinSplits >= 2,
+                args.joinSplitPublicSpends.length >= 2,
                 "Must specify at least 2 joinsplits for JOINSPLIT_NF_ALREADY_IN_SET failure type"
             );
         }
@@ -151,8 +161,10 @@ library NocturneUtils {
         );
 
         // Setup joinsplits depending on failure type
-        JoinSplit[] memory joinSplits = new JoinSplit[](args.numJoinSplits);
-        for (uint256 i = 0; i < args.numJoinSplits; i++) {
+        JoinSplit[] memory joinSplits = new JoinSplit[](
+            args.joinSplitPublicSpends.length
+        );
+        for (uint256 i = 0; i < args.joinSplitPublicSpends.length; i++) {
             uint256 nullifierA = 0;
             uint256 nullifierB = 0;
             if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
@@ -161,14 +173,14 @@ library NocturneUtils {
             } else if (
                 operationFailure ==
                 OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
-                i + 2 == args.numJoinSplits
+                i + 2 == args.joinSplitPublicSpends.length
             ) {
                 nullifierA = uint256(2 * 0x1234); // Matches last NF B
                 nullifierB = uint256(2 * i + 1);
             } else if (
                 operationFailure ==
                 OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
-                i + 1 == args.numJoinSplits
+                i + 1 == args.joinSplitPublicSpends.length
             ) {
                 nullifierA = uint256(2 * i);
                 nullifierB = uint256(2 * 0x1234); // Matches 2nd to last NF A
@@ -186,7 +198,7 @@ library NocturneUtils {
                 newNoteBEncrypted: newNoteBEncrypted,
                 proof: dummyProof(),
                 encodedAsset: encodedAsset,
-                publicSpend: args.publicSpendPerJoinSplit,
+                publicSpend: args.joinSplitPublicSpends[i],
                 encSenderCanonAddrC1X: 0,
                 encSenderCanonAddrC2X: 0
             });

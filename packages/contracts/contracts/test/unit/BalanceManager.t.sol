@@ -244,8 +244,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -278,8 +280,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -323,8 +327,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 3,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    3
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
@@ -367,8 +373,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -435,8 +443,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
-                numJoinSplits: 3,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT / 3,
+                    3
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
@@ -476,8 +486,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -508,8 +520,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -541,8 +555,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -574,8 +590,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -606,8 +624,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: token,
                 gasToken: token,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -653,8 +673,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: joinSplitToken,
                 gasToken: joinSplitToken,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -687,8 +709,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: joinSplitToken,
                 gasToken: joinSplitToken,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -807,8 +831,10 @@ contract BalanceManagerTest is Test {
                 joinSplitToken: joinSplitToken,
                 gasToken: joinSplitToken,
                 root: balanceManager.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: refundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,

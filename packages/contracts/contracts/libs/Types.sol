@@ -64,8 +64,9 @@ struct DepositRequest {
     uint256 gasCompensation;
 }
 
-struct Bundle {
-    Operation[] operations;
+struct Action {
+    address contractAddress;
+    bytes encodedFunction;
 }
 
 struct Operation {
@@ -98,9 +99,8 @@ struct OperationResult {
     uint256 numRefunds;
 }
 
-struct Action {
-    address contractAddress;
-    bytes encodedFunction;
+struct Bundle {
+    Operation[] operations;
 }
 
 library OperationLib {

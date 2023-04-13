@@ -270,8 +270,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -321,8 +323,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -520,8 +524,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -583,8 +589,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 3,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    3
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
@@ -646,8 +654,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 6,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    6
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 6,
@@ -710,8 +720,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: 1 * PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -773,8 +785,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -836,8 +850,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -912,8 +928,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -979,8 +997,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1013,8 +1033,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1068,8 +1090,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1102,8 +1126,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1173,8 +1199,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1207,8 +1235,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1278,8 +1308,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
@@ -1354,8 +1386,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
@@ -1426,8 +1460,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
@@ -1547,8 +1583,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: tokenIn,
                 gasToken: tokenIn,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: encodedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
@@ -1668,8 +1706,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: tokenIn,
                 gasToken: tokenIn,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 2,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
                 encodedRefundAssets: encodedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1, // should be 4 refund assets, 1 too few
@@ -1755,8 +1795,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT / 3,
-                numJoinSplits: 3,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT / 3,
+                    3
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 20,
@@ -1813,8 +1855,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: 100, // not enough gas for transfer
                 maxNumRefunds: 1,
@@ -1863,8 +1907,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1896,8 +1942,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1927,8 +1975,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
@@ -1958,8 +2008,10 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
                 joinSplitToken: token,
                 gasToken: token,
                 root: handler.root(),
-                publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                numJoinSplits: 1,
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    1
+                ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
