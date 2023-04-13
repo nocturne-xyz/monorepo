@@ -1,5 +1,5 @@
 import { TeardownFn, makeRedisInstance } from "./utils";
-import { makeTestLogger } from "@noctune-xyz/offchain-utils";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import {
   BundlerBatcher,
   BundlerServer,
