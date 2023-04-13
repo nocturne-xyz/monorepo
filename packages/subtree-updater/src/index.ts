@@ -77,6 +77,12 @@ export class SubtreeUpdater {
 
   public async init(logger: Logger): Promise<void> {
     await this.recoverPersisedState(logger);
+
+    const nextBlockToIndex = await this.getNextBlockToIndex();
+    logger.info(
+      "subtree updater initialized - starting at block",
+      nextBlockToIndex
+    );
   }
 
   public async tryGenAndSubmitProofs(logger: Logger): Promise<void> {
@@ -86,7 +92,7 @@ export class SubtreeUpdater {
       childLogger.info("generating proof for batch...");
 
       const proof = await this.genProof(batch, subtreeIndex);
-      childLogger.debug("proof generated. submitting...");
+      childLogger.info("proof generated. submitting...");
       await this.submitter.submitProof(childLogger, proof, newRoot);
     }
   }
@@ -152,7 +158,10 @@ export class SubtreeUpdater {
 
     this.insertions.push(...newInsertions);
     if (lastCommit !== undefined) {
-      logger.info("pruning batches up to", lastCommit.subtreeIndex);
+      logger.info(
+        "pruning batches up to subtreeIndex",
+        lastCommit.subtreeIndex
+      );
       this.pruneBatchesUpTo(lastCommit.subtreeIndex);
     }
 
