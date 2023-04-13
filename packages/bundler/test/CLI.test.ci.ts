@@ -23,11 +23,17 @@ describe("Bundler CLI", async () => {
     process.env.RPC_URL = "http://localhost:8545";
     process.env.TX_SIGNER_KEY =
       "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+
+    // clear log dir if it exists
+    const logDir = `${ROOT_DIR}/packages/bundler/test/logs`;
+    if (fs.existsSync(logDir)) {
+      fs.rmdirSync(logDir, { recursive: true });
+    }
   });
 
   async function executeCmdForAHotSec(cmdArray: any[]) {
     const child = spawn(cmdArray[0], cmdArray.slice(1), { shell: true });
-    await sleep(20_000);
+    await sleep(30_000);
     child.kill();
   }
 
