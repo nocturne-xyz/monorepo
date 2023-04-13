@@ -37,7 +37,7 @@ import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
-contract InvariantHandler is CommonBase, StdCheats, StdUtils {
+contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
     using LibDepositSumSet for DepositSumSet;
@@ -53,8 +53,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
-    Wallet public wallet;
-    Handler public handler;
+    // ______PUBLIC______
     TestDepositManager public depositManager;
 
     WETH9 public weth;
@@ -65,12 +64,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     EncodedAsset public encodedErc20;
 
     bytes32 public lastCall;
+
+    // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
     uint256[] internal _depositSizes;
-
     AddressSet internal _actors;
-    address internal currentActor;
+    address internal _currentActor;
+    uint256 internal _actorNum = 0;
 
     DepositSumSet internal _instantiateDepositSumSetETH;
     DepositSumSet internal _retrieveDepositSumSetETH;
@@ -82,19 +83,36 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     DepositRequest[] internal _depositSet;
 
-    uint256 actorNum = 0;
-    modifier createActor() {
-        currentActor = msg.sender;
+    constructor(
+        TestDepositManager _depositManager,
+        SimpleERC20Token _erc20,
+        SimpleERC721Token _erc721,
+        SimpleERC1155Token _erc1155
+    ) {
+        depositManager = _depositManager;
+        erc20 = _erc20;
+        erc721 = _erc721;
+        erc1155 = _erc1155;
 
-        if (!_actors.contains(currentActor)) {
-            _actors.add(currentActor);
-            actorNum += 1;
+        encodedErc20 = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(_erc20),
+            ERC20_ID
+        );
+    }
+
+    modifier createActor() {
+        _currentActor = msg.sender;
+
+        if (!_actors.contains(_currentActor)) {
+            _actors.add(_currentActor);
+            _actorNum += 1;
         }
         _;
     }
 
     modifier useActor(uint256 actorIndexSeed) {
-        currentActor = _actors.rand(actorIndexSeed);
+        _currentActor = _actors.rand(actorIndexSeed);
         _;
     }
 
@@ -108,47 +126,10 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
     fallback() external payable {}
 
-    constructor() {
-        wallet = new Wallet();
-        handler = new Handler();
-        depositManager = new TestDepositManager();
-
-        weth = new WETH9();
-
-        TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
-        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
-
-        wallet.setDepositSourcePermission(address(depositManager), true);
-        handler.setSubtreeBatchFillerPermission(address(this), true);
-
-        depositManager.initialize(
-            CONTRACT_NAME,
-            CONTRACT_VERSION,
-            address(wallet),
-            address(weth)
-        );
-        depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
-
-        erc20 = new SimpleERC20Token();
-        erc721 = new SimpleERC721Token();
-        erc1155 = new SimpleERC1155Token();
-
-        encodedErc20 = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20),
-            ERC20_ID
-        );
-
-        erc20.reserveTokens(address(this), type(uint256).max);
-    }
-
     // ______EXTERNAL______
 
     function callSummary() external view {
-        console.log("Call summary:");
+        console.log("DepositManagerHandler call summary:");
         console.log("-------------------");
         console.log("instantiateDepositETH", _calls["instantiateDepositETH"]);
         console.log(
@@ -165,7 +146,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         console.log("retrieveDepositSumErc20", ghost_retrieveDepositSumErc20());
         console.log("completeDepositSumErc20", ghost_completeDepositSumErc20());
 
-        console.log("actorNum", actorNum);
+        console.log("_actorNum", _actorNum);
         console.log("depositSetLength", _depositSet.length);
 
         console.log(
@@ -186,9 +167,9 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
         _depositSizes.push(amount);
 
         // Deal gas compensation
-        vm.deal(currentActor, amount + GAS_COMPENSATION);
+        vm.deal(_currentActor, amount + GAS_COMPENSATION);
 
-        vm.startPrank(currentActor);
+        vm.startPrank(_currentActor);
 
         // Start recording logs and make call
         vm.recordLogs();
@@ -210,7 +191,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Update sets and sum
         _depositSet.push(req);
-        _instantiateDepositSumSetETH.addToActorSum(currentActor, amount);
+        _instantiateDepositSumSetETH.addToActorSum(_currentActor, amount);
     }
 
     function instantiateDepositErc20(
@@ -218,14 +199,14 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
     ) public createActor trackCall("instantiateDepositErc20") {
         // Bound deposit amount
         amount = bound(amount, 0, erc20.balanceOf(address(this)));
-        erc20.transfer(currentActor, amount);
+        erc20.transfer(_currentActor, amount);
         _depositSizes.push(amount);
 
         // Deal gas compensation
-        vm.deal(currentActor, GAS_COMPENSATION);
+        vm.deal(_currentActor, GAS_COMPENSATION);
 
         // Approve token
-        vm.startPrank(currentActor);
+        vm.startPrank(_currentActor);
         erc20.approve(address(depositManager), amount);
 
         // Start recording logs and make call
@@ -249,7 +230,7 @@ contract InvariantHandler is CommonBase, StdCheats, StdUtils {
 
         // Update sets and sum
         _depositSet.push(req);
-        _instantiateDepositSumSetErc20.addToActorSum(currentActor, amount);
+        _instantiateDepositSumSetErc20.addToActorSum(_currentActor, amount);
     }
 
     function retrieveDepositErc20(

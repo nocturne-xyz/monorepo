@@ -12,9 +12,10 @@ import {QueueLib} from "../../../libs/Queue.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import "../../../libs/Types.sol";
 
-contract OffchainMerkleInvariantHandler is CommonBase, StdCheats, StdUtils {
+contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
     using OffchainMerkleTree for OffchainMerkleTreeData;
 
+    // ______PUBLIC______
     OffchainMerkleTreeData merkle;
 
     bytes32 public lastCall;
@@ -23,8 +24,19 @@ contract OffchainMerkleInvariantHandler is CommonBase, StdCheats, StdUtils {
     uint256 public preCallGetBatchLen;
     uint256 public preCallGetAccumulatorQueueLen;
 
+    // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
     uint256 internal _rootCounter = 0;
+
+    constructor() {
+        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
+        merkle.initialize(address(subtreeUpdateVerifier));
+
+        preCallRoot = root();
+        preCallGetCount = getCount();
+        preCallGetBatchLen = batchLen();
+        preCallGetAccumulatorQueueLen = accumulatorQueueLength();
+    }
 
     modifier trackCall(bytes32 key) {
         preCallRoot = root();
@@ -35,16 +47,6 @@ contract OffchainMerkleInvariantHandler is CommonBase, StdCheats, StdUtils {
         lastCall = key;
         _calls[key]++;
         _;
-    }
-
-    constructor() {
-        TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
-        merkle.initialize(address(subtreeUpdateVerifier));
-
-        preCallRoot = root();
-        preCallGetCount = getCount();
-        preCallGetBatchLen = batchLen();
-        preCallGetAccumulatorQueueLen = accumulatorQueueLength();
     }
 
     function callSummary() external view {
