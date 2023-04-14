@@ -82,7 +82,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
-            console.log("top of loop");
             bool isTransfer = bound(args.seed, 0, 1) == 0;
 
             // Swap request requires two actions, if at end of array just fill with transfer
@@ -96,9 +95,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 runningJoinSplitAmount
             );
 
-            console.log("runningJoinSplitAmount -= joinSplitUseAmount");
             runningJoinSplitAmount -= joinSplitUseAmount;
-            console.log("[DONE] runningJoinSplitAmount -= joinSplitUseAmount");
 
             if (isTransfer) {
                 TransferRequest memory transferRequest = TransferRequest({
@@ -106,21 +103,16 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     recipient: address(0x3), // TODO: track recipient
                     amount: joinSplitUseAmount
                 });
-                console.log("NocturneUtils.formatTransferAction");
                 actions[i] = NocturneUtils.formatTransferAction(
                     transferRequest
                 );
-                console.log("[DONE] _createRandomSwapRequest");
                 _meta.transfers[i] = transferRequest;
                 _meta.isTransfer[i] = true;
-                console.log("[DONE] _meta.transfers[i] = transferRequest");
             } else {
-                console.log("_createRandomSwapRequest");
                 SwapRequest memory swapRequest = _createRandomSwapRequest(
                     joinSplitUseAmount,
                     args
                 );
-                console.log("[DONE] _createRandomSwapRequest");
 
                 // Kludge to satisfy stack limit
                 SimpleERC20Token inToken = args.joinSplitToken;
@@ -161,12 +153,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             operationFailureType: OperationFailureType.NONE
         });
 
-        console.log("NocturneUtils.formatOperation(opArgs)");
         _op = NocturneUtils.formatOperation(opArgs);
 
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
         // to convert NocturneUtils to contract to inherit forge std
-        console.log("Randomizing nfs");
         for (uint256 i = 0; i < _op.joinSplits.length; i++) {
             // Overflow here doesn't matter given all we need are random nfs
             unchecked {
@@ -174,7 +164,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
             }
         }
-        console.log("[DONE] Randomizing nfs");
     }
 
     function _createRandomSwapRequest(
@@ -226,7 +215,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         for (uint256 i = 0; i < numJoinSplits - 1; i++) {
             // Generate a random amount for the current join split and update the remaining amount
             uint256 randomAmount = bound(seed, 0, remainingAmount);
-            console.log(randomAmount);
             joinSplitAmounts[i] = randomAmount;
             remainingAmount -= randomAmount;
         }

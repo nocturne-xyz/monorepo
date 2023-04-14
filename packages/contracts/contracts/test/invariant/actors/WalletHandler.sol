@@ -136,8 +136,9 @@ contract WalletHandler is OperationGenerator {
                 if (meta.isTransfer[j]) {
                     _successfulTransfers.push(meta.transfers[j]);
                 } else {
-                    _successfulSwaps.push(meta.swaps[j]); // skip approval action, +1
-                    // j += 1; // extra +1 to skip past swap action
+                    // +1 skip past approval action, swap action always preceeds
+                    _successfulSwaps.push(meta.swaps[j + 1]);
+                    j += 1;
                 }
             }
         }
