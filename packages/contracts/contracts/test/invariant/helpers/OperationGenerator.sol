@@ -40,6 +40,7 @@ struct GenerateOperationArgs {
 struct GeneratedOperationMetadata {
     TransferRequest[] transfers;
     SwapRequest[] swaps;
+    bool[] isTransfer;
 }
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
@@ -63,29 +64,38 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 root = args.handler.root();
 
         // Calculate args.joinSplitPublicSpends
-        uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
-            args.seed,
-            totalJoinSplitUnwrapAmount
-        );
+        // uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
+        //     args.seed,
+        //     totalJoinSplitUnwrapAmount
+        // );
+        uint256[] memory joinSplitPublicSpends = new uint256[](1);
+        joinSplitPublicSpends[0] = totalJoinSplitUnwrapAmount;
 
         // Calculate numActions using the bound function
-        uint256 numActions = bound(args.seed, 1, 8);
+        // uint256 numActions = bound(args.seed, 1, 8);
+        uint256 numActions = 1;
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
+        _meta.isTransfer = new bool[](numActions);
 
         // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
-            bool isTransfer = bound(args.seed, 0, 1) == 0;
+            console.log("top of loop");
+            // bool isTransfer = bound(args.seed, 0, 1) == 0;
+            bool isTransfer = true;
             uint256 joinSplitUseAmount = bound(
                 args.seed,
                 0,
                 runningJoinSplitAmount
             );
+
+            console.log("runningJoinSplitAmount -= joinSplitUseAmount");
             runningJoinSplitAmount -= joinSplitUseAmount;
+            console.log("[DONE] runningJoinSplitAmount -= joinSplitUseAmount");
 
             if (isTransfer) {
                 TransferRequest memory transferRequest = TransferRequest({
@@ -93,15 +103,21 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     recipient: address(0x3), // TODO: track recipient
                     amount: joinSplitUseAmount
                 });
+                console.log("NocturneUtils.formatTransferAction");
                 actions[i] = NocturneUtils.formatTransferAction(
                     transferRequest
                 );
+                console.log("[DONE] _createRandomSwapRequest");
                 _meta.transfers[i] = transferRequest;
+                _meta.isTransfer[i] = true;
+                console.log("[DONE] _meta.transfers[i] = transferRequest");
             } else {
+                console.log("_createRandomSwapRequest");
                 SwapRequest memory swapRequest = _createRandomSwapRequest(
                     joinSplitUseAmount,
                     args
                 );
+                console.log("[DONE] _createRandomSwapRequest");
                 actions[i] = Action({
                     contractAddress: address(args.swapper),
                     encodedFunction: abi.encodeWithSelector(
@@ -127,7 +143,19 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             operationFailureType: OperationFailureType.NONE
         });
 
+        console.log("NocturneUtils.formatOperation(opArgs)");
         _op = NocturneUtils.formatOperation(opArgs);
+
+        // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
+        // to convert NocturneUtils to contract to inherit forge std
+        console.log("Randomizing nfs");
+        for (uint256 i = 0; i < _op.joinSplits.length; i++) {
+            unchecked {
+                _op.joinSplits[i].nullifierA = args.seed + (2 * i);
+                _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
+            }
+        }
+        console.log("[DONE] Randomizing nfs");
     }
 
     function _createRandomSwapRequest(
@@ -151,8 +179,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             args.seed
         );
         uint256 swapErc1155OutId = ERC20_ID;
-        uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
-
+        // uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
+        uint256 swapErc1155OutAmount = 10_000_000;
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.wallet),
             encodedAssetIn: encodedAssetIn,
@@ -196,10 +224,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 seed
     ) internal view returns (uint256 _id) {
         for (uint256 j = 0; ; j++) {
-            uint256 maybeId = bound(seed, 0, type(uint256).max - 1);
-
-            if (!erc721.exists(maybeId)) {
-                _id = maybeId;
+            if (!erc721.exists(seed)) {
+                _id = seed;
                 break;
             }
 

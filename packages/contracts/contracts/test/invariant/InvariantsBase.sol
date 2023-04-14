@@ -51,6 +51,27 @@ contract InvariantsBase is Test {
         walletHandler.callSummary();
     }
 
+    // _______________PROTOCOL_WIDE_______________
+
+    function assert_protocol_walletBalanceEqualsCompletedDepositSumETH()
+        internal
+    {
+        assertEq(
+            weth.balanceOf(address(wallet)),
+            depositManagerHandler.ghost_completeDepositSumETH()
+        );
+    }
+
+    function assert_protocol_walletBalanceEqualsCompletedDepositSumErc20()
+        internal
+    {
+        assertEq(
+            depositManagerHandler.erc20().balanceOf(address(wallet)),
+            depositManagerHandler.ghost_completeDepositSumErc20() -
+                walletHandler.ghost_totalTransferedOutOfWallet()
+        );
+    }
+
     // _______________DEPOSIT_ETH_______________
 
     function assert_deposit_outNeverExceedsInETH() internal {
@@ -83,15 +104,6 @@ contract InvariantsBase is Test {
         }
 
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumETH());
-    }
-
-    function assert_deposit_walletBalanceEqualsCompletedDepositSumETH()
-        internal
-    {
-        assertEq(
-            weth.balanceOf(address(wallet)),
-            depositManagerHandler.ghost_completeDepositSumETH()
-        );
     }
 
     function assert_deposit_actorBalanceAlwaysEqualsRetrievedETH() internal {
@@ -154,15 +166,6 @@ contract InvariantsBase is Test {
         }
 
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
-    }
-
-    function assert_deposit_walletBalanceEqualsCompletedDepositSumErc20()
-        internal
-    {
-        assertEq(
-            depositManagerHandler.erc20().balanceOf(address(wallet)),
-            depositManagerHandler.ghost_completeDepositSumErc20()
-        );
     }
 
     function assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20() internal {

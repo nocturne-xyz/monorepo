@@ -141,19 +141,78 @@ contract ProtocolInvariants is Test, InvariantsBase {
         print_callSummary();
     }
 
-    function invariant_deposits() external {
-        assert_deposit_outNeverExceedsInETH();
-        assert_deposit_depositManagerBalanceEqualsInMinusOutETH();
-        assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH();
-        assert_deposit_walletBalanceEqualsCompletedDepositSumETH();
-        assert_deposit_actorBalanceAlwaysEqualsRetrievedETH();
-        assert_deposit_actorBalanceNeverExceedsInstantiatedETH();
+    /*****************************
+     * Protocol-Wide
+     *****************************/
+    function invariant_protocol_walletBalanceEqualsCompletedDepositSumETH()
+        external
+    {
+        assert_protocol_walletBalanceEqualsCompletedDepositSumETH();
+    }
 
+    function invariant_protocol_walletBalanceEqualsCompletedDepositSumErc20()
+        external
+    {
+        assert_protocol_walletBalanceEqualsCompletedDepositSumErc20();
+    }
+
+    /*****************************
+     * Deposits ETH
+     *****************************/
+    function invariant_deposit_outNeverExceedsInETH() external {
+        assert_deposit_outNeverExceedsInETH();
+    }
+
+    function invariant_deposit_depositManagerBalanceEqualsInMinusOutETH()
+        external
+    {
+        assert_deposit_depositManagerBalanceEqualsInMinusOutETH();
+    }
+
+    function invariant_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
+        external
+    {
+        assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH();
+    }
+
+    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedETH() external {
+        assert_deposit_actorBalanceAlwaysEqualsRetrievedETH();
+    }
+
+    function invariant_deposit_actorBalanceNeverExceedsInstantiatedETH()
+        external
+    {
+        assert_deposit_actorBalanceNeverExceedsInstantiatedETH();
+    }
+
+    /*****************************
+     * Deposits ERC20
+     *****************************/
+    function invariant_deposit_outNeverExceedsInErc20() external {
         assert_deposit_outNeverExceedsInErc20();
+    }
+
+    function invariant_deposit_depositManagerBalanceEqualsInMinusOutErc20()
+        external
+    {
         assert_deposit_depositManagerBalanceEqualsInMinusOutErc20();
+    }
+
+    function invariant_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
+        external
+    {
         assert_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20();
-        assert_deposit_walletBalanceEqualsCompletedDepositSumErc20();
+    }
+
+    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedErc20()
+        external
+    {
         assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20();
+    }
+
+    function invariant_deposit_actorBalanceNeverExceedsInstantiatedErc20()
+        external
+    {
         assert_deposit_actorBalanceNeverExceedsInstantiatedErc20();
     }
 }

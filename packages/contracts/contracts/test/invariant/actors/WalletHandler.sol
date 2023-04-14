@@ -49,7 +49,7 @@ contract WalletHandler is OperationGenerator {
     uint256 internal _numSuccessfulActions;
     string[] internal _failureReasons;
 
-    TransferRequest[] internal _transfers;
+    TransferRequest[] internal _successfulTransfers;
 
     constructor(
         Wallet _wallet,
@@ -85,8 +85,8 @@ contract WalletHandler is OperationGenerator {
         }
 
         console.log("Metadata");
-        for (uint256 i = 0; i < _transfers.length; i++) {
-            console.log("Transfer amount", _transfers[i].amount);
+        for (uint256 i = 0; i < _successfulTransfers.length; i++) {
+            console.log("Transfer amount", _successfulTransfers[i].amount);
         }
     }
 
@@ -109,30 +109,39 @@ contract WalletHandler is OperationGenerator {
                 })
             );
 
-        for (uint256 i = 0; i < meta.transfers.length; i++) {
-            _transfers.push(meta.transfers[i]);
-        }
-
         Bundle memory bundle;
         bundle.operations = new Operation[](1);
         bundle.operations[0] = op;
 
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
-        for (uint256 i = 0; i < opResults.length; i++) {
-            OperationResult memory opResult = opResults[i];
+        // TODO: enable multiple ops in bundle
+        OperationResult memory opResult = opResults[0];
 
-            if (bytes(opResult.failureReason).length > 0) {
-                _failureReasons.push(opResult.failureReason);
-            }
+        if (bytes(opResult.failureReason).length > 0) {
+            _failureReasons.push(opResult.failureReason);
+        }
 
-            for (uint256 j = 0; j < opResult.callSuccesses.length; j++) {
-                if (opResult.callSuccesses[j]) {
-                    _numSuccessfulActions += 1;
+        for (uint256 j = 0; j < opResult.callSuccesses.length; j++) {
+            if (opResult.callSuccesses[j]) {
+                _numSuccessfulActions += 1;
+                if (meta.isTransfer[j]) {
+                    _successfulTransfers.push(meta.transfers[j]);
                 }
             }
         }
     }
 
     // ______VIEW______
+    function ghost_totalTransferedOutOfWallet()
+        external
+        view
+        returns (uint256)
+    {
+        uint256 total = 0;
+        for (uint256 i = 0; i < _successfulTransfers.length; i++) {
+            total += _successfulTransfers[i].amount;
+        }
+        return total;
+    }
 }
