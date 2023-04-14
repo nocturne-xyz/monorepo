@@ -6,6 +6,8 @@ import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
+import {WalletHandler} from "./actors/WalletHandler.sol";
+import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../utils/NocturneUtils.sol";
@@ -28,15 +30,21 @@ contract InvariantsBase is Test {
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
     DepositManagerHandler public depositManagerHandler;
+    WalletHandler public walletHandler;
 
     Wallet public wallet;
     Handler public handler;
     TestDepositManager public depositManager;
-    WETH9 public weth;
 
-    SimpleERC20Token public erc20;
-    SimpleERC721Token public erc721;
-    SimpleERC1155Token public erc1155;
+    TokenSwapper public swapper;
+
+    WETH9 public weth;
+    SimpleERC20Token public depositErc20;
+    SimpleERC721Token public depositErc721;
+    SimpleERC1155Token public depositErc1155;
+    SimpleERC20Token public swapErc20;
+    SimpleERC721Token public swapErc721;
+    SimpleERC1155Token public swapErc1155;
 
     function print_callSummary() internal view {
         depositManagerHandler.callSummary();

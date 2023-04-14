@@ -25,47 +25,46 @@ import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
-struct GenerateRandomOperationArgs {
+struct GenerateOperationArgs {
     uint256 seed;
     Wallet wallet;
     Handler handler;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
-    SimpleERC20Token erc20;
-    SimpleERC721Token erc721;
-    SimpleERC1155Token erc1155;
+    SimpleERC20Token swapErc20;
+    SimpleERC721Token swapErc721;
+    SimpleERC1155Token swapErc1155;
 }
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
 
-    function generateRandomOperation(
-        GenerateRandomOperationArgs memory args
-    ) public view returns (Operation memory) {
-        // Step 2: Calculate totalJoinSplitUnwrapAmount using the bound function
+    function _generateRandomOperation(
+        GenerateOperationArgs memory args
+    ) internal view returns (Operation memory) {
+        // Calculate totalJoinSplitUnwrapAmount using the bound function
         uint256 totalJoinSplitUnwrapAmount = bound(
             args.seed,
             0,
             args.joinSplitToken.balanceOf(address(args.wallet))
         );
 
-        // Step 4: Pick handler.root() as args.root
+        // Pick handler.root() as args.root
         uint256 root = args.handler.root();
 
-        // Step 5: Calculate args.joinSplitPublicSpends
+        // Calculate args.joinSplitPublicSpends
         uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
             args.seed,
             totalJoinSplitUnwrapAmount
         );
 
-        // Step 6: Calculate numActions using the bound function
-        uint256 numActions = bound(args.seed, 1, 10);
-
+        // Calculate numActions using the bound function
+        uint256 numActions = bound(args.seed, 1, 8);
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
-        // Step 7: For each action of numActions, switch on transfer vs swap
+        // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
             bool isTransfer = bound(args.seed, 0, 1) == 0;
@@ -104,10 +103,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
             executionGasLimit: 5_000_000,
-            maxNumRefunds: 0,
-            gasPrice: 0,
+            maxNumRefunds: 20, // TODO: take based on number of swaps
+            gasPrice: 0, // TODO: account for gas compensation
             actions: actions,
-            atomicActions: false,
+            atomicActions: true,
             operationFailureType: OperationFailureType.NONE
         });
 
@@ -116,7 +115,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
     function _createRandomSwapRequest(
         uint256 joinSplitUseAmount,
-        GenerateRandomOperationArgs memory args
+        GenerateOperationArgs memory args
     ) internal view returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
@@ -125,22 +124,29 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             ERC20_ID
         );
 
-        uint256 erc20OutAmount = bound(args.seed, 0, args.erc20.totalSupply());
-        uint256 erc721OutId = _getRandomErc721Id(args.erc721, args.seed);
-        uint256 erc1155OutId = ERC20_ID;
-        uint256 erc1155OutAmount = bound(args.seed, 0, 10_000_000);
+        uint256 swapErc20OutAmount = bound(
+            args.seed,
+            0,
+            args.swapErc20.totalSupply()
+        );
+        uint256 swapErc721OutId = _getRandomErc721Id(
+            args.swapErc721,
+            args.seed
+        );
+        uint256 swapErc1155OutId = ERC20_ID;
+        uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
 
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.wallet),
             encodedAssetIn: encodedAssetIn,
             assetInAmount: joinSplitUseAmount,
-            erc20Out: address(args.erc20),
-            erc20OutAmount: erc20OutAmount,
-            erc721Out: address(args.erc721),
-            erc721OutId: erc721OutId,
-            erc1155Out: address(args.erc1155),
-            erc1155OutId: erc1155OutId,
-            erc1155OutAmount: erc1155OutAmount
+            erc20Out: address(args.swapErc20),
+            erc20OutAmount: swapErc20OutAmount,
+            erc721Out: address(args.swapErc721),
+            erc721OutId: swapErc721OutId,
+            erc1155Out: address(args.swapErc1155),
+            erc1155OutId: swapErc1155OutId,
+            erc1155OutAmount: swapErc1155OutAmount
         });
 
         return swapRequest;
@@ -150,7 +156,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 seed,
         uint256 totalAmount
     ) internal view returns (uint256[] memory) {
-        uint256 numJoinSplits = bound(seed, 1, 10); // You can change the bounds as needed
+        uint256 numJoinSplits = bound(seed, 1, 8); // at most 8 joinsplits
         uint256[] memory joinSplitAmounts = new uint256[](numJoinSplits);
 
         uint256 remainingAmount = totalAmount;

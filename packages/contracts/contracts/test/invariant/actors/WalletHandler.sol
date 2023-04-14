@@ -10,40 +10,60 @@ import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
-import {TestWallet} from "../../harnesses/TestWallet.sol";
+import {Wallet} from "../../../Wallet.sol";
+import {Handler} from "../../../Handler.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
-import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {DepositSumSet, LibDepositSumSet} from "../helpers/DepositSumSet.sol";
-import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
+import {OperationGenerator, GenerateOperationArgs} from "../helpers/OperationGenerator.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
-contract WalletHandler is CommonBase, StdCheats, StdUtils {
-    uint256 constant ERC20_ID = 0;
-
+contract WalletHandler is OperationGenerator {
     uint256 constant BUNDLER_PRIVKEY = 2;
     address BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
 
     // ______PUBLIC______
-    TestWallet public wallet;
+    Wallet public wallet;
+    Handler public handler;
+    TokenSwapper public swapper;
 
     SimpleERC20Token public joinSplitToken;
     SimpleERC20Token public gasToken;
 
+    SimpleERC20Token public swapErc20;
+    SimpleERC721Token public swapErc721;
+    SimpleERC1155Token public swapErc1155;
+
     bytes32 public lastCall;
 
     // ______INTERNAL______
+
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
 
-    constructor(TestWallet _wallet) {
+    constructor(
+        Wallet _wallet,
+        Handler _handler,
+        TokenSwapper _swapper,
+        SimpleERC20Token _joinSplitToken,
+        SimpleERC20Token _gasToken,
+        SimpleERC20Token _swapErc20,
+        SimpleERC721Token _swapErc721,
+        SimpleERC1155Token _swapErc1155
+    ) {
         wallet = _wallet;
+        handler = _handler;
+        swapper = _swapper;
+        joinSplitToken = _joinSplitToken;
+        gasToken = _gasToken;
+        swapErc20 = _swapErc20;
+        swapErc721 = _swapErc721;
+        swapErc1155 = _swapErc1155;
     }
 
     // ______EXTERNAL______
@@ -53,23 +73,27 @@ contract WalletHandler is CommonBase, StdCheats, StdUtils {
         console.log("-------------------");
     }
 
-    // function processBundle(uint256 seed) external view {
-    //     uint256 numOps = bound(seed, 1, 10);
-    // }
+    function processBundle(uint256 seed) external {
+        Operation memory op = _generateRandomOperation(
+            GenerateOperationArgs({
+                seed: seed,
+                wallet: wallet,
+                handler: handler,
+                swapper: swapper,
+                joinSplitToken: joinSplitToken,
+                gasToken: gasToken,
+                swapErc20: swapErc20,
+                swapErc721: swapErc721,
+                swapErc1155: swapErc1155
+            })
+        );
+
+        Bundle memory bundle;
+        bundle.operations = new Operation[](1);
+        bundle.operations[0] = op;
+
+        wallet.processBundle(bundle);
+    }
 
     // ______VIEW______
-
-    // ______INTERNAL______
-    function _generateRandomOperation(
-        uint256 seed
-    ) internal pure returns (Operation memory _op) {
-        // FormatOperationArgs memory args;
-        // args.joinSplitToken = joinSplitToken;
-        // args.gasToken = gasToken;
-        // uint256 totalJoinSplitUnwrapAmount = bound(
-        //     seed,
-        //     0,
-        //     erc20.balanceOf(wallet)
-        // );
-    }
 }

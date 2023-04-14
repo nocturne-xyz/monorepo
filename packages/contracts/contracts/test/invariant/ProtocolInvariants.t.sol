@@ -7,6 +7,8 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {InvariantsBase} from "./InvariantsBase.sol";
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
+import {WalletHandler} from "./actors/WalletHandler.sol";
+import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../utils/NocturneUtils.sol";
@@ -47,17 +49,36 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
         depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
 
-        erc20 = new SimpleERC20Token();
-        erc721 = new SimpleERC721Token();
-        erc1155 = new SimpleERC1155Token();
+        depositErc20 = new SimpleERC20Token();
+        depositErc721 = new SimpleERC721Token();
+        depositErc1155 = new SimpleERC1155Token();
 
         depositManagerHandler = new DepositManagerHandler(
             depositManager,
-            erc20,
-            erc721,
-            erc1155
+            depositErc20,
+            depositErc721,
+            depositErc1155
         );
-        erc20.reserveTokens(address(depositManagerHandler), type(uint256).max);
+        depositErc20.reserveTokens(
+            address(depositManagerHandler),
+            type(uint256).max
+        );
+
+        swapper = new TokenSwapper();
+        swapErc20 = new SimpleERC20Token();
+        swapErc721 = new SimpleERC721Token();
+        swapErc1155 = new SimpleERC1155Token();
+
+        walletHandler = new WalletHandler(
+            wallet,
+            handler,
+            swapper,
+            depositErc20,
+            depositErc20,
+            swapErc20,
+            swapErc721,
+            swapErc1155
+        );
 
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
