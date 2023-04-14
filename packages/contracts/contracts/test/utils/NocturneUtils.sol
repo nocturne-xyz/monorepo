@@ -28,6 +28,12 @@ struct FormatOperationArgs {
     OperationFailureType operationFailureType;
 }
 
+struct TransferRequest {
+    SimpleERC20Token token;
+    address recipient;
+    uint256 amount;
+}
+
 library NocturneUtils {
     uint256 constant ERC20_ID = 0;
     uint256 constant DEADLINE_BUFFER = 1000;
@@ -95,22 +101,26 @@ library NocturneUtils {
         uint256 amount
     ) public pure returns (Action[] memory) {
         Action[] memory actions = new Action[](1);
-        actions[0] = formatTransferAction(token, recipient, amount);
+        actions[0] = formatTransferAction(
+            TransferRequest({
+                token: token,
+                recipient: recipient,
+                amount: amount
+            })
+        );
         return actions;
     }
 
     function formatTransferAction(
-        SimpleERC20Token token,
-        address recipient,
-        uint256 amount
+        TransferRequest memory transferRequest
     ) public pure returns (Action memory) {
         return
             Action({
-                contractAddress: address(token),
+                contractAddress: address(transferRequest.token),
                 encodedFunction: abi.encodeWithSelector(
-                    token.transfer.selector,
-                    recipient,
-                    amount
+                    transferRequest.token.transfer.selector,
+                    transferRequest.recipient,
+                    transferRequest.amount
                 )
             });
     }

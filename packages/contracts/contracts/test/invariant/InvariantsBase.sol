@@ -48,6 +48,7 @@ contract InvariantsBase is Test {
 
     function print_callSummary() internal view {
         depositManagerHandler.callSummary();
+        walletHandler.callSummary();
     }
 
     // _______________DEPOSIT_ETH_______________

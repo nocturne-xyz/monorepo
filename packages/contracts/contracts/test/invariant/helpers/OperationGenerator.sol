@@ -37,12 +37,21 @@ struct GenerateOperationArgs {
     SimpleERC1155Token swapErc1155;
 }
 
+struct GeneratedOperationMetadata {
+    TransferRequest[] transfers;
+    SwapRequest[] swaps;
+}
+
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
-    ) internal view returns (Operation memory) {
+    )
+        internal
+        view
+        returns (Operation memory _op, GeneratedOperationMetadata memory _meta)
+    {
         // Calculate totalJoinSplitUnwrapAmount using the bound function
         uint256 totalJoinSplitUnwrapAmount = bound(
             args.seed,
@@ -64,6 +73,9 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
+        _meta.transfers = new TransferRequest[](numActions);
+        _meta.swaps = new SwapRequest[](numActions);
+
         // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
@@ -76,11 +88,15 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             runningJoinSplitAmount -= joinSplitUseAmount;
 
             if (isTransfer) {
+                TransferRequest memory transferRequest = TransferRequest({
+                    token: args.joinSplitToken,
+                    recipient: address(0x3), // TODO: track recipient
+                    amount: joinSplitUseAmount
+                });
                 actions[i] = NocturneUtils.formatTransferAction(
-                    args.joinSplitToken,
-                    address(args.wallet),
-                    joinSplitUseAmount
+                    transferRequest
                 );
+                _meta.transfers[i] = transferRequest;
             } else {
                 SwapRequest memory swapRequest = _createRandomSwapRequest(
                     joinSplitUseAmount,
@@ -93,6 +109,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                         swapRequest
                     )
                 });
+                _meta.swaps[i] = swapRequest;
             }
         }
 
@@ -110,7 +127,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             operationFailureType: OperationFailureType.NONE
         });
 
-        return NocturneUtils.formatOperation(opArgs);
+        _op = NocturneUtils.formatOperation(opArgs);
     }
 
     function _createRandomSwapRequest(
@@ -162,7 +179,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 remainingAmount = totalAmount;
         for (uint256 i = 0; i < numJoinSplits - 1; i++) {
             // Generate a random amount for the current join split and update the remaining amount
-            uint256 randomAmount = bound(seed + i, 0, remainingAmount);
+            uint256 randomAmount = bound(seed, 0, remainingAmount);
+            console.log(randomAmount);
             joinSplitAmounts[i] = randomAmount;
             remainingAmount -= randomAmount;
         }

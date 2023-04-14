@@ -114,6 +114,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     // ______EXTERNAL______
 
     function callSummary() external view {
+        console.log("-------------------");
         console.log("DepositManagerHandler call summary:");
         console.log("-------------------");
         console.log("instantiateDepositETH", _calls["instantiateDepositETH"]);

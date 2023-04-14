@@ -80,17 +80,54 @@ contract ProtocolInvariants is Test, InvariantsBase {
             swapErc1155
         );
 
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
-        selectors[1] = depositManagerHandler.instantiateDepositErc20.selector;
-        selectors[2] = depositManagerHandler.retrieveDepositErc20.selector;
-        selectors[3] = depositManagerHandler.completeDepositErc20.selector;
+        // TODO: allow other tokens once we enable transacting with them
+        handler.setCallableContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.approve.selector,
+            true
+        );
+        handler.setCallableContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.transfer.selector,
+            true
+        );
+
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        bytes4[] memory depositManagerHandlerSelectors = new bytes4[](4);
+        depositManagerHandlerSelectors[0] = depositManagerHandler
+            .instantiateDepositETH
+            .selector;
+        depositManagerHandlerSelectors[1] = depositManagerHandler
+            .instantiateDepositErc20
+            .selector;
+        depositManagerHandlerSelectors[2] = depositManagerHandler
+            .retrieveDepositErc20
+            .selector;
+        depositManagerHandlerSelectors[3] = depositManagerHandler
+            .completeDepositErc20
+            .selector;
+
+        bytes4[] memory walletHandlerSelectors = new bytes4[](1);
+        walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
         targetContract(address(depositManagerHandler));
         targetSelector(
             FuzzSelector({
                 addr: address(depositManagerHandler),
-                selectors: selectors
+                selectors: depositManagerHandlerSelectors
+            })
+        );
+
+        targetContract(address(walletHandler));
+        targetSelector(
+            FuzzSelector({
+                addr: address(walletHandler),
+                selectors: walletHandlerSelectors
             })
         );
 
