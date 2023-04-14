@@ -50,6 +50,7 @@ contract WalletHandler is OperationGenerator {
     string[] internal _failureReasons;
 
     TransferRequest[] internal _successfulTransfers;
+    SwapRequest[] internal _successfulSwaps;
 
     constructor(
         Wallet _wallet,
@@ -84,13 +85,20 @@ contract WalletHandler is OperationGenerator {
             console.log(_failureReasons[i]);
         }
 
-        console.log("Metadata");
+        console.log("Metadata:");
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             console.log("Transfer amount", _successfulTransfers[i].amount);
         }
+        for (uint256 i = 0; i < _successfulSwaps.length; i++) {
+            console.log("Swap in amount", _successfulSwaps[i].assetInAmount);
+        }
+
+        console.log(
+            "Swapper joinsplit balance",
+            joinSplitToken.balanceOf(address(swapper))
+        );
     }
 
-    // TODO: ensure there are existing deposits (from same run as dep manager)
     function processBundle(uint256 seed) external {
         (
             Operation memory op,
@@ -127,6 +135,9 @@ contract WalletHandler is OperationGenerator {
                 _numSuccessfulActions += 1;
                 if (meta.isTransfer[j]) {
                     _successfulTransfers.push(meta.transfers[j]);
+                } else {
+                    _successfulSwaps.push(meta.swaps[j]); // skip approval action, +1
+                    // j += 1; // extra +1 to skip past swap action
                 }
             }
         }

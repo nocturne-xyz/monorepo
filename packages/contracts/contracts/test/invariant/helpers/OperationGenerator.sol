@@ -64,16 +64,14 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 root = args.handler.root();
 
         // Calculate args.joinSplitPublicSpends
-        // uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
-        //     args.seed,
-        //     totalJoinSplitUnwrapAmount
-        // );
-        uint256[] memory joinSplitPublicSpends = new uint256[](1);
-        joinSplitPublicSpends[0] = totalJoinSplitUnwrapAmount;
+        uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
+            args.seed,
+            totalJoinSplitUnwrapAmount
+        );
 
-        // Calculate numActions using the bound function
-        // uint256 numActions = bound(args.seed, 1, 8);
-        uint256 numActions = 1;
+        // Calculate numActions using the bound function, at least 2 to make space for token
+        // approvals in case of a swap
+        uint256 numActions = bound(args.seed, 2, 5);
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
@@ -86,7 +84,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         for (uint256 i = 0; i < numActions; i++) {
             console.log("top of loop");
             // bool isTransfer = bound(args.seed, 0, 1) == 0;
-            bool isTransfer = true;
+            bool isTransfer = false;
+
+            // Swap request requires two actions, if at end of array just fill with transfer
+            if (i + 1 == numActions) {
+                isTransfer = true;
+            }
+
             uint256 joinSplitUseAmount = bound(
                 args.seed,
                 0,
@@ -118,14 +122,29 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     args
                 );
                 console.log("[DONE] _createRandomSwapRequest");
-                actions[i] = Action({
-                    contractAddress: address(args.swapper),
+
+                // Kludge to satisfy stack limit
+                SimpleERC20Token inToken = args.joinSplitToken;
+                TokenSwapper swapper = args.swapper;
+
+                Action memory approveAction = Action({
+                    contractAddress: address(inToken),
                     encodedFunction: abi.encodeWithSelector(
-                        args.swapper.swap.selector,
+                        inToken.approve.selector,
+                        address(swapper),
+                        swapRequest.assetInAmount
+                    )
+                });
+                actions[i] = approveAction;
+                actions[i + 1] = Action({
+                    contractAddress: address(swapper),
+                    encodedFunction: abi.encodeWithSelector(
+                        swapper.swap.selector,
                         swapRequest
                     )
                 });
                 _meta.swaps[i] = swapRequest;
+                i += 1; // additional +1
             }
         }
 
@@ -150,6 +169,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // to convert NocturneUtils to contract to inherit forge std
         console.log("Randomizing nfs");
         for (uint256 i = 0; i < _op.joinSplits.length; i++) {
+            // Overflow here doesn't matter given all we need are random nfs
             unchecked {
                 _op.joinSplits[i].nullifierA = args.seed + (2 * i);
                 _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
@@ -179,12 +199,11 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             args.seed
         );
         uint256 swapErc1155OutId = ERC20_ID;
-        // uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
-        uint256 swapErc1155OutAmount = 10_000_000;
+        uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
         SwapRequest memory swapRequest = SwapRequest({
-            assetInOwner: address(args.wallet),
+            assetInOwner: address(args.handler),
             encodedAssetIn: encodedAssetIn,
-            assetInAmount: joinSplitUseAmount,
+            assetInAmount: 1000,
             erc20Out: address(args.swapErc20),
             erc20OutAmount: swapErc20OutAmount,
             erc721Out: address(args.swapErc721),

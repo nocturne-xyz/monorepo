@@ -53,6 +53,7 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
+    // TODO: enable weth transactions
     function assert_protocol_walletBalanceEqualsCompletedDepositSumETH()
         internal
     {
@@ -62,7 +63,7 @@ contract InvariantsBase is Test {
         );
     }
 
-    function assert_protocol_walletBalanceEqualsCompletedDepositSumErc20()
+    function assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
         internal
     {
         assertEq(
