@@ -16,9 +16,11 @@ services:
       context: ../..
       dockerfile: packages/deposit-screener/Dockerfile
     restart: always
-    command: "run processor --deposit-manager-address ${DEPOSIT_MANAGER_ADDRESS}"
+    command: "run processor --deposit-manager-address ${DEPOSIT_MANAGER_ADDRESS} --log-dir /logs/deposit-screener-processor"
     extra_hosts:
       - host.docker.internal:host-gateway
+    volumes:
+      - ../../logs:/logs
 
 volumes:
   redis-data:

@@ -1,7 +1,8 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
-import { getRedis, makeLogger } from "../../utils";
+import { getRedis } from "../../utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
@@ -29,7 +30,7 @@ const runSubmitter = new Command("submitter")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
 
-    const logger = makeLogger(logDir, "submitter");
+    const logger = makeLogger(logDir, "bundler", "submitter");
     const submitter = new BundlerSubmitter(
       walletAddress,
       signingProvider,

@@ -1,7 +1,8 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
 import { BundlerServer } from "../../../server";
-import { getRedis, makeLogger } from "../../utils";
+import { getRedis } from "../../utils";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 const runServer = new Command("server")
   .summary("run bundler server")
@@ -24,7 +25,7 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-    const logger = makeLogger(logDir, "server");
+    const logger = makeLogger(logDir, "bundler", "server");
     const server = new BundlerServer(
       walletAddress,
       provider,

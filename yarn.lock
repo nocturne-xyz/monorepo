@@ -3188,6 +3188,7 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
+    "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3219,7 +3220,6 @@ __metadata:
     ts-node: ^10.9.1
     typescript: ^4.8.4
     winston: ^3.8.2
-    winston-transport: ^4.5.0
   bin:
     bundler-cli: dist/src/cli/index.js
   languageName: unknown
@@ -3330,6 +3330,7 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/contracts": 1.0.20-alpha
+    "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.100-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3363,6 +3364,7 @@ __metadata:
     sorted-btree: ^1.8.1
     ts-node: ^10.9.1
     typescript: ^4.8.4
+    winston: ^3.8.2
   bin:
     screener-cli: dist/src/cli/index.js
   languageName: unknown
@@ -3378,6 +3380,7 @@ __metadata:
     "@nocturne-xyz/deploy": "workspace:^"
     "@nocturne-xyz/deposit-screener": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/offchain-utils": "workspace:^"
     "@nocturne-xyz/sdk": "workspace:^"
     "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/chai": ^4.3.3
@@ -3449,6 +3452,24 @@ __metadata:
     snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
+  languageName: unknown
+  linkType: soft
+
+"@nocturne-xyz/offchain-utils@0.1.0, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+  version: 0.0.0-use.local
+  resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
+  dependencies:
+    "@types/node": ^18.8.0
+    "@typescript-eslint/eslint-plugin": ^5.20.0
+    "@typescript-eslint/parser": ^5.20.0
+    eslint: ^7.32.0
+    eslint-config-prettier: ^8.3.0
+    prettier: ^2.8.0
+    ts-node: ^10.9.1
+    typescript: ^4.8.4
+    winston: ^3.8.2
+    winston-humanize-formatter: ^0.1.4
+    winston-transport: ^4.5.0
   languageName: unknown
   linkType: soft
 
@@ -12846,7 +12867,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 

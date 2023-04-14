@@ -29,7 +29,8 @@
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
-        "@nocturne-xyz/config#build"
+        "@nocturne-xyz/config#build",
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/snap#build": {
@@ -43,14 +44,16 @@
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/config#build",
-        "@nocturne-xyz/local-prover#build"
+        "@nocturne-xyz/local-prover#build",
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/deposit-screener#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
         "@nocturne-xyz/sdk#build",
-        "@nocturne-xyz/config#build"
+        "@nocturne-xyz/config#build",
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/frontend-sdk#build": {
@@ -75,7 +78,8 @@
         "@nocturne-xyz/subtree-updater#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/bundler#build",
-        "@nocturne-xyz/deposit-screener#build"
+        "@nocturne-xyz/deposit-screener#build",
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "@nocturne-xyz/subtree-updater#build": {
@@ -83,7 +87,8 @@
         "@nocturne-xyz/sdk#build",
         "@nocturne-xyz/local-prover#build",
         "@nocturne-xyz/circuits#build",
-        "@nocturne-xyz/contracts#build"
+        "@nocturne-xyz/contracts#build",
+        "@nocturne-xyz/offchain-utils#build"
       ]
     },
     "test": {
