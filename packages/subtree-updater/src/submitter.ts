@@ -1,12 +1,9 @@
 import { Handler } from "@nocturne-xyz/contracts";
 import { BaseProof, packToSolidityProof } from "@nocturne-xyz/sdk";
+import { Logger } from "winston";
 
 export interface SubtreeUpdateSubmitter {
-  submitProof(
-    proof: BaseProof,
-    newRoot: bigint,
-    subtreeIndex: number
-  ): Promise<void>;
+  submitProof(logger: Logger, proof: BaseProof, newRoot: bigint): Promise<void>;
   fillBatch(): Promise<void>;
   dropDB(): Promise<void>;
 }
@@ -20,24 +17,30 @@ export class SyncSubtreeSubmitter implements SubtreeUpdateSubmitter {
     this.handlerContract = handlerContract;
   }
 
-  async submitProof(proof: BaseProof, newRoot: bigint): Promise<void> {
+  async submitProof(
+    logger: Logger,
+    proof: BaseProof,
+    newRoot: bigint
+  ): Promise<void> {
     const solidityProof = packToSolidityProof(proof);
     try {
-      console.log("submitting tx...");
+      logger.info("submitting tx...");
       const tx = await this.handlerContract.applySubtreeUpdate(
         newRoot,
         solidityProof
       );
+      logger.info("waiting for confirmation...");
       await tx.wait(1);
-      console.log("successfully updated root to", newRoot);
+
+      logger.info("successfully updated root to", newRoot);
     } catch (err: any) {
       // ignore errors that are due to duplicate submissions
       // this can happen if there are multiple instances of subtree updaters running
       if (!err.toString().includes("newRoot already a past root")) {
-        console.error("error submitting proof:", err);
+        logger.error("error submitting proof:", err);
         throw err;
       }
-      console.log("update already submitted by another agent");
+      logger.warn("update already submitted by another agent");
     }
   }
 

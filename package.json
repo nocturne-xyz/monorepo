@@ -7,7 +7,7 @@
     "build": "yarn turbo run --no-daemon build",
     "build:nocache": "yarn turbo run --no-daemon build --force",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
-    "clean": "echo \"\nRunning clean in each package\" && yarn workspaces foreach run clean && echo \"\nDeleting yarn cache\" && rm -rf .yarn/cache && echo \"\nClearing yarn.lock contents\" && cp /dev/null yarn.lock",
+    "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",
     "dev:site": "scripts/run_site_dev.sh",
     "e2e-tests": "yarn workspace @nocturne-xyz/e2e-tests",
     "lint": "yarn turbo run --no-daemon lint",

@@ -29,6 +29,7 @@ import {
   sleep,
   submitAndProcessOperation,
 } from "../src/utils";
+import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { KEYS_TO_WALLETS } from "../src/keys";
@@ -64,6 +65,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let updater: SubtreeUpdater;
 
     let joinSplitProver: JoinSplitProver;
+    const logger = makeTestLogger("subtree-updater", "updater");
 
     beforeEach(async () => {
       // don't deploy subtree updater, and don't deploy subgraph unless we're using SubgraphSyncAdapter
@@ -103,14 +105,14 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const prover = getSubtreeUpdateProver();
       const submitter = new SyncSubtreeSubmitter(handler);
       updater = new SubtreeUpdater(handler, serverDB, prover, submitter);
-      await updater.init();
+      await updater.init(logger);
     }
 
     async function applySubtreeUpdate() {
       const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
-      await updater.pollInsertionsAndTryMakeBatch();
-      await updater.tryGenAndSubmitProofs();
+      await updater.pollInsertionsAndTryMakeBatch(logger);
+      await updater.tryGenAndSubmitProofs(logger);
       // wait for subgraph
       await sleep(2_000);
     }

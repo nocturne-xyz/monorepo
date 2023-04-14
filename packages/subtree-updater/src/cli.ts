@@ -6,6 +6,7 @@ import { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
+import { makeLogger } from "@nocturne-xyz/offchain-utils";
 
 export default async function main(): Promise<void> {
   dotenv.config();
@@ -55,7 +56,12 @@ export default async function main(): Promise<void> {
       "block to start indexing at",
       parseInt
     )
-    .option("--dbPath <string>", "path to the store DB files", "./db");
+    .option("--dbPath <string>", "path to the store DB files", "./db")
+    .option(
+      "--log-dir <string>",
+      "directory to write logs to",
+      "./logs/subtree-updater"
+    );
 
   program.parse();
 
@@ -71,6 +77,7 @@ export default async function main(): Promise<void> {
     interval,
     indexingStartBlock,
     fillBatches,
+    logDir,
   } = program.opts();
 
   const rpcUrl = process.env.RPC_URL;
@@ -105,11 +112,13 @@ export default async function main(): Promise<void> {
     );
   }
 
+  const logger = makeLogger(logDir, "subtree-updater", "server");
   const server = new SubtreeUpdateServer(
     prover,
     handlerAddress,
     dbPath,
     signer,
+    logger,
     { indexingStartBlock, interval, fillBatches }
   );
 
