@@ -83,8 +83,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
             console.log("top of loop");
-            // bool isTransfer = bound(args.seed, 0, 1) == 0;
-            bool isTransfer = false;
+            bool isTransfer = bound(args.seed, 0, 1) == 0;
 
             // Swap request requires two actions, if at end of array just fill with transfer
             if (i + 1 == numActions) {
@@ -203,7 +202,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
             encodedAssetIn: encodedAssetIn,
-            assetInAmount: 1000,
+            assetInAmount: joinSplitUseAmount,
             erc20Out: address(args.swapErc20),
             erc20OutAmount: swapErc20OutAmount,
             erc721Out: address(args.swapErc721),

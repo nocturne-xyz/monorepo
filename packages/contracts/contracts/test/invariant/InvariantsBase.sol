@@ -69,7 +69,7 @@ contract InvariantsBase is Test {
         assertEq(
             depositManagerHandler.erc20().balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumErc20() -
-                walletHandler.ghost_totalTransferedOutOfWallet()
+                walletHandler.ghost_totalTransferredOutOfWallet()
         );
     }
 

@@ -144,7 +144,7 @@ contract WalletHandler is OperationGenerator {
     }
 
     // ______VIEW______
-    function ghost_totalTransferedOutOfWallet()
+    function ghost_totalTransferredOutOfWallet()
         external
         view
         returns (uint256)
@@ -152,6 +152,9 @@ contract WalletHandler is OperationGenerator {
         uint256 total = 0;
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             total += _successfulTransfers[i].amount;
+        }
+        for (uint256 i = 0; i < _successfulSwaps.length; i++) {
+            total += _successfulSwaps[i].assetInAmount;
         }
         return total;
     }
