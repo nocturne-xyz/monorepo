@@ -53,16 +53,6 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    // TODO: enable operations that spend weth
-    function assert_protocol_walletBalanceEqualsCompletedDepositSumETH()
-        internal
-    {
-        assertEq(
-            weth.balanceOf(address(wallet)),
-            depositManagerHandler.ghost_completeDepositSumETH()
-        );
-    }
-
     function assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
         internal
     {
@@ -91,6 +81,15 @@ contract InvariantsBase is Test {
             depositManagerHandler.ghost_instantiateDepositSumETH() -
                 depositManagerHandler.ghost_retrieveDepositSumETH() -
                 depositManagerHandler.ghost_completeDepositSumETH()
+        );
+    }
+
+    function assert_deposit_walletBalanceEqualsCompletedDepositSumETH()
+        internal
+    {
+        assertEq(
+            weth.balanceOf(address(wallet)),
+            depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
 

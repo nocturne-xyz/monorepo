@@ -47,7 +47,6 @@ contract WalletHandler is OperationGenerator {
     bytes32 public lastCall;
 
     // ______INTERNAL______
-
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
     uint256 internal _numSuccessfulActions;
@@ -79,7 +78,6 @@ contract WalletHandler is OperationGenerator {
     }
 
     // ______EXTERNAL______
-
     function callSummary() external view {
         console.log("-------------------");
         console.log("WalletHandler call summary:");

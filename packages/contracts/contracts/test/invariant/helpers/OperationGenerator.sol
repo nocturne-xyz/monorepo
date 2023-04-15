@@ -54,7 +54,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         view
         returns (Operation memory _op, GeneratedOperationMetadata memory _meta)
     {
-        // Calculate totalJoinSplitUnwrapAmount using the bound function
+        // Get random totalJoinSplitUnwrapAmount using the bound function
         uint256 totalJoinSplitUnwrapAmount = bound(
             args.seed,
             0,
@@ -64,13 +64,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // Pick handler.root() as args.root
         uint256 root = args.handler.root();
 
-        // Calculate args.joinSplitPublicSpends
+        // Get random args.joinSplitPublicSpends
         uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
             args.seed,
             totalJoinSplitUnwrapAmount
         );
 
-        // Calculate numActions using the bound function, at least 2 to make space for token
+        // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
         uint256 numActions = bound(args.seed, 2, 5);
         Action[] memory actions = new Action[](numActions);

@@ -146,12 +146,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_walletBalanceEqualsCompletedDepositSumETH()
-        external
-    {
-        assert_protocol_walletBalanceEqualsCompletedDepositSumETH();
-    }
-
     function invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
         external
     {
@@ -225,6 +219,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
         external
     {
         assert_operation_totalSwapErc20ReceivedMatchesWalletBalance();
+    }
+
+    function invariant_operation_walletOwnsAllSwapErc721s() external {
+        assert_operation_walletOwnsAllSwapErc721s();
     }
 
     function invariant_operation_totalSwapErc1155ReceivedMatchesWalletBalance()

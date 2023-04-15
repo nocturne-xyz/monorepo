@@ -112,7 +112,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     fallback() external payable {}
 
     // ______EXTERNAL______
-
     function callSummary() external view {
         console.log("-------------------");
         console.log("DepositManagerHandler call summary:");
