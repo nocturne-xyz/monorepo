@@ -140,6 +140,7 @@ console.log(opSig);
 
 const joinsplitInputs: JoinSplitInputs = {
   vk,
+  vkNonce: nocturneSigner.vkNonce,
   spendPk: [spendPk.x, spendPk.y],
   operationDigest,
   c: opSig.c,

@@ -109,7 +109,7 @@ template SigVerify() {
     R.x2 <== pkc.out[0];
     R.y2 <== pkc.out[1];
 
-    signal cp <== Poseidon(3)([R.xout, R.yout, m]);
+    signal cp <== Poseidon(4)([pk[0], R.xout, R.yout, m]);
     cp === sig[0];
 }
 

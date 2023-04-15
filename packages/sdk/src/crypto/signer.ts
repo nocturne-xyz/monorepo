@@ -37,7 +37,7 @@ export class NocturneSigner extends NocturneViewer {
     // TODO: make this deterministic
     const r = randomFr();
     const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
-    const c = poseidonBN([R.x, R.y, m]);
+    const c = poseidonBN([this.spendPk.x, R.x, R.y, m]);
 
     // eslint-disable-next-line
     let z = Fr.reduce(r - (this.sk as any) * c);

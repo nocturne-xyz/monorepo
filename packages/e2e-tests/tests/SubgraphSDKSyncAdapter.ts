@@ -7,6 +7,7 @@ import {
   NocturneViewer,
   NoteTrait,
   IncludedNote,
+  NocturneSigner,
 } from "@nocturne-xyz/sdk";
 import { sleep } from "../src/utils";
 import { setupTestDeployment, SUBGRAPH_URL } from "../src/deploy";
@@ -38,7 +39,7 @@ describe("SDKSubgraphSyncAdapter", async () => {
       testDeployment);
 
     syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
-    viewer = new NocturneViewer(2n);
+    viewer = new NocturneSigner(2n).viewer();
 
     token = testDeployment.tokens.erc20;
     console.log("Token deployed at: ", token.address);
