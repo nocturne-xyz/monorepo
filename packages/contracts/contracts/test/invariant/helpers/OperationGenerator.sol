@@ -41,6 +41,7 @@ struct GeneratedOperationMetadata {
     TransferRequest[] transfers;
     SwapRequest[] swaps;
     bool[] isTransfer;
+    bool[] isSwap;
 }
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
@@ -78,22 +79,24 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
         _meta.isTransfer = new bool[](numActions);
+        _meta.isSwap = new bool[](numActions);
 
         // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
         for (uint256 i = 0; i < numActions; i++) {
             bool isTransfer = bound(args.seed, 0, 1) == 0;
-
-            // Swap request requires two actions, if at end of array just fill with transfer
-            if (i + 1 == numActions) {
-                isTransfer = true;
-            }
-
             uint256 joinSplitUseAmount = bound(
                 args.seed,
                 0,
                 runningJoinSplitAmount
             );
+
+            // Swap request requires two actions, if at end of array just fill with transfer and
+            // use the rest
+            if (i == numActions - 1) {
+                isTransfer = true;
+                joinSplitUseAmount = runningJoinSplitAmount;
+            }
 
             runningJoinSplitAmount -= joinSplitUseAmount;
 
@@ -134,8 +137,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                         swapRequest
                     )
                 });
-                _meta.swaps[i] = swapRequest;
-                i += 1; // additional +1
+
+                _meta.swaps[i + 1] = swapRequest;
+                _meta.isSwap[i + 1] = true;
+                i += 1; // additional +1 to skip past swap action at i+1
             }
         }
 
