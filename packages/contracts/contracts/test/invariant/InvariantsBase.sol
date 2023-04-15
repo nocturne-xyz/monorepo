@@ -53,7 +53,7 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    // TODO: enable weth transactions
+    // TODO: enable operations that spend weth
     function assert_protocol_walletBalanceEqualsCompletedDepositSumETH()
         internal
     {
@@ -195,5 +195,15 @@ contract InvariantsBase is Test {
                 )
             );
         }
+    }
+
+    // _______________OPERATIONS_______________
+    function assert_operation_totalSwapErc20ReceivedMatchesWalletBalance()
+        internal
+    {
+        assertEq(
+            swapErc20.balanceOf(address(wallet)),
+            walletHandler.ghost_totalSwapErc20Received()
+        );
     }
 }

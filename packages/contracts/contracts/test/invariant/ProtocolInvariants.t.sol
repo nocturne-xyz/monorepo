@@ -217,4 +217,13 @@ contract ProtocolInvariants is Test, InvariantsBase {
     {
         assert_deposit_actorBalanceNeverExceedsInstantiatedErc20();
     }
+
+    /*****************************
+     * Operations
+     *****************************/
+    function invariant_operation_totalSwapErc20ReceivedMatchesWalletBalance()
+        external
+    {
+        assert_operation_totalSwapErc20ReceivedMatchesWalletBalance();
+    }
 }

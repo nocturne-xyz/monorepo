@@ -51,6 +51,8 @@ contract WalletHandler is OperationGenerator {
 
     TransferRequest[] internal _successfulTransfers;
     SwapRequest[] internal _successfulSwaps;
+    uint256[] internal _receivedErc721Ids;
+    uint256[] internal _receivedErc1155Ids;
 
     constructor(
         Wallet _wallet,
@@ -130,12 +132,12 @@ contract WalletHandler is OperationGenerator {
             _failureReasons.push(opResult.failureReason);
         }
 
-        for (uint256 j = 0; j < opResult.callSuccesses.length; j++) {
-            if (opResult.callSuccesses[j]) {
-                if (meta.isTransfer[j]) {
-                    _successfulTransfers.push(meta.transfers[j]);
-                } else if (meta.isSwap[j]) {
-                    _successfulSwaps.push(meta.swaps[j]);
+        for (uint256 i = 0; i < opResult.callSuccesses.length; i++) {
+            if (opResult.callSuccesses[i]) {
+                if (meta.isTransfer[i]) {
+                    _successfulTransfers.push(meta.transfers[i]);
+                } else if (meta.isSwap[i]) {
+                    _successfulSwaps.push(meta.swaps[i]);
                 }
                 _numSuccessfulActions += 1;
             }
@@ -156,5 +158,24 @@ contract WalletHandler is OperationGenerator {
             total += _successfulSwaps[i].assetInAmount;
         }
         return total;
+    }
+
+    function ghost_totalSwapErc20Received() external view returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < _successfulSwaps.length; i++) {
+            total += _successfulSwaps[i].erc20OutAmount;
+        }
+        return total;
+    }
+
+    function ghost_totalSwapErc1155Received(
+        uint256 id
+    ) external view returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < _successfulSwaps.length; i++) {
+            if (_successfulSwaps[i].erc1155OutId == id) {
+                total += _successfulSwaps[i].erc1155OutAmount;
+            }
+        }
     }
 }
