@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add x-coordinate of PK to hash in schnorr sig
 - use rejection sampling to find a vkNonce such that key is in the field
 - fix RPC note insertion indexing to index singular `InsertNote` events
 - include `op.atomicActions` in op digest calculation

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add x-coordinate of PK to hash in schnorr sig
 - update verifier contract generator to use arrays instead of `Proof` structs
 - force viewing key to be an element of Baby Jubjub scalar field with compconstant
 - pull bitified viewing key out into `joinSplit` so we don't decompose it multiple times
