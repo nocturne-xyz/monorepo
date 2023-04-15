@@ -20,11 +20,15 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
+import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
+
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
 contract WalletHandler is OperationGenerator {
+    using LibTokenIdSet for TokenIdSet;
+
     uint256 constant BUNDLER_PRIVKEY = 2;
     address BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
 
@@ -51,8 +55,8 @@ contract WalletHandler is OperationGenerator {
 
     TransferRequest[] internal _successfulTransfers;
     SwapRequest[] internal _successfulSwaps;
-    uint256[] internal _receivedErc721Ids;
-    uint256[] internal _receivedErc1155Ids;
+    TokenIdSet internal _receivedErc721Ids;
+    TokenIdSet internal _receivedErc1155Ids;
 
     constructor(
         Wallet _wallet,
@@ -138,6 +142,8 @@ contract WalletHandler is OperationGenerator {
                     _successfulTransfers.push(meta.transfers[i]);
                 } else if (meta.isSwap[i]) {
                     _successfulSwaps.push(meta.swaps[i]);
+                    _receivedErc721Ids.add(meta.swaps[i].erc721OutId);
+                    _receivedErc1155Ids.add(meta.swaps[i].erc1155OutId);
                 }
                 _numSuccessfulActions += 1;
             }
@@ -168,7 +174,7 @@ contract WalletHandler is OperationGenerator {
         return total;
     }
 
-    function ghost_totalSwapErc1155Received(
+    function ghost_totalSwapErc1155ReceivedForId(
         uint256 id
     ) external view returns (uint256) {
         uint256 total = 0;
@@ -177,5 +183,22 @@ contract WalletHandler is OperationGenerator {
                 total += _successfulSwaps[i].erc1155OutAmount;
             }
         }
+        return total;
+    }
+
+    function ghost_swapErc721IdsReceived()
+        external
+        view
+        returns (uint256[] memory)
+    {
+        return _receivedErc721Ids.getIds();
+    }
+
+    function ghost_swapErc1155IdsReceived()
+        external
+        view
+        returns (uint256[] memory)
+    {
+        return _receivedErc1155Ids.getIds();
     }
 }

@@ -198,6 +198,7 @@ contract InvariantsBase is Test {
     }
 
     // _______________OPERATIONS_______________
+
     function assert_operation_totalSwapErc20ReceivedMatchesWalletBalance()
         internal
     {
@@ -205,5 +206,25 @@ contract InvariantsBase is Test {
             swapErc20.balanceOf(address(wallet)),
             walletHandler.ghost_totalSwapErc20Received()
         );
+    }
+
+    function assert_operation_walletOwnsAllSwapErc721s() internal {
+        uint256[] memory ids = walletHandler.ghost_swapErc721IdsReceived();
+        for (uint256 i = 0; i < ids.length; i++) {
+            assertEq(address(wallet), swapErc721.ownerOf(ids[i]));
+        }
+    }
+
+    function assert_operation_totalSwapErc1155ReceivedMatchesWalletBalance()
+        internal
+    {
+        uint256[] memory ids = walletHandler.ghost_swapErc1155IdsReceived();
+        for (uint256 i = 0; i < ids.length; i++) {
+            uint256 id = ids[i];
+            assertEq(
+                swapErc1155.balanceOf(address(wallet), id),
+                walletHandler.ghost_totalSwapErc1155ReceivedForId(id)
+            );
+        }
     }
 }

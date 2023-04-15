@@ -226,4 +226,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
     {
         assert_operation_totalSwapErc20ReceivedMatchesWalletBalance();
     }
+
+    function invariant_operation_totalSwapErc1155ReceivedMatchesWalletBalance()
+        external
+    {
+        assert_operation_totalSwapErc1155ReceivedMatchesWalletBalance();
+    }
 }
