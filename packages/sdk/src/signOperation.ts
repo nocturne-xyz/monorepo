@@ -71,6 +71,7 @@ function makePreProofJoinSplit(
 
   const proofInputs: JoinSplitInputs = {
     vk: signer.vk,
+    vkNonce: signer.vkNonce,
     spendPk: [x, y],
     c,
     z,

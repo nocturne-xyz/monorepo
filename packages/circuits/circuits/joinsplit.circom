@@ -76,8 +76,20 @@ template JoinSplit(levels) {
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
         16950150798460657717958625567821834550301663161624707787222815936182638968203
     ];
+    var BABYJUB_SCALAR_FIELD_ORDER = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
 
-    signal senderCanonAddr[2] <== canonAddr()(userViewKey);
+    // viewing keys must be elements of baby jubjub's scalar field
+    signal viewKeyBits[251] <== Num2Bits(251)(userViewKey);
+    component gtFrOrderMinusOne = CompConstant(BABYJUB_SCALAR_FIELD_ORDER - 1);
+    for (var i=0; i<251; i++) {
+      gtFrOrderMinusOne.in[i] <== viewKeyBits[i];
+    }
+    gtFrOrderMinusOne.in[251] <== 0;
+    gtFrOrderMinusOne.in[252] <== 0;
+    gtFrOrderMinusOne.in[253] <== 0;
+    0 === gtFrOrderMinusOne.out;
+
+    signal senderCanonAddr[2] <== canonAddr()(viewKeyBits);
 
     // new note A's owner is sender's canonical address
     signal newNoteAOwnerH1X <== BASE8[0];
@@ -153,8 +165,8 @@ template JoinSplit(levels) {
     publicSpend <== valInput - valOutput;
 
     // check that old note owner addresses correspond to user's viewing key 
-    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, userViewKey);
-    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, userViewKey);
+    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
+    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
 
     // derive spending public key
     signal derivedViewKey <== Poseidon(3)([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);

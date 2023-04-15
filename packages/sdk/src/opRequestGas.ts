@@ -1,5 +1,10 @@
 import { Handler } from "@nocturne-xyz/contracts";
-import { NocturneViewer, StealthAddress } from "./crypto";
+import {
+  NocturneViewer,
+  StealthAddress,
+  spendPkFromFromSk,
+  vkFromSpendPk,
+} from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   GasAccountedOperationRequest,
@@ -61,6 +66,12 @@ interface GasParams {
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
 }
+
+// VK corresponding to SK of 1 with minimum valid nonce
+const DUMMY_VIEWER = new NocturneViewer(
+  655374300543486358510310527362452574140738137308572239595396943710924175576n,
+  3n
+);
 
 export async function handleGasForOperationRequest(
   deps: HandleOpRequestGasDeps,
@@ -216,9 +227,8 @@ async function estimateGasForOperationRequest(
     };
 
     // prepare the request into an operation using a dummy viewer
-    const dummyViewer = new NocturneViewer(1n);
     const simulationOp = await prepareOperation(
-      { viewer: dummyViewer, ...deps },
+      { viewer: DUMMY_VIEWER, ...deps },
       dummyOpRequest
     );
 

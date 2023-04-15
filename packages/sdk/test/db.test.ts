@@ -12,6 +12,8 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   AssetTrait,
+  vkFromSpendPk,
+  spendPkFromFromSk,
 } from "../src";
 import { ponzi, shitcoin, stablescam } from "./utils";
 
@@ -160,7 +162,8 @@ describe("InMemoryKVStore", async () => {
 describe("NocturneDB", async () => {
   const kv = new InMemoryKVStore();
   const db = new NocturneDB(kv);
-  const viewer = new NocturneViewer(1n);
+  const [vk, vkNonce] = vkFromSpendPk(spendPkFromFromSk(1n));
+  const viewer = new NocturneViewer(vk, vkNonce);
 
   const dummyNotesAndNfs = (
     notesPerAsset: number,

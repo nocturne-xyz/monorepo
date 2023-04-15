@@ -20,7 +20,14 @@ export function spendPkFromFromSk(sk: SpendingKey): SpendPk {
   return BabyJubJub.scalarMul(BabyJubJub.BasePoint, sk);
 }
 
-export function vkFromSpendPk(spendPk: SpendPk): ViewingKey {
-  const nonce = 1n;
-  return poseidonBN([spendPk.x, spendPk.y, nonce]);
+// returns [vk, vkNonce]
+export function vkFromSpendPk(spendPk: SpendPk): [ViewingKey, bigint] {
+  let nonce = 1n;
+  let vk = poseidonBN([spendPk.x, spendPk.y, nonce]);
+  while (vk >= Fr.Modulus) {
+    nonce += 1n;
+    vk = poseidonBN([spendPk.x, spendPk.y, nonce]);
+  }
+
+  return [vk, nonce];
 }

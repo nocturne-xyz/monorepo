@@ -45,6 +45,7 @@ export interface JoinSplitPublicSignals {
 
 export interface JoinSplitInputs {
   vk: bigint;
+  vkNonce: bigint;
   spendPk: [bigint, bigint];
   operationDigest: bigint;
   c: bigint;

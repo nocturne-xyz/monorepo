@@ -22,15 +22,15 @@ export class NocturneSigner extends NocturneViewer {
 
   constructor(sk: SpendingKey) {
     const spendPk = spendPkFromFromSk(sk);
-    const vk = vkFromSpendPk(spendPk);
-    super(vk);
+    const [vk, vkNonce] = vkFromSpendPk(spendPk);
+    super(vk, vkNonce);
 
     this.sk = sk;
     this.spendPk = spendPk;
   }
 
   viewer(): NocturneViewer {
-    return new NocturneViewer(this.vk);
+    return new NocturneViewer(this.vk, this.vkNonce);
   }
 
   sign(m: bigint): NocturneSignature {

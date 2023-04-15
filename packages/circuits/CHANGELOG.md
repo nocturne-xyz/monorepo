@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- update verifier contract generator to use arrays instead of `Proof` structs
+- force viewing key to be an element of Baby Jubjub scalar field with compconstant
+- pull bitified viewing key out into `joinSplit` so we don't decompose it multiple times
 - use `Num2BitsBE_strict` in subtree update circuit when necessary
 - add `Num2BitsBE_strict`
 - add 2^16 ptau as changes take us up a power of two

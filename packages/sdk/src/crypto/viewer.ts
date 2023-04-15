@@ -11,9 +11,11 @@ const Fr = BabyJubJub.ScalarField;
 
 export class NocturneViewer {
   vk: ViewingKey;
+  vkNonce: bigint;
 
-  constructor(vk: ViewingKey) {
+  constructor(vk: ViewingKey, vkNonce: bigint) {
     this.vk = vk;
+    this.vkNonce = vkNonce;
   }
 
   canonicalAddress(): CanonAddress {

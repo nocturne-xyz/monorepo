@@ -37,17 +37,25 @@ template DeriveNullifier() {
     nullifier <== hash.out;
 }
 
+// checks that a stealth address belongs to a given vk
 template vkIntegrity() {
+    // X and Y coordinates of both
+    // components of the stealth address
     signal input H1X;
     signal input H1Y;
     signal input H2X;
     signal input H2Y;
-    signal input vk;
+
+    // little-endian bit representation of viewing key
+    // we check elsewhere that this viewing key was derived correctly
+    // here we assume it was, in which case it fits in 251 bits
+    // and we can avoid a Num2Bits_strict
+    signal input vkBits[251];
 
     // G = vk * H1
     signal GX, GY, GGX, GGY, GG2X, GG2Y, GG4X, GG4Y, GG8X, GG8Y;
     signal G[2];
-    G <== EscalarMulAny(254)(Num2Bits_strict()(vk), [H1X, H1Y]);
+    G <== EscalarMulAny(251)(vkBits, [H1X, H1Y]);
     // GG = vk * H1 - H2
     (GGX, GGY) <== BabyAdd()(G[0], G[1], -H2X, H2Y);
     (GG2X, GG2Y) <== BabyDbl()(GGX, GGY);
@@ -67,13 +75,25 @@ template SigVerify() {
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
         16950150798460657717958625567821834550301663161624707787222815936182638968203
     ];
-    component gz = EscalarMulFix(254, BASE8);
+    component gz = EscalarMulFix(251, BASE8);
     component pkc = EscalarMulAny(254);
-    component zBits = Num2Bits_strict();
+
+    // OPTIMIZATION:
+    // let r be the order of Baby Jubjub's scalar field
+    // if z > r, then wraparound will happen in the scalar mul
+    // therefore, it's equivalent to simply require the prover to reduce it.
+    // before plugging it into the circuit
+    // The case where the reduced version isn't correct is equivalent to the case
+    // where `z` is bogus - the signature check will still fail.
+    // therefore we can simply assume it's 251 bits and not explicitly compare to r
+    component zBits = Num2Bits(251);
+
+    // we do, however, need to check this against an un-reduced poseidon hash computed in joinsplit.circom
+    // therefore we sitll use Num2Bits_strict here
     component cBits = Num2Bits_strict();
 
     zBits.in <== sig[1];
-    for (var i = 0; i < 254; i++) {
+    for (var i = 0; i < 251; i++) {
         gz.e[i] <== zBits.out[i];
     }
 
@@ -94,7 +114,12 @@ template SigVerify() {
 }
 
 template canonAddr() {
-    signal input userViewKey;
+    // little-endian bit representation of viewing key
+    // we check elsewhere that this viewing key was derived correctly
+    // here we assume it was, in which case it fits in 251 bits
+    // and we can avoid a Num2Bits_strict
+    signal input userViewKeyBits[251];
+    // the canonical address corresponding to given viewing key
     signal output addr[2];
 
     var BASE8[2] = [
@@ -102,7 +127,7 @@ template canonAddr() {
         16950150798460657717958625567821834550301663161624707787222815936182638968203
     ];
 
-    addr <== EscalarMulFix(254, BASE8)(Num2Bits_strict()(userViewKey));
+    addr <== EscalarMulFix(251, BASE8)(userViewKeyBits);
 }
 
 // Forces the input signal to be of value between 0 and 2**n - 1
