@@ -99,13 +99,15 @@ echo "Token contract addresses: $TOKEN_CONTRACT_ADDR1, $TOKEN_CONTRACT_ADDR2"
 echo "Bundler submitter private key: $BUNDLER_TX_SIGNER_KEY"
 echo "Subtree updater submitter private key: $SUBTREE_UPDATER_TX_SIGNER_KEY"
 
+CONFIG_PATH_IN_DOCKER=/configs/localhost.json
+
 # write bundler's .env file
 pushd packages/bundler
 cat > .env <<- EOM
 REDIS_URL=$BUNDLER_REDIS_URL
 REDIS_PASSWORD=$REDIS_PASSWORD
 
-CONFIG_NAME_OR_PATH=/configs/localhost.json
+CONFIG_NAME_OR_PATH=$CONFIG_PATH_IN_DOCKER
 MAX_LATENCY=5
 
 RPC_URL=$RPC_URL
@@ -129,7 +131,7 @@ cat > .env <<- EOM
 REDIS_URL=$SCREENER_REDIS_URL
 REDIS_PASSWORD=$REDIS_PASSWORD
 
-CONFIG_NAME_OR_PATH=/configs/localhost.json
+CONFIG_NAME_OR_PATH=$CONFIG_PATH_IN_DOCKER
 SUBGRAPH_URL=$SUBGRAPH_URL
 RPC_URL=$RPC_URL
 
@@ -157,7 +159,7 @@ EOM
 popd
 
 # run subtree updater
-docker run --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --handler-address "$HANDLER_CONTRACT_ADDRESS" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
+docker run -v "$ROOT_DIR/logs/:/logs" -v "$ROOT_DIR/packages/config/configs:/configs" --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --config-name-or-path "$CONFIG_PATH_IN_DOCKER" --log-dir "/logs/subtree-updater" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
 echo "subtree updater running at PID: $SUBTREE_UPDATER_PID"
