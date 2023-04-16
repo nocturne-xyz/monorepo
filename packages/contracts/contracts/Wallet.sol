@@ -132,6 +132,8 @@ contract Wallet is
         returns (OperationResult[] memory)
     {
         Operation[] calldata ops = bundle.operations;
+        require(ops.length > 0, "empty bundle");
+
         uint256[] memory opDigests = OperationUtils.computeOperationDigests(
             ops
         );

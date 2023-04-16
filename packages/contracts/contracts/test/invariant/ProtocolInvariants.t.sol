@@ -7,6 +7,8 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {InvariantsBase} from "./InvariantsBase.sol";
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
+import {WalletHandler} from "./actors/WalletHandler.sol";
+import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../utils/NocturneUtils.sol";
@@ -47,34 +49,92 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
         depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
 
-        erc20 = new SimpleERC20Token();
-        erc721 = new SimpleERC721Token();
-        erc1155 = new SimpleERC1155Token();
+        depositErc20 = new SimpleERC20Token();
+        depositErc721 = new SimpleERC721Token();
+        depositErc1155 = new SimpleERC1155Token();
 
         depositManagerHandler = new DepositManagerHandler(
             depositManager,
-            erc20,
-            erc721,
-            erc1155
+            depositErc20,
+            depositErc721,
+            depositErc1155
         );
-        erc20.reserveTokens(address(depositManagerHandler), type(uint256).max);
+        depositErc20.reserveTokens(
+            address(depositManagerHandler),
+            type(uint256).max
+        );
 
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = depositManagerHandler.instantiateDepositETH.selector;
-        selectors[1] = depositManagerHandler.instantiateDepositErc20.selector;
-        selectors[2] = depositManagerHandler.retrieveDepositErc20.selector;
-        selectors[3] = depositManagerHandler.completeDepositErc20.selector;
+        swapper = new TokenSwapper();
+        swapErc20 = new SimpleERC20Token();
+        swapErc721 = new SimpleERC721Token();
+        swapErc1155 = new SimpleERC1155Token();
+
+        walletHandler = new WalletHandler(
+            wallet,
+            handler,
+            swapper,
+            depositErc20,
+            depositErc20,
+            swapErc20,
+            swapErc721,
+            swapErc1155
+        );
+
+        // TODO: allow other tokens once we enable transacting with them
+        handler.setCallableContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.approve.selector,
+            true
+        );
+        handler.setCallableContractAllowlistPermission(
+            address(depositErc20),
+            depositErc20.transfer.selector,
+            true
+        );
+
+        handler.setCallableContractAllowlistPermission(
+            address(swapper),
+            swapper.swap.selector,
+            true
+        );
+
+        bytes4[] memory depositManagerHandlerSelectors = new bytes4[](4);
+        depositManagerHandlerSelectors[0] = depositManagerHandler
+            .instantiateDepositETH
+            .selector;
+        depositManagerHandlerSelectors[1] = depositManagerHandler
+            .instantiateDepositErc20
+            .selector;
+        depositManagerHandlerSelectors[2] = depositManagerHandler
+            .retrieveDepositErc20
+            .selector;
+        depositManagerHandlerSelectors[3] = depositManagerHandler
+            .completeDepositErc20
+            .selector;
+
+        bytes4[] memory walletHandlerSelectors = new bytes4[](1);
+        walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
         targetContract(address(depositManagerHandler));
         targetSelector(
             FuzzSelector({
                 addr: address(depositManagerHandler),
-                selectors: selectors
+                selectors: depositManagerHandlerSelectors
+            })
+        );
+
+        targetContract(address(walletHandler));
+        targetSelector(
+            FuzzSelector({
+                addr: address(walletHandler),
+                selectors: walletHandlerSelectors
             })
         );
 
         excludeSender(address(depositManagerHandler));
+        excludeSender(address(walletHandler));
         excludeSender(address(wallet));
+        excludeSender(address(handler));
         excludeSender(address(depositManager));
         excludeSender(address(weth));
     }
@@ -83,19 +143,91 @@ contract ProtocolInvariants is Test, InvariantsBase {
         print_callSummary();
     }
 
-    function invariant_deposits() external {
-        assert_deposit_outNeverExceedsInETH();
-        assert_deposit_depositManagerBalanceEqualsInMinusOutETH();
-        assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH();
-        assert_deposit_walletBalanceEqualsCompletedDepositSumETH();
-        assert_deposit_actorBalanceAlwaysEqualsRetrievedETH();
-        assert_deposit_actorBalanceNeverExceedsInstantiatedETH();
+    /*****************************
+     * Protocol-Wide
+     *****************************/
+    function invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
+        external
+    {
+        assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20();
+    }
 
+    /*****************************
+     * Deposits ETH
+     *****************************/
+    function invariant_deposit_outNeverExceedsInETH() external {
+        assert_deposit_outNeverExceedsInETH();
+    }
+
+    function invariant_deposit_depositManagerBalanceEqualsInMinusOutETH()
+        external
+    {
+        assert_deposit_depositManagerBalanceEqualsInMinusOutETH();
+    }
+
+    function invariant_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
+        external
+    {
+        assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH();
+    }
+
+    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedETH() external {
+        assert_deposit_actorBalanceAlwaysEqualsRetrievedETH();
+    }
+
+    function invariant_deposit_actorBalanceNeverExceedsInstantiatedETH()
+        external
+    {
+        assert_deposit_actorBalanceNeverExceedsInstantiatedETH();
+    }
+
+    /*****************************
+     * Deposits ERC20
+     *****************************/
+    function invariant_deposit_outNeverExceedsInErc20() external {
         assert_deposit_outNeverExceedsInErc20();
+    }
+
+    function invariant_deposit_depositManagerBalanceEqualsInMinusOutErc20()
+        external
+    {
         assert_deposit_depositManagerBalanceEqualsInMinusOutErc20();
+    }
+
+    function invariant_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
+        external
+    {
         assert_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20();
-        assert_deposit_walletBalanceEqualsCompletedDepositSumErc20();
+    }
+
+    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedErc20()
+        external
+    {
         assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20();
+    }
+
+    function invariant_deposit_actorBalanceNeverExceedsInstantiatedErc20()
+        external
+    {
         assert_deposit_actorBalanceNeverExceedsInstantiatedErc20();
+    }
+
+    /*****************************
+     * Operations
+     *****************************/
+    function invariant_operation_totalSwapErc20ReceivedMatchesWalletBalance()
+        external
+    {
+        assert_operation_totalSwapErc20ReceivedMatchesWalletBalance();
+    }
+
+    function invariant_operation_walletOwnsAllSwapErc721s() external {
+        assert_operation_walletOwnsAllSwapErc721s();
+    }
+
+    function invariant_operation_totalSwapErc1155ReceivedMatchesWalletBalance()
+        external
+    {
+        assert_operation_totalSwapErc1155ReceivedMatchesWalletBalance();
     }
 }

@@ -32,8 +32,8 @@ contract ReentrantCaller {
                     joinSplitToken: _token,
                     gasToken: _token,
                     root: _handler.root(),
-                    publicSpendPerJoinSplit: PER_NOTE_AMOUNT,
-                    numJoinSplits: 6,
+                    joinSplitPublicSpends: NocturneUtils
+                        .fillJoinSplitPublicSpends(PER_NOTE_AMOUNT, 6),
                     encodedRefundAssets: new EncodedAsset[](0),
                     executionGasLimit: DEFAULT_GAS_LIMIT,
                     maxNumRefunds: 1,

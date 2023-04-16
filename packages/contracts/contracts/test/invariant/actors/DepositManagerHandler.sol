@@ -6,24 +6,9 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
-import {IJoinSplitVerifier} from "../../../interfaces/IJoinSplitVerifier.sol";
-import {ISubtreeUpdateVerifier} from "../../../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../../libs/OffchainMerkleTree.sol";
-import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../../utils/PoseidonHashers.sol";
-import {IHasherT3, IHasherT5, IHasherT6} from "../../interfaces/IHasher.sol";
-import {PoseidonDeployer} from "../../utils/PoseidonDeployer.sol";
-import {IPoseidonT3} from "../../interfaces/IPoseidon.sol";
-import {TestJoinSplitVerifier} from "../../harnesses/TestJoinSplitVerifier.sol";
-import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifier.sol";
-import {ReentrantCaller} from "../../utils/ReentrantCaller.sol";
-import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
-import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
 import {TestDepositManager} from "../../harnesses/TestDepositManager.sol";
-import {Wallet} from "../../../Wallet.sol";
-import {Handler} from "../../../Handler.sol";
-import {CommitmentTreeManager} from "../../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {WETH9} from "../../tokens/WETH9.sol";
@@ -127,8 +112,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     fallback() external payable {}
 
     // ______EXTERNAL______
-
     function callSummary() external view {
+        console.log("-------------------");
         console.log("DepositManagerHandler call summary:");
         console.log("-------------------");
         console.log("instantiateDepositETH", _calls["instantiateDepositETH"]);

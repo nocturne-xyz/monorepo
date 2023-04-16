@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+- Add invariant tests for tracking swap token balances
+- Add erc20 transfers out to net balances invariant test
+- Add `WalletHandler` to track bundle-related info
+- Add `OperationGenerator` contract for creating random swaps and transfers
+- Add `TokenIdSet` helper to invariant tests
+- Add `exists` method `SimpleERC721Token`
+- Split up invariant checks again to make debugging failures easier
 - add `ProtocolInvariants.t.sol`, which inherits `InvariantsBase` and groups up related assertions into single invariants (more efficient use of test runs to check all assertions on every run)
 - convert `DepositManagerInvariants.invariants.t.sol` into `InvariantsBase.sol` which only exports assertions and summary printing and itself does not run tests
 - move state and instantiation logic out of `DepositManagerHandler` into the actual invariant test files
