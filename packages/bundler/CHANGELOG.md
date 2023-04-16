@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- CLI uses config package to get contract addresses
 - remove gas hardcode in submitter `processBundle`
 - add `--log-dir` option to CLI with defaults
 - add winston logging
