@@ -15,6 +15,7 @@
     "snap.manifest.json"
   ],
   "scripts": {
+    "cp-config": "cp ../config/configs/localhost.json ./src/config.json",
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
     "build:website": "node ./scripts/build-website.js",

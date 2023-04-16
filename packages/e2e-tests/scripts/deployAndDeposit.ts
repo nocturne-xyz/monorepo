@@ -96,7 +96,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     gasAssets,
     rateLimits
   );
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config));
+  fs.writeFileSync(CONFIG_PATH, config.toString());
 
   for (const [token, amount] of zip(tokens, amounts)) {
     // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`

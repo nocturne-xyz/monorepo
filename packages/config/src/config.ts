@@ -9,6 +9,12 @@ export interface RateLimit {
   global: bigint;
 }
 
+export interface NocturneConfigProperties {
+  contracts: NocturneContractDeployment;
+  gasAssets: [string, string][]; // ticker -> address
+  rateLimits: [string, RateLimit][]; // ticker -> rate limit
+}
+
 export class NocturneConfig {
   contracts: NocturneContractDeployment;
   gasAssets: Map<string, string>; // ticker -> address
@@ -22,6 +28,29 @@ export class NocturneConfig {
     this.contracts = contracts;
     this.gasAssets = gasAssets;
     this.rateLimits = rateLimits;
+  }
+
+  static fromObject<T extends NocturneConfigProperties>(
+    obj: T
+  ): NocturneConfig {
+    return new NocturneConfig(
+      obj.contracts,
+      new Map(obj.gasAssets),
+      new Map(obj.rateLimits)
+    );
+  }
+
+  static fromString(str: string): NocturneConfig {
+    const obj = JSON.parse(str) as NocturneConfigProperties;
+    return NocturneConfig.fromObject(obj);
+  }
+
+  toString(): string {
+    return JSON.stringify({
+      contracts: this.contracts,
+      gasAssets: Array.from(this.gasAssets.entries()),
+      rateLimits: Array.from(this.rateLimits.entries()),
+    });
   }
 
   walletAddress(): Address {
@@ -43,6 +72,10 @@ export class NocturneConfig {
   rateLimit(ticker: string): RateLimit | undefined {
     return this.rateLimits.get(ticker);
   }
+
+  startBlock(): number {
+    return this.contracts.startBlock;
+  }
 }
 
 export function loadNocturneConfig(
@@ -57,10 +90,6 @@ export function loadNocturneConfig(
       .toString();
   }
 
-  const parsed = JSON.parse(json) as NocturneConfig;
-  return new NocturneConfig(
-    parsed.contracts,
-    new Map(Object.entries(parsed.gasAssets)),
-    new Map(Object.entries(parsed.rateLimits))
-  );
+  const parsed = JSON.parse(json) as NocturneConfigProperties;
+  return NocturneConfig.fromObject(parsed);
 }

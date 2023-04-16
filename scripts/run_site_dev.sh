@@ -27,13 +27,6 @@ popd
 # same ports its dumb graphql server wants to use
 sleep 20
 
-# start the snap
-pushd packages/snap
-echo "starting snap..."
-yarn start &
-SNAP_PID=$!
-popd
-
 # start hardhat 
 pushd packages/e2e-tests
 echo "starting hardhat..."
@@ -50,6 +43,14 @@ GRAPH_NODE_PID=$!
 # deposit
 echo "Running deposit funds script..."
 yarn hardhat-deposit &> "$LOG_DIR/hardhat-deposit" || { echo 'hardhat-deposit failed' ; exit 1; }
+
+# start the snap
+pushd packages/snap
+echo "starting snap..."
+yarn cp-config
+yarn start &
+SNAP_PID=$!
+popd
 
 START_BLOCK=0
 
@@ -169,12 +170,7 @@ SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 
 # Set snap handler contract address
-sed -i '' -r -e "s/const HANDLER_ADDRESS = \"0x[0-9a-faA-F]+\";/const HANDLER_ADDRESS = \"$HANDLER_CONTRACT_ADDRESS\";/g" $SNAP_INDEX_TS
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
-
-# Set snap gas token addresses
-sed -i '' -r -e "s/const GAS_TOKEN1 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN1 = \"$TOKEN_CONTRACT_ADDR1\";/g" $SNAP_INDEX_TS
-sed -i '' -r -e "s/const GAS_TOKEN2 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN2 = \"$TOKEN_CONTRACT_ADDR2\";/g" $SNAP_INDEX_TS
 
 # Set site wallet address
 sed -i '' -r -e "s/export const WALLET_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const WALLET_CONTRACT_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS

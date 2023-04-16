@@ -13,58 +13,13 @@ import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
-import {
-  NocturneConfig,
-  NocturneContractDeployment,
-} from "@nocturne-xyz/config";
+import { NocturneConfig } from "@nocturne-xyz/config";
+import * as rawConfig from "./config.json";
 
-const HANDLER_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
-const START_BLOCK = 0;
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
-const GAS_TOKEN1 = "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c";
-const GAS_TOKEN2 = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1";
-
-const DUMMY_CONTRACT_DEPLOYMENT: NocturneContractDeployment = {
-  startBlock: 0,
-  network: {
-    name: "hardhat",
-    chainId: 31337,
-  },
-  proxyAdmin: "0x0000000000000000000000000000000000000000",
-  owners: {
-    proxyAdminOwner: "0x0000000000000000000000000000000000000000",
-    walletOwner: "0x0000000000000000000000000000000000000000",
-    handlerOwner: "0x0000000000000000000000000000000000000000",
-    depositManagerOwner: "0x0000000000000000000000000000000000000000",
-  },
-  walletProxy: {
-    kind: "Transparent",
-    proxy: "0x0000000000000000000000000000000000000000",
-    implementation: "0x0000000000000000000000000000000000000000",
-  },
-  handlerProxy: {
-    kind: "Transparent",
-    proxy: HANDLER_ADDRESS,
-    implementation: "0x0000000000000000000000000000000000000000",
-  },
-  depositManagerProxy: {
-    kind: "Transparent",
-    proxy: "0x0000000000000000000000000000000000000000",
-    implementation: "0x0000000000000000000000000000000000000000",
-  },
-  joinSplitVerifierAddress: "0x0000000000000000000000000000000000000000",
-  subtreeUpdateVerifierAddress: "0x0000000000000000000000000000000000000000",
-  depositSources: ["0x0000000000000000000000000000000000000000"],
-  screeners: ["0x0000000000000000000000000000000000000000"],
-};
-
-const DUMMY_CONFIG = new NocturneConfig(
-  DUMMY_CONTRACT_DEPLOYMENT,
-  new Map([GAS_TOKEN1, GAS_TOKEN2].map((addr, i) => [`TOKEN-${i}`, addr])),
-  new Map()
-);
+const config = NocturneConfig.fromObject(rawConfig);
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -110,7 +65,9 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }) => {
   const kvStore = new SnapKvStore();
-  const nocturneDB = new NocturneDB(kvStore, { startBlock: START_BLOCK });
+  const nocturneDB = new NocturneDB(kvStore, {
+    startBlock: config.startBlock(),
+  });
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
   const signer = await getNocturneSignerFromBIP44();
@@ -122,7 +79,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const context = new NocturneWalletSDK(
     signer,
     provider,
-    DUMMY_CONFIG,
+    config,
     merkleProver,
     nocturneDB,
     syncAdapter
