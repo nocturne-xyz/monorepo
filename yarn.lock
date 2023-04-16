@@ -3187,6 +3187,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
+    "@nocturne-xyz/config": "workspace:^"
     "@nocturne-xyz/contracts": 1.0.20-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.100-alpha

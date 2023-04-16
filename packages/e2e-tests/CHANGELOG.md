@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make & write localhost config to a file in `deployAndDepositScript`
 - install hardhat and run out of `e2e-tests` package
 - switch back to hardhat due to very strange contract bug
 - increase gas faucet amount in `EndToEnd.ts`

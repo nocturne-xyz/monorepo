@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- site script points bundler to config file instead of passing in wallet address
 - `yarn clean` now simply runs clean in each package and removes turbo cache
 - remove fresh build from precommit hook
 - add precommit hooks for lint, prettier, and fresh build

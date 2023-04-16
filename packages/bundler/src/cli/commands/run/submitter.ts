@@ -3,20 +3,25 @@ import { ethers } from "ethers";
 import { BundlerSubmitter } from "../../../submitter";
 import { getRedis } from "../../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { loadNocturneConfig } from "@nocturne-xyz/config";
 
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
   .description(
     "must supply .env file with REDIS_URL, RPC_URL, and TX_SIGNER_KEY. must also supply wallet contract address as an option."
   )
-  .requiredOption("--wallet-address <string>", "wallet contract address")
+  .requiredOption(
+    "--config-name-or-path <string>",
+    "config name or path to Nocturne contract JSON config file"
+  )
   .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/bundler-submitter"
   )
   .action(async (options) => {
-    const { walletAddress, logDir } = options;
+    const { configNameOrPath, logDir } = options;
+    const config = loadNocturneConfig(configNameOrPath);
 
     const privateKey = process.env.TX_SIGNER_KEY;
     if (!privateKey) {
@@ -32,7 +37,7 @@ const runSubmitter = new Command("submitter")
 
     const logger = makeLogger(logDir, "bundler", "submitter");
     const submitter = new BundlerSubmitter(
-      walletAddress,
+      config.walletAddress(),
       signingProvider,
       getRedis(),
       logger
