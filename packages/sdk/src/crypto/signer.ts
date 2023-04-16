@@ -57,7 +57,7 @@ export class NocturneSigner extends NocturneViewer {
     const Z = BabyJubJub.scalarMul(BabyJubJub.BasePoint, z);
     const P = BabyJubJub.scalarMul(pk, c);
     const R = BabyJubJub.add(Z, P);
-    const cp = poseidonBN([R.x, R.y, m]);
+    const cp = poseidonBN([pk.x, R.x, R.y, m]);
     return c == cp;
   }
 }
