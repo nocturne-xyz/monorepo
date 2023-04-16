@@ -4,6 +4,7 @@ import { DepositScreenerProcessor } from "../../../processor";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { loadNocturneConfig } from "@nocturne-xyz/config";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -11,7 +12,7 @@ const runProcess = new Command("processor")
     "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. must supply deposit manager contract address as options."
   )
   .requiredOption(
-    "--deposit-manager-address <string>",
+    "--config-name-or-path <string>",
     "deposit manager contract address"
   )
   .option(
@@ -20,7 +21,8 @@ const runProcess = new Command("processor")
     "./logs/deposit-screener-processor"
   )
   .action(async (options) => {
-    const { depositManagerAddress, logDir } = options;
+    const { configNameOrPath, logDir } = options;
+    const config = loadNocturneConfig(configNameOrPath);
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
@@ -49,7 +51,7 @@ const runProcess = new Command("processor")
     const logger = makeLogger(logDir, "deposit-screener", "processor");
     const processor = new DepositScreenerProcessor(
       adapter,
-      depositManagerAddress,
+      config.depositManagerAddress(),
       attestationSigner,
       txSigner,
       getRedis(),
