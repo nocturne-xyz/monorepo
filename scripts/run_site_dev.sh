@@ -44,14 +44,6 @@ GRAPH_NODE_PID=$!
 echo "Running deposit funds script..."
 yarn hardhat-deposit &> "$LOG_DIR/hardhat-deposit" || { echo 'hardhat-deposit failed' ; exit 1; }
 
-# start the snap
-pushd packages/snap
-echo "starting snap..."
-yarn cp-config
-yarn start &
-SNAP_PID=$!
-popd
-
 START_BLOCK=0
 
 # hardhat account #4
@@ -81,6 +73,14 @@ sleep 10
 pushd packages/subgraph
 yarn create-local
 yarn deploy-local
+popd
+
+# start the snap
+pushd packages/snap
+echo "starting snap..."
+yarn cp-config
+yarn start &
+SNAP_PID=$!
 popd
 
 # bundler default config variables
