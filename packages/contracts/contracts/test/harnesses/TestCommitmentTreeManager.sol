@@ -3,8 +3,15 @@ pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
+import {QueueLib} from "../../libs/Queue.sol";
 
 contract TestCommitmentTreeManager is CommitmentTreeManager {
+    using QueueLib for QueueLib.Queue;
+
+    function initialize(address subtreeUpdateVerifier) external initializer {
+        __CommitmentTreeManager_init(subtreeUpdateVerifier);
+    }
+
     function handleJoinSplit(JoinSplit calldata joinSplit) external {
         _handleJoinSplit(joinSplit);
     }
@@ -31,5 +38,9 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
 
     function currentBatchLen() external view returns (uint256) {
         return _merkle.batchLen;
+    }
+
+    function accumulatorQueueLen() external view returns (uint256) {
+        return _merkle.accumulatorQueue.length();
     }
 }

@@ -6,6 +6,8 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
+import {IHasherT3} from "../../interfaces/IHasher.sol";
+import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
 import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifier.sol";
 import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../../libs/OffchainMerkleTree.sol";
 import {QueueLib} from "../../../libs/Queue.sol";
@@ -50,7 +52,8 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function callSummary() external view {
-        console.log("Call summary:");
+        console.log("-------------------");
+        console.log("OffchainMerkleHandler call summary:");
         console.log("-------------------");
         console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);

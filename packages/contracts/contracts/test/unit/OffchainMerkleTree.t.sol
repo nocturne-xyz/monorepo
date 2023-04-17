@@ -14,7 +14,7 @@ import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../../libs/Types.sol";
 
-contract TestOffchainMerkleTree is Test, PoseidonDeployer {
+contract TestOffchainMerkleTree is PoseidonDeployer {
     using TreeTestLib for TreeTest;
     using OffchainMerkleTree for OffchainMerkleTreeData;
 

@@ -7,13 +7,16 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
+import {PoseidonDeployer} from "../../utils/PoseidonDeployer.sol";
+import {IHasherT3} from "../../interfaces/IHasher.sol";
+import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
 import {TestCommitmentTreeManager} from "../../harnesses/TestCommitmentTreeManager.sol";
 import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import "../../../libs/Types.sol";
 
-contract CommitmentTreeManagerHandler is CommonBase, StdCheats, StdUtils {
+contract CommitmentTreeManagerHandler is PoseidonDeployer {
     using LibIncrementalTree for IncrementalTree;
 
     // ______PUBLIC______
@@ -25,33 +28,78 @@ contract CommitmentTreeManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 public ghost_insertNoteLeafCount = 0;
     uint256 public ghost_insertNoteCommitmentsLeafCount = 0;
 
+    bytes32 public lastCall;
+
     // ______INTERNAL______
     IncrementalTree _mirrorTree;
+    mapping(bytes32 => uint256) internal _calls;
+    uint256 internal _rootCounter = 0;
+    uint256 internal _nullifierCounter = 0;
 
     constructor(TestCommitmentTreeManager _commitmentTreeManager) {
         commitmentTreeManager = _commitmentTreeManager;
+
+        // deployPoseidon3Through6();
+        // IHasherT3 hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
+        // _mirrorTree.initialize(uint8(TreeUtils.DEPTH), 0, hasherT3);
+    }
+
+    modifier trackCall(bytes32 key) {
+        lastCall = key;
+        _calls[key]++;
+        _;
+    }
+
+    function callSummary() external view {
+        console.log("-------------------");
+        console.log("CommitmentTreeManagerHandler call summary:");
+        console.log("-------------------");
+        console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
+        console.log("handleJoinSplit", _calls["handleJoinSplit"]);
+        console.log("handleRefundNote", _calls["handleRefundNote"]);
+        console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
+        console.log("insertNote", _calls["insertNote"]);
+        console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
     }
 
     function applySubtreeUpdate(
-        uint256 newRoot,
-        uint256[8] calldata proof
-    ) external {
-        commitmentTreeManager.applySubtreeUpdate(newRoot, proof);
+        uint256[8] memory proof
+    ) public trackCall("applySubtreeUpdate") {
+        if (commitmentTreeManager.accumulatorQueueLen() > 0) {
+            uint256 newRoot = _rootCounter;
+            commitmentTreeManager.applySubtreeUpdate(newRoot, proof);
+            _rootCounter += 1;
+        } else {
+            lastCall = "no-op";
+        }
     }
 
-    function handleJoinSplit(JoinSplit calldata joinSplit) external {
+    function handleJoinSplit(
+        JoinSplit memory joinSplit
+    ) public trackCall("handleJoinSplit") {
+        joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
+        joinSplit.nullifierA = _nullifierCounter;
+        joinSplit.nullifierB = _nullifierCounter + 1;
+
+        if (joinSplit.nullifierA == joinSplit.nullifierB) {
+            unchecked {
+                joinSplit.nullifierB = joinSplit.nullifierA + 1;
+            }
+        }
         commitmentTreeManager.handleJoinSplit(joinSplit);
 
-        _mirrorTree.insert(joinSplit.newNoteACommitment);
-        _mirrorTree.insert(joinSplit.newNoteBCommitment);
+        assertEq(commitmentTreeManager._pastRoots(joinSplit.nullifierA), true);
+        assertEq(commitmentTreeManager._pastRoots(joinSplit.nullifierB), true);
+
+        _nullifierCounter += 2;
         ghost_joinSplitLeafCount += 2; // call could not have completed without adding 2 leaves
     }
 
     function handleRefundNote(
         EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr,
+        StealthAddress memory refundAddr,
         uint256 value
-    ) external {
+    ) public trackCall("handleRefundNote") {
         vm.recordLogs();
         commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, value);
 
@@ -63,36 +111,28 @@ contract CommitmentTreeManagerHandler is CommonBase, StdCheats, StdUtils {
 
         vm.stopPrank();
 
-        uint256 nc = TreeUtils.sha256Note(note);
-        _mirrorTree.insert(nc);
         ghost_refundNotesLeafCount += 1;
     }
 
-    function fillBatchWithZeros() external {
+    function fillBatchWithZeros() public trackCall("fillBatchWithZeros") {
         uint256 leavesLeft = TreeUtils.BATCH_SIZE -
             commitmentTreeManager.currentBatchLen();
         commitmentTreeManager.fillBatchWithZeros();
 
-        for (uint256 i = 0; i < leavesLeft; i++) {
-            _mirrorTree.insert(0);
-        }
         ghost_fillBatchWithZerosLeafCount += leavesLeft;
     }
 
-    function insertNote(EncodedNote memory note) external {
+    function insertNote(
+        EncodedNote memory note
+    ) public trackCall("insertNote") {
         commitmentTreeManager.insertNote(note);
-
-        uint256 nc = TreeUtils.sha256Note(note);
-        _mirrorTree.insert(nc);
         ghost_insertNoteLeafCount += 1;
     }
 
-    function insertNoteCommitments(uint256[] memory ncs) external {
+    function insertNoteCommitments(
+        uint256[] memory ncs
+    ) public trackCall("insertNoteCommitments") {
         commitmentTreeManager.insertNoteCommitments(ncs);
-
-        for (uint256 i = 0; i < ncs.length; i++) {
-            _mirrorTree.insert(ncs[i]);
-        }
         ghost_insertNoteCommitmentsLeafCount += ncs.length;
     }
 }
