@@ -1,16 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "../../../CommitmentTreeManager.sol";
+import {TestCommitmentTreeManager} from "../../harnesses/TestCommitmentTreeManager.sol";
+import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import "../../../libs/Types.sol";
 
-contract CommitmentTreeManagerHandler is CommitmentTreeManager {
-    constructor(address subtreeUpdateVerifier) {
-        __CommitmentTreeManager_init(subtreeUpdateVerifier);
+contract CommitmentTreeManagerHandler {
+    // ______PUBLIC______
+    TestCommitmentTreeManager public commitmentTreeManager;
+
+    uint256 public ghost_joinSplitLeafCount = 0;
+    uint256 public ghost_refundNotesLeafCount = 0;
+    uint256 public ghost_fillBatchWithZerosLeafCount = 0;
+    uint256 public ghost_insertNoteLeafCount = 0;
+    uint256 public ghost_insertNoteCommitmentsLeafCount = 0;
+
+    constructor(TestCommitmentTreeManager _commitmentTreeManager) {
+        commitmentTreeManager = _commitmentTreeManager;
+    }
+
+    function applySubtreeUpdate(
+        uint256 newRoot,
+        uint256[8] calldata proof
+    ) external {
+        commitmentTreeManager.applySubtreeUpdate(newRoot, proof);
     }
 
     function handleJoinSplit(JoinSplit calldata joinSplit) external {
-        _handleJoinSplit(joinSplit);
+        commitmentTreeManager.handleJoinSplit(joinSplit);
+        ghost_joinSplitLeafCount += 2; // call could not have completed without adding 2 leaves
     }
 
     function handleRefundNote(
@@ -18,18 +36,24 @@ contract CommitmentTreeManagerHandler is CommitmentTreeManager {
         StealthAddress calldata refundAddr,
         uint256 value
     ) external {
-        _handleRefundNote(encodedAsset, refundAddr, value);
+        commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, value);
+        ghost_refundNotesLeafCount += 1;
     }
 
     function fillBatchWithZeros() external {
-        _fillBatchWithZeros();
+        uint256 leavesLeft = TreeUtils.BATCH_SIZE -
+            commitmentTreeManager.currentBatchLen();
+        commitmentTreeManager.fillBatchWithZeros();
+        ghost_fillBatchWithZerosLeafCount += leavesLeft;
     }
 
     function insertNote(EncodedNote memory note) external {
-        _insertNote(note);
+        commitmentTreeManager.insertNote(note);
+        ghost_insertNoteLeafCount += 1;
     }
 
     function insertNoteCommitments(uint256[] memory ncs) external {
-        _insertNoteCommitments(ncs);
+        commitmentTreeManager.insertNoteCommitments(ncs);
+        ghost_insertNoteCommitmentsLeafCount += ncs.length;
     }
 }
