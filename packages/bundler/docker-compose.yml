@@ -16,13 +16,14 @@ services:
       context: ../..
       dockerfile: packages/bundler/Dockerfile
     restart: always
-    command: "run server --wallet-address ${WALLET_ADDRESS} --port 3000 --log-dir /logs/bundler-server"
+    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3000 --log-dir /logs/bundler-server"
     ports:
       - "3000:3000"
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
       - ../../logs:/logs
+      - ../config/configs:/configs
 
   batcher:
     build:
@@ -38,11 +39,12 @@ services:
       context: ../..
       dockerfile: packages/bundler/Dockerfile
     restart: always
-    command: "run submitter --wallet-address ${WALLET_ADDRESS} --log-dir /logs/bundler-submitter"
+    command: "run submitter --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/bundler-submitter"
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
       - ../../logs:/logs
+      - ../config/configs:/configs
 
 volumes:
   redis-data:

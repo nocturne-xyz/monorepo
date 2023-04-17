@@ -17,6 +17,8 @@ MyLogFile.log
 **/.env
 **/redis-data
 
+# ignore localhost config
+packages/config/configs/localhost.json
 
 # ignore really chonky ptau files
 # instead, download them from here and put them into `packages/circuits/data`

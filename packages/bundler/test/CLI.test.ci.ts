@@ -7,10 +7,9 @@ import RedisMemoryServer from "redis-memory-server";
 import { sleep } from "../src/utils";
 
 const PORT = 3000;
-const WALLET_ADDRESS = "0xE706317bf66b1C741CfCa5dCf5B78A44B5eD79e0";
-
 const ROOT_DIR = findWorkspaceRoot()!;
 const BUNDLER_CLI_PATH = `${ROOT_DIR}/packages/bundler/src/cli/index.ts`;
+const NOCTURNE_CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/example-network.json`;
 
 describe("Bundler CLI", async () => {
   let redisServer: RedisMemoryServer;
@@ -39,15 +38,14 @@ describe("Bundler CLI", async () => {
 
   it("`run server` command succeeds", async () => {
     const logDir = `${ROOT_DIR}/packages/bundler/test/logs/bundler-server`;
-
     await executeCmdForAHotSec([
       `npx`,
       `ts-node`,
       `${BUNDLER_CLI_PATH}`,
       `run`,
       `server`,
-      `--wallet-address`,
-      `${WALLET_ADDRESS}`,
+      `--config-name-or-path`,
+      `${NOCTURNE_CONFIG_PATH}`,
       `--port`,
       `${PORT}`,
       `--log-dir`,
@@ -85,8 +83,8 @@ describe("Bundler CLI", async () => {
       `${BUNDLER_CLI_PATH}`,
       `run`,
       `submitter`,
-      `--wallet-address`,
-      `${WALLET_ADDRESS}`,
+      `--config-name-or-path`,
+      `${NOCTURNE_CONFIG_PATH}`,
       `--log-dir`,
       logDir,
     ]);

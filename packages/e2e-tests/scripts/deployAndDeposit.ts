@@ -11,11 +11,17 @@ import {
   StealthAddressTrait,
   zip,
 } from "@nocturne-xyz/sdk";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { deployAndWhitelistERC20 } from "../src/tokens";
+import fs from "fs";
+import findWorkspaceRoot from "find-yarn-workspace-root";
 
 const ANVIL_URL = "http://127.0.0.1:8545";
+
+const ROOT_DIR = findWorkspaceRoot()!;
+const CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/localhost.json`
 
 // anvil account #5
 const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
@@ -55,11 +61,13 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
-  const { depositManagerProxy, handlerProxy } =
+  const contractDeployment =
     await deployContractsWithDummyAdmins(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
       subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
     });
+   
+  const { handlerProxy, depositManagerProxy} = contractDeployment;
   const handler = Handler__factory.connect(handlerProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
     depositManagerProxy.proxy,
@@ -75,6 +83,17 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     tokens.push(token);
     amounts.push(tokenAmount);
   }
+
+  // both tokens are gas assets
+  const gasAssets = new Map(tokens.map((token, i) => [`TOKEN-${i}`, token.address]));
+  // no rate limits
+  const rateLimits = new Map();
+  const config = new NocturneConfig(
+    contractDeployment,
+    gasAssets,
+    rateLimits
+  );
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config));
 
   for (const [token, amount] of zip(tokens, amounts)) {
     // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`
@@ -145,3 +164,4 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     `deployAndDeposit script finished in ${Date.now() - startTime}ms.`
   );
 })();
+
