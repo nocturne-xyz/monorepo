@@ -168,9 +168,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Recover deposit request
         Vm.Log[] memory entries = vm.getRecordedLogs();
         Vm.Log memory entry = entries[entries.length - 1];
-        DepositRequest memory req = EventParsing.decodeDepositRequestFromEvent(
-            entry
-        );
+        DepositRequest memory req = EventParsing
+            .decodeDepositRequestFromDepositEvent(entry);
 
         vm.stopPrank();
 
@@ -207,9 +206,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Recover deposit request
         Vm.Log[] memory entries = vm.getRecordedLogs();
         Vm.Log memory entry = entries[entries.length - 1];
-        DepositRequest memory req = EventParsing.decodeDepositRequestFromEvent(
-            entry
-        );
+        DepositRequest memory req = EventParsing
+            .decodeDepositRequestFromDepositEvent(entry);
 
         vm.stopPrank();
 

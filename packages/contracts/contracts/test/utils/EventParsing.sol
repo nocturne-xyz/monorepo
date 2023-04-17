@@ -5,7 +5,7 @@ import "../../libs/Types.sol";
 import "forge-std/Vm.sol";
 
 library EventParsing {
-    function decodeDepositRequestFromEvent(
+    function decodeDepositRequestFromDepositEvent(
         Vm.Log memory entry
     ) public pure returns (DepositRequest memory) {
         address spender = address(uint160(uint256(entry.topics[1])));
@@ -50,6 +50,31 @@ library EventParsing {
                 }),
                 nonce: nonce,
                 gasCompensation: gasCompensation
+            });
+    }
+
+    function decodeNoteFromRefundProcessedEvent(
+        Vm.Log memory entry
+    ) public pure returns (EncodedNote memory) {
+        (
+            StealthAddress memory refundAddr,
+            uint256 nonce,
+            uint256 encodedAssetAddr,
+            uint256 encodedAssetId,
+            uint256 value
+        ) = abi.decode(
+                entry.data,
+                ((StealthAddress), uint256, uint256, uint256, uint256)
+            );
+
+        return
+            EncodedNote({
+                ownerH1: refundAddr.h1X,
+                ownerH2: refundAddr.h2X,
+                nonce: nonce,
+                encodedAssetAddr: encodedAssetAddr,
+                encodedAssetId: encodedAssetId,
+                value: value
             });
     }
 }

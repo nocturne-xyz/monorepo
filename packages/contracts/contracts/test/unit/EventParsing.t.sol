@@ -17,7 +17,7 @@ contract EventParsingTest is Test {
         uint256 gasCompensation
     );
 
-    function testDecodeDepositRequestFromEvent() public {
+    function testdecodeDepositRequestFromDepositEvent() public {
         vm.recordLogs();
         emit DepositInstantiated(
             address(0x1),
@@ -30,9 +30,8 @@ contract EventParsingTest is Test {
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
         Vm.Log memory entry = entries[entries.length - 1];
-        DepositRequest memory req = EventParsing.decodeDepositRequestFromEvent(
-            entry
-        );
+        DepositRequest memory req = EventParsing
+            .decodeDepositRequestFromDepositEvent(entry);
 
         assertEq(req.spender, address(0x1));
         assertEq(req.encodedAsset.encodedAssetAddr, 1);
