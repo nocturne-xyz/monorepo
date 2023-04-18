@@ -153,6 +153,8 @@ contract CommitmentTreeManager is Initializable, PausableUpgradeable {
     }
 
     function _fillBatchWithZeros() internal {
+        require(_merkle.batchLen > 0, "!zero fill empty batch");
+
         uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
         uint256[] memory zeros = new uint256[](numToInsert);
         _insertNoteCommitments(zeros);

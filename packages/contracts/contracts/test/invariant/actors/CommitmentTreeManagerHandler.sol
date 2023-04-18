@@ -7,16 +7,13 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
-import {PoseidonDeployer} from "../../utils/PoseidonDeployer.sol";
-import {IHasherT3} from "../../interfaces/IHasher.sol";
-import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
 import {TestCommitmentTreeManager} from "../../harnesses/TestCommitmentTreeManager.sol";
 import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import "../../../libs/Types.sol";
 
-contract CommitmentTreeManagerHandler is PoseidonDeployer {
+contract CommitmentTreeManagerHandler is Test {
     using LibIncrementalTree for IncrementalTree;
 
     // ______PUBLIC______
@@ -29,6 +26,9 @@ contract CommitmentTreeManagerHandler is PoseidonDeployer {
     uint256 public ghost_insertNoteCommitmentsLeafCount = 0;
 
     bytes32 public lastCall;
+    uint256 public preCallTotalCount;
+    uint256 public insertNoteCommitmentsLength;
+    JoinSplit public lastHandledJoinSplit;
 
     // ______INTERNAL______
     IncrementalTree _mirrorTree;
@@ -38,13 +38,11 @@ contract CommitmentTreeManagerHandler is PoseidonDeployer {
 
     constructor(TestCommitmentTreeManager _commitmentTreeManager) {
         commitmentTreeManager = _commitmentTreeManager;
-
-        // deployPoseidon3Through6();
-        // IHasherT3 hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
-        // _mirrorTree.initialize(uint8(TreeUtils.DEPTH), 0, hasherT3);
     }
 
     modifier trackCall(bytes32 key) {
+        preCallTotalCount = commitmentTreeManager.totalCount();
+
         lastCall = key;
         _calls[key]++;
         _;
@@ -88,9 +86,7 @@ contract CommitmentTreeManagerHandler is PoseidonDeployer {
         }
         commitmentTreeManager.handleJoinSplit(joinSplit);
 
-        assertEq(commitmentTreeManager._pastRoots(joinSplit.nullifierA), true);
-        assertEq(commitmentTreeManager._pastRoots(joinSplit.nullifierB), true);
-
+        lastHandledJoinSplit = joinSplit;
         _nullifierCounter += 2;
         ghost_joinSplitLeafCount += 2; // call could not have completed without adding 2 leaves
     }
@@ -100,26 +96,19 @@ contract CommitmentTreeManagerHandler is PoseidonDeployer {
         StealthAddress memory refundAddr,
         uint256 value
     ) public trackCall("handleRefundNote") {
-        vm.recordLogs();
         commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, value);
-
-        // Recover deposit request
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        Vm.Log memory entry = entries[entries.length - 1];
-        EncodedNote memory note = EventParsing
-            .decodeNoteFromRefundProcessedEvent(entry);
-
-        vm.stopPrank();
-
         ghost_refundNotesLeafCount += 1;
     }
 
     function fillBatchWithZeros() public trackCall("fillBatchWithZeros") {
         uint256 leavesLeft = TreeUtils.BATCH_SIZE -
             commitmentTreeManager.currentBatchLen();
-        commitmentTreeManager.fillBatchWithZeros();
-
-        ghost_fillBatchWithZerosLeafCount += leavesLeft;
+        if (leavesLeft != TreeUtils.BATCH_SIZE) {
+            commitmentTreeManager.fillBatchWithZeros();
+            ghost_fillBatchWithZerosLeafCount += leavesLeft;
+        } else {
+            lastCall = "no-op";
+        }
     }
 
     function insertNote(
@@ -133,6 +122,7 @@ contract CommitmentTreeManagerHandler is PoseidonDeployer {
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
         commitmentTreeManager.insertNoteCommitments(ncs);
+        insertNoteCommitmentsLength = ncs.length;
         ghost_insertNoteCommitmentsLeafCount += ncs.length;
     }
 }

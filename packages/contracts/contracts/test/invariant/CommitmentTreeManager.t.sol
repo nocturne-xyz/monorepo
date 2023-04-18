@@ -8,6 +8,8 @@ import {console} from "forge-std/console.sol";
 import {CommitmentTreeManagerHandler} from "./actors/CommitmentTreeManagerHandler.sol";
 import {TestCommitmentTreeManager} from "../harnesses/TestCommitmentTreeManager.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
+import {TreeUtils} from "../../libs/TreeUtils.sol";
+import "../../libs/Types.sol";
 
 contract CommitmentTreeManagerInvariants is Test {
     CommitmentTreeManagerHandler public commitmentTreeManagerHandler;
@@ -55,5 +57,91 @@ contract CommitmentTreeManagerInvariants is Test {
                     .ghost_insertNoteCommitmentsLeafCount(),
             commitmentTreeManagerHandler.commitmentTreeManager().totalCount()
         );
+    }
+
+    function invariant_handledJoinSplitNullifiersMarkedTrue() external {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+            (
+                ,
+                uint256 nullifierA,
+                uint256 nullifierB,
+                ,
+                ,
+                ,
+                ,
+                ,
+                ,
+                ,
+
+            ) = commitmentTreeManagerHandler.lastHandledJoinSplit();
+            assertEq(
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    ._nullifierSet(nullifierA),
+                true
+            );
+            assertEq(
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    ._nullifierSet(nullifierB),
+                true
+            );
+        }
+    }
+
+    function invariant_totalCountIncreasesByExpected() external {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount() + 2,
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        } else if (
+            commitmentTreeManagerHandler.lastCall() == "handleRefundNote"
+        ) {
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        } else if (
+            commitmentTreeManagerHandler.lastCall() == "fillBatchWithZeros"
+        ) {
+            uint256 amountToFill = TreeUtils.BATCH_SIZE -
+                (commitmentTreeManagerHandler.preCallTotalCount() %
+                    TreeUtils.BATCH_SIZE);
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount() + amountToFill,
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        } else if (commitmentTreeManagerHandler.lastCall() == "insertNote") {
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        } else if (
+            commitmentTreeManagerHandler.lastCall() == "insertNoteCommitments"
+        ) {
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    commitmentTreeManagerHandler.insertNoteCommitmentsLength(),
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        } else {
+            assertEq(
+                commitmentTreeManagerHandler.preCallTotalCount(),
+                commitmentTreeManagerHandler
+                    .commitmentTreeManager()
+                    .totalCount()
+            );
+        }
     }
 }
