@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- CLI uses config package to get contract addresses
 - add `--log-dir` option to CLI with defaults
 - add winston logging
 - add 5 retries with exponential backoff to deposit screener

@@ -3330,6 +3330,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
+    "@nocturne-xyz/config": 1.0.1-alpha
     "@nocturne-xyz/contracts": 1.0.20-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.100-alpha
