@@ -7,9 +7,9 @@ include "include/sha256/sha256.circom";
 include "lib.circom";
 include "tree.circom";
 
-// Update a subtree of depth 4, where overall tree is of depth r + 4
+// Update a quaternary subtree of depth 2, where overall tree is of depth r + 2
 template SubtreeUpdate4(r) {
-    var s = 4;
+    var s = 2;
     // public inputs
     signal input encodedPathAndHash;
     signal input accumulatorHash;
@@ -19,25 +19,25 @@ template SubtreeUpdate4(r) {
     // merkle proof for the subtree's root
     signal input siblings[r];
     // note commitments
-    signal input leaves[2**s];
+    signal input leaves[4**s];
     // bitmap indicating which of the leaves don't appear in the accumulator hash
     // i.e. if the leaf was inserted by a joinsplit, then its corresponding bit will be 0, as we don't know the entire note
     // otherwise, it's 1, since the note was revealed on-chain
-    signal input bitmap[2**s];
+    signal input bitmap[4**s];
 
     // notes to be inserted
     // ! NOTE: This assumes ristretto compression for addresses has been implemented
-    signal input ownerH1s[2**s];
-    signal input ownerH2s[2**s];
-    signal input nonces[2**s];
-    signal input encodedAssetAddrs[2**s];
-    signal input encodedAssetIds[2**s];
-    signal input values[2**s];
+    signal input ownerH1s[4**s];
+    signal input ownerH2s[4**s];
+    signal input nonces[4**s];
+    signal input encodedAssetAddrs[4**s];
+    signal input encodedAssetIds[4**s];
+    signal input values[4**s];
 
     component inner = SubtreeUpdate(r, s);
 
-    // root of the depth-4 subtree
-    inner.emptySubtreeRoot <== 3607627140608796879659380071776844901612302623152076817094415224584923813162;
+    // root of the depth-2 subtree
+    inner.emptySubtreeRoot <== 13867732332339151465497925642082178974038372652152621168903203076445231043372;
 
     for (var i = 0; i < r; i++) {
         inner.siblings[i] <== siblings[i];
