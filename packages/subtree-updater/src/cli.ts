@@ -7,14 +7,15 @@ import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import { MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { loadNocturneConfig } from "@nocturne-xyz/config";
 
 export default async function main(): Promise<void> {
   dotenv.config();
 
   program
     .requiredOption(
-      "--handler-address <string>",
-      "address of the handler contract"
+      "--config-name-or-path <string>",
+      "deposit manager contract address"
     )
     .requiredOption(
       "--zkey-path <string>",
@@ -72,13 +73,14 @@ export default async function main(): Promise<void> {
     vkeyPath,
     proverPath,
     witnessGeneratorPath,
-    handlerAddress,
+    configNameOrPath,
     useMockProver,
     interval,
     indexingStartBlock,
     fillBatches,
     logDir,
   } = program.opts();
+  const config = loadNocturneConfig(configNameOrPath);
 
   const rpcUrl = process.env.RPC_URL;
   if (!rpcUrl) {
@@ -115,7 +117,7 @@ export default async function main(): Promise<void> {
   const logger = makeLogger(logDir, "subtree-updater", "server");
   const server = new SubtreeUpdateServer(
     prover,
-    handlerAddress,
+    config.handlerAddress(),
     dbPath,
     signer,
     logger,

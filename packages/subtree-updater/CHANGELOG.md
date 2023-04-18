@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- take handler address via config in CLI via `--config-name-or-path`
 - add `--log-dir` option to CLI with defaults
 - add winston logging
 - make `SubtreeUpdateServer.start()` non-async, as it doesn't need to be async
