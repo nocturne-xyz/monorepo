@@ -1,25 +1,28 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
+import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 import "../../libs/Types.sol";
 import "forge-std/Test.sol";
 
 struct TreeTest {
     IHasherT3 hasherT3;
+    IHasherT5 hasherT5;
     IHasherT6 hasherT6;
 }
 
 library TreeTestLib {
     uint256 public constant EMPTY_SUBTREE_ROOT =
-        3607627140608796879659380071776844901612302623152076817094415224584923813162;
+        13867732332339151465497925642082178974038372652152621168903203076445231043372;
 
     function initialize(
         TreeTest storage self,
         IHasherT3 _hasherT3,
+        IHasherT5 _hasherT5,
         IHasherT6 _hasherT6
     ) internal {
         self.hasherT3 = _hasherT3;
+        self.hasherT5 = _hasherT5;
         self.hasherT6 = _hasherT6;
     }
 
@@ -38,10 +41,12 @@ library TreeTestLib {
             i >= 0;
             i--
         ) {
-            for (uint256 j = 0; j < 2 ** uint256(i); j++) {
-                uint256 left = scratch[2 * j];
-                uint256 right = scratch[2 * j + 1];
-                scratch[j] = self.hasherT3.hash([left, right]);
+            for (uint256 j = 0; j < 4 ** uint256(i); j++) {
+                uint256 one = scratch[4 * j];
+                uint256 two = scratch[4 * j + 1];
+                uint256 three = scratch[4 * j + 2];
+                uint256 four = scratch[4 * j + 3];
+                scratch[j] = self.hasherT5.hash([one, two, three, four]);
             }
         }
 
@@ -49,62 +54,76 @@ library TreeTestLib {
     }
 
     // compute the new tree root after inserting a batch to an empty tree
-    // returns the path to the subtree, from the subtree root (inclusive) to the overall tree root
+    // returns `lastForPaths` containing first subtree's path at index 0, 0s elsewhere
     function computeInitialRoot(
         TreeTest storage self,
         uint256[] memory batch
-    ) internal view returns (uint256[] memory) {
+    ) internal view returns (uint256[3][] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
-        uint256[] memory path = new uint256[](
+        uint256[3][] memory paths = new uint256[3][](
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
-        path[0] = subtreeRoot;
+
         for (
             uint256 i = 0;
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-            path[i + 1] = self.hasherT3.hash([path[i], zero]);
-            zero = self.hasherT3.hash([zero, zero]);
+            paths[0][i + 1] = self.hasherT5.hash([paths[0][i], zero, zero, zero]);
+            zero = self.hasherT5.hash([zero, zero, zero, zero]);
         }
 
-        return path;
+        return paths;
     }
 
-    // compute the new tree root after inserting a batch given the path to the rightmost subtree
+    // compute the new tree root after inserting a batch given the paths to the last three subtrees in order of ascending age
     // idx is the index of the leftmost leaf in the subtree
+    // returns updated list of last four subtree paths
     function computeNewRoot(
         TreeTest storage self,
         uint256[] memory batch,
-        uint256[] memory path,
+        uint256[3][] memory lastThreePaths,
         uint256 idx
-    ) internal view returns (uint256[] memory) {
+    ) internal view returns (uint256[3][] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 subtreeIdx = idx >> TreeUtils.BATCH_SUBTREE_DEPTH;
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
-        uint256[] memory newPath = new uint256[](
+        uint256[3][] memory newPaths = new uint256[3][](
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
-        newPath[0] = subtreeRoot;
+
+        newPaths[1] = lastThreePaths[0];
+        newPaths[2] = lastThreePaths[1];
+
+        newPaths[0][0] = subtreeRoot;
         for (
             uint256 i = 0;
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-            if (subtreeIdx & 1 == 1) {
-                newPath[i + 1] = self.hasherT3.hash([path[i], newPath[i]]);
+
+            if (subtreeIdx & 2 == 0) {
+                // first child
+                newPaths[0][i + 1] = self.hasherT5.hash([newPaths[0][i], zero, zero, zero]);
+            } else if (subtreeIdx & 2 == 1) {
+                // second child
+                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[0][i], newPaths[0][i], zero, zero]);
+            } else if (subtreeIdx & 2 == 2) {
+                // third child
+                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[1][i], lastThreePaths[0][i], newPaths[0][i], zero]);
             } else {
-                newPath[i + 1] = self.hasherT3.hash([newPath[i], zero]);
+                // fourth child
+                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[2][i], lastThreePaths[1][i], lastThreePaths[0][i], newPaths[0][i]]);
             }
 
-            zero = self.hasherT3.hash([zero, zero]);
-            subtreeIdx >>= 1;
+            zero = self.hasherT5.hash([zero, zero, zero, zero]);
+            subtreeIdx >>= 2;
         }
 
-        return newPath;
+        return newPaths;
     }
 
     function computeNoteCommitment(
