@@ -37,7 +37,7 @@ template JoinSplit(levels) {
 
     // Path to old note A
     signal input pathA[levels];
-    signal input siblingsA[levels];
+    signal input siblingsA[levels][3];
 
     // Old note B
     signal input oldNoteBOwnerH1X;
@@ -49,7 +49,7 @@ template JoinSplit(levels) {
 
     // Path to old note B
     signal input pathB[levels];
-    signal input siblingsB[levels];
+    signal input siblingsB[levels][3];
 
     // New note A
     signal input newNoteAValue;
@@ -220,4 +220,4 @@ template JoinSplit(levels) {
     encSenderCanonAddrC2X <== adder.xout;
 }
 
-component main { public [encodedAssetAddr, encodedAssetId, operationDigest] } = JoinSplit(32);
+component main { public [encodedAssetAddr, encodedAssetId, operationDigest] } = JoinSplit(16);
