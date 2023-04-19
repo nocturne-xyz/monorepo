@@ -58,20 +58,30 @@ library TreeTestLib {
     function computeInitialRoot(
         TreeTest storage self,
         uint256[] memory batch
-    ) internal view returns (uint256[3][] memory) {
+    ) internal view returns (uint256[][3] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
-        uint256[3][] memory paths = new uint256[3][](
+        uint256[][3] memory paths;
+        paths[0] = new uint256[](
+            TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
+        );
+        paths[1] = new uint256[](
+            TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
+        );
+        paths[2] = new uint256[](
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
 
+        paths[0][0] = subtreeRoot;
         for (
             uint256 i = 0;
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-            paths[0][i + 1] = self.hasherT5.hash([paths[0][i], zero, zero, zero]);
+            paths[0][i + 1] = self.hasherT5.hash(
+                [paths[0][i], zero, zero, zero]
+            );
             zero = self.hasherT5.hash([zero, zero, zero, zero]);
         }
 
@@ -84,17 +94,17 @@ library TreeTestLib {
     function computeNewRoot(
         TreeTest storage self,
         uint256[] memory batch,
-        uint256[3][] memory lastThreePaths,
+        uint256[][3] memory lastThreePaths,
         uint256 idx
-    ) internal view returns (uint256[3][] memory) {
+    ) internal view returns (uint256[][3] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
         uint256 subtreeIdx = idx >> TreeUtils.BATCH_SUBTREE_DEPTH;
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
-        uint256[3][] memory newPaths = new uint256[3][](
+        uint256[][3] memory newPaths;
+        newPaths[0] = new uint256[](
             TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH + 1
         );
-
         newPaths[1] = lastThreePaths[0];
         newPaths[2] = lastThreePaths[1];
 
@@ -104,19 +114,36 @@ library TreeTestLib {
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-
             if (subtreeIdx & 2 == 0) {
                 // first child
-                newPaths[0][i + 1] = self.hasherT5.hash([newPaths[0][i], zero, zero, zero]);
+                newPaths[0][i + 1] = self.hasherT5.hash(
+                    [newPaths[0][i], zero, zero, zero]
+                );
             } else if (subtreeIdx & 2 == 1) {
                 // second child
-                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[0][i], newPaths[0][i], zero, zero]);
+                newPaths[0][i + 1] = self.hasherT5.hash(
+                    [lastThreePaths[0][i], newPaths[0][i], zero, zero]
+                );
             } else if (subtreeIdx & 2 == 2) {
                 // third child
-                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[1][i], lastThreePaths[0][i], newPaths[0][i], zero]);
+                newPaths[0][i + 1] = self.hasherT5.hash(
+                    [
+                        lastThreePaths[1][i],
+                        lastThreePaths[0][i],
+                        newPaths[0][i],
+                        zero
+                    ]
+                );
             } else {
                 // fourth child
-                newPaths[0][i + 1] = self.hasherT5.hash([lastThreePaths[2][i], lastThreePaths[1][i], lastThreePaths[0][i], newPaths[0][i]]);
+                newPaths[0][i + 1] = self.hasherT5.hash(
+                    [
+                        lastThreePaths[2][i],
+                        lastThreePaths[1][i],
+                        lastThreePaths[0][i],
+                        newPaths[0][i]
+                    ]
+                );
             }
 
             zero = self.hasherT5.hash([zero, zero, zero, zero]);

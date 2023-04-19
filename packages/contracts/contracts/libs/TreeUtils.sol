@@ -9,7 +9,7 @@ library TreeUtils {
     uint256 public constant BATCH_SIZE = 16;
     uint256 public constant BATCH_SUBTREE_DEPTH = 2;
     uint256 public constant EMPTY_TREE_ROOT =
-        13867732332339151465497925642082178974038372652152621168903203076445231043372;
+        9533201250583817767896570092866591469094150406835227552485691564931228351592;
 
     // packs a field element for the `encodedPathAndHash` input to the subtree update verifier
     // `subtreeIdx` is the index of the subtree's leftmost element in the tree
@@ -25,7 +25,7 @@ library TreeUtils {
         uint256 encodedPathAndHash = uint256(subtreeIdx) >> BATCH_SUBTREE_DEPTH;
         encodedPathAndHash |=
             accumulatorHashHi <<
-            (2*(DEPTH - BATCH_SUBTREE_DEPTH));
+            (2 * (DEPTH - BATCH_SUBTREE_DEPTH));
 
         return encodedPathAndHash;
     }
