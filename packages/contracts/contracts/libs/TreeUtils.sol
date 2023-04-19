@@ -7,6 +7,7 @@ import "./Types.sol";
 library TreeUtils {
     uint256 public constant DEPTH = 32;
     uint256 public constant BATCH_SIZE = 16;
+    uint256 public constant LOG2_BATCH_SIZE = 4;
     uint256 public constant BATCH_SUBTREE_DEPTH = 4;
     uint256 public constant EMPTY_TREE_ROOT =
         21443572485391568159800782191812935835534334817699172242223315142338162256601;
