@@ -22,22 +22,22 @@ export class NocturneSigner extends NocturneViewer {
 
   constructor(sk: SpendingKey) {
     const spendPk = spendPkFromFromSk(sk);
-    const vk = vkFromSpendPk(spendPk);
-    super(vk);
+    const [vk, vkNonce] = vkFromSpendPk(spendPk);
+    super(vk, vkNonce);
 
     this.sk = sk;
     this.spendPk = spendPk;
   }
 
   viewer(): NocturneViewer {
-    return new NocturneViewer(this.vk);
+    return new NocturneViewer(this.vk, this.vkNonce);
   }
 
   sign(m: bigint): NocturneSignature {
     // TODO: make this deterministic
     const r = randomFr();
     const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
-    const c = poseidonBN([R.x, R.y, m]);
+    const c = poseidonBN([this.spendPk.x, R.x, R.y, m]);
 
     // eslint-disable-next-line
     let z = Fr.reduce(r - (this.sk as any) * c);
@@ -57,7 +57,7 @@ export class NocturneSigner extends NocturneViewer {
     const Z = BabyJubJub.scalarMul(BabyJubJub.BasePoint, z);
     const P = BabyJubJub.scalarMul(pk, c);
     const R = BabyJubJub.add(Z, P);
-    const cp = poseidonBN([R.x, R.y, m]);
+    const cp = poseidonBN([pk.x, R.x, R.y, m]);
     return c == cp;
   }
 }

@@ -279,19 +279,19 @@ export class DepositScreenerProcessor {
     const tx = await this.depositManagerContract
       .completeDeposit(depositRequest, signature)
       .catch((e) => {
-        console.error(e);
+        logger.error(e);
         throw new Error(e);
       });
 
-    console.info("waiting for receipt...");
+    logger.info("waiting for receipt...");
     const receipt = await tx.wait(1);
-    console.info("completeDeposit receipt:", receipt);
+    logger.info("completeDeposit receipt:", receipt);
 
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
       this.depositManagerContract.interface.getEvent("DepositCompleted")
     ) as DepositCompletedEvent[];
-    console.info("matching events:", matchingEvents);
+    logger.info("matching events:", matchingEvents);
 
     if (matchingEvents.length > 0) {
       logger.info(

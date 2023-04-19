@@ -24,6 +24,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
   ): Promise<JoinSplitProofWithPublicSignals> {
     const {
       vk,
+      vkNonce,
       spendPk,
       operationDigest,
       c,
@@ -41,7 +42,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       userViewKey: vk,
 
       spendPubKey: spendPk,
-      userViewKeyNonce: BigInt(1),
+      userViewKeyNonce: vkNonce,
 
       encodedAssetAddr: oldNoteA.encodedAssetAddr,
       encodedAssetId: oldNoteA.encodedAssetId,
