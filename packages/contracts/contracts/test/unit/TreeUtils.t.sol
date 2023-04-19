@@ -19,7 +19,7 @@ contract TestTreeUtils is Test {
             hi
         );
         uint256 expected = (3 <<
-            (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH)) | 12;
+            (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) | 12;
 
         assertEq(expected, encodedPathAndhash);
     }

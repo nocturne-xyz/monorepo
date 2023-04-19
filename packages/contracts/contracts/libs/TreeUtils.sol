@@ -22,7 +22,10 @@ library TreeUtils {
             subtreeIdx % BATCH_SIZE == 0,
             "subtreeIdx not multiple of BATCH_SIZE"
         );
-        uint256 encodedPathAndHash = uint256(subtreeIdx) >> BATCH_SUBTREE_DEPTH;
+
+        // we shift by 2 * depth because the tree is quaternary
+        uint256 encodedPathAndHash = uint256(subtreeIdx) >>
+            (2 * BATCH_SUBTREE_DEPTH);
         encodedPathAndHash |=
             accumulatorHashHi <<
             (2 * (DEPTH - BATCH_SUBTREE_DEPTH));

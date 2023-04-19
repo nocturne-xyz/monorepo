@@ -64,7 +64,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         path = treeTest.computeInitialRoot(batch);
         assertEq(
             path[0][DEPTH_TO_SUBTREE],
-            7535458605132084619456785809582285707117893595742786994560375527566624811343
+            1876908926272187450761598598188752060951923126538985491623069278962090072418
         );
         assertEq(path[0][0], treeTest.computeSubtreeRoot(batch));
 
@@ -76,7 +76,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         path = treeTest.computeNewRoot(batch, path, 16);
         assertEq(
             path[0][DEPTH_TO_SUBTREE],
-            6984220783167935932287489881196784031196766582157979071264100186030762206286
+            7121119364410700771071060140874401316335848409647514241451685854290541005256
         );
         assertEq(path[0][0], treeTest.computeSubtreeRoot(batch));
     }

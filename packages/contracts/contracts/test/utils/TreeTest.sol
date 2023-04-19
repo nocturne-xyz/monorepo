@@ -98,7 +98,7 @@ library TreeTestLib {
         uint256 idx
     ) internal view returns (uint256[][3] memory) {
         uint256 subtreeRoot = computeSubtreeRoot(self, batch);
-        uint256 subtreeIdx = idx >> TreeUtils.BATCH_SUBTREE_DEPTH;
+        uint256 subtreeIdx = idx >> (2 * TreeUtils.BATCH_SUBTREE_DEPTH);
         uint256 zero = EMPTY_SUBTREE_ROOT;
 
         uint256[][3] memory newPaths;
@@ -114,17 +114,17 @@ library TreeTestLib {
             i < TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH;
             i++
         ) {
-            if (subtreeIdx & 2 == 0) {
+            if (subtreeIdx & 3 == 0) {
                 // first child
                 newPaths[0][i + 1] = self.hasherT5.hash(
                     [newPaths[0][i], zero, zero, zero]
                 );
-            } else if (subtreeIdx & 2 == 1) {
+            } else if (subtreeIdx & 3 == 1) {
                 // second child
                 newPaths[0][i + 1] = self.hasherT5.hash(
                     [lastThreePaths[0][i], newPaths[0][i], zero, zero]
                 );
-            } else if (subtreeIdx & 2 == 2) {
+            } else if (subtreeIdx & 3 == 2) {
                 // third child
                 newPaths[0][i + 1] = self.hasherT5.hash(
                     [

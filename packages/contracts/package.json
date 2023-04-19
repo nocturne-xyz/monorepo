@@ -26,7 +26,7 @@
     "test:deep-invariant": "FOUNDRY_PROFILE=deep forge test",
     "test:gas-report": "yarn test:unit --gas-report",
     "test:invariant-summary": "yarn test:unit -vv -m invariant_callSummary",
-    "test:unit": "forge test --match-test testTreeTest"
+    "test:unit": "forge test --match-test testEncodePathAndHash"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.8.2",
