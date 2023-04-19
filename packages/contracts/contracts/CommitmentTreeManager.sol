@@ -4,20 +4,20 @@ pragma solidity ^0.8.17;
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 // Internal
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "./libs/OffchainMerkleTree.sol";
+import {LibOffchainMerkleTree, OffchainMerkleTree} from "./libs/OffchainMerkleTree.sol";
 import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 import "./libs/Types.sol";
 
 contract CommitmentTreeManager is Initializable, PausableUpgradeable {
-    using OffchainMerkleTree for OffchainMerkleTreeData;
+    using LibOffchainMerkleTree for OffchainMerkleTree;
 
     // past roots of the merkle tree
     mapping(uint256 => bool) public _pastRoots;
 
     mapping(uint256 => bool) public _nullifierSet;
 
-    OffchainMerkleTreeData internal _merkle;
+    OffchainMerkleTree internal _merkle;
 
     // gap for upgrade safety
     uint256[50] private __GAP;

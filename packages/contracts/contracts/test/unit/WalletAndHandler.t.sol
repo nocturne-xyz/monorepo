@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
+import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils//PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
@@ -36,7 +36,7 @@ import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
 
 contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
-    using OffchainMerkleTree for OffchainMerkleTreeData;
+    using LibOffchainMerkleTree for OffchainMerkleTree;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 

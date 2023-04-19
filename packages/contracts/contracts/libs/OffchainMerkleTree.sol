@@ -10,7 +10,7 @@ import {Utils} from "./Utils.sol";
 import {TreeUtils} from "./TreeUtils.sol";
 import {QueueLib} from "./Queue.sol";
 
-struct OffchainMerkleTreeData {
+struct OffchainMerkleTree {
     // number of non-zero leaves in the tree
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
     uint128 count;
@@ -32,11 +32,11 @@ struct OffchainMerkleTreeData {
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
 }
 
-library OffchainMerkleTree {
+library LibOffchainMerkleTree {
     using QueueLib for QueueLib.Queue;
 
     function initialize(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         address subtreeUpdateVerifier
     ) internal {
         // root starts as the root of the empty depth-32 tree.
@@ -50,7 +50,7 @@ library OffchainMerkleTree {
     }
 
     function insertNote(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         EncodedNote memory note
     ) internal {
         uint256 hashedNote = TreeUtils.sha256Note(note);
@@ -58,16 +58,17 @@ library OffchainMerkleTree {
     }
 
     function insertNoteCommitments(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         uint256[] memory ncs
     ) internal {
         for (uint256 i = 0; i < ncs.length; i++) {
+            require(ncs[i] < Utils.SNARK_SCALAR_FIELD);
             _insertUpdate(self, ncs[i]);
         }
     }
 
     function applySubtreeUpdate(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         uint256 newRoot,
         uint256[8] memory proof
     ) internal {
@@ -85,21 +86,21 @@ library OffchainMerkleTree {
 
     // returns the current root of the tree
     function getRoot(
-        OffchainMerkleTreeData storage self
+        OffchainMerkleTree storage self
     ) internal view returns (uint256) {
         return self.root;
     }
 
     // returns the current number of leaves in the tree
     function getCount(
-        OffchainMerkleTreeData storage self
+        OffchainMerkleTree storage self
     ) internal view returns (uint128) {
         return self.count;
     }
 
     // returns the number of leaves in the tree plus the number of leaves waiting in the queue
     function getTotalCount(
-        OffchainMerkleTreeData storage self
+        OffchainMerkleTree storage self
     ) internal view returns (uint128) {
         return
             self.count +
@@ -109,7 +110,7 @@ library OffchainMerkleTree {
     }
 
     function _calculatePublicInputs(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         uint256 newRoot
     ) internal view returns (uint256[] memory) {
         uint256 accumulatorHash = self.accumulatorQueue.peek();
@@ -131,7 +132,7 @@ library OffchainMerkleTree {
     }
 
     function _computeAccumulatorHash(
-        OffchainMerkleTreeData storage self
+        OffchainMerkleTree storage self
     ) internal view returns (uint256) {
         require(
             self.batchLen == TreeUtils.BATCH_SIZE,
@@ -146,7 +147,7 @@ library OffchainMerkleTree {
         return uint256(TreeUtils.sha256FieldElems(batch));
     }
 
-    function _accumulate(OffchainMerkleTreeData storage self) internal {
+    function _accumulate(OffchainMerkleTree storage self) internal {
         require(
             self.batchLen == TreeUtils.BATCH_SIZE,
             "batchLen != TreeUtils.BATCH_SIZE"
@@ -158,7 +159,7 @@ library OffchainMerkleTree {
     }
 
     function _insertUpdate(
-        OffchainMerkleTreeData storage self,
+        OffchainMerkleTree storage self,
         uint256 update
     ) internal {
         self.batch[self.batchLen] = update;

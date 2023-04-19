@@ -2,7 +2,8 @@
 
 ### Unreleased
 
-- Require `CTM.fillBatchWithZeros` to be called on non-empty batch
+- require `OffchainMerkle.insertNoteCommitments` ncs < scalar field
+- require `CTM.fillBatchWithZeros` to be called on non-empty batch
 - add initial CTM invariant tests
 - add `CommitmentTreeManagerHandler`
 - add `TestCommitmentTreeManager` to test harnesses

@@ -11,6 +11,7 @@ import {TestCommitmentTreeManager} from "../../harnesses/TestCommitmentTreeManag
 import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
+import {Utils} from "../../../libs/Utils.sol";
 import "../../../libs/Types.sol";
 
 contract CommitmentTreeManagerHandler is Test {
@@ -78,6 +79,16 @@ contract CommitmentTreeManagerHandler is Test {
         joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
         joinSplit.nullifierA = _nullifierCounter;
         joinSplit.nullifierB = _nullifierCounter + 1;
+        joinSplit.newNoteACommitment = bound(
+            joinSplit.newNoteACommitment,
+            0,
+            Utils.SNARK_SCALAR_FIELD - 1
+        );
+        joinSplit.newNoteBCommitment = bound(
+            joinSplit.newNoteBCommitment,
+            0,
+            Utils.SNARK_SCALAR_FIELD - 1
+        );
         commitmentTreeManager.handleJoinSplit(joinSplit);
 
         lastHandledJoinSplit = joinSplit;
@@ -115,6 +126,10 @@ contract CommitmentTreeManagerHandler is Test {
     function insertNoteCommitments(
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
+        for (uint256 i = 0; i < ncs.length; i++) {
+            ncs[i] = bound(ncs[i], 0, Utils.SNARK_SCALAR_FIELD - 1);
+        }
+
         commitmentTreeManager.insertNoteCommitments(ncs);
         insertNoteCommitmentsLength = ncs.length;
         ghost_insertNoteCommitmentsLeafCount += ncs.length;
