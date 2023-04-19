@@ -35,7 +35,7 @@ library LibIncrementalTree {
         uint256 zero,
         IHasherT3 hasherT3
     ) internal {
-        // require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
             depth > 0 && depth <= MAX_DEPTH,
             "Depth must be between 1 and 32"
@@ -56,7 +56,7 @@ library LibIncrementalTree {
     /// @param self: Tree data.
     /// @param leaf: Leaf to be inserted.
     function insert(IncrementalTree storage self, uint256 leaf) internal {
-        // require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
         require(
             self.numberOfLeaves < 2 ** self.depth,
             "BinaryTree: tree is full"
@@ -85,10 +85,10 @@ library LibIncrementalTree {
         uint256[2] memory leaves
     ) internal {
         for (uint256 i = 0; i < 2; i++) {
-            // require(
-            //     leaves[i] < SNARK_SCALAR_FIELD,
-            //     "Leaf must be < snark field"
-            // );
+            require(
+                leaves[i] < SNARK_SCALAR_FIELD,
+                "Leaf must be < snark field"
+            );
         }
         require(
             self.numberOfLeaves + 2 <= 2 ** self.depth,
@@ -118,10 +118,10 @@ library LibIncrementalTree {
         uint256[8] memory leaves
     ) internal {
         for (uint256 i = 0; i < 8; i++) {
-            // require(
-            //     leaves[i] < SNARK_SCALAR_FIELD,
-            //     "Leaf must be < snark field"
-            // );
+            require(
+                leaves[i] < SNARK_SCALAR_FIELD,
+                "Leaf must be < snark field"
+            );
         }
         require(
             self.numberOfLeaves + 8 <= 2 ** self.depth,
@@ -153,10 +153,10 @@ library LibIncrementalTree {
         uint256[16] memory leaves
     ) internal {
         for (uint256 i = 0; i < 16; i++) {
-            // require(
-            //     leaves[i] < SNARK_SCALAR_FIELD,
-            //     "Leaf must be < snark field"
-            // );
+            require(
+                leaves[i] < SNARK_SCALAR_FIELD,
+                "Leaf must be < snark field"
+            );
         }
         require(
             self.numberOfLeaves + 16 <= 2 ** self.depth,

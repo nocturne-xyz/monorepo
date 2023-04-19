@@ -78,12 +78,6 @@ contract CommitmentTreeManagerHandler is Test {
         joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
         joinSplit.nullifierA = _nullifierCounter;
         joinSplit.nullifierB = _nullifierCounter + 1;
-
-        if (joinSplit.nullifierA == joinSplit.nullifierB) {
-            unchecked {
-                joinSplit.nullifierB = joinSplit.nullifierA + 1;
-            }
-        }
         commitmentTreeManager.handleJoinSplit(joinSplit);
 
         lastHandledJoinSplit = joinSplit;

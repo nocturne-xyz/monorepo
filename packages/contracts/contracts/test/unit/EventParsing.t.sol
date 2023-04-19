@@ -17,7 +17,7 @@ contract EventParsingTest is Test {
         uint256 gasCompensation
     );
 
-    function testdecodeDepositRequestFromDepositEvent() public {
+    function testDecodeDepositRequestFromDepositEvent() public {
         vm.recordLogs();
         emit DepositInstantiated(
             address(0x1),

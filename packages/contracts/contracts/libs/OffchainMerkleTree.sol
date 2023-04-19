@@ -49,7 +49,6 @@ library OffchainMerkleTree {
         self.accumulatorQueue.initialize();
     }
 
-    // TODO: should we require "Leaf must be < snark field"
     function insertNote(
         OffchainMerkleTreeData storage self,
         EncodedNote memory note
