@@ -148,6 +148,9 @@ contract DepositManager is
         );
     }
 
+    // NOTE: We accept race condition where user could technically retrieve their deposit before
+    // the screener completes it. This would grief the screener but would incur a greater cost to
+    // the user to continually instantiate + prematurely retrieve.
     function retrieveDeposit(
         DepositRequest calldata req
     ) external nonReentrant {
