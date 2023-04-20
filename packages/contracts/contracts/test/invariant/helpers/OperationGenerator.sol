@@ -28,7 +28,8 @@ import "../../../libs/Types.sol";
 struct GenerateOperationArgs {
     uint256 seed;
     Wallet wallet;
-    Handler handler;
+    address handler;
+    uint256 root;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -60,9 +61,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             0,
             args.joinSplitToken.balanceOf(address(args.wallet))
         );
-
-        // Pick handler.root() as args.root
-        uint256 root = args.handler.root();
 
         // Get random args.joinSplitPublicSpends
         uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
@@ -147,7 +145,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitToken: args.joinSplitToken,
             gasToken: args.gasToken,
-            root: root,
+            root: args.root,
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
             executionGasLimit: 5_000_000,

@@ -111,7 +111,8 @@ contract WalletHandler is OperationGenerator {
                 GenerateOperationArgs({
                     seed: seed,
                     wallet: wallet,
-                    handler: handler,
+                    handler: address(handler),
+                    root: handler.root(),
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
