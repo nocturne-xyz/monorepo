@@ -60,7 +60,8 @@ contract BalanceManagerInvariants is Test {
             balanceManager,
             swapper,
             depositErc20,
-            depositErc20,
+            depositErc721,
+            depositErc1155,
             swapErc20,
             swapErc721,
             swapErc1155
@@ -86,7 +87,7 @@ contract BalanceManagerInvariants is Test {
         );
     }
 
-    function invariant_callSummary() public view {
-        balanceManagerHandler.callSummary();
-    }
+    // function invariant_callSummary() public view {
+    //     balanceManagerHandler.callSummary();
+    // }
 }
