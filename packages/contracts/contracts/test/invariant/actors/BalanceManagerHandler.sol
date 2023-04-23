@@ -13,10 +13,10 @@ import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {TestBalanceManager} from "../../harnesses/TestBalanceManager.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
+import "../helpers/BalanceManagerOpUtils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import {OperationUtils} from "../../../libs/OperationUtils.sol";
 import "../../utils/NocturneUtils.sol";
-import "../helpers/BalanceManagerOpUtils.sol";
 import "../../../libs/Types.sol";
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -85,7 +85,6 @@ contract BalanceManagerHandler is
         console.log("BalanceManagerHandler call summary:");
         console.log("-------------------");
         console.log("addToAssetPrefill", _calls["addToAssetPrefill"]);
-        console.log("handleDeposit", _calls["handleDeposit"]);
         console.log(
             "processJoinSplitsReservingFee",
             _calls["processJoinSplitsReservingFee"]
@@ -148,27 +147,26 @@ contract BalanceManagerHandler is
         uint256 seed,
         uint256 perJoinSplitVerifyGas
     ) public trackCall("processJoinSplitsReservingFee") {
-        (
-            Operation memory op,
-            GeneratedOperationMetadata memory meta
-        ) = _generateRandomOperation(
-                GenerateOperationArgs({
-                    seed: seed,
-                    wallet: wallet,
-                    handler: address(balanceManager),
-                    root: balanceManager.root(),
-                    swapper: swapper,
-                    joinSplitToken: depositErc20,
-                    gasToken: depositErc20,
-                    swapErc20: swapErc20,
-                    swapErc721: swapErc721,
-                    swapErc1155: swapErc1155
-                })
-            );
+        (Operation memory op, ) = _generateRandomOperation(
+            GenerateOperationArgs({
+                seed: seed,
+                wallet: wallet,
+                handler: address(balanceManager),
+                root: balanceManager.root(),
+                swapper: swapper,
+                joinSplitToken: depositErc20,
+                gasToken: depositErc20,
+                swapErc20: swapErc20,
+                swapErc721: swapErc721,
+                swapErc1155: swapErc1155
+            })
+        );
         perJoinSplitVerifyGas = bound(perJoinSplitVerifyGas, 0, 15_000_000);
 
         balanceManager.processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
+        console.log("called process");
+        console.log("seed", seed);
         _processedOps.push(
             OperationWithoutStructArrays({
                 refundAddr: op.refundAddr,
@@ -181,11 +179,36 @@ contract BalanceManagerHandler is
                 atomicActions: op.atomicActions
             })
         );
-        _opStructArrays[_processedOps.length - 1] = OperationStructArrays({
-            joinSplits: op.joinSplits,
-            encodedRefundAssets: op.encodedRefundAssets,
-            actions: op.actions
-        });
+
+        console.log("pushed op. length:", _processedOps.length);
+
+        // KLUDGE: workaround for "Copying of type struct JoinSplit memory[] memory to storage not
+        // yet supported"
+        // _opStructArrays[_processedOps.length - 1].joinSplits = new JoinSplit[](
+        //     op.joinSplits.length
+        // );
+        // _opStructArrays[_processedOps.length - 1]
+        //     .encodedRefundAssets = new EncodedAsset[](
+        //     op.encodedRefundAssets.length
+        // );
+        // _opStructArrays[_processedOps.length - 1].actions = new Action[](
+        //     op.actions.length
+        // );
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+            _opStructArrays[_processedOps.length - 1].joinSplits.push(
+                op.joinSplits[i]
+            );
+        }
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+            _opStructArrays[_processedOps.length - 1].encodedRefundAssets.push(
+                op.encodedRefundAssets[i]
+            );
+        }
+        for (uint256 i = 0; i < op.actions.length; i++) {
+            _opStructArrays[_processedOps.length - 1].actions.push(
+                op.actions[i]
+            );
+        }
     }
 
     function gatherReservedGasAndPayBundler(

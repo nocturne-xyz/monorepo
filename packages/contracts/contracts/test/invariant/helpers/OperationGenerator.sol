@@ -48,11 +48,12 @@ struct GeneratedOperationMetadata {
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
 
+    uint256 nullifierCount = 0;
+
     function _generateRandomOperation(
         GenerateOperationArgs memory args
     )
         internal
-        view
         returns (Operation memory _op, GeneratedOperationMetadata memory _meta)
     {
         // Get random totalJoinSplitUnwrapAmount using the bound function
@@ -162,10 +163,14 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // to convert NocturneUtils to contract to inherit forge std
         for (uint256 i = 0; i < _op.joinSplits.length; i++) {
             // Overflow here doesn't matter given all we need are random nfs
-            unchecked {
-                _op.joinSplits[i].nullifierA = args.seed + (2 * i);
-                _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
-            }
+
+            _op.joinSplits[i].nullifierA = nullifierCount;
+            _op.joinSplits[i].nullifierB = nullifierCount + 1;
+
+            nullifierCount += 2;
+
+            console.log("NF A", _op.joinSplits[i].nullifierA);
+            console.log("NF B", _op.joinSplits[i].nullifierB);
         }
     }
 
