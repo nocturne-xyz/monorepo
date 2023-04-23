@@ -14,7 +14,9 @@ import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {TestBalanceManager} from "../../harnesses/TestBalanceManager.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
+import {OperationUtils} from "../../../libs/OperationUtils.sol";
 import "../../utils/NocturneUtils.sol";
+import "../helpers/BalanceManagerOpUtils.sol";
 import "../../../libs/Types.sol";
 
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -27,6 +29,7 @@ contract BalanceManagerHandler is
 {
     uint256 constant OPERATION_STAGE_SLOT = 174;
     uint256 constant ENTERED_PREFILL = 2;
+    address constant BUNDLER_ADDRESS = address(0x1);
 
     // ______PUBLIC______
     Wallet public wallet;
@@ -42,9 +45,12 @@ contract BalanceManagerHandler is
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
+    uint256 public ghost_bundlerComp;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
+    OperationWithoutStructArrays[] _processedOps;
+    mapping(uint256 => OperationStructArrays) _opStructArrays;
 
     constructor(
         Wallet _wallet,
@@ -128,47 +134,96 @@ contract BalanceManagerHandler is
                 address(depositErc1155),
                 seed
             );
-            console.log("seed id", seed);
-            console.log("AssetUtils decoded id", encodedAsset.encodedAssetId);
 
             AssetUtils.approveAsset(
                 encodedAsset,
                 address(balanceManager),
-                value + 1
+                value
             );
         }
         balanceManager.addToAssetPrefill(encodedAsset, value);
     }
 
-    // function handleDeposit(
-    //     DepositRequest calldata deposit
-    // ) public trackCall("handleDeposit") {
-    //     testBalanceManager.handleDeposit(deposit);
-    // }
+    function processJoinSplitsReservingFee(
+        uint256 seed,
+        uint256 perJoinSplitVerifyGas
+    ) public trackCall("processJoinSplitsReservingFee") {
+        (
+            Operation memory op,
+            GeneratedOperationMetadata memory meta
+        ) = _generateRandomOperation(
+                GenerateOperationArgs({
+                    seed: seed,
+                    wallet: wallet,
+                    handler: address(balanceManager),
+                    root: balanceManager.root(),
+                    swapper: swapper,
+                    joinSplitToken: depositErc20,
+                    gasToken: depositErc20,
+                    swapErc20: swapErc20,
+                    swapErc721: swapErc721,
+                    swapErc1155: swapErc1155
+                })
+            );
+        perJoinSplitVerifyGas = bound(perJoinSplitVerifyGas, 0, 15_000_000);
 
-    // function processJoinSplitsReservingFee(
-    //     Operation calldata op,
-    //     uint256 perJoinSplitVerifyGas
-    // ) public trackCall("processJoinSplitsReservingFee") {
-    //     testBalanceManager.processJoinSplitsReservingFee(
-    //         op,
-    //         perJoinSplitVerifyGas
-    //     );
-    // }
+        balanceManager.processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
-    // function gatherReservedGasAndPayBundler(
-    //     Operation calldata op,
-    //     OperationResult memory opResult,
-    //     uint256 perJoinSplitVerifyGas,
-    //     address bundler
-    // ) public trackCall("gatherReservedGasAndPayBundler") {
-    //     testBalanceManager.gatherReservedGasAssetAndPayBundler(
-    //         op,
-    //         opResult,
-    //         perJoinSplitVerifyGas,
-    //         bundler
-    //     );
-    // }
+        _processedOps.push(
+            OperationWithoutStructArrays({
+                refundAddr: op.refundAddr,
+                encodedGasAsset: op.encodedGasAsset,
+                executionGasLimit: op.executionGasLimit,
+                maxNumRefunds: op.maxNumRefunds,
+                gasPrice: op.gasPrice,
+                chainId: op.chainId,
+                deadline: op.deadline,
+                atomicActions: op.atomicActions
+            })
+        );
+        _opStructArrays[_processedOps.length - 1] = OperationStructArrays({
+            joinSplits: op.joinSplits,
+            encodedRefundAssets: op.encodedRefundAssets,
+            actions: op.actions
+        });
+    }
+
+    function gatherReservedGasAndPayBundler(
+        uint256 seed,
+        OperationResult memory opResult,
+        uint256 perJoinSplitVerifyGas
+    ) public trackCall("gatherReservedGasAndPayBundler") {
+        uint256 opIndex = bound(seed, 0, _processedOps.length);
+        OperationWithoutStructArrays
+            memory opWithoutStructArrays = _processedOps[opIndex];
+        OperationStructArrays memory opStructArrays = _opStructArrays[opIndex];
+
+        Operation memory op = BalanceManagerOpUtils.joinOperation(
+            opWithoutStructArrays,
+            opStructArrays
+        );
+
+        delete _processedOps[opIndex];
+        delete _opStructArrays[opIndex];
+
+        opResult.verificationGas = ((perJoinSplitVerifyGas +
+            GAS_PER_JOINSPLIT_HANDLE) * op.joinSplits.length);
+        opResult.executionGas = op.executionGasLimit;
+        opResult.numRefunds = op.maxNumRefunds;
+
+        balanceManager.gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            perJoinSplitVerifyGas,
+            BUNDLER_ADDRESS
+        );
+
+        uint256 expectedBunderComp = _copiedCalculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
+        ghost_bundlerComp += expectedBunderComp;
+    }
 
     // function handleAllRefunds(
     //     uint256 seed
@@ -230,5 +285,22 @@ contract BalanceManagerHandler is
             (interfaceId == type(IERC165).interfaceId) ||
             (interfaceId == type(IERC721Receiver).interfaceId) ||
             (interfaceId == type(IERC1155Receiver).interfaceId);
+    }
+
+    // KLUDGE: because OperationUtils.calculateBundlerGasAssetPayout only takes Operation calldata
+    function _copiedCalculateBundlerGasAssetPayout(
+        Operation memory op,
+        OperationResult memory opResult
+    ) internal returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
     }
 }

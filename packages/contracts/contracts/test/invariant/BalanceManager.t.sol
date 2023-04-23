@@ -87,7 +87,7 @@ contract BalanceManagerInvariants is Test {
         );
     }
 
-    // function invariant_callSummary() public view {
-    //     balanceManagerHandler.callSummary();
-    // }
+    function invariant_callSummary() public view {
+        balanceManagerHandler.callSummary();
+    }
 }
