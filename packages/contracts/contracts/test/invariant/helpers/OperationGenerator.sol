@@ -48,7 +48,7 @@ struct GeneratedOperationMetadata {
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
 
-    uint256 nullifierCount = 0;
+    uint256 nullifierCount = 10;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
