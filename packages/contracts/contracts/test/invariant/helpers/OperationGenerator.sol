@@ -30,6 +30,9 @@ struct GenerateOperationArgs {
     Wallet wallet;
     address handler;
     uint256 root;
+    // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
+    // wallet invariant tests hang for no apparent reason
+    bool statefulNfGeneration;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -162,13 +165,21 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
         // to convert NocturneUtils to be stateful contract
         for (uint256 i = 0; i < _op.joinSplits.length; i++) {
-            _op.joinSplits[i].nullifierA = nullifierCount;
-            _op.joinSplits[i].nullifierB = nullifierCount + 1;
+            if (args.statefulNfGeneration) {
+                _op.joinSplits[i].nullifierA = nullifierCount;
+                _op.joinSplits[i].nullifierB = nullifierCount + 1;
 
-            nullifierCount += 2;
+                nullifierCount += 2;
 
-            console.log("NF A", _op.joinSplits[i].nullifierA);
-            console.log("NF B", _op.joinSplits[i].nullifierB);
+                console.log("NF A", _op.joinSplits[i].nullifierA);
+                console.log("NF B", _op.joinSplits[i].nullifierB);
+            } else {
+                // Overflow here doesn't matter given all we need are random nfs
+                unchecked {
+                    _op.joinSplits[i].nullifierA = args.seed + (2 * i);
+                    _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
+                }
+            }
         }
     }
 

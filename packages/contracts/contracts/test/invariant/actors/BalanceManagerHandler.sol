@@ -154,6 +154,7 @@ contract BalanceManagerHandler is
                 wallet: wallet,
                 handler: address(balanceManager),
                 root: balanceManager.root(),
+                statefulNfGeneration: true,
                 swapper: swapper,
                 joinSplitToken: depositErc20,
                 gasToken: depositErc20,

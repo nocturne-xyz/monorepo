@@ -113,6 +113,7 @@ contract WalletHandler is OperationGenerator {
                     wallet: wallet,
                     handler: address(handler),
                     root: handler.root(),
+                    statefulNfGeneration: false,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
