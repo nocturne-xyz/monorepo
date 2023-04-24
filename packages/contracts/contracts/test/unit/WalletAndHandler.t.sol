@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IJoinSplitVerifier} from "../../interfaces/IJoinSplitVerifier.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
+import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
 import {PoseidonHasherT3, PoseidonHasherT4, PoseidonHasherT5, PoseidonHasherT6} from "../utils//PoseidonHashers.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
@@ -35,8 +35,8 @@ import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
 
-contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
-    using OffchainMerkleTree for OffchainMerkleTreeData;
+contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
+    using LibOffchainMerkleTree for OffchainMerkleTree;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
@@ -481,6 +481,17 @@ contract WalletTest is Test, ForgeUtils, PoseidonDeployer {
         vm.expectEmit(true, true, true, true);
         emit SubtreeBatchFillerPermissionSet(ALICE, true);
         handler.setSubtreeBatchFillerPermission(ALICE, true);
+
+        // So batch is not empty
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+        depositFunds(
+            ALICE,
+            token,
+            PER_NOTE_AMOUNT,
+            ERC20_ID,
+            NocturneUtils.defaultStealthAddress()
+        );
 
         vm.prank(ALICE);
         handler.fillBatchWithZeros();

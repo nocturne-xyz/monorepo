@@ -6,17 +6,20 @@ import {StdCheats} from "forge-std/StdCheats.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
 import {console} from "forge-std/console.sol";
 
+import {IHasherT3} from "../../interfaces/IHasher.sol";
+import {PoseidonHasherT3} from "../../utils/PoseidonHashers.sol";
+import {Utils} from "../../../libs/Utils.sol";
 import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifier.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../../libs/OffchainMerkleTree.sol";
+import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../../libs/OffchainMerkleTree.sol";
 import {QueueLib} from "../../../libs/Queue.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import "../../../libs/Types.sol";
 
 contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
-    using OffchainMerkleTree for OffchainMerkleTreeData;
+    using LibOffchainMerkleTree for OffchainMerkleTree;
 
     // ______PUBLIC______
-    OffchainMerkleTreeData merkle;
+    OffchainMerkleTree merkle;
 
     bytes32 public lastCall;
     uint256 public preCallRoot;
@@ -50,7 +53,8 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function callSummary() external view {
-        console.log("Call summary:");
+        console.log("-------------------");
+        console.log("OffchainMerkleHandler call summary:");
         console.log("-------------------");
         console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
@@ -66,6 +70,9 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
     function insertNoteCommitments(
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
+        for (uint256 i = 0; i < ncs.length; i++) {
+            ncs[i] = bound(ncs[i], 0, Utils.SNARK_SCALAR_FIELD - 1);
+        }
         merkle.insertNoteCommitments(ncs);
     }
 

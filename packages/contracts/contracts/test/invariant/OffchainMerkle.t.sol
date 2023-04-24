@@ -52,4 +52,12 @@ contract OffchainMerkleInvariants is Test {
             );
         }
     }
+
+    // Because we update in increments of BATCH_SIZE, count % BATCH_SIZE should always = 0, thus
+    // the bottom log2(BATCH_SIZE) bits of count should always be 0
+    function invariant_bottomLog2BitsOfCountAlwaysZero() external {
+        uint128 mask = (uint128(1) << uint128(TreeUtils.LOG2_BATCH_SIZE)) -
+            uint128(1);
+        assertEq(offchainMerkleHandler.getCount() & mask, 0);
+    }
 }

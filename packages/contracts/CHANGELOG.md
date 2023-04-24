@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+- add invariant RE bottom log2(batch_size) bits of `OffchainMerkle.count`
+- require `OffchainMerkle.insertNoteCommitments` ncs < scalar field
+- require `CTM.fillBatchWithZeros` to be called on non-empty batch
+- add initial CTM invariant tests
+- add `CommitmentTreeManagerHandler`
+- add `TestCommitmentTreeManager` to test harnesses
+- Rename `BinaryMerkle` to just `IncrementalTree` + `LibIncrementalTree`
 - Add invariant tests for tracking swap token balances
 - Add erc20 transfers out to net balances invariant test
 - Add `WalletHandler` to track bundle-related info

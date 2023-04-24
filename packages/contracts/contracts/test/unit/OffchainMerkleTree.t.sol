@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
-import {OffchainMerkleTree, OffchainMerkleTreeData} from "../../libs/OffchainMerkleTree.sol";
+import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
 import {IHasherT3, IHasherT6} from "../interfaces/IHasher.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
 import {PoseidonHasherT3, PoseidonHasherT6} from "../utils/PoseidonHashers.sol";
@@ -14,11 +14,11 @@ import {PoseidonDeployer} from "../utils/PoseidonDeployer.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../../libs/Types.sol";
 
-contract TestOffchainMerkleTree is Test, PoseidonDeployer {
+contract TestOffchainMerkleTree is PoseidonDeployer {
     using TreeTestLib for TreeTest;
-    using OffchainMerkleTree for OffchainMerkleTreeData;
+    using LibOffchainMerkleTree for OffchainMerkleTree;
 
-    OffchainMerkleTreeData merkle;
+    OffchainMerkleTree merkle;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     IHasherT3 hasherT3;
     IHasherT6 hasherT6;
