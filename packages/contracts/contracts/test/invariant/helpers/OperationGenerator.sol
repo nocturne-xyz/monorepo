@@ -48,7 +48,7 @@ struct GeneratedOperationMetadata {
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
 
-    uint256 nullifierCount = 10;
+    uint256 nullifierCount = 0;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
@@ -160,10 +160,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         _op = NocturneUtils.formatOperation(opArgs);
 
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
-        // to convert NocturneUtils to contract to inherit forge std
+        // to convert NocturneUtils to be stateful contract
         for (uint256 i = 0; i < _op.joinSplits.length; i++) {
-            // Overflow here doesn't matter given all we need are random nfs
-
             _op.joinSplits[i].nullifierA = nullifierCount;
             _op.joinSplits[i].nullifierB = nullifierCount + 1;
 

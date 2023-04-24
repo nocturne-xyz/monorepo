@@ -113,8 +113,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
             .selector;
 
         // TODO: turn wallet handler back on RE nf counter issue
-        // bytes4[] memory walletHandlerSelectors = new bytes4[](1);
-        // walletHandlerSelectors[0] = walletHandler.processBundle.selector;
+        bytes4[] memory walletHandlerSelectors = new bytes4[](1);
+        walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
         targetContract(address(depositManagerHandler));
         targetSelector(
@@ -124,16 +124,16 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
-        // targetContract(address(walletHandler));
-        // targetSelector(
-        //     FuzzSelector({
-        //         addr: address(walletHandler),
-        //         selectors: walletHandlerSelectors
-        //     })
-        // );
+        targetContract(address(walletHandler));
+        targetSelector(
+            FuzzSelector({
+                addr: address(walletHandler),
+                selectors: walletHandlerSelectors
+            })
+        );
 
         excludeSender(address(depositManagerHandler));
-        // excludeSender(address(walletHandler));
+        excludeSender(address(walletHandler));
         excludeSender(address(wallet));
         excludeSender(address(handler));
         excludeSender(address(depositManager));
