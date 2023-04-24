@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add comment documenting retrieve deposit griefing assumption
 - add invariant RE bottom log2(batch_size) bits of `OffchainMerkle.count`
 - require `OffchainMerkle.insertNoteCommitments` ncs < scalar field
 - require `CTM.fillBatchWithZeros` to be called on non-empty batch
