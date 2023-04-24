@@ -48,8 +48,8 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
         preCallGetAccumulatorQueueLen = accumulatorQueueLength();
 
         lastCall = key;
-        _calls[key]++;
         _;
+        _calls[lastCall]++;
     }
 
     function callSummary() external view {
@@ -59,6 +59,7 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
         console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
         console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
+        console.log("no-op", _calls["no-op"]);
     }
 
     function insertNote(

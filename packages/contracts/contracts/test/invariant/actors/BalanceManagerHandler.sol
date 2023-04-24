@@ -49,8 +49,10 @@ contract BalanceManagerHandler is
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
+    uint256 internal _handleRefundOpCounter;
     OperationWithoutStructArrays[] _processedOps;
     mapping(uint256 => OperationStructArrays) _opStructArrays;
+    mapping(bytes32 => uint256) _prefilledAssetBalances;
 
     constructor(
         Wallet _wallet,
@@ -76,8 +78,8 @@ contract BalanceManagerHandler is
 
     modifier trackCall(bytes32 key) {
         lastCall = key;
-        _calls[key]++;
         _;
+        _calls[lastCall]++;
     }
 
     function callSummary() external view {
@@ -141,13 +143,18 @@ contract BalanceManagerHandler is
                 value
             );
         }
+
         balanceManager.addToAssetPrefill(encodedAsset, value);
+
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        _prefilledAssetBalances[assetHash] += value;
     }
 
     function processJoinSplitsReservingFee(
         uint256 seed,
         uint256 perJoinSplitVerifyGas
     ) public trackCall("processJoinSplitsReservingFee") {
+        // Generate random op and verification gas
         (Operation memory op, ) = _generateRandomOperation(
             GenerateOperationArgs({
                 seed: seed,
@@ -165,10 +172,10 @@ contract BalanceManagerHandler is
         );
         perJoinSplitVerifyGas = bound(perJoinSplitVerifyGas, 0, 15_000_000);
 
+        // Make call
         balanceManager.processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
 
-        console.log("called process");
-        console.log("seed", seed);
+        // Save operation result details
         _processedOps.push(
             OperationWithoutStructArrays({
                 refundAddr: op.refundAddr,
@@ -181,8 +188,6 @@ contract BalanceManagerHandler is
                 atomicActions: op.atomicActions
             })
         );
-
-        console.log("pushed op. length:", _processedOps.length);
 
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
             _opStructArrays[_processedOps.length - 1].joinSplits.push(
@@ -213,23 +218,19 @@ contract BalanceManagerHandler is
         uint256 perJoinSplitVerifyGas = 250_000; // TODO: make this more random
         uint256 opIndex = bound(seed, 0, _processedOps.length - 1); // TODO: call in linear order and remove from callable set once called
 
-        console.log("opIndex", opIndex);
         OperationWithoutStructArrays
             memory opWithoutStructArrays = _processedOps[opIndex];
         OperationStructArrays memory opStructArrays = _opStructArrays[opIndex];
 
-        console.log("got op without struct arrays");
         Operation memory op = BalanceManagerOpUtils.joinOperation(
             opWithoutStructArrays,
             opStructArrays
         );
-        console.log("got struct arrays");
 
         opResult.verificationGas = ((perJoinSplitVerifyGas +
             GAS_PER_JOINSPLIT_HANDLE) * op.joinSplits.length);
         opResult.executionGas = op.executionGasLimit;
         opResult.numRefunds = op.maxNumRefunds;
-        console.log("updated opResult gas");
 
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
@@ -237,39 +238,38 @@ contract BalanceManagerHandler is
             perJoinSplitVerifyGas,
             BUNDLER_ADDRESS
         );
-        console.log("gathered gas and paid bundler");
 
         uint256 expectedBunderComp = _copiedCalculateBundlerGasAssetPayout(
             op,
             opResult
         );
-        console.log("recalculated gas comp");
         ghost_bundlerComp += expectedBunderComp;
     }
 
     function handleAllRefunds(
         uint256 seed
     ) public trackCall("handleAllRefunds") {
-        if (_processedOps.length == 0) {
+        if (_handleRefundOpCounter >= _processedOps.length) {
             lastCall = "no-op";
             return;
         }
 
-        uint256 opIndex = bound(seed, 0, _processedOps.length - 1); // TODO: call in linear order and remove from callable set once called
-
-        console.log("opIndex", opIndex);
         OperationWithoutStructArrays
-            memory opWithoutStructArrays = _processedOps[opIndex];
-        OperationStructArrays memory opStructArrays = _opStructArrays[opIndex];
+            memory opWithoutStructArrays = _processedOps[
+                _handleRefundOpCounter
+            ];
+        OperationStructArrays memory opStructArrays = _opStructArrays[
+            _handleRefundOpCounter
+        ];
 
-        console.log("got op without struct arrays");
         Operation memory op = BalanceManagerOpUtils.joinOperation(
             opWithoutStructArrays,
             opStructArrays
         );
-        console.log("got struct arrays");
 
         balanceManager.handleAllRefunds(op);
+
+        _handleRefundOpCounter++;
     }
 
     function onERC721Received(

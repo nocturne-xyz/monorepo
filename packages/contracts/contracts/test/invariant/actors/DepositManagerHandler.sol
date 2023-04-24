@@ -103,8 +103,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     modifier trackCall(bytes32 key) {
         lastCall = key;
-        _calls[key]++;
         _;
+        _calls[lastCall]++;
     }
 
     receive() external payable {}
@@ -142,6 +142,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             "completeDepositErc20 reverts",
             _reverts["completeDepositErc20"]
         );
+        console.log("no-op", _calls["no-op"]);
     }
 
     function instantiateDepositETH(
