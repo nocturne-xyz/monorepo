@@ -99,9 +99,68 @@ contract BalanceManagerHandler is
         console.log("no-op", _calls["no-op"]);
     }
 
-    function addToAssetPrefill(
+    function call(
+        uint256 seed,
+        uint256 perJoinSplitVerifyGas,
+        OperationResult memory opResult
+    ) public {
+        // Ensure cycle of processJoinSplitsReservingFee -> gatherReservedGasAndPayBundler ->
+        // handleAllRefunds
+        if (lastCall == bytes32("processJoinSplitsReservingFee")) {
+            _gatherReservedGasAndPayBundler(seed, opResult);
+        } else if (lastCall == bytes32("gatherReservedGasAndPayBundler")) {
+            _handleAllRefunds();
+        } else {
+            uint256 prefill = bound(seed, 0, 1);
+            if (prefill == 1) {
+                _addToAssetPrefill(seed);
+            } else {
+                _processJoinSplitsReservingFee(seed, perJoinSplitVerifyGas);
+            }
+        }
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256, // tokenId
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256, // id
+        uint256, // value
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata, // ids
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external pure override returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            (interfaceId == type(IERC165).interfaceId) ||
+            (interfaceId == type(IERC721Receiver).interfaceId) ||
+            (interfaceId == type(IERC1155Receiver).interfaceId);
+    }
+
+    function _addToAssetPrefill(
         uint256 seed
-    ) public trackCall("addToAssetPrefill") {
+    ) internal trackCall("addToAssetPrefill") {
         uint256 assetType = bound(seed, 0, 1);
 
         vm.store(
@@ -150,10 +209,10 @@ contract BalanceManagerHandler is
         _prefilledAssetBalances[assetHash] += value;
     }
 
-    function processJoinSplitsReservingFee(
+    function _processJoinSplitsReservingFee(
         uint256 seed,
         uint256 perJoinSplitVerifyGas
-    ) public trackCall("processJoinSplitsReservingFee") {
+    ) internal trackCall("processJoinSplitsReservingFee") {
         // Generate random op and verification gas
         (Operation memory op, ) = _generateRandomOperation(
             GenerateOperationArgs({
@@ -206,10 +265,10 @@ contract BalanceManagerHandler is
         }
     }
 
-    function gatherReservedGasAndPayBundler(
+    function _gatherReservedGasAndPayBundler(
         uint256 seed,
         OperationResult memory opResult
-    ) public trackCall("gatherReservedGasAndPayBundler") {
+    ) internal trackCall("gatherReservedGasAndPayBundler") {
         if (_processedOps.length == 0) {
             lastCall = "no-op";
             return;
@@ -246,9 +305,7 @@ contract BalanceManagerHandler is
         ghost_bundlerComp += expectedBunderComp;
     }
 
-    function handleAllRefunds(
-        uint256 seed
-    ) public trackCall("handleAllRefunds") {
+    function _handleAllRefunds() internal trackCall("handleAllRefunds") {
         if (_handleRefundOpCounter >= _processedOps.length) {
             lastCall = "no-op";
             return;
@@ -270,44 +327,6 @@ contract BalanceManagerHandler is
         balanceManager.handleAllRefunds(op);
 
         _handleRefundOpCounter++;
-    }
-
-    function onERC721Received(
-        address, // operator
-        address, // from
-        uint256, // tokenId
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
-    function onERC1155Received(
-        address, // operator
-        address, // from
-        uint256, // id
-        uint256, // value
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address, // operator
-        address, // from
-        uint256[] calldata, // ids
-        uint256[] calldata, // values
-        bytes calldata // data
-    ) external pure override returns (bytes4) {
-        return IERC1155Receiver.onERC1155BatchReceived.selector;
-    }
-
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external pure override returns (bool) {
-        return
-            (interfaceId == type(IERC165).interfaceId) ||
-            (interfaceId == type(IERC721Receiver).interfaceId) ||
-            (interfaceId == type(IERC1155Receiver).interfaceId);
     }
 
     // KLUDGE: because OperationUtils.calculateBundlerGasAssetPayout only takes Operation calldata

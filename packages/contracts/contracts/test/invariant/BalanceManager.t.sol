@@ -67,15 +67,8 @@ contract BalanceManagerInvariants is Test {
             swapErc1155
         );
 
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = balanceManagerHandler.addToAssetPrefill.selector;
-        selectors[1] = balanceManagerHandler
-            .processJoinSplitsReservingFee
-            .selector;
-        selectors[2] = balanceManagerHandler
-            .gatherReservedGasAndPayBundler
-            .selector;
-        selectors[3] = balanceManagerHandler.handleAllRefunds.selector;
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = balanceManagerHandler.call.selector;
 
         targetContract(address(balanceManagerHandler));
         targetSelector(
