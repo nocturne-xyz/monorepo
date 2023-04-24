@@ -32,26 +32,26 @@ template MerkleTreeInclusionProof(nLevels) {
 
         // path index = 0
         mux[i].c[0][0] <== hashes[i];
-        mux[i].c[0][1] <== siblings[i][0];
-        mux[i].c[0][2] <== siblings[i][1];
-        mux[i].c[0][3] <== siblings[i][2];
+        mux[i].c[1][0] <== siblings[i][0];
+        mux[i].c[2][0] <== siblings[i][1];
+        mux[i].c[3][0] <== siblings[i][2];
 
         // path index = 1
-        mux[i].c[1][0] <== siblings[i][0];
+        mux[i].c[0][1] <== siblings[i][0];
         mux[i].c[1][1] <== hashes[i];
-        mux[i].c[1][2] <== siblings[i][1];
-        mux[i].c[1][3] <== siblings[i][2];
+        mux[i].c[2][1] <== siblings[i][1];
+        mux[i].c[3][1] <== siblings[i][2];
 
         // path index = 2
-        mux[i].c[2][0] <== siblings[i][0];
-        mux[i].c[2][1] <== siblings[i][1];
+        mux[i].c[0][2] <== siblings[i][0];
+        mux[i].c[1][2] <== siblings[i][1];
         mux[i].c[2][2] <== hashes[i];
-        mux[i].c[2][3] <== siblings[i][2];
+        mux[i].c[3][2] <== siblings[i][2];
 
         // path index = 3
-        mux[i].c[3][0] <== siblings[i][0];
-        mux[i].c[3][1] <== siblings[i][1];
-        mux[i].c[3][2] <== siblings[i][2];
+        mux[i].c[0][3] <== siblings[i][0];
+        mux[i].c[1][3] <== siblings[i][1];
+        mux[i].c[2][3] <== siblings[i][2];
         mux[i].c[3][3] <== hashes[i];
 
         mux[i].s <== pathIndexBits[i];
