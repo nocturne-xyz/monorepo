@@ -33,7 +33,7 @@ const nocturneSigner = new NocturneSigner(sk);
 const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
-const tree = new IncrementalMerkleTree(poseidonBN, 16, 0, 4);
+const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
 
 // dummy notes
 const batch: (Note | bigint)[] = [
@@ -66,6 +66,7 @@ for (const noteOrCommitment of batch) {
 const merkleProof = tree.createProof(0);
 
 const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
+console.log("num leaves", inputs.leaves.length);
 console.log(inputs);
 
 async function prove() {

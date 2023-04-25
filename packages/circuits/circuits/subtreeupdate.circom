@@ -209,25 +209,24 @@ template SubtreeUpdate(r, s) {
     oldRoot <== MerkleTreeInclusionProof(r)(emptySubtreeRoot, pathIndices, siblings);
 
     // Compute accumulator hash for proposed leaves
-    component hasher = Sha256(256 * 2**s);
+    component hasher = Sha256(256 * 4**s);
 
     // set accumulatorHash input
     // accumulatorHash input is a concatenation of all of the sha256 hashes for the notes as big-endian bitstrings
-    for (var i = 0; i < 2**s; i++) {
+    for (var i = 0; i < 4**s; i++) {
         for (var j = 0; j < 256; j++) {
             hasher.in[i*256 + j] <== accumulatorInnerHashes[i][j];
         }
     }
 
     // Assert that the accumulatorHash is correct
-    component computedHashBits = Num2BitsBE(253);
-    computedHashBits.in <== accumulatorHash;
+    signal computedHashBits[253] <== Num2BitsBE(253)(accumulatorHash);
     for (var i = 0; i < 256; i++) {
         if (i < 3) {
             // pathBits are LE, hashBits are BE
             accumulatorHashTop3Bits[2-i] === hasher.out[i];
         } else {
-            computedHashBits.out[i-3] === hasher.out[i];
+            computedHashBits[i-3] === hasher.out[i];
         }
     }
 
