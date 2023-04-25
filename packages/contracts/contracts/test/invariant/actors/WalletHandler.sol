@@ -30,7 +30,7 @@ contract WalletHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
 
     uint256 constant BUNDLER_PRIVKEY = 2;
-    address BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
+    address public BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
 
     // ______PUBLIC______
     Wallet public wallet;

@@ -132,6 +132,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
+        excludeSender(walletHandler.BUNDLER_ADDRESS());
         excludeSender(address(depositManagerHandler));
         excludeSender(address(walletHandler));
         excludeSender(address(wallet));
