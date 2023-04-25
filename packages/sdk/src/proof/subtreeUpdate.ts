@@ -49,7 +49,7 @@ export function subtreeUpdateInputsFromBatch(
   merkleProof: MerkleProof
 ): SubtreeUpdateInputs {
   if (batch.length !== TreeConstants.BATCH_SIZE) {
-    throw new Error(`\`batch.length\` ${TreeConstants.BATCH_SIZE}, `);
+    throw new Error(`\`batch.length\` != ${TreeConstants.BATCH_SIZE}`);
   }
 
   const ownerH1s: bigint[] = [];
@@ -96,8 +96,11 @@ export function subtreeUpdateInputsFromBatch(
 
   // accumulatorHash
   const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));
+  console.log("accumulatorHash", accumulatorHashU256);
   const [accumulatorHashHi, accumulatorHash] =
     bigInt256ToFieldElems(accumulatorHashU256);
+
+  console.log("accumulatorHashHi", accumulatorHashHi);
 
   const siblings = merkleProof.siblings.slice(TreeConstants.SUBTREE_DEPTH);
   const idx = merkleProof.pathIndices.reduce(

@@ -148,7 +148,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         }
 
         // Insert 9 ncs
-        uint256[] memory ncs = new uint256[](10);
+        uint256[] memory ncs = new uint256[](9);
         for (uint256 i = 0; i < 9; i++) {
             ncs[i] = nc;
         }
@@ -166,23 +166,25 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         uint256[][3] memory path = treeTest.computeInitialRoot(batch);
         uint256 _newRoot = path[0][DEPTH_TO_SUBTREE];
 
-        uint256 newRoot = 2148530186383747530821653986434349341874407543492575165183948509644419849075;
+        uint256 newRoot = 7692074189416150984263394138680301006228090185414219994496061801546117138813;
 
         assertEq(newRoot, _newRoot);
 
+        uint256 accumulatorHash = merkle.getAccumulatorHash();
+        console.log("accumulatorHash", accumulatorHash);
+        (uint256 hi, uint256 lo) = TreeUtils.uint256ToFieldElemLimbs(
+            accumulatorHash
+        );
+
+        console.log("accumulatorHashHi", hi);
+
         uint256[] memory pis = merkle._calculatePublicInputs(newRoot);
-        assertEq(
-            pis[0],
-            21443572485391568159800782191812935835534334817699172242223315142338162256601
-        );
-        assertEq(
-            pis[1],
-            2148530186383747530821653986434349341874407543492575165183948509644419849075
-        );
-        assertEq(pis[2], 1073741824);
+        assertEq(pis[0], TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(pis[1], newRoot);
+        assertEq(pis[2], 1879048192);
         assertEq(
             pis[3],
-            4369603618049527331146763788699655885066799772437199894124267345370035181946
+            13761535849878919798310125019909519451162264697046676736248712268787268459921
         );
     }
 
@@ -193,8 +195,8 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
     function dummyNote() internal pure returns (EncodedNote memory) {
         EncodedNote memory note = EncodedNote({
-            ownerH1: 16114171923265390730037465875328827721281782660087141077700479736598096658937,
-            ownerH2: 10977258428915190383432832691667013955459124698254120657094471191004412212417,
+            ownerH1: 20053872845712750666020333248434368879858874000328815279916175647306793909806,
+            ownerH2: 10878178814994881930842668029692572520203302021151403528591159382456948662398,
             nonce: 1,
             encodedAssetAddr: 917551056842671309452305380979543736893630245704,
             encodedAssetId: 5,

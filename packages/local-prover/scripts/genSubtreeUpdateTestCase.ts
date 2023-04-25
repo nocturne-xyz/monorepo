@@ -66,7 +66,6 @@ for (const noteOrCommitment of batch) {
 const merkleProof = tree.createProof(0);
 
 const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
-console.log("num leaves", inputs.leaves.length);
 console.log(inputs);
 
 async function prove() {
