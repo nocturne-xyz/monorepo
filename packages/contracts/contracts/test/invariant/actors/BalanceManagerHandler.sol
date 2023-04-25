@@ -13,9 +13,10 @@ import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {TestBalanceManager} from "../../harnesses/TestBalanceManager.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
-import "../helpers/BalanceManagerOpUtils.sol";
+import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import {OperationUtils} from "../../../libs/OperationUtils.sol";
+import "../helpers/BalanceManagerOpUtils.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
 
@@ -27,6 +28,8 @@ contract BalanceManagerHandler is
     IERC721Receiver,
     IERC1155Receiver
 {
+    using LibTokenIdSet for TokenIdSet;
+
     uint256 constant OPERATION_STAGE_SLOT = 174;
     uint256 constant ENTERED_PREFILL = 2;
     address constant BUNDLER_ADDRESS = address(0x1);
@@ -46,13 +49,16 @@ contract BalanceManagerHandler is
 
     bytes32 public lastCall;
     uint256 public ghost_bundlerComp;
+    mapping(bytes32 => uint256) public prefilledAssetBalances;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
-    uint256 internal _handleRefundOpCounter;
-    OperationWithoutStructArrays[] _processedOps;
-    mapping(uint256 => OperationStructArrays) _opStructArrays;
-    mapping(bytes32 => uint256) _prefilledAssetBalances;
+
+    TokenIdSet _depositErc1155IdSet;
+
+    OperationWithoutStructArrays internal _currentOpWithoutStructArrays;
+    OperationStructArrays internal _currentOpStructArrays;
+    OperationResult internal _currentOpResult;
 
     constructor(
         Wallet _wallet,
@@ -99,11 +105,7 @@ contract BalanceManagerHandler is
         console.log("no-op", _calls["no-op"]);
     }
 
-    function call(
-        uint256 seed,
-        uint256 perJoinSplitVerifyGas,
-        OperationResult memory opResult
-    ) public {
+    function call(uint256 seed, OperationResult memory opResult) public {
         // Ensure cycle of processJoinSplitsReservingFee -> gatherReservedGasAndPayBundler ->
         // handleAllRefunds
         if (lastCall == bytes32("processJoinSplitsReservingFee")) {
@@ -115,7 +117,7 @@ contract BalanceManagerHandler is
             if (prefill == 1) {
                 _addToAssetPrefill(seed);
             } else {
-                _processJoinSplitsReservingFee(seed, perJoinSplitVerifyGas);
+                _processJoinSplitsReservingFee(seed);
             }
         }
     }
@@ -201,17 +203,18 @@ contract BalanceManagerHandler is
                 address(balanceManager),
                 value
             );
+
+            _depositErc1155IdSet.add(seed);
         }
 
         balanceManager.addToAssetPrefill(encodedAsset, value);
 
         bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        _prefilledAssetBalances[assetHash] += value;
+        prefilledAssetBalances[assetHash] += value;
     }
 
     function _processJoinSplitsReservingFee(
-        uint256 seed,
-        uint256 perJoinSplitVerifyGas
+        uint256 seed
     ) internal trackCall("processJoinSplitsReservingFee") {
         // Generate random op and verification gas
         (Operation memory op, ) = _generateRandomOperation(
@@ -229,39 +232,35 @@ contract BalanceManagerHandler is
                 swapErc1155: swapErc1155
             })
         );
-        perJoinSplitVerifyGas = bound(perJoinSplitVerifyGas, 0, 15_000_000);
 
         // Make call
-        balanceManager.processJoinSplitsReservingFee(op, perJoinSplitVerifyGas);
-
-        // Save operation result details
-        _processedOps.push(
-            OperationWithoutStructArrays({
-                refundAddr: op.refundAddr,
-                encodedGasAsset: op.encodedGasAsset,
-                executionGasLimit: op.executionGasLimit,
-                maxNumRefunds: op.maxNumRefunds,
-                gasPrice: op.gasPrice,
-                chainId: op.chainId,
-                deadline: op.deadline,
-                atomicActions: op.atomicActions
-            })
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            PER_JOINSPLIT_VERIFY_GAS
         );
 
+        // Save operation result details
+        _currentOpWithoutStructArrays = OperationWithoutStructArrays({
+            refundAddr: op.refundAddr,
+            encodedGasAsset: op.encodedGasAsset,
+            executionGasLimit: op.executionGasLimit,
+            maxNumRefunds: op.maxNumRefunds,
+            gasPrice: op.gasPrice,
+            chainId: op.chainId,
+            deadline: op.deadline,
+            atomicActions: op.atomicActions
+        });
+
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
-            _opStructArrays[_processedOps.length - 1].joinSplits.push(
-                op.joinSplits[i]
-            );
+            _currentOpStructArrays.joinSplits.push(op.joinSplits[i]);
         }
         for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
-            _opStructArrays[_processedOps.length - 1].encodedRefundAssets.push(
+            _currentOpStructArrays.encodedRefundAssets.push(
                 op.encodedRefundAssets[i]
             );
         }
         for (uint256 i = 0; i < op.actions.length; i++) {
-            _opStructArrays[_processedOps.length - 1].actions.push(
-                op.actions[i]
-            );
+            _currentOpStructArrays.actions.push(op.actions[i]);
         }
     }
 
@@ -269,24 +268,13 @@ contract BalanceManagerHandler is
         uint256 seed,
         OperationResult memory opResult
     ) internal trackCall("gatherReservedGasAndPayBundler") {
-        if (_processedOps.length == 0) {
-            lastCall = "no-op";
-            return;
-        }
-
-        uint256 perJoinSplitVerifyGas = 250_000; // TODO: make this more random
-        uint256 opIndex = bound(seed, 0, _processedOps.length - 1); // TODO: call in linear order and remove from callable set once called
-
-        OperationWithoutStructArrays
-            memory opWithoutStructArrays = _processedOps[opIndex];
-        OperationStructArrays memory opStructArrays = _opStructArrays[opIndex];
-
         Operation memory op = BalanceManagerOpUtils.joinOperation(
-            opWithoutStructArrays,
-            opStructArrays
+            _currentOpWithoutStructArrays,
+            _currentOpStructArrays
         );
 
-        opResult.verificationGas = ((perJoinSplitVerifyGas +
+        // Fill op result with dummy vals
+        opResult.verificationGas = ((PER_JOINSPLIT_VERIFY_GAS +
             GAS_PER_JOINSPLIT_HANDLE) * op.joinSplits.length);
         opResult.executionGas = op.executionGasLimit;
         opResult.numRefunds = op.maxNumRefunds;
@@ -294,55 +282,61 @@ contract BalanceManagerHandler is
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
             opResult,
-            perJoinSplitVerifyGas,
+            PER_JOINSPLIT_VERIFY_GAS,
             BUNDLER_ADDRESS
         );
 
-        uint256 expectedBunderComp = _copiedCalculateBundlerGasAssetPayout(
-            op,
-            opResult
-        );
+        _currentOpResult = opResult;
+
+        uint256 expectedBunderComp = balanceManager
+            .calculateBundlerGasAssetPayout(op, opResult);
         ghost_bundlerComp += expectedBunderComp;
     }
 
     function _handleAllRefunds() internal trackCall("handleAllRefunds") {
-        if (_handleRefundOpCounter >= _processedOps.length) {
-            lastCall = "no-op";
-            return;
-        }
-
-        OperationWithoutStructArrays
-            memory opWithoutStructArrays = _processedOps[
-                _handleRefundOpCounter
-            ];
-        OperationStructArrays memory opStructArrays = _opStructArrays[
-            _handleRefundOpCounter
-        ];
-
         Operation memory op = BalanceManagerOpUtils.joinOperation(
-            opWithoutStructArrays,
-            opStructArrays
+            _currentOpWithoutStructArrays,
+            _currentOpStructArrays
         );
 
         balanceManager.handleAllRefunds(op);
-
-        _handleRefundOpCounter++;
     }
 
-    // KLUDGE: because OperationUtils.calculateBundlerGasAssetPayout only takes Operation calldata
-    function _copiedCalculateBundlerGasAssetPayout(
-        Operation memory op,
-        OperationResult memory opResult
-    ) internal returns (uint256) {
-        uint256 handleJoinSplitGas = op.joinSplits.length *
-            GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+    function ghost_prefilledErc1155Ids()
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return _depositErc1155IdSet.getIds();
+    }
 
+    function ghost_lastProcessedOperation()
+        public
+        view
+        returns (Operation memory)
+    {
         return
-            op.gasPrice *
-            (opResult.verificationGas +
-                handleJoinSplitGas +
-                opResult.executionGas +
-                handleRefundGas);
+            BalanceManagerOpUtils.joinOperation(
+                _currentOpWithoutStructArrays,
+                _currentOpStructArrays
+            );
+    }
+
+    function ghost_lastOperationResult()
+        public
+        view
+        returns (OperationResult memory)
+    {
+        return
+            OperationResult({
+                opProcessed: _currentOpResult.opProcessed,
+                assetsUnwrapped: _currentOpResult.assetsUnwrapped,
+                failureReason: _currentOpResult.failureReason,
+                callSuccesses: _currentOpResult.callSuccesses,
+                callResults: _currentOpResult.callResults,
+                verificationGas: _currentOpResult.verificationGas,
+                executionGas: _currentOpResult.executionGas,
+                numRefunds: _currentOpResult.numRefunds
+            });
     }
 }

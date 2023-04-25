@@ -65,7 +65,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
         );
     }
 
-    function calculateOpGasAssetCost(
+    function calculateOpMaxGasAssetCost(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) public pure returns (uint256) {
