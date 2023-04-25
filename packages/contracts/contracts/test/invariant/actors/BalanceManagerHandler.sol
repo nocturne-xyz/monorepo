@@ -109,7 +109,7 @@ contract BalanceManagerHandler is
         // Ensure cycle of processJoinSplitsReservingFee -> gatherReservedGasAndPayBundler ->
         // handleAllRefunds
         if (lastCall == bytes32("processJoinSplitsReservingFee")) {
-            _gatherReservedGasAndPayBundler(seed, opResult);
+            _gatherReservedGasAndPayBundler(opResult);
         } else if (lastCall == bytes32("gatherReservedGasAndPayBundler")) {
             _handleAllRefunds();
         } else {
@@ -265,7 +265,6 @@ contract BalanceManagerHandler is
     }
 
     function _gatherReservedGasAndPayBundler(
-        uint256 seed,
         OperationResult memory opResult
     ) internal trackCall("gatherReservedGasAndPayBundler") {
         Operation memory op = BalanceManagerOpUtils.joinOperation(

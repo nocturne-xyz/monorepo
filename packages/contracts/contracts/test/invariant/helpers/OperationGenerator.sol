@@ -50,6 +50,7 @@ struct GeneratedOperationMetadata {
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
+    address public TRANSFER_RECIPIENT_ADDRESS = address(0x3);
 
     uint256 nullifierCount = 0;
 
@@ -105,7 +106,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             if (isTransfer) {
                 TransferRequest memory transferRequest = TransferRequest({
                     token: args.joinSplitToken,
-                    recipient: address(0x3), // TODO: track recipient
+                    recipient: TRANSFER_RECIPIENT_ADDRESS, // TODO: track recipient
                     amount: joinSplitUseAmount
                 });
                 actions[i] = NocturneUtils.formatTransferAction(

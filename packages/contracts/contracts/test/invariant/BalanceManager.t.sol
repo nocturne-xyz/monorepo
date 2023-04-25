@@ -96,45 +96,7 @@ contract BalanceManagerInvariants is Test {
     function invariant_consistentTokenBalances() external {
         bytes32 lastCall = balanceManagerHandler.lastCall();
         if (lastCall == "addToAssetPrefill") {
-            // BalanceManager erc20s match prefills
-            uint256 erc20Prefill = balanceManagerHandler.prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(
-                    AssetUtils.encodeAsset(
-                        AssetType.ERC20,
-                        address(depositErc20),
-                        uint256(AssetType.ERC20)
-                    )
-                )
-            );
-            assertEq(
-                erc20Prefill,
-                depositErc20.balanceOf(
-                    address(balanceManagerHandler.balanceManager())
-                )
-            );
-
-            // BalanceManager erc1155s match prefills
-            uint256[] memory erc1155Ids = balanceManagerHandler
-                .ghost_prefilledErc1155Ids();
-            for (uint256 i = 0; i < erc1155Ids.length; i++) {
-                uint256 erc1155Prefill = balanceManagerHandler
-                    .prefilledAssetBalances(
-                        AssetUtils.hashEncodedAsset(
-                            AssetUtils.encodeAsset(
-                                AssetType.ERC1155,
-                                address(depositErc1155),
-                                erc1155Ids[i]
-                            )
-                        )
-                    );
-                assertEq(
-                    erc1155Prefill,
-                    depositErc1155.balanceOf(
-                        address(balanceManagerHandler.balanceManager()),
-                        erc1155Ids[i]
-                    )
-                );
-            }
+            _assertBalancesMatchPrefills();
         } else if (lastCall == "processJoinSplitsReservingFee") {
             Operation memory op = balanceManagerHandler
                 .ghost_lastProcessedOperation();
@@ -185,16 +147,58 @@ contract BalanceManagerInvariants is Test {
                 .calculateBundlerGasAssetPayout(op, opResult);
             uint256 expectedInBalanceManager = reserved - bundlerPayout;
 
-            (
-                AssetType decodedAssetType,
-                address decodedAssetAddr,
-                uint256 decodedId
-            ) = AssetUtils.decodeAsset(op.encodedGasAsset);
+            (, address decodedAssetAddr, ) = AssetUtils.decodeAsset(
+                op.encodedGasAsset
+            );
 
             assertEq(
                 expectedInBalanceManager,
                 IERC20(decodedAssetAddr).balanceOf(
                     address(balanceManagerHandler.balanceManager())
+                )
+            );
+        } else if (lastCall == "handleAllRefunds") {
+            _assertBalancesMatchPrefills();
+        }
+    }
+
+    function _assertBalancesMatchPrefills() internal {
+        // BalanceManager erc20s match prefills
+        uint256 erc20Prefill = balanceManagerHandler.prefilledAssetBalances(
+            AssetUtils.hashEncodedAsset(
+                AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(depositErc20),
+                    uint256(AssetType.ERC20)
+                )
+            )
+        );
+        assertEq(
+            erc20Prefill,
+            depositErc20.balanceOf(
+                address(balanceManagerHandler.balanceManager())
+            )
+        );
+
+        // BalanceManager erc1155s match prefills
+        uint256[] memory erc1155Ids = balanceManagerHandler
+            .ghost_prefilledErc1155Ids();
+        for (uint256 i = 0; i < erc1155Ids.length; i++) {
+            uint256 erc1155Prefill = balanceManagerHandler
+                .prefilledAssetBalances(
+                    AssetUtils.hashEncodedAsset(
+                        AssetUtils.encodeAsset(
+                            AssetType.ERC1155,
+                            address(depositErc1155),
+                            erc1155Ids[i]
+                        )
+                    )
+                );
+            assertEq(
+                erc1155Prefill,
+                depositErc1155.balanceOf(
+                    address(balanceManagerHandler.balanceManager()),
+                    erc1155Ids[i]
                 )
             );
         }
