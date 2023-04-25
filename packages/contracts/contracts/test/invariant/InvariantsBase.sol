@@ -53,13 +53,14 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
+    function assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         internal
     {
         assertEq(
             depositManagerHandler.erc20().balanceOf(address(wallet)),
             depositManagerHandler.ghost_completeDepositSumErc20() -
-                walletHandler.ghost_totalTransferredOutOfWallet()
+                walletHandler.ghost_totalTransferredOutOfWallet() -
+                walletHandler.ghost_totalBundlerPayout()
         );
     }
 

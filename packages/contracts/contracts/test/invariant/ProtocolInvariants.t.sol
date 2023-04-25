@@ -149,10 +149,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20()
+    function invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         external
     {
-        assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutErc20();
+        assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
     }
 
     /*****************************

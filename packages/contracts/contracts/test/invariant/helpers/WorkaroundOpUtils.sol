@@ -27,7 +27,7 @@ struct EncodedAssetPublicSpend {
 
 uint256 constant PER_JOINSPLIT_VERIFY_GAS = 220_000; // TODO: make this more random
 
-library BalanceManagerOpUtils {
+library WorkaroundOpUtils {
     uint256 constant MAX_NUM_ASSETS = 100;
 
     function joinOperation(
@@ -79,5 +79,21 @@ library BalanceManagerOpUtils {
             uniqueAssets[k] = assetPublicSpend[k];
         }
         return uniqueAssets;
+    }
+
+    function calculateBundlerGasAssetPayout(
+        Operation memory op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
     }
 }

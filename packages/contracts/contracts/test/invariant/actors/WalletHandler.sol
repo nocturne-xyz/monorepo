@@ -20,8 +20,8 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
+import {WorkaroundOpUtils} from "../helpers/WorkaroundOpUtils.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
-
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
@@ -45,6 +45,7 @@ contract WalletHandler is OperationGenerator {
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
+    uint256 public ghost_totalBundlerPayout;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
@@ -83,6 +84,10 @@ contract WalletHandler is OperationGenerator {
         console.log("WalletHandler call summary:");
         console.log("-------------------");
         console.log("Successful actions", _numSuccessfulActions);
+        console.log(
+            "Bundler balance",
+            joinSplitToken.balanceOf(BUNDLER_ADDRESS)
+        );
 
         console.log("Failure reasons:");
         for (uint256 i = 0; i < _failureReasons.length; i++) {
@@ -127,10 +132,17 @@ contract WalletHandler is OperationGenerator {
         bundle.operations = new Operation[](1);
         bundle.operations[0] = op;
 
+        vm.prank(BUNDLER_ADDRESS);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // TODO: enable multiple ops in bundle
         OperationResult memory opResult = opResults[0];
+
+        if (opResult.assetsUnwrapped) {
+            uint256 bundlerPayout = WorkaroundOpUtils
+                .calculateBundlerGasAssetPayout(op, opResult);
+            ghost_totalBundlerPayout += bundlerPayout;
+        }
 
         if (bytes(opResult.failureReason).length > 0) {
             _failureReasons.push(opResult.failureReason);

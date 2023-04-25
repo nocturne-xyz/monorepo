@@ -86,6 +86,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
         // For each action of numActions, switch on transfer vs swap
         uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
+        if (runningJoinSplitAmount > 2_000_000) {
+            runningJoinSplitAmount = runningJoinSplitAmount - 2_000_000;
+        }
+
         for (uint256 i = 0; i < numActions; i++) {
             bool isTransfer = bound(args.seed, 0, 1) == 0;
             uint256 joinSplitUseAmount = bound(
@@ -153,9 +157,9 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             root: args.root,
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
-            executionGasLimit: 5_000_000,
-            maxNumRefunds: 20, // TODO: take based on number of swaps
-            gasPrice: 0, // TODO: account for gas compensation
+            executionGasLimit: 600_000,
+            maxNumRefunds: 6, // TODO: take based on number of swaps
+            gasPrice: 1, // TODO: account for gas compensation
             actions: actions,
             atomicActions: true,
             operationFailureType: OperationFailureType.NONE
@@ -226,7 +230,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 seed,
         uint256 totalAmount
     ) internal view returns (uint256[] memory) {
-        uint256 numJoinSplits = bound(seed, 1, 8); // at most 8 joinsplits
+        uint256 numJoinSplits = bound(seed, 1, 5); // at most 5 joinsplits
         uint256[] memory joinSplitAmounts = new uint256[](numJoinSplits);
 
         uint256 remainingAmount = totalAmount;

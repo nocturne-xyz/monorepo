@@ -16,7 +16,7 @@ import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} f
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import {OperationUtils} from "../../../libs/OperationUtils.sol";
-import "../helpers/BalanceManagerOpUtils.sol";
+import "../helpers/WorkaroundOpUtils.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../../libs/Types.sol";
 
@@ -267,7 +267,7 @@ contract BalanceManagerHandler is
     function _gatherReservedGasAndPayBundler(
         OperationResult memory opResult
     ) internal trackCall("gatherReservedGasAndPayBundler") {
-        Operation memory op = BalanceManagerOpUtils.joinOperation(
+        Operation memory op = WorkaroundOpUtils.joinOperation(
             _currentOpWithoutStructArrays,
             _currentOpStructArrays
         );
@@ -293,7 +293,7 @@ contract BalanceManagerHandler is
     }
 
     function _handleAllRefunds() internal trackCall("handleAllRefunds") {
-        Operation memory op = BalanceManagerOpUtils.joinOperation(
+        Operation memory op = WorkaroundOpUtils.joinOperation(
             _currentOpWithoutStructArrays,
             _currentOpStructArrays
         );
@@ -315,7 +315,7 @@ contract BalanceManagerHandler is
         returns (Operation memory)
     {
         return
-            BalanceManagerOpUtils.joinOperation(
+            WorkaroundOpUtils.joinOperation(
                 _currentOpWithoutStructArrays,
                 _currentOpStructArrays
             );
