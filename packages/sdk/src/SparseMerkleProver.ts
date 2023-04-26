@@ -3,6 +3,7 @@ import { assertOrErr, zip } from "./utils";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
+import { omitIdx, range } from "./utils/functional";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -10,7 +11,7 @@ import * as JSON from "bigint-json-serialization";
 // 2. we avoid iterating over all of the leaves
 // 3. we avoid storing the whole tree persistently
 // 4. all of the above hold in snap, where storage is a single value
-//    (ie we have to serialize all persistent single object and get/store that)
+//    (ie we have to serialize all persistent state into single object and get/set that)
 //
 // `SparseMerkleProver` works as follows:
 // 1. Start with a basic, naive merkle tree implementation with monotonic,
@@ -34,8 +35,7 @@ import * as JSON from "bigint-json-serialization";
 // have to iterate over all leaves.
 
 export interface TreeNode {
-  left?: TreeNode;
-  right?: TreeNode;
+  children: (TreeNode | undefined)[];
   hash: bigint;
 }
 
@@ -46,16 +46,27 @@ export interface SMTDump {
 }
 
 // (0 means left, 1 means right)
-type PathIndex = 0 | 1;
+type PathIndex = number;
 
 const SMT_DUMP_KEY = "SMT_DUMP";
-export const MAX_DEPTH = 32;
+export const ARITY = 4;
+export const MAX_DEPTH = 16;
 
 // TODO: turn these into constants
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
 export const ZERO_HASHES = [0n];
 for (let i = 1; i <= MAX_DEPTH; i++) {
-  ZERO_HASHES.push(poseidonBN([ZERO_HASHES[i - 1], ZERO_HASHES[i - 1]]));
+  ZERO_HASHES.push(poseidonBN(range(ARITY).map((_) => ZERO_HASHES[i - 1])));
+}
+
+const NO_CHILDREN = new Array(ARITY).fill(undefined);
+
+function zeroHashAtDepth(depth: number): bigint {
+  return ZERO_HASHES[MAX_DEPTH - depth - 1];
+}
+
+function emptyNode(depth: number): TreeNode {
+  return { hash: zeroHashAtDepth(depth), children: [...NO_CHILDREN] };
 }
 
 export class SparseMerkleProver {
@@ -66,6 +77,7 @@ export class SparseMerkleProver {
 
   constructor(kv: KVStore) {
     this.root = {
+      children: [...NO_CHILDREN],
       hash: ZERO_HASHES[0],
     };
     this.leaves = new Map();
@@ -78,10 +90,13 @@ export class SparseMerkleProver {
   }
 
   insert(index: number, leaf: bigint, include = true): void {
-    assertOrErr(index < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
+    assertOrErr(
+      index < ARITY ** MAX_DEPTH,
+      `index must be < ${ARITY}^maxDepth`
+    );
     assertOrErr(index >= this._count, "index must be >= tree count");
 
-    this.root = this.insertInner(this.root, [leaf], bitReverse(index));
+    this.root = this.insertInner(this.root, [leaf], pathIndexReverse(index));
 
     if (include) {
       this.leaves.set(index, leaf);
@@ -91,7 +106,10 @@ export class SparseMerkleProver {
   }
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
-    assertOrErr(startIndex < 2 ** MAX_DEPTH, "index must be < 2^maxDepth");
+    assertOrErr(
+      startIndex < ARITY ** MAX_DEPTH,
+      `index must be < ${ARITY}^maxDepth`
+    );
     assertOrErr(startIndex >= this._count, "index must be >= tree count");
     assertOrErr(
       leaves.length === includes.length,
@@ -101,7 +119,7 @@ export class SparseMerkleProver {
     this.root = this.insertInner(
       this.root,
       [...leaves],
-      bitReverse(startIndex)
+      pathIndexReverse(startIndex)
     );
 
     for (const [i, include] of includes.entries()) {
@@ -125,7 +143,7 @@ export class SparseMerkleProver {
     );
     const [siblings, pathIndices] = this.getSiblings(
       this.root,
-      bitReverse(index)
+      pathIndexReverse(index)
     );
 
     return {
@@ -144,17 +162,56 @@ export class SparseMerkleProver {
   }: MerkleProof): boolean {
     let currentRoot = leaf;
 
-    for (const [sibling, pathIndex] of zip(siblings, pathIndices)) {
-      assertOrErr(typeof sibling === "bigint", "invalid sibling");
-      assertOrErr(typeof pathIndex === "number", "invalid pathIndex");
-      assertOrErr(pathIndex === 0 || pathIndex === 1, "invalid pathindex");
+    for (const [currSiblings, pathIndex] of zip(siblings, pathIndices)) {
+      assertOrErr(Array.isArray(currSiblings), "invalid siblings: not array");
+      assertOrErr(
+        typeof currSiblings[0] === "bigint",
+        "invalid siblings: not bigint"
+      );
+      assertOrErr(
+        typeof pathIndex === "number",
+        "invalid pathIndex: not number"
+      );
+      assertOrErr(
+        pathIndex >= 0 && pathIndex < ARITY,
+        `invalid pathindex: not in range [0..${ARITY})`
+      );
 
-      if (pathIndex === 0) {
-        // path goes left
-        currentRoot = poseidonBN([currentRoot, sibling]);
-      } else {
-        // path goes right
-        currentRoot = poseidonBN([sibling, currentRoot]);
+      switch (pathIndex) {
+        case 0:
+          currentRoot = poseidonBN([
+            currentRoot,
+            currSiblings[0],
+            currSiblings[1],
+            currSiblings[2],
+          ]);
+          break;
+        case 1:
+          currentRoot = poseidonBN([
+            currSiblings[0],
+            currentRoot,
+            currSiblings[1],
+            currSiblings[2],
+          ]);
+          break;
+        case 2:
+          currentRoot = poseidonBN([
+            currSiblings[0],
+            currSiblings[1],
+            currentRoot,
+            currSiblings[2],
+          ]);
+          break;
+        case 3:
+          currentRoot = poseidonBN([
+            currSiblings[0],
+            currSiblings[1],
+            currSiblings[2],
+            currentRoot,
+          ]);
+          break;
+        default:
+          throw new Error("in `verifyProof`: unreachable!");
       }
     }
 
@@ -197,19 +254,20 @@ export class SparseMerkleProver {
     // we'll need a leaf to generate a proof if:
     // 1. it's in the leaves map
     // 2. it's the sibling of a leaf in the leaves map
-    // 3. it's the last leaf in the tree and the tree has an odd number of leaves
-    //    (in this case, if we were to remove the last leaf, prune, and then append another leaf,
-    //     we'd need the pruned leaf to generate a proof for the new leaf)
+    // 3. the tree's total leaf count is not a multiple of `ARITY` and the leaf is in the rightmost depth-1 subtree
+    //    (in this case, if we were to remove the leaf, prune, and then append another leaf,
+    //     we'd need the pruned leaf because it's a sibling of the leaf we just added)
     // these cases are not mutually exclusive, but if at least one of them are true,
     // then we can't prune the leaf
     //
-    // we can check the second case by checking the `leaves` map for the sibling of the current leaf, whose
-    // index will be the current index with the least significant bit flipped
+    // we can check the second case by checking the `leaves` map for a sibling of the current leaf, whose
+    // index will be the current index with any of the two least significant bits flipped
     if (
       depth === MAX_DEPTH &&
       (this.leaves.has(index) ||
-        this.leaves.has(index ^ 1) ||
-        (index === this._count - 1 && this._count % 2 === 1))
+        range(1, ARITY).some((mask) => this.leaves.has(index ^ mask)) ||
+        (this._count % ARITY !== 0 &&
+          this._count - index <= this._count % ARITY))
     ) {
       return 1;
     }
@@ -217,20 +275,21 @@ export class SparseMerkleProver {
     // if we get here, two cases:
     // 1. we're at a leaf. if we are, then we can safely prune it because we passed previous checks
     // 2. we're at an internal node. if we are, recurse and count the number of leaves in our child trees we can't prune
-    const leftCount = root.left
-      ? this.pruneHelper(root.left, depth + 1, index << 1)
-      : 0;
-    const rightCount = root.right
-      ? this.pruneHelper(root.right, depth + 1, (index << 1) + 1)
-      : 0;
+    const childCount = root.children.reduce(
+      (count, child, pathIndex) =>
+        count +
+        (child
+          ? this.pruneHelper(child, depth + 1, (index << 2) + pathIndex)
+          : 0),
+      0
+    );
 
-    // if there are no leaves in either of our child trees that we can't prune, then we can prune this node too
-    if (leftCount + rightCount === 0) {
-      root.left = undefined;
-      root.right = undefined;
+    // if there are no leaves in any of our child trees that we can't prune, then we can prune this node too
+    if (childCount === 0) {
+      root.children = [...NO_CHILDREN];
     }
 
-    return leftCount + rightCount;
+    return childCount;
   }
 
   // returns [hashes, pathIndices]
@@ -240,36 +299,27 @@ export class SparseMerkleProver {
     root: TreeNode,
     pathMask: number,
     depth = 0
-  ): [bigint[], PathIndex[]] {
+  ): [bigint[][], PathIndex[]] {
     if (depth === MAX_DEPTH) {
       return [[], []];
     }
 
-    if (pathMask & 1) {
-      // path goes to the right => get the left sibling
-      // `root.right` is guaranteed to exist because we checked `this.leaves.has(index)`
-      const [siblings, pathIndices] = this.getSiblings(
-        root.right!,
-        pathMask >> 1,
-        depth + 1
-      );
-      return [
-        [...siblings, root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1]],
-        [...pathIndices, 1],
-      ];
-    } else {
-      // path goes to the left => get the right sibling
-      // `root.left` is guaranteed to exist because we checked `this.leaves.has(index)`
-      const [siblings, pathIndices] = this.getSiblings(
-        root.left!,
-        pathMask >> 1,
-        depth + 1
-      );
-      return [
-        [...siblings, root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1]],
-        [...pathIndices, 0],
-      ];
-    }
+    const pathIndex = pathMask & 0b11;
+    const [siblings, pathIndices] = this.getSiblings(
+      root.children[pathIndex]!,
+      pathMask >> 2,
+      depth + 1
+    );
+
+    return [
+      [
+        ...siblings,
+        omitIdx(root.children, pathIndex).map((child) =>
+          child ? child.hash : zeroHashAtDepth(depth)
+        ),
+      ],
+      [...pathIndices, pathIndex],
+    ];
   }
 
   private insertInner(
@@ -282,44 +332,31 @@ export class SparseMerkleProver {
 
     // we're at the leaf
     if (depth === MAX_DEPTH) {
-      return { hash: leaves.shift()! };
+      return { hash: leaves.shift()!, children: [...NO_CHILDREN] };
     }
 
     // we're not at the leaf
-    if (pathMask & 1) {
-      // right
-      root.right = this.insertInner(
-        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
-        leaves,
-        pathMask >> 1,
-        depth + 1
-      );
-    } else {
-      // left
-      root.left = this.insertInner(
-        root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
-        leaves,
-        pathMask >> 1,
-        depth + 1
-      );
+    let pathIndex = pathMask & 0b11;
+    root.children[pathIndex] = this.insertInner(
+      root.children[pathIndex] ?? emptyNode(depth),
+      leaves,
+      pathMask >> 2,
+      depth + 1
+    );
 
-      // if there are still leaves to insert, then continue to the right subtree
-      if (leaves.length > 0) {
-        root.right = this.fillLeft(
-          root.right ?? {
-            hash: ZERO_HASHES[MAX_DEPTH - depth - 1],
-          },
-          leaves,
-          depth + 1
-        );
-      }
+    while (leaves.length > 0 && ++pathIndex < ARITY) {
+      root.children[pathIndex] = this.fillLeft(
+        root.children[pathIndex] ?? emptyNode(depth),
+        leaves,
+        depth + 1
+      );
     }
 
-    root.hash = poseidonBN([
-      root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
-      root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
-    ]);
-
+    root.hash = poseidonBN(
+      root.children.map((child) =>
+        child ? child.hash : zeroHashAtDepth(depth)
+      )
+    );
     return root;
   }
 
@@ -328,39 +365,30 @@ export class SparseMerkleProver {
     if (leaves.length === 0) return root;
 
     if (depth === MAX_DEPTH) {
-      return { hash: leaves.shift()! };
+      return { hash: leaves.shift()!, children: [...NO_CHILDREN] };
     }
 
-    root.left = this.fillLeft(
-      root.left ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
-      leaves,
-      depth + 1
-    );
-
-    // this branch is technically unnecessary
-    // but we include it so that the structure that results from a batch insert
-    // is the same as the structure that results from inserting one by one
-    if (leaves.length > 0) {
-      root.right = this.fillLeft(
-        root.right ?? { hash: ZERO_HASHES[MAX_DEPTH - depth - 1] },
+    let pathIndex = 0;
+    do {
+      root.children[pathIndex] = this.fillLeft(
+        root.children[pathIndex] ?? emptyNode(depth),
         leaves,
         depth + 1
       );
-    }
+    } while (leaves.length > 0 && ++pathIndex < ARITY);
 
-    root.hash = poseidonBN([
-      root.left?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
-      root.right?.hash ?? ZERO_HASHES[MAX_DEPTH - depth - 1],
-    ]);
-
+    root.hash = poseidonBN(
+      root.children.map((child) =>
+        child ? child.hash : zeroHashAtDepth(depth)
+      )
+    );
     return root;
   }
 }
 
-// a 32-bit bit-reversal
-// from https://stackoverflow.com/a/60227327
-function bitReverse(x: number): number {
-  x = ((x >> 1) & 0x55555555) | ((x & 0x55555555) << 1);
+// reverse order of the 2-bit chunks in binary representation of `x`
+// https://stackoverflow.com/a/60227327, but with the first line removed
+function pathIndexReverse(x: number): number {
   x = ((x >> 2) & 0x33333333) | ((x & 0x33333333) << 2);
   x = ((x >> 4) & 0x0f0f0f0f) | ((x & 0x0f0f0f0f) << 4);
   x = ((x >> 8) & 0x00ff00ff) | ((x & 0x00ff00ff) << 8);

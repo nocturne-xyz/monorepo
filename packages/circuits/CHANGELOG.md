@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- make commitment tree quaternary:
+  - add slicing util templates to lib
+  - decode `encodedPathAndHash` using LE ordering
+  - add `BitsToTwoBitLimbs` template to lib for getting path indices which are now 2-bit numbers
+  - circuit is now back under 2^15 (~28K constraints)
 - add x-coordinate of PK to hash in schnorr sig
 - update verifier contract generator to use arrays instead of `Proof` structs
 - force viewing key to be an element of Baby Jubjub scalar field with compconstant

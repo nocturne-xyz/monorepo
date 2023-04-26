@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update fixture scripts
 - `genJoinSplitTestCase` prints out proving time
 - add `encRandomness` to `genJoinSplitTestCase`
 - add `encSenderCanonAddrC1X`, `encSenderCanonAddrC2X` to public signals
