@@ -20,7 +20,6 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
-import {WorkaroundOpUtils} from "../helpers/WorkaroundOpUtils.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -138,8 +137,10 @@ contract WalletHandler is OperationGenerator {
         OperationResult memory opResult = opResults[0];
 
         if (opResult.assetsUnwrapped) {
-            uint256 bundlerPayout = WorkaroundOpUtils
-                .calculateBundlerGasAssetPayout(op, opResult);
+            uint256 bundlerPayout = _calculateBundlerGasAssetPayout(
+                op,
+                opResult
+            );
             ghost_totalBundlerPayout += bundlerPayout;
         }
 
@@ -211,5 +212,23 @@ contract WalletHandler is OperationGenerator {
         returns (uint256[] memory)
     {
         return _receivedErc1155Ids.getIds();
+    }
+
+    // ______VIEW______
+    // Workaround for OperationUtils version only being for op calldata
+    function _calculateBundlerGasAssetPayout(
+        Operation memory op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
     }
 }
