@@ -308,8 +308,8 @@ function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
 
   // account for special case
   const k = prover.count() % ARITY;
-  //@ts-ignore
   const needsAdditionalLeaves =
+    //@ts-ignore
     k > 0 && range(k).every((i) => !prover.leaves.has(prover.count - k + i));
   if (needsAdditionalLeaves) {
     res += k;

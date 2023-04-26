@@ -56,7 +56,7 @@ export const MAX_DEPTH = 16;
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
 export const ZERO_HASHES = [0n];
 for (let i = 1; i <= MAX_DEPTH; i++) {
-  ZERO_HASHES.push(poseidonBN(range(ARITY).map((_) => ZERO_HASHES[i - 1])));
+  ZERO_HASHES.push(poseidonBN(new Array(ARITY).fill(ZERO_HASHES[i - 1])));
 }
 
 const NO_CHILDREN = new Array(ARITY).fill(undefined);
