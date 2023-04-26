@@ -214,7 +214,7 @@ contract WalletHandler is OperationGenerator {
         return _receivedErc1155Ids.getIds();
     }
 
-    // ______VIEW______
+    // ______UTILS______
     // Workaround for OperationUtils version only being for op calldata
     function _calculateBundlerGasAssetPayout(
         Operation memory op,
