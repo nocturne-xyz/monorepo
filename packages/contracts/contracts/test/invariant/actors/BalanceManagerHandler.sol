@@ -59,6 +59,7 @@ contract BalanceManagerHandler is
     OperationWithoutStructArrays internal _currentOpWithoutStructArrays;
     OperationStructArrays internal _currentOpStructArrays;
     OperationResult internal _currentOpResult;
+    string[] internal _reverts;
 
     constructor(
         Wallet _wallet,
@@ -103,6 +104,11 @@ contract BalanceManagerHandler is
         );
         console.log("handleAllRefunds", _calls["handleAllRefunds"]);
         console.log("no-op", _calls["no-op"]);
+
+        console.log("Reverts");
+        for (uint256 i = 0; i < _reverts.length; i++) {
+            console.log(_reverts[i]);
+        }
     }
 
     function call(uint256 seed, OperationResult memory opResult) public {
@@ -234,10 +240,16 @@ contract BalanceManagerHandler is
         );
 
         // Make call
-        balanceManager.processJoinSplitsReservingFee(
-            op,
-            PER_JOINSPLIT_VERIFY_GAS
-        );
+        try
+            balanceManager.processJoinSplitsReservingFee(
+                op,
+                PER_JOINSPLIT_VERIFY_GAS
+            )
+        {} catch (bytes memory reason) {
+            _reverts.push(string(reason));
+            lastCall = "no-op";
+            return;
+        }
 
         // Save operation result details
         _currentOpWithoutStructArrays = OperationWithoutStructArrays({
@@ -284,6 +296,9 @@ contract BalanceManagerHandler is
             PER_JOINSPLIT_VERIFY_GAS,
             BUNDLER_ADDRESS
         );
+
+        delete _currentOpWithoutStructArrays;
+        delete _currentOpStructArrays;
 
         _currentOpResult = opResult;
 

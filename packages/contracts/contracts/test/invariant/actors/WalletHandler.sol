@@ -49,7 +49,6 @@ contract WalletHandler is OperationGenerator {
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
-    mapping(string => uint256) internal _reverts;
     uint256 internal _numSuccessfulActions;
     string[] internal _failureReasons;
 

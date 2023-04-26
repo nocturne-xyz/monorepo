@@ -77,6 +77,8 @@ contract BalanceManagerInvariants is Test {
             swapErc1155
         );
 
+        depositErc20.reserveTokens(address(wallet), type(uint256).max);
+
         bytes4[] memory selectors = new bytes4[](1);
         selectors[0] = balanceManagerHandler.call.selector;
 
@@ -98,6 +100,7 @@ contract BalanceManagerInvariants is Test {
         if (lastCall == "addToAssetPrefill") {
             _assertBalancesMatchPrefills();
         } else if (lastCall == "processJoinSplitsReservingFee") {
+            // TODO: this doesn't account for gas comp, assumes all joinsplits requested
             Operation memory op = balanceManagerHandler
                 .ghost_lastProcessedOperation();
             EncodedAssetPublicSpend[]
@@ -112,6 +115,8 @@ contract BalanceManagerInvariants is Test {
                     address decodedAssetAddr,
                     uint256 decodedId
                 ) = AssetUtils.decodeAsset(assetPublicSpend.encodedAsset);
+
+                // TODO: if joinsplit erc20, subtract op.maxGasAssetCost()
 
                 if (decodedAssetType == AssetType.ERC20) {
                     assertEq(
