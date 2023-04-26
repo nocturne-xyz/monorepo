@@ -15,7 +15,7 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 15000 --exit -g SparseMerkleProver"
+    "test:unit": "mocha --require ts-node/register test/** --timeout 15000 --exit"
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
