@@ -179,6 +179,12 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
     }
 
+    function invariant_protocol_handlerAlwaysEndsWithPrefillBalances()
+        external
+    {
+        assert_protocol_handlerAlwaysEndsWithPrefillBalances();
+    }
+
     /*****************************
      * Deposits ETH
      *****************************/

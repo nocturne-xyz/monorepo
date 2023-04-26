@@ -99,7 +99,8 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
             value = bound(
                 seed,
                 0,
-                (type(uint256).max - depositErc20.totalSupply()) / 1_000_000
+                (type(uint256).max - depositErc20.totalSupply()) /
+                    1_000_000_000_000
             );
             depositErc20.reserveTokens(OWNER, value);
 
@@ -115,7 +116,7 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
                 seed,
                 0,
                 (type(uint256).max - depositErc1155.totalSupply(seed)) /
-                    1_000_000
+                    1_000_000_000_000
             );
             depositErc1155.reserveTokens(OWNER, seed, value);
 
