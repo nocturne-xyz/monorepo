@@ -50,6 +50,10 @@ struct GeneratedOperationMetadata {
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
+    uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 500_000;
+    uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
+    uint256 constant DEFAULT_MAX_NUM_REFUNDS = 6;
+
     address public TRANSFER_RECIPIENT_ADDRESS = address(0x3);
 
     uint256 nullifierCount = 0;
@@ -84,12 +88,21 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         _meta.isTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
 
-        // For each action of numActions, switch on transfer vs swap
-        uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount; // TODO: subtract gas
-        if (runningJoinSplitAmount > 2_000_000) {
-            runningJoinSplitAmount = runningJoinSplitAmount - 2_000_000;
+        uint256 gasToReserve = _opMaxGasAssetCost(
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            DEFAULT_EXECUTION_GAS_LIMIT,
+            joinSplitPublicSpends.length,
+            DEFAULT_MAX_NUM_REFUNDS
+        );
+
+        bool compensateBundler = false;
+        uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount;
+        if (runningJoinSplitAmount > gasToReserve) {
+            runningJoinSplitAmount = runningJoinSplitAmount - gasToReserve;
+            compensateBundler = true;
         }
 
+        // For each action of numActions, switch on transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
             bool isTransfer = bound(args.seed, 0, 1) == 0;
             uint256 joinSplitUseAmount = bound(
@@ -105,24 +118,23 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 joinSplitUseAmount = runningJoinSplitAmount;
             }
 
-            runningJoinSplitAmount -= joinSplitUseAmount;
-
             if (isTransfer) {
-                TransferRequest memory transferRequest = TransferRequest({
+                _meta.transfers[i] = TransferRequest({
                     token: args.joinSplitToken,
                     recipient: TRANSFER_RECIPIENT_ADDRESS, // TODO: track recipient
                     amount: joinSplitUseAmount
                 });
-                actions[i] = NocturneUtils.formatTransferAction(
-                    transferRequest
-                );
-                _meta.transfers[i] = transferRequest;
                 _meta.isTransfer[i] = true;
+
+                actions[i] = NocturneUtils.formatTransferAction(
+                    _meta.transfers[i]
+                );
             } else {
-                SwapRequest memory swapRequest = _createRandomSwapRequest(
+                _meta.swaps[i + 1] = _createRandomSwapRequest(
                     joinSplitUseAmount,
                     args
                 );
+                _meta.isSwap[i + 1] = true;
 
                 // Kludge to satisfy stack limit
                 SimpleERC20Token inToken = args.joinSplitToken;
@@ -133,9 +145,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     encodedFunction: abi.encodeWithSelector(
                         inToken.approve.selector,
                         address(swapper),
-                        swapRequest.assetInAmount
+                        joinSplitUseAmount
                     )
                 });
+
+                // Kludge to satisfy stack limit
+                SwapRequest memory swapRequest = _meta.swaps[i + 1];
+
                 actions[i] = approveAction;
                 actions[i + 1] = Action({
                     contractAddress: address(swapper),
@@ -145,10 +161,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     )
                 });
 
-                _meta.swaps[i + 1] = swapRequest;
-                _meta.isSwap[i + 1] = true;
                 i += 1; // additional +1 to skip past swap action at i+1
             }
+
+            runningJoinSplitAmount -= joinSplitUseAmount;
         }
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
@@ -157,9 +173,9 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             root: args.root,
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
-            executionGasLimit: 600_000,
-            maxNumRefunds: 6, // TODO: take based on number of swaps
-            gasPrice: 1, // TODO: account for gas compensation
+            executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
+            maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps
+            gasPrice: compensateBundler ? 1 : 0,
             actions: actions,
             atomicActions: true,
             operationFailureType: OperationFailureType.NONE
@@ -259,5 +275,19 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
             seed++;
         }
+    }
+
+    // Copied from Types.sol and built around not needing op beforehand
+    function _opMaxGasAssetCost(
+        uint256 perJoinSplitVerifyGas,
+        uint256 executionGasLimit,
+        uint256 numJoinSplits,
+        uint256 maxNumRefunds
+    ) internal pure returns (uint256) {
+        return
+            executionGasLimit +
+            ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
+                numJoinSplits) +
+            ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * maxNumRefunds);
     }
 }
