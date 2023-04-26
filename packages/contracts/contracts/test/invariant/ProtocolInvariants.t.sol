@@ -125,9 +125,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         bytes4[] memory walletHandlerSelectors = new bytes4[](1);
         walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
-        bytes4[] memory handlerHandlerSelectors = new bytes4[](1);
+        bytes4[] memory handlerHandlerSelectors = new bytes4[](2);
         handlerHandlerSelectors[0] = handlerHandler.addToAssetPrefill.selector;
-        // handlerHandlerSelectors[1] = handlerHandler.fillBatchWithZeros.selector;
+        handlerHandlerSelectors[1] = handlerHandler.fillBatchWithZeros.selector;
 
         targetContract(address(depositManagerHandler));
         targetSelector(

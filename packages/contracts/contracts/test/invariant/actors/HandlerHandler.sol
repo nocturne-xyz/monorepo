@@ -23,6 +23,7 @@ import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} f
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
+import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import "../../../libs/Types.sol";
 
 contract HandlerHandler is CommonBase, StdCheats, StdUtils {
@@ -68,6 +69,7 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
         console.log("-------------------");
         console.log("addToAssetPrefill", _calls["addToAssetPrefill"]);
         console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
+        console.log("no-op", _calls["no-op"]);
         console.log("-------------------");
         console.log(
             "Handler erc20 prefill",
@@ -140,7 +142,7 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function fillBatchWithZeros() external trackCall("fillBatchWithZeros") {
-        if (handler.totalCount() - handler.count() != 0) {
+        if (handler.totalCount() % TreeUtils.BATCH_SIZE != 0) {
             vm.prank(subtreeBatchFiller);
             handler.fillBatchWithZeros();
         } else {
