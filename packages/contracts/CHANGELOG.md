@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- check for compensation in `invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20` and add new test case for checking bundler balance equals tracked
+- add bundler compensation to `OperationGenerator.sol`
+- add unit test for `AssetUtils` encode and decode after bug fix
+- fix `AssetUtils` bit shift bug where `encodedAssetAddr` was being incorrectly formatted and causing high asset values to produce wrong decodings
 - add comment documenting retrieve deposit griefing assumption
 - add invariant RE bottom log2(batch_size) bits of `OffchainMerkle.count`
 - require `OffchainMerkle.insertNoteCommitments` ncs < scalar field

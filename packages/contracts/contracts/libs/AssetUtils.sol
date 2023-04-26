@@ -14,8 +14,7 @@ library AssetUtils {
 
     uint256 constant MASK_111 = 7;
     uint256 constant MASK_11 = 3;
-    uint256 constant MIDDLE_250_TO_252_MASK = (MASK_111 << 250);
-    uint256 constant TOP_THREE_MASK = (MASK_111 << 253);
+    uint256 constant BITS_250_TO_252_MASK = (MASK_111 << 250);
     uint256 constant BOTTOM_253_MASK = (1 << 253) - 1;
     uint256 constant BOTTOM_160_MASK = (1 << 160) - 1;
 
@@ -24,7 +23,7 @@ library AssetUtils {
         address assetAddr,
         uint256 id
     ) internal pure returns (EncodedAsset memory encodedAsset) {
-        uint256 encodedAssetId = id & ((1 << 253) - 1);
+        uint256 encodedAssetId = id & BOTTOM_253_MASK;
         uint256 assetTypeBits;
         if (assetType == AssetType.ERC20) {
             assetTypeBits = uint256(0);
@@ -36,7 +35,7 @@ library AssetUtils {
             revert("Invalid assetType");
         }
 
-        uint256 encodedAssetAddr = ((id >> 3) & MIDDLE_250_TO_252_MASK) |
+        uint256 encodedAssetAddr = ((id >> 3) & BITS_250_TO_252_MASK) |
             (assetTypeBits << 160) |
             (uint256(uint160(assetAddr)));
 
@@ -55,7 +54,7 @@ library AssetUtils {
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
         id =
-            ((encodedAsset.encodedAssetAddr & MIDDLE_250_TO_252_MASK) << 3) |
+            ((encodedAsset.encodedAssetAddr & BITS_250_TO_252_MASK) << 3) |
             encodedAsset.encodedAssetId;
         assetAddr = address(
             uint160(encodedAsset.encodedAssetAddr & BOTTOM_160_MASK)

@@ -264,4 +264,11 @@ contract InvariantsBase is Test {
             );
         }
     }
+
+    function assert_operation_bundlerBalanceMatchesTracked() internal {
+        assertEq(
+            depositErc20.balanceOf(address(walletHandler.BUNDLER_ADDRESS())),
+            walletHandler.ghost_totalBundlerPayout()
+        );
+    }
 }
