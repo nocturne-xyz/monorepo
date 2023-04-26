@@ -99,7 +99,7 @@ describe("subtree updater", async () => {
     await server.stop();
 
     // @ts-ignore
-    const root = server.updater.tree.root();
+    const root = server.updater.tree.root;
     // @ts-ignore
     const nextBlockToIndex = server.updater.nextBlockToIndex;
     // @ts-ignore
@@ -113,7 +113,7 @@ describe("subtree updater", async () => {
     await server.init();
 
     // @ts-ignore
-    const recoveredRoot = server.updater.tree.root();
+    const recoveredRoot = server.updater.tree.root;
     // @ts-ignore
     const recoveredNextBlockToIndex = server.updater.nextBlockToIndex;
     // @ts-ignore

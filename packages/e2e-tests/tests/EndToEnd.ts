@@ -149,6 +149,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const signed = nocturneWalletSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
+    //@ts-ignore
+    console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
+
     await submitAndProcessOperation(operation);
     // wait for subgraph / subtree updater to catch up
     await sleep(7_000);
