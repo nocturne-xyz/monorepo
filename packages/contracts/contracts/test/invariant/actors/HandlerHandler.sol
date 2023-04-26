@@ -28,6 +28,8 @@ import "../../../libs/Types.sol";
 contract HandlerHandler is CommonBase, StdCheats, StdUtils {
     using LibTokenIdSet for TokenIdSet;
 
+    address constant OWNER = address(0x1);
+
     Handler public handler;
     address subtreeBatchFiller;
 
@@ -66,19 +68,40 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
         console.log("-------------------");
         console.log("addToAssetPrefill", _calls["addToAssetPrefill"]);
         console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
+        console.log("-------------------");
+        console.log(
+            "Handler erc20 prefill",
+            depositErc20.balanceOf(address(handler))
+        );
+        console.log("Handler erc1155 prefills");
+        uint256[] memory ids = ghost_prefilledErc1155Ids();
+        for (uint256 i = 0; i < ids.length; i++) {
+            console.log(
+                "Erc1155 id",
+                ids[i],
+                " -- balance",
+                depositErc1155.balanceOf(address(handler), ids[i])
+            );
+        }
     }
 
     // ______EXTERNAL______
-    function _addToAssetPrefill(
+    function addToAssetPrefill(
         uint256 seed
-    ) internal trackCall("addToAssetPrefill") {
+    ) external trackCall("addToAssetPrefill") {
         uint256 assetType = bound(seed, 0, 1);
+
+        vm.startPrank(OWNER);
 
         EncodedAsset memory encodedAsset;
         uint256 value;
         if (assetType == 0) {
-            value = bound(seed, 0, 1_000_000); // TODO: make these bounds better
-            depositErc20.reserveTokens(address(this), value);
+            value = bound(
+                seed,
+                0,
+                (type(uint256).max - depositErc20.totalSupply()) / 1_000_000
+            );
+            depositErc20.reserveTokens(OWNER, value);
 
             encodedAsset = AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -88,8 +111,13 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
 
             AssetUtils.approveAsset(encodedAsset, address(handler), value);
         } else {
-            value = bound(seed, 0, 1_000_000);
-            depositErc1155.reserveTokens(address(this), seed, value);
+            value = bound(
+                seed,
+                0,
+                (type(uint256).max - depositErc1155.totalSupply(seed)) /
+                    1_000_000
+            );
+            depositErc1155.reserveTokens(OWNER, seed, value);
 
             encodedAsset = AssetUtils.encodeAsset(
                 AssetType.ERC1155,
@@ -102,16 +130,21 @@ contract HandlerHandler is CommonBase, StdCheats, StdUtils {
             _depositErc1155IdSet.add(seed);
         }
 
-        vm.prank(handler.owner());
         handler.addToAssetPrefill(encodedAsset, value);
+
+        vm.stopPrank();
 
         bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
         ghost_prefilledAssetBalances[assetHash] += value;
     }
 
-    function fillBatchWithZeros() external {
-        vm.prank(subtreeBatchFiller);
-        handler.fillBatchWithZeros();
+    function fillBatchWithZeros() external trackCall("fillBatchWithZeros") {
+        if (handler.totalCount() - handler.count() != 0) {
+            vm.prank(subtreeBatchFiller);
+            handler.fillBatchWithZeros();
+        } else {
+            lastCall = "no-op";
+        }
     }
 
     // ______VIEW______

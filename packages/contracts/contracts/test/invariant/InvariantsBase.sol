@@ -7,6 +7,7 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
 import {WalletHandler} from "./actors/WalletHandler.sol";
+import {HandlerHandler} from "./actors/HandlerHandler.sol";
 import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
@@ -26,11 +27,14 @@ import "../../libs/Types.sol";
 contract InvariantsBase is Test {
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
+    address constant OWNER = address(0x1);
+    address constant SUBTREE_BATCH_FILLER_ADDRESS = address(0x2);
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
     DepositManagerHandler public depositManagerHandler;
     WalletHandler public walletHandler;
+    HandlerHandler public handlerHandler;
 
     Wallet public wallet;
     Handler public handler;
@@ -49,6 +53,7 @@ contract InvariantsBase is Test {
     function print_callSummary() internal view {
         depositManagerHandler.callSummary();
         walletHandler.callSummary();
+        handlerHandler.callSummary();
     }
 
     // _______________PROTOCOL_WIDE_______________

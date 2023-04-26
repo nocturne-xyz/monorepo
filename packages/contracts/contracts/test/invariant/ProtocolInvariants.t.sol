@@ -8,6 +8,7 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {InvariantsBase} from "./InvariantsBase.sol";
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
 import {WalletHandler} from "./actors/WalletHandler.sol";
+import {HandlerHandler} from "./actors/HandlerHandler.sol";
 import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
@@ -59,10 +60,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc721,
             depositErc1155
         );
-        depositErc20.reserveTokens(
-            address(depositManagerHandler),
-            type(uint256).max
-        );
 
         swapper = new TokenSwapper();
         swapErc20 = new SimpleERC20Token();
@@ -98,6 +95,18 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
 
+        handler.setSubtreeBatchFillerPermission(
+            address(SUBTREE_BATCH_FILLER_ADDRESS),
+            true
+        );
+
+        handlerHandler = new HandlerHandler(
+            handler,
+            SUBTREE_BATCH_FILLER_ADDRESS,
+            depositErc20,
+            depositErc1155
+        );
+
         bytes4[] memory depositManagerHandlerSelectors = new bytes4[](4);
         depositManagerHandlerSelectors[0] = depositManagerHandler
             .instantiateDepositETH
@@ -116,6 +125,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
         bytes4[] memory walletHandlerSelectors = new bytes4[](1);
         walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
+        bytes4[] memory handlerHandlerSelectors = new bytes4[](1);
+        handlerHandlerSelectors[0] = handlerHandler.addToAssetPrefill.selector;
+        // handlerHandlerSelectors[1] = handlerHandler.fillBatchWithZeros.selector;
+
         targetContract(address(depositManagerHandler));
         targetSelector(
             FuzzSelector({
@@ -132,6 +145,14 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
+        targetContract(address(handlerHandler));
+        targetSelector(
+            FuzzSelector({
+                addr: address(handlerHandler),
+                selectors: handlerHandlerSelectors
+            })
+        );
+
         excludeSender(walletHandler.BUNDLER_ADDRESS());
         excludeSender(walletHandler.TRANSFER_RECIPIENT_ADDRESS());
         excludeSender(address(depositManagerHandler));
@@ -140,6 +161,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         excludeSender(address(handler));
         excludeSender(address(depositManager));
         excludeSender(address(weth));
+
+        wallet.transferOwnership(OWNER);
+        handler.transferOwnership(OWNER);
     }
 
     function invariant_callSummary() external {

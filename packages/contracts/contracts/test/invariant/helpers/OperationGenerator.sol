@@ -54,7 +54,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 6;
 
-    address public TRANSFER_RECIPIENT_ADDRESS = address(0x3);
+    address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
 
     uint256 nullifierCount = 0;
 

@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ISimpleToken.sol";
 
 contract SimpleERC1155Token is ISimpleERC1155Token, ERC1155, Ownable {
+    mapping(uint256 => uint256) public _totalSupply;
+
     constructor() ERC1155("Simple") {}
 
     function reserveTokens(
@@ -15,5 +17,10 @@ contract SimpleERC1155Token is ISimpleERC1155Token, ERC1155, Ownable {
         uint256 amount
     ) external virtual override {
         _mint(account, id, amount, "");
+        _totalSupply[id] += amount;
+    }
+
+    function totalSupply(uint256 id) external view returns (uint256) {
+        return _totalSupply[id];
     }
 }
