@@ -296,7 +296,7 @@ contract BalanceManagerTest is Test {
 
         // gasPrice * (providedExecutionGas + gasPerJoinSplit + gasPerRefund)
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
@@ -343,7 +343,7 @@ contract BalanceManagerTest is Test {
 
         // gasPrice * (executionGas + joinSplitGas + refundGas)
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
@@ -389,7 +389,7 @@ contract BalanceManagerTest is Test {
 
         // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
         // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
@@ -460,7 +460,7 @@ contract BalanceManagerTest is Test {
         // gasPrice * (executionGas + joinSplitGas + refundGas)
         // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
         // NOTE: we only deposited 50M
-        uint256 totalFeeReserved = balanceManager.calculateOpGasAssetCost(
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );

@@ -21,7 +21,6 @@ import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} from "../helpers/OperationGenerator.sol";
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
-
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
@@ -30,7 +29,7 @@ contract WalletHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
 
     uint256 constant BUNDLER_PRIVKEY = 2;
-    address BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
+    address public BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
 
     // ______PUBLIC______
     Wallet public wallet;
@@ -45,10 +44,10 @@ contract WalletHandler is OperationGenerator {
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
+    uint256 public ghost_totalBundlerPayout;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
-    mapping(string => uint256) internal _reverts;
     uint256 internal _numSuccessfulActions;
     string[] internal _failureReasons;
 
@@ -83,6 +82,10 @@ contract WalletHandler is OperationGenerator {
         console.log("WalletHandler call summary:");
         console.log("-------------------");
         console.log("Successful actions", _numSuccessfulActions);
+        console.log(
+            "Bundler balance",
+            joinSplitToken.balanceOf(BUNDLER_ADDRESS)
+        );
 
         console.log("Failure reasons:");
         for (uint256 i = 0; i < _failureReasons.length; i++) {
@@ -111,7 +114,9 @@ contract WalletHandler is OperationGenerator {
                 GenerateOperationArgs({
                     seed: seed,
                     wallet: wallet,
-                    handler: handler,
+                    handler: address(handler),
+                    root: handler.root(),
+                    statefulNfGeneration: false,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
@@ -125,10 +130,19 @@ contract WalletHandler is OperationGenerator {
         bundle.operations = new Operation[](1);
         bundle.operations[0] = op;
 
+        vm.prank(BUNDLER_ADDRESS);
         OperationResult[] memory opResults = wallet.processBundle(bundle);
 
         // TODO: enable multiple ops in bundle
         OperationResult memory opResult = opResults[0];
+
+        if (opResult.assetsUnwrapped) {
+            uint256 bundlerPayout = _calculateBundlerGasAssetPayout(
+                op,
+                opResult
+            );
+            ghost_totalBundlerPayout += bundlerPayout;
+        }
 
         if (bytes(opResult.failureReason).length > 0) {
             _failureReasons.push(opResult.failureReason);
@@ -198,5 +212,23 @@ contract WalletHandler is OperationGenerator {
         returns (uint256[] memory)
     {
         return _receivedErc1155Ids.getIds();
+    }
+
+    // ______UTILS______
+    // Workaround for OperationUtils version only being for op calldata
+    function _calculateBundlerGasAssetPayout(
+        Operation memory op,
+        OperationResult memory opResult
+    ) internal pure returns (uint256) {
+        uint256 handleJoinSplitGas = op.joinSplits.length *
+            GAS_PER_JOINSPLIT_HANDLE;
+        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+
+        return
+            op.gasPrice *
+            (opResult.verificationGas +
+                handleJoinSplitGas +
+                opResult.executionGas +
+                handleRefundGas);
     }
 }

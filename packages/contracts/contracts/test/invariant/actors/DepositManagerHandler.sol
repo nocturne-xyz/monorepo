@@ -103,8 +103,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     modifier trackCall(bytes32 key) {
         lastCall = key;
-        _calls[key]++;
         _;
+        _calls[lastCall]++;
     }
 
     receive() external payable {}
@@ -142,6 +142,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             "completeDepositErc20 reverts",
             _reverts["completeDepositErc20"]
         );
+        console.log("no-op", _calls["no-op"]);
     }
 
     function instantiateDepositETH(
@@ -182,8 +183,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 amount
     ) public createActor trackCall("instantiateDepositErc20") {
         // Bound deposit amount
-        amount = bound(amount, 0, erc20.balanceOf(address(this)));
-        erc20.transfer(_currentActor, amount);
+        amount = bound(amount, 0, type(uint256).max - erc20.totalSupply());
+        erc20.reserveTokens(_currentActor, amount);
         _depositSizes.push(amount);
 
         // Deal gas compensation

@@ -14,28 +14,30 @@ library AssetUtils {
 
     uint256 constant MASK_111 = 7;
     uint256 constant MASK_11 = 3;
-    uint256 constant ENCODED_ASSET_ID_IN_ADDR_MASK = MASK_111 << 250;
-    uint256 constant ENCODED_ASSET_ADDR_MASK = (1 << 160) - 1;
+    uint256 constant BITS_250_TO_252_MASK = (MASK_111 << 250);
+    uint256 constant BOTTOM_253_MASK = (1 << 253) - 1;
+    uint256 constant BOTTOM_160_MASK = (1 << 160) - 1;
 
     function encodeAsset(
         AssetType assetType,
         address assetAddr,
         uint256 id
     ) internal pure returns (EncodedAsset memory encodedAsset) {
-        uint256 encodedAssetId = (id << 3) >> 3;
-        uint256 asset_type_bits;
+        uint256 encodedAssetId = id & BOTTOM_253_MASK;
+        uint256 assetTypeBits;
         if (assetType == AssetType.ERC20) {
-            asset_type_bits = uint256(0);
+            assetTypeBits = uint256(0);
         } else if (assetType == AssetType.ERC721) {
-            asset_type_bits = uint256(1);
+            assetTypeBits = uint256(1);
         } else if (assetType == AssetType.ERC1155) {
-            asset_type_bits = uint256(2);
+            assetTypeBits = uint256(2);
         } else {
             revert("Invalid assetType");
         }
-        uint256 encodedAssetAddr = ((id >> 253) << 253) |
-            uint256(uint160(assetAddr)) |
-            (asset_type_bits << 160);
+
+        uint256 encodedAssetAddr = ((id >> 3) & BITS_250_TO_252_MASK) |
+            (assetTypeBits << 160) |
+            (uint256(uint160(assetAddr)));
 
         return
             EncodedAsset({
@@ -52,18 +54,18 @@ library AssetUtils {
         returns (AssetType assetType, address assetAddr, uint256 id)
     {
         id =
-            (encodedAsset.encodedAssetAddr & ENCODED_ASSET_ID_IN_ADDR_MASK) |
+            ((encodedAsset.encodedAssetAddr & BITS_250_TO_252_MASK) << 3) |
             encodedAsset.encodedAssetId;
         assetAddr = address(
-            uint160(encodedAsset.encodedAssetAddr & ENCODED_ASSET_ADDR_MASK)
+            uint160(encodedAsset.encodedAssetAddr & BOTTOM_160_MASK)
         );
-        uint256 asset_type_bits = (encodedAsset.encodedAssetAddr >> 160) &
+        uint256 assetTypeBits = (encodedAsset.encodedAssetAddr >> 160) &
             MASK_11;
-        if (asset_type_bits == 0) {
+        if (assetTypeBits == 0) {
             assetType = AssetType.ERC20;
-        } else if (asset_type_bits == 1) {
+        } else if (assetTypeBits == 1) {
             assetType = AssetType.ERC721;
-        } else if (asset_type_bits == 2) {
+        } else if (assetTypeBits == 2) {
             assetType = AssetType.ERC1155;
         } else {
             revert("Invalid encodedAssetAddr");
