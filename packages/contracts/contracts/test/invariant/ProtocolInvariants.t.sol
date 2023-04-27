@@ -121,7 +121,6 @@ contract ProtocolInvariants is Test, InvariantsBase {
             .completeDepositErc20
             .selector;
 
-        // TODO: turn wallet handler back on RE nf counter issue
         bytes4[] memory walletHandlerSelectors = new bytes4[](1);
         walletHandlerSelectors[0] = walletHandler.processBundle.selector;
 
