@@ -103,7 +103,7 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
  * @param args.request - A validated JSON-RPC request object.
  * @returns `null` if the request succeeded.
  * @throws If the request method is not valid for this snap.
- * @throws If the `snap_confirm` call failed.
+ * @throws If the `snap_dialog` call failed.
  */
 export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
@@ -132,7 +132,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   switch (request.method) {
     case "hello":
       return await snap.request({
-        method: "snap_confirm",
+        method: "snap_dialog",
         params: [
           {
             prompt: getMessage(origin),
@@ -180,7 +180,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
       // Confirm spend sig auth
       await snap.request({
-        method: "snap_confirm",
+        method: "snap_dialog",
         params: [
           {
             prompt: `Confirm Spend Authorization`,
