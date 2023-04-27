@@ -45,8 +45,8 @@ contract CommitmentTreeManagerHandler is Test {
         preCallTotalCount = commitmentTreeManager.totalCount();
 
         lastCall = key;
-        _calls[key]++;
         _;
+        _calls[lastCall]++;
     }
 
     function callSummary() external view {
@@ -59,6 +59,7 @@ contract CommitmentTreeManagerHandler is Test {
         console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
         console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
+        console.log("no-op", _calls["no-op"]);
     }
 
     function applySubtreeUpdate(
