@@ -23,9 +23,22 @@ describe("Config", async () => {
     expect(config.contracts.depositSources).to.not.be.undefined;
     expect(config.contracts.screeners).to.not.be.undefined;
 
-    expect(config.gasAsset("weth")!).to.eql(jsonConfig.gasAssets.weth);
-    expect(config.gasAsset("dai")!).to.eql(jsonConfig.gasAssets.dai);
-    expect(config.rateLimit("weth")!).to.eql(jsonConfig.rateLimits.weth);
-    expect(config.rateLimit("dai")!).to.eql(jsonConfig.rateLimits.dai);
+    expect(config.gasAsset("weth")!).to.eql(
+      getFromPairArray(jsonConfig.gasAssets, "weth")
+    );
+    expect(config.gasAsset("dai")!).to.eql(
+      getFromPairArray(jsonConfig.gasAssets, "dai")
+    );
+    expect(config.rateLimit("weth")!).to.eql(
+      getFromPairArray(jsonConfig.rateLimits, "weth")
+    );
+    expect(config.rateLimit("dai")!).to.eql(
+      getFromPairArray(jsonConfig.rateLimits, "dai")
+    );
   });
 });
+
+function getFromPairArray<T>(arr: [String, T][], ticker: string) {
+  const pair = arr.find(([t, _]) => t === ticker);
+  return pair ? pair[1] : undefined;
+}
