@@ -14,6 +14,7 @@ import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
 import { NocturneConfig } from "@nocturne-xyz/config";
+import { panel, text, heading } from "@metamask/snaps-ui";
 import * as rawConfig from "./config.json";
 
 const RPC_URL = "http://127.0.0.1:8545/";
@@ -22,14 +23,6 @@ const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 const config = NocturneConfig.fromObject(rawConfig);
 
 const Fr = BabyJubJub.ScalarField;
-
-/**
- * Get a message from the origin. For demonstration purposes only.
- *
- * @param originString - The origin string.
- * @returns A message based on the origin.
- */
-const getMessage = (originString: string): string => `Hello, ${originString}!`;
 
 const NOCTURNE_BIP44_COINTYPE = 6789;
 
@@ -76,7 +69,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   const merkleProver = await SparseMerkleProver.loadFromKV(kvStore);
   // const syncAdapter = new RPCSyncAdapter(provider, WALLET_ADDRESS);
   const syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_API_URL);
-  const context = new NocturneWalletSDK(
+  const sdk = new NocturneWalletSDK(
     signer,
     provider,
     config,
@@ -87,28 +80,15 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
   console.log("Switching on method: ", request.method);
   switch (request.method) {
-    case "hello":
-      return await snap.request({
-        method: "snap_dialog",
-        params: [
-          {
-            prompt: getMessage(origin),
-            description:
-              "This custom confirmation is just for display purposes.",
-            textAreaContent:
-              "But you can edit the snap source code to make it do something, if you want to!",
-          },
-        ],
-      });
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
-      await context.sync({ skipMerkleProverUpdates: true });
-      return JSON.stringify(await context.getAllAssetBalances());
+      await sdk.sync();
+      return JSON.stringify(await sdk.getAllAssetBalances());
     case "nocturne_sync":
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
-        await context.sync({ skipMerkleProverUpdates: true });
+        await sdk.sync();
         console.log(
           "Synced. state is now: ",
           //@ts-ignore
@@ -122,29 +102,30 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case "nocturne_signOperation":
       console.log("Request params: ", request.params);
 
-      await context.sync();
+      await sdk.sync();
 
       const operationRequest = JSON.parse(
         (request.params as any).operationRequest
       ) as OperationRequest;
 
       // Ensure user has minimum balance for request
-      if (
-        !(await context.hasEnoughBalanceForOperationRequest(operationRequest))
-      ) {
+      if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
         throw new Error("Insufficient balance for operation request");
       }
 
       // Confirm spend sig auth
       await snap.request({
         method: "snap_dialog",
-        params: [
-          {
-            prompt: `Confirm Spend Authorization`,
-            description: `${origin}`,
-            textAreaContent: JSON.stringify(operationRequest.joinSplitRequests),
-          },
-        ],
+        params: {
+          type: "confirmation",
+          // TODO: make this UI better
+          content: panel([
+            heading(
+              `${origin} would like to perform an operation via Nocturne`
+            ),
+            text(`operation request: ${JSON.stringify(operationRequest)}`),
+          ]),
+        },
       });
 
       console.log("Operation request: ", operationRequest);
@@ -158,8 +139,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       console.log("Operation gas price: ", operationRequest.gasPrice);
 
       try {
-        const preSignOp = await context.prepareOperation(operationRequest);
-        const signedOp = await context.signOperation(preSignOp);
+        const preSignOp = await sdk.prepareOperation(operationRequest);
+        const signedOp = await sdk.signOperation(preSignOp);
         console.log(
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)

@@ -31,6 +31,7 @@
     "test:unit": ""
   },
   "dependencies": {
+    "@metamask/snaps-ui": "^0.32.2",
     "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/sdk": "workspace:^",

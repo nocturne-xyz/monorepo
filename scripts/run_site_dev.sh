@@ -7,6 +7,7 @@ cd $ROOT_DIR
 
 LOG_DIR="$ROOT_DIR/site-dev-logs"
 mkdir -p $LOG_DIR
+mkdir -p $ROOT_DIR/logs
 echo "outputting logs to $LOG_DIR/"
 
 yarn build
@@ -144,6 +145,7 @@ EOM
 rm -r ./redis-data || echo 'redis-data does not yet exist'
 mkdir ./redis-data
 popd
+
 
 # run screener
 docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
