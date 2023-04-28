@@ -45,8 +45,8 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   },
   // sebastien
   {
-    x: 10531276164714485321488172461296879864416112362514696615449591148776974751873n,
-    y: 13585423869572436949412525299854957275002229199240796670735390606221054763159n,
+    x: 1441066160553778219808661378611760479884464923094970807507826046172487135388n,
+    y: 2780714365822323562859897945726675737150114817291312997511941355689684182163n,
   },
   // daniel
   {
@@ -96,7 +96,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     gasAssets,
     rateLimits
   );
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config));
+  fs.writeFileSync(CONFIG_PATH, config.toString());
 
   for (const [token, amount] of zip(tokens, amounts)) {
     // airdrop ETH and reserve test tokens (outside nocturne) to each addr in `TEST_ETH_ADDRS`
@@ -157,9 +157,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       await tx.wait(1);
     }
   }
-
-  const tx = await handler.connect(deployerEoa).fillBatchWithZeros();
-  await tx.wait(1);
 
   await provider.send("evm_setIntervalMining", [1000]);
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- snap slurps up real config - not dummy config - using JSON module
 - Snap takes handler contract addr for SDK not wallet
 - if op doesn't have `gasPrice` set, set it to chain's current gas price
 - set `gasAssets` in `DUMMY_CONFIG`

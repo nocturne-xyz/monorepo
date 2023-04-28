@@ -7,6 +7,7 @@ cd $ROOT_DIR
 
 LOG_DIR="$ROOT_DIR/site-dev-logs"
 mkdir -p $LOG_DIR
+mkdir -p $ROOT_DIR/logs
 echo "outputting logs to $LOG_DIR/"
 
 yarn build
@@ -26,13 +27,6 @@ popd
 # this is to avoid gatsby throwing a fit because we have stuff running on the
 # same ports its dumb graphql server wants to use
 sleep 20
-
-# start the snap
-pushd packages/snap
-echo "starting snap..."
-yarn start &
-SNAP_PID=$!
-popd
 
 # start hardhat 
 pushd packages/e2e-tests
@@ -80,6 +74,14 @@ sleep 10
 pushd packages/subgraph
 yarn create-local
 yarn deploy-local
+popd
+
+# start the snap
+pushd packages/snap
+echo "starting snap..."
+yarn cp-config
+yarn start &
+SNAP_PID=$!
 popd
 
 # bundler default config variables
@@ -144,6 +146,7 @@ rm -r ./redis-data || echo 'redis-data does not yet exist'
 mkdir ./redis-data
 popd
 
+
 # run screener
 docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
 SCREENER_PID=$!
@@ -169,12 +172,7 @@ SITE_TEST_PAGE="$SCRIPT_DIR/../packages/site/src/pages/index.tsx"
 SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 
 # Set snap handler contract address
-sed -i '' -r -e "s/const HANDLER_ADDRESS = \"0x[0-9a-faA-F]+\";/const HANDLER_ADDRESS = \"$HANDLER_CONTRACT_ADDRESS\";/g" $SNAP_INDEX_TS
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
-
-# Set snap gas token addresses
-sed -i '' -r -e "s/const GAS_TOKEN1 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN1 = \"$TOKEN_CONTRACT_ADDR1\";/g" $SNAP_INDEX_TS
-sed -i '' -r -e "s/const GAS_TOKEN2 = \"0x[0-9a-faA-F]+\";/const GAS_TOKEN2 = \"$TOKEN_CONTRACT_ADDR2\";/g" $SNAP_INDEX_TS
 
 # Set site wallet address
 sed -i '' -r -e "s/export const WALLET_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const WALLET_CONTRACT_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
