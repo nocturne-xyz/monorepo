@@ -106,6 +106,7 @@ export class SparseMerkleProver {
   }
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
+    console.log(`insertBatch: startIndex: ${startIndex}, num leaves: ${leaves.length}`);
     assertOrErr(
       startIndex < ARITY ** MAX_DEPTH,
       `index must be < ${ARITY}^maxDepth`

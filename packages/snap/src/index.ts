@@ -104,6 +104,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
 
       await sdk.sync();
 
+      console.log("done syncing");
+
       const operationRequest = JSON.parse(
         (request.params as any).operationRequest
       ) as OperationRequest;
