@@ -286,12 +286,11 @@ export class SubtreeUpdater {
 
   private async recoverPersisedState(logger: Logger): Promise<void> {
     const nextInsertionIndex = await this.getNextInsertionIndex();
-    const lastCommitedIndex = (await this.getLastCommittedIndex()) ?? 0;
     if (nextInsertionIndex === 0) {
       return;
     }
 
-    const start = insertionKey(lastCommitedIndex);
+    const start = insertionKey(0);
     const end = insertionKey(nextInsertionIndex);
 
     for (const { key, value } of this.db.getRange({ start, end })) {
