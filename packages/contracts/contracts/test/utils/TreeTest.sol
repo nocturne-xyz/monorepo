@@ -54,8 +54,8 @@ library TreeTestLib {
     }
 
     // compute the new tree root after inserting a batch to an empty tree
-    // returns `lastForPaths` containing first subtree's path at index 0, 0s elsewhere
-    function computeInitialRoot(
+    // returns `lastThreePaths` containing first subtree's path at index 0, 0s elsewhere
+    function computeInitialPaths(
         TreeTest storage self,
         uint256[] memory batch
     ) internal view returns (uint256[][3] memory) {
@@ -91,7 +91,7 @@ library TreeTestLib {
     // compute the new tree root after inserting a batch given the paths to the last three subtrees in order of ascending age
     // idx is the index of the leftmost leaf in the subtree
     // returns updated list of last four subtree paths
-    function computeNewRoot(
+    function computeNewPaths(
         TreeTest storage self,
         uint256[] memory batch,
         uint256[][3] memory lastThreePaths,

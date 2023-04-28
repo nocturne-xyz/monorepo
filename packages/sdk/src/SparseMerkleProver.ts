@@ -3,7 +3,7 @@ import { assertOrErr, zip } from "./utils";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
-import { omitIdx, range } from "./utils/functional";
+import { omitIndices, range } from "./utils/functional";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -288,7 +288,7 @@ export class SparseMerkleProver {
     return [
       [
         ...siblings,
-        omitIdx(root.children, pathIndex).map((child) =>
+        omitIndices(root.children, pathIndex).map((child) =>
           child ? child.hash : zeroHashAtDepth(depth)
         ),
       ],

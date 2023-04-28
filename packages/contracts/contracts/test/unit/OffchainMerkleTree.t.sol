@@ -54,26 +54,26 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         );
 
         // test that hashing empty batch total gives EMPTY_TREE_ROOT
-        uint256[][3] memory path = treeTest.computeInitialRoot(batch);
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         assertEq(path[0][DEPTH_TO_SUBTREE], TreeUtils.EMPTY_TREE_ROOT);
 
-        // test computeInitialRoot for non-empty batch
+        // test computeInitialPaths for non-empty batch
         batch = new uint256[](2);
         batch[0] = 420;
         batch[1] = 69;
-        path = treeTest.computeInitialRoot(batch);
+        path = treeTest.computeInitialPaths(batch);
         assertEq(
             path[0][DEPTH_TO_SUBTREE],
             1876908926272187450761598598188752060951923126538985491623069278962090072418
         );
         assertEq(path[0][0], treeTest.computeSubtreeRoot(batch));
 
-        // test computeNewRoot for non-empty batch
+        // test computeNewPaths for non-empty batch
         batch = new uint256[](3);
         batch[0] = 9;
         batch[1] = 1;
         batch[2] = 1449;
-        path = treeTest.computeNewRoot(batch, path, 16);
+        path = treeTest.computeNewPaths(batch, path, 16);
         assertEq(
             path[0][DEPTH_TO_SUBTREE],
             7121119364410700771071060140874401316335848409647514241451685854290541005256
@@ -103,7 +103,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         // compute new root and call `applySubtreeUpdate`
-        uint256[][3] memory path = treeTest.computeInitialRoot(batch);
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 newRoot = path[0][DEPTH_TO_SUBTREE];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
@@ -127,7 +127,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
 
         // apply subtree update
-        uint256[][3] memory path = treeTest.computeInitialRoot(batch);
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 newRoot = path[0][DEPTH_TO_SUBTREE];
         merkle.applySubtreeUpdate(newRoot, dummyProof());
 
@@ -163,7 +163,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
             batch[i] = nc;
         }
 
-        uint256[][3] memory path = treeTest.computeInitialRoot(batch);
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 _newRoot = path[0][DEPTH_TO_SUBTREE];
 
         uint256 newRoot = 7692074189416150984263394138680301006228090185414219994496061801546117138813;

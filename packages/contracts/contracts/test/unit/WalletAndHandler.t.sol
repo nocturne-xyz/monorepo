@@ -199,7 +199,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             batch[i] = noteCommitment;
         }
 
-        uint256[][3] memory path = treeTest.computeInitialRoot(batch);
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
         uint256 root = path[0][path[0].length - 1];
 
         // fill the tree batch

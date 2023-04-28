@@ -75,11 +75,11 @@ export function* iterChunks<T>(
 }
 
 // returns an array with the elements at the given indices omitted
-export function omitIdx<T>(arr: T[], ...indices: number[]): T[] {
+export function omitIndices<T>(arr: T[], ...indices: number[]): T[] {
   const omitted = new Set(indices);
   assertOrErr(
     omitted.size < arr.length,
-    "omitIdx: more indices to omit than elements in array"
+    "omitIndices: more indices to omit than elements in array"
   );
 
   return arr.flatMap((item, i) => (omitted.has(i) ? [] : item));
