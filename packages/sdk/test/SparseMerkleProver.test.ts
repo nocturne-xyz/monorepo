@@ -2,13 +2,14 @@ import "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { InMemoryKVStore, randomBigInt, range } from "../src";
-import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import {
   ARITY,
   MAX_DEPTH,
   SparseMerkleProver,
   TreeNode,
 } from "../src/SparseMerkleProver";
+import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 
 chai.use(chaiAsPromised);
 
@@ -245,6 +246,42 @@ describe("SparseMerkleProver", () => {
     // check number of leaves
     const numLeaves = countLeaves(prover);
     expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  });
+
+  it("calculates same root as @zk-kit/incremental-merkle-tree", () => {
+    const kv = new InMemoryKVStore();
+
+    // run 10 fuzzes using incremental insert
+    range(10).forEach((_) => {
+      const prover = new SparseMerkleProver(kv);
+      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+
+      const numLeaves = Number(randomBigInt() % 30n);
+      for (const idx of range(prover.count(), prover.count() + numLeaves)) {
+        const leaf = randomBaseFieldElement();
+        prover.insert(idx, leaf, false);
+        tree.insert(leaf);
+
+        expect(prover.getRoot() === tree.root).to.be.true;
+      }
+    });
+
+    // run 5 fuzzes using batch insert
+    range(5).forEach((_) => {
+      const prover = new SparseMerkleProver(kv);
+      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+
+      const numLeaves = Number(randomBigInt() % 100n);
+      const batch = range(numLeaves).map(randomBaseFieldElement);
+      const includes = new Array(numLeaves).fill(false);
+
+      prover.insertBatch(0, batch, includes);
+      for (const leaf of batch) {
+        tree.insert(leaf);
+      }
+
+      expect(prover.getRoot() === tree.root).to.be.true;
+    });
   });
 });
 
