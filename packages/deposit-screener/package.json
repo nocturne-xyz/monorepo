@@ -27,7 +27,7 @@
     "@nocturne-xyz/config": "1.0.2-alpha",
     "@nocturne-xyz/contracts": "1.0.20-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.0",
-    "@nocturne-xyz/sdk": "1.0.101-alpha",
+    "@nocturne-xyz/sdk": "1.0.102-alpha",
     "@types/randombytes": "^2.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",
