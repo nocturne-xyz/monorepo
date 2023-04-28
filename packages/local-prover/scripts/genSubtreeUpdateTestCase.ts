@@ -2,15 +2,17 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
 
+import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import {
   AssetType,
-  BinaryPoseidonTree,
   NocturneSigner,
   Note,
   NoteTrait,
   subtreeUpdateInputsFromBatch,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
 import { WasmSubtreeUpdateProver } from "../src/subtreeUpdate";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const FIXTURE_PATH = path.join(ROOT_DIR, "fixtures/subtreeupdateProof.json");
@@ -31,11 +33,11 @@ const nocturneSigner = new NocturneSigner(sk);
 const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
-const tree = new BinaryPoseidonTree();
+const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
 
 // dummy notes
 const batch: (Note | bigint)[] = [
-  ...Array(BinaryPoseidonTree.BATCH_SIZE).keys(),
+  ...Array(TreeConstants.BATCH_SIZE).keys(),
 ].map((_) => {
   return {
     owner: stealthAddr,
@@ -61,7 +63,7 @@ for (const noteOrCommitment of batch) {
     tree.insert(NoteTrait.toCommitment(noteOrCommitment));
   }
 }
-const merkleProof = tree.getProof(0);
+const merkleProof = tree.createProof(0);
 
 const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
 console.log(inputs);

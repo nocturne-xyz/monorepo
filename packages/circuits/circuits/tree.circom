@@ -2,12 +2,16 @@
 pragma circom 2.0.0;
 
 include "include/poseidon.circom";
-include "include/mux1.circom";
+include "include/mux2.circom";
+include "include/bitify.circom";
+include "lib.circom";
 
+
+// inclusion proof for a quaternary tree
 template MerkleTreeInclusionProof(nLevels) {
     signal input leaf;
     signal input pathIndices[nLevels];
-    signal input siblings[nLevels];
+    signal input siblings[nLevels][3];
 
     signal output root;
 
@@ -17,22 +21,45 @@ template MerkleTreeInclusionProof(nLevels) {
     signal hashes[nLevels + 1];
     hashes[0] <== leaf;
 
+    signal pathIndexBits[nLevels][2];
+
     for (var i = 0; i < nLevels; i++) {
-        pathIndices[i] * (1 - pathIndices[i]) === 0;
+        // check that pathIndices are all valid 2-bit numbers
+        pathIndexBits[i] <== Num2Bits(2)(pathIndices[i]);
 
-        poseidons[i] = Poseidon(2);
-        mux[i] = MultiMux1(2);
+        poseidons[i] = Poseidon(4);
+        mux[i] = MultiMux2(4);
 
+        // path index = 0
         mux[i].c[0][0] <== hashes[i];
-        mux[i].c[0][1] <== siblings[i];
+        mux[i].c[1][0] <== siblings[i][0];
+        mux[i].c[2][0] <== siblings[i][1];
+        mux[i].c[3][0] <== siblings[i][2];
 
-        mux[i].c[1][0] <== siblings[i];
+        // path index = 1
+        mux[i].c[0][1] <== siblings[i][0];
         mux[i].c[1][1] <== hashes[i];
+        mux[i].c[2][1] <== siblings[i][1];
+        mux[i].c[3][1] <== siblings[i][2];
 
-        mux[i].s <== pathIndices[i];
+        // path index = 2
+        mux[i].c[0][2] <== siblings[i][0];
+        mux[i].c[1][2] <== siblings[i][1];
+        mux[i].c[2][2] <== hashes[i];
+        mux[i].c[3][2] <== siblings[i][2];
+
+        // path index = 3
+        mux[i].c[0][3] <== siblings[i][0];
+        mux[i].c[1][3] <== siblings[i][1];
+        mux[i].c[2][3] <== siblings[i][2];
+        mux[i].c[3][3] <== hashes[i];
+
+        mux[i].s <== pathIndexBits[i];
 
         poseidons[i].inputs[0] <== mux[i].out[0];
         poseidons[i].inputs[1] <== mux[i].out[1];
+        poseidons[i].inputs[2] <== mux[i].out[2];
+        poseidons[i].inputs[3] <== mux[i].out[3];
 
         hashes[i + 1] <== poseidons[i].out;
     }

@@ -2,12 +2,14 @@ import "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { InMemoryKVStore, randomBigInt, range } from "../src";
-import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import {
+  ARITY,
   MAX_DEPTH,
   SparseMerkleProver,
   TreeNode,
 } from "../src/SparseMerkleProver";
+import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 
 chai.use(chaiAsPromised);
 
@@ -90,7 +92,7 @@ describe("SparseMerkleProver", () => {
     for (const idx of range(10)) {
       const proof = prover.getProof(idx);
 
-      proof.pathIndices[0] = 1 - proof.pathIndices[0];
+      proof.pathIndices[0] = 3 - proof.pathIndices[0];
       expect(SparseMerkleProver.verifyProof(proof)).to.be.false;
     }
 
@@ -98,7 +100,11 @@ describe("SparseMerkleProver", () => {
     for (const idx of range(10)) {
       const proof = prover.getProof(idx);
 
-      proof.siblings[0] = randomBaseFieldElement();
+      proof.siblings[0] = [
+        randomBaseFieldElement(),
+        randomBaseFieldElement(),
+        randomBaseFieldElement(),
+      ];
       expect(SparseMerkleProver.verifyProof(proof)).to.be.false;
     }
   });
@@ -146,30 +152,35 @@ describe("SparseMerkleProver", () => {
     expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
   });
 
-  it("doesn't prune the latest leaf the tree has an odd number of nodes", () => {
-    const kv = new InMemoryKVStore();
-    const prover = new SparseMerkleProver(kv);
+  // run the test for each k mod ARITY
+  for (const k of range(1, ARITY)) {
+    it(`doesn't prune the latest leaves if the tree has a number of nodes = ${k} mod ARITY (${ARITY})`, () => {
+      // run the test for each k mod ARITY
+      const kv = new InMemoryKVStore();
+      const prover = new SparseMerkleProver(kv);
 
-    // insert one leaf with `include = true`
-    prover.insert(0, randomBaseFieldElement(), true);
+      // insert one leaf with `include = true`
+      prover.insert(0, randomBaseFieldElement(), true);
 
-    // insert an even number of leaves with `include = false`
-    for (const idx of range(prover.count(), prover.count() + 20)) {
-      prover.insert(idx, randomBaseFieldElement(), false);
-    }
+      // insert an multiple of ARITY number of leaves with `include = false`
+      for (const idx of range(prover.count(), prover.count() + ARITY * 10)) {
+        prover.insert(idx, randomBaseFieldElement(), false);
+      }
 
-    // insert one more leaf with `include = false`.
-    // This leaf's index will be even and the tree will have an odd number of leaves
-    // This leaf should not be pruned because, if we were to prune it and then insert a new leaf,
-    // we would no longer have the sibling of the leaf we just inserted.
-    prover.insert(prover.count(), randomBaseFieldElement(), false);
+      // insert k more leaves with `include = false` into a copy.
+      // These leaves should not be pruned because, if we were to prune it and then insert a new leaf,
+      // we'd be missing at least one sibling of the leaf we just inserted.
+      for (const _ of range(k)) {
+        prover.insert(prover.count(), randomBaseFieldElement(), false);
+      }
 
-    // prune
-    prover.prune();
+      // prune
+      prover.prune();
 
-    const numLeaves = countLeaves(prover);
-    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
-  });
+      const numLeaves = countLeaves(prover);
+      expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+    });
+  }
 
   it("inserts a batch of leaves all at once", () => {
     const kv = new InMemoryKVStore();
@@ -236,6 +247,42 @@ describe("SparseMerkleProver", () => {
     const numLeaves = countLeaves(prover);
     expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
   });
+
+  it("calculates same root as @zk-kit/incremental-merkle-tree", () => {
+    const kv = new InMemoryKVStore();
+
+    // run 10 fuzzes using incremental insert
+    range(10).forEach((_) => {
+      const prover = new SparseMerkleProver(kv);
+      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+
+      const numLeaves = Number(randomBigInt() % 30n);
+      for (const idx of range(prover.count(), prover.count() + numLeaves)) {
+        const leaf = randomBaseFieldElement();
+        prover.insert(idx, leaf, false);
+        tree.insert(leaf);
+
+        expect(prover.getRoot() === tree.root).to.be.true;
+      }
+    });
+
+    // run 5 fuzzes using batch insert
+    range(5).forEach((_) => {
+      const prover = new SparseMerkleProver(kv);
+      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+
+      const numLeaves = Number(randomBigInt() % 100n);
+      const batch = range(numLeaves).map(randomBaseFieldElement);
+      const includes = new Array(numLeaves).fill(false);
+
+      prover.insertBatch(0, batch, includes);
+      for (const leaf of batch) {
+        tree.insert(leaf);
+      }
+
+      expect(prover.getRoot() === tree.root).to.be.true;
+    });
+  });
 });
 
 function countLeaves(prover: SparseMerkleProver): number {
@@ -247,12 +294,10 @@ function countLeaves(prover: SparseMerkleProver): number {
       return;
     }
 
-    if (node.left) {
-      traverse(node.left, depth + 1);
-    }
-
-    if (node.right) {
-      traverse(node.right, depth + 1);
+    for (const child of node.children) {
+      if (child) {
+        traverse(child, depth + 1);
+      }
     }
   };
 
@@ -265,20 +310,47 @@ function countLeaves(prover: SparseMerkleProver): number {
 function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
   // number of leaves should be equal to the number of leaves in the `leaves` map
   // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
-  // plus one if the latest leaf's index is odd and it's not in the `leaves` map
+  // plus 0-ARITY more to account the for the following edge case:
+  //   If tree count is not a multiple of `ARITY`, then we need to keep the rightmost group of `ARITY` leaves in the tree
+  //   even if they're not in the `leaves` map. To illustrate why, consider the following example:a
+  //
+  //   suppose tree count is 2 mod ARITY - that means the rightmost part of the tree will have a branch with
+  //   two leaves on the left and the rest of the leaves empty. Now suppose those two leaves aren't in the `leaves` map.
+  //   If we were to prune them, insert another leaf, with the new leaf included in the leaves map,
+  //   we'd now need the two leaves we just pruned, since they're siblings of a leaf in the `leaves` map.
+  //
+  //   To account for this edge case, we add prover.count % ARITY to the result if none of the leaves in this
+  //   "unifinished" group of ARITY leaves are in the `leaves` map.
+  //    If at least one of them is in the map, then we've already accounted for it because it's a
+  //    sibling of a leaf in the `leaves` map
 
-  // @ts-ignore
-  const numSiblingLeaves = Array.from(prover.leaves.keys()).filter(
-    // @ts-ignore
-    (idx) => !prover.leaves.has(idx ^ 1)
-  ).length;
-
+  // get number of leaves in the leaves map
   // @ts-ignore
   const includedLeaves = prover.leaves.size;
 
-  const additionalLeaf =
-    // @ts-ignore
-    prover.count() % 2 === 1 && !prover.leaves.has(prover.count() - 1) ? 1 : 0;
+  // get number of leaves that aren't in the leaves map but have a sibling that is
+  const siblingIndices = new Set();
+  // @ts-ignore
+  for (const leafIdx of prover.leaves.keys()) {
+    // siblings of `leafIdx` have indices the same as `leafIdx` but with any of the bottom `log2(ARITY)` bits flipped
+    for (const siblingIndex of range(1, ARITY).map((i) => leafIdx ^ i)) {
+      // @ts-ignore
+      if (!prover.leaves.has(siblingIndex)) {
+        siblingIndices.add(siblingIndex);
+      }
+    }
+  }
 
-  return includedLeaves + numSiblingLeaves + additionalLeaf;
+  let res = includedLeaves + siblingIndices.size;
+
+  // account for special case
+  const k = prover.count() % ARITY;
+  const needsAdditionalLeaves =
+    //@ts-ignore
+    k > 0 && range(k).every((i) => !prover.leaves.has(prover.count - k + i));
+  if (needsAdditionalLeaves) {
+    res += k;
+  }
+
+  return res;
 }

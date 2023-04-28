@@ -9,6 +9,7 @@ import {ParseUtils} from "../utils/ParseUtils.sol";
 
 contract TestTreeUtils is Test {
     function testEncodePathAndHash() public {
+        // test encoding with an accumulator hash whose hi bits are 011 and the 12th subtree
         uint256 idx = 12 * TreeUtils.BATCH_SIZE;
         uint256 accumulatorHash = (1 << 255) - 1;
         (uint256 hi, ) = TreeUtils.uint256ToFieldElemLimbs(accumulatorHash);
@@ -18,8 +19,10 @@ contract TestTreeUtils is Test {
             uint128(idx),
             hi
         );
+
+        // expect ncodedPathAndHash to contain 011 as the hash bits and 12 as the index to subtree root
         uint256 expected = (3 <<
-            (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH)) | 12;
+            (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) | 12;
 
         assertEq(expected, encodedPathAndhash);
     }

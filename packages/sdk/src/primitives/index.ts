@@ -1,4 +1,5 @@
 export * from "./types";
+export * as TreeConstants from "./treeConstants";
 
 export { BinaryPoseidonTree } from "./binaryPoseidonTree";
 export {

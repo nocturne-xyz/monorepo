@@ -3,8 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { WasmJoinSplitProver } from "../src/joinsplit";
+import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import {
-  BinaryPoseidonTree,
   NocturneSigner,
   JoinSplitInputs,
   MerkleProofInput,
@@ -77,12 +77,15 @@ const oldNoteBCommitment = poseidonBN([
 console.log("old note commitment B: ", oldNoteBCommitment);
 
 // Generate valid merkle proofs
-const tree = new BinaryPoseidonTree();
+const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
 tree.insert(oldNoteACommitment);
 tree.insert(oldNoteBCommitment);
 
-const merkleProofA = tree.getProof(0);
-const merkleProofB = tree.getProof(1);
+const merkleProofA = tree.createProof(0);
+const merkleProofB = tree.createProof(1);
+
+console.log("merkleProofA", merkleProofA);
+console.log("merkleProofB", merkleProofB);
 
 console.log("merkle root A: ", merkleProofA.root);
 console.log("merkle root B: ", merkleProofB.root);

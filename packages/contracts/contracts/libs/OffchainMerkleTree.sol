@@ -109,6 +109,12 @@ library LibOffchainMerkleTree {
             uint128(self.accumulatorQueue.length());
     }
 
+    function getAccumulatorHash(
+        OffchainMerkleTree storage self
+    ) external view returns (uint256) {
+        return self.accumulatorQueue.peek();
+    }
+
     function _calculatePublicInputs(
         OffchainMerkleTree storage self,
         uint256 newRoot

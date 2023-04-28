@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- make commitment tree quaternary:
+  - update `proof/joinsplit` and `proof/subtreeupdate` with new circuit input shapes 
+  - make `SparseMerkleProver` generic over tree arity and set arity to 4
 - add x-coordinate of PK to hash in schnorr sig
 - use rejection sampling to find a vkNonce such that key is in the field
 - fix RPC note insertion indexing to index singular `InsertNote` events

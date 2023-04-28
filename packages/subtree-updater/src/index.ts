@@ -1,18 +1,20 @@
 import {
   BaseProof,
-  BinaryPoseidonTree,
   SubtreeUpdateProver,
   fetchInsertions,
   fetchSubtreeUpdateCommits,
   Note,
   NoteTrait,
   subtreeUpdateInputsFromBatch,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { RootDatabase, Database } from "lmdb";
 import { Handler } from "@nocturne-xyz/contracts";
 import { SubtreeUpdateSubmitter } from "./submitter";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
+import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 
 export { SubtreeUpdateServer } from "./server";
 export { RapidsnarkSubtreeUpdateProver } from "./rapidsnarkProver";
@@ -52,7 +54,7 @@ export class SubtreeUpdater {
 
   private insertions: (Note | bigint)[];
   private batches: SubtreeUpdateBatch[];
-  private tree: BinaryPoseidonTree;
+  private tree: IncrementalMerkleTree;
   indexingStartBlock: number;
 
   constructor(
@@ -68,7 +70,12 @@ export class SubtreeUpdater {
 
     this.insertions = [];
     this.batches = [];
-    this.tree = new BinaryPoseidonTree();
+    this.tree = new IncrementalMerkleTree(
+      poseidonBN,
+      TreeConstants.DEPTH,
+      0n,
+      4
+    );
 
     this.submitter = submitter;
 
@@ -178,7 +185,7 @@ export class SubtreeUpdater {
   }
 
   public batchNotEmptyOrFull(): boolean {
-    return this.insertions.length % BinaryPoseidonTree.BATCH_SIZE !== 0;
+    return this.insertions.length % TreeConstants.BATCH_SIZE !== 0;
   }
 
   private async subtreeIsCommitted(subtreeIndex: number): Promise<boolean> {
@@ -188,14 +195,14 @@ export class SubtreeUpdater {
 
   private async tryMakeBatches(logger: Logger): Promise<boolean> {
     let madeBatch = false;
-    while (this.insertions.length >= BinaryPoseidonTree.BATCH_SIZE) {
-      const batch = this.insertions.slice(0, BinaryPoseidonTree.BATCH_SIZE);
+    while (this.insertions.length >= TreeConstants.BATCH_SIZE) {
+      const batch = this.insertions.slice(0, TreeConstants.BATCH_SIZE);
       logger.info("making batch", batch);
 
       this.applyBatch(batch);
 
-      const subtreeIndex = this.tree.count - batch.length;
-      const newRoot = this.tree.root();
+      const subtreeIndex = this.tree.leaves.length - batch.length;
+      const newRoot = this.tree.root;
 
       if (!(await this.subtreeIsCommitted(subtreeIndex))) {
         this.batches.push({
@@ -205,7 +212,7 @@ export class SubtreeUpdater {
         });
       }
 
-      this.insertions.splice(0, BinaryPoseidonTree.BATCH_SIZE);
+      this.insertions.splice(0, TreeConstants.BATCH_SIZE);
       madeBatch = true;
     }
 
@@ -238,7 +245,7 @@ export class SubtreeUpdater {
     batch: (Note | bigint)[],
     subtreeIndex: number
   ): Promise<BaseProof> {
-    const merkleProof = this.tree.getProof(subtreeIndex);
+    const merkleProof = this.tree.createProof(subtreeIndex);
     const inputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
     const { proof } = await this.prover.proveSubtreeUpdate(inputs);
     return proof;

@@ -59,6 +59,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     SimpleERC721Token[3] ERC721s;
     SimpleERC1155Token[3] ERC1155s;
     IHasherT3 hasherT3;
+    IHasherT5 hasherT5;
     IHasherT6 hasherT6;
 
     event DepositSourcePermissionSet(address source, bool permission);
@@ -101,9 +102,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
+        hasherT5 = IHasherT5(new PoseidonHasherT5(poseidonT5));
         hasherT6 = IHasherT6(new PoseidonHasherT6(poseidonT6));
 
-        treeTest.initialize(hasherT3, hasherT6);
+        treeTest.initialize(hasherT3, hasherT5, hasherT6);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -197,8 +199,8 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             batch[i] = noteCommitment;
         }
 
-        uint256[] memory path = treeTest.computeInitialRoot(batch);
-        uint256 root = path[path.length - 1];
+        uint256[][3] memory path = treeTest.computeInitialPaths(batch);
+        uint256 root = path[0][path[0].length - 1];
 
         // fill the tree batch
         handler.fillBatchWithZeros();

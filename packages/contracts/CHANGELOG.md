@@ -2,6 +2,12 @@
 
 ### Unreleased
 
+- make commitment tree quaternary:
+  - update `TreeUtils` constants
+  - update `TreeUtils` PI encoding / decoding helpers
+  - update joinsplit and subtreeupdate verifiers
+  - update `TreeTest` to simulate incremental quaternary tree
+  - update tests
 - check for compensation in `invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20` and add new test case for checking bundler balance equals tracked
 - add bundler compensation to `OperationGenerator.sol`
 - add unit test for `AssetUtils` encode and decode after bug fix

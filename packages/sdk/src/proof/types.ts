@@ -21,7 +21,7 @@ export type SolidityProof = [
 
 export interface MerkleProofInput {
   path: bigint[];
-  siblings: any[];
+  siblings: bigint[][];
 }
 
 export interface VerifyingKey {

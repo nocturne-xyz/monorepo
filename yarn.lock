@@ -3368,7 +3368,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.2-alpha
     "@nocturne-xyz/contracts": 1.0.20-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
-    "@nocturne-xyz/sdk": 1.0.100-alpha
+    "@nocturne-xyz/sdk": 1.0.102-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3511,7 +3511,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.2-alpha
     "@nocturne-xyz/contracts": 1.0.20-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
-    "@nocturne-xyz/sdk": 1.0.100-alpha
+    "@nocturne-xyz/sdk": 1.0.102-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3621,6 +3621,7 @@ __metadata:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
     bigint-conversion: ^2.3.0
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.6
@@ -3653,7 +3654,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.100-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.102-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3799,10 +3800,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.2-alpha
     "@nocturne-xyz/contracts": 1.0.20-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
-    "@nocturne-xyz/sdk": 1.0.100-alpha
+    "@nocturne-xyz/sdk": 1.0.102-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -3810,6 +3812,7 @@ __metadata:
     "@types/node": ^18.11.9
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
     async-mutex: ^0.4.0
     bigint-json-serialization: ^1.0.1
     chai: ^4.3.7

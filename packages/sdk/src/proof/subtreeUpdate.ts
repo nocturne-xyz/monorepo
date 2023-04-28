@@ -1,5 +1,5 @@
 import { BaseProof } from "./types";
-import { BinaryPoseidonTree, Note, NoteTrait, AssetTrait } from "../primitives";
+import { Note, NoteTrait, AssetTrait, TreeConstants } from "../primitives";
 import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
@@ -18,7 +18,7 @@ export interface SubtreeUpdateInputs {
   encodedPathAndHash: bigint;
   accumulatorHash: bigint;
 
-  siblings: bigint[];
+  siblings: bigint[][];
   leaves: bigint[];
   bitmap: bigint[];
   ownerH1s: bigint[];
@@ -48,8 +48,8 @@ export function subtreeUpdateInputsFromBatch(
   batch: (Note | bigint)[],
   merkleProof: MerkleProof
 ): SubtreeUpdateInputs {
-  if (batch.length !== BinaryPoseidonTree.BATCH_SIZE) {
-    throw new Error(`\`batch.length\` ${BinaryPoseidonTree.BATCH_SIZE}, `);
+  if (batch.length !== TreeConstants.BATCH_SIZE) {
+    throw new Error(`\`batch.length\` != ${TreeConstants.BATCH_SIZE}`);
   }
 
   const ownerH1s: bigint[] = [];
@@ -96,14 +96,15 @@ export function subtreeUpdateInputsFromBatch(
 
   // accumulatorHash
   const accumulatorHashU256 = BigInt("0x" + sha256.hex(accumulatorPreimage));
+  console.log("accumulatorHash", accumulatorHashU256);
   const [accumulatorHashHi, accumulatorHash] =
     bigInt256ToFieldElems(accumulatorHashU256);
 
-  const siblings = merkleProof.siblings
-    .slice(BinaryPoseidonTree.S)
-    .map((arr) => arr[0]);
+  console.log("accumulatorHashHi", accumulatorHashHi);
+
+  const siblings = merkleProof.siblings.slice(TreeConstants.SUBTREE_DEPTH);
   const idx = merkleProof.pathIndices.reduce(
-    (idx, bit) => (idx << 1n) | BigInt(bit),
+    (idx, pathIndex) => (idx << 2n) | BigInt(pathIndex),
     0n
   );
 
@@ -130,11 +131,13 @@ function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
   idx = BigInt.asUintN(256, idx);
   accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
 
-  if (idx % BigInt(BinaryPoseidonTree.BATCH_SIZE) !== 0n) {
+  if (idx % BigInt(TreeConstants.BATCH_SIZE) !== 0n) {
     throw new Error("idx must be a multiple of BATCH_SIZE");
   }
 
-  let encodedPathAndHash = idx >> BigInt(BinaryPoseidonTree.S);
-  encodedPathAndHash |= accumulatorHashHi << BigInt(BinaryPoseidonTree.R);
+  // we shift by 2 * depth because tree is quaternary
+  let encodedPathAndHash = idx >> BigInt(2 * TreeConstants.SUBTREE_DEPTH);
+  encodedPathAndHash |=
+    accumulatorHashHi << BigInt(2 * TreeConstants.DEPTH_TO_SUBTREE);
   return encodedPathAndHash;
 }
