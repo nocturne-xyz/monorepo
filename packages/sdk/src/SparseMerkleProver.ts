@@ -85,6 +85,10 @@ export class SparseMerkleProver {
     this.kv = kv;
   }
 
+  getRoot(): bigint {
+    return this.root.hash;
+  }
+
   count(): number {
     return this._count;
   }
@@ -106,7 +110,9 @@ export class SparseMerkleProver {
   }
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
-    console.log(`insertBatch: startIndex: ${startIndex}, num leaves: ${leaves.length}`);
+    console.log(
+      `insertBatch: startIndex: ${startIndex}, num leaves: ${leaves.length}`
+    );
     assertOrErr(
       startIndex < ARITY ** MAX_DEPTH,
       `index must be < ${ARITY}^maxDepth`
@@ -178,42 +184,12 @@ export class SparseMerkleProver {
         `invalid pathindex: not in range [0..${ARITY})`
       );
 
-      switch (pathIndex) {
-        case 0:
-          currentRoot = poseidonBN([
-            currentRoot,
-            currSiblings[0],
-            currSiblings[1],
-            currSiblings[2],
-          ]);
-          break;
-        case 1:
-          currentRoot = poseidonBN([
-            currSiblings[0],
-            currentRoot,
-            currSiblings[1],
-            currSiblings[2],
-          ]);
-          break;
-        case 2:
-          currentRoot = poseidonBN([
-            currSiblings[0],
-            currSiblings[1],
-            currentRoot,
-            currSiblings[2],
-          ]);
-          break;
-        case 3:
-          currentRoot = poseidonBN([
-            currSiblings[0],
-            currSiblings[1],
-            currSiblings[2],
-            currentRoot,
-          ]);
-          break;
-        default:
-          throw new Error("in `verifyProof`: unreachable!");
-      }
+      const preimage = [
+        ...currSiblings.slice(0, pathIndex),
+        currentRoot,
+        ...currSiblings.slice(pathIndex),
+      ];
+      currentRoot = poseidonBN(preimage);
     }
 
     return currentRoot === root;

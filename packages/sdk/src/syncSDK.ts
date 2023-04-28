@@ -97,6 +97,8 @@ async function updateMerkle(
     merkle.insertBatch(startIndex, leaves, includes);
   }
 
+  console.log("merkle root:", merkle.getRoot());
+
   // mark nullified ones for pruning
   for (const index of nfIndices) {
     merkle.markForPruning(index);
