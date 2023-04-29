@@ -1,4 +1,4 @@
-import { ProtocolWhitelistEntry } from "./config";
+import { ProtocolWhitelistEntry } from "@nocturne-xyz/config";
 import { Handler } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
@@ -10,7 +10,8 @@ export async function whitelistProtocols(
 ): Promise<void> {
   handler = handler.connect(connectedSigner);
 
-  for (const [name, entry] of protocolWhitelist.entries()) {
+  console.log("whitelisting protocols...");
+  for (const [name, entry] of Array.from(protocolWhitelist)) {
     const { contractAddress, functionSignatures } = entry;
     for (const signature of functionSignatures) {
       const selector = getSelector(signature);

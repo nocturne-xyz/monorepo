@@ -1,3 +1,4 @@
+import { ProtocolWhitelistEntry } from "@nocturne-xyz/config";
 import {
   Handler,
   SimpleERC1155Token__factory,
@@ -7,10 +8,7 @@ import {
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
-import {
-  ProtocolWhitelistEntry,
-  whitelistProtocols,
-} from "@nocturne-xyz/deploy";
+import { whitelistProtocols } from "@nocturne-xyz/deploy";
 import { Asset, AssetType } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 

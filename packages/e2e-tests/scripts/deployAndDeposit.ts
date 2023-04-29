@@ -90,9 +90,14 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const gasAssets = new Map(
     tokens.map((token, i) => [`TOKEN-${i}`, token.address])
   );
+
   // no rate limits
-  const rateLimits = new Map();
-  const config = new NocturneConfig(contractDeployment, gasAssets, rateLimits);
+  const config = new NocturneConfig(
+    contractDeployment,
+    new Map(), // dummy, protocol whitelist not important here
+    gasAssets,
+    new Map() // dummy, no rate limits
+  );
   fs.writeFileSync(CONFIG_PATH, config.toString());
 
   for (const [token, amount] of zip(tokens, amounts)) {
