@@ -21,7 +21,7 @@ import findWorkspaceRoot from "find-yarn-workspace-root";
 const ANVIL_URL = "http://127.0.0.1:8545";
 
 const ROOT_DIR = findWorkspaceRoot()!;
-const CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/localhost.json`
+const CONFIG_PATH = `${ROOT_DIR}/packages/config/configs/localhost.json`;
 
 // anvil account #5
 const SUBTREE_BATCH_FILLER = "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc";
@@ -40,8 +40,8 @@ const TEST_ETH_ADDRS = [
 const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   // luke
   {
-    x: 12704419479989462831088949222607517865959716029468493775216288001516871924955n,
-    y: 10813016887799300068375838291425202357665005847646472172617457372914028857258n,
+    x: 10142086077893486181754172705121012824519743084895847195556991208649326069031n,
+    y: 8193080910598498103381811317346023892678961233898095959711997273954450549100n,
   },
   // sebastien
   {
@@ -64,13 +64,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
-  const contractDeployment =
-    await deployContractsWithDummyAdmins(deployerEoa, {
-      screeners: [DEPOSIT_SCREENER],
-      subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
-    });
-   
-  const { handlerProxy, depositManagerProxy} = contractDeployment;
+  const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
+    screeners: [DEPOSIT_SCREENER],
+    subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
+  });
+
+  const { handlerProxy, depositManagerProxy } = contractDeployment;
   const handler = Handler__factory.connect(handlerProxy.proxy, deployerEoa);
   const depositManager = DepositManager__factory.connect(
     depositManagerProxy.proxy,
@@ -88,14 +87,12 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   }
 
   // both tokens are gas assets
-  const gasAssets = new Map(tokens.map((token, i) => [`TOKEN-${i}`, token.address]));
+  const gasAssets = new Map(
+    tokens.map((token, i) => [`TOKEN-${i}`, token.address])
+  );
   // no rate limits
   const rateLimits = new Map();
-  const config = new NocturneConfig(
-    contractDeployment,
-    gasAssets,
-    rateLimits
-  );
+  const config = new NocturneConfig(contractDeployment, gasAssets, rateLimits);
   fs.writeFileSync(CONFIG_PATH, config.toString());
 
   for (const [token, amount] of zip(tokens, amounts)) {
@@ -164,4 +161,3 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     `deployAndDeposit script finished in ${Date.now() - startTime}ms.`
   );
 })();
-
