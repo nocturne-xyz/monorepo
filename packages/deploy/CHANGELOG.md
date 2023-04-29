@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- take data out of env vars and put into config.json
+- make contract owners same as proxy admin owner, in practice proxy admin owner will be gnosis safe and we want that same contract to have ownership of contracts
 - Pass weth to deposit manager initialization
 - Deploy handler contract and remove vault
 - Add subtree batch fillers args to `NocturneDeployArgs` and give them permission in `deployNocturne`
