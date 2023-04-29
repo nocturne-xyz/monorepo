@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- throw error when `snap_dialog` returns a falsy value (unlike `snap_confirm`, `snap_dialog` doesn't do this for you);
 - snap slurps up real config - not dummy config - using JSON module
 - Snap takes handler contract addr for SDK not wallet
 - if op doesn't have `gasPrice` set, set it to chain's current gas price
