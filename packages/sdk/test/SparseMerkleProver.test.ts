@@ -251,6 +251,15 @@ describe("SparseMerkleProver", () => {
   it("calculates same root as @zk-kit/incremental-merkle-tree", () => {
     const kv = new InMemoryKVStore();
 
+    // check empty batch case
+    {
+      const prover = new SparseMerkleProver(kv);
+      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+
+      prover.insertBatch(0, [], []);
+      expect(prover.getRoot() === tree.root).to.be.true;
+    }
+
     // run 10 fuzzes using incremental insert
     range(10).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
@@ -280,7 +289,14 @@ describe("SparseMerkleProver", () => {
         tree.insert(leaf);
       }
 
-      expect(prover.getRoot() === tree.root).to.be.true;
+      const check = prover.getRoot() === tree.root;
+      if (!check) {
+        console.log("fuzz failed for batch", batch);
+        console.log("sparse: ", prover.getRoot());
+        console.log("zk-kit: ", tree.root);
+      }
+
+      expect(check).to.be.true;
     });
   });
 });

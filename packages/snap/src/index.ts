@@ -116,7 +116,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       }
 
       // Confirm spend sig auth
-      await snap.request({
+      const res = await snap.request({
         method: "snap_dialog",
         params: {
           type: "confirmation",
@@ -129,6 +129,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           ]),
         },
       });
+
+      if (!res) {
+        throw new Error("rejected by user");
+      }
 
       console.log("Operation request: ", operationRequest);
 

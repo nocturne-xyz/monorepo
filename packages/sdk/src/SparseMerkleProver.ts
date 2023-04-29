@@ -78,7 +78,7 @@ export class SparseMerkleProver {
   constructor(kv: KVStore) {
     this.root = {
       children: [...NO_CHILDREN],
-      hash: ZERO_HASHES[0],
+      hash: ZERO_HASHES[MAX_DEPTH],
     };
     this.leaves = new Map();
     this._count = 0;
