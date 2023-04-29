@@ -1,11 +1,11 @@
-import { ProtocolWhitelistEntry } from "@nocturne-xyz/config";
+import { ProtocolAllowlist } from "@nocturne-xyz/config";
 import { Handler } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
 
 export async function whitelistProtocols(
   connectedSigner: ethers.Wallet,
-  protocolWhitelist: Map<string, ProtocolWhitelistEntry>,
+  protocolWhitelist: ProtocolAllowlist,
   handler: Handler
 ): Promise<void> {
   handler = handler.connect(connectedSigner);

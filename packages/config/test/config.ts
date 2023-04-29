@@ -11,6 +11,7 @@ describe("Config", async () => {
     );
     const config = loadNocturneConfig("example-network");
 
+    console.log(config);
     expect(config.contracts.network).to.not.be.undefined;
     expect(config.contracts.startBlock).to.not.be.undefined;
     expect(config.contracts.owners).to.not.be.undefined;
@@ -22,6 +23,7 @@ describe("Config", async () => {
     expect(config.contracts.subtreeUpdateVerifierAddress).to.not.be.undefined;
     expect(config.contracts.depositSources).to.not.be.undefined;
     expect(config.contracts.screeners).to.not.be.undefined;
+    expect(config.protocolAllowlist.size).to.be.greaterThan(0);
 
     expect(config.gasAsset("weth")!).to.eql(
       getFromPairArray(jsonConfig.gasAssets, "weth")
