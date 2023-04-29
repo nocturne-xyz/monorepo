@@ -280,7 +280,14 @@ describe("SparseMerkleProver", () => {
         tree.insert(leaf);
       }
 
-      expect(prover.getRoot() === tree.root).to.be.true;
+      const check = prover.getRoot() === tree.root;
+      if (!check) {
+        console.log("fuzz failed for batch", batch);
+        console.log("sparse: ", prover.getRoot());
+        console.log("zk-kit: ", tree.root);
+      }
+
+      expect(check).to.be.true;
     });
   });
 });

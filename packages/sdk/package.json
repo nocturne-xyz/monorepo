@@ -15,7 +15,7 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
     "prettier:write": "prettier --write ./src ./test",
-    "test:unit": "mocha --require ts-node/register test/** --timeout 15000 --exit"
+    "test:unit": "mocha --require ts-node/register test/** --timeout 15000 --exit -g 'calculates same root as @zk-kit/incremental-merkle-tree'"
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
