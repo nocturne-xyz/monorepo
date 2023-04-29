@@ -60,6 +60,7 @@ export class NocturneConfig {
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
+      protocolAllowlist: Array.from(this.protocolAllowlist.entries()),
       gasAssets: Array.from(this.gasAssets.entries()),
       rateLimits: Array.from(this.rateLimits.entries()),
     });
