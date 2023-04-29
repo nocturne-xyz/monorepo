@@ -2,14 +2,15 @@
 
 ### Unreleased
 
+- fix minor bug where SDK would override `executionGasLimit` or `maxNumRefunds` even if it was set in opRequest
 - make commitment tree quaternary:
-  - update `proof/joinsplit` and `proof/subtreeupdate` with new circuit input shapes 
+  - update `proof/joinsplit` and `proof/subtreeupdate` with new circuit input shapes
   - make `SparseMerkleProver` generic over tree arity and set arity to 4
 - add x-coordinate of PK to hash in schnorr sig
 - use rejection sampling to find a vkNonce such that key is in the field
 - fix RPC note insertion indexing to index singular `InsertNote` events
 - include `op.atomicActions` in op digest calculation
-- make randomBigInt sample 32 random bytes, not 8 (bruh moment) 
+- make randomBigInt sample 32 random bytes, not 8 (bruh moment)
 - add util `randomFr` to `crypto` module
 - add `encRandomness` to `JoinSplitInputs`
 - add `encSenderAddrC1X` and `encSenderAddrC2X` to `JoinSplitPublicSignals`

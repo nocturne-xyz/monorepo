@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- submitter checks `op.opProcessed` for failures and marks failed execution if so
 - CLI uses config package to get contract addresses
 - remove gas hardcode in submitter `processBundle`
 - add `--log-dir` option to CLI with defaults
