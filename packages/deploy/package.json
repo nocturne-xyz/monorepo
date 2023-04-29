@@ -21,6 +21,7 @@
   "dependencies": {
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "dotenv": "^16.0.3"
   },
   "devDependencies": {

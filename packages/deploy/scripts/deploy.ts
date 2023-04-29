@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
-import { NocturneDeployConfig, deployNocturne } from "../src/deploy";
+import { NocturneDeployConfig } from "../src/config";
+import { deployNocturne } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import { checkNocturneContractDeployment } from "../src/checks";
