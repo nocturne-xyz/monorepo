@@ -302,23 +302,17 @@ export async function deployContractsWithDummyAdmins(
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
-  const deployment = await deployNocturne(
-    connectedSigner,
-    {
-      proxyAdminOwner: connectedSigner.address,
-      walletOwner: connectedSigner.address,
-      handlerOwner: connectedSigner.address,
-      depositManagerOwner: connectedSigner.address,
-      screeners: args.screeners,
-      subtreeBatchFillers: args.subtreeBatchFillers,
-      wethAddress: weth.address,
-    },
-    {
+  const deployment = await deployNocturne(connectedSigner, {
+    proxyAdminOwner: connectedSigner.address,
+    screeners: args.screeners,
+    subtreeBatchFillers: args.subtreeBatchFillers,
+    wethAddress: weth.address,
+    opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
       confirmations: 1,
-    }
-  );
+    },
+  });
 
   // Log for dev site script
   console.log("Wallet address:", deployment.walletProxy.proxy);

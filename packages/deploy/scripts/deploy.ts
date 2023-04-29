@@ -1,40 +1,18 @@
 import { ethers } from "ethers";
-import { deployNocturne } from "../src/deploy";
+import { NocturneDeployConfig, deployNocturne } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import { checkNocturneContractDeployment } from "../src/checks";
+import * as JSON from "bigint-json-serialization";
 
+const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
 
 dotenv.config();
 
 (async () => {
-  const proxyAdminOwner = process.env.PROXY_ADMIN_OWNER;
-  if (!proxyAdminOwner) throw new Error("Missing PROXY_ADMIN_OWNER");
-
-  const walletOwner = process.env.WALLET_OWNER;
-  if (!walletOwner) throw new Error("Missing WALLET_OWNER");
-
-  const handlerOwner = process.env.HANDLER_OWNER;
-  if (!handlerOwner) throw new Error("Missing HANDLER_OWNER");
-
-  const depositManagerOwner = process.env.DEPOSIT_MANAGER_OWNER;
-  if (!depositManagerOwner) throw new Error("Missing DEPOSIT_MANAGER_OWNER");
-
-  const screenersString = process.env.SCREENERS;
-  if (!screenersString) throw new Error("Missing SCREENERS");
-  const screeners = screenersString?.split(",") ?? [];
-
-  const subtreeBatchFillersString = process.env.SUBTREE_BATCH_FILLERS;
-  if (!subtreeBatchFillersString)
-    throw new Error("Missing SUBTREE_BATCH_FILLERS");
-  const subtreeBatchFillers = subtreeBatchFillersString?.split(",") ?? [];
-
-  const wethAddress = process.env.WETH_ADDRESS;
-  if (!wethAddress) throw new Error("Missing WETH_ADDRESS");
-
-  const useMockSubtreeUpdateVerifier =
-    process.env.USE_MOCK_SUBTREE_UPDATE_VERIFIER != undefined;
+  const configName = process.env.CONFIG_NAME;
+  if (!configName) throw new Error("Missing CONFIG_NAME");
 
   const deployerKey = process.env.DEPLOYER_KEY;
   if (!deployerKey) throw new Error("Missing DEPLOYER_KEY");
@@ -45,21 +23,13 @@ dotenv.config();
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const deployer = new ethers.Wallet(deployerKey, provider);
 
-  const deployment = await deployNocturne(
-    deployer,
-    {
-      proxyAdminOwner,
-      walletOwner,
-      handlerOwner,
-      depositManagerOwner,
-      screeners,
-      subtreeBatchFillers,
-      wethAddress,
-    },
-    {
-      useMockSubtreeUpdateVerifier,
-    }
+  const configString = fs.readFileSync(
+    `${CONFIGS_DIR}/${configName}.json`,
+    "utf-8"
   );
+  const config: NocturneDeployConfig = JSON.parse(configString);
+
+  const deployment = await deployNocturne(deployer, config);
 
   console.log(deployment);
 

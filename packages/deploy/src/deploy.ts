@@ -20,27 +20,23 @@ import {
 } from "@nocturne-xyz/config";
 import { Address } from "./utils";
 
-export interface NocturneDeployArgs {
+export interface NocturneDeployConfig {
   proxyAdminOwner: Address;
-  walletOwner: Address;
-  handlerOwner: Address;
-  depositManagerOwner: Address;
   screeners: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
+  opts?: NocturneDeployOpts;
 }
 
 export interface NocturneDeployOpts {
   proxyAdmin?: ProxyAdmin;
-  provider?: any; // FIX: ts build within hh disallows ethers.providers.Provider
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
 }
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
-  args: NocturneDeployArgs,
-  opts?: NocturneDeployOpts
+  config: NocturneDeployConfig
 ): Promise<NocturneContractDeployment> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
@@ -51,11 +47,12 @@ export async function deployNocturne(
   const startBlock = await connectedSigner.provider.getBlockNumber();
 
   // Maybe deploy proxy admin
+  const { opts } = config;
   let proxyAdmin = opts?.proxyAdmin;
   if (!proxyAdmin) {
     console.log("deploying ProxyAdmin...");
     proxyAdmin = await new ProxyAdmin__factory(connectedSigner).deploy();
-    const tx = await proxyAdmin.transferOwnership(args.proxyAdminOwner);
+    const tx = await proxyAdmin.transferOwnership(config.proxyAdminOwner);
     await tx.wait(opts?.confirmations);
   }
   console.log();
@@ -94,7 +91,7 @@ export async function deployNocturne(
   const proxiedWallet = await deployProxiedContract(
     new Wallet__factory(connectedSigner),
     proxyAdmin,
-    [proxiedHandler.address, joinSplitVerifier.address]
+    [proxiedHandler.address, joinSplitVerifier.address] // initialize here
   );
   console.log("deployed proxied Wallet:", proxiedWallet.proxyAddresses);
   console.log();
@@ -111,7 +108,7 @@ export async function deployNocturne(
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
-    ["NocturneDepositManager", "v1", proxiedWallet.address, args.wethAddress]
+    ["NocturneDepositManager", "v1", proxiedWallet.address, config.wethAddress] // initialize here
   );
   console.log(
     "deployed proxied DepositManager:",
@@ -120,7 +117,7 @@ export async function deployNocturne(
   console.log();
 
   console.log("setting deposit manager screeners...");
-  for (const screener of args.screeners) {
+  for (const screener of config.screeners) {
     const tx = await proxiedDepositManager.contract.setScreenerPermission(
       screener,
       true
@@ -130,7 +127,7 @@ export async function deployNocturne(
   console.log();
 
   console.log("setting subtree batch fillers...");
-  for (const filler of args.subtreeBatchFillers) {
+  for (const filler of config.subtreeBatchFillers) {
     const tx = await proxiedHandler.contract.setSubtreeBatchFillerPermission(
       filler,
       true
@@ -154,16 +151,16 @@ export async function deployNocturne(
   console.log();
 
   const walletTransferOwnershipTx =
-    await proxiedWallet.contract.transferOwnership(args.walletOwner);
+    await proxiedWallet.contract.transferOwnership(config.proxyAdminOwner);
   await walletTransferOwnershipTx.wait(opts?.confirmations);
 
   const handlerTransferOwnershipTx =
-    await proxiedHandler.contract.transferOwnership(args.handlerOwner);
+    await proxiedHandler.contract.transferOwnership(config.proxyAdminOwner);
   await handlerTransferOwnershipTx.wait(opts?.confirmations);
 
   const depositManagerTransferOwnershipTx =
     await proxiedDepositManager.contract.transferOwnership(
-      args.depositManagerOwner
+      config.proxyAdminOwner
     );
   await depositManagerTransferOwnershipTx.wait(opts?.confirmations);
 
@@ -174,10 +171,10 @@ export async function deployNocturne(
     },
     startBlock,
     owners: {
-      proxyAdminOwner: args.proxyAdminOwner,
-      walletOwner: args.walletOwner,
-      handlerOwner: args.handlerOwner,
-      depositManagerOwner: args.depositManagerOwner,
+      proxyAdminOwner: config.proxyAdminOwner,
+      walletOwner: config.proxyAdminOwner,
+      handlerOwner: config.proxyAdminOwner,
+      depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
@@ -185,7 +182,7 @@ export async function deployNocturne(
     handlerProxy: proxiedHandler.proxyAddresses,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
-    screeners: args.screeners,
+    screeners: config.screeners,
     depositSources: [proxiedDepositManager.address],
   };
 }
