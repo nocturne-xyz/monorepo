@@ -238,10 +238,14 @@ async function estimateGasForOperationRequest(
     }
 
     // set executionGasLimit with 20% buffer above the simulation result
-    executionGasLimit = (result.executionGas * 12n) / 10n;
+    if (!executionGasLimit) {
+      executionGasLimit = (result.executionGas * 12n) / 10n;
+    }
 
     // set maxNumRefunds to the number of refunds from simulation result
-    maxNumRefunds = result.numRefunds;
+    if (!maxNumRefunds) {
+      maxNumRefunds = result.numRefunds;
+    }
   }
 
   // if gasPrice is not specified, get it from RPC node
