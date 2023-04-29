@@ -70,6 +70,15 @@ popd
 
 sleep 10
 
+# re-build now that config package has update localhost.json
+echo "rebuilding config post-deploy..."
+pushd packages/config
+yarn clean
+yarn build
+popd
+
+sleep 15
+
 # deploy subgraph
 pushd packages/subgraph
 yarn create-local
@@ -79,7 +88,8 @@ popd
 # start the snap
 pushd packages/snap
 echo "starting snap..."
-yarn cp-config
+yarn build
+sleep 10
 yarn start &
 SNAP_PID=$!
 popd
