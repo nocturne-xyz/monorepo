@@ -10,26 +10,29 @@ export async function whitelistProtocols(
 ): Promise<void> {
   handler = handler.connect(connectedSigner);
 
-  let proms: Promise<ethers.ContractTransaction>[] = [];
   for (const [name, entry] of protocolWhitelist.entries()) {
     const { contractAddress, functionSignatures } = entry;
     for (const signature of functionSignatures) {
-      const selector = ethers.utils.keccak256(signature);
+      const selector = getSelector(signature);
       const key = protocolWhitelistKey(contractAddress, selector);
 
       if (!(await handler._callableContractAllowlist(key))) {
         console.log(
           `whitelisting protocol: ${name}. address: ${contractAddress}. signature: ${signature}.`
         );
-        const tx = handler.setCallableContractAllowlistPermission(
+        const tx = await handler.setCallableContractAllowlistPermission(
           contractAddress,
-          ethers.utils.keccak256(signature),
+          selector,
           true
         );
-        proms.push(tx);
+        await tx.wait(1);
       }
     }
   }
+}
 
-  await Promise.all(proms);
+function getSelector(signature: string): string {
+  const sigBytes = ethers.utils.toUtf8Bytes(signature);
+  const hash = ethers.utils.keccak256(sigBytes);
+  return ethers.utils.hexDataSlice(hash, 0, 4);
 }

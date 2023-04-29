@@ -7,6 +7,10 @@ import {
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
+import {
+  ProtocolWhitelistEntry,
+  whitelistProtocols,
+} from "@nocturne-xyz/deploy";
 import { Asset, AssetType } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
 
@@ -21,21 +25,20 @@ export async function deployAndWhitelistERC20(
 
   const erc20 = await new SimpleERC20Token__factory(eoa).deploy();
 
-  const erc20Iface = SimpleERC20Token__factory.createInterface();
-  await handler
-    .connect(eoa)
-    .setCallableContractAllowlistPermission(
-      erc20.address,
-      erc20Iface.getSighash("approve"),
-      true
-    );
-  await handler
-    .connect(eoa)
-    .setCallableContractAllowlistPermission(
-      erc20.address,
-      erc20Iface.getSighash("transfer"),
-      true
-    );
+  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+    [
+      "erc20", // dummy name
+      {
+        contractAddress: erc20.address,
+        functionSignatures: [
+          "transfer(address,uint256)",
+          "approve(address,uint256)",
+        ],
+      },
+    ],
+  ]);
+
+  await whitelistProtocols(eoa, whitelistEntries, handler);
 
   const asset: Asset = {
     assetType: AssetType.ERC20,
@@ -57,14 +60,17 @@ export async function deployAndWhitelistERC721(
 
   const erc721 = await new SimpleERC721Token__factory(eoa).deploy();
 
-  const erc721Iface = SimpleERC721Token__factory.createInterface();
-  await handler
-    .connect(eoa)
-    .setCallableContractAllowlistPermission(
-      erc721.address,
-      erc721Iface.getSighash("reserveToken"),
-      true
-    );
+  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+    [
+      "erc721", // dummy name
+      {
+        contractAddress: erc721.address,
+        functionSignatures: ["reserveToken(address,uint256)"],
+      },
+    ],
+  ]);
+
+  await whitelistProtocols(eoa, whitelistEntries, handler);
 
   const assetConstructor = (id: bigint) => ({
     assetType: AssetType.ERC721,
@@ -86,14 +92,17 @@ export async function deployAndWhitelistERC1155(
 
   const erc1155 = await new SimpleERC1155Token__factory(eoa).deploy();
 
-  const erc1155Iface = SimpleERC1155Token__factory.createInterface();
-  await handler
-    .connect(eoa)
-    .setCallableContractAllowlistPermission(
-      erc1155.address,
-      erc1155Iface.getSighash("reserveTokens"),
-      true
-    );
+  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+    [
+      "erc1155", // dummy name
+      {
+        contractAddress: erc1155.address,
+        functionSignatures: ["reserveTokens(address,uint256,uint256)"],
+      },
+    ],
+  ]);
+
+  await whitelistProtocols(eoa, whitelistEntries, handler);
 
   const assetConstructor = (id: bigint) => ({
     assetType: AssetType.ERC1155,

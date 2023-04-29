@@ -6,7 +6,6 @@ export interface NocturneDeployConfig {
   screeners: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
-  protocolWhitelist: Map<string, ProtocolWhitelistEntry>;
   opts?: NocturneDeployOpts;
 }
 
@@ -15,6 +14,8 @@ export interface NocturneDeployOpts {
   useMockSubtreeUpdateVerifier?: boolean;
   confirmations?: number;
 }
+
+export type ProtocolWhitelistConfig = Map<string, ProtocolWhitelistEntry>;
 
 export interface ProtocolWhitelistEntry {
   contractAddress: Address;
