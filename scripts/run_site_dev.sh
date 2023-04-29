@@ -70,7 +70,7 @@ popd
 
 sleep 10
 
-# re-build now that config package has update localhost.json
+# re-build now that config package has updated localhost.json
 echo "rebuilding config post-deploy..."
 pushd packages/config
 yarn clean
