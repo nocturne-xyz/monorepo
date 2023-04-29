@@ -1,7 +1,8 @@
-export { loadNocturneConfig, NocturneConfig } from "./config";
 export {
-  NocturneContractDeployment,
+  loadNocturneConfig,
+  NocturneConfig,
   ProtocolAllowlist,
   ProtocolWhitelistEntry,
-} from "./deployment";
+} from "./config";
+export { NocturneContractDeployment } from "./deployment";
 export * from "./proxy";

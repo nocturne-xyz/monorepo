@@ -307,7 +307,6 @@ export async function deployContractsWithDummyAdmins(
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
     wethAddress: weth.address,
-    protocolAllowlist: new Map(),
     opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,

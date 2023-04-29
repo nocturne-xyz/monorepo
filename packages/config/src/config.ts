@@ -1,9 +1,4 @@
-import {
-  Address,
-  NocturneContractDeployment,
-  ProtocolAllowlist,
-  ProtocolWhitelistEntry,
-} from "./deployment";
+import { Address, NocturneContractDeployment } from "./deployment";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
@@ -13,6 +8,13 @@ export interface RateLimit {
   perAddress: bigint;
   global: bigint;
 }
+
+export interface ProtocolWhitelistEntry {
+  contractAddress: Address;
+  functionSignatures: string[];
+}
+
+export type ProtocolAllowlist = Map<string, ProtocolWhitelistEntry>;
 
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;

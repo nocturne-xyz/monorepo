@@ -26,10 +26,3 @@ export interface NocturneContractDeployment {
   depositSources: Address[];
   screeners: Address[];
 }
-
-export type ProtocolAllowlist = Map<string, ProtocolWhitelistEntry>;
-
-export interface ProtocolWhitelistEntry {
-  contractAddress: Address;
-  functionSignatures: string[];
-}
