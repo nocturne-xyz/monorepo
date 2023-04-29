@@ -213,14 +213,10 @@ export class BundlerSubmitter {
     const redisTxs = matchingEvents.flatMap(({ args }) => {
       const digest = args.operationDigest.toBigInt();
 
-      const callSuccesses = args.callSuccesses.reduce(
-        (acc, success) => acc && success
-      );
-
       let status: OperationStatus;
       if (!args.assetsUnwrapped) {
         status = OperationStatus.OPERATION_PROCESSING_FAILED;
-      } else if (!callSuccesses) {
+      } else if (!args.opProcessed) {
         status = OperationStatus.OPERATION_EXECUTION_FAILED;
       } else {
         status = OperationStatus.EXECUTED_SUCCESS;

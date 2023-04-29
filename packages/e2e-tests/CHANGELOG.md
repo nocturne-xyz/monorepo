@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add e2e test for under-gassed tx that ensures bundler marked `OPERATION_EXECUTION_FAILED`
+- `testE2E` checks bundler op status
 - make & write localhost config to a file in `deployAndDepositScript`
 - install hardhat and run out of `e2e-tests` package
 - switch back to hardhat due to very strange contract bug
