@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- deploy and whitelist methods in deployment use `whitelistProtocols` fn instead of custom calling handler
 - add e2e test for under-gassed tx that ensures bundler marked `OPERATION_EXECUTION_FAILED`
 - `testE2E` checks bundler op status
 - make & write localhost config to a file in `deployAndDepositScript`
