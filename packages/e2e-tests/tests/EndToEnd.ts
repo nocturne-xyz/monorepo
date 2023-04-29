@@ -22,6 +22,7 @@ import {
   Asset,
   JoinSplitProver,
   proveOperation,
+  OperationStatus,
 } from "@nocturne-xyz/sdk";
 import { sleep, submitAndProcessOperation } from "../src/utils";
 import {
@@ -127,7 +128,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   async function testE2E(
     operationRequest: OperationRequest,
     contractChecks: () => Promise<void>,
-    offchainChecks: () => Promise<void>
+    offchainChecks: () => Promise<void>,
+    expectedBundlerStatus: OperationStatus
   ): Promise<void> {
     console.log("alice: Sync SDK");
     await nocturneWalletSDKAlice.sync();
@@ -152,12 +154,13 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     //@ts-ignore
     console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
 
-    await submitAndProcessOperation(operation);
+    const status = await submitAndProcessOperation(operation);
     // wait for subgraph / subtree updater to catch up
     await sleep(7_000);
 
     await contractChecks();
     await offchainChecks();
+    expect(expectedBundlerStatus).to.eql(status);
   }
 
   it("bundler rejects operation with gas price < chain's gas price", async () => {
@@ -188,9 +191,50 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       testE2E(
         operationRequest,
         async () => {},
-        async () => {}
+        async () => {},
+        OperationStatus.BUNDLE_REVERTED
       )
     ).to.eventually.be.rejectedWith("gas price too low");
+  });
+
+  it("bundler marks under-gassed operation OPERATION_EXECUTION_FAILED", async () => {
+    console.log("deposit funds and commit note commitments");
+    await depositFundsMultiToken(
+      depositManager,
+      [
+        [erc20, [PER_NOTE_AMOUNT, PER_NOTE_AMOUNT]],
+        [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
+      ],
+      aliceEoa,
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+    );
+
+    console.log("encode transfer erc20 action");
+    const encodedFunction =
+      SimpleERC20Token__factory.createInterface().encodeFunctionData(
+        "transfer",
+        [await bobEoa.getAddress(), ALICE_TO_BOB_PUB_VAL]
+      );
+
+    const operationRequest = new OperationRequestBuilder()
+      .unwrap(erc20Asset, ALICE_UNWRAP_VAL)
+      .action(erc20.address, encodedFunction)
+      .gas({
+        executionGasLimit: 1n, // Intentionally too low
+        gasPrice: GAS_PRICE,
+      })
+      .chainId(BigInt((await provider.getNetwork()).chainId))
+      .deadline(
+        BigInt((await provider.getBlock("latest")).timestamp) + ONE_DAY_SECONDS
+      )
+      .build();
+
+    await testE2E(
+      operationRequest,
+      async () => {},
+      async () => {},
+      OperationStatus.OPERATION_EXECUTION_FAILED
+    );
   });
 
   it(`alice deposits two ${PER_NOTE_AMOUNT} token notes, unwraps ${ALICE_UNWRAP_VAL} tokens publicly, ERC20 transfers ${ALICE_TO_BOB_PUB_VAL} to Bob, and pays ${ALICE_TO_BOB_PRIV_VAL} to Bob privately`, async () => {
@@ -302,7 +346,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(bundlerBalanceAfter > bundlerBalanceBefore).to.be.true;
     };
 
-    await testE2E(operationRequest, contractChecks, offchainChecks);
+    await testE2E(
+      operationRequest,
+      contractChecks,
+      offchainChecks,
+      OperationStatus.EXECUTED_SUCCESS
+    );
   });
 
   it(`alice mints an ERC721 and ERC1155 and receives them privately them as refunds to her Nocturne address`, async () => {
@@ -375,6 +424,11 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(erc1155NotesAlice.length).to.equal(1);
     };
 
-    await testE2E(operationRequest, contractChecks, offchainChecks);
+    await testE2E(
+      operationRequest,
+      contractChecks,
+      offchainChecks,
+      OperationStatus.EXECUTED_SUCCESS
+    );
   });
 });
