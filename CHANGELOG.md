@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update prettier in all packages
 - site script starts snap after deposit script completes
 - site script points deposit-screener to config file instead of passing in wallet address
 - site script points bundler to config file instead of passing in wallet address

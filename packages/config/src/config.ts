@@ -9,8 +9,16 @@ export interface RateLimit {
   global: bigint;
 }
 
+export interface ProtocolWhitelistEntry {
+  contractAddress: Address;
+  functionSignatures: string[];
+}
+
+export type ProtocolAllowlist = Map<string, ProtocolWhitelistEntry>;
+
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;
+  protocolAllowlist: [string, ProtocolWhitelistEntry][]; // name -> entry
   gasAssets: [string, string][]; // ticker -> address
   rateLimits: [string, RateLimit][]; // ticker -> rate limit
 }
@@ -19,15 +27,18 @@ export class NocturneConfig {
   contracts: NocturneContractDeployment;
   gasAssets: Map<string, string>; // ticker -> address
   rateLimits: Map<string, RateLimit>; // ticker -> rate limit
+  protocolAllowlist: ProtocolAllowlist;
 
   constructor(
     contracts: NocturneContractDeployment,
+    protocolAllowlist: ProtocolAllowlist,
     gasAssets: Map<string, string>,
     rateLimits: Map<string, RateLimit>
   ) {
     this.contracts = contracts;
     this.gasAssets = gasAssets;
     this.rateLimits = rateLimits;
+    this.protocolAllowlist = protocolAllowlist;
   }
 
   static fromObject<T extends NocturneConfigProperties>(
@@ -35,6 +46,7 @@ export class NocturneConfig {
   ): NocturneConfig {
     return new NocturneConfig(
       obj.contracts,
+      new Map(obj.protocolAllowlist),
       new Map(obj.gasAssets),
       new Map(obj.rateLimits)
     );
@@ -48,6 +60,7 @@ export class NocturneConfig {
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
+      protocolAllowlist: Array.from(this.protocolAllowlist.entries()),
       gasAssets: Array.from(this.gasAssets.entries()),
       rateLimits: Array.from(this.rateLimits.entries()),
     });

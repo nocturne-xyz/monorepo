@@ -4,22 +4,19 @@
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "engines": {
-    "node": "18.12.1"
-  },
   "scripts": {
-    "setup-rapidsnark": "scripts/setup_rapidsnark_prover.sh",
     "build": "tsc --build",
     "build-all-circuits": "scripts/build_all.sh",
+    "build:deps": "../../scripts/install_base_deps.sh && ./scripts/install_deps.sh",
     "build:joinsplit": "scripts/joinsplit/build.sh",
     "build:subtreeupdate": "scripts/subtreeupdate/build.sh",
-    "build:deps": "../../scripts/install_base_deps.sh && ./scripts/install_deps.sh",
+    "clean": "",
     "download-big-ptau": "scripts/download_big_ptau.sh",
     "lint": "",
-    "test:unit": "",
-    "clean": "",
     "prettier:check": "",
-    "prettier:write": ""
+    "prettier:write": "",
+    "setup-rapidsnark": "scripts/setup_rapidsnark_prover.sh",
+    "test:unit": ""
   },
   "dependencies": {
     "snarkjs": "^0.5.0"
@@ -30,8 +27,11 @@
     "@typescript-eslint/eslint-plugin": "^5.20.0",
     "@typescript-eslint/parser": "^5.20.0",
     "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-prettier": "^8.8.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.4"
+  },
+  "engines": {
+    "node": "18.12.1"
   }
 }

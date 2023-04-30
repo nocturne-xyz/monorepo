@@ -52,6 +52,10 @@ import {
   deployAndWhitelistERC20,
   deployAndWhitelistERC721,
 } from "../src/tokens";
+import {
+  NocturneDeployConfigWithoutAllowlist,
+  relinquishContractOwnership,
+} from "@nocturne-xyz/deploy/dist/src/deploy";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -95,6 +99,12 @@ export interface TestDeploymentTokens {
   erc1155Asset: Asset;
   gasToken: SimpleERC20Token;
   gasTokenAsset: Asset;
+}
+
+export interface TestContracts {
+  wallet: Wallet;
+  handler: Handler;
+  depositManager: DepositManager;
 }
 
 export interface TestDeployment {
@@ -175,24 +185,11 @@ export async function setupTestDeployment(
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
   console.log("deploying contracts...");
-  const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
-    screeners: [screenerEoa.address],
-    subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
-  });
-
-  await checkNocturneContractDeployment(
-    contractDeployment,
-    deployerEoa.provider
-  );
-
-  const { depositManagerProxy, walletProxy, handlerProxy } = contractDeployment;
-  const [depositManager, wallet, handler] = await Promise.all([
-    DepositManager__factory.connect(depositManagerProxy.proxy, deployerEoa),
-    Wallet__factory.connect(walletProxy.proxy, deployerEoa),
-    Handler__factory.connect(handlerProxy.proxy, deployerEoa),
-  ]);
-
-  const tokens = await deployAndWhitelistTestTokens(deployerEoa, handler);
+  const [deployment, tokens, { wallet, handler, depositManager }] =
+    await deployContractsWithDummyConfig(deployerEoa, {
+      screeners: [screenerEoa.address],
+      subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
+    });
 
   // Deploy subgraph first, as other services depend on it
   let stopSubgraph: undefined | (() => Promise<void>);
@@ -201,7 +198,7 @@ export async function setupTestDeployment(
     const subgraphConfig = {
       ...DEFAULT_SUBGRAPH_CONFIG,
       ...givenSubgraphConfig,
-      walletAddress: walletProxy.proxy,
+      walletAddress: wallet.address,
     };
 
     stopSubgraph = await startSubgraph(subgraphConfig);
@@ -215,7 +212,7 @@ export async function setupTestDeployment(
     const bundlerConfig: BundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
-      walletAddress: walletProxy.proxy,
+      walletAddress: wallet.address,
       txSignerKey: bundlerEoa.privateKey,
     };
 
@@ -228,7 +225,7 @@ export async function setupTestDeployment(
     const subtreeUpdaterConfig: SubtreeUpdaterConfig = {
       ...DEFAULT_SUBTREE_UPDATER_CONFIG,
       ...givenSubtreeUpdaterConfig,
-      handlerAddress: handlerProxy.proxy,
+      handlerAddress: handler.address,
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
 
@@ -240,7 +237,7 @@ export async function setupTestDeployment(
     const depositScreenerConfig: DepositScreenerConfig = {
       ...DEFAULT_DEPOSIT_SCREENER_CONFIG,
       ...givenDepositScreenerConfig,
-      depositManagerAddress: depositManagerProxy.proxy,
+      depositManagerAddress: depositManager.address,
       attestationSignerKey: screenerEoa.privateKey,
       txSignerKey: screenerEoa.privateKey,
     };
@@ -283,7 +280,7 @@ export async function setupTestDeployment(
     wallet,
     handler,
     tokens,
-    contractDeployment,
+    contractDeployment: deployment,
     provider,
     teardown,
     deployerEoa,
@@ -295,14 +292,14 @@ export async function setupTestDeployment(
   };
 }
 
-export async function deployContractsWithDummyAdmins(
+export async function deployContractsWithDummyConfig(
   connectedSigner: ethers.Wallet,
   args: TestDeployArgs
-): Promise<NocturneContractDeployment> {
+): Promise<[NocturneContractDeployment, TestDeploymentTokens, TestContracts]> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
-  const deployment = await deployNocturne(connectedSigner, {
+  const deployConfig: NocturneDeployConfigWithoutAllowlist = {
     proxyAdminOwner: connectedSigner.address,
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
@@ -312,13 +309,29 @@ export async function deployContractsWithDummyAdmins(
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
       confirmations: 1,
     },
-  });
+  };
+
+  const deployment = await deployNocturne(connectedSigner, deployConfig);
+  const { depositManagerProxy, walletProxy, handlerProxy } = deployment;
 
   // Log for dev site script
-  console.log("Wallet address:", deployment.walletProxy.proxy);
-  console.log("Handler address:", deployment.handlerProxy.proxy);
-  console.log("DepositManager address:", deployment.depositManagerProxy.proxy);
-  return deployment;
+  console.log("Wallet address:", walletProxy.proxy);
+  console.log("Handler address:", handlerProxy.proxy);
+  console.log("DepositManager address:", depositManagerProxy.proxy);
+
+  const [depositManager, wallet, handler] = await Promise.all([
+    DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
+    Wallet__factory.connect(walletProxy.proxy, connectedSigner),
+    Handler__factory.connect(handlerProxy.proxy, connectedSigner),
+  ]);
+
+  const tokens = await deployAndWhitelistTestTokens(connectedSigner, handler);
+
+  await relinquishContractOwnership(connectedSigner, deployConfig, deployment);
+
+  await checkNocturneContractDeployment(deployment, connectedSigner.provider);
+
+  return [deployment, tokens, { wallet, handler, depositManager }];
 }
 
 export async function deployAndWhitelistTestTokens(
@@ -330,26 +343,27 @@ export async function deployAndWhitelistTestTokens(
     deployerEoa,
     handler
   );
-  console.log("ERC20 deployed at: ", erc20.address);
+  console.log("ERC20 token 1 deployed at:", erc20.address); // read by dev script
 
   const [gasToken, gasTokenAsset] = await deployAndWhitelistERC20(
     deployerEoa,
     handler
   );
+  console.log("ERC20 token 2 deployed at:", gasToken.address); // read by dev script
 
   const [erc721, erc721Ctor] = await deployAndWhitelistERC721(
     deployerEoa,
     handler
   );
   const erc721Asset = erc721Ctor(0n);
-  console.log("ERC721 deployed at: ", erc721.address);
+  console.log("ERC721 deployed at:", erc721.address);
 
   const [erc1155, erc1155Ctor] = await deployAndWhitelistERC1155(
     deployerEoa,
     handler
   );
   const erc1155Asset = erc1155Ctor(0n);
-  console.log("ERC1155 deployed at: ", erc1155.address);
+  console.log("ERC1155 deployed at:", erc1155.address);
 
   return {
     erc20,
@@ -388,6 +402,7 @@ export async function setupTestClient(
 ): Promise<ClientSetup> {
   const config = new NocturneConfig(
     contractDeployment,
+    new Map(), // dummy value, don't need whitelist here
     // TODO: fill with real assets and rate limits in SDK gas asset and deposit
     // screener PRs
     opts?.gasAssets ?? new Map(Object.entries({})),

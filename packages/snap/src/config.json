@@ -29,6 +29,7 @@
     "screeners": ["0x976EA74026E726554dB657fA54763abd0C3a0aa9"],
     "depositSources": ["0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"]
   },
+  "protocolAllowlist": [],
   "gasAssets": [
     ["TOKEN-0", "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"],
     ["TOKEN-1", "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1"]

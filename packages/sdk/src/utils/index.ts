@@ -1,5 +1,6 @@
 export { sortNotesByValue, getJoinSplitRequestTotalValue, sleep } from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
+export { protocolWhitelistKey } from "./contract";
 export {
   zip,
   range,

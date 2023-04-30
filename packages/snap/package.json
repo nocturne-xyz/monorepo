@@ -15,11 +15,11 @@
     "snap.manifest.json"
   ],
   "scripts": {
-    "cp-config": "cp ../config/configs/localhost.json ./src/config.json",
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
+    "cp-config": "cp ../config/configs/localhost.json ./src/config.json",
     "lint": "eslint --fix src --ext .ts",
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
@@ -51,7 +51,7 @@
     "@typescript-eslint/parser": "^5.20.0",
     "chai": "^4.3.6",
     "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.2.9",
     "eslint-plugin-node": "^11.1.0",

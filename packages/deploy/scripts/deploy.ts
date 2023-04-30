@@ -1,14 +1,26 @@
 import { ethers } from "ethers";
-import { NocturneDeployConfig, deployNocturne } from "../src/deploy";
+import { NocturneDeployConfig } from "../src/config";
+import { deployNocturne, relinquishContractOwnership } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import { checkNocturneContractDeployment } from "../src/checks";
 import * as JSON from "bigint-json-serialization";
+import { Handler__factory } from "@nocturne-xyz/contracts";
+import { whitelistProtocols } from "../src/whitelist";
+import {
+  NocturneContractDeployment,
+  ProtocolAllowlist,
+} from "@nocturne-xyz/config";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
 
 dotenv.config();
+
+interface DeploymentAndAllowlist {
+  deployment: NocturneContractDeployment;
+  protocolAllowlist: ProtocolAllowlist;
+}
 
 (async () => {
   const configName = process.env.CONFIG_NAME;
@@ -29,11 +41,26 @@ dotenv.config();
   );
   const config: NocturneDeployConfig = JSON.parse(configString);
 
+  // Deploy contracts
   const deployment = await deployNocturne(deployer, config);
 
-  console.log(deployment);
+  // Whitelist protocols
+  const handler = Handler__factory.connect(
+    deployment.handlerProxy.proxy,
+    deployer
+  );
+  await whitelistProtocols(deployer, config.protocolAllowlist, handler);
+
+  // Relinquish ownership to proxy admin owner
+  await relinquishContractOwnership(deployer, config, deployment);
 
   await checkNocturneContractDeployment(deployment, provider);
+
+  const deploymentAndAllowlist: DeploymentAndAllowlist = {
+    deployment,
+    protocolAllowlist: config.protocolAllowlist,
+  };
+  console.log(deploymentAndAllowlist);
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
@@ -41,7 +68,7 @@ dotenv.config();
 
   fs.writeFileSync(
     `${DEPLOYS_DIR}/${deployment.network.name}-${Date.now().toString()}.json`,
-    JSON.stringify(deployment),
+    JSON.stringify(deploymentAndAllowlist),
     {
       encoding: "utf8",
       flag: "w",

@@ -29,18 +29,46 @@
     "depositSources": ["0x51401dc811bb5740090279Ba06cfA8fcF6113778"],
     "screeners": ["0x1111beB3B2C4f22Ee086B2b38C1476A3cE7f78E8"]
   },
+  "protocolAllowlist": [
+    [
+      "weth",
+      {
+        "contractAddress": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "dai",
+      {
+        "contractAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ]
+  ],
   "gasAssets": [
     ["weth", "0xDe09E74d4888Bc4e65F589e8c13Bce9F71DdF4c7"],
     ["dai", "0xA3183498b579bd228aa2B62101C40CC1da978F24"]
   ],
   "rateLimits": [
-    ["weth", {
-      "perAddress": "5000000000000000000n",
-      "global": "500000000000000000000n"
-    }],
-    ["dai", {
-      "perAddress": "10000000000000000000000n",
-      "global": "1000000000000000000000000n"
-    }]
+    [
+      "weth",
+      {
+        "perAddress": "5000000000000000000n",
+        "global": "500000000000000000000n"
+      }
+    ],
+    [
+      "dai",
+      {
+        "perAddress": "10000000000000000000000n",
+        "global": "1000000000000000000000000n"
+      }
+    ]
   ]
 }
