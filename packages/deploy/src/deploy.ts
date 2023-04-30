@@ -20,8 +20,10 @@ import {
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 
-export interface NocturneDeployConfigWithoutAllowlist
-  extends Omit<NocturneDeployConfig, "protocolAllowlist"> {}
+export type NocturneDeployConfigWithoutAllowlist = Omit<
+  NocturneDeployConfig,
+  "protocolAllowlist"
+>;
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
