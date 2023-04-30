@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- instead of copying localhost config to snap, dev site rebuilds config package, then rebuilds snap, such that when snap runs, can draw on updated config pkg
 - update prettier in all packages
 - site script starts snap after deposit script completes
 - site script points deposit-screener to config file instead of passing in wallet address
