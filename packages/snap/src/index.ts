@@ -13,14 +13,13 @@ import { getBIP44AddressKeyDeriver } from "@metamask/key-tree";
 import { OnRpcRequestHandler } from "@metamask/snaps-types";
 import { SnapKvStore } from "./snapdb";
 import * as JSON from "bigint-json-serialization";
-import { NocturneConfig } from "@nocturne-xyz/config";
+import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
-import * as rawConfig from "./config.json";
 
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
 
-const config = NocturneConfig.fromObject(rawConfig);
+const config = loadNocturneConfigBuiltin("localhost");
 
 const Fr = BabyJubJub.ScalarField;
 

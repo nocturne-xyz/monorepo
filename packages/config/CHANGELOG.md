@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- expose `loadNocturneConfigBuiltin` which avoids FS access
 - add `protocolAllowlist` to NocturneConfig
 - add `toString`, `fromString` methods to avoid direct map serialization
 - add `fromObject` method

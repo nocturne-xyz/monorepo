@@ -1,5 +1,6 @@
 export {
   loadNocturneConfig,
+  loadNocturneConfigBuiltin,
   NocturneConfig,
   ProtocolAllowlist,
   ProtocolWhitelistEntry,

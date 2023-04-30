@@ -1,8 +1,8 @@
 import { Address, NocturneContractDeployment } from "./deployment";
+import * as localhost from "../configs/localhost.json";
+import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
-
-const CONFIGS_DIR = `${__dirname}/../configs`;
 
 export interface RateLimit {
   perAddress: bigint;
@@ -44,6 +44,8 @@ export class NocturneConfig {
   static fromObject<T extends NocturneConfigProperties>(
     obj: T
   ): NocturneConfig {
+    obj = JSON.parse(JSON.stringify(obj));
+
     return new NocturneConfig(
       obj.contracts,
       new Map(obj.protocolAllowlist),
@@ -97,12 +99,19 @@ export function loadNocturneConfig(
   let json: string;
   if (fs.existsSync(networkNameOrFilePath)) {
     json = fs.readFileSync(networkNameOrFilePath).toString();
+    const parsed = JSON.parse(json) as NocturneConfigProperties;
+    return NocturneConfig.fromObject(parsed);
   } else {
-    json = fs
-      .readFileSync(`${CONFIGS_DIR}/${networkNameOrFilePath}.json`)
-      .toString();
+    return loadNocturneConfigBuiltin(networkNameOrFilePath);
   }
+}
 
-  const parsed = JSON.parse(json) as NocturneConfigProperties;
-  return NocturneConfig.fromObject(parsed);
+export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
+  if (name == "localhost") {
+    return NocturneConfig.fromObject(localhost as any);
+  } else if (name == "example-network") {
+    return NocturneConfig.fromObject(exampleNetwork as any);
+  } else {
+    throw new Error(`unknown config name: ${name}`);
+  }
 }
