@@ -16,6 +16,10 @@
     "setup-rapidsnark": "../circuits/scripts/setup_rapidsnark_prover.sh",
     "test:e2e": "mocha --require ts-node/register tests/** --timeout 10000000 --exit"
   },
+  "dependencies": {
+    "@nocturne-xyz/offchain-utils": "workspace:^",
+    "winston-humanize-formatter": "^0.1.4"
+  },
   "devDependencies": {
     "@nocturne-xyz/bundler": "workspace:^",
     "@nocturne-xyz/config": "workspace:^",
@@ -40,14 +44,10 @@
     "find-yarn-workspace-root": "^2.0.0",
     "hardhat": "^2.13.1",
     "mocha": "^10.1.0",
-    "prettier": "^2.8.0",
+    "prettier": "^2.8.8",
     "uuid": "^9.0.0"
   },
   "engines": {
     "node": "18.12.1"
-  },
-  "dependencies": {
-    "@nocturne-xyz/offchain-utils": "workspace:^",
-    "winston-humanize-formatter": "^0.1.4"
   }
 }
