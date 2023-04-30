@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { NocturneDeployConfig } from "../src/config";
-import { deployNocturne } from "../src/deploy";
+import { deployNocturne, relinquishContractOwnership } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import { checkNocturneContractDeployment } from "../src/checks";
@@ -34,7 +34,6 @@ dotenv.config();
 
   // Deploy contracts
   const deployment = await deployNocturne(deployer, config);
-  await checkNocturneContractDeployment(deployment, provider);
 
   // Whitelist protocols
   const handler = Handler__factory.connect(
@@ -42,6 +41,11 @@ dotenv.config();
     deployer
   );
   await whitelistProtocols(deployer, config.protocolAllowlist, handler);
+
+  // Relinquish ownership to proxy admin owner
+  await relinquishContractOwnership(deployer, config, deployment);
+
+  await checkNocturneContractDeployment(deployment, provider);
 
   const deploymentAndAllowlist = {
     deployment,

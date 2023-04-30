@@ -126,23 +126,6 @@ export async function deployNocturne(
     );
   await enrollDepositManagerTx.wait(opts?.confirmations);
 
-  console.log(
-    "\nrelinquishing control of wallet, handler, and deposit manager..."
-  );
-  const walletTransferOwnershipTx =
-    await proxiedWallet.contract.transferOwnership(config.proxyAdminOwner);
-  await walletTransferOwnershipTx.wait(opts?.confirmations);
-
-  const handlerTransferOwnershipTx =
-    await proxiedHandler.contract.transferOwnership(config.proxyAdminOwner);
-  await handlerTransferOwnershipTx.wait(opts?.confirmations);
-
-  const depositManagerTransferOwnershipTx =
-    await proxiedDepositManager.contract.transferOwnership(
-      config.proxyAdminOwner
-    );
-  await depositManagerTransferOwnershipTx.wait(opts?.confirmations);
-
   return {
     network: {
       name,
@@ -151,6 +134,8 @@ export async function deployNocturne(
     startBlock,
     owners: {
       proxyAdminOwner: config.proxyAdminOwner,
+      // Below owners are all anticipated, ownership relinquished after this fn
+      // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
       walletOwner: config.proxyAdminOwner,
       handlerOwner: config.proxyAdminOwner,
       depositManagerOwner: config.proxyAdminOwner,
@@ -164,6 +149,44 @@ export async function deployNocturne(
     screeners: config.screeners,
     depositSources: [proxiedDepositManager.address],
   };
+}
+
+export async function relinquishContractOwnership(
+  connectedSigner: ethers.Wallet,
+  config: NocturneDeployConfigWithoutAllowlist,
+  deployment: NocturneContractDeployment
+): Promise<void> {
+  const { opts } = config;
+
+  const wallet = Wallet__factory.connect(
+    deployment.walletProxy.proxy,
+    connectedSigner
+  );
+  const handler = Handler__factory.connect(
+    deployment.handlerProxy.proxy,
+    connectedSigner
+  );
+  const depositManager = DepositManager__factory.connect(
+    deployment.depositManagerProxy.proxy,
+    connectedSigner
+  );
+
+  console.log("\nrelinquishing control of wallet...");
+  const walletTransferOwnershipTx = await wallet.transferOwnership(
+    config.proxyAdminOwner
+  );
+  await walletTransferOwnershipTx.wait(opts?.confirmations);
+
+  console.log("relinquishing control of handler...");
+  const handlerTransferOwnershipTx = await handler.transferOwnership(
+    config.proxyAdminOwner
+  );
+  await handlerTransferOwnershipTx.wait(opts?.confirmations);
+
+  console.log("relinquishing control of deposit manager...");
+  const depositManagerTransferOwnershipTx =
+    await depositManager.transferOwnership(config.proxyAdminOwner);
+  await depositManagerTransferOwnershipTx.wait(opts?.confirmations);
 }
 
 async function deployProxiedContract<
