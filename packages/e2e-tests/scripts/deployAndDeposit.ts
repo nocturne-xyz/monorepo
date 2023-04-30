@@ -1,9 +1,5 @@
-import { deployContractsWithDummyAdmins } from "../src/deploy";
+import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
-import {
-  DepositManager__factory,
-  Handler__factory,
-} from "@nocturne-xyz/contracts";
 import {
   AssetTrait,
   AssetType,
@@ -13,8 +9,6 @@ import {
 } from "@nocturne-xyz/sdk";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { KEYS_TO_WALLETS } from "../src/keys";
-import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { deployAndWhitelistERC20 } from "../src/tokens";
 import fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 
@@ -64,27 +58,15 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
-  const contractDeployment = await deployContractsWithDummyAdmins(deployerEoa, {
-    screeners: [DEPOSIT_SCREENER],
-    subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
-  });
-
-  const { handlerProxy, depositManagerProxy } = contractDeployment;
-  const handler = Handler__factory.connect(handlerProxy.proxy, deployerEoa);
-  const depositManager = DepositManager__factory.connect(
-    depositManagerProxy.proxy,
-    deployerEoa
-  );
+  const [deployment, { erc20, gasToken }, { depositManager }] =
+    await deployContractsWithDummyConfig(deployerEoa, {
+      screeners: [DEPOSIT_SCREENER],
+      subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
+    });
 
   const tokenAmount = ethers.utils.parseEther("10.0").toBigInt();
-  const tokens: SimpleERC20Token[] = [];
-  const amounts: bigint[] = [];
-  for (let i = 0; i < 2; i++) {
-    const [token] = await deployAndWhitelistERC20(deployerEoa, handler);
-    console.log(`ERC20 token ${i + 1} deployed at: ${token.address}`);
-    tokens.push(token);
-    amounts.push(tokenAmount);
-  }
+  const tokens = [erc20, gasToken];
+  const amounts = [tokenAmount, tokenAmount];
 
   // both tokens are gas assets
   const gasAssets = new Map(
@@ -93,7 +75,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
 
   // no rate limits
   const config = new NocturneConfig(
-    contractDeployment,
+    deployment,
     new Map(), // dummy, protocol whitelist not important here
     gasAssets,
     new Map() // dummy, no rate limits
