@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- separate ownership transferral from contract deployment
 - add `whitelistProtocols` function
 - remove empty `console.log()` in place of `\n` again
 - separate configs types out into separate `config.ts` again
