@@ -264,7 +264,7 @@ async function simulateOperation(
   handlerContract: Handler,
   op: Operation
 ): Promise<OperationResult> {
-  // We need to do staticCall, which fails if teller is connected to a signer
+  // We need to do staticCall, which fails if wallet is connected to a signer
   // https://github.com/ethers-io/ethers.js/discussions/3327#discussioncomment-3539505
   // Switching to a regular provider underlying the signer
   if (handlerContract.signer) {

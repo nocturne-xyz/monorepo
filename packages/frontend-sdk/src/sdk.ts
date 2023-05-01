@@ -203,7 +203,7 @@ export class NocturneFrontendSDK {
    */
   async getAllBalances(): Promise<AssetWithBalance[]> {
     const json = (await window.ethereum.request({
-      method: "teller_invokeSnap",
+      method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -220,7 +220,7 @@ export class NocturneFrontendSDK {
    */
   async sync(): Promise<void> {
     await window.ethereum.request({
-      method: "teller_invokeSnap",
+      method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -240,7 +240,7 @@ export class NocturneFrontendSDK {
     operationRequest: OperationRequest
   ): Promise<SignedOperation> {
     const json = (await window.ethereum.request({
-      method: "teller_invokeSnap",
+      method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -258,7 +258,7 @@ export class NocturneFrontendSDK {
    */
   protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
-      method: "teller_invokeSnap",
+      method: "wallet_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {

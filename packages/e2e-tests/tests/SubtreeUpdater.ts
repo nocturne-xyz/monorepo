@@ -22,7 +22,7 @@ describe("subtree updater", async () => {
   let depositManager: DepositManager;
   let handler: Handler;
   let token: SimpleERC20Token;
-  let nocturneTellerSDKAlice: NocturneWalletSDK;
+  let nocturneWalletSDKAlice: NocturneWalletSDK;
   let server: SubtreeUpdateServer;
   let nocturneDBAlice: NocturneDB;
 
@@ -44,7 +44,7 @@ describe("subtree updater", async () => {
     aliceEoa = _aliceEoa;
     subtreeUpdaterEoa = _subtreeUpdaterEoa;
 
-    ({ nocturneTellerSDKAlice, nocturneDBAlice } = await setupTestClient(
+    ({ nocturneWalletSDKAlice, nocturneDBAlice } = await setupTestClient(
       contractDeployment,
       provider
     ));
@@ -89,7 +89,7 @@ describe("subtree updater", async () => {
       depositManager,
       token,
       aliceEoa,
-      nocturneTellerSDKAlice.signer.generateRandomStealthAddress(),
+      nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
       [PER_SPEND_AMOUNT, PER_SPEND_AMOUNT]
     );
 

@@ -389,9 +389,9 @@ export enum SyncAdapterOption {
 
 export interface ClientSetup {
   nocturneDBAlice: NocturneDB;
-  nocturneTellerSDKAlice: NocturneWalletSDK;
+  nocturneWalletSDKAlice: NocturneWalletSDK;
   nocturneDBBob: NocturneDB;
-  nocturneTellerSDKBob: NocturneWalletSDK;
+  nocturneWalletSDKBob: NocturneWalletSDK;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -422,7 +422,7 @@ export async function setupTestClient(
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
-  const nocturneTellerSDKAlice = setupNocturneWalletSDK(
+  const nocturneWalletSDKAlice = setupNocturneWalletSDK(
     3n,
     config,
     provider,
@@ -435,7 +435,7 @@ export async function setupTestClient(
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
-  const nocturneTellerSDKBob = setupNocturneWalletSDK(
+  const nocturneWalletSDKBob = setupNocturneWalletSDK(
     5n,
     config,
     provider,
@@ -448,9 +448,9 @@ export async function setupTestClient(
 
   return {
     nocturneDBAlice,
-    nocturneTellerSDKAlice,
+    nocturneWalletSDKAlice,
     nocturneDBBob,
-    nocturneTellerSDKBob,
+    nocturneWalletSDKBob,
     joinSplitProver,
   };
 }
