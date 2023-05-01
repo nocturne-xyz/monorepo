@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.17;
-import {IWallet} from "../interfaces/IWallet.sol";
+import {ITeller} from "../interfaces/ITeller.sol";
 import {Groth16} from "../libs/Groth16.sol";
 import {Pairing} from "../libs/Pairing.sol";
 import "../libs/Types.sol";

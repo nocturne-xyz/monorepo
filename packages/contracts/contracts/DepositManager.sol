@@ -7,7 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 // Internal
-import {IWallet} from "./interfaces/IWallet.sol";
+import {ITeller} from "./interfaces/ITeller.sol";
 import {IWeth} from "./interfaces/IWeth.sol";
 import {DepositManagerBase} from "./DepositManagerBase.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
@@ -22,7 +22,7 @@ contract DepositManager is
     uint256 constant ERC20_ID = 0;
     uint256 constant TWO_ETH_TRANSFERS_GAS = 50_000;
 
-    IWallet public _wallet;
+    ITeller public _teller;
     IWeth public _weth;
 
     EncodedAsset public _wethEncoded;
@@ -66,12 +66,12 @@ contract DepositManager is
     function initialize(
         string memory contractName,
         string memory contractVersion,
-        address wallet,
+        address teller,
         address weth
     ) external initializer {
         __Ownable_init();
         __DepositManagerBase_init(contractName, contractVersion);
-        _wallet = IWallet(wallet);
+        _teller = ITeller(teller);
         _weth = IWeth(weth);
         _wethEncoded = AssetUtils.encodeAsset(AssetType.ERC20, weth, ERC20_ID);
     }
@@ -198,9 +198,9 @@ contract DepositManager is
         // Clear deposit hash
         _outstandingDepositHashes[depositHash] = false;
 
-        // Approve wallet for assets and deposit funds
-        AssetUtils.approveAsset(req.encodedAsset, address(_wallet), req.value);
-        _wallet.depositFunds(req);
+        // Approve teller for assets and deposit funds
+        AssetUtils.approveAsset(req.encodedAsset, address(_teller), req.value);
+        _teller.depositFunds(req);
 
         // NOTE: screener may be under-compensated for gas during spikes in
         // demand.

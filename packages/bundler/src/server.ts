@@ -8,7 +8,7 @@ import morgan from "morgan";
 import { Queue } from "bullmq";
 import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
 import { NullifierDB, StatusDB } from "./db";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import { makeGetOperationStatusHandler, makeRelayHandler } from "./routes";
 
 export class BundlerServer {
@@ -17,12 +17,12 @@ export class BundlerServer {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
-  walletContract: Wallet;
+  tellerContract: Teller;
   provider: ethers.providers.Provider;
   ignoreGas?: boolean;
 
   constructor(
-    walletAddress: string,
+    tellerAddress: string,
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
@@ -34,7 +34,7 @@ export class BundlerServer {
     this.nullifierDB = new NullifierDB(redis);
     this.logger = logger;
     this.provider = provider;
-    this.walletContract = Wallet__factory.connect(walletAddress, provider);
+    this.tellerContract = Teller__factory.connect(tellerAddress, provider);
     this.ignoreGas = ignoreGas;
   }
 
@@ -47,7 +47,7 @@ export class BundlerServer {
         statusDB: this.statusDB,
         nullifierDB: this.nullifierDB,
         redis: this.redis,
-        walletContract: this.walletContract,
+        tellerContract: this.tellerContract,
         provider: this.provider,
         logger: this.logger.child({
           route: "/relay",

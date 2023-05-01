@@ -1,5 +1,5 @@
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
+import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 import {
   Address,
   computeOperationDigest,
@@ -25,7 +25,7 @@ export interface BundlerSubmitterHandle {
 export class BundlerSubmitter {
   redis: IORedis;
   signingProvider: ethers.Signer;
-  walletContract: Wallet; // TODO: replace with tx manager
+  tellerContract: Teller; // TODO: replace with tx manager
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
@@ -34,7 +34,7 @@ export class BundlerSubmitter {
   readonly BATCH_SIZE: number = 8;
 
   constructor(
-    walletAddress: Address,
+    tellerAddress: Address,
     signingProvider: ethers.Signer,
     redis: IORedis,
     logger: Logger
@@ -44,8 +44,8 @@ export class BundlerSubmitter {
     this.statusDB = new StatusDB(this.redis);
     this.nullifierDB = new NullifierDB(this.redis);
     this.signingProvider = signingProvider;
-    this.walletContract = Wallet__factory.connect(
-      walletAddress,
+    this.tellerContract = Teller__factory.connect(
+      tellerAddress,
       this.signingProvider
     );
   }
@@ -74,7 +74,7 @@ export class BundlerSubmitter {
     );
 
     this.logger.info(
-      `submitter starting... wallet contract: ${this.walletContract.address}.`
+      `submitter starting... teller contract: ${this.tellerContract.address}.`
     );
 
     const promise = new Promise<void>((resolve) => {
@@ -151,17 +151,17 @@ export class BundlerSubmitter {
   ): Promise<ethers.ContractTransaction | undefined> {
     try {
       // Estimate gas first
-      const data = this.walletContract.interface.encodeFunctionData(
+      const data = this.tellerContract.interface.encodeFunctionData(
         "processBundle",
         [{ operations }]
       );
-      const est = await this.walletContract.provider.estimateGas({
-        to: this.walletContract.address,
+      const est = await this.tellerContract.provider.estimateGas({
+        to: this.tellerContract.address,
         data,
       });
 
       logger.info(`submtting bundle with ${operations.length} operations`);
-      return this.walletContract.processBundle(
+      return this.tellerContract.processBundle(
         { operations },
         { gasLimit: est.toBigInt() + 1_000_000n } // Add gas est buffer
       );
@@ -205,7 +205,7 @@ export class BundlerSubmitter {
     logger.debug("looking for OperationProcessed events...");
     const matchingEvents = parseEventsFromContractReceipt(
       receipt,
-      this.walletContract.interface.getEvent("OperationProcessed")
+      this.tellerContract.interface.getEvent("OperationProcessed")
     ) as OperationProcessedEvent[];
 
     logger.info("matching events:", matchingEvents);

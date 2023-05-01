@@ -8,7 +8,7 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
-import {IWallet} from "./interfaces/IWallet.sol";
+import {ITeller} from "./interfaces/ITeller.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
 import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
@@ -24,7 +24,7 @@ contract BalanceManager is
 {
     using OperationLib for Operation;
 
-    IWallet public _wallet;
+    ITeller public _teller;
 
     EncodedAsset[] public _receivedAssets;
 
@@ -37,12 +37,12 @@ contract BalanceManager is
     event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
 
     function __BalanceManager_init(
-        address wallet,
+        address teller,
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
         __NocturneReentrancyGuard_init();
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
-        _wallet = IWallet(wallet);
+        _teller = ITeller(teller);
     }
 
     modifier notErc721(EncodedAsset calldata encodedAsset) {
@@ -74,7 +74,7 @@ contract BalanceManager is
             );
         }
 
-        // ENTERED_PROCESS is ok because this is when wallet funds handler
+        // ENTERED_PROCESS is ok because this is when teller funds handler
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
@@ -156,10 +156,10 @@ contract BalanceManager is
 
     /**
       Process all joinSplits and request all declared publicSpend from the
-      wallet, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
+      teller, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
 
       @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from wallet with the same encodedAsset as
+      to request maxGasAssetCost from teller with the same encodedAsset as
       joinSplits[0].
     */
     function _processJoinSplitsReservingFee(
@@ -175,7 +175,7 @@ contract BalanceManager is
             // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
 
-            // Defaults to requesting all publicSpend from wallet
+            // Defaults to requesting all publicSpend from teller
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
             // If we still need to reserve more gas and the current
             // `joinSplit` is spending the gasAsset, then reserve what we can
@@ -190,7 +190,7 @@ contract BalanceManager is
                     op.joinSplits[i].publicSpend,
                     gasAssetToReserve
                 );
-                // Deduct gas payment from value to transfer to wallet
+                // Deduct gas payment from value to transfer to teller
                 valueToTransfer -= gasPaymentThisJoinSplit;
                 // Deduct gas payment from the amount to be reserved
                 gasAssetToReserve -= gasPaymentThisJoinSplit;
@@ -198,7 +198,7 @@ contract BalanceManager is
 
             // If value to transfer is 0, skip the transfer
             if (valueToTransfer > 0) {
-                _wallet.requestAsset(
+                _teller.requestAsset(
                     op.joinSplits[i].encodedAsset,
                     valueToTransfer
                 );
@@ -217,10 +217,10 @@ contract BalanceManager is
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
-            // Request reserved gasAssetAmount from wallet.
+            // Request reserved gasAssetAmount from teller.
             /// @dev This is safe because _processJoinSplitsReservingFee is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
-            _wallet.requestAsset(encodedGasAsset, gasAssetAmount);
+            _teller.requestAsset(encodedGasAsset, gasAssetAmount);
 
             uint256 bundlerPayout = OperationUtils
                 .calculateBundlerGasAssetPayout(op, opResult);
@@ -242,7 +242,7 @@ contract BalanceManager is
     }
 
     /**
-      Refund all current wallet assets back to refundAddr. The list of assets
+      Refund all current teller assets back to refundAddr. The list of assets
       to refund is specified in joinSplits and the state variable
       _receivedAssets.
     */
@@ -276,7 +276,7 @@ contract BalanceManager is
             uint256 difference = currentBalance - preFilledBalance;
             AssetUtils.transferAssetTo(
                 encodedAsset,
-                address(_wallet),
+                address(_teller),
                 difference
             );
             _handleRefundNote(encodedAsset, refundAddr, difference);

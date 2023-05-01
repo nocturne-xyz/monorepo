@@ -8,7 +8,7 @@ import { loadNocturneConfig } from "@nocturne-xyz/config";
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
   .description(
-    "must supply .env file with REDIS_URL, RPC_URL, and TX_SIGNER_KEY. must also supply wallet contract address as an option."
+    "must supply .env file with REDIS_URL, RPC_URL, and TX_SIGNER_KEY. must also supply teller contract address as an option."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -37,7 +37,7 @@ const runSubmitter = new Command("submitter")
 
     const logger = makeLogger(logDir, "bundler", "submitter");
     const submitter = new BundlerSubmitter(
-      config.walletAddress(),
+      config.tellerAddress(),
       signingProvider,
       getRedis(),
       logger

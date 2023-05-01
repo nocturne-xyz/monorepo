@@ -13,7 +13,7 @@ import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerk
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {OperationUtils} from "../../libs/OperationUtils.sol";
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {TestBalanceManager} from "../harnesses/TestBalanceManager.sol";
 import "../utils/NocturneUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
@@ -43,7 +43,7 @@ contract BalanceManagerTest is Test {
     uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
 
     TestBalanceManager balanceManager;
-    Wallet wallet;
+    Teller teller;
     IJoinSplitVerifier joinSplitVerifier;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
     SimpleERC20Token[3] ERC20s;
@@ -51,22 +51,22 @@ contract BalanceManagerTest is Test {
     SimpleERC1155Token[3] ERC1155s;
 
     function setUp() public virtual {
-        // Instantiate wallet, joinSplitVerifier, tree, and balanceManager
-        wallet = new Wallet();
+        // Instantiate teller, joinSplitVerifier, tree, and balanceManager
+        teller = new Teller();
         balanceManager = new TestBalanceManager();
 
         joinSplitVerifier = new TestJoinSplitVerifier();
         subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
         balanceManager.initialize(
-            address(wallet),
+            address(teller),
             address(subtreeUpdateVerifier)
         );
 
         // NOTE: TestBalanceManager implements IHandler so we can test with
-        // wallet
-        wallet.initialize(address(balanceManager), address(joinSplitVerifier));
-        wallet.setDepositSourcePermission(ALICE, true);
+        // teller
+        teller.initialize(address(balanceManager), address(joinSplitVerifier));
+        teller.setDepositSourcePermission(ALICE, true);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -95,10 +95,10 @@ contract BalanceManagerTest is Test {
         );
 
         vm.prank(recipient);
-        token.approve(address(wallet), amount);
+        token.approve(address(teller), amount);
 
         vm.prank(ALICE);
-        wallet.depositFunds(deposit);
+        teller.depositFunds(deposit);
     }
 
     function testOnErc721ReceivedEnteredExecute() public {
@@ -223,13 +223,13 @@ contract BalanceManagerTest is Test {
 
         // Pre-deposit state
         assertEq(balanceManager.totalCount(), 0);
-        assertEq(token.balanceOf(address(wallet)), 0);
+        assertEq(token.balanceOf(address(teller)), 0);
 
         reserveAndDepositFunds(ALICE, token, depositAmount);
 
         // Post-deposit state
         assertEq(balanceManager.totalCount(), 1);
-        assertEq(token.balanceOf(address(wallet)), depositAmount);
+        assertEq(token.balanceOf(address(teller)), depositAmount);
     }
 
     function testProcessJoinSplitsGasPriceZero() public {
@@ -311,7 +311,7 @@ contract BalanceManagerTest is Test {
             token.balanceOf(address(balanceManager)),
             (2 * PER_NOTE_AMOUNT) - totalFeeReserved
         );
-        assertEq(token.balanceOf(address(wallet)), totalFeeReserved);
+        assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
@@ -358,7 +358,7 @@ contract BalanceManagerTest is Test {
             token.balanceOf(address(balanceManager)),
             (3 * PER_NOTE_AMOUNT) - totalFeeReserved
         );
-        assertEq(token.balanceOf(address(wallet)), totalFeeReserved);
+        assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeAndPayBundler() public {
@@ -631,7 +631,7 @@ contract BalanceManagerTest is Test {
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
-                gasPrice: 0, // don't reserve any gas, wallet takes up all
+                gasPrice: 0, // don't reserve any gas, teller takes up all
                 actions: new Action[](0),
                 atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
@@ -647,12 +647,12 @@ contract BalanceManagerTest is Test {
             token.balanceOf(address(balanceManager)),
             (2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(wallet)), 0);
+        assertEq(token.balanceOf(address(teller)), 0);
 
-        // Expect all 100M to be refunded to wallet
+        // Expect all 100M to be refunded to teller
         balanceManager.handleAllRefunds(op);
         assertEq(token.balanceOf(address(balanceManager)), 0);
-        assertEq(token.balanceOf(address(wallet)), (2 * PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(teller)), (2 * PER_NOTE_AMOUNT));
     }
 
     function testHandleRefundsRefundAssetsSingleAsset() public {
@@ -693,10 +693,10 @@ contract BalanceManagerTest is Test {
         vm.prank(ALICE);
         refundToken.transfer(address(balanceManager), refundAmount);
 
-        // Expect all refund tokens to be refunded to wallet
+        // Expect all refund tokens to be refunded to teller
         balanceManager.handleAllRefunds(op);
         assertEq(refundToken.balanceOf(address(balanceManager)), 0);
-        assertEq(refundToken.balanceOf(address(wallet)), refundAmount);
+        assertEq(refundToken.balanceOf(address(teller)), refundAmount);
     }
 
     function testHandleRefundsReceivedAssets() public {
@@ -755,24 +755,24 @@ contract BalanceManagerTest is Test {
 
         // Pre-refund balances
         assertEq(erc721.balanceOf(address(balanceManager)), 1);
-        assertEq(erc721.balanceOf(address(wallet)), 0);
+        assertEq(erc721.balanceOf(address(teller)), 0);
         assertEq(erc721.ownerOf(erc721Id), address(balanceManager));
 
         assertEq(
             erc1155.balanceOf(address(balanceManager), erc1155Id),
             erc1155Amount
         );
-        assertEq(erc1155.balanceOf(address(wallet), erc1155Id), 0);
+        assertEq(erc1155.balanceOf(address(teller), erc1155Id), 0);
 
         balanceManager.handleAllRefunds(op);
 
-        // Post-refund balances (wallet owns what balance manager had)
+        // Post-refund balances (teller owns what balance manager had)
         assertEq(erc721.balanceOf(address(balanceManager)), 0);
-        assertEq(erc721.balanceOf(address(wallet)), 1);
-        assertEq(erc721.ownerOf(erc721Id), address(wallet));
+        assertEq(erc721.balanceOf(address(teller)), 1);
+        assertEq(erc721.ownerOf(erc721Id), address(teller));
 
         assertEq(erc1155.balanceOf(address(balanceManager), erc1155Id), 0);
-        assertEq(erc1155.balanceOf(address(wallet), erc1155Id), erc1155Amount);
+        assertEq(erc1155.balanceOf(address(teller), erc1155Id), erc1155Amount);
     }
 
     function testPrefillAssetAndHandleRefundsJoinSplitAndRefundTokens() public {
@@ -865,14 +865,14 @@ contract BalanceManagerTest is Test {
             refundAmount + 1
         );
 
-        // Expect all refund tokens to be refunded to wallet barring the
+        // Expect all refund tokens to be refunded to teller barring the
         // prefilled 1s
         balanceManager.handleAllRefunds(op);
 
         assertEq(joinSplitToken.balanceOf(address(balanceManager)), 1);
-        assertEq(joinSplitToken.balanceOf(address(wallet)), PER_NOTE_AMOUNT);
+        assertEq(joinSplitToken.balanceOf(address(teller)), PER_NOTE_AMOUNT);
 
         assertEq(refundToken.balanceOf(address(balanceManager)), 1);
-        assertEq(refundToken.balanceOf(address(wallet)), refundAmount);
+        assertEq(refundToken.balanceOf(address(teller)), refundAmount);
     }
 }

@@ -8,7 +8,7 @@ import {
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
-  Wallet,
+  Teller,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -29,7 +29,7 @@ import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 
 chai.use(chaiAsPromised);
 
@@ -58,7 +58,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let bundlerEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let wallet: Wallet;
+  let teller: Teller;
   let handler: Handler;
   let nocturneDBAlice: NocturneDB;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
@@ -91,7 +91,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     ({
       provider,
       teardown,
-      wallet,
+      teller,
       handler,
       aliceEoa,
       bobEoa,
@@ -280,8 +280,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
-        wallet,
-        wallet.filters.OperationProcessed(),
+        teller,
+        teller.filters.OperationProcessed(),
         0,
         latestBlock
       );
@@ -295,7 +295,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20.balanceOf(wallet.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
       expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(0n);
@@ -368,7 +368,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const erc721ReserveCalldata =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
-        // mint a ERC721 token directly to the wallet contract
+        // mint a ERC721 token directly to the teller contract
         [handler.address, erc721Asset.id]
       );
 
@@ -376,7 +376,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const erc1155ReserveCalldata =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
-        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
+        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the teller contract
         [handler.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
       );
 
@@ -396,8 +396,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
-        wallet,
-        wallet.filters.OperationProcessed(),
+        teller,
+        teller.filters.OperationProcessed(),
         0,
         latestBlock
       );

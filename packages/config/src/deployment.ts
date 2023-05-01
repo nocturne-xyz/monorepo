@@ -13,13 +13,13 @@ export interface NocturneContractDeployment {
   // TODO: consolidate owners once we've sorted out upgrade admin situation
   owners: {
     proxyAdminOwner: Address;
-    walletOwner: Address;
+    tellerOwner: Address;
     handlerOwner: Address;
     depositManagerOwner: Address;
   };
   proxyAdmin: Address;
   depositManagerProxy: ProxyAddresses<any>;
-  walletProxy: ProxyAddresses<any>;
+  tellerProxy: ProxyAddresses<any>;
   handlerProxy: ProxyAddresses<any>;
   joinSplitVerifierAddress: Address;
   subtreeUpdateVerifierAddress: Address;

@@ -29,11 +29,11 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     );
 
     function initialize(
-        address wallet,
+        address teller,
         address subtreeUpdateVerifier
     ) external initializer {
         __Ownable_init();
-        __BalanceManager_init(wallet, subtreeUpdateVerifier);
+        __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
     modifier onlyThis() {
@@ -41,8 +41,8 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         _;
     }
 
-    modifier onlyWallet() {
-        require(msg.sender == address(_wallet), "Only wallet");
+    modifier onlyTeller() {
+        require(msg.sender == address(_teller), "Only teller");
         _;
     }
 
@@ -100,7 +100,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
 
     function handleDeposit(
         DepositRequest calldata deposit
-    ) external override whenNotPaused onlyWallet {
+    ) external override whenNotPaused onlyTeller {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }
@@ -132,7 +132,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     )
         external
         whenNotPaused
-        onlyWallet
+        onlyTeller
         handleOperationGuard
         returns (OperationResult memory opResult)
     {
@@ -235,8 +235,8 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         Action calldata action
     ) internal returns (bool success, bytes memory result) {
         require(
-            action.contractAddress != address(_wallet),
-            "Cannot call the Nocturne wallet"
+            action.contractAddress != address(_teller),
+            "Cannot call the Nocturne teller"
         );
 
         bytes4 selector = _extractFunctionSelector(action.encodedFunction);

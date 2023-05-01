@@ -8,7 +8,7 @@ import { loadNocturneConfig } from "@nocturne-xyz/config";
 const runServer = new Command("server")
   .summary("run bundler server")
   .description(
-    "must supply .env file with REDIS_URL and RPC_URL. must supply wallet contract address and port as options."
+    "must supply .env file with REDIS_URL and RPC_URL. must supply teller contract address and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -32,7 +32,7 @@ const runServer = new Command("server")
 
     const logger = makeLogger(logDir, "bundler", "server");
     const server = new BundlerServer(
-      config.walletAddress(),
+      config.tellerAddress(),
       provider,
       getRedis(),
       logger

@@ -68,8 +68,8 @@ export class NocturneConfig {
     });
   }
 
-  walletAddress(): Address {
-    return this.contracts.walletProxy.proxy;
+  tellerAddress(): Address {
+    return this.contracts.tellerProxy.proxy;
   }
 
   handlerAddress(): Address {

@@ -10,14 +10,14 @@ contract TestBalanceManager is IHandler, BalanceManager {
     using OperationLib for Operation;
 
     function initialize(
-        address wallet,
+        address teller,
         address subtreeUpdateVerifier
     ) external initializer {
-        __BalanceManager_init(wallet, subtreeUpdateVerifier);
+        __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
-    modifier onlyWallet() {
-        require(msg.sender == address(_wallet), "Only wallet");
+    modifier onlyTeller() {
+        require(msg.sender == address(_teller), "Only teller");
         _;
     }
 
@@ -28,10 +28,10 @@ contract TestBalanceManager is IHandler, BalanceManager {
         _addToAssetPrefill(encodedAsset, value);
     }
 
-    // Stub to make testing between Wallet<>BalanceManager easier
+    // Stub to make testing between Teller<>BalanceManager easier
     function handleDeposit(
         DepositRequest calldata deposit
-    ) external override onlyWallet {
+    ) external override onlyTeller {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }

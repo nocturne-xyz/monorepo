@@ -22,7 +22,7 @@ import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
 import "../utils/NocturneUtils.sol";
 import "../utils/ForgeUtils.sol";
 import {Handler} from "../../Handler.sol";
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {CommitmentTreeManager} from "../../CommitmentTreeManager.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
@@ -35,7 +35,7 @@ import {Utils} from "../../libs/Utils.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import "../../libs/Types.sol";
 
-contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
+contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
     uint256 public constant SNARK_SCALAR_FIELD =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
@@ -52,7 +52,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     address constant DEPOSIT_SOURCE = address(3);
     uint256 constant PER_NOTE_AMOUNT = uint256(50_000_000);
 
-    Wallet wallet;
+    Teller teller;
     Handler handler;
     TreeTest treeTest;
     SimpleERC20Token[3] ERC20s;
@@ -89,16 +89,16 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Deploy poseidon hasher libraries
         deployPoseidon3Through6();
 
-        wallet = new Wallet();
+        teller = new Teller();
         handler = new Handler();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
+        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        teller.initialize(address(handler), address(joinSplitVerifier));
 
-        wallet.setDepositSourcePermission(DEPOSIT_SOURCE, true);
+        teller.setDepositSourcePermission(DEPOSIT_SOURCE, true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
         hasherT3 = IHasherT3(new PoseidonHasherT3(poseidonT3));
@@ -138,8 +138,8 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         token.transfer(DEPOSIT_SOURCE, value);
 
         vm.startPrank(DEPOSIT_SOURCE);
-        token.approve(address(wallet), value);
-        wallet.depositFunds(
+        token.approve(address(teller), value);
+        teller.depositFunds(
             NocturneUtils.formatDepositRequest(
                 spender,
                 address(token),
@@ -167,7 +167,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             ? amount / PER_NOTE_AMOUNT
             : amount / PER_NOTE_AMOUNT + 1;
 
-        // Deposit funds to wallet
+        // Deposit funds to teller
         for (uint256 i = 0; i < depositIterations; i++) {
             StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
@@ -207,20 +207,20 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         handler.applySubtreeUpdate(root, NocturneUtils.dummyProof());
     }
 
-    function testWalletPauseUnpauseOnlyCallableByOwner() public {
+    function testTellerPauseUnpauseOnlyCallableByOwner() public {
         vm.startPrank(BOB); // Not owner
         vm.expectRevert("Ownable: caller is not the owner");
-        wallet.pause();
+        teller.pause();
         vm.expectRevert("Ownable: caller is not the owner");
-        wallet.unpause();
+        teller.unpause();
         vm.stopPrank();
 
         vm.startPrank(address(this));
-        wallet.pause();
-        assertEq(wallet.paused(), true);
+        teller.pause();
+        assertEq(teller.paused(), true);
 
-        wallet.unpause();
-        assertEq(wallet.paused(), false);
+        teller.unpause();
+        assertEq(teller.paused(), false);
         vm.stopPrank();
     }
 
@@ -240,9 +240,9 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.stopPrank();
     }
 
-    function testPausableWorksOnWallet() public {
+    function testPausableWorksOnTeller() public {
         vm.prank(address(this));
-        wallet.pause();
+        teller.pause();
 
         SimpleERC20Token token = ERC20s[0];
         EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
@@ -291,12 +291,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.expectRevert("Pausable: paused");
-        wallet.depositFunds(deposit);
+        teller.depositFunds(deposit);
         vm.expectRevert("Pausable: paused");
-        wallet.processBundle(bundle);
+        teller.processBundle(bundle);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(handler));
-        wallet.requestAsset(encodedToken, 100);
+        teller.requestAsset(encodedToken, 100);
     }
 
     function testPausableWorksOnHandler() public {
@@ -344,20 +344,20 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.expectRevert("Pausable: paused");
-        vm.prank(address(wallet));
+        vm.prank(address(teller));
         handler.handleDeposit(deposit);
         vm.expectRevert("Pausable: paused");
-        vm.prank(address(wallet));
+        vm.prank(address(teller));
         handler.handleOperation(operation, 100, ALICE);
         vm.expectRevert("Pausable: paused");
         vm.prank(address(handler));
         handler.executeActions(operation);
     }
 
-    function testSetDepositSourcePermissionWalletFailsNotOwner() public {
+    function testSetDepositSourcePermissionTellerFailsNotOwner() public {
         vm.prank(BOB); // not owner
         vm.expectRevert("Ownable: caller is not the owner");
-        wallet.setDepositSourcePermission(address(0x123), true);
+        teller.setDepositSourcePermission(address(0x123), true);
     }
 
     function testSetDepositSourcePermissionSucceedsOwner() public {
@@ -365,7 +365,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.expectEmit(true, true, true, true);
         emit DepositSourcePermissionSet(address(0x123), true);
         vm.prank(address(this));
-        wallet.setDepositSourcePermission(address(0x123), true);
+        teller.setDepositSourcePermission(address(0x123), true);
     }
 
     function testAddToAssetPrefillHandlerFailsNotOwner() public {
@@ -504,11 +504,11 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
         vm.prank(ALICE);
-        token.approve(address(wallet), PER_NOTE_AMOUNT);
+        token.approve(address(teller), PER_NOTE_AMOUNT);
 
         vm.startPrank(ALICE); // msg.sender made to be ALICE not DEPOSIT_SOURCE
         vm.expectRevert("Only deposit source");
-        wallet.depositFunds(
+        teller.depositFunds(
             DepositRequest({
                 spender: ALICE,
                 encodedAsset: AssetUtils.encodeAsset(
@@ -526,7 +526,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleTransferSingleJoinSplitWithBundlerComp() public {
-        // Alice starts with 50M tokens in wallet
+        // Alice starts with 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT);
 
@@ -555,7 +555,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        assertEq(token.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
+        assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(token.balanceOf(address(handler)), uint256(0));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
@@ -568,7 +568,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -578,10 +578,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         // Expect BOB to have the 25M sent by alice
-        // Expect wallet to have alice's remaining 25M - gasComp
+        // Expect teller to have alice's remaining 25M - gasComp
         // Expect BUNDLER to have > 0 gas tokens
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(PER_NOTE_AMOUNT / 2)
         );
         assertGt(token.balanceOf(BUNDLER), 0);
@@ -591,7 +591,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleTransferThreeJoinSplit() public {
-        // Alice starts with 3 * 50M in wallet
+        // Alice starts with 3 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 3 * PER_NOTE_AMOUNT);
 
@@ -621,7 +621,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(3 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -635,7 +635,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -645,9 +645,9 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         // Expect BOB to have the 50M sent by alice
-        // Expect wallet to have alice's remaining 100M
+        // Expect teller to have alice's remaining 100M
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -656,7 +656,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleTransferSixJoinSplit() public {
-        // Alice starts with 6 * 50M in wallet
+        // Alice starts with 6 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 6 * PER_NOTE_AMOUNT);
 
@@ -686,7 +686,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(6 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -700,7 +700,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] succeeded
         assertEq(opResults.length, uint256(1));
@@ -710,9 +710,9 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(1));
 
         // Expect BOB to have the 200M sent by alice
-        // Expect wallet to have alice's remaining 100M
+        // Expect teller to have alice's remaining 100M
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -721,7 +721,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleFailureBadRoot() public {
-        // Alice starts with 2 * 50M in wallet
+        // Alice starts with 2 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -752,7 +752,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -766,7 +766,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -774,10 +774,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Tree root not past root");
 
-        // No tokens are lost from wallet because handleJoinSplit revert stops
+        // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -786,7 +786,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleFailureAlreadyUsedNullifier() public {
-        // Alice starts with 2 * 50M in wallet
+        // Alice starts with 2 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -818,7 +818,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -832,7 +832,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -840,10 +840,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "Nullifier B already used");
 
-        // No tokens are lost from wallet because handleJoinSplit revert stops
+        // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -852,7 +852,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleFailureMatchingNullifiers() public {
-        // Alice starts with 2 * 50M in wallet
+        // Alice starts with 2 * 50M in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -882,7 +882,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -896,7 +896,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -904,10 +904,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].assetsUnwrapped, false);
         assertEq(opResults[0].failureReason, "2 nfs should !equal");
 
-        // No tokens are lost from wallet because handleJoinSplit revert stops
+        // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -916,12 +916,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleFailureReentrancyProcessBundleIndirect() public {
-        // Alice starts with 2 * 50M tokens in wallet
+        // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
         ReentrantCaller reentrantCaller = new ReentrantCaller(
-            wallet,
+            teller,
             handler,
             ERC20s[0]
         );
@@ -972,7 +972,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -991,7 +991,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1000,7 +1000,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     }
 
     function testProcessBundleFailureReentrancyProcessBundleDirect() public {
-        // Alice starts with 2 * 50M tokens in wallet
+        // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1031,14 +1031,14 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Encode action for handler to call itself via executeActions
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
-            contractAddress: address(wallet),
+            contractAddress: address(teller),
             encodedFunction: abi.encodeWithSelector(
-                wallet.processBundle.selector,
+                teller.processBundle.selector,
                 internalOp
             )
         });
 
-        // Nest internal op into action where wallet call itself via
+        // Nest internal op into action where teller call itself via
         // executeActions
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1063,25 +1063,25 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call the Nocturne wallet",
+                maybeFailureReason: "Cannot call the Nocturne teller",
                 assetsUnwrapped: true
             })
         );
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].failureReason, "Cannot call the Nocturne wallet");
+        assertEq(opResults[0].failureReason, "Cannot call the Nocturne teller");
 
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1093,11 +1093,11 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleFailureReentrancyHandleOperationHandlerCaller()
         public
     {
-        // Alice starts with 2 * 50M tokens in wallet
+        // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
-        // Create internal op that is used when wallet calls itself
+        // Create internal op that is used when teller calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitToken: token,
@@ -1121,7 +1121,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Encode action for wallet to call itself via handleOperation
+        // Encode action for teller to call itself via handleOperation
         Action[] memory actions = new Action[](1);
         actions[0] = Action({
             contractAddress: address(handler),
@@ -1131,7 +1131,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Nest internal op into action where wallet call itself via
+        // Nest internal op into action where teller call itself via
         // handleOperation
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1170,10 +1170,10 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed, handleOperation only
-        // callable by wallet
+        // callable by teller
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, true);
         assertEq(opResults[0].assetsUnwrapped, true);
@@ -1183,14 +1183,14 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].callResults[0]),
-                "Only wallet"
+                "Only teller"
             )
         );
 
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1202,7 +1202,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     function testProcessBundleFailureReentrancyExecuteActionsHandlerCaller()
         public
     {
-        // Alice starts with 2 * 50M tokens in wallet
+        // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1240,7 +1240,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         });
 
-        // Nest internal op into action where wallet call itself via
+        // Nest internal op into action where teller call itself via
         // executeActions
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
@@ -1279,7 +1279,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -1298,7 +1298,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1314,7 +1314,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by wallet
+        // taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1340,7 +1340,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1357,7 +1357,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Use Bob as bundler for this call
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed
         assertEq(opResults.length, uint256(1));
@@ -1376,7 +1376,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1392,7 +1392,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by wallet
+        // taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1418,7 +1418,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1433,7 +1433,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // op processed = false, whole op reverted
         assertEq(opResults.length, uint256(1));
@@ -1451,7 +1451,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1466,7 +1466,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
         // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by wallet
+        // taken up by teller
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
@@ -1492,7 +1492,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1507,7 +1507,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // op processed = false, whole op reverted
         assertEq(opResults.length, uint256(1));
@@ -1525,7 +1525,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens.
         assertLt(
-            token.balanceOf(address(wallet)),
+            token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertEq(token.balanceOf(address(handler)), uint256(0));
@@ -1610,12 +1610,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Ensure 50M tokensIn in wallet and nothing else, swapper has 0 erc20In tokens
-        assertEq(tokenIn.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc20Out.balanceOf(address(handler)), uint256(0));
-        assertEq(erc721Out.balanceOf(address(wallet)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
-            erc1155Out.balanceOf(address(wallet), erc1155OutId),
+            erc1155Out.balanceOf(address(teller), erc1155OutId),
             uint256(0)
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
@@ -1634,7 +1634,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             true
         );
 
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, approve call and swap call both succeeded
         assertEq(opResults.length, uint256(1));
@@ -1645,12 +1645,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].callResults.length, uint256(2));
 
         // Ensure 50M tokensIn in swapper, and all types of refund tokens back
-        // in wallet
-        assertEq(erc20Out.balanceOf(address(wallet)), uint256(PER_NOTE_AMOUNT));
-        assertEq(erc721Out.balanceOf(address(wallet)), uint256(1));
-        assertEq(erc721Out.ownerOf(erc721OutId), address(wallet));
+        // in teller
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc721Out.balanceOf(address(teller)), uint256(1));
+        assertEq(erc721Out.ownerOf(erc721OutId), address(teller));
         assertEq(
-            erc1155Out.balanceOf(address(wallet), erc1155OutId),
+            erc1155Out.balanceOf(address(teller), erc1155OutId),
             PER_NOTE_AMOUNT
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(PER_NOTE_AMOUNT));
@@ -1687,7 +1687,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             encodedFunction: abi.encodeWithSelector(
                 swapper.swap.selector,
                 SwapRequest({
-                    assetInOwner: address(wallet),
+                    assetInOwner: address(teller),
                     encodedAssetIn: AssetUtils.encodeAsset(
                         AssetType.ERC20,
                         address(tokenIn),
@@ -1733,16 +1733,16 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        // Ensure 100M tokensIn in wallet and nothing else
+        // Ensure 100M tokensIn in teller and nothing else
         // Swapper has 0 erc20In tokens
         assertEq(
-            tokenIn.balanceOf(address(wallet)),
+            tokenIn.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(erc20Out.balanceOf(address(wallet)), uint256(0));
-        assertEq(erc721Out.balanceOf(address(wallet)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
-            erc1155Out.balanceOf(address(wallet), erc1155OutId),
+            erc1155Out.balanceOf(address(teller), erc1155OutId),
             uint256(0)
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
@@ -1763,7 +1763,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(BUNDLER);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false, call[0] failed (too many refunds)
         assertEq(opResults.length, uint256(1));
@@ -1776,17 +1776,17 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             )
         );
 
-        // Wallet lost some tokenIn to BUNDLER due to bundler gas fee, but
+        // Teller lost some tokenIn to BUNDLER due to bundler gas fee, but
         // otherwise no state changes
         assertLt(
-            tokenIn.balanceOf(address(wallet)),
+            tokenIn.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
         assertGt(tokenIn.balanceOf(BUNDLER), 0);
-        assertEq(erc20Out.balanceOf(address(wallet)), uint256(0));
-        assertEq(erc721Out.balanceOf(address(wallet)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(teller)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
-            erc1155Out.balanceOf(address(wallet), erc1155OutId),
+            erc1155Out.balanceOf(address(teller), erc1155OutId),
             uint256(0)
         );
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
@@ -1826,7 +1826,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        assertEq(token.balanceOf(address(wallet)), PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
         // Check OperationProcessed event emits processed = false
@@ -1838,7 +1838,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(BOB);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = true, call[0] failed (too few gas tokens)
         assertEq(opResults.length, uint256(1));
@@ -1852,12 +1852,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // No balances changed, bundler not compensated for missing this check
-        assertEq(token.balanceOf(address(wallet)), PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(teller)), PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
     }
 
     function testProcessBundleFailureOOG() public {
-        // Alice starts with 2 * 50M tokens in wallet
+        // Alice starts with 2 * 50M tokens in teller
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1886,7 +1886,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        assertEq(token.balanceOf(address(wallet)), 2 * PER_NOTE_AMOUNT);
+        assertEq(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertEq(token.balanceOf(address(BOB)), 0);
 
         // Check OperationProcessed event emits processed = false
@@ -1898,7 +1898,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         vm.prank(ALICE);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // One op, processed = false
         assertEq(opResults.length, uint256(1));
@@ -1906,12 +1906,12 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults[0].failureReason, "exceeded `executionGasLimit`");
 
         // ALICE (bundler) was still paid
-        assertLt(token.balanceOf(address(wallet)), 2 * PER_NOTE_AMOUNT);
+        assertLt(token.balanceOf(address(teller)), 2 * PER_NOTE_AMOUNT);
         assertGt(token.balanceOf(address(ALICE)), 0);
     }
 
     // TODO: move to Handler.t.sol
-    function testHandleOperationNotWalletCaller() public {
+    function testHandleOperationNotTellerCaller() public {
         SimpleERC20Token token = ERC20s[0];
         reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
 
@@ -1939,9 +1939,9 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Attempt to call handleOperation directly with ALICE as caller not
-        // wallet
+        // teller
         vm.prank(ALICE);
-        vm.expectRevert("Only wallet");
+        vm.expectRevert("Only teller");
         handler.handleOperation(op, 0, ALICE);
     }
 
@@ -1973,7 +1973,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vm.prank(address(wallet));
+        vm.prank(address(teller));
         vm.expectRevert("invalid chainid");
         handler.handleOperation(op, 0, BUNDLER);
     }
@@ -2006,7 +2006,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             })
         );
 
-        vm.prank(address(wallet));
+        vm.prank(address(teller));
         vm.expectRevert("expired deadline");
         handler.handleOperation(op, 0, BUNDLER);
     }
@@ -2040,7 +2040,7 @@ contract WalletAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Attempt to call executeActions directly with ALICE as caller not
-        // wallet
+        // teller
         vm.prank(ALICE);
         vm.expectRevert("Only this");
         handler.executeActions(op);
