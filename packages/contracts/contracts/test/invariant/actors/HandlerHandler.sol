@@ -11,7 +11,7 @@ import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
-import {Wallet} from "../../../Wallet.sol";
+import {Teller} from "../../../Teller.sol";
 import {Handler} from "../../../Handler.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";

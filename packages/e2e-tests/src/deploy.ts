@@ -1,10 +1,10 @@
 import { ethers } from "ethers";
 import * as fs from "fs";
 import {
-  Wallet__factory,
+  Teller__factory,
   Handler__factory,
   Handler,
-  Wallet,
+  Teller,
   DepositManager,
   DepositManager__factory,
   WETH9__factory,
@@ -102,14 +102,14 @@ export interface TestDeploymentTokens {
 }
 
 export interface TestContracts {
-  wallet: Wallet;
+  teller: Teller;
   handler: Handler;
   depositManager: DepositManager;
 }
 
 export interface TestDeployment {
   depositManager: DepositManager;
-  wallet: Wallet;
+  teller: Teller;
   handler: Handler;
   tokens: TestDeploymentTokens;
   contractDeployment: NocturneContractDeployment;
@@ -130,7 +130,7 @@ export const SUBGRAPH_URL =
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,
-  "walletAddress" | "txSignerKey" | "ignoreGas"
+  "tellerAddress" | "txSignerKey" | "ignoreGas"
 > = {
   maxLatency: 1,
   rpcUrl: ANVIL_URL,
@@ -151,7 +151,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   rpcUrl: ANVIL_URL,
 };
 
-const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "walletAddress"> = {
+const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
   startBlock: 0,
 };
 
@@ -185,7 +185,7 @@ export async function setupTestDeployment(
     screenerEoa,
   ] = KEYS_TO_WALLETS(provider);
   console.log("deploying contracts...");
-  const [deployment, tokens, { wallet, handler, depositManager }] =
+  const [deployment, tokens, { teller, handler, depositManager }] =
     await deployContractsWithDummyConfig(deployerEoa, {
       screeners: [screenerEoa.address],
       subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
@@ -198,7 +198,7 @@ export async function setupTestDeployment(
     const subgraphConfig = {
       ...DEFAULT_SUBGRAPH_CONFIG,
       ...givenSubgraphConfig,
-      walletAddress: wallet.address,
+      tellerAddress: teller.address,
     };
 
     stopSubgraph = await startSubgraph(subgraphConfig);
@@ -212,7 +212,7 @@ export async function setupTestDeployment(
     const bundlerConfig: BundlerConfig = {
       ...DEFAULT_BUNDLER_CONFIG,
       ...givenBundlerConfig,
-      walletAddress: wallet.address,
+      tellerAddress: teller.address,
       txSignerKey: bundlerEoa.privateKey,
     };
 
@@ -277,7 +277,7 @@ export async function setupTestDeployment(
 
   return {
     depositManager,
-    wallet,
+    teller,
     handler,
     tokens,
     contractDeployment: deployment,
@@ -312,16 +312,16 @@ export async function deployContractsWithDummyConfig(
   };
 
   const deployment = await deployNocturne(connectedSigner, deployConfig);
-  const { depositManagerProxy, walletProxy, handlerProxy } = deployment;
+  const { depositManagerProxy, tellerProxy, handlerProxy } = deployment;
 
   // Log for dev site script
-  console.log("Wallet address:", walletProxy.proxy);
+  console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
 
-  const [depositManager, wallet, handler] = await Promise.all([
+  const [depositManager, teller, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
-    Wallet__factory.connect(walletProxy.proxy, connectedSigner),
+    Teller__factory.connect(tellerProxy.proxy, connectedSigner),
     Handler__factory.connect(handlerProxy.proxy, connectedSigner),
   ]);
 
@@ -331,7 +331,7 @@ export async function deployContractsWithDummyConfig(
 
   await checkNocturneContractDeployment(deployment, connectedSigner.provider);
 
-  return [deployment, tokens, { wallet, handler, depositManager }];
+  return [deployment, tokens, { teller, handler, depositManager }];
 }
 
 export async function deployAndWhitelistTestTokens(
@@ -389,9 +389,9 @@ export enum SyncAdapterOption {
 
 export interface ClientSetup {
   nocturneDBAlice: NocturneDB;
-  nocturneWalletSDKAlice: NocturneWalletSDK;
+  nocturneTellerSDKAlice: NocturneWalletSDK;
   nocturneDBBob: NocturneDB;
-  nocturneWalletSDKBob: NocturneWalletSDK;
+  nocturneTellerSDKBob: NocturneWalletSDK;
   joinSplitProver: JoinSplitProver;
 }
 
@@ -422,7 +422,7 @@ export async function setupTestClient(
   const aliceKV = new InMemoryKVStore();
   const nocturneDBAlice = new NocturneDB(aliceKV);
   const merkleProverAlice = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKAlice = setupNocturneWalletSDK(
+  const nocturneTellerSDKAlice = setupNocturneWalletSDK(
     3n,
     config,
     provider,
@@ -435,7 +435,7 @@ export async function setupTestClient(
   const bobKV = new InMemoryKVStore();
   const nocturneDBBob = new NocturneDB(bobKV);
   const merkleProverBob = new SparseMerkleProver(aliceKV);
-  const nocturneWalletSDKBob = setupNocturneWalletSDK(
+  const nocturneTellerSDKBob = setupNocturneWalletSDK(
     5n,
     config,
     provider,
@@ -448,9 +448,9 @@ export async function setupTestClient(
 
   return {
     nocturneDBAlice,
-    nocturneWalletSDKAlice,
+    nocturneTellerSDKAlice,
     nocturneDBBob,
-    nocturneWalletSDKBob,
+    nocturneTellerSDKBob,
     joinSplitProver,
   };
 }

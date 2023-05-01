@@ -13,7 +13,7 @@ const GRAPH_NODE_COMPOSE_OPTS: compose.IDockerComposeOptions = {
 export const SUBGRAPH_CWD = `${ROOT_DIR}/packages/subgraph`;
 
 export interface SubgraphConfig {
-  walletAddress: string;
+  tellerAddress: string;
   startBlock: number;
 }
 

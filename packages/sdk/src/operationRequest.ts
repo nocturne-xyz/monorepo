@@ -129,7 +129,7 @@ export class OperationRequestBuilder {
   }
 
   // Set the stealth address `refundAddr` up-front.
-  // if this is not set, the wallet will generate a new one
+  // if this is not set, the teller will generate a new one
   // returns `this` so it's chainable
   refundAddr(addr: StealthAddress): OperationRequestBuilder {
     this.op.refundAddr = addr;
@@ -159,7 +159,7 @@ export class OperationRequestBuilder {
 
   // Specify gas parameters up-front.
   // this is optional and not recommended.
-  // usually you want to just let the wallet estimate this instead.
+  // usually you want to just let the teller estimate this instead.
   // returns `this` so it's chainable
   gas(gasParams: OperationGasParams): OperationRequestBuilder {
     const { executionGasLimit, gasPrice } = gasParams;

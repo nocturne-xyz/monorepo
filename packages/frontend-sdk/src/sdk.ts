@@ -17,7 +17,7 @@ import {
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
-import { Wallet, Wallet__factory } from "@nocturne-xyz/contracts";
+import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
@@ -29,56 +29,56 @@ export type BundlerOperationID = string;
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   bundlerEndpoint: string;
-  walletContract: Wallet;
+  tellerContract: Teller;
 
   private constructor(
     bundlerEndpoint: string,
-    walletContract: Wallet,
+    tellerContract: Teller,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.bundlerEndpoint = bundlerEndpoint;
-    this.walletContract = walletContract;
+    this.tellerContract = tellerContract;
   }
 
   /**
    * Instantiate new `NocturneFrontendSDK` instance.
    *
-   * @param walletContractAddress Wallet contract address
+   * @param tellerContractAddress Teller contract address
    * @param wasPath Joinsplit wasm path
    * @param zkeyPath Joinsplit zkey path
    * @param vkey Vkey object
    */
   static async instantiate(
     bundlerEndpoint: string,
-    walletContractAddress: string,
+    tellerContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
   ): Promise<NocturneFrontendSDK> {
-    const walletContract = await NocturneFrontendSDK.connectWalletContract(
-      walletContractAddress
+    const tellerContract = await NocturneFrontendSDK.connectTellerContract(
+      tellerContractAddress
     );
     return new NocturneFrontendSDK(
       bundlerEndpoint,
-      walletContract,
+      tellerContract,
       wasmPath,
       zkeyPath,
       vkey
     );
   }
 
-  private static async connectWalletContract(
-    walletContractAddress: string
-  ): Promise<Wallet> {
+  private static async connectTellerContract(
+    tellerContractAddress: string
+  ): Promise<Teller> {
     const signer = await getWindowSigner();
-    return Wallet__factory.connect(walletContractAddress, signer);
+    return Teller__factory.connect(tellerContractAddress, signer);
   }
 
   /**
-   * Call `walletContract.depositFunds` given the provided `assetType`,
+   * Call `tellerContract.depositFunds` given the provided `assetType`,
    * `assetAddress`, `value`, and `assetId`.
    *
    * @param assetType Asset type
@@ -92,7 +92,7 @@ export class NocturneFrontendSDK {
     assetId: bigint,
     value: bigint
   ): Promise<ContractTransaction> {
-    const spender = await this.walletContract.signer.getAddress();
+    const spender = await this.tellerContract.signer.getAddress();
     const depositAddr = await this.getRandomizedAddr();
     const encodedAsset = AssetTrait.encode({
       assetType,
@@ -103,15 +103,15 @@ export class NocturneFrontendSDK {
     const signer = await getWindowSigner();
     const tokenContract = getTokenContract(assetType, assetAddress, signer);
     if (assetType == AssetType.ERC20) {
-      await tokenContract.approve(this.walletContract.address, value);
+      await tokenContract.approve(this.tellerContract.address, value);
     } else if (assetType == AssetType.ERC721) {
-      await tokenContract.approve(this.walletContract.address, assetId);
+      await tokenContract.approve(this.tellerContract.address, assetId);
     } else if (assetType == AssetType.ERC1155) {
-      await tokenContract.setApprovalForAll(this.walletContract.address, true);
+      await tokenContract.setApprovalForAll(this.tellerContract.address, true);
     }
 
     // TODO: currently broken as is, fix once we have deposit screener agent
-    return this.walletContract.depositFunds({
+    return this.tellerContract.depositFunds({
       spender,
       encodedAsset,
       value,
@@ -203,7 +203,7 @@ export class NocturneFrontendSDK {
    */
   async getAllBalances(): Promise<AssetWithBalance[]> {
     const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+      method: "teller_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -220,7 +220,7 @@ export class NocturneFrontendSDK {
    */
   async sync(): Promise<void> {
     await window.ethereum.request({
-      method: "wallet_invokeSnap",
+      method: "teller_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -240,7 +240,7 @@ export class NocturneFrontendSDK {
     operationRequest: OperationRequest
   ): Promise<SignedOperation> {
     const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+      method: "teller_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -258,7 +258,7 @@ export class NocturneFrontendSDK {
    */
   protected async getRandomizedAddr(): Promise<StealthAddress> {
     const json = (await window.ethereum.request({
-      method: "wallet_invokeSnap",
+      method: "teller_invokeSnap",
       params: {
         snapId: SNAP_ID,
         request: {
@@ -272,7 +272,7 @@ export class NocturneFrontendSDK {
 }
 
 /**
- * Load a `NocturneFrontendSDK` instance, provided a wallet contract
+ * Load a `NocturneFrontendSDK` instance, provided a teller contract
  * address and paths to local prover's wasm, zkey, and
  * vkey. Circuit file paths default to caller's current directory (joinsplit.
  * wasm, joinsplit.zkey, joinSplitVkey.json).
@@ -283,7 +283,7 @@ export class NocturneFrontendSDK {
  */
 export async function loadNocturneFrontendSDK(
   bundlerEndpoint: string,
-  walletContractAddress: string,
+  tellerContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
@@ -291,7 +291,7 @@ export async function loadNocturneFrontendSDK(
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
     bundlerEndpoint,
-    walletContractAddress,
+    tellerContractAddress,
     wasmPath,
     zkeyPath,
     vkey as VerifyingKey

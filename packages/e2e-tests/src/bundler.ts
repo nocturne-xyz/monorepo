@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 import IORedis from "ioredis";
 
 export interface BundlerConfig {
-  walletAddress: string;
+  tellerAddress: string;
   maxLatency: number;
   rpcUrl: string;
   txSignerKey: string;
@@ -39,7 +39,7 @@ function startBundlerSubmitter(
   const signer = new ethers.Wallet(config.txSignerKey, provider);
   const logger = makeTestLogger("bundler", "submitter");
   const submitter = new BundlerSubmitter(
-    config.walletAddress,
+    config.tellerAddress,
     signer,
     redis,
     logger
@@ -73,7 +73,7 @@ function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
   const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
   const logger = makeTestLogger("bundler", "server");
   const server = new BundlerServer(
-    config.walletAddress,
+    config.tellerAddress,
     provider,
     redis,
     logger,

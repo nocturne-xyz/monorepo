@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import "./NocturneUtils.sol";
 import "../../libs/Types.sol";
 
 contract ReentrantCaller {
-    Wallet _wallet;
+    Teller _teller;
     Handler _handler;
     SimpleERC20Token _token;
 
     uint256 public constant PER_NOTE_AMOUNT = 50_000_000;
     uint256 public constant DEFAULT_GAS_LIMIT = 500_000;
 
-    modifier onlyWallet() {
-        require(msg.sender == address(_wallet), "Only wallet");
+    modifier onlyTeller() {
+        require(msg.sender == address(_teller), "Only teller");
         _;
     }
 
-    constructor(Wallet wallet, Handler handler, SimpleERC20Token token) {
-        _wallet = wallet;
+    constructor(Teller teller, Handler handler, SimpleERC20Token token) {
+        _teller = teller;
         _handler = handler;
         _token = token;
     }
@@ -53,7 +53,7 @@ contract ReentrantCaller {
         // Create operation to transfer 4 * 50M tokens to bob
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = formatOperation();
-        _wallet.processBundle(bundle);
+        _teller.processBundle(bundle);
     }
 
     function reentrantHandleOperation() external {

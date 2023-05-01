@@ -7,7 +7,7 @@ import {
   computeOperationDigest,
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Teller } from "@nocturne-xyz/contracts";
 import {
   checkNotEnoughGasError,
   checkNullifierConflictError,
@@ -24,7 +24,7 @@ export interface HandleRelayDeps {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   redis: IORedis;
-  walletContract: Wallet;
+  tellerContract: Teller;
   provider: ethers.providers.Provider;
   logger: Logger;
   opts: { ignoreGas?: boolean };
@@ -35,7 +35,7 @@ export function makeRelayHandler({
   statusDB,
   nullifierDB,
   redis,
-  walletContract,
+  tellerContract,
   provider,
   logger,
   opts,
@@ -86,7 +86,7 @@ export function makeRelayHandler({
 
     childLogger.debug("validating reverts");
     const revertErr = await checkRevertError(
-      walletContract,
+      tellerContract,
       provider,
       childLogger,
       operation

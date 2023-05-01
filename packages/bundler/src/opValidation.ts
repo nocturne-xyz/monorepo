@@ -4,7 +4,7 @@ import {
   computeOperationDigest,
   ProvenOperation,
 } from "@nocturne-xyz/sdk";
-import { Wallet } from "@nocturne-xyz/contracts";
+import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
 import { ErrString } from "./common";
 import { Logger } from "winston";
@@ -43,7 +43,7 @@ export async function checkNullifierConflictError(
 }
 
 export async function checkRevertError(
-  walletContract: Wallet,
+  tellerContract: Teller,
   provider: ethers.providers.Provider,
   logger: Logger,
   operation: ProvenOperation
@@ -51,13 +51,13 @@ export async function checkRevertError(
   logger.debug("submitting operation", operation);
 
   const bundle: Bundle = { operations: [operation] };
-  const data = walletContract.interface.encodeFunctionData("processBundle", [
+  const data = tellerContract.interface.encodeFunctionData("processBundle", [
     bundle,
   ]);
 
   try {
     const est = await provider.estimateGas({
-      to: walletContract.address,
+      to: tellerContract.address,
       data,
     });
 

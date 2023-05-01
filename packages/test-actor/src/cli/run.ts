@@ -1,7 +1,7 @@
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import {
   DepositManager__factory,
-  Wallet__factory,
+  Teller__factory,
 } from "@nocturne-xyz/contracts";
 import {
   DepositRequest,
@@ -85,8 +85,8 @@ export const run = new Command("run")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
 
-    const wallet = Wallet__factory.connect(
-      config.walletAddress(),
+    const teller = Teller__factory.connect(
+      config.tellerAddress(),
       signingProvider
     );
     const depositManager = DepositManager__factory.connect(
@@ -128,7 +128,7 @@ export const run = new Command("run")
     }
 
     const actor = new TestActor(
-      wallet,
+      teller,
       depositManager,
       sdk,
       prover,

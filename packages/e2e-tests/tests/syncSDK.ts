@@ -61,7 +61,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let handler: Handler;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
-    let nocturneWalletSDKAlice: NocturneWalletSDK;
+    let nocturneTellerSDKAlice: NocturneWalletSDK;
     let updater: SubtreeUpdater;
 
     let joinSplitProver: JoinSplitProver;
@@ -88,7 +88,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       gasToken = testDeployment.tokens.gasToken;
       console.log("gas Token deployed at: ", gasToken.address);
 
-      ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
+      ({ nocturneTellerSDKAlice, joinSplitProver } = await setupTestClient(
         testDeployment.contractDeployment,
         provider,
         {
@@ -128,7 +128,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         depositManager,
         token,
         aliceEoa,
-        nocturneWalletSDKAlice.signer.generateRandomStealthAddress(),
+        nocturneTellerSDKAlice.signer.generateRandomStealthAddress(),
         [100n, 100n]
       );
 
@@ -136,23 +136,23 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // apply subtree update and sync SDK
       await applySubtreeUpdate();
-      await nocturneWalletSDKAlice.sync();
+      await nocturneTellerSDKAlice.sync();
 
       // check that DB has notes and merkle has leaves for them
       //@ts-ignore
-      const allNotes = await nocturneWalletSDKAlice.db.getAllNotes();
+      const allNotes = await nocturneTellerSDKAlice.db.getAllNotes();
       const notes = Array.from(allNotes.values()).flat();
       expect(notes.length).to.eql(2);
 
       //@ts-ignore
-      expect(nocturneWalletSDKAlice.merkleProver.count()).to.eql(2);
+      expect(nocturneTellerSDKAlice.merkleProver.count()).to.eql(2);
       expect(
         //@ts-ignore
-        BigInt(nocturneWalletSDKAlice.merkleProver.getProof(0).leaf)
+        BigInt(nocturneTellerSDKAlice.merkleProver.getProof(0).leaf)
       ).to.equal(ncs[0]);
       expect(
         //@ts-ignore
-        BigInt(nocturneWalletSDKAlice.merkleProver.getProof(1).leaf)
+        BigInt(nocturneTellerSDKAlice.merkleProver.getProof(1).leaf)
       ).to.equal(ncs[1]);
     });
 
@@ -166,7 +166,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
         ],
         aliceEoa,
-        nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+        nocturneTellerSDKAlice.signer.generateRandomStealthAddress()
       );
 
       // apply subtree update and sync SDK...
@@ -174,7 +174,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       await applySubtreeUpdate();
 
       console.log("syncing SDK...");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneTellerSDKAlice.sync();
 
       // spend one of them...
       const asset = {
@@ -202,8 +202,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         .build();
 
       console.log("preparing op...");
-      const preSign = await nocturneWalletSDKAlice.prepareOperation(opRequest);
-      const signed = nocturneWalletSDKAlice.signOperation(preSign);
+      const preSign = await nocturneTellerSDKAlice.prepareOperation(opRequest);
+      const signed = nocturneTellerSDKAlice.signOperation(preSign);
       console.log("proving op...");
       const op = await proveOperation(joinSplitProver, signed);
 
@@ -212,13 +212,13 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // sync SDK again...
       console.log("syncing SDK again...");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneTellerSDKAlice.sync();
 
       // check that the DB nullified the spent note
       // after the op, the 80 token note should be nullified, so they should have
       // no non-zero notes for `token`
       //@ts-ignore
-      const notesForToken = await nocturneWalletSDKAlice.db.getNotesForAsset({
+      const notesForToken = await nocturneTellerSDKAlice.db.getNotesForAsset({
         assetType: AssetType.ERC20,
         assetAddr: token.address,
         id: 0n,
@@ -234,7 +234,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       // check that the merkle prover marked spent note's commitment for pruning
       // the spent note was inserted first, at merkle index 0
       //@ts-ignore
-      expect(nocturneWalletSDKAlice.merkleProver.leaves.has(0)).to.be.false;
+      expect(nocturneTellerSDKAlice.merkleProver.leaves.has(0)).to.be.false;
     });
   };
 }

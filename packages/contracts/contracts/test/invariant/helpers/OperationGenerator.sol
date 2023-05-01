@@ -10,7 +10,7 @@ import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
-import {Wallet} from "../../../Wallet.sol";
+import {Teller} from "../../../Teller.sol";
 import {Handler} from "../../../Handler.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
@@ -27,11 +27,11 @@ import "../../../libs/Types.sol";
 
 struct GenerateOperationArgs {
     uint256 seed;
-    Wallet wallet;
+    Teller teller;
     address handler;
     uint256 root;
     // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
-    // wallet invariant tests hang for no apparent reason
+    // teller invariant tests hang for no apparent reason
     bool statefulNfGeneration;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
@@ -68,7 +68,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 totalJoinSplitUnwrapAmount = bound(
             args.seed,
             0,
-            args.joinSplitToken.balanceOf(address(args.wallet))
+            args.joinSplitToken.balanceOf(address(args.teller))
         );
 
         // Get random args.joinSplitPublicSpends

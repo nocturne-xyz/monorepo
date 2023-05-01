@@ -112,8 +112,8 @@ const Playground = () => {
         {shouldDisplayReconnectButton(state.installedSnap) && (
           <Card
             content={{
-              title: "Deposit to Wallet",
-              description: "Deposit assets to smart contract wallet",
+              title: "Deposit to Teller",
+              description: "Deposit assets to smart contract teller",
             }}
           >
             {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}

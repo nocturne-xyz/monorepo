@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "../libs/Types.sol";
 
-interface IWallet {
+interface ITeller {
     function processBundle(
         Bundle calldata bundle
     ) external returns (OperationResult[] memory opResults);

@@ -8,7 +8,7 @@ import {
   TestSubtreeUpdateVerifier__factory,
   TransparentUpgradeableProxy__factory,
   Handler__factory,
-  Wallet__factory,
+  Teller__factory,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
@@ -74,17 +74,17 @@ export async function deployNocturne(
   }
   await subtreeUpdateVerifier.deployTransaction.wait(opts?.confirmations);
 
-  console.log("\ndeploying proxied Wallet...");
-  const proxiedWallet = await deployProxiedContract(
-    new Wallet__factory(connectedSigner),
+  console.log("\ndeploying proxied Teller...");
+  const proxiedTeller = await deployProxiedContract(
+    new Teller__factory(connectedSigner),
     proxyAdmin,
     [proxiedHandler.address, joinSplitVerifier.address] // initialize here
   );
-  console.log("deployed proxied Wallet:", proxiedWallet.proxyAddresses);
+  console.log("deployed proxied Teller:", proxiedTeller.proxyAddresses);
 
   console.log("\ninitializing proxied Handler");
   const handlerInitTx = await proxiedHandler.contract.initialize(
-    proxiedWallet.address,
+    proxiedTeller.address,
     subtreeUpdateVerifier.address
   );
   await handlerInitTx.wait(opts?.confirmations);
@@ -93,7 +93,7 @@ export async function deployNocturne(
   const proxiedDepositManager = await deployProxiedContract(
     new DepositManager__factory(connectedSigner),
     proxyAdmin,
-    ["NocturneDepositManager", "v1", proxiedWallet.address, config.wethAddress] // initialize here
+    ["NocturneDepositManager", "v1", proxiedTeller.address, config.wethAddress] // initialize here
   );
   console.log(
     "deployed proxied DepositManager:",
@@ -118,9 +118,9 @@ export async function deployNocturne(
     await tx.wait(opts?.confirmations);
   }
 
-  console.log("\nadding deposit manager to wallet deposit sources...");
+  console.log("\nadding deposit manager to teller deposit sources...");
   const enrollDepositManagerTx =
-    await proxiedWallet.contract.setDepositSourcePermission(
+    await proxiedTeller.contract.setDepositSourcePermission(
       proxiedDepositManager.address,
       true
     );
@@ -136,13 +136,13 @@ export async function deployNocturne(
       proxyAdminOwner: config.proxyAdminOwner,
       // Below owners are all anticipated, ownership relinquished after this fn
       // NOTE: if contracts owners don't match proxyAdminOwner, check fn will throw error
-      walletOwner: config.proxyAdminOwner,
+      tellerOwner: config.proxyAdminOwner,
       handlerOwner: config.proxyAdminOwner,
       depositManagerOwner: config.proxyAdminOwner,
     },
     proxyAdmin: proxyAdmin.address,
     depositManagerProxy: proxiedDepositManager.proxyAddresses,
-    walletProxy: proxiedWallet.proxyAddresses,
+    tellerProxy: proxiedTeller.proxyAddresses,
     handlerProxy: proxiedHandler.proxyAddresses,
     joinSplitVerifierAddress: joinSplitVerifier.address,
     subtreeUpdateVerifierAddress: subtreeUpdateVerifier.address,
@@ -158,8 +158,8 @@ export async function relinquishContractOwnership(
 ): Promise<void> {
   const { opts } = config;
 
-  const wallet = Wallet__factory.connect(
-    deployment.walletProxy.proxy,
+  const teller = Teller__factory.connect(
+    deployment.tellerProxy.proxy,
     connectedSigner
   );
   const handler = Handler__factory.connect(
@@ -171,11 +171,11 @@ export async function relinquishContractOwnership(
     connectedSigner
   );
 
-  console.log("\nrelinquishing control of wallet...");
-  const walletTransferOwnershipTx = await wallet.transferOwnership(
+  console.log("\nrelinquishing control of teller...");
+  const tellerTransferOwnershipTx = await teller.transferOwnership(
     config.proxyAdminOwner
   );
-  await walletTransferOwnershipTx.wait(opts?.confirmations);
+  await tellerTransferOwnershipTx.wait(opts?.confirmations);
 
   console.log("relinquishing control of handler...");
   const handlerTransferOwnershipTx = await handler.transferOwnership(

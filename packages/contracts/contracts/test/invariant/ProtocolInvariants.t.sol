@@ -7,14 +7,14 @@ import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {InvariantsBase} from "./InvariantsBase.sol";
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
-import {WalletHandler} from "./actors/WalletHandler.sol";
+import {TellerHandler} from "./actors/TellerHandler.sol";
 import {HandlerHandler} from "./actors/HandlerHandler.sol";
 import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../utils/NocturneUtils.sol";
 import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {EventParsing} from "../utils/EventParsing.sol";
@@ -27,7 +27,7 @@ import "../../libs/Types.sol";
 
 contract ProtocolInvariants is Test, InvariantsBase {
     function setUp() public virtual {
-        wallet = new Wallet();
+        teller = new Teller();
         handler = new Handler();
         depositManager = new TestDepositManager();
 
@@ -36,16 +36,16 @@ contract ProtocolInvariants is Test, InvariantsBase {
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
+        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        teller.initialize(address(handler), address(joinSplitVerifier));
 
-        wallet.setDepositSourcePermission(address(depositManager), true);
+        teller.setDepositSourcePermission(address(depositManager), true);
         handler.setSubtreeBatchFillerPermission(address(this), true);
 
         depositManager.initialize(
             CONTRACT_NAME,
             CONTRACT_VERSION,
-            address(wallet),
+            address(teller),
             address(weth)
         );
         depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
@@ -66,8 +66,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
         swapErc721 = new SimpleERC721Token();
         swapErc1155 = new SimpleERC1155Token();
 
-        walletHandler = new WalletHandler(
-            wallet,
+        tellerHandler = new TellerHandler(
+            teller,
             handler,
             swapper,
             depositErc20,
@@ -121,8 +121,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
             .completeDepositErc20
             .selector;
 
-        bytes4[] memory walletHandlerSelectors = new bytes4[](1);
-        walletHandlerSelectors[0] = walletHandler.processBundle.selector;
+        bytes4[] memory tellerHandlerSelectors = new bytes4[](1);
+        tellerHandlerSelectors[0] = tellerHandler.processBundle.selector;
 
         bytes4[] memory handlerHandlerSelectors = new bytes4[](2);
         handlerHandlerSelectors[0] = handlerHandler.addToAssetPrefill.selector;
@@ -136,11 +136,11 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
-        targetContract(address(walletHandler));
+        targetContract(address(tellerHandler));
         targetSelector(
             FuzzSelector({
-                addr: address(walletHandler),
-                selectors: walletHandlerSelectors
+                addr: address(tellerHandler),
+                selectors: tellerHandlerSelectors
             })
         );
 
@@ -152,16 +152,16 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
-        excludeSender(walletHandler.BUNDLER_ADDRESS());
-        excludeSender(walletHandler.TRANSFER_RECIPIENT_ADDRESS());
+        excludeSender(tellerHandler.BUNDLER_ADDRESS());
+        excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
         excludeSender(address(depositManagerHandler));
-        excludeSender(address(walletHandler));
-        excludeSender(address(wallet));
+        excludeSender(address(tellerHandler));
+        excludeSender(address(teller));
         excludeSender(address(handler));
         excludeSender(address(depositManager));
         excludeSender(address(weth));
 
-        wallet.transferOwnership(OWNER);
+        teller.transferOwnership(OWNER);
         handler.transferOwnership(OWNER);
     }
 
@@ -172,10 +172,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
+    function invariant_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         external
     {
-        assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
+        assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
     }
 
     function invariant_protocol_handlerAlwaysEndsWithPrefillBalances()
@@ -247,20 +247,20 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Operations
      *****************************/
-    function invariant_operation_totalSwapErc20ReceivedMatchesWalletBalance()
+    function invariant_operation_totalSwapErc20ReceivedMatchesTellerBalance()
         external
     {
-        assert_operation_totalSwapErc20ReceivedMatchesWalletBalance();
+        assert_operation_totalSwapErc20ReceivedMatchesTellerBalance();
     }
 
-    function invariant_operation_walletOwnsAllSwapErc721s() external {
-        assert_operation_walletOwnsAllSwapErc721s();
+    function invariant_operation_tellerOwnsAllSwapErc721s() external {
+        assert_operation_tellerOwnsAllSwapErc721s();
     }
 
-    function invariant_operation_totalSwapErc1155ReceivedMatchesWalletBalance()
+    function invariant_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
         external
     {
-        assert_operation_totalSwapErc1155ReceivedMatchesWalletBalance();
+        assert_operation_totalSwapErc1155ReceivedMatchesTellerBalance();
     }
 
     function invariant_operation_bundlerBalanceMatchesTracked() external {

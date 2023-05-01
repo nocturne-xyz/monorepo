@@ -11,7 +11,7 @@ import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
-import {Wallet} from "../../../Wallet.sol";
+import {Teller} from "../../../Teller.sol";
 import {Handler} from "../../../Handler.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
@@ -25,14 +25,14 @@ import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
 import "../../../libs/Types.sol";
 
-contract WalletHandler is OperationGenerator {
+contract TellerHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
 
     uint256 constant BUNDLER_PRIVKEY = 2;
     address public BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
 
     // ______PUBLIC______
-    Wallet public wallet;
+    Teller public teller;
     Handler public handler;
     TokenSwapper public swapper;
 
@@ -57,7 +57,7 @@ contract WalletHandler is OperationGenerator {
     TokenIdSet internal _receivedErc1155Ids;
 
     constructor(
-        Wallet _wallet,
+        Teller _teller,
         Handler _handler,
         TokenSwapper _swapper,
         SimpleERC20Token _joinSplitToken,
@@ -66,7 +66,7 @@ contract WalletHandler is OperationGenerator {
         SimpleERC721Token _swapErc721,
         SimpleERC1155Token _swapErc1155
     ) {
-        wallet = _wallet;
+        teller = _teller;
         handler = _handler;
         swapper = _swapper;
         joinSplitToken = _joinSplitToken;
@@ -79,7 +79,7 @@ contract WalletHandler is OperationGenerator {
     // ______EXTERNAL______
     function callSummary() external view {
         console.log("-------------------");
-        console.log("WalletHandler call summary:");
+        console.log("TellerHandler call summary:");
         console.log("-------------------");
         console.log("Successful actions", _numSuccessfulActions);
         console.log(
@@ -113,7 +113,7 @@ contract WalletHandler is OperationGenerator {
         ) = _generateRandomOperation(
                 GenerateOperationArgs({
                     seed: seed,
-                    wallet: wallet,
+                    teller: teller,
                     handler: address(handler),
                     root: handler.root(),
                     statefulNfGeneration: false,
@@ -131,7 +131,7 @@ contract WalletHandler is OperationGenerator {
         bundle.operations[0] = op;
 
         vm.prank(BUNDLER_ADDRESS);
-        OperationResult[] memory opResults = wallet.processBundle(bundle);
+        OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // TODO: enable multiple ops in bundle
         OperationResult memory opResult = opResults[0];
@@ -163,7 +163,7 @@ contract WalletHandler is OperationGenerator {
     }
 
     // ______VIEW______
-    function ghost_totalTransferredOutOfWallet()
+    function ghost_totalTransferredOutOfTeller()
         external
         view
         returns (uint256)

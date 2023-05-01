@@ -6,14 +6,14 @@ import {console} from "forge-std/console.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 
 import {DepositManagerHandler} from "./actors/DepositManagerHandler.sol";
-import {WalletHandler} from "./actors/WalletHandler.sol";
+import {TellerHandler} from "./actors/TellerHandler.sol";
 import {HandlerHandler} from "./actors/HandlerHandler.sol";
 import {TokenSwapper, SwapRequest} from "../utils/TokenSwapper.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import "../utils/NocturneUtils.sol";
 import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {Handler} from "../../Handler.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {EventParsing} from "../utils/EventParsing.sol";
@@ -33,10 +33,10 @@ contract InvariantsBase is Test {
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
     DepositManagerHandler public depositManagerHandler;
-    WalletHandler public walletHandler;
+    TellerHandler public tellerHandler;
     HandlerHandler public handlerHandler;
 
-    Wallet public wallet;
+    Teller public teller;
     Handler public handler;
     TestDepositManager public depositManager;
 
@@ -52,20 +52,20 @@ contract InvariantsBase is Test {
 
     function print_callSummary() internal view {
         depositManagerHandler.callSummary();
-        walletHandler.callSummary();
+        tellerHandler.callSummary();
         handlerHandler.callSummary();
     }
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_walletBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
+    function assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         internal
     {
         assertEq(
-            depositManagerHandler.erc20().balanceOf(address(wallet)),
+            depositManagerHandler.erc20().balanceOf(address(teller)),
             depositManagerHandler.ghost_completeDepositSumErc20() -
-                walletHandler.ghost_totalTransferredOutOfWallet() -
-                walletHandler.ghost_totalBundlerPayout()
+                tellerHandler.ghost_totalTransferredOutOfTeller() -
+                tellerHandler.ghost_totalBundlerPayout()
         );
     }
 
@@ -122,11 +122,11 @@ contract InvariantsBase is Test {
         );
     }
 
-    function assert_deposit_walletBalanceEqualsCompletedDepositSumETH()
+    function assert_deposit_tellerBalanceEqualsCompletedDepositSumETH()
         internal
     {
         assertEq(
-            weth.balanceOf(address(wallet)),
+            weth.balanceOf(address(teller)),
             depositManagerHandler.ghost_completeDepositSumETH()
         );
     }
@@ -236,39 +236,39 @@ contract InvariantsBase is Test {
 
     // _______________OPERATIONS_______________
 
-    function assert_operation_totalSwapErc20ReceivedMatchesWalletBalance()
+    function assert_operation_totalSwapErc20ReceivedMatchesTellerBalance()
         internal
     {
         assertEq(
-            swapErc20.balanceOf(address(wallet)),
-            walletHandler.ghost_totalSwapErc20Received()
+            swapErc20.balanceOf(address(teller)),
+            tellerHandler.ghost_totalSwapErc20Received()
         );
     }
 
-    function assert_operation_walletOwnsAllSwapErc721s() internal {
-        uint256[] memory ids = walletHandler.ghost_swapErc721IdsReceived();
+    function assert_operation_tellerOwnsAllSwapErc721s() internal {
+        uint256[] memory ids = tellerHandler.ghost_swapErc721IdsReceived();
         for (uint256 i = 0; i < ids.length; i++) {
-            assertEq(address(wallet), swapErc721.ownerOf(ids[i]));
+            assertEq(address(teller), swapErc721.ownerOf(ids[i]));
         }
     }
 
-    function assert_operation_totalSwapErc1155ReceivedMatchesWalletBalance()
+    function assert_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
         internal
     {
-        uint256[] memory ids = walletHandler.ghost_swapErc1155IdsReceived();
+        uint256[] memory ids = tellerHandler.ghost_swapErc1155IdsReceived();
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             assertEq(
-                swapErc1155.balanceOf(address(wallet), id),
-                walletHandler.ghost_totalSwapErc1155ReceivedForId(id)
+                swapErc1155.balanceOf(address(teller), id),
+                tellerHandler.ghost_totalSwapErc1155ReceivedForId(id)
             );
         }
     }
 
     function assert_operation_bundlerBalanceMatchesTracked() internal {
         assertEq(
-            depositErc20.balanceOf(address(walletHandler.BUNDLER_ADDRESS())),
-            walletHandler.ghost_totalBundlerPayout()
+            depositErc20.balanceOf(address(tellerHandler.BUNDLER_ADDRESS())),
+            tellerHandler.ghost_totalBundlerPayout()
         );
     }
 }

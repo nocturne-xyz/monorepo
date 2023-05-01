@@ -8,7 +8,7 @@ import { GetSnapsResponse, Snap } from "../types";
  */
 export const getSnaps = async (): Promise<GetSnapsResponse> => {
   return (await window.ethereum.request({
-    method: "wallet_getSnaps",
+    method: "teller_getSnaps",
   })) as unknown as GetSnapsResponse;
 };
 
@@ -22,7 +22,7 @@ export const connectSnap = async (
   params: Record<"version" | string, unknown> = {}
 ) => {
   await window.ethereum.request({
-    method: "wallet_requestSnaps",
+    method: "teller_requestSnaps",
     params: {
       [SNAP_ID]: {
         ...params,
@@ -52,7 +52,7 @@ export const getSnap = async (version?: string): Promise<Snap | undefined> => {
 
 export const clearDb = async () => {
   await window.ethereum.request({
-    method: "wallet_invokeSnap",
+    method: "teller_invokeSnap",
     params: {
       snapId: SNAP_ID,
       request: {

@@ -8,7 +8,7 @@ import {
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
-  Wallet,
+  Teller,
 } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
@@ -29,7 +29,7 @@ import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Wallet";
+import { OperationProcessedEvent } from "@nocturne-xyz/contracts/dist/src/Teller";
 
 chai.use(chaiAsPromised);
 
@@ -58,12 +58,12 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
   let bundlerEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
-  let wallet: Wallet;
+  let teller: Teller;
   let handler: Handler;
   let nocturneDBAlice: NocturneDB;
-  let nocturneWalletSDKAlice: NocturneWalletSDK;
+  let nocturneTellerSDKAlice: NocturneWalletSDK;
   let nocturneDBBob: NocturneDB;
-  let nocturneWalletSDKBob: NocturneWalletSDK;
+  let nocturneTellerSDKBob: NocturneWalletSDK;
   let joinSplitProver: JoinSplitProver;
 
   let erc20: SimpleERC20Token;
@@ -91,7 +91,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     ({
       provider,
       teardown,
-      wallet,
+      teller,
       handler,
       aliceEoa,
       bobEoa,
@@ -112,9 +112,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     ({
       nocturneDBAlice,
-      nocturneWalletSDKAlice,
+      nocturneTellerSDKAlice,
       nocturneDBBob,
-      nocturneWalletSDKBob,
+      nocturneTellerSDKBob,
       joinSplitProver,
     } = await setupTestClient(testDeployment.contractDeployment, provider, {
       gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
@@ -132,10 +132,10 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     expectedBundlerStatus: OperationStatus
   ): Promise<void> {
     console.log("alice: Sync SDK");
-    await nocturneWalletSDKAlice.sync();
+    await nocturneTellerSDKAlice.sync();
 
     console.log("bob: Sync SDK");
-    await nocturneWalletSDKBob.sync();
+    await nocturneTellerSDKBob.sync();
 
     const preOpNotesAlice = await nocturneDBAlice.getAllNotes();
     console.log("alice pre-op notes:", preOpNotesAlice);
@@ -145,14 +145,14 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     );
 
     console.log("prepare, sign, and prove operation with NocturneWalletSDK");
-    const preSign = await nocturneWalletSDKAlice.prepareOperation(
+    const preSign = await nocturneTellerSDKAlice.prepareOperation(
       operationRequest
     );
-    const signed = nocturneWalletSDKAlice.signOperation(preSign);
+    const signed = nocturneTellerSDKAlice.signOperation(preSign);
     const operation = await proveOperation(joinSplitProver, signed);
 
     //@ts-ignore
-    console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
+    console.log(nocturneTellerSDKAlice.merkleProver.root.hash);
 
     const status = await submitAndProcessOperation(operation);
     // wait for subgraph / subtree updater to catch up
@@ -172,7 +172,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneTellerSDKAlice.signer.generateRandomStealthAddress()
     );
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
@@ -206,7 +206,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneTellerSDKAlice.signer.generateRandomStealthAddress()
     );
 
     console.log("encode transfer erc20 action");
@@ -246,7 +246,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
         [gasToken, [GAS_FAUCET_DEFAULT_AMOUNT]],
       ],
       aliceEoa,
-      nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
+      nocturneTellerSDKAlice.signer.generateRandomStealthAddress()
     );
 
     console.log("encode transfer erc20 action");
@@ -261,7 +261,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       .confidentialPayment(
         erc20Asset,
         ALICE_TO_BOB_PRIV_VAL,
-        nocturneWalletSDKBob.signer.canonicalAddress()
+        nocturneTellerSDKBob.signer.canonicalAddress()
       )
       .action(erc20.address, encodedFunction)
       .gasPrice(GAS_PRICE)
@@ -280,8 +280,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
-        wallet,
-        wallet.filters.OperationProcessed(),
+        teller,
+        teller.filters.OperationProcessed(),
         0,
         latestBlock
       );
@@ -295,7 +295,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(
         (await erc20.balanceOf(await bobEoa.getAddress())).toBigInt()
       ).to.equal(ALICE_TO_BOB_PUB_VAL);
-      expect((await erc20.balanceOf(wallet.address)).toBigInt()).to.equal(
+      expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
       expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(0n);
@@ -303,7 +303,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneTellerSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
         erc20Asset
       )!;
@@ -327,7 +327,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect(foundNotesAlice.length).to.equal(1);
 
       console.log("bob: Sync SDK post-operation");
-      await nocturneWalletSDKBob.sync();
+      await nocturneTellerSDKBob.sync();
       const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
@@ -360,7 +360,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       depositManager,
       gasToken,
       aliceEoa,
-      nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
+      nocturneTellerSDKAlice.signer.canonicalStealthAddress(),
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
 
@@ -368,7 +368,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const erc721ReserveCalldata =
       SimpleERC721Token__factory.createInterface().encodeFunctionData(
         "reserveToken",
-        // mint a ERC721 token directly to the wallet contract
+        // mint a ERC721 token directly to the teller contract
         [handler.address, erc721Asset.id]
       );
 
@@ -376,7 +376,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     const erc1155ReserveCalldata =
       SimpleERC1155Token__factory.createInterface().encodeFunctionData(
         "reserveTokens",
-        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the wallet contract
+        // mint ERC1155_TOKEN_AMOUNT of ERC1155 token directly to the teller contract
         [handler.address, erc1155Asset.id, PLUTOCRACY_AMOUNT]
       );
 
@@ -396,8 +396,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("check for OperationProcessed event");
       const latestBlock = await provider.getBlockNumber();
       const events: OperationProcessedEvent[] = await queryEvents(
-        wallet,
-        wallet.filters.OperationProcessed(),
+        teller,
+        teller.filters.OperationProcessed(),
         0,
         latestBlock
       );
@@ -409,7 +409,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
     const offchainChecks = async () => {
       console.log("alice: Sync SDK post-operation");
-      await nocturneWalletSDKAlice.sync();
+      await nocturneTellerSDKAlice.sync();
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(

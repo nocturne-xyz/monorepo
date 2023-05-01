@@ -54,7 +54,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
     const { decimals } = await getTokenDetails(
       assetType,
       assetAddress,
-      sdk.walletContract.provider
+      sdk.tellerContract.provider
     );
     const tokenUnitsValue = formatTokenAmountEvmRepr(value, decimals);
 

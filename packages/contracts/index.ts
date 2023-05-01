@@ -1,7 +1,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { DepositManager } from './src/DepositManager';
-export type { Wallet } from './src/Wallet';
+export type { Teller } from './src/Teller';
 export type { Handler } from './src/Handler';
 export type { JoinSplitVerifier } from './src/JoinSplitVerifier';
 export type { SubtreeUpdateVerifier } from './src/SubtreeUpdateVerifier';
@@ -17,7 +17,7 @@ export type { ProxyAdmin } from './src/ProxyAdmin';
 export type { Versioned } from './src/Versioned';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
-export { Wallet__factory } from './src/factories/Wallet__factory';
+export { Teller__factory } from './src/factories/Teller__factory';
 export { Handler__factory } from './src/factories/Handler__factory';
 export { JoinSplitVerifier__factory } from './src/factories/JoinSplitVerifier__factory';
 export { SubtreeUpdateVerifier__factory } from './src/factories/SubtreeUpdateVerifier__factory';

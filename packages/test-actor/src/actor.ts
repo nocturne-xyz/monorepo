@@ -3,7 +3,7 @@ import {
   SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
   SimpleERC721Token__factory,
-  Wallet,
+  Teller,
 } from "@nocturne-xyz/contracts";
 import {
   DepositRequest,
@@ -27,7 +27,7 @@ interface DepositToDispatch {
 }
 
 export class TestActor {
-  wallet: Wallet;
+  teller: Teller;
   depositManager: DepositManager;
   sdk: NocturneWalletSDK;
   prover: JoinSplitProver;
@@ -37,7 +37,7 @@ export class TestActor {
   opRequests: OperationRequest[];
 
   constructor(
-    wallet: Wallet,
+    teller: Teller,
     depositManager: DepositManager,
     sdk: NocturneWalletSDK,
     prover: JoinSplitProver,
@@ -45,7 +45,7 @@ export class TestActor {
     depositRequests: DepositRequest[],
     opRequests: OperationRequest[]
   ) {
-    this.wallet = wallet;
+    this.teller = teller;
     this.depositManager = depositManager;
     this.sdk = sdk;
     this.prover = prover;

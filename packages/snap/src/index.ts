@@ -42,7 +42,7 @@ async function getNocturneSignerFromBIP44(): Promise<NocturneSigner> {
 }
 
 /**
- * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
+ * Handle incoming JSON-RPC requests, sent through `teller_invokeSnap`.
  *
  * @param args - The request handler args as object.
  * @param args.origin - The origin of the request, e.g., the website that

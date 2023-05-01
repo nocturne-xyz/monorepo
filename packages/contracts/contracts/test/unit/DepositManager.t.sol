@@ -13,7 +13,7 @@ import {EventParsing} from "../utils/EventParsing.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
 import {TestDepositManager} from "../harnesses/TestDepositManager.sol";
 import {Handler} from "../../Handler.sol";
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import {TestJoinSplitVerifier} from "../harnesses/TestJoinSplitVerifier.sol";
 import {TestSubtreeUpdateVerifier} from "../harnesses/TestSubtreeUpdateVerifier.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
@@ -22,7 +22,7 @@ import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
 import {WETH9} from "../tokens/WETH9.sol";
 
 contract DepositManagerTest is Test {
-    Wallet public wallet;
+    Teller public teller;
     Handler public handler;
     TestDepositManager public depositManager;
     WETH9 public weth;
@@ -70,27 +70,27 @@ contract DepositManagerTest is Test {
     );
 
     function setUp() public virtual {
-        // TODO: extract wallet/handler deployment into NocturneUtils
-        wallet = new Wallet();
+        // TODO: extract teller/handler deployment into NocturneUtils
+        teller = new Teller();
         handler = new Handler();
         weth = new WETH9();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
 
-        handler.initialize(address(wallet), address(subtreeUpdateVerifier));
-        wallet.initialize(address(handler), address(joinSplitVerifier));
+        handler.initialize(address(teller), address(subtreeUpdateVerifier));
+        teller.initialize(address(handler), address(joinSplitVerifier));
 
         depositManager = new TestDepositManager();
         depositManager.initialize(
             CONTRACT_NAME,
             CONTRACT_VERSION,
-            address(wallet),
+            address(teller),
             address(weth)
         );
 
         depositManager.setScreenerPermission(SCREENER, true);
-        wallet.setDepositSourcePermission(address(depositManager), true);
+        teller.setDepositSourcePermission(address(depositManager), true);
 
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
@@ -405,8 +405,8 @@ contract DepositManagerTest is Test {
         // Deposit hash marked false again
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
 
-        // Ensure wallet now has ALICE's tokens
-        assertEq(token.balanceOf(address(wallet)), RESERVE_AMOUNT);
+        // Ensure teller now has ALICE's tokens
+        assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT);
         assertEq(token.balanceOf(address(ALICE)), 0);
 
         // TODO: We want to check that some gas went to screener and rest went

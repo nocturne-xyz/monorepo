@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Wallet} from "../../Wallet.sol";
+import {Teller} from "../../Teller.sol";
 import "./NocturneUtils.sol";
 import "../../libs/Types.sol";
 import "../tokens/ISimpleToken.sol";
