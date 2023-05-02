@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- create separate `docker-compose.local.yml` and `docker-compose.dev.yml` where `dev` version pulls from docker hub
 - add config for newly deployed sepolia contracts
 - expose `loadNocturneConfigBuiltin` which avoids FS access
 - add `protocolAllowlist` to NocturneConfig

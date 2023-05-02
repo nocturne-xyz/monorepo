@@ -665,10 +665,10 @@
   },
   {
     "inputs": [],
-    "name": "_wallet",
+    "name": "_teller",
     "outputs": [
       {
-        "internalType": "contract IWallet",
+        "internalType": "contract ITeller",
         "name": "",
         "type": "address"
       }
@@ -1476,7 +1476,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "wallet",
+        "name": "teller",
         "type": "address"
       },
       {

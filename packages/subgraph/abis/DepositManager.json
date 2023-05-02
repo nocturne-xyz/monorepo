@@ -464,10 +464,10 @@
   },
   {
     "inputs": [],
-    "name": "_wallet",
+    "name": "_teller",
     "outputs": [
       {
-        "internalType": "contract IWallet",
+        "internalType": "contract ITeller",
         "name": "",
         "type": "address"
       }
@@ -604,7 +604,7 @@
       },
       {
         "internalType": "address",
-        "name": "wallet",
+        "name": "teller",
         "type": "address"
       },
       {
@@ -845,4 +845,4 @@
     "stateMutability": "nonpayable",
     "type": "function"
   }
-] 
+]

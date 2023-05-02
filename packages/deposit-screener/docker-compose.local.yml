@@ -17,6 +17,14 @@ services:
       dockerfile: packages/deposit-screener/Dockerfile
     restart: always
     command: "run processor --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-processor"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - SUBGRAPH_URL=${SUBGRAPH_URL}
+      - RPC_URL=${RPC_URL}
+      - TX_SIGNER_KEY=${TX_SIGNER_KEY}
+      - ATTESTATION_SIGNER_KEY=${ATTESTATION_SIGNER_KEY}
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
