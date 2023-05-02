@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add deploy config for sepolia
 - separate ownership transferral from contract deployment
 - add `whitelistProtocols` function
 - remove empty `console.log()` in place of `\n` again

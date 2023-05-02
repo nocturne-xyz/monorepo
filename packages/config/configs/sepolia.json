@@ -1,0 +1,74 @@
+{
+  "contracts": {
+    "network": { "name": "sepolia", "chainId": 11155111 },
+    "startBlock": 3406572,
+    "owners": {
+      "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
+      "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
+    },
+    "proxyAdmin": "0x197eb31c85C30a03326C5fe9224e1986d427d00D",
+    "depositManagerProxy": {
+      "kind": "Transparent",
+      "proxy": "0xD68deCAb99E4cf94B3C601ce85e71Ab68378E92F",
+      "implementation": "0x61e2340957B2be32C8E71a83461Cb6c3c645997F"
+    },
+    "tellerProxy": {
+      "kind": "Transparent",
+      "proxy": "0x53e8E02D10f3ad096C6Cd064ef21993aDdA72646",
+      "implementation": "0xD7320A89b22A5C01D10f9CB6bE97d38bAe436976"
+    },
+    "handlerProxy": {
+      "kind": "Transparent",
+      "proxy": "0xfF9765694b35a3DAdDE30A377a9cC8c8eB872e4C",
+      "implementation": "0x29D6B79eFa936741cB400FDBd2d99E46Ab568576"
+    },
+    "joinSplitVerifierAddress": "0x8A8f6509712180D7a10E0B4E002a9fb5Cc077413",
+    "subtreeUpdateVerifierAddress": "0xbfAC3e253c0C2ad1b7B4DA1868C42926B92F21dA",
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0xD68deCAb99E4cf94B3C601ce85e71Ab68378E92F"]
+  },
+  "protocolAllowlist": [
+    [
+      "weth",
+      {
+        "contractAddress": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ],
+    [
+      "dai",
+      {
+        "contractAddress": "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6",
+        "functionSignatures": [
+          "approve(address,uint256)",
+          "transfer(address,uint256)"
+        ]
+      }
+    ]
+  ],
+  "gasAssets": [
+    ["weth", "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"],
+    ["dai", "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6"]
+  ],
+  "rateLimits": [
+    [
+      "weth",
+      {
+        "perAddress": "5000000000000000000n",
+        "global": "500000000000000000000n"
+      }
+    ],
+    [
+      "dai",
+      {
+        "perAddress": "10000000000000000000000n",
+        "global": "1000000000000000000000000n"
+      }
+    ]
+  ]
+}
