@@ -1,4 +1,5 @@
 import { Address, NocturneContractDeployment } from "./deployment";
+import * as sepolia from "../configs/sepolia.json";
 import * as localhost from "../configs/localhost.json";
 import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
@@ -107,7 +108,9 @@ export function loadNocturneConfig(
 }
 
 export function loadNocturneConfigBuiltin(name: string): NocturneConfig {
-  if (name == "localhost") {
+  if (name == "sepolia") {
+    return NocturneConfig.fromObject(sepolia as any);
+  } else if (name == "localhost") {
     return NocturneConfig.fromObject(localhost as any);
   } else if (name == "example-network") {
     return NocturneConfig.fromObject(exampleNetwork as any);
