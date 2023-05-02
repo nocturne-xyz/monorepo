@@ -3427,7 +3427,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.3-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@npm:1.0.3-alpha":
+  version: 1.0.3-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.3-alpha"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+  checksum: 09f1915ba0c58316dc6c981f9dd33874603147a9c4e67816190016f7bf0fa46fe8b2c127b1ddabd6e24a91a6e45fd69431e59c61b8dc57c191ebaec9e045d7ef
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
