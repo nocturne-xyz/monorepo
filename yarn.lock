@@ -3365,7 +3365,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/config": 1.0.3-alpha
+    "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.21-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.103-alpha
@@ -3427,13 +3427,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:1.0.3-alpha":
-  version: 1.0.3-alpha
-  resolution: "@nocturne-xyz/config@npm:1.0.3-alpha"
+"@nocturne-xyz/config@npm:1.0.4-alpha":
+  version: 1.0.4-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.4-alpha"
   dependencies:
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
-  checksum: 09f1915ba0c58316dc6c981f9dd33874603147a9c4e67816190016f7bf0fa46fe8b2c127b1ddabd6e24a91a6e45fd69431e59c61b8dc57c191ebaec9e045d7ef
+  checksum: 205f6dc305a3e1d4456ef9348864f0489f5ce1f9e5d4333f7b9f32e78318c8ec05674a16b580991e0813b23371fd2f7498ced83e7386223dfeb4ad4c31a9f9fb
   languageName: node
   linkType: hard
 
@@ -3519,7 +3519,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": 1.0.3-alpha
+    "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.21-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.103-alpha
@@ -3812,7 +3812,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": 1.0.3-alpha
+    "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.21-alpha
     "@nocturne-xyz/offchain-utils": 0.1.0
     "@nocturne-xyz/sdk": 1.0.103-alpha
