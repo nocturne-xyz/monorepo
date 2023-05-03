@@ -525,14 +525,14 @@ export class DepositManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  _wallet(): Address {
-    let result = super.call("_wallet", "_wallet():(address)", []);
+  _teller(): Address {
+    let result = super.call("_teller", "_teller():(address)", []);
 
     return result[0].toAddress();
   }
 
-  try__wallet(): ethereum.CallResult<Address> {
-    let result = super.tryCall("_wallet", "_wallet():(address)", []);
+  try__teller(): ethereum.CallResult<Address> {
+    let result = super.tryCall("_teller", "_teller():(address)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -721,7 +721,7 @@ export class InitializeCall__Inputs {
     return this._call.inputValues[1].value.toString();
   }
 
-  get wallet(): Address {
+  get teller(): Address {
     return this._call.inputValues[2].value.toAddress();
   }
 
