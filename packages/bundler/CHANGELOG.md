@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- tag docker image with nocturnexyz org name
+- tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
 - `yarn build:docker` now builds CLI container, not docker compose. 
 - submitter checks `op.opProcessed` for failures and marks failed execution if so

@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- tag docker images with nocturnexyz org name
+- tag docker images with nocturnelabs org name
 - scan through all insertions starting from index 0 when recovering
 - take handler address via config in CLI via `--config-name-or-path`
 - add `--log-dir` option to CLI with defaults

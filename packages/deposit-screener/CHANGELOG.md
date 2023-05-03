@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- tag docker image with nocturnexyz org name
+- tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
 - `yarn build:docker` now builds CLI container, not docker compose. 
 - CLI uses config package to get contract addresses

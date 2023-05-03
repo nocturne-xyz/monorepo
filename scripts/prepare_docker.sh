@@ -2,7 +2,6 @@
 
 # builds docker containers for offchain actors
 # takes two options:
-#   -n (required): network name to build actors for (see `packages/config/configs`)
 #   -p (optional): prover mode for subtree updater, 'mock' or 'rapidsnark'. If not given, defaults to 'mock'.
 
 usage() { echo "usage: $0 [-p <'mock' | 'rapidsnark'>]" 1>&2; }

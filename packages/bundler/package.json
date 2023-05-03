@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnexyz/bundler:dev",
+    "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnelabs/bundler:dev",
     "build:docker-compose": "docker compose build",
     "bundler-cli": "npx ts-node src/cli/index.ts",
     "check": "tsc --noEmit",
