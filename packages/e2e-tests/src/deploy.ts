@@ -125,8 +125,7 @@ export interface TestDeployment {
 
 // defaults for actor deployments
 const ANVIL_URL = "http://0.0.0.0:8545";
-export const SUBGRAPH_URL =
-  "http://localhost:8000/subgraphs/name/nocturne-test";
+export const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/nocturne";
 
 const DEFAULT_BUNDLER_CONFIG: Omit<
   BundlerConfig,

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- create separate `docker-compose.local.yml` and `docker-compose.dev.yml` where `dev` version pulls from docker hub
 - tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
 - `yarn build:docker` now builds CLI container, not docker compose. 

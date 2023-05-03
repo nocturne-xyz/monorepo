@@ -6,10 +6,9 @@ dataSources:
     name: Handler
     network: mainnet
     source:
-      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
-      # startBlock: 8412194
-      startBlock: 0
       abi: Handler
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+      startBlock: 0
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -23,7 +22,8 @@ dataSources:
         - name: Handler
           file: ./abis/Handler.json
       eventHandlers:
-        - event: JoinSplitProcessed(indexed uint256,indexed uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256)))
+        - event: JoinSplitProcessed(indexed uint256,indexed
+            uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256)))
           handler: handleJoinSplit
         - event: RefundProcessed((uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint128)
           handler: handleRefund
@@ -34,9 +34,9 @@ dataSources:
     name: DepositManager
     network: mainnet
     source:
+      abi: DepositManager
       address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
       startBlock: 0
-      abi: DepositManager
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -47,6 +47,7 @@ dataSources:
         - name: DepositManager
           file: ./abis/DepositManager.json
       eventHandlers:
-        - event: DepositInstantiated(indexed address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)
+        - event: DepositInstantiated(indexed
+            address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)
           handler: handleDepositInstantiated
       file: ./src/depositManager.ts

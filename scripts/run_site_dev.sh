@@ -102,7 +102,7 @@ BUNDLER_PORT="3000"
 
 # screener default config variables
 SCREENER_REDIS_URL="redis://redis:6380"
-SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne-test"
+SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
 echo "Teller contract address: $TELLER_CONTRACT_ADDRESS"
@@ -132,7 +132,7 @@ mkdir ./redis-data
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.local.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "bundler running at PID: $BUNDLER_PID"
@@ -158,7 +158,7 @@ popd
 
 
 # run screener
-docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
+docker compose -f ./packages/deposit-screener/docker-compose.local.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
 SCREENER_PID=$!
 
 echo "screener running at PID: $SCREENER_PID"

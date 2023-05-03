@@ -17,7 +17,7 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
 
 const RPC_URL = "http://127.0.0.1:8545/";
-const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne-test";
+const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
 
 const config = loadNocturneConfigBuiltin("localhost");
 

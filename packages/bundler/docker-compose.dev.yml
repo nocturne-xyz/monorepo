@@ -12,39 +12,51 @@ services:
       - 6379
 
   server:
-    build:
-      context: ../..
-      dockerfile: packages/bundler/Dockerfile
+    image: nocturnelabs/bundler:dev
     restart: always
     command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3000 --log-dir /logs/bundler-server"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - RPC_URL=${RPC_URL}
     ports:
       - "3000:3000"
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
-      - ../../logs:/logs
-      - ../config/configs:/configs
+      - ./logs:/logs
+      - ./configs:/configs
 
   batcher:
-    build:
-      context: ../..
-      dockerfile: packages/bundler/Dockerfile
+    image: nocturnelabs/bundler:dev
     restart: always
     command: "run batcher --max-latency ${MAX_LATENCY:-60} --log-dir /logs/bundler-batcher"
-    volumes:
-      - ../../logs:/logs
-
-  submitter:
-    build:
-      context: ../..
-      dockerfile: packages/bundler/Dockerfile
-    restart: always
-    command: "run submitter --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/bundler-submitter"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - MAX_LATENCY=${MAX_LATENCY}
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
-      - ../../logs:/logs
-      - ../config/configs:/configs
+      - ./logs:/logs
+
+  submitter:
+    image: nocturnelabs/bundler:dev
+    restart: always
+    command: "run submitter --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/bundler-submitter"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+      - RPC_URL=${RPC_URL}
+      - TX_SIGNER_KEY=${TX_SIGNER_KEY}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./logs:/logs
+      - ./configs:/configs
 
 volumes:
   redis-data:
