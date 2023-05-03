@@ -102,7 +102,7 @@ BUNDLER_PORT="3000"
 
 # screener default config variables
 SCREENER_REDIS_URL="redis://redis:6380"
-SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne-test"
+SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
 echo "Teller contract address: $TELLER_CONTRACT_ADDRESS"
