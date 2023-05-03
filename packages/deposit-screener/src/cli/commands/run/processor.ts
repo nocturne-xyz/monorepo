@@ -22,6 +22,7 @@ const runProcess = new Command("processor")
   )
   .action(async (options) => {
     const { configNameOrPath, logDir } = options;
+
     const config = loadNocturneConfig(configNameOrPath);
 
     // TODO: enable switching on adapter impl
@@ -55,7 +56,8 @@ const runProcess = new Command("processor")
       attestationSigner,
       txSigner,
       getRedis(),
-      logger
+      logger,
+      config.contracts.startBlock
     );
 
     const { promise } = await processor.start();

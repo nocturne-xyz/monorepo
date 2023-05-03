@@ -31,9 +31,9 @@ export class DepositScreenerDB {
     await this.redis.set(NEXT_BLOCK_KEY, block);
   }
 
-  async getNextBlock(): Promise<number> {
+  async getNextBlock(): Promise<number | undefined> {
     const val = await this.redis.get(NEXT_BLOCK_KEY);
-    return val ? Number(val) : 0;
+    return val ? Number(val) : undefined;
   }
 
   async setDepositRequestStatus(
