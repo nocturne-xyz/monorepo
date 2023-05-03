@@ -30,6 +30,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   // second old note's nullfier
   idx = getTotalEntityIndex(totalLogIndex, 1);
   const nullifierB = new Nullifier(toPadded32BArray(idx));
+  nullifierB.idx = idx;
   nullifierB.nullifier = event.params.oldNoteBNullifier;
   nullifierB.save();
 
