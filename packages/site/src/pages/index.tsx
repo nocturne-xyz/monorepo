@@ -31,7 +31,7 @@ import {
   BundlerOperationID,
   formatTokenAmountEvmRepr,
 } from "@nocturne-xyz/frontend-sdk";
-import { WALLET_CONTRACT_ADDRESS } from "../config";
+import { TELLER_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 import { ethers } from "ethers";
 import { RPC_URL } from "../config/contracts";
@@ -114,7 +114,7 @@ const Index = () => {
   const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, WALLET_CONTRACT_ADDRESS).then(
+    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, TELLER_CONTRACT_ADDRESS).then(
       (sdk) => {
         setFrontendSDK(sdk);
       }

@@ -61,7 +61,7 @@ SCREENER_TX_SIGNER_KEY="0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b
 
 # read config variables from logs
 read DEPOSIT_MANAGER_CONTRACT_ADDRESS < <(sed -nr 's/^DepositManager address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
-read WALLET_CONTRACT_ADDRESS < <(sed -nr 's/^Wallet address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
+read TELLER_CONTRACT_ADDRESS < <(sed -nr 's/^Teller address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read HANDLER_CONTRACT_ADDRESS< <(sed -nr 's/^Handler address: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read TOKEN_CONTRACT_ADDR1 < <(sed -nr 's/^ERC20 token 1 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
 read TOKEN_CONTRACT_ADDR2 < <(sed -nr 's/^ERC20 token 2 deployed at: (0x[a-fA-F0-9]{40})$/\1/p' $LOG_DIR/hardhat-deposit)
@@ -105,7 +105,7 @@ SCREENER_REDIS_URL="redis://redis:6380"
 SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne-test"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
-echo "Wallet contract address: $WALLET_CONTRACT_ADDRESS"
+echo "Teller contract address: $TELLER_CONTRACT_ADDRESS"
 echo "Handler contract address: $HANDLER_CONTRACT_ADDRESS"
 echo "Token contract addresses: $TOKEN_CONTRACT_ADDR1, $TOKEN_CONTRACT_ADDR2"
 echo "Bundler submitter private key: $BUNDLER_TX_SIGNER_KEY"
@@ -184,8 +184,8 @@ SITE_CONTRACT_CONFIG_TS="$SCRIPT_DIR/../packages/site/src/config/contracts.ts"
 # Set snap handler contract address
 sed -i '' -r -e "s/const START_BLOCK = [0-9]*;/const START_BLOCK = ${START_BLOCK};/g" $SNAP_INDEX_TS
 
-# Set site wallet address
-sed -i '' -r -e "s/export const WALLET_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const WALLET_CONTRACT_ADDRESS = \"$WALLET_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
+# Set site teller address
+sed -i '' -r -e "s/export const TELLER_CONTRACT_ADDRESS = \"0x[0-9a-faA-F]+\";/export const TELLER_CONTRACT_ADDRESS = \"$TELLER_CONTRACT_ADDRESS\";/g" $SITE_CONTRACT_CONFIG_TS
 
 # Set test site token address
 sed -i '' -r -e "s/const TOKEN_ADDRESS = \"0x[0-9a-faA-F]+\";/const TOKEN_ADDRESS = \"$TOKEN_CONTRACT_ADDR1\";/g" $SITE_TEST_PAGE
