@@ -12,7 +12,7 @@ services:
       - 6380
 
   processor:
-    image: nocturnexyz/deposit-screener:dev
+    image: nocturnelabs/deposit-screener:dev
     restart: always
     command: "run processor --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-processor"
     environment:
