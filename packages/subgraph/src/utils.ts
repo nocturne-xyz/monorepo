@@ -12,30 +12,20 @@ export function getTotalLogIndex(event: ethereum.Event): BigInt {
   return blockNumber.leftShift(32).bitOr(txIndex).leftShift(32).bitOr(logIndex);
 }
 
-// `blockNumber << 64 | txIndex << 32 | logIndex` as a left-zero-padded 32-byte array, in big-endian order
-export function getId(totalLogIndex: BigInt): Bytes {
-  const without0x = totalLogIndex.toHexString().slice(2);
-
-  // pad the resulting ID out to 64 nibbles, or 256 bits
-  // this leaves 192 bits for `blockNumber`, which is plenty
-  const padded = without0x.padStart(64, "0");
-
-  return Bytes.fromHexString("0x" + padded);
-}
-
-// `blockNumber << 96 | txIndex << 32 | logIndex << 64 || entityIndex` as a left-zero-padded 32-byte array, in big-endian order
+// `blockNumber << 96 | txIndex << 32 | logIndex << 64 || entityIndex`
 // where `blockNumber`, `txIndex`, and `logIndex` uniquely identify the event
 // and `entityIndex` is used to handle cases where a single event produces
 // multiple entities (e.g. JoinSplit, which produces four of them)
-export function getIdWithEntityIndex(
+export function getTotalEntityIndex(
   totalLogIndex: BigInt,
   entityIndex: number
-): Bytes {
-  const idNum = totalLogIndex
-    .leftShift(32)
-    .bitOr(BigInt.fromI32(entityIndex as i32));
+): BigInt {
+  return totalLogIndex.leftShift(32).bitOr(BigInt.fromI32(entityIndex as i32));
+}
 
-  const without0x = idNum.toHexString().slice(2);
+// converts a bigint to a left-zero-padded 32-byte array, in big-endian order
+export function toPadded32BArray(id: BigInt): Bytes {
+  const without0x = id.toHexString().slice(2);
 
   // pad the resulting ID out to 64 nibbles, or 256 bits
   // this leaves 160 bits for `blockNumber`, which is plenty

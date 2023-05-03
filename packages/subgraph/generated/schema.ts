@@ -44,6 +44,15 @@ export class DepositEvent extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
+  }
+
   get type(): string {
     let value = this.get("type");
     return value!.toString();
@@ -180,6 +189,15 @@ export class EncodedOrEncryptedNote extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
+  }
+
   get merkleIndex(): BigInt {
     let value = this.get("merkleIndex");
     return value!.toBigInt();
@@ -255,6 +273,15 @@ export class EncodedNote extends Entity {
 
   set id(value: Bytes) {
     this.set("id", Value.fromBytes(value));
+  }
+
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
   }
 
   get ownerH1X(): BigInt {
@@ -361,6 +388,15 @@ export class EncryptedNote extends Entity {
 
   set id(value: Bytes) {
     this.set("id", Value.fromBytes(value));
+  }
+
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
   }
 
   get ownerH1X(): BigInt {
@@ -487,6 +523,15 @@ export class Nullifier extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
+  }
+
   get nullifier(): BigInt {
     let value = this.get("nullifier");
     return value!.toBigInt();
@@ -528,6 +573,15 @@ export class SubtreeCommit extends Entity {
 
   set id(value: Bytes) {
     this.set("id", Value.fromBytes(value));
+  }
+
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
   }
 
   get newRoot(): BigInt {
