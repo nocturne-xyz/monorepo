@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- tag docker image with nocturnelabs org name
+- add `yarn build:docker-compose` which builds docker compose
+- `yarn build:docker` now builds CLI container, not docker compose. 
 - submitter checks `op.opProcessed` for failures and marks failed execution if so
 - CLI uses config package to get contract addresses
 - remove gas hardcode in submitter `processBundle`

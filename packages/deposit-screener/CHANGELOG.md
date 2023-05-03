@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- tag docker image with nocturnelabs org name
+- add `yarn build:docker-compose` which builds docker compose
+- `yarn build:docker` now builds CLI container, not docker compose. 
 - CLI uses config package to get contract addresses
 - add `--log-dir` option to CLI with defaults
 - add winston logging

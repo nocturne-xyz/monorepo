@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:docker": "docker compose build",
+    "build:docker": "docker build -f ./Dockerfile ../../ -t nocturnelabs/deposit-screener:dev",
+    "build:docker-compose": "docker compose build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases:depositrequest": "npx ts-node ./scripts/genSignedDepositRequestTestCase.ts",
@@ -24,7 +25,7 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/config": "1.0.3-alpha",
+    "@nocturne-xyz/config": "1.0.4-alpha",
     "@nocturne-xyz/contracts": "1.0.21-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.0",
     "@nocturne-xyz/sdk": "1.0.103-alpha",

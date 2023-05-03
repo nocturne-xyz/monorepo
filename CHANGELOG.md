@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add `M1_README` for M1 users
+- move `rebuild_graph_m1.sh` to root `scripts`
+- add README to scripts dir
+- `prepare_docker.sh` builds containers, not docker compose for bundler and deposit screener
+- `prepare_docker.sh` takes a `-p` option for specifying whether or not to use rapidsnark
 - rename `Wallet` to `Teller` across all packages
 - instead of copying localhost config to snap, dev site rebuilds config package, then rebuilds snap, such that when snap runs, can draw on updated config pkg
 - update prettier in all packages
