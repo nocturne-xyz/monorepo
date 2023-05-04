@@ -59,7 +59,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         }
 
         // if `to` > current block number, want to only fetch up to current block number
-        const currentBlock = await handlerContract.provider.getBlockNumber()
+        const currentBlock = await handlerContract.provider.getBlockNumber();
         to = min(to, currentBlock);
 
         // if `from` > `to`, we've caught up to the tip of the chain
