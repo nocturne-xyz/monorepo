@@ -20,8 +20,13 @@ const runProcess = new Command("processor")
     "directory to write logs to",
     "./logs/deposit-screener-processor"
   )
+  .option(
+    "--throttle-ms <number>",
+    "maximum period of time to wait before pulling new deposit events",
+    parseInt
+  )
   .action(async (options) => {
-    const { configNameOrPath, logDir } = options;
+    const { configNameOrPath, logDir, throttleMs } = options;
 
     const config = loadNocturneConfig(configNameOrPath);
 
@@ -60,7 +65,7 @@ const runProcess = new Command("processor")
       config.contracts.startBlock
     );
 
-    const { promise } = await processor.start();
+    const { promise } = await processor.start(throttleMs);
     await promise;
   });
 

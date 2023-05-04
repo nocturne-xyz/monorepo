@@ -24,7 +24,7 @@
     "@nocturne-xyz/config": "1.0.4-alpha",
     "@nocturne-xyz/contracts": "1.0.21-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.0",
-    "@nocturne-xyz/sdk": "1.0.104-alpha",
+    "@nocturne-xyz/sdk": "1.0.154-alpha",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",

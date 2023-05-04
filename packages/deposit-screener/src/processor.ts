@@ -88,7 +88,9 @@ export class DepositScreenerProcessor {
     this.delayCalculator = new DummyDelayCalculator();
   }
 
-  async start(): Promise<DepositScreenerProcessorHandle> {
+  async start(
+    queryThrottleMs?: number
+  ): Promise<DepositScreenerProcessorHandle> {
     const nextBlockToSync = (await this.db.getNextBlock()) ?? this.startBlock;
     this.logger.info(
       `processing deposit requests starting from block ${nextBlockToSync}`
@@ -97,7 +99,7 @@ export class DepositScreenerProcessor {
     const depositEvents = this.adapter.iterDepositEvents(
       DepositEventType.Instantiated,
       nextBlockToSync,
-      { maxChunkSize: 10_000 }
+      { maxChunkSize: 100_000, throttleMs: queryThrottleMs }
     );
 
     const screenerProm = this.runScreener(

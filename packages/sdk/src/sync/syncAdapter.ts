@@ -34,6 +34,8 @@ export interface StateDiff extends BaseStateDiff {
 export interface IterSyncOpts {
   endBlock?: number;
   maxChunkSize?: number;
+  // throttle the iterator to it will yield at most once every `throttleMs` milliseconds
+  throttleMs?: number;
 }
 
 export interface SDKSyncAdapter {
