@@ -6,6 +6,7 @@ enum DepositEventType {
 
 type DepositEvent @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   type: DepositEventType!
   spender: Bytes!
   encodedAssetAddr: BigInt!
@@ -21,6 +22,7 @@ type DepositEvent @entity(immutable: true) {
 
 type EncodedOrEncryptedNote @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   merkleIndex: BigInt!
   note: EncodedNote
   encryptedNote: EncryptedNote
@@ -28,6 +30,7 @@ type EncodedOrEncryptedNote @entity(immutable: true) {
 
 type EncodedNote @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   ownerH1X: BigInt!
   ownerH1Y: BigInt!
   ownerH2X: BigInt!
@@ -40,6 +43,7 @@ type EncodedNote @entity(immutable: true) {
 
 type EncryptedNote @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   ownerH1X: BigInt!
   ownerH1Y: BigInt!
   ownerH2X: BigInt!
@@ -54,11 +58,13 @@ type EncryptedNote @entity(immutable: true) {
 
 type Nullifier @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   nullifier: BigInt!
 }
 
 type SubtreeCommit @entity(immutable: true) {
   id: Bytes!
+  idx: BigInt!
   newRoot: BigInt!
   subtreeIndex: BigInt!
 }

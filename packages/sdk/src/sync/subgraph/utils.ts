@@ -61,12 +61,14 @@ export const makeSubgraphQuery =
     }
   };
 
-export function entityIdFromBlockNumber(blockNumber: bigint): string {
-  return `0x${(blockNumber << 64n).toString(16).padStart(64, "0")}`;
+export function totalLogIndexFromBlockNumber(blockNumber: bigint): bigint {
+  return blockNumber << 64n;
 }
 
-export function entityIdWithEntityIndexFromBlockNumber(
-  blockNumber: bigint
-): string {
-  return `0x${(blockNumber << 96n).toString(16).padStart(64, "0")}`;
+export function totalEntityIndexFromBlockNumber(blockNumber: bigint): bigint {
+  return blockNumber << 96n;
+}
+
+export function bigintToPadded32BHex(n: bigint): string {
+  return `0x${n.toString(16).padStart(64, "0")}`;
 }

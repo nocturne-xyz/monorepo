@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- subgraph fetch functions query via `idx_gte` and `idx_lt` instead of `id_gte` and `id_lt`
 - add util method for concattenating address to selector for handler checks
 - fix `SparseMerkleProver` bug where empty tree has incorrect root
 - fix minor bug where SDK would override `executionGasLimit` or `maxNumRefunds` even if it was set in opRequest

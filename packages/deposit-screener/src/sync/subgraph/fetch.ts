@@ -1,7 +1,7 @@
 import { EncodedAsset, StealthAddress, SubgraphUtils } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
 
-const { makeSubgraphQuery, entityIdFromBlockNumber } = SubgraphUtils;
+const { makeSubgraphQuery, totalLogIndexFromBlockNumber } = SubgraphUtils;
 
 export interface DepositEventResponse {
   id: string;
@@ -20,8 +20,8 @@ export interface DepositEventResponse {
 }
 
 interface FetchDepositEventsVars {
-  fromID: string;
-  toID: string;
+  fromIdx: string;
+  toIdx: string;
   type: DepositEventType;
 }
 
@@ -32,8 +32,8 @@ interface FetchDepositEventsResponse {
 }
 
 const depositEventsQuery = `\
-  query fetchDepositEvents($fromID: Bytes!, $toID: Bytes!, $type: String!) {
-    depositEvents(where: { id_gte: $fromID, id_lt: $toID, type: $type }) {
+  query fetchDepositEvents($fromIdx: Bytes!, $toIdx: Bytes!, $type: String!) {
+    depositEvents(where: { idx_gte: $fromIdx, idx_lt: $toIdx, type: $type }) {
       type
       spender
       encodedAssetAddr
@@ -60,10 +60,10 @@ export async function fetchDepositEvents(
     FetchDepositEventsResponse
   >(endpoint, depositEventsQuery, "depositEvents");
 
-  const fromID = entityIdFromBlockNumber(BigInt(fromBlock));
-  const toID = entityIdFromBlockNumber(BigInt(toBlock + 1));
+  const fromIdx = totalLogIndexFromBlockNumber(BigInt(fromBlock)).toString();
+  const toIdx = totalLogIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
-  const res = await query({ fromID, toID, type });
+  const res = await query({ fromIdx, toIdx, type });
   return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 

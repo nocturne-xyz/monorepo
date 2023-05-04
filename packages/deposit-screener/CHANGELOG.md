@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- subgraph fetch functions query via `idx_gte` and `idx_lt` instead of `id_gte` and `id_lt`
 - create separate `docker-compose.local.yml` and `docker-compose.dev.yml` where `dev` version pulls from docker hub
 - tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose

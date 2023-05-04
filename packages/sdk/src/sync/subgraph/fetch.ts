@@ -6,10 +6,7 @@ import {
   IncludedNote,
 } from "../../primitives";
 import { maxArray } from "../../utils";
-import {
-  entityIdWithEntityIndexFromBlockNumber,
-  makeSubgraphQuery,
-} from "./utils";
+import { makeSubgraphQuery, totalEntityIndexFromBlockNumber } from "./utils";
 
 interface NoteResponse {
   ownerH1X: string;
@@ -24,6 +21,7 @@ interface NoteResponse {
 
 interface EncryptedNoteResponse {
   id: string;
+  idx: string;
   ownerH1X: string;
   ownerH1Y: string;
   ownerH2X: string;
@@ -49,13 +47,14 @@ interface FetchNotesResponse {
 }
 
 interface FetchNotesVars {
-  fromID: string;
-  toID: string;
+  fromIdx: string;
+  toIdx: string;
 }
 
 const notesQuery = `\
-query fetchNotes($fromID: Bytes!, $toID: Bytes!) {
-  encodedOrEncryptedNotes(where: { id_gte: $fromID, id_lt: $toID}) {
+query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
+  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
+    idx
     merkleIndex
     note {
       ownerH1X
@@ -95,10 +94,10 @@ export async function fetchNotes(
     "notes"
   );
 
-  const fromID = entityIdWithEntityIndexFromBlockNumber(BigInt(fromBlock));
-  const toID = entityIdWithEntityIndexFromBlockNumber(BigInt(toBlock + 1));
+  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
+  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
-  const res = await query({ fromID, toID });
+  const res = await query({ fromIdx, toIdx });
   return res.data.encodedOrEncryptedNotes.map(
     ({ merkleIndex, note, encryptedNote }) => {
       if (note) {
@@ -236,8 +235,8 @@ interface FetchNullifiersResponse {
 }
 
 interface FetchNullifiersVars {
-  fromID: string;
-  toID: string;
+  fromIdx: string;
+  toIdx: string;
 }
 
 interface NullifierResponse {
@@ -245,8 +244,8 @@ interface NullifierResponse {
 }
 
 const nullifiersQuery = `
-  query fetchNullifiers($fromID: Bytes!, $toID: Bytes!) {
-    nullifiers(where: { id_gte: $fromID, id_lt: $toID}) {
+  query fetchNullifiers($fromIdx: Bytes!, $toIdx: Bytes!) {
+    nullifiers(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
       nullifier
     }
   }
@@ -265,9 +264,9 @@ export async function fetchNullifiers(
     "nullifiers"
   );
 
-  const fromID = entityIdWithEntityIndexFromBlockNumber(BigInt(fromBlock));
-  const toID = entityIdWithEntityIndexFromBlockNumber(BigInt(toBlock + 1));
+  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
+  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
-  const res = await query({ fromID, toID });
+  const res = await query({ fromIdx, toIdx });
   return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
 }
