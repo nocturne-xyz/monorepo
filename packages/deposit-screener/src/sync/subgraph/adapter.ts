@@ -69,7 +69,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
 
         from = to + 1;
 
-        if (opts?.throttleMs) {
+        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
           await sleep(opts.throttleMs);
         }
       }

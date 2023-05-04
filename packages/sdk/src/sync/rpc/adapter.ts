@@ -59,7 +59,8 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         }
 
         // if `to` > current block number, want to only fetch up to current block number
-        to = min(to, await handlerContract.provider.getBlockNumber());
+        const currentBlock = await handlerContract.provider.getBlockNumber()
+        to = min(to, currentBlock);
 
         // if `from` > `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
@@ -107,7 +108,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // the next state diff starts at the first block in the next range, `to + 1`
         from = to + 1;
 
-        if (opts?.throttleMs) {
+        if (opts?.throttleMs && currentBlock - from > chunkSize) {
           await sleep(opts.throttleMs);
         }
       }
