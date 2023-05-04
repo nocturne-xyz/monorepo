@@ -75,6 +75,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         yield stateDiff;
 
         from = to + 1;
+
+        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
+          await sleep(opts.throttleMs);
+        }
       }
     };
 

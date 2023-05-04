@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add optional `throttleMs` field to `IterSyncOpts` and implement it in all sync adapters
 - subgraph fetch functions query via `idx_gte` and `idx_lt` instead of `id_gte` and `id_lt`
 - add util method for concattenating address to selector for handler checks
 - fix `SparseMerkleProver` bug where empty tree has incorrect root

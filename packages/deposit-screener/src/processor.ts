@@ -56,6 +56,7 @@ export class DepositScreenerProcessor {
   attestationSigner: TypedDataSigner;
   txSigner: ethers.Wallet;
   logger: Logger;
+  startBlock: number;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -63,11 +64,14 @@ export class DepositScreenerProcessor {
     attestationSigner: TypedDataSigner,
     txSigner: ethers.Wallet,
     redis: IORedis,
-    logger: Logger
+    logger: Logger,
+    startBlock?: number
   ) {
     this.redis = redis;
     this.adapter = syncAdapter;
     this.logger = logger;
+
+    this.startBlock = startBlock ?? 0;
 
     this.attestationSigner = attestationSigner;
     this.txSigner = txSigner;
@@ -84,8 +88,10 @@ export class DepositScreenerProcessor {
     this.delayCalculator = new DummyDelayCalculator();
   }
 
-  async start(): Promise<DepositScreenerProcessorHandle> {
-    const nextBlockToSync = await this.db.getNextBlock();
+  async start(
+    queryThrottleMs?: number
+  ): Promise<DepositScreenerProcessorHandle> {
+    const nextBlockToSync = (await this.db.getNextBlock()) ?? this.startBlock;
     this.logger.info(
       `processing deposit requests starting from block ${nextBlockToSync}`
     );
@@ -93,7 +99,7 @@ export class DepositScreenerProcessor {
     const depositEvents = this.adapter.iterDepositEvents(
       DepositEventType.Instantiated,
       nextBlockToSync,
-      { maxChunkSize: 10_000 }
+      { maxChunkSize: 100_000, throttleMs: queryThrottleMs }
     );
 
     const screenerProm = this.runScreener(
