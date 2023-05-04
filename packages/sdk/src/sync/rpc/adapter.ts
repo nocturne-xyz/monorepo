@@ -106,6 +106,10 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // the next state diff starts at the first block in the next range, `to + 1`
         from = to + 1;
+
+        if (opts?.throttleMs) {
+          await sleep(opts.throttleMs);
+        }
       }
     };
 

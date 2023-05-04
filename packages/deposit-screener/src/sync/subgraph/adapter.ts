@@ -68,6 +68,10 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
         };
 
         from = to + 1;
+
+        if (opts?.throttleMs) {
+          await sleep(opts.throttleMs);
+        }
       }
     };
 
