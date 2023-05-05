@@ -418,6 +418,17 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
+    // function testCompleteDepositFailureExceedsGlobalCap public {
+    //     SimpleERC20Token token = ERC20s[0];
+    //     EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+    //         AssetType.ERC20,
+    //         address(token),
+    //         NocturneUtils.ERC20_ID
+    //     );
+
+    //     depositManager.setAssetCap(encodedToken, RESERVE_AMOUNT * 10, RESERVE_AMOUNT, );
+    // }
+
     function testCompleteDepositFailureBadSignature() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);

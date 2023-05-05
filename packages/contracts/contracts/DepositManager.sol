@@ -88,47 +88,36 @@ contract DepositManager is
     }
 
     modifier enforceCaps(EncodedAsset memory encodedAsset, uint256 value) {
+        require(value < type(uint128).max, "value >= uint128.max");
+
         bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
         AssetCap memory cap = _assetCaps[assetHash];
 
-        // Ignore cap if no entry
-        if (
-            (cap.runningGlobalDeposited |
-                cap.globalCapWholeTokens |
-                cap.maxPerAddressDepositSize |
-                cap.lastResetTimestamp |
-                cap.precision) == 0
-        ) {
-            _;
-        } else {
-            require(value < type(uint128).max, "value >= uint128.max");
-
-            // Clear expired global cap if possible
-            if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
-                cap.runningGlobalDeposited = 0;
-                cap.lastResetTimestamp = uint32(block.timestamp);
-            }
-
-            uint256 precision = (10 ** cap.precision);
-            uint256 globalCap = cap.globalCapWholeTokens * precision;
-            uint256 perAddressDepositSizeCap = cap.maxPerAddressDepositSize *
-                precision;
-
-            // Ensure less than global cap and less than deposit size cap
-            require(
-                uint256(cap.runningGlobalDeposited) + value <= globalCap,
-                "globalCap exceeded"
-            );
-            require(
-                uint256(value) <= perAddressDepositSizeCap,
-                "perAddressDepositSizeCap exceeded"
-            );
-
-            _;
-
-            // we know value < uint128.max given first require
-            _assetCaps[assetHash].runningGlobalDeposited += uint128(value);
+        // Clear expired global cap if possible
+        if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
+            cap.runningGlobalDeposited = 0;
+            cap.lastResetTimestamp = uint32(block.timestamp);
         }
+
+        uint256 precision = (10 ** cap.precision);
+        uint256 globalCap = cap.globalCapWholeTokens * precision;
+        uint256 perAddressDepositSizeCap = cap.maxPerAddressDepositSize *
+            precision;
+
+        // Ensure less than global cap and less than deposit size cap
+        require(
+            uint256(cap.runningGlobalDeposited) + value <= globalCap,
+            "globalCap exceeded"
+        );
+        require(
+            uint256(value) <= perAddressDepositSizeCap,
+            "perAddressDepositSizeCap exceeded"
+        );
+
+        _;
+
+        // we know value < uint128.max given first require
+        _assetCaps[assetHash].runningGlobalDeposited += uint128(value);
     }
 
     function setScreenerPermission(
@@ -139,7 +128,7 @@ contract DepositManager is
         emit ScreenerPermissionSet(screener, permission);
     }
 
-    function setAssetCaps(
+    function setAssetCap(
         EncodedAsset calldata encodedAsset,
         uint32 globalCapWholeTokens,
         uint32 maxPerAddressDepositSize,
