@@ -20,7 +20,7 @@ contract DepositManager is
     OwnableUpgradeable
 {
     struct Erc20Cap {
-        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), note that uint128 is plenty large (3x10^20 whole tokens even for 18 decimal tokens)
+        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
         uint32 globalCapWholeTokens; // global cap for asset in whole tokens
         uint32 maxPerAddressDepositSize; // max size of a single deposit per address
         uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
@@ -84,6 +84,31 @@ contract DepositManager is
         _weth = IWeth(weth);
     }
 
+    modifier enforceErc20MaxDepositSize(address token, uint256 value) {
+        require(value < type(uint128).max, "value >= uint128.max");
+
+        Erc20Cap memory cap = _erc20Caps[token];
+
+        // Ensure asset is supported (has a cap)
+        require(
+            (cap.runningGlobalDeposited |
+                cap.globalCapWholeTokens |
+                cap.maxPerAddressDepositSize |
+                cap.lastResetTimestamp |
+                cap.precision) != 0,
+            "!supported erc20"
+        );
+
+        uint256 precision = (10 ** cap.precision);
+        uint256 maxPerAddressDepositSize = cap.maxPerAddressDepositSize *
+            precision;
+
+        // Ensure less than max deposit size
+        require(value <= maxPerAddressDepositSize, "maxDepositSize exceeded");
+
+        _;
+    }
+
     modifier enforceErc20Cap(
         EncodedAsset calldata encodedAsset,
         uint256 value
@@ -111,17 +136,11 @@ contract DepositManager is
 
         uint256 precision = (10 ** cap.precision);
         uint256 globalCap = cap.globalCapWholeTokens * precision;
-        uint256 perAddressDepositSizeCap = cap.maxPerAddressDepositSize *
-            precision;
 
         // Ensure less than global cap and less than deposit size cap
         require(
             uint256(cap.runningGlobalDeposited) + value <= globalCap,
             "globalCap exceeded"
-        );
-        require(
-            uint256(value) <= perAddressDepositSizeCap,
-            "perAddressDepositSizeCap exceeded"
         );
 
         _;
@@ -162,7 +181,12 @@ contract DepositManager is
     function instantiateETHDeposit(
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant {
+    )
+        external
+        payable
+        nonReentrant
+        enforceErc20MaxDepositSize(address(_weth), value)
+    {
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
@@ -201,7 +225,7 @@ contract DepositManager is
         address token,
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant {
+    ) external payable nonReentrant enforceErc20MaxDepositSize(token, value) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             token,

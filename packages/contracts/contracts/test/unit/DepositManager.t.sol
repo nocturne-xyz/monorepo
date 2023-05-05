@@ -42,6 +42,9 @@ contract DepositManagerTest is Test {
     uint256 constant RESERVE_AMOUNT = 50_000_000;
     uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
+    uint32 constant MAX_DEPOSIT_SIZE = 100_000_000;
+    uint32 constant GLOBAL_CAP = 1_000_000_000;
+
     event DepositInstantiated(
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -94,8 +97,8 @@ contract DepositManagerTest is Test {
 
         depositManager.setErc20Cap(
             address(weth),
-            1_000_000_000,
-            10_000_000,
+            GLOBAL_CAP,
+            MAX_DEPOSIT_SIZE,
             18
         );
 
@@ -107,8 +110,8 @@ contract DepositManagerTest is Test {
 
             depositManager.setErc20Cap(
                 address(ERC20s[i]),
-                1_000_000_000,
-                10_000_000,
+                GLOBAL_CAP,
+                MAX_DEPOSIT_SIZE,
                 18
             );
         }
@@ -408,16 +411,75 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
-    // function testCompleteDepositFailureExceedsGlobalCap public {
-    //     SimpleERC20Token token = ERC20s[0];
-    //     EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-    //         AssetType.ERC20,
-    //         address(token),
-    //         NocturneUtils.ERC20_ID
-    //     );
+    function testCompleteDepositFailureExceedsMaxDepositSize() public {
+        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
+            1;
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, overMaxSizeAmount);
 
-    //     depositManager.setAssetCap(encodedToken, RESERVE_AMOUNT * 10, RESERVE_AMOUNT, );
-    // }
+        vm.prank(ALICE);
+        token.approve(address(depositManager), overMaxSizeAmount);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("maxDepositSize exceeded");
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            overMaxSizeAmount,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
+    function testCompleteDepositFailureExceedsGlobalCap() public {
+        SimpleERC20Token token = ERC20s[0];
+        uint256 chunkAmount = (uint256(GLOBAL_CAP) * (10 ** 18)) / 10;
+
+        // Deposit one chunk size over global cap
+        DepositRequest memory deposit;
+        bytes memory signature;
+        for (uint256 i = 0; i < 11; i++) {
+            token.reserveTokens(ALICE, chunkAmount);
+
+            vm.prank(ALICE);
+            token.approve(address(depositManager), chunkAmount);
+
+            deposit = NocturneUtils.formatDepositRequest(
+                ALICE,
+                address(token),
+                chunkAmount,
+                NocturneUtils.ERC20_ID,
+                NocturneUtils.defaultStealthAddress(),
+                depositManager._nonces(ALICE),
+                GAS_COMP_AMOUNT // 10M gas comp
+            );
+
+            vm.deal(ALICE, GAS_COMP_AMOUNT);
+            vm.prank(ALICE);
+            depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+                address(token),
+                chunkAmount,
+                NocturneUtils.defaultStealthAddress()
+            );
+
+            bytes32 digest = depositManager.computeDigest(deposit);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+            signature = ParseUtils.rsvToSignatureBytes(
+                uint256(r),
+                uint256(s),
+                v
+            );
+
+            // Last chunk reverts due to exceeding global cap
+            if (i == 10) {
+                vm.expectRevert("globalCap exceeded");
+            }
+            depositManager.completeErc20Deposit(deposit, signature);
+        }
+
+        // Last chunk goes through after moving forward timestamp 1h
+        vm.warp(block.timestamp + 3_601);
+        depositManager.completeErc20Deposit(deposit, signature);
+    }
 
     function testCompleteDepositFailureBadSignature() public {
         SimpleERC20Token token = ERC20s[0];
