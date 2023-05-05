@@ -390,7 +390,7 @@ contract DepositManagerTest is Test {
         );
 
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, signature);
+        depositManager.completeErc20Deposit(deposit, signature);
 
         // Deposit hash marked false again
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
@@ -456,7 +456,7 @@ contract DepositManagerTest is Test {
 
         vm.expectRevert("request signer !screener");
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, badSignature);
+        depositManager.completeErc20Deposit(deposit, badSignature);
     }
 
     function testCompleteDepositFailureNonExistentDeposit() public {
@@ -488,6 +488,6 @@ contract DepositManagerTest is Test {
 
         vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, signature);
+        depositManager.completeErc20Deposit(deposit, signature);
     }
 }

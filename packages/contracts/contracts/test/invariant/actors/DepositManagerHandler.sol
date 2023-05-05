@@ -27,8 +27,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibDepositRequestArray for DepositRequest[];
     using LibDepositSumSet for DepositSumSet;
 
-    uint256 constant ERC20_ID = 0;
-
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
 
@@ -135,13 +133,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             _reverts["completeDepositErc20"]
         );
         console.log("no-op", _calls["no-op"]);
+        console.log("timestamp", block.timestamp);
     }
 
     function instantiateDepositETH(
-        uint256 amount
+        uint256 seed
     ) public createActor trackCall("instantiateDepositETH") {
         // Bound deposit amount
-        amount = bound(amount, 0, ETH_SUPPLY);
+        uint256 amount = bound(seed, 0, ETH_SUPPLY);
         _depositSizes.push(amount);
 
         // Deal gas compensation
@@ -172,20 +171,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function instantiateDepositErc20(
-        uint256 amount
+        uint256 seed
     ) public createActor trackCall("instantiateDepositErc20") {
-        (
-            uint128 runningGlobalDeposited,
-            uint32 globalCapWholeTokens,
-            ,
-            ,
-            uint8 precision
-        ) = depositManager._erc20Caps(address(erc20));
-
+        (, uint32 globalCapWholeTokens, , , uint8 precision) = depositManager
+            ._erc20Caps(address(erc20));
         uint256 globalCap = uint256(globalCapWholeTokens) * 10 ** precision;
 
         // Bound deposit amount
-        amount = bound(amount, 0, globalCap - uint256(runningGlobalDeposited));
+        uint256 amount = bound(seed, 0, globalCap);
         erc20.reserveTokens(_currentActor, amount);
         _depositSizes.push(amount);
 
@@ -278,7 +271,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         );
 
         // Complete deposit
-        try depositManager.completeDeposit(randDepositRequest, signature) {
+        uint256 warpTimestamp;
+        unchecked {
+            warpTimestamp = block.timestamp + seed;
+        }
+        vm.warp(warpTimestamp);
+        try depositManager.completeErc20Deposit(randDepositRequest, signature) {
             (uint256 encodedWethAddr, ) = depositManager._wethEncoded();
             if (
                 randDepositRequest.encodedAsset.encodedAssetAddr ==

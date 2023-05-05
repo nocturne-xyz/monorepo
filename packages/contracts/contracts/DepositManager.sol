@@ -91,9 +91,13 @@ contract DepositManager is
         );
     }
 
-    modifier enforceErc20Cap(address token, uint256 value) {
+    modifier enforceErc20Cap(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) {
         require(value < type(uint128).max, "value >= uint128.max");
 
+        (, address token, ) = AssetUtils.decodeAsset(encodedAsset);
         Erc20Cap memory cap = _erc20Caps[token];
 
         // Ensure asset is supported (has a cap)
@@ -147,6 +151,10 @@ contract DepositManager is
         uint32 maxPerAddressDepositSize,
         uint8 precision
     ) external onlyOwner {
+        require(
+            globalCapWholeTokens * 10 ** precision < type(uint128).max,
+            "globalCap >= uint128.max"
+        );
         _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
             globalCapWholeTokens: globalCapWholeTokens,
@@ -156,10 +164,12 @@ contract DepositManager is
         });
     }
 
+    // TODO: add multiDeposit method for splitting large deposits into multiple
+
     function instantiateETHDeposit(
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable enforceErc20Cap(address(_weth), value) nonReentrant {
+    ) external payable nonReentrant {
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
@@ -192,45 +202,13 @@ contract DepositManager is
         address token,
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant enforceErc20Cap(token, value) {
+    ) external payable nonReentrant {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             token,
             ERC20_ID
         );
         _instantiateDeposit(encodedAsset, value, depositAddr);
-    }
-
-    function _instantiateDeposit(
-        EncodedAsset memory encodedAsset,
-        uint256 value,
-        StealthAddress calldata depositAddr
-    ) internal {
-        DepositRequest memory req = DepositRequest({
-            spender: msg.sender,
-            encodedAsset: encodedAsset,
-            value: value,
-            depositAddr: depositAddr,
-            nonce: _nonces[msg.sender],
-            gasCompensation: msg.value
-        });
-
-        bytes32 depositHash = _hashDepositRequest(req);
-
-        // Update deposit mapping and nonces
-        _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
-
-        AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
-
-        emit DepositInstantiated(
-            req.spender,
-            req.encodedAsset,
-            req.value,
-            req.depositAddr,
-            req.nonce,
-            req.gasCompensation
-        );
     }
 
     // NOTE: We accept race condition where user could technically retrieve their deposit before
@@ -265,10 +243,49 @@ contract DepositManager is
         );
     }
 
-    function completeDeposit(
+    function completeErc20Deposit(
         DepositRequest calldata req,
         bytes calldata signature
-    ) external nonReentrant {
+    ) external nonReentrant enforceErc20Cap(req.encodedAsset, req.value) {
+        _completeDeposit(req, signature);
+    }
+
+    function _instantiateDeposit(
+        EncodedAsset memory encodedAsset,
+        uint256 value,
+        StealthAddress calldata depositAddr
+    ) internal {
+        DepositRequest memory req = DepositRequest({
+            spender: msg.sender,
+            encodedAsset: encodedAsset,
+            value: value,
+            depositAddr: depositAddr,
+            nonce: _nonces[msg.sender],
+            gasCompensation: msg.value
+        });
+
+        bytes32 depositHash = _hashDepositRequest(req);
+
+        // Update deposit mapping and nonces
+        _outstandingDepositHashes[depositHash] = true;
+        _nonces[req.spender] = req.nonce + 1;
+
+        AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
+
+        emit DepositInstantiated(
+            req.spender,
+            req.encodedAsset,
+            req.value,
+            req.depositAddr,
+            req.nonce,
+            req.gasCompensation
+        );
+    }
+
+    function _completeDeposit(
+        DepositRequest calldata req,
+        bytes calldata signature
+    ) internal {
         uint256 preDepositGas = gasleft();
 
         // Recover and check screener signature
