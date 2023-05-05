@@ -20,8 +20,12 @@ const runServer = new Command("server")
     "directory to write logs to",
     "./logs/bundler-server"
   )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
-    const { configNameOrPath, port, logDir } = options;
+    const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const rpcUrl = process.env.RPC_URL;
@@ -30,7 +34,7 @@ const runServer = new Command("server")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-    const logger = makeLogger(logDir, "bundler", "server");
+    const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
     const server = new BundlerServer(
       config.tellerAddress(),
       provider,

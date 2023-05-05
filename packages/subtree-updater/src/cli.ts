@@ -62,6 +62,10 @@ export default async function main(): Promise<void> {
       "--log-dir <string>",
       "directory to write logs to",
       "./logs/subtree-updater"
+    )
+    .option(
+      "--stdout-log-level",
+      "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
     );
 
   program.parse();
@@ -79,6 +83,7 @@ export default async function main(): Promise<void> {
     indexingStartBlock,
     fillBatches,
     logDir,
+    stdoutLogLevel,
   } = program.opts();
   const config = loadNocturneConfig(configNameOrPath);
 
@@ -114,7 +119,12 @@ export default async function main(): Promise<void> {
     );
   }
 
-  const logger = makeLogger(logDir, "subtree-updater", "server");
+  const logger = makeLogger(
+    logDir,
+    "subtree-updater",
+    "server",
+    stdoutLogLevel
+  );
   const server = new SubtreeUpdateServer(
     prover,
     config.handlerAddress(),
