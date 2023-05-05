@@ -15,6 +15,7 @@ COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
 COPY packages/circuits packages/circuits
+COPY packages/config/configs ./configs
 COPY circuit-artifacts circuit-artifacts
 
 RUN corepack enable

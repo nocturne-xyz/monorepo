@@ -7,6 +7,7 @@ COPY tsconfig.json .
 COPY yarn.lock .
 COPY .yarn .yarn
 COPY .yarnrc.yml .
+COPY packages/config/configs ./configs
 COPY packages/bundler packages/bundler
 
 RUN yarn install
