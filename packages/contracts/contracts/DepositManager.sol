@@ -34,8 +34,6 @@ contract DepositManager is
     ITeller public _teller;
     IWeth public _weth;
 
-    EncodedAsset public _wethEncoded;
-
     mapping(address => bool) public _screeners;
     mapping(address => uint256) public _nonces;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
@@ -84,11 +82,6 @@ contract DepositManager is
         __DepositManagerBase_init(contractName, contractVersion);
         _teller = ITeller(teller);
         _weth = IWeth(weth);
-        _wethEncoded = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(_weth),
-            ERC20_ID
-        );
     }
 
     modifier enforceErc20Cap(
@@ -173,9 +166,15 @@ contract DepositManager is
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
+        EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(_weth),
+            ERC20_ID
+        );
+
         DepositRequest memory req = DepositRequest({
             spender: msg.sender,
-            encodedAsset: _wethEncoded,
+            encodedAsset: encodedWeth,
             value: value,
             depositAddr: depositAddr,
             nonce: _nonces[msg.sender],

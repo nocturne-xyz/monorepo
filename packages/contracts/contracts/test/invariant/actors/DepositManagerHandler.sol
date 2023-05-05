@@ -27,6 +27,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibDepositRequestArray for DepositRequest[];
     using LibDepositSumSet for DepositSumSet;
 
+    uint256 constant ERC20_ID = 0;
+
     string constant CONTRACT_NAME = "NocturneDepositManager";
     string constant CONTRACT_VERSION = "v1";
 
@@ -228,10 +230,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Retrieve deposit
         vm.prank(randDepositRequest.spender);
         try depositManager.retrieveDeposit(randDepositRequest) {
-            (uint256 encodedWethAddr, ) = depositManager._wethEncoded();
+            EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(depositManager._weth()),
+                ERC20_ID
+            );
             if (
                 randDepositRequest.encodedAsset.encodedAssetAddr ==
-                encodedWethAddr
+                encodedWeth.encodedAssetAddr
             ) {
                 _retrieveDepositSumSetETH.addToActorSum(
                     randDepositRequest.spender,
@@ -277,10 +283,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         }
         vm.warp(warpTimestamp);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
-            (uint256 encodedWethAddr, ) = depositManager._wethEncoded();
+            EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(depositManager._weth()),
+                ERC20_ID
+            );
             if (
                 randDepositRequest.encodedAsset.encodedAssetAddr ==
-                encodedWethAddr
+                encodedWeth.encodedAssetAddr
             ) {
                 _completeDepositSumSetETH.addToActorSum(
                     randDepositRequest.spender,
