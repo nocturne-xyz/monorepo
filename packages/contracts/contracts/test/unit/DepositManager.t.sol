@@ -92,11 +92,25 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
+        depositManager.setErc20Cap(
+            address(weth),
+            1_000_000_000,
+            10_000_000,
+            18
+        );
+
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            depositManager.setErc20Cap(
+                address(ERC20s[i]),
+                1_000_000_000,
+                10_000_000,
+                18
+            );
         }
     }
 
@@ -109,12 +123,6 @@ contract DepositManagerTest is Test {
         // Approve 25M tokens for deposit
         vm.prank(ALICE);
         token.approve(address(depositManager), depositAmount);
-
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
 
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
@@ -144,8 +152,8 @@ contract DepositManagerTest is Test {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
             depositAmount,
             NocturneUtils.defaultStealthAddress()
         );
@@ -221,12 +229,6 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -241,8 +243,8 @@ contract DepositManagerTest is Test {
         // Call instantiateDeposit
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
@@ -290,12 +292,6 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -308,8 +304,8 @@ contract DepositManagerTest is Test {
 
         // Call instantiateDeposit
         vm.prank(ALICE);
-        depositManager.instantiateDeposit(
-            encodedToken,
+        depositManager.instantiateErc20Deposit(
+            address(token),
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
@@ -348,12 +344,6 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -368,8 +358,8 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
@@ -437,12 +427,6 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
@@ -455,8 +439,8 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
             RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );

@@ -19,11 +19,11 @@ contract DepositManager is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
-    struct AssetCap {
-        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units)
+    struct Erc20Cap {
+        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), note that uint128 is plenty large (3x10^20 whole tokens even for 18 decimal tokens)
         uint32 globalCapWholeTokens; // global cap for asset in whole tokens
         uint32 maxPerAddressDepositSize; // max size of a single deposit per address
-        uint32 lastResetTimestamp; // block.timestamp of last reset
+        uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
         uint8 precision; // decimals for asset
     }
 
@@ -40,7 +40,7 @@ contract DepositManager is
     mapping(address => uint256) public _nonces;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
 
-    mapping(bytes32 => AssetCap) public _assetCaps;
+    mapping(address => Erc20Cap) public _erc20Caps;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
@@ -84,14 +84,27 @@ contract DepositManager is
         __DepositManagerBase_init(contractName, contractVersion);
         _teller = ITeller(teller);
         _weth = IWeth(weth);
-        _wethEncoded = AssetUtils.encodeAsset(AssetType.ERC20, weth, ERC20_ID);
+        _wethEncoded = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(_weth),
+            ERC20_ID
+        );
     }
 
-    modifier enforceCaps(EncodedAsset memory encodedAsset, uint256 value) {
+    modifier enforceErc20Cap(address token, uint256 value) {
         require(value < type(uint128).max, "value >= uint128.max");
 
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        AssetCap memory cap = _assetCaps[assetHash];
+        Erc20Cap memory cap = _erc20Caps[token];
+
+        // Ensure asset is supported (has a cap)
+        require(
+            (cap.runningGlobalDeposited |
+                cap.globalCapWholeTokens |
+                cap.maxPerAddressDepositSize |
+                cap.lastResetTimestamp |
+                cap.precision) != 0,
+            "!supported erc20"
+        );
 
         // Clear expired global cap if possible
         if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
@@ -117,7 +130,7 @@ contract DepositManager is
         _;
 
         // we know value < uint128.max given first require
-        _assetCaps[assetHash].runningGlobalDeposited += uint128(value);
+        _erc20Caps[token].runningGlobalDeposited += uint128(value);
     }
 
     function setScreenerPermission(
@@ -128,14 +141,13 @@ contract DepositManager is
         emit ScreenerPermissionSet(screener, permission);
     }
 
-    function setAssetCap(
-        EncodedAsset calldata encodedAsset,
+    function setErc20Cap(
+        address token,
         uint32 globalCapWholeTokens,
         uint32 maxPerAddressDepositSize,
         uint8 precision
     ) external onlyOwner {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        _assetCaps[assetHash] = AssetCap({
+        _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
             globalCapWholeTokens: globalCapWholeTokens,
             maxPerAddressDepositSize: maxPerAddressDepositSize,
@@ -147,7 +159,7 @@ contract DepositManager is
     function instantiateETHDeposit(
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable enforceCaps(_wethEncoded, value) nonReentrant {
+    ) external payable enforceErc20Cap(address(_weth), value) nonReentrant {
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
@@ -176,11 +188,24 @@ contract DepositManager is
         );
     }
 
-    function instantiateDeposit(
-        EncodedAsset calldata encodedAsset,
+    function instantiateErc20Deposit(
+        address token,
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable enforceCaps(encodedAsset, value) nonReentrant {
+    ) external payable nonReentrant enforceErc20Cap(token, value) {
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            token,
+            ERC20_ID
+        );
+        _instantiateDeposit(encodedAsset, value, depositAddr);
+    }
+
+    function _instantiateDeposit(
+        EncodedAsset memory encodedAsset,
+        uint256 value,
+        StealthAddress calldata depositAddr
+    ) internal {
         DepositRequest memory req = DepositRequest({
             spender: msg.sender,
             encodedAsset: encodedAsset,

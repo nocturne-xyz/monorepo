@@ -46,8 +46,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     SimpleERC721Token public erc721;
     SimpleERC1155Token public erc1155;
 
-    EncodedAsset public encodedErc20;
-
     bytes32 public lastCall;
 
     // ______INTERNAL______
@@ -78,12 +76,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         erc20 = _erc20;
         erc721 = _erc721;
         erc1155 = _erc1155;
-
-        encodedErc20 = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(_erc20),
-            ERC20_ID
-        );
     }
 
     modifier createActor() {
@@ -182,8 +174,18 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     function instantiateDepositErc20(
         uint256 amount
     ) public createActor trackCall("instantiateDepositErc20") {
+        (
+            uint128 runningGlobalDeposited,
+            uint32 globalCapWholeTokens,
+            ,
+            ,
+            uint8 precision
+        ) = depositManager._erc20Caps(address(erc20));
+
+        uint256 globalCap = uint256(globalCapWholeTokens) * 10 ** precision;
+
         // Bound deposit amount
-        amount = bound(amount, 0, type(uint256).max - erc20.totalSupply());
+        amount = bound(amount, 0, globalCap - uint256(runningGlobalDeposited));
         erc20.reserveTokens(_currentActor, amount);
         _depositSizes.push(amount);
 
@@ -198,8 +200,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         vm.recordLogs();
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
-        depositManager.instantiateDeposit{value: GAS_COMPENSATION}(
-            encodedErc20,
+        depositManager.instantiateErc20Deposit{value: GAS_COMPENSATION}(
+            address(erc20),
             amount,
             depositAddr
         );
