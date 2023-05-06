@@ -133,7 +133,7 @@ contract DepositManagerTest is Test {
             depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -177,7 +177,7 @@ contract DepositManagerTest is Test {
             depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -238,7 +238,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT
         );
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
@@ -301,7 +301,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             0
         );
 
@@ -330,7 +330,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             0
         );
 
@@ -353,7 +353,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -466,7 +466,7 @@ contract DepositManagerTest is Test {
                 chunkAmount,
                 NocturneUtils.ERC20_ID,
                 NocturneUtils.defaultStealthAddress(),
-                depositManager._nonces(ALICE),
+                depositManager._nonce(),
                 GAS_COMP_AMOUNT // 10M gas comp
             );
 
@@ -512,7 +512,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -553,7 +553,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 

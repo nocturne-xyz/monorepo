@@ -35,7 +35,7 @@ contract DepositManager is
     IWeth public _weth;
 
     mapping(address => bool) public _screeners;
-    mapping(address => uint256) public _nonces;
+    uint256 public _nonce;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
 
     mapping(address => Erc20Cap) public _erc20Caps;
@@ -184,7 +184,7 @@ contract DepositManager is
             encodedAsset: encodedWeth,
             value: value,
             depositAddr: depositAddr,
-            nonce: _nonces[msg.sender],
+            nonce: _nonce,
             gasCompensation: msg.value - value
         });
 
@@ -192,7 +192,7 @@ contract DepositManager is
 
         // Update deposit mapping and nonces
         _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
+        _nonce++;
 
         emit DepositInstantiated(
             req.spender,
@@ -267,7 +267,7 @@ contract DepositManager is
             encodedAsset: encodedAsset,
             value: value,
             depositAddr: depositAddr,
-            nonce: _nonces[msg.sender],
+            nonce: _nonce,
             gasCompensation: msg.value
         });
 
@@ -275,7 +275,7 @@ contract DepositManager is
 
         // Update deposit mapping and nonces
         _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1; // TODO: move writes outside of function
+        _nonce++;
 
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
