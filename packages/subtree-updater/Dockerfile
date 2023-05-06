@@ -15,7 +15,6 @@ COPY .yarn .yarn
 COPY .yarnrc.yml .
 COPY packages/subtree-updater packages/subtree-updater
 COPY packages/circuits packages/circuits
-COPY packages/config/configs ./configs
 COPY circuit-artifacts circuit-artifacts
 
 RUN corepack enable
@@ -29,6 +28,8 @@ WORKDIR /app/packages/subtree-updater
 
 RUN yarn build
 RUN npm i -g
+
+COPY packages/config/configs /app/configs
 
 WORKDIR /app
 

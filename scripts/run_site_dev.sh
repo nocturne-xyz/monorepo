@@ -172,6 +172,7 @@ EOM
 popd
 
 # run subtree updater
+./buld_bock_docker.sh
 docker run -v "$ROOT_DIR/logs/:/logs" -v "$ROOT_DIR/packages/config/configs:/configs" --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --config-name-or-path "$CONFIG_PATH_IN_DOCKER" --log-dir "/logs/subtree-updater" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
