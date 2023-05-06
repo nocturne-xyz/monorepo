@@ -135,7 +135,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             _reverts["completeDepositErc20"]
         );
         console.log("no-op", _calls["no-op"]);
-        console.log("timestamp", block.timestamp);
     }
 
     function instantiateDepositETH(
@@ -143,6 +142,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     ) public createActor trackCall("instantiateDepositETH") {
         // Bound deposit amount
         uint256 amount = bound(seed, 0, ETH_SUPPLY);
+        if (amount == 0) {
+            lastCall = "no-op";
+            return;
+        }
+
         _depositSizes.push(amount);
 
         // Deal gas compensation
@@ -181,6 +185,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
         // Bound deposit amount
         uint256 amount = bound(seed, 0, globalCap);
+        if (amount == 0) {
+            lastCall = "no-op";
+            return;
+        }
+
         erc20.reserveTokens(_currentActor, amount);
         _depositSizes.push(amount);
 

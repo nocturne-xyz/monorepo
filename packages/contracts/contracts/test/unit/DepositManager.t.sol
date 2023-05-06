@@ -411,21 +411,19 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
-    function testCompleteDepositFailureExceedsMaxDepositSize() public {
-        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
-            1;
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, overMaxSizeAmount);
+    function testCompleteDepositFailureUnsupportedToken() public {
+        SimpleERC20Token token = new SimpleERC20Token();
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
         vm.prank(ALICE);
-        token.approve(address(depositManager), overMaxSizeAmount);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        vm.expectRevert("maxDepositSize exceeded");
+        vm.expectRevert("!supported erc20");
         depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            overMaxSizeAmount,
+            RESERVE_AMOUNT,
             NocturneUtils.defaultStealthAddress()
         );
     }

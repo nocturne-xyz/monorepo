@@ -22,7 +22,7 @@ contract DepositManager is
     struct Erc20Cap {
         uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
         uint32 globalCapWholeTokens; // global cap for asset in whole tokens
-        uint32 maxPerAddressDepositSize; // max size of a single deposit per address
+        uint32 maxDepositSize; // max size of a single deposit per address
         uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
         uint8 precision; // decimals for asset
     }
@@ -84,27 +84,18 @@ contract DepositManager is
         _weth = IWeth(weth);
     }
 
-    modifier enforceErc20MaxDepositSize(address token, uint256 value) {
-        require(value < type(uint128).max, "value >= uint128.max");
-
+    modifier ensureErc20Supported(address token) {
         Erc20Cap memory cap = _erc20Caps[token];
 
         // Ensure asset is supported (has a cap)
         require(
             (cap.runningGlobalDeposited |
                 cap.globalCapWholeTokens |
-                cap.maxPerAddressDepositSize |
+                cap.maxDepositSize |
                 cap.lastResetTimestamp |
                 cap.precision) != 0,
             "!supported erc20"
         );
-
-        uint256 precision = (10 ** cap.precision);
-        uint256 maxPerAddressDepositSize = cap.maxPerAddressDepositSize *
-            precision;
-
-        // Ensure less than max deposit size
-        require(value <= maxPerAddressDepositSize, "maxDepositSize exceeded");
 
         _;
     }
@@ -117,16 +108,6 @@ contract DepositManager is
 
         (, address token, ) = AssetUtils.decodeAsset(encodedAsset);
         Erc20Cap memory cap = _erc20Caps[token];
-
-        // Ensure asset is supported (has a cap)
-        require(
-            (cap.runningGlobalDeposited |
-                cap.globalCapWholeTokens |
-                cap.maxPerAddressDepositSize |
-                cap.lastResetTimestamp |
-                cap.precision) != 0,
-            "!supported erc20"
-        );
 
         // Clear expired global cap if possible
         if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
@@ -160,7 +141,7 @@ contract DepositManager is
     function setErc20Cap(
         address token,
         uint32 globalCapWholeTokens,
-        uint32 maxPerAddressDepositSize,
+        uint32 maxDepositSize,
         uint8 precision
     ) external onlyOwner {
         require(
@@ -170,7 +151,7 @@ contract DepositManager is
         _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
             globalCapWholeTokens: globalCapWholeTokens,
-            maxPerAddressDepositSize: maxPerAddressDepositSize,
+            maxDepositSize: maxDepositSize,
             lastResetTimestamp: uint32(block.timestamp),
             precision: precision
         });
@@ -181,12 +162,7 @@ contract DepositManager is
     function instantiateETHDeposit(
         uint256 value,
         StealthAddress calldata depositAddr
-    )
-        external
-        payable
-        nonReentrant
-        enforceErc20MaxDepositSize(address(_weth), value)
-    {
+    ) external payable nonReentrant ensureErc20Supported(address(_weth)) {
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
@@ -225,13 +201,23 @@ contract DepositManager is
         address token,
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant enforceErc20MaxDepositSize(token, value) {
+    ) external payable nonReentrant ensureErc20Supported(token) {
+        Erc20Cap memory cap = _erc20Caps[token];
+
+        uint256 precision = (10 ** cap.precision);
+        uint256 maxDepositSize = cap.maxDepositSize * precision;
+
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             token,
             ERC20_ID
         );
-        _instantiateDeposit(encodedAsset, value, depositAddr);
+        while (value > 0) {
+            uint256 chunkValue = Utils.min(value, maxDepositSize);
+            value -= chunkValue;
+
+            _instantiateDeposit(encodedAsset, chunkValue, depositAddr);
+        }
     }
 
     // NOTE: We accept race condition where user could technically retrieve their deposit before
@@ -291,7 +277,7 @@ contract DepositManager is
 
         // Update deposit mapping and nonces
         _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
+        _nonces[req.spender] = req.nonce + 1; // TODO: move writes outside of function
 
         AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
 
