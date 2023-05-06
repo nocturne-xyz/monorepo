@@ -51,13 +51,18 @@ export function makeLogger(
     // in the future, we'll add a transport for our logging service (datadog, axiom, etc) here
   ];
 
+  const exceptionHandlers = [];
+  const rejectionHandlers = [];
+
   if (consoleLevel) {
-    logTransports.push(
-      new transports.Console({
-        format: format.combine(format.timestamp(), format.json()),
-        level: consoleLevel,
-      })
-    );
+    const consoleTransport = new transports.Console({
+      format: format.combine(format.timestamp(), format.json()),
+      level: consoleLevel,
+    });
+
+    logTransports.push(consoleTransport);
+    exceptionHandlers.push(consoleTransport);
+    rejectionHandlers.push(consoleTransport);
   }
 
   return createLogger({
