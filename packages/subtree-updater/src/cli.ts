@@ -13,10 +13,7 @@ export default async function main(): Promise<void> {
   dotenv.config();
 
   program
-    .requiredOption(
-      "--config-name-or-path <string>",
-      "deposit manager contract address"
-    )
+    .requiredOption("--config-name-or-path <string>", "name or path to config")
     .requiredOption(
       "--zkey-path <string>",
       "path to `subtreeupdate.zkey`, i.e. the proving key for the subtree update circuit"
