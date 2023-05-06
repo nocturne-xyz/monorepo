@@ -169,10 +169,11 @@ cat > .env <<- EOM
 RPC_URL=$RPC_URL
 TX_SIGNER_KEY=$SUBTREE_UPDATER_TX_SIGNER_KEY
 EOM
+
+./build_mock_docker.sh
 popd
 
 # run subtree updater
-./build_mock_docker.sh
 docker run -v "$ROOT_DIR/logs/:/logs" -v "$ROOT_DIR/packages/config/configs:/configs" --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --config-name-or-path "$CONFIG_PATH_IN_DOCKER" --log-dir "/logs/subtree-updater" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
 SUBTREE_UPDATER_PID=$!
 
