@@ -54,6 +54,7 @@ export function makeLogger(
   if (consoleLevel) {
     logTransports.push(
       new transports.Console({
+        format: format.combine(format.timestamp(), format.json()),
         level: consoleLevel,
       })
     );
