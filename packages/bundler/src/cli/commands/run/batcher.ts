@@ -17,7 +17,7 @@ const runBatcher = new Command("batcher")
     "./logs/bundler-server"
   )
   .option(
-    "--stdout-log-level",
+    "--stdout-log-level <string>",
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
