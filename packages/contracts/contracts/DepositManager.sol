@@ -22,7 +22,7 @@ contract DepositManager is
     struct Erc20Cap {
         uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
         uint32 globalCapWholeTokens; // global cap for asset in whole tokens
-        uint32 maxDepositSize; // max size of a single deposit per address
+        uint32 maxDepositSizeWholeTokens; // max size of a single deposit per address
         uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
         uint8 precision; // decimals for asset
     }
@@ -84,18 +84,22 @@ contract DepositManager is
         _weth = IWeth(weth);
     }
 
-    modifier ensureErc20Supported(address token) {
+    modifier enforceErc20DepositSize(address token, uint256 value) {
         Erc20Cap memory cap = _erc20Caps[token];
 
         // Ensure asset is supported (has a cap)
         require(
             (cap.runningGlobalDeposited |
                 cap.globalCapWholeTokens |
-                cap.maxDepositSize |
+                cap.maxDepositSizeWholeTokens |
                 cap.lastResetTimestamp |
                 cap.precision) != 0,
             "!supported erc20"
         );
+
+        uint256 precision = (10 ** cap.precision);
+        uint256 maxDepositSize = cap.maxDepositSizeWholeTokens * precision;
+        require(value <= maxDepositSize, "maxDepositSize exceeded");
 
         _;
     }
@@ -141,7 +145,7 @@ contract DepositManager is
     function setErc20Cap(
         address token,
         uint32 globalCapWholeTokens,
-        uint32 maxDepositSize,
+        uint32 maxDepositSizeWholeTokens,
         uint8 precision
     ) external onlyOwner {
         require(
@@ -151,18 +155,21 @@ contract DepositManager is
         _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
             globalCapWholeTokens: globalCapWholeTokens,
-            maxDepositSize: maxDepositSize,
+            maxDepositSizeWholeTokens: maxDepositSizeWholeTokens,
             lastResetTimestamp: uint32(block.timestamp),
             precision: precision
         });
     }
 
-    // TODO: add multiDeposit method for splitting large deposits into multiple
-
     function instantiateETHDeposit(
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant ensureErc20Supported(address(_weth)) {
+    )
+        external
+        payable
+        nonReentrant
+        enforceErc20DepositSize(address(_weth), value)
+    {
         require(msg.value >= value, "msg.value < value");
         _weth.deposit{value: value}();
 
@@ -201,23 +208,14 @@ contract DepositManager is
         address token,
         uint256 value,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant ensureErc20Supported(token) {
-        Erc20Cap memory cap = _erc20Caps[token];
-
-        uint256 precision = (10 ** cap.precision);
-        uint256 maxDepositSize = cap.maxDepositSize * precision;
-
+    ) external payable nonReentrant enforceErc20DepositSize(token, value) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             token,
             ERC20_ID
         );
-        while (value > 0) {
-            uint256 chunkValue = Utils.min(value, maxDepositSize);
-            value -= chunkValue;
 
-            _instantiateDeposit(encodedAsset, chunkValue, depositAddr);
-        }
+        _instantiateDeposit(encodedAsset, value, depositAddr);
     }
 
     // NOTE: We accept race condition where user could technically retrieve their deposit before

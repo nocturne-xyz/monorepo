@@ -428,6 +428,25 @@ contract DepositManagerTest is Test {
         );
     }
 
+    function testCompleteDepositFailureExceedsMaxDepositSize() public {
+        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
+            1;
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, overMaxSizeAmount);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), overMaxSizeAmount);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("maxDepositSize exceeded");
+        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            overMaxSizeAmount,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
     function testCompleteDepositFailureExceedsGlobalCap() public {
         SimpleERC20Token token = ERC20s[0];
         uint256 chunkAmount = (uint256(GLOBAL_CAP) * (10 ** 18)) / 10;
