@@ -51,8 +51,16 @@ export function makeLogger(
     // in the future, we'll add a transport for our logging service (datadog, axiom, etc) here
   ];
 
-  const exceptionHandlers = [];
-  const rejectionHandlers = [];
+  const exceptionHandlers: Transport[] = [
+    new transports.File({
+      filename: path.join(logDir, "uncaughtExpections.log"),
+    }),
+  ];
+  const rejectionHandlers: Transport[] = [
+    new transports.File({
+      filename: path.join(logDir, "uncaughtRejections.log"),
+    }),
+  ];
 
   if (consoleLevel) {
     const consoleTransport = new transports.Console({
@@ -61,8 +69,12 @@ export function makeLogger(
     });
 
     logTransports.push(consoleTransport);
-    exceptionHandlers.push(consoleTransport);
-    rejectionHandlers.push(consoleTransport);
+
+    const consoleErrorTransport = new transports.Console({
+      format: format.combine(format.timestamp(), format.json()),
+    });
+    exceptionHandlers.push(consoleErrorTransport);
+    rejectionHandlers.push(consoleErrorTransport);
   }
 
   return createLogger({
@@ -71,17 +83,9 @@ export function makeLogger(
     // add metadata saying which process this log is coming from
     defaultMeta: { service, process },
     // write all uncaught exceptions to `uncaughtExceptions.log`
-    exceptionHandlers: [
-      new transports.File({
-        filename: path.join(logDir, "uncaughtExpections.log"),
-      }),
-    ],
+    exceptionHandlers,
     // write all uncaught promise rejections to `uncaughtRejections.log`
-    rejectionHandlers: [
-      new transports.File({
-        filename: path.join(logDir, "uncaughtRejections.log"),
-      }),
-    ],
+    rejectionHandlers,
     transports: logTransports,
   });
 }
