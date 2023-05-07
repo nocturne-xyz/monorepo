@@ -43,7 +43,7 @@ const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 // 10^9 (e.g. 10 gwei if this was eth)
 const GAS_PRICE = 10n * 10n ** 9n;
 // 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = 1_000_000n * GAS_PRICE; // 10M gwei
+const GAS_FAUCET_DEFAULT_AMOUNT = 10_000_000n * GAS_PRICE; // 100M gwei
 
 const PLUTOCRACY_AMOUNT = 3n;
 
