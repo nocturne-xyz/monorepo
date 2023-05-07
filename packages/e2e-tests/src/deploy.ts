@@ -326,11 +326,35 @@ export async function deployContractsWithDummyConfig(
 
   const tokens = await deployAndWhitelistTestTokens(connectedSigner, handler);
 
+  await setTestTokenCaps(depositManager, tokens);
+
   await relinquishContractOwnership(connectedSigner, deployConfig, deployment);
 
   await checkNocturneContractDeployment(deployment, connectedSigner.provider);
 
   return [deployment, tokens, { teller, handler, depositManager }];
+}
+
+async function setTestTokenCaps(
+  depositManager: DepositManager,
+  testTokens: TestDeploymentTokens
+): Promise<void> {
+  console.log("Setting test token caps...");
+  const tx1 = await depositManager.setErc20Cap(
+    testTokens.erc20.address,
+    BigInt((2 ^ 128) - 1),
+    BigInt((2 ^ 32) - 1),
+    18
+  );
+  await tx1.wait();
+
+  const tx2 = await depositManager.setErc20Cap(
+    testTokens.gasToken.address,
+    BigInt((2 ^ 128) - 1),
+    BigInt((2 ^ 32) - 1),
+    18
+  );
+  await tx2.wait();
 }
 
 export async function deployAndWhitelistTestTokens(

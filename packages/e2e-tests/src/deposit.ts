@@ -1,6 +1,6 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { AssetType, AssetTrait, StealthAddress, Note } from "@nocturne-xyz/sdk";
+import { AssetType, StealthAddress, Note } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { sleep } from "./utils";
 
@@ -76,7 +76,6 @@ function makeDepositFn(
       assetAddr: token.address,
       id: 0n,
     };
-    const encodedAsset = AssetTrait.encode(asset);
 
     console.log(
       `instantiating deposit for ${amount} of token ${token.address}`
