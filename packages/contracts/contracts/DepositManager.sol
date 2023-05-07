@@ -118,7 +118,10 @@ contract DepositManager is
         require(value <= type(uint128).max, "value > uint128.max");
         uint128 valueU128 = uint128(value);
 
-        (, address token, ) = AssetUtils.decodeAsset(encodedAsset);
+        (AssetType assetType, address token, uint256 id) = AssetUtils
+            .decodeAsset(encodedAsset);
+        require(assetType == AssetType.ERC20 && id == ERC20_ID, "!erc20");
+
         Erc20Cap memory cap = _erc20Caps[token];
 
         // Clear expired global cap if possible
