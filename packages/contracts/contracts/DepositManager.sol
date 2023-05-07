@@ -25,7 +25,7 @@ contract DepositManager is
 
     struct Erc20Cap {
         uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
-        uint32 globalCapWholeTokens; // global cap for asset in whole tokens
+        uint32 globalCapWholeTokens; // global cap for asset in whole tokens, globalCapWholeTokens * 10^precision should never exceed uint128.max (checked in setter)
         uint32 maxDepositSizeWholeTokens; // max size of a single deposit per address
         uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
         uint8 precision; // decimals for asset
@@ -114,7 +114,9 @@ contract DepositManager is
         EncodedAsset calldata encodedAsset,
         uint256 value
     ) {
-        require(value < type(uint128).max, "value >= uint128.max");
+        // Deposit value should not exceed limit on max deposit cap (uint128.max)
+        require(value <= type(uint128).max, "value > uint128.max");
+        uint128 valueU128 = uint128(value);
 
         (, address token, ) = AssetUtils.decodeAsset(encodedAsset);
         Erc20Cap memory cap = _erc20Caps[token];
@@ -125,18 +127,20 @@ contract DepositManager is
             cap.lastResetTimestamp = uint32(block.timestamp);
         }
 
-        uint256 globalCap = cap.globalCapWholeTokens * (10 ** cap.precision);
+        // We know cap.globalCapWholeTokens * (10 ** cap.precision) <= uint128.max given setter
+        uint128 globalCap = uint128(
+            cap.globalCapWholeTokens * (10 ** cap.precision)
+        );
 
         // Ensure less than global cap and less than deposit size cap
         require(
-            uint256(cap.runningGlobalDeposited) + value <= globalCap,
+            cap.runningGlobalDeposited + valueU128 <= globalCap,
             "globalCap exceeded"
         );
 
         _;
 
-        // we know value < uint128.max given first require
-        _erc20Caps[token].runningGlobalDeposited += uint128(value);
+        _erc20Caps[token].runningGlobalDeposited += valueU128;
     }
 
     function setScreenerPermission(
@@ -225,7 +229,7 @@ contract DepositManager is
         enforceErc20DepositSize(address(_weth), values)
     {
         uint256 totalDepositAmount = Utils.sum(values);
-        require(totalDepositAmount <= msg.value, "msg.value < value");
+        require(totalDepositAmount <= msg.value, "msg.value < deposit weth");
 
         uint256 gasCompensation = msg.value - totalDepositAmount;
         require(gasCompensation % values.length == 0, "!gas comp split");

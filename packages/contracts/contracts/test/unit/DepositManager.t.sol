@@ -222,7 +222,7 @@ contract DepositManagerTest is Test {
 
         // Set ALICE balance to 20M wei, enough for deposit and gas comp
         vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
-        vm.expectRevert("msg.value < value");
+        vm.expectRevert("msg.value < deposit weth");
         vm.prank(ALICE);
 
         uint256[] memory depositAmounts = new uint256[](1);
