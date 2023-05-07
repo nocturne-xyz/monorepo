@@ -173,48 +173,46 @@ contract DepositManager is
     ) external payable nonReentrant enforceErc20DepositSize(token, values) {
         require(msg.value % values.length == 0, "!gas comp split");
 
-        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            token,
-            ERC20_ID
-        );
-
-        uint256 gasCompensationPerDeposit = msg.value / values.length;
-        uint256 nonce = _nonce;
-        DepositRequest memory req = DepositRequest({
-            spender: msg.sender,
-            encodedAsset: encodedAsset,
-            value: 0,
-            depositAddr: depositAddr,
-            nonce: 0,
-            gasCompensation: gasCompensationPerDeposit
-        });
-
-        for (uint256 i = 0; i < values.length; i++) {
-            req.value = values[i];
-            req.nonce = nonce + i;
-
-            bytes32 depositHash = _hashDepositRequest(req);
-            _outstandingDepositHashes[depositHash] = true;
-
-            emit DepositInstantiated(
-                req.spender,
-                req.encodedAsset,
-                req.value,
-                req.depositAddr,
-                req.nonce,
-                req.gasCompensation
+        {
+            EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                token,
+                ERC20_ID
             );
+
+            uint256 gasCompensationPerDeposit = msg.value / values.length;
+            uint256 nonce = _nonce;
+            DepositRequest memory req = DepositRequest({
+                spender: msg.sender,
+                encodedAsset: encodedAsset,
+                value: 0,
+                depositAddr: depositAddr,
+                nonce: 0,
+                gasCompensation: gasCompensationPerDeposit
+            });
+
+            for (uint256 i = 0; i < values.length; i++) {
+                req.value = values[i];
+                req.nonce = nonce + i;
+
+                bytes32 depositHash = _hashDepositRequest(req);
+                _outstandingDepositHashes[depositHash] = true;
+
+                emit DepositInstantiated(
+                    req.spender,
+                    req.encodedAsset,
+                    req.value,
+                    req.depositAddr,
+                    req.nonce,
+                    req.gasCompensation
+                );
+            }
         }
 
         _nonce += values.length;
 
         uint256 totalValue = Utils.sum(values);
-        // TODO: fix stack too deep error and use safeTransferFrom
-        require(
-            IERC20(token).transferFrom(msg.sender, address(this), totalValue),
-            "transferFrom failed"
-        );
+        IERC20(token).safeTransferFrom(msg.sender, address(this), totalValue);
     }
 
     function instantiateETHMultiDeposit(

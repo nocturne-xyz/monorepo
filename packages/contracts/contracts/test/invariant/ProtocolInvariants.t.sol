@@ -170,6 +170,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
         excludeSender(address(depositManagerHandler));
         excludeSender(address(tellerHandler));
+        excludeSender(address(swapper));
         excludeSender(address(teller));
         excludeSender(address(handler));
         excludeSender(address(depositManager));
