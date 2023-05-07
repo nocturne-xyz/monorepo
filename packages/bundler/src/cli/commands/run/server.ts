@@ -41,7 +41,8 @@ const runServer = new Command("server")
       getRedis(),
       logger
     );
-    server.start(port);
+
+    await server.start(port);
   });
 
 export default runServer;
