@@ -155,9 +155,12 @@ contract DepositManagerTest is Test {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            depositAmount,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -199,9 +202,12 @@ contract DepositManagerTest is Test {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateETHDeposit{
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateETHMultiDeposit{
             value: GAS_COMP_AMOUNT + depositAmount
-        }(depositAmount, NocturneUtils.defaultStealthAddress());
+        }(depositAmounts, NocturneUtils.defaultStealthAddress());
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -218,8 +224,11 @@ contract DepositManagerTest is Test {
         vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
         vm.expectRevert("msg.value < value");
         vm.prank(ALICE);
-        depositManager.instantiateETHDeposit{value: depositAmount - 1}(
-            depositAmount,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateETHMultiDeposit{value: depositAmount - 1}(
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
     }
@@ -246,9 +255,12 @@ contract DepositManagerTest is Test {
         // Call instantiateDeposit
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            RESERVE_AMOUNT,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -307,9 +319,12 @@ contract DepositManagerTest is Test {
 
         // Call instantiateDeposit
         vm.prank(ALICE);
-        depositManager.instantiateErc20Deposit(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit(
             address(token),
-            RESERVE_AMOUNT,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -361,9 +376,12 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            RESERVE_AMOUNT,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -421,9 +439,12 @@ contract DepositManagerTest is Test {
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
         vm.expectRevert("!supported erc20");
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            RESERVE_AMOUNT,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
     }
@@ -440,9 +461,12 @@ contract DepositManagerTest is Test {
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
         vm.expectRevert("maxDepositSize exceeded");
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = overMaxSizeAmount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            overMaxSizeAmount,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
     }
@@ -472,9 +496,12 @@ contract DepositManagerTest is Test {
 
             vm.deal(ALICE, GAS_COMP_AMOUNT);
             vm.prank(ALICE);
-            depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+            uint256[] memory depositAmounts = new uint256[](1);
+            depositAmounts[0] = chunkAmount;
+            depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
                 address(token),
-                chunkAmount,
+                depositAmounts,
                 NocturneUtils.defaultStealthAddress()
             );
 
@@ -518,9 +545,12 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateErc20Deposit{value: GAS_COMP_AMOUNT}(
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
             address(token),
-            RESERVE_AMOUNT,
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 

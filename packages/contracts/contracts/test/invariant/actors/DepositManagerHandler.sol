@@ -158,14 +158,16 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         vm.recordLogs();
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
-        depositManager.instantiateETHDeposit{value: amount + GAS_COMPENSATION}(
-            amount,
-            depositAddr
-        );
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        depositManager.instantiateETHMultiDeposit{
+            value: amount + GAS_COMPENSATION
+        }(amounts, depositAddr);
 
         // Recover deposit request
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        Vm.Log memory entry = entries[entries.length - 1];
+        Vm.Log memory entry = entries[0]; // last is transfer event, 2nd to last is deposit event
         DepositRequest memory req = EventParsing
             .decodeDepositRequestFromDepositEvent(entry);
 
@@ -204,15 +206,18 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         vm.recordLogs();
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
-        depositManager.instantiateErc20Deposit{value: GAS_COMPENSATION}(
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = amount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMPENSATION}(
             address(erc20),
-            amount,
+            amounts,
             depositAddr
         );
 
         // Recover deposit request
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        Vm.Log memory entry = entries[entries.length - 1];
+        Vm.Log memory entry = entries[0]; // last is transfer event, 2nd to last is deposit event
         DepositRequest memory req = EventParsing
             .decodeDepositRequestFromDepositEvent(entry);
 

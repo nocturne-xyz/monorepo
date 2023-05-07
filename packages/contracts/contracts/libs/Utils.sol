@@ -14,4 +14,12 @@ library Utils {
     function min(uint256 a, uint256 b) internal pure returns (uint256) {
         return (a >= b) ? b : a;
     }
+
+    function sum(uint256[] calldata arr) internal pure returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < arr.length; i++) {
+            total += arr[i];
+        }
+        return total;
+    }
 }
