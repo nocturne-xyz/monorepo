@@ -125,8 +125,7 @@ contract DepositManager is
             cap.lastResetTimestamp = uint32(block.timestamp);
         }
 
-        uint256 precision = (10 ** cap.precision);
-        uint256 globalCap = cap.globalCapWholeTokens * precision;
+        uint256 globalCap = cap.globalCapWholeTokens * (10 ** cap.precision);
 
         // Ensure less than global cap and less than deposit size cap
         require(
@@ -155,8 +154,8 @@ contract DepositManager is
         uint8 precision
     ) external onlyOwner {
         require(
-            globalCapWholeTokens * 10 ** precision < type(uint128).max,
-            "globalCap >= uint128.max"
+            globalCapWholeTokens * (10 ** precision) <= type(uint128).max,
+            "globalCap > uint128.max"
         );
         _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
@@ -309,20 +308,6 @@ contract DepositManager is
         bytes calldata signature
     ) external nonReentrant enforceErc20Cap(req.encodedAsset, req.value) {
         _completeDeposit(req, signature);
-    }
-
-    function _markDepositInstantiated(DepositRequest memory req) internal {
-        bytes32 depositHash = _hashDepositRequest(req);
-        _outstandingDepositHashes[depositHash] = true;
-
-        emit DepositInstantiated(
-            req.spender,
-            req.encodedAsset,
-            req.value,
-            req.depositAddr,
-            req.nonce,
-            req.gasCompensation
-        );
     }
 
     function _completeDeposit(

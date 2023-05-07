@@ -354,7 +354,7 @@ contract DepositManagerTest is Test {
         depositManager.retrieveDeposit(deposit);
     }
 
-    function testCompleteDepositSuccess() public {
+    function testCompleteDepositSuccessSingle() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -428,6 +428,8 @@ contract DepositManagerTest is Test {
         assertEq(SCREENER.balance, 0);
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
+
+    // TODO: add test for multiple deposits
 
     function testCompleteDepositFailureUnsupportedToken() public {
         SimpleERC20Token token = new SimpleERC20Token();
