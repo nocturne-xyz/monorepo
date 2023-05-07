@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- use multideposit after deposit manager changes
+- add small function to set deposit caps to deposit manager (will be replaced by deploy script refactor to include cap setting + whitelisting all in `deployNocturne`)
 - move `rebuild_graph_m1` to monorepo scripts
 - deploy contract with dummy info method relinquishes ownership and is used in depositAndDeploy script
 - deploy and whitelist methods in deployment use `whitelistProtocols` fn instead of custom calling handler
