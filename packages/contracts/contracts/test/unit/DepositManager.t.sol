@@ -418,7 +418,7 @@ contract DepositManagerTest is Test {
 
         // Ensure teller now has ALICE's tokens
         assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT);
-        assertEq(token.balanceOf(address(ALICE)), 0);
+        assertEq(token.balanceOf(address(depositManager)), 0);
 
         // TODO: We want to check that some gas went to screener and rest went
         // back to ALICE. Currently unable to because we can't set tx.gasprice
@@ -429,7 +429,92 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
-    // TODO: add test for multiple deposits
+    function testCompleteDepositSuccessMulti() public {
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, RESERVE_AMOUNT * 3);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT * 3);
+
+        DepositRequest[] memory deposits = new DepositRequest[](3);
+        bytes32[] memory depositHashes = new bytes32[](3);
+        for (uint256 i = 0; i < 3; i++) {
+            deposits[i] = NocturneUtils.formatDepositRequest(
+                ALICE,
+                address(token),
+                RESERVE_AMOUNT,
+                NocturneUtils.ERC20_ID,
+                NocturneUtils.defaultStealthAddress(),
+                depositManager._nonce() + i,
+                GAS_COMP_AMOUNT // 10M gas comp
+            );
+            depositHashes[i] = depositManager.hashDepositRequest(deposits[i]);
+        }
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT * 3);
+        vm.prank(ALICE);
+
+        uint256[] memory depositAmounts = new uint256[](3);
+        for (uint256 i = 0; i < 3; i++) {
+            depositAmounts[i] = RESERVE_AMOUNT;
+        }
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT * 3}(
+            address(token),
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+
+        // Deposit hash marked true
+        for (uint256 i = 0; i < 3; i++) {
+            assertTrue(
+                depositManager._outstandingDepositHashes(depositHashes[i])
+            );
+        }
+
+        // Deposit manager has tokens and gas funds
+        assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT * 3);
+        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT * 3);
+
+        bytes[] memory signatures = new bytes[](3);
+        for (uint256 i = 0; i < 3; i++) {
+            bytes32 digest = depositManager.computeDigest(deposits[i]);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+            signatures[i] = ParseUtils.rsvToSignatureBytes(
+                uint256(r),
+                uint256(s),
+                v
+            );
+        }
+
+        for (uint256 i = 0; i < 3; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit DepositCompleted(
+                deposits[i].spender,
+                deposits[i].encodedAsset,
+                deposits[i].value,
+                deposits[i].depositAddr,
+                deposits[i].nonce,
+                deposits[i].gasCompensation
+            );
+
+            vm.prank(SCREENER);
+            depositManager.completeErc20Deposit(deposits[i], signatures[i]);
+
+            // Deposit hash marked false again
+            assertFalse(
+                depositManager._outstandingDepositHashes(depositHashes[i])
+            );
+        }
+
+        // Ensure teller now has ALICE's tokens
+        assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT * 3);
+        assertEq(token.balanceOf(address(depositManager)), 0);
+
+        assertEq(address(depositManager).balance, 0);
+        assertEq(SCREENER.balance, 0);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT * 3); // TODO: screener comp so this is accurate
+    }
 
     function testCompleteDepositFailureUnsupportedToken() public {
         SimpleERC20Token token = new SimpleERC20Token();
