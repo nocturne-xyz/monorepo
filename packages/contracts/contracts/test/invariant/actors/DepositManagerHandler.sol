@@ -33,7 +33,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     string constant CONTRACT_VERSION = "v1";
 
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
-    uint256 constant GAS_COMPENSATION = 100_000 * 50 gwei;
+    uint256 constant GAS_COMPENSATION = 120_000 gwei;
 
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
@@ -51,7 +51,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
     mapping(string => uint256) internal _reverts;
-    uint256[] internal _depositSizes;
     AddressSet internal _actors;
     address internal _currentActor;
     uint256 internal _actorNum = 0;
@@ -137,97 +136,128 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         console.log("no-op", _calls["no-op"]);
     }
 
-    // TODO: use multideposit
     function instantiateDepositETH(
         uint256 seed
     ) public createActor trackCall("instantiateDepositETH") {
-        // Bound deposit amount
-        uint256 amount = bound(seed, 0, ETH_SUPPLY);
-        if (amount == 0) {
-            lastCall = "no-op";
-            return;
-        }
+        uint256 numDeposits = bound(seed, 1, 10);
 
-        _depositSizes.push(amount);
-
-        // Deal gas compensation
-        vm.deal(_currentActor, amount + GAS_COMPENSATION);
-
-        vm.startPrank(_currentActor);
-
-        // Start recording logs and make call
-        vm.recordLogs();
+        // Bound deposit amounts, save deposit reqs
+        uint256[] memory depositAmounts = new uint256[](numDeposits);
+        DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
+        for (uint256 i = 0; i < numDeposits; i++) {
+            // Get random amount
+            uint256 newSeed;
+            unchecked {
+                newSeed = seed + i;
+            }
+            uint256 amount = bound(
+                uint256(keccak256(abi.encodePacked(newSeed))),
+                0,
+                ETH_SUPPLY
+            );
+            depositAmounts[i] = amount;
 
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
+            // Record deposit req
+            deposits[i] = NocturneUtils.formatDepositRequest(
+                _currentActor,
+                address(erc20),
+                depositAmounts[i],
+                NocturneUtils.ERC20_ID,
+                depositAddr,
+                depositManager._nonce() + i,
+                GAS_COMPENSATION
+            );
+        }
+
+        // Deal enough eth for deposits + comp
+        uint256 totalDepositAmount = _sum(depositAmounts);
+        vm.deal(
+            _currentActor,
+            totalDepositAmount + (GAS_COMPENSATION * numDeposits)
+        );
+
+        vm.prank(_currentActor);
         depositManager.instantiateETHMultiDeposit{
-            value: amount + GAS_COMPENSATION
-        }(amounts, depositAddr);
-
-        // Recover deposit request
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        Vm.Log memory entry = entries[0]; // last is transfer event, 2nd to last is deposit event
-        DepositRequest memory req = EventParsing
-            .decodeDepositRequestFromDepositEvent(entry);
-
-        vm.stopPrank();
+            value: totalDepositAmount + (GAS_COMPENSATION * numDeposits)
+        }(depositAmounts, depositAddr);
 
         // Update sets and sum
-        _depositSet.push(req);
-        _instantiateDepositSumSetETH.addToActorSum(_currentActor, amount);
+        for (uint256 i = 0; i < numDeposits; i++) {
+            _depositSet.push(deposits[i]);
+            _instantiateDepositSumSetETH.addToActorSum(
+                _currentActor,
+                depositAmounts[i]
+            );
+        }
     }
 
-    // TODO: use multideposit
     function instantiateDepositErc20(
+        uint256 numDepositsSeed,
         uint256 seed
     ) public createActor trackCall("instantiateDepositErc20") {
+        uint256 numDeposits = bound(numDepositsSeed, 1, 10);
+
         (, uint32 globalCapWholeTokens, , , uint8 precision) = depositManager
             ._erc20Caps(address(erc20));
         uint256 globalCap = uint256(globalCapWholeTokens) * 10 ** precision;
 
-        // Bound deposit amount
-        uint256 amount = bound(seed, 0, globalCap);
-        if (amount == 0) {
-            lastCall = "no-op";
-            return;
+        // Bound deposit amounts, reserve tokens, save deposit reqs
+        uint256[] memory depositAmounts = new uint256[](numDeposits);
+        DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
+        StealthAddress memory depositAddr = NocturneUtils
+            .defaultStealthAddress();
+        for (uint256 i = 0; i < numDeposits; i++) {
+            // Get random amount
+            uint256 newSeed;
+            unchecked {
+                newSeed = seed + i;
+            }
+            uint256 amount = bound(
+                uint256(keccak256(abi.encodePacked(newSeed))),
+                0,
+                globalCap
+            );
+            depositAmounts[i] = amount;
+
+            // Record deposit req
+            deposits[i] = NocturneUtils.formatDepositRequest(
+                _currentActor,
+                address(erc20),
+                depositAmounts[i],
+                NocturneUtils.ERC20_ID,
+                depositAddr,
+                depositManager._nonce() + i,
+                GAS_COMPENSATION
+            );
         }
 
-        erc20.reserveTokens(_currentActor, amount);
-        _depositSizes.push(amount);
+        // Reserve tokens
+        uint256 totalDepositAmount = _sum(depositAmounts);
+        erc20.reserveTokens(_currentActor, totalDepositAmount);
 
         // Deal gas compensation
-        vm.deal(_currentActor, GAS_COMPENSATION);
+        vm.deal(_currentActor, GAS_COMPENSATION * numDeposits);
 
         // Approve token
         vm.startPrank(_currentActor);
-        erc20.approve(address(depositManager), amount);
+        erc20.approve(address(depositManager), totalDepositAmount);
 
-        // Start recording logs and make call
-        vm.recordLogs();
-        StealthAddress memory depositAddr = NocturneUtils
-            .defaultStealthAddress();
-
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount;
-        depositManager.instantiateErc20MultiDeposit{value: GAS_COMPENSATION}(
-            address(erc20),
-            amounts,
-            depositAddr
-        );
-
-        // Recover deposit request
-        Vm.Log[] memory entries = vm.getRecordedLogs();
-        Vm.Log memory entry = entries[0]; // last is transfer event, 2nd to last is deposit event
-        DepositRequest memory req = EventParsing
-            .decodeDepositRequestFromDepositEvent(entry);
+        depositManager.instantiateErc20MultiDeposit{
+            value: GAS_COMPENSATION * numDeposits
+        }(address(erc20), depositAmounts, depositAddr);
 
         vm.stopPrank();
 
-        // Update sets and sum
-        _depositSet.push(req);
-        _instantiateDepositSumSetErc20.addToActorSum(_currentActor, amount);
+        // Update deposit set and sum
+        for (uint256 i = 0; i < numDeposits; i++) {
+            _depositSet.push(deposits[i]);
+            _instantiateDepositSumSetErc20.addToActorSum(
+                _currentActor,
+                depositAmounts[i]
+            );
+        }
     }
 
     function retrieveDepositErc20(
@@ -389,5 +419,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         address actor
     ) public view returns (uint256) {
         return _completeDepositSumSetErc20.getSumForActor(actor);
+    }
+
+    // ______PURE______
+    function _sum(uint256[] memory arr) internal pure returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = 0; i < arr.length; i++) {
+            sum += arr[i];
+        }
+        return sum;
     }
 }
