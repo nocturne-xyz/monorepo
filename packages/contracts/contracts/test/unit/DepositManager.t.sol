@@ -431,15 +431,22 @@ contract DepositManagerTest is Test {
 
     function testCompleteDepositSuccessMulti() public {
         SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, RESERVE_AMOUNT * 3);
+
+        uint256 numDeposits = 10;
+        uint256[] memory depositAmounts = new uint256[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
+            depositAmounts[i] = RESERVE_AMOUNT;
+        }
+
+        token.reserveTokens(ALICE, RESERVE_AMOUNT * numDeposits);
 
         // Approve 50M tokens for deposit
         vm.prank(ALICE);
-        token.approve(address(depositManager), RESERVE_AMOUNT * 3);
+        token.approve(address(depositManager), RESERVE_AMOUNT * numDeposits);
 
-        DepositRequest[] memory deposits = new DepositRequest[](3);
-        bytes32[] memory depositHashes = new bytes32[](3);
-        for (uint256 i = 0; i < 3; i++) {
+        DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
+        bytes32[] memory depositHashes = new bytes32[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
             deposits[i] = NocturneUtils.formatDepositRequest(
                 ALICE,
                 address(token),
@@ -452,32 +459,36 @@ contract DepositManagerTest is Test {
             depositHashes[i] = depositManager.hashDepositRequest(deposits[i]);
         }
 
-        vm.deal(ALICE, GAS_COMP_AMOUNT * 3);
+        vm.deal(ALICE, GAS_COMP_AMOUNT * numDeposits);
         vm.prank(ALICE);
 
-        uint256[] memory depositAmounts = new uint256[](3);
-        for (uint256 i = 0; i < 3; i++) {
-            depositAmounts[i] = RESERVE_AMOUNT;
-        }
-        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT * 3}(
+        depositManager.instantiateErc20MultiDeposit{
+            value: GAS_COMP_AMOUNT * numDeposits
+        }(
             address(token),
             depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
         // Deposit hash marked true
-        for (uint256 i = 0; i < 3; i++) {
+        for (uint256 i = 0; i < numDeposits; i++) {
             assertTrue(
                 depositManager._outstandingDepositHashes(depositHashes[i])
             );
         }
 
         // Deposit manager has tokens and gas funds
-        assertEq(token.balanceOf(address(depositManager)), RESERVE_AMOUNT * 3);
-        assertEq(address(depositManager).balance, GAS_COMP_AMOUNT * 3);
+        assertEq(
+            token.balanceOf(address(depositManager)),
+            RESERVE_AMOUNT * numDeposits
+        );
+        assertEq(
+            address(depositManager).balance,
+            GAS_COMP_AMOUNT * numDeposits
+        );
 
-        bytes[] memory signatures = new bytes[](3);
-        for (uint256 i = 0; i < 3; i++) {
+        bytes[] memory signatures = new bytes[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
             bytes32 digest = depositManager.computeDigest(deposits[i]);
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
             signatures[i] = ParseUtils.rsvToSignatureBytes(
@@ -487,7 +498,7 @@ contract DepositManagerTest is Test {
             );
         }
 
-        for (uint256 i = 0; i < 3; i++) {
+        for (uint256 i = 0; i < numDeposits; i++) {
             vm.expectEmit(true, true, true, true);
             emit DepositCompleted(
                 deposits[i].spender,
@@ -508,12 +519,15 @@ contract DepositManagerTest is Test {
         }
 
         // Ensure teller now has ALICE's tokens
-        assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT * 3);
+        assertEq(
+            token.balanceOf(address(teller)),
+            RESERVE_AMOUNT * numDeposits
+        );
         assertEq(token.balanceOf(address(depositManager)), 0);
 
         assertEq(address(depositManager).balance, 0);
         assertEq(SCREENER.balance, 0);
-        assertEq(ALICE.balance, GAS_COMP_AMOUNT * 3); // TODO: screener comp so this is accurate
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT * numDeposits); // TODO: screener comp so this is accurate
     }
 
     function testCompleteDepositFailureUnsupportedToken() public {
