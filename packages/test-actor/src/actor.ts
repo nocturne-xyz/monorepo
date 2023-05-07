@@ -144,12 +144,15 @@ export class TestActor {
     }
 
     // submit
-    console.log(`instantiating deposit request ${JSON.stringify(deposit)}`);
-    const instantiateDepositTx = await this.depositManager.instantiateDeposit(
-      deposit.encodedAsset,
-      deposit.value,
-      deposit.depositAddr
+    console.log(
+      `instantiating erc20 deposit request ${JSON.stringify(deposit)}`
     );
+    const instantiateDepositTx =
+      await this.depositManager.instantiateErc20MultiDeposit(
+        asset.assetAddr,
+        [deposit.value],
+        deposit.depositAddr
+      );
     await instantiateDepositTx.wait(1);
 
     // TODO request from deposit screener instead

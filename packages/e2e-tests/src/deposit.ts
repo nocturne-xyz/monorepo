@@ -10,7 +10,7 @@ export async function depositFundsMultiToken(
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
 ): Promise<Note[]> {
-  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
+  const deposit = makeDepositFn(depositManager, eoa, stealthAddress);
   const notes: Note[] = [];
   const txs: ContractTransaction[] = [];
   for (const [token, amounts] of tokensWithAmounts) {
@@ -40,7 +40,7 @@ export async function depositFundsSingleToken(
   stealthAddress: StealthAddress,
   amounts: bigint[]
 ): Promise<Note[]> {
-  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
+  const deposit = makeDepositFn(depositManager, eoa, stealthAddress);
   const total = amounts.reduce((sum, a) => sum + a);
 
   const txs = [
@@ -61,7 +61,7 @@ export async function depositFundsSingleToken(
   return notes;
 }
 
-function makeDeposit(
+function makeDepositFn(
   depositManager: DepositManager,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
@@ -83,7 +83,7 @@ function makeDeposit(
     );
     const instantiateDepositTx = await depositManager
       .connect(eoa)
-      .instantiateDeposit(encodedAsset, amount, stealthAddress);
+      .instantiateErc20MultiDeposit(token.address, [amount], stealthAddress);
 
     return [
       instantiateDepositTx,

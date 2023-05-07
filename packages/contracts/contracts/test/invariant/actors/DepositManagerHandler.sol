@@ -137,6 +137,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         console.log("no-op", _calls["no-op"]);
     }
 
+    // TODO: use multideposit
     function instantiateDepositETH(
         uint256 seed
     ) public createActor trackCall("instantiateDepositETH") {
@@ -178,6 +179,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         _instantiateDepositSumSetETH.addToActorSum(_currentActor, amount);
     }
 
+    // TODO: use multideposit
     function instantiateDepositErc20(
         uint256 seed
     ) public createActor trackCall("instantiateDepositErc20") {

@@ -283,7 +283,7 @@ export class DepositScreenerProcessor {
 
     logger.info("submitting completeDeposit tx...");
     const tx = await this.depositManagerContract
-      .completeDeposit(depositRequest, signature)
+      .completeErc20Deposit(depositRequest, signature)
       .catch((e) => {
         logger.error(e);
         throw new Error(e);
