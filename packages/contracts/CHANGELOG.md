@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make protocol allowlist only address, remove function selector specificity
 - update invariant tests to use multideposit for erc20s and eth
 - add unit tests for multidepositing 10 deposits
 - add unit tests for failure cases of exceeding global cap, using unsupported asset, and depositing over max single deposit size
