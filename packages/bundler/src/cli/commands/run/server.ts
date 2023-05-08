@@ -37,12 +37,10 @@ const runServer = new Command("server")
     const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
 
     logger.debug("connecting to redis");
-    const redis = await getRedis();
-
     const server = new BundlerServer(
       config.tellerAddress(),
       provider,
-      redis,
+      getRedis(),
       logger
     );
 
