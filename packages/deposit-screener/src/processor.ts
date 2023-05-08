@@ -4,6 +4,8 @@ import {
 } from "@nocturne-xyz/contracts";
 import {
   Address,
+  AssetTrait,
+  AssetType,
   ClosableAsyncIterator,
   DepositRequest,
   parseEventsFromContractReceipt,
@@ -281,13 +283,22 @@ export class DepositScreenerProcessor {
       depositRequest
     );
 
-    logger.info("submitting completeDeposit tx...");
-    const tx = await this.depositManagerContract
-      .completeDeposit(depositRequest, signature)
-      .catch((e) => {
-        logger.error(e);
-        throw new Error(e);
-      });
+    const asset = AssetTrait.decode(depositRequest.encodedAsset);
+
+    let tx: ethers.ContractTransaction;
+    switch (asset.assetType) {
+      case AssetType.ERC20:
+        logger.info("submitting completeDeposit tx...");
+        tx = await this.depositManagerContract
+          .completeErc20Deposit(depositRequest, signature)
+          .catch((e) => {
+            logger.error(e);
+            throw new Error(e);
+          });
+        break;
+      default:
+        throw new Error("currently only supporting erc20 deposits");
+    }
 
     logger.info("waiting for receipt...");
     const receipt = await tx.wait(1);

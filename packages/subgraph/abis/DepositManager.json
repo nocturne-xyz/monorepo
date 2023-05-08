@@ -413,7 +413,40 @@
         "type": "address"
       }
     ],
-    "name": "_nonces",
+    "name": "_erc20Caps",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "runningGlobalDeposited",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint32",
+        "name": "globalCapWholeTokens",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "maxDepositSizeWholeTokens",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "lastResetTimestamp",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "precision",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "_nonce",
     "outputs": [
       {
         "internalType": "uint256",
@@ -483,24 +516,6 @@
         "internalType": "contract IWeth",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "_wethEncoded",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "encodedAssetAddr",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "encodedAssetId",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -585,7 +600,7 @@
         "type": "bytes"
       }
     ],
-    "name": "completeDeposit",
+    "name": "completeErc20Deposit",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -621,26 +636,9 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetAddr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetId",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct EncodedAsset",
-        "name": "encodedAsset",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "values",
+        "type": "uint256[]"
       },
       {
         "components": [
@@ -670,7 +668,7 @@
         "type": "tuple"
       }
     ],
-    "name": "instantiateDeposit",
+    "name": "instantiateETHMultiDeposit",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -678,9 +676,14 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "values",
+        "type": "uint256[]"
       },
       {
         "components": [
@@ -710,7 +713,7 @@
         "type": "tuple"
       }
     ],
-    "name": "instantiateETHDeposit",
+    "name": "instantiateErc20MultiDeposit",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -810,6 +813,34 @@
       }
     ],
     "name": "retrieveDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint32",
+        "name": "globalCapWholeTokens",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "maxDepositSizeWholeTokens",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "precision",
+        "type": "uint8"
+      }
+    ],
+    "name": "setErc20Cap",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

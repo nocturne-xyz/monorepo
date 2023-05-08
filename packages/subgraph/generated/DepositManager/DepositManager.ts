@@ -340,28 +340,58 @@ export class DepositManager___computeDigestInputReqDepositAddrStruct extends eth
   }
 }
 
-export class DepositManager___wethEncodedResult {
+export class DepositManager___erc20CapsResult {
   value0: BigInt;
   value1: BigInt;
+  value2: BigInt;
+  value3: BigInt;
+  value4: i32;
 
-  constructor(value0: BigInt, value1: BigInt) {
+  constructor(
+    value0: BigInt,
+    value1: BigInt,
+    value2: BigInt,
+    value3: BigInt,
+    value4: i32
+  ) {
     this.value0 = value0;
     this.value1 = value1;
+    this.value2 = value2;
+    this.value3 = value3;
+    this.value4 = value4;
   }
 
   toMap(): TypedMap<string, ethereum.Value> {
     let map = new TypedMap<string, ethereum.Value>();
     map.set("value0", ethereum.Value.fromUnsignedBigInt(this.value0));
     map.set("value1", ethereum.Value.fromUnsignedBigInt(this.value1));
+    map.set("value2", ethereum.Value.fromUnsignedBigInt(this.value2));
+    map.set("value3", ethereum.Value.fromUnsignedBigInt(this.value3));
+    map.set(
+      "value4",
+      ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(this.value4))
+    );
     return map;
   }
 
-  getEncodedAssetAddr(): BigInt {
+  getRunningGlobalDeposited(): BigInt {
     return this.value0;
   }
 
-  getEncodedAssetId(): BigInt {
+  getGlobalCapWholeTokens(): BigInt {
     return this.value1;
+  }
+
+  getMaxDepositSizeWholeTokens(): BigInt {
+    return this.value2;
+  }
+
+  getLastResetTimestamp(): BigInt {
+    return this.value3;
+  }
+
+  getPrecision(): i32 {
+    return this.value4;
   }
 }
 
@@ -464,18 +494,53 @@ export class DepositManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
-  _nonces(param0: Address): BigInt {
-    let result = super.call("_nonces", "_nonces(address):(uint256)", [
-      ethereum.Value.fromAddress(param0)
-    ]);
+  _erc20Caps(param0: Address): DepositManager___erc20CapsResult {
+    let result = super.call(
+      "_erc20Caps",
+      "_erc20Caps(address):(uint128,uint32,uint32,uint32,uint8)",
+      [ethereum.Value.fromAddress(param0)]
+    );
+
+    return new DepositManager___erc20CapsResult(
+      result[0].toBigInt(),
+      result[1].toBigInt(),
+      result[2].toBigInt(),
+      result[3].toBigInt(),
+      result[4].toI32()
+    );
+  }
+
+  try__erc20Caps(
+    param0: Address
+  ): ethereum.CallResult<DepositManager___erc20CapsResult> {
+    let result = super.tryCall(
+      "_erc20Caps",
+      "_erc20Caps(address):(uint128,uint32,uint32,uint32,uint8)",
+      [ethereum.Value.fromAddress(param0)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      new DepositManager___erc20CapsResult(
+        value[0].toBigInt(),
+        value[1].toBigInt(),
+        value[2].toBigInt(),
+        value[3].toBigInt(),
+        value[4].toI32()
+      )
+    );
+  }
+
+  _nonce(): BigInt {
+    let result = super.call("_nonce", "_nonce():(uint256)", []);
 
     return result[0].toBigInt();
   }
 
-  try__nonces(param0: Address): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("_nonces", "_nonces(address):(uint256)", [
-      ethereum.Value.fromAddress(param0)
-    ]);
+  try__nonce(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("_nonce", "_nonce():(uint256)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -555,37 +620,6 @@ export class DepositManager extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  _wethEncoded(): DepositManager___wethEncodedResult {
-    let result = super.call(
-      "_wethEncoded",
-      "_wethEncoded():(uint256,uint256)",
-      []
-    );
-
-    return new DepositManager___wethEncodedResult(
-      result[0].toBigInt(),
-      result[1].toBigInt()
-    );
-  }
-
-  try__wethEncoded(): ethereum.CallResult<DepositManager___wethEncodedResult> {
-    let result = super.tryCall(
-      "_wethEncoded",
-      "_wethEncoded():(uint256,uint256)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(
-      new DepositManager___wethEncodedResult(
-        value[0].toBigInt(),
-        value[1].toBigInt()
-      )
-    );
-  }
-
   owner(): Address {
     let result = super.call("owner", "owner():(address)", []);
 
@@ -602,25 +636,25 @@ export class DepositManager extends ethereum.SmartContract {
   }
 }
 
-export class CompleteDepositCall extends ethereum.Call {
-  get inputs(): CompleteDepositCall__Inputs {
-    return new CompleteDepositCall__Inputs(this);
+export class CompleteErc20DepositCall extends ethereum.Call {
+  get inputs(): CompleteErc20DepositCall__Inputs {
+    return new CompleteErc20DepositCall__Inputs(this);
   }
 
-  get outputs(): CompleteDepositCall__Outputs {
-    return new CompleteDepositCall__Outputs(this);
+  get outputs(): CompleteErc20DepositCall__Outputs {
+    return new CompleteErc20DepositCall__Outputs(this);
   }
 }
 
-export class CompleteDepositCall__Inputs {
-  _call: CompleteDepositCall;
+export class CompleteErc20DepositCall__Inputs {
+  _call: CompleteErc20DepositCall;
 
-  constructor(call: CompleteDepositCall) {
+  constructor(call: CompleteErc20DepositCall) {
     this._call = call;
   }
 
-  get req(): CompleteDepositCallReqStruct {
-    return changetype<CompleteDepositCallReqStruct>(
+  get req(): CompleteErc20DepositCallReqStruct {
+    return changetype<CompleteErc20DepositCallReqStruct>(
       this._call.inputValues[0].value.toTuple()
     );
   }
@@ -630,21 +664,21 @@ export class CompleteDepositCall__Inputs {
   }
 }
 
-export class CompleteDepositCall__Outputs {
-  _call: CompleteDepositCall;
+export class CompleteErc20DepositCall__Outputs {
+  _call: CompleteErc20DepositCall;
 
-  constructor(call: CompleteDepositCall) {
+  constructor(call: CompleteErc20DepositCall) {
     this._call = call;
   }
 }
 
-export class CompleteDepositCallReqStruct extends ethereum.Tuple {
+export class CompleteErc20DepositCallReqStruct extends ethereum.Tuple {
   get spender(): Address {
     return this[0].toAddress();
   }
 
-  get encodedAsset(): CompleteDepositCallReqEncodedAssetStruct {
-    return changetype<CompleteDepositCallReqEncodedAssetStruct>(
+  get encodedAsset(): CompleteErc20DepositCallReqEncodedAssetStruct {
+    return changetype<CompleteErc20DepositCallReqEncodedAssetStruct>(
       this[1].toTuple()
     );
   }
@@ -653,8 +687,8 @@ export class CompleteDepositCallReqStruct extends ethereum.Tuple {
     return this[2].toBigInt();
   }
 
-  get depositAddr(): CompleteDepositCallReqDepositAddrStruct {
-    return changetype<CompleteDepositCallReqDepositAddrStruct>(
+  get depositAddr(): CompleteErc20DepositCallReqDepositAddrStruct {
+    return changetype<CompleteErc20DepositCallReqDepositAddrStruct>(
       this[3].toTuple()
     );
   }
@@ -668,7 +702,7 @@ export class CompleteDepositCallReqStruct extends ethereum.Tuple {
   }
 }
 
-export class CompleteDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
+export class CompleteErc20DepositCallReqEncodedAssetStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -678,7 +712,7 @@ export class CompleteDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
   }
 }
 
-export class CompleteDepositCallReqDepositAddrStruct extends ethereum.Tuple {
+export class CompleteErc20DepositCallReqDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -738,59 +772,43 @@ export class InitializeCall__Outputs {
   }
 }
 
-export class InstantiateDepositCall extends ethereum.Call {
-  get inputs(): InstantiateDepositCall__Inputs {
-    return new InstantiateDepositCall__Inputs(this);
+export class InstantiateETHMultiDepositCall extends ethereum.Call {
+  get inputs(): InstantiateETHMultiDepositCall__Inputs {
+    return new InstantiateETHMultiDepositCall__Inputs(this);
   }
 
-  get outputs(): InstantiateDepositCall__Outputs {
-    return new InstantiateDepositCall__Outputs(this);
+  get outputs(): InstantiateETHMultiDepositCall__Outputs {
+    return new InstantiateETHMultiDepositCall__Outputs(this);
   }
 }
 
-export class InstantiateDepositCall__Inputs {
-  _call: InstantiateDepositCall;
+export class InstantiateETHMultiDepositCall__Inputs {
+  _call: InstantiateETHMultiDepositCall;
 
-  constructor(call: InstantiateDepositCall) {
+  constructor(call: InstantiateETHMultiDepositCall) {
     this._call = call;
   }
 
-  get encodedAsset(): InstantiateDepositCallEncodedAssetStruct {
-    return changetype<InstantiateDepositCallEncodedAssetStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
+  get values(): Array<BigInt> {
+    return this._call.inputValues[0].value.toBigIntArray();
   }
 
-  get value(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get depositAddr(): InstantiateDepositCallDepositAddrStruct {
-    return changetype<InstantiateDepositCallDepositAddrStruct>(
-      this._call.inputValues[2].value.toTuple()
+  get depositAddr(): InstantiateETHMultiDepositCallDepositAddrStruct {
+    return changetype<InstantiateETHMultiDepositCallDepositAddrStruct>(
+      this._call.inputValues[1].value.toTuple()
     );
   }
 }
 
-export class InstantiateDepositCall__Outputs {
-  _call: InstantiateDepositCall;
+export class InstantiateETHMultiDepositCall__Outputs {
+  _call: InstantiateETHMultiDepositCall;
 
-  constructor(call: InstantiateDepositCall) {
+  constructor(call: InstantiateETHMultiDepositCall) {
     this._call = call;
   }
 }
 
-export class InstantiateDepositCallEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
-  }
-}
-
-export class InstantiateDepositCallDepositAddrStruct extends ethereum.Tuple {
+export class InstantiateETHMultiDepositCallDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -808,43 +826,47 @@ export class InstantiateDepositCallDepositAddrStruct extends ethereum.Tuple {
   }
 }
 
-export class InstantiateETHDepositCall extends ethereum.Call {
-  get inputs(): InstantiateETHDepositCall__Inputs {
-    return new InstantiateETHDepositCall__Inputs(this);
+export class InstantiateErc20MultiDepositCall extends ethereum.Call {
+  get inputs(): InstantiateErc20MultiDepositCall__Inputs {
+    return new InstantiateErc20MultiDepositCall__Inputs(this);
   }
 
-  get outputs(): InstantiateETHDepositCall__Outputs {
-    return new InstantiateETHDepositCall__Outputs(this);
+  get outputs(): InstantiateErc20MultiDepositCall__Outputs {
+    return new InstantiateErc20MultiDepositCall__Outputs(this);
   }
 }
 
-export class InstantiateETHDepositCall__Inputs {
-  _call: InstantiateETHDepositCall;
+export class InstantiateErc20MultiDepositCall__Inputs {
+  _call: InstantiateErc20MultiDepositCall;
 
-  constructor(call: InstantiateETHDepositCall) {
+  constructor(call: InstantiateErc20MultiDepositCall) {
     this._call = call;
   }
 
-  get value(): BigInt {
-    return this._call.inputValues[0].value.toBigInt();
+  get token(): Address {
+    return this._call.inputValues[0].value.toAddress();
   }
 
-  get depositAddr(): InstantiateETHDepositCallDepositAddrStruct {
-    return changetype<InstantiateETHDepositCallDepositAddrStruct>(
-      this._call.inputValues[1].value.toTuple()
+  get values(): Array<BigInt> {
+    return this._call.inputValues[1].value.toBigIntArray();
+  }
+
+  get depositAddr(): InstantiateErc20MultiDepositCallDepositAddrStruct {
+    return changetype<InstantiateErc20MultiDepositCallDepositAddrStruct>(
+      this._call.inputValues[2].value.toTuple()
     );
   }
 }
 
-export class InstantiateETHDepositCall__Outputs {
-  _call: InstantiateETHDepositCall;
+export class InstantiateErc20MultiDepositCall__Outputs {
+  _call: InstantiateErc20MultiDepositCall;
 
-  constructor(call: InstantiateETHDepositCall) {
+  constructor(call: InstantiateErc20MultiDepositCall) {
     this._call = call;
   }
 }
 
-export class InstantiateETHDepositCallDepositAddrStruct extends ethereum.Tuple {
+export class InstantiateErc20MultiDepositCallDepositAddrStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -975,6 +997,48 @@ export class RetrieveDepositCallReqDepositAddrStruct extends ethereum.Tuple {
 
   get h2Y(): BigInt {
     return this[3].toBigInt();
+  }
+}
+
+export class SetErc20CapCall extends ethereum.Call {
+  get inputs(): SetErc20CapCall__Inputs {
+    return new SetErc20CapCall__Inputs(this);
+  }
+
+  get outputs(): SetErc20CapCall__Outputs {
+    return new SetErc20CapCall__Outputs(this);
+  }
+}
+
+export class SetErc20CapCall__Inputs {
+  _call: SetErc20CapCall;
+
+  constructor(call: SetErc20CapCall) {
+    this._call = call;
+  }
+
+  get token(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get globalCapWholeTokens(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get maxDepositSizeWholeTokens(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
+  get precision(): i32 {
+    return this._call.inputValues[3].value.toI32();
+  }
+}
+
+export class SetErc20CapCall__Outputs {
+  _call: SetErc20CapCall;
+
+  constructor(call: SetErc20CapCall) {
+    this._call = call;
   }
 }
 

@@ -6,6 +6,8 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/se
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AddressUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {IWeth} from "./interfaces/IWeth.sol";
@@ -19,17 +21,28 @@ contract DepositManager is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
+    using SafeERC20 for IERC20;
+
+    struct Erc20Cap {
+        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
+        uint32 globalCapWholeTokens; // global cap for asset in whole tokens, globalCapWholeTokens * 10^precision should never exceed uint128.max (checked in setter)
+        uint32 maxDepositSizeWholeTokens; // max size of a single deposit per address
+        uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
+        uint8 precision; // decimals for asset
+    }
+
     uint256 constant ERC20_ID = 0;
     uint256 constant TWO_ETH_TRANSFERS_GAS = 50_000;
+    uint256 constant SECONDS_IN_HOUR = 3_600;
 
     ITeller public _teller;
     IWeth public _weth;
 
-    EncodedAsset public _wethEncoded;
-
     mapping(address => bool) public _screeners;
-    mapping(address => uint256) public _nonces;
+    uint256 public _nonce;
     mapping(bytes32 => bool) public _outstandingDepositHashes;
+
+    mapping(address => Erc20Cap) public _erc20Caps;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
@@ -73,7 +86,63 @@ contract DepositManager is
         __DepositManagerBase_init(contractName, contractVersion);
         _teller = ITeller(teller);
         _weth = IWeth(weth);
-        _wethEncoded = AssetUtils.encodeAsset(AssetType.ERC20, weth, ERC20_ID);
+    }
+
+    modifier enforceErc20DepositSize(address token, uint256[] calldata values) {
+        Erc20Cap memory cap = _erc20Caps[token];
+
+        // Ensure asset is supported (has a cap)
+        require(
+            (cap.runningGlobalDeposited |
+                cap.globalCapWholeTokens |
+                cap.maxDepositSizeWholeTokens |
+                cap.lastResetTimestamp |
+                cap.precision) != 0,
+            "!supported erc20"
+        );
+
+        uint256 maxDepositSize = cap.maxDepositSizeWholeTokens *
+            (10 ** cap.precision);
+        for (uint256 i = 0; i < values.length; i++) {
+            require(values[i] <= maxDepositSize, "maxDepositSize exceeded");
+        }
+
+        _;
+    }
+
+    modifier enforceErc20Cap(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) {
+        // Deposit value should not exceed limit on max deposit cap (uint128.max)
+        require(value <= type(uint128).max, "value > uint128.max");
+
+        (AssetType assetType, address token, uint256 id) = AssetUtils
+            .decodeAsset(encodedAsset);
+        require(assetType == AssetType.ERC20 && id == ERC20_ID, "!erc20");
+
+        Erc20Cap memory cap = _erc20Caps[token];
+
+        // Clear expired global cap if possible
+        if (block.timestamp > cap.lastResetTimestamp + SECONDS_IN_HOUR) {
+            cap.runningGlobalDeposited = 0;
+            cap.lastResetTimestamp = uint32(block.timestamp);
+        }
+
+        // We know cap.globalCapWholeTokens * (10 ** cap.precision) <= uint128.max given setter
+        uint128 globalCap = uint128(
+            cap.globalCapWholeTokens * (10 ** cap.precision)
+        );
+
+        // Ensure less than global cap and less than deposit size cap
+        require(
+            cap.runningGlobalDeposited + uint128(value) <= globalCap,
+            "globalCap exceeded"
+        );
+
+        _;
+
+        _erc20Caps[token].runningGlobalDeposited += uint128(value);
     }
 
     function setScreenerPermission(
@@ -84,68 +153,130 @@ contract DepositManager is
         emit ScreenerPermissionSet(screener, permission);
     }
 
-    function instantiateETHDeposit(
-        uint256 value,
-        StealthAddress calldata depositAddr
-    ) external payable nonReentrant {
-        require(msg.value >= value, "msg.value < value");
-        _weth.deposit{value: value}();
-
-        DepositRequest memory req = DepositRequest({
-            spender: msg.sender,
-            encodedAsset: _wethEncoded,
-            value: value,
-            depositAddr: depositAddr,
-            nonce: _nonces[msg.sender],
-            gasCompensation: msg.value - value
-        });
-
-        bytes32 depositHash = _hashDepositRequest(req);
-
-        // Update deposit mapping and nonces
-        _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
-
-        emit DepositInstantiated(
-            req.spender,
-            req.encodedAsset,
-            req.value,
-            req.depositAddr,
-            req.nonce,
-            req.gasCompensation
+    function setErc20Cap(
+        address token,
+        uint32 globalCapWholeTokens,
+        uint32 maxDepositSizeWholeTokens,
+        uint8 precision
+    ) external onlyOwner {
+        require(
+            globalCapWholeTokens * (10 ** precision) <= type(uint128).max,
+            "globalCap > uint128.max"
         );
+        require(
+            maxDepositSizeWholeTokens <= globalCapWholeTokens,
+            "maxDepositSize > globalCap"
+        );
+        _erc20Caps[token] = Erc20Cap({
+            runningGlobalDeposited: 0,
+            globalCapWholeTokens: globalCapWholeTokens,
+            maxDepositSizeWholeTokens: maxDepositSizeWholeTokens,
+            lastResetTimestamp: uint32(block.timestamp),
+            precision: precision
+        });
     }
 
-    function instantiateDeposit(
-        EncodedAsset calldata encodedAsset,
-        uint256 value,
+    function instantiateErc20MultiDeposit(
+        address token,
+        uint256[] calldata values,
         StealthAddress calldata depositAddr
-    ) external payable nonReentrant {
+    ) external payable nonReentrant enforceErc20DepositSize(token, values) {
+        require(msg.value % values.length == 0, "!gas comp split");
+
+        {
+            EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                token,
+                ERC20_ID
+            );
+
+            uint256 gasCompensationPerDeposit = msg.value / values.length;
+            uint256 nonce = _nonce;
+            DepositRequest memory req = DepositRequest({
+                spender: msg.sender,
+                encodedAsset: encodedAsset,
+                value: 0,
+                depositAddr: depositAddr,
+                nonce: 0,
+                gasCompensation: gasCompensationPerDeposit
+            });
+
+            for (uint256 i = 0; i < values.length; i++) {
+                req.value = values[i];
+                req.nonce = nonce + i;
+
+                bytes32 depositHash = _hashDepositRequest(req);
+                _outstandingDepositHashes[depositHash] = true;
+
+                emit DepositInstantiated(
+                    req.spender,
+                    req.encodedAsset,
+                    req.value,
+                    req.depositAddr,
+                    req.nonce,
+                    req.gasCompensation
+                );
+            }
+        }
+
+        _nonce += values.length;
+
+        uint256 totalValue = Utils.sum(values);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), totalValue);
+    }
+
+    function instantiateETHMultiDeposit(
+        uint256[] calldata values,
+        StealthAddress calldata depositAddr
+    )
+        external
+        payable
+        nonReentrant
+        enforceErc20DepositSize(address(_weth), values)
+    {
+        uint256 totalDepositAmount = Utils.sum(values);
+        require(totalDepositAmount <= msg.value, "msg.value < deposit weth");
+
+        uint256 gasCompensation = msg.value - totalDepositAmount;
+        require(gasCompensation % values.length == 0, "!gas comp split");
+
+        EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(_weth),
+            ERC20_ID
+        );
+
+        uint256 gasCompensationPerDeposit = gasCompensation / values.length;
+        uint256 nonce = _nonce;
         DepositRequest memory req = DepositRequest({
             spender: msg.sender,
-            encodedAsset: encodedAsset,
-            value: value,
+            encodedAsset: encodedWeth,
+            value: 0,
             depositAddr: depositAddr,
-            nonce: _nonces[msg.sender],
-            gasCompensation: msg.value
+            nonce: 0,
+            gasCompensation: gasCompensationPerDeposit
         });
 
-        bytes32 depositHash = _hashDepositRequest(req);
+        for (uint256 i = 0; i < values.length; i++) {
+            req.value = values[i];
+            req.nonce = nonce + i;
 
-        // Update deposit mapping and nonces
-        _outstandingDepositHashes[depositHash] = true;
-        _nonces[req.spender] = req.nonce + 1;
+            bytes32 depositHash = _hashDepositRequest(req);
+            _outstandingDepositHashes[depositHash] = true;
 
-        AssetUtils.transferAssetFrom(req.encodedAsset, req.spender, req.value);
+            emit DepositInstantiated(
+                req.spender,
+                req.encodedAsset,
+                req.value,
+                req.depositAddr,
+                req.nonce,
+                req.gasCompensation
+            );
+        }
 
-        emit DepositInstantiated(
-            req.spender,
-            req.encodedAsset,
-            req.value,
-            req.depositAddr,
-            req.nonce,
-            req.gasCompensation
-        );
+        _nonce += values.length;
+
+        _weth.deposit{value: totalDepositAmount}();
     }
 
     // NOTE: We accept race condition where user could technically retrieve their deposit before
@@ -180,10 +311,17 @@ contract DepositManager is
         );
     }
 
-    function completeDeposit(
+    function completeErc20Deposit(
         DepositRequest calldata req,
         bytes calldata signature
-    ) external nonReentrant {
+    ) external nonReentrant enforceErc20Cap(req.encodedAsset, req.value) {
+        _completeDeposit(req, signature);
+    }
+
+    function _completeDeposit(
+        DepositRequest calldata req,
+        bytes calldata signature
+    ) internal {
         uint256 preDepositGas = gasleft();
 
         // Recover and check screener signature

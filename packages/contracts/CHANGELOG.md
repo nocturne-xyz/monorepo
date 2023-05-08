@@ -2,6 +2,16 @@
 
 ### Unreleased
 
+- update invariant tests to use multideposit for erc20s and eth
+- add unit tests for multidepositing 10 deposits
+- add unit tests for failure cases of exceeding global cap, using unsupported asset, and depositing over max single deposit size
+- `completeDeposit` becomes internal method and we expose `completeErc20Deposit` which checks global hourly cap
+- replace `instantiateDeposit` and `instantiateETHDeposit` with erc20-specific methods that allow for multi deposits in same call
+- add modifiers to enforce erc20 max deposit size for instantiating deposits and global cap for completing deposits
+- add erc20 caps to deposit manager which includes global hourly cap and max deposit size
+- use single `_nonce` for deposit manager instead of nonce mapping (cheaper)
+- Add `sum` method to `Utils`
+- fix `AssetUtils` to ensure erc721 methods only have `value = 1` to avoid any unexpected behavior
 - make commitment tree quaternary:
   - update `TreeUtils` constants
   - update `TreeUtils` PI encoding / decoding helpers

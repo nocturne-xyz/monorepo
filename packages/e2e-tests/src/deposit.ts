@@ -1,6 +1,6 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { AssetType, AssetTrait, StealthAddress, Note } from "@nocturne-xyz/sdk";
+import { AssetType, StealthAddress, Note } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { sleep } from "./utils";
 
@@ -10,7 +10,7 @@ export async function depositFundsMultiToken(
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
 ): Promise<Note[]> {
-  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
+  const deposit = makeDepositFn(depositManager, eoa, stealthAddress);
   const notes: Note[] = [];
   const txs: ContractTransaction[] = [];
   for (const [token, amounts] of tokensWithAmounts) {
@@ -40,7 +40,7 @@ export async function depositFundsSingleToken(
   stealthAddress: StealthAddress,
   amounts: bigint[]
 ): Promise<Note[]> {
-  const deposit = makeDeposit(depositManager, eoa, stealthAddress);
+  const deposit = makeDepositFn(depositManager, eoa, stealthAddress);
   const total = amounts.reduce((sum, a) => sum + a);
 
   const txs = [
@@ -61,7 +61,7 @@ export async function depositFundsSingleToken(
   return notes;
 }
 
-function makeDeposit(
+function makeDepositFn(
   depositManager: DepositManager,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress
@@ -76,14 +76,13 @@ function makeDeposit(
       assetAddr: token.address,
       id: 0n,
     };
-    const encodedAsset = AssetTrait.encode(asset);
 
     console.log(
       `instantiating deposit for ${amount} of token ${token.address}`
     );
     const instantiateDepositTx = await depositManager
       .connect(eoa)
-      .instantiateDeposit(encodedAsset, amount, stealthAddress);
+      .instantiateErc20MultiDeposit(token.address, [amount], stealthAddress);
 
     return [
       instantiateDepositTx,

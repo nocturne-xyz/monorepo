@@ -1,12 +1,6 @@
 import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
-import {
-  AssetTrait,
-  AssetType,
-  CanonAddress,
-  StealthAddressTrait,
-  zip,
-} from "@nocturne-xyz/sdk";
+import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/sdk";
 import { NocturneConfig } from "@nocturne-xyz/config";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import fs from "fs";
@@ -115,19 +109,11 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
     }
   }
 
-  const encodedAssets = tokens
-    .map((token) => ({
-      assetType: AssetType.ERC20,
-      assetAddr: token.address,
-      id: 0n,
-    }))
-    .map(AssetTrait.encode);
-
   // deposit some test tokens to each nocturne address in `TEST_CANONICAL_NOCTURNE_ADDRS`
   const targetAddrs = TEST_CANONICAL_NOCTURNE_ADDRS.map(
     StealthAddressTrait.fromCanonAddress
   );
-  for (const [encodedAsset, amount] of zip(encodedAssets, amounts)) {
+  for (const [token, amount] of zip(tokens, amounts)) {
     // Deposit two 100 unit notes for given token
     for (const addr of targetAddrs) {
       console.log(
@@ -137,7 +123,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       );
       const tx = await depositManager
         .connect(deployerEoa)
-        .instantiateDeposit(encodedAsset, amount, addr);
+        .instantiateErc20MultiDeposit(token.address, [amount], addr);
       await tx.wait(1);
     }
   }

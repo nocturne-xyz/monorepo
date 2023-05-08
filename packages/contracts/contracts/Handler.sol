@@ -101,6 +101,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     function handleDeposit(
         DepositRequest calldata deposit
     ) external override whenNotPaused onlyTeller {
+        // TODO: ensure asset is whitelisted
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }

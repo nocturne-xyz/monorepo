@@ -70,7 +70,7 @@ export class DepositScreenerDB {
     await this.redis.set(GLOBAL_DEPOSIT_AMOUNT_KEY, amount);
   }
 
-  async getGlobalDepositAmount(amount: number): Promise<number> {
+  async getGlobalDepositAmount(): Promise<number> {
     const val = await this.redis.get(GLOBAL_DEPOSIT_AMOUNT_KEY);
     return val ? Number(val) : 0;
   }

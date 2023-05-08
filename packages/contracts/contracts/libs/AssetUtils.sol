@@ -117,6 +117,8 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransfer(receiver, value);
         } else if (assetType == AssetType.ERC721) {
+            require(value == 1, "ERC721 value != 1");
+
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(address(this), receiver, id);
         } else if (assetType == AssetType.ERC1155) {
@@ -147,6 +149,8 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransferFrom(spender, address(this), value);
         } else if (assetType == AssetType.ERC721) {
+            require(value == 1, "ERC721 value != 1");
+
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(spender, address(this), id);
         } else if (assetType == AssetType.ERC1155) {
@@ -164,12 +168,12 @@ library AssetUtils {
     }
 
     /**
-      @dev Approve asset to spender for amount. Throws if unsuccssful.
+      @dev Approve asset to spender for value. Throws if unsuccssful.
     */
     function approveAsset(
         EncodedAsset memory encodedAsset,
         address spender,
-        uint256 amount
+        uint256 value
     ) internal {
         (AssetType assetType, address assetAddr, uint256 id) = decodeAsset(
             encodedAsset
@@ -178,8 +182,10 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             // TODO: next OZ release will add SafeERC20.forceApprove
             IERC20(assetAddr).approve(spender, 0);
-            IERC20(assetAddr).approve(spender, amount);
+            IERC20(assetAddr).approve(spender, value);
         } else if (assetType == AssetType.ERC721) {
+            require(value == 1, "ERC721 value != 1");
+
             // uncaught revert will be propagated
             IERC721(assetAddr).approve(spender, id);
         } else if (assetType == AssetType.ERC1155) {

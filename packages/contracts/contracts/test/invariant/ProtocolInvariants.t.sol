@@ -77,6 +77,20 @@ contract ProtocolInvariants is Test, InvariantsBase {
             swapErc1155
         );
 
+        depositManager.setErc20Cap(
+            address(weth),
+            type(uint32).max,
+            type(uint32).max,
+            weth.decimals()
+        );
+
+        depositManager.setErc20Cap(
+            address(depositErc20),
+            type(uint32).max,
+            type(uint32).max,
+            depositErc20.decimals()
+        );
+
         // TODO: allow other tokens once we enable transacting with them
         handler.setCallableContractAllowlistPermission(
             address(depositErc20),
@@ -156,6 +170,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
         excludeSender(address(depositManagerHandler));
         excludeSender(address(tellerHandler));
+        excludeSender(address(swapper));
         excludeSender(address(teller));
         excludeSender(address(handler));
         excludeSender(address(depositManager));

@@ -42,6 +42,9 @@ contract DepositManagerTest is Test {
     uint256 constant RESERVE_AMOUNT = 50_000_000;
     uint256 constant GAS_COMP_AMOUNT = 10_000_000;
 
+    uint32 constant MAX_DEPOSIT_SIZE = 100_000_000;
+    uint32 constant GLOBAL_CAP = 1_000_000_000;
+
     event DepositInstantiated(
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -92,11 +95,25 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
+        depositManager.setErc20Cap(
+            address(weth),
+            GLOBAL_CAP,
+            MAX_DEPOSIT_SIZE,
+            18
+        );
+
         // Instantiate token contracts
         for (uint256 i = 0; i < 3; i++) {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            depositManager.setErc20Cap(
+                address(ERC20s[i]),
+                GLOBAL_CAP,
+                MAX_DEPOSIT_SIZE,
+                18
+            );
         }
     }
 
@@ -110,19 +127,13 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), depositAmount);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
             depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -144,9 +155,12 @@ contract DepositManagerTest is Test {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
-            depositAmount,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -166,7 +180,7 @@ contract DepositManagerTest is Test {
             depositAmount,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -188,9 +202,12 @@ contract DepositManagerTest is Test {
             deposit.gasCompensation
         );
         vm.prank(ALICE);
-        depositManager.instantiateETHDeposit{
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateETHMultiDeposit{
             value: GAS_COMP_AMOUNT + depositAmount
-        }(depositAmount, NocturneUtils.defaultStealthAddress());
+        }(depositAmounts, NocturneUtils.defaultStealthAddress());
 
         // Deposit hash marked true
         assertTrue(depositManager._outstandingDepositHashes(depositHash));
@@ -205,10 +222,13 @@ contract DepositManagerTest is Test {
 
         // Set ALICE balance to 20M wei, enough for deposit and gas comp
         vm.deal(ALICE, GAS_COMP_AMOUNT + depositAmount);
-        vm.expectRevert("msg.value < value");
+        vm.expectRevert("msg.value < deposit weth");
         vm.prank(ALICE);
-        depositManager.instantiateETHDeposit{value: depositAmount - 1}(
-            depositAmount,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = depositAmount;
+        depositManager.instantiateETHMultiDeposit{value: depositAmount - 1}(
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
     }
@@ -221,19 +241,13 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT
         );
         bytes32 depositHash = depositManager.hashDepositRequest(deposit);
@@ -241,9 +255,12 @@ contract DepositManagerTest is Test {
         // Call instantiateDeposit
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
-            RESERVE_AMOUNT,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -290,27 +307,24 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             0
         );
 
         // Call instantiateDeposit
         vm.prank(ALICE);
-        depositManager.instantiateDeposit(
-            encodedToken,
-            RESERVE_AMOUNT,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit(
+            address(token),
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -331,7 +345,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             0
         );
 
@@ -340,7 +354,7 @@ contract DepositManagerTest is Test {
         depositManager.retrieveDeposit(deposit);
     }
 
-    function testCompleteDepositSuccess() public {
+    function testCompleteDepositSuccessSingle() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
@@ -348,19 +362,13 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -368,9 +376,12 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
-            RESERVE_AMOUNT,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -400,14 +411,14 @@ contract DepositManagerTest is Test {
         );
 
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, signature);
+        depositManager.completeErc20Deposit(deposit, signature);
 
         // Deposit hash marked false again
         assertFalse(depositManager._outstandingDepositHashes(depositHash));
 
         // Ensure teller now has ALICE's tokens
         assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT);
-        assertEq(token.balanceOf(address(ALICE)), 0);
+        assertEq(token.balanceOf(address(depositManager)), 0);
 
         // TODO: We want to check that some gas went to screener and rest went
         // back to ALICE. Currently unable to because we can't set tx.gasprice
@@ -418,6 +429,203 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
+    function testCompleteDepositSuccessMulti() public {
+        SimpleERC20Token token = ERC20s[0];
+
+        uint256 numDeposits = 10;
+        uint256[] memory depositAmounts = new uint256[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
+            depositAmounts[i] = RESERVE_AMOUNT;
+        }
+
+        token.reserveTokens(ALICE, RESERVE_AMOUNT * numDeposits);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT * numDeposits);
+
+        DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
+        bytes32[] memory depositHashes = new bytes32[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
+            deposits[i] = NocturneUtils.formatDepositRequest(
+                ALICE,
+                address(token),
+                RESERVE_AMOUNT,
+                NocturneUtils.ERC20_ID,
+                NocturneUtils.defaultStealthAddress(),
+                depositManager._nonce() + i,
+                GAS_COMP_AMOUNT // 10M gas comp
+            );
+            depositHashes[i] = depositManager.hashDepositRequest(deposits[i]);
+        }
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT * numDeposits);
+        vm.prank(ALICE);
+
+        depositManager.instantiateErc20MultiDeposit{
+            value: GAS_COMP_AMOUNT * numDeposits
+        }(
+            address(token),
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+
+        // Deposit hash marked true
+        for (uint256 i = 0; i < numDeposits; i++) {
+            assertTrue(
+                depositManager._outstandingDepositHashes(depositHashes[i])
+            );
+        }
+
+        // Deposit manager has tokens and gas funds
+        assertEq(
+            token.balanceOf(address(depositManager)),
+            RESERVE_AMOUNT * numDeposits
+        );
+        assertEq(
+            address(depositManager).balance,
+            GAS_COMP_AMOUNT * numDeposits
+        );
+
+        bytes[] memory signatures = new bytes[](numDeposits);
+        for (uint256 i = 0; i < numDeposits; i++) {
+            bytes32 digest = depositManager.computeDigest(deposits[i]);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+            signatures[i] = ParseUtils.rsvToSignatureBytes(
+                uint256(r),
+                uint256(s),
+                v
+            );
+        }
+
+        for (uint256 i = 0; i < numDeposits; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit DepositCompleted(
+                deposits[i].spender,
+                deposits[i].encodedAsset,
+                deposits[i].value,
+                deposits[i].depositAddr,
+                deposits[i].nonce,
+                deposits[i].gasCompensation
+            );
+
+            vm.prank(SCREENER);
+            depositManager.completeErc20Deposit(deposits[i], signatures[i]);
+
+            // Deposit hash marked false again
+            assertFalse(
+                depositManager._outstandingDepositHashes(depositHashes[i])
+            );
+        }
+
+        // Ensure teller now has ALICE's tokens
+        assertEq(
+            token.balanceOf(address(teller)),
+            RESERVE_AMOUNT * numDeposits
+        );
+        assertEq(token.balanceOf(address(depositManager)), 0);
+
+        assertEq(address(depositManager).balance, 0);
+        assertEq(SCREENER.balance, 0);
+        assertEq(ALICE.balance, GAS_COMP_AMOUNT * numDeposits); // TODO: screener comp so this is accurate
+    }
+
+    function testCompleteDepositFailureUnsupportedToken() public {
+        SimpleERC20Token token = new SimpleERC20Token();
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("!supported erc20");
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
+    function testCompleteDepositFailureExceedsMaxDepositSize() public {
+        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
+            1;
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, overMaxSizeAmount);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), overMaxSizeAmount);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("maxDepositSize exceeded");
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = overMaxSizeAmount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
+    function testCompleteDepositFailureExceedsGlobalCap() public {
+        SimpleERC20Token token = ERC20s[0];
+        uint256 chunkAmount = (uint256(GLOBAL_CAP) * (10 ** 18)) / 10;
+
+        // Deposit one chunk size over global cap
+        DepositRequest memory deposit;
+        bytes memory signature;
+        for (uint256 i = 0; i < 11; i++) {
+            token.reserveTokens(ALICE, chunkAmount);
+
+            vm.prank(ALICE);
+            token.approve(address(depositManager), chunkAmount);
+
+            deposit = NocturneUtils.formatDepositRequest(
+                ALICE,
+                address(token),
+                chunkAmount,
+                NocturneUtils.ERC20_ID,
+                NocturneUtils.defaultStealthAddress(),
+                depositManager._nonce(),
+                GAS_COMP_AMOUNT // 10M gas comp
+            );
+
+            vm.deal(ALICE, GAS_COMP_AMOUNT);
+            vm.prank(ALICE);
+
+            uint256[] memory depositAmounts = new uint256[](1);
+            depositAmounts[0] = chunkAmount;
+            depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+                address(token),
+                depositAmounts,
+                NocturneUtils.defaultStealthAddress()
+            );
+
+            bytes32 digest = depositManager.computeDigest(deposit);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+            signature = ParseUtils.rsvToSignatureBytes(
+                uint256(r),
+                uint256(s),
+                v
+            );
+
+            // Last chunk reverts due to exceeding global cap
+            if (i == 10) {
+                vm.expectRevert("globalCap exceeded");
+            }
+            depositManager.completeErc20Deposit(deposit, signature);
+        }
+
+        // Last chunk goes through after moving forward timestamp 1h
+        vm.warp(block.timestamp + 3_601);
+        depositManager.completeErc20Deposit(deposit, signature);
+    }
+
     function testCompleteDepositFailureBadSignature() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
@@ -426,27 +634,24 @@ contract DepositManagerTest is Test {
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(token),
-            NocturneUtils.ERC20_ID
-        );
-
         DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
             ALICE,
             address(token),
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        depositManager.instantiateDeposit{value: GAS_COMP_AMOUNT}(
-            encodedToken,
-            RESERVE_AMOUNT,
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
 
@@ -461,7 +666,7 @@ contract DepositManagerTest is Test {
 
         vm.expectRevert("request signer !screener");
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, badSignature);
+        depositManager.completeErc20Deposit(deposit, badSignature);
     }
 
     function testCompleteDepositFailureNonExistentDeposit() public {
@@ -479,7 +684,7 @@ contract DepositManagerTest is Test {
             RESERVE_AMOUNT,
             NocturneUtils.ERC20_ID,
             NocturneUtils.defaultStealthAddress(),
-            depositManager._nonces(ALICE),
+            depositManager._nonce(),
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
@@ -493,6 +698,6 @@ contract DepositManagerTest is Test {
 
         vm.expectRevert("deposit !exists");
         vm.prank(SCREENER);
-        depositManager.completeDeposit(deposit, signature);
+        depositManager.completeErc20Deposit(deposit, signature);
     }
 }

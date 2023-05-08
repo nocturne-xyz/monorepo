@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- processor switches on token type and calls `completeErc20Deposit`
 - add `--throttle-ms` arg to CLI
 - bump max chunk size up to 100K blocks
 - add optional argument `queryThrottleMs` to `DepositScreenerProcessor.start` and use it when instantiating iterator
@@ -12,7 +13,7 @@
 - create separate `docker-compose.local.yml` and `docker-compose.dev.yml` where `dev` version pulls from docker hub
 - tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
-- `yarn build:docker` now builds CLI container, not docker compose. 
+- `yarn build:docker` now builds CLI container, not docker compose.
 - CLI uses config package to get contract addresses
 - add `--log-dir` option to CLI with defaults
 - add winston logging
