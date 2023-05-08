@@ -1,7 +1,6 @@
 import { ProtocolAllowlist } from "@nocturne-xyz/config";
 import { Handler } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { protocolWhitelistKey } from "@nocturne-xyz/sdk";
 
 export async function whitelistProtocols(
   connectedSigner: ethers.Wallet,
@@ -11,29 +10,16 @@ export async function whitelistProtocols(
   handler = handler.connect(connectedSigner);
 
   console.log("whitelisting protocols...");
-  for (const [name, entry] of Array.from(protocolWhitelist)) {
-    const { contractAddress, functionSignatures } = entry;
-    for (const signature of functionSignatures) {
-      const selector = getSelector(signature);
-      const key = protocolWhitelistKey(contractAddress, selector);
-
-      if (!(await handler._callableContractAllowlist(key))) {
-        console.log(
-          `whitelisting protocol: ${name}. address: ${contractAddress}. signature: ${signature}.`
-        );
-        const tx = await handler.setCallableContractAllowlistPermission(
-          contractAddress,
-          selector,
-          true
-        );
-        await tx.wait(1);
-      }
+  for (const [name, contractAddress] of Array.from(protocolWhitelist)) {
+    if (!(await handler._supportedContractAllowlist(contractAddress))) {
+      console.log(
+        `whitelisting protocol: ${name}. address: ${contractAddress}.`
+      );
+      const tx = await handler.setSupportedContractAllowlistPermission(
+        contractAddress,
+        true
+      );
+      await tx.wait(1);
     }
   }
-}
-
-function getSelector(signature: string): string {
-  const sigBytes = ethers.utils.toUtf8Bytes(signature);
-  const hash = ethers.utils.keccak256(sigBytes);
-  return ethers.utils.hexDataSlice(hash, 0, 4);
 }

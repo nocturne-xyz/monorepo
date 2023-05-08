@@ -15,16 +15,15 @@ import "./libs/Types.sol";
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     mapping(address => bool) public _subtreeBatchFiller;
 
-    mapping(uint192 => bool) public _callableContractAllowlist;
+    mapping(address => bool) public _supportedContractAllowlist;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
 
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
-    event CallableContractAllowlistPermissionSet(
+    event SupportedContractAllowlistPermissionSet(
         address contractAddress,
-        bytes4 selector,
         bool permission
     );
 
@@ -68,21 +67,14 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         emit SubtreeBatchFillerPermissionSet(filler, permission);
     }
 
-    // Gives an handler ability to call function with given selector on the
-    // specified protocol
-    function setCallableContractAllowlistPermission(
+    // Gives an handler ability to call function with on the specified protocol
+    function setSupportedContractAllowlistPermission(
         address contractAddress,
-        bytes4 selector,
         bool permission
     ) external onlyOwner {
-        uint192 addressAndSelector = _addressAndSelector(
+        _supportedContractAllowlist[contractAddress] = permission;
+        emit SupportedContractAllowlistPermissionSet(
             contractAddress,
-            selector
-        );
-        _callableContractAllowlist[addressAndSelector] = permission;
-        emit CallableContractAllowlistPermissionSet(
-            contractAddress,
-            selector,
             permission
         );
     }
@@ -239,31 +231,11 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
             action.contractAddress != address(_teller),
             "Cannot call the Nocturne teller"
         );
-
-        bytes4 selector = _extractFunctionSelector(action.encodedFunction);
-        uint192 addressAndSelector = _addressAndSelector(
-            action.contractAddress,
-            selector
-        );
         require(
-            _callableContractAllowlist[addressAndSelector],
+            _supportedContractAllowlist[action.contractAddress],
             "Cannot call non-allowed protocol"
         );
 
         (success, result) = action.contractAddress.call(action.encodedFunction);
-    }
-
-    function _extractFunctionSelector(
-        bytes calldata encodedFunctionData
-    ) public pure returns (bytes4 selector) {
-        require(encodedFunctionData.length >= 4, "Invalid encoded fn length");
-        return bytes4(encodedFunctionData[:4]);
-    }
-
-    function _addressAndSelector(
-        address contractAddress,
-        bytes4 selector
-    ) internal pure returns (uint192) {
-        return (uint192(uint160(contractAddress)) << 32) | uint32(selector);
     }
 }

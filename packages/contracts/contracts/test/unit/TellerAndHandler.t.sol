@@ -113,14 +113,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
 
-            handler.setCallableContractAllowlistPermission(
+            handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
-                ERC20.approve.selector,
-                true
-            );
-            handler.setCallableContractAllowlistPermission(
-                address(ERC20s[i]),
-                ERC20.transfer.selector,
                 true
             );
         }
@@ -964,9 +958,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist reentrantCaller for sake of simulation
-        handler.setCallableContractAllowlistPermission(
+        handler.setSupportedContractAllowlistPermission(
             address(reentrantCaller),
-            ReentrantCaller.reentrantProcessBundle.selector,
             true
         );
 
@@ -1162,11 +1155,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setCallableContractAllowlistPermission(
-            address(handler),
-            Handler.handleOperation.selector,
-            true
-        );
+        handler.setSupportedContractAllowlistPermission(address(handler), true);
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
@@ -1271,11 +1260,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist handler for sake of simulation
-        handler.setCallableContractAllowlistPermission(
-            address(handler),
-            Handler.executeActions.selector,
-            true
-        );
+        handler.setSupportedContractAllowlistPermission(address(handler), true);
 
         // Op was processed but call result has reentry failure message
         vm.prank(BUNDLER);
@@ -1628,11 +1613,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setCallableContractAllowlistPermission(
-            address(swapper),
-            TokenSwapper.swap.selector,
-            true
-        );
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
 
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
@@ -1756,11 +1737,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Whitelist token swapper for sake of simulation
-        handler.setCallableContractAllowlistPermission(
-            address(swapper),
-            TokenSwapper.swap.selector,
-            true
-        );
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
 
         vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- pass map of name to address for protocol whitelisting after removing fn selectors
 - use multideposit after deposit manager changes
 - add small function to set deposit caps to deposit manager (will be replaced by deploy script refactor to include cap setting + whitelisting all in `deployNocturne`)
 - move `rebuild_graph_m1` to monorepo scripts

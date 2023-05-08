@@ -92,22 +92,11 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         // TODO: allow other tokens once we enable transacting with them
-        handler.setCallableContractAllowlistPermission(
+        handler.setSupportedContractAllowlistPermission(
             address(depositErc20),
-            depositErc20.approve.selector,
             true
         );
-        handler.setCallableContractAllowlistPermission(
-            address(depositErc20),
-            depositErc20.transfer.selector,
-            true
-        );
-
-        handler.setCallableContractAllowlistPermission(
-            address(swapper),
-            swapper.swap.selector,
-            true
-        );
+        handler.setSupportedContractAllowlistPermission(address(swapper), true);
 
         handler.setSubtreeBatchFillerPermission(
             address(SUBTREE_BATCH_FILLER_ADDRESS),

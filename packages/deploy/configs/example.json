@@ -4,20 +4,8 @@
   "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
   "wethAddress": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
   "protocolAllowlist": {
-    "weth": {
-      "contractAddress": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
-      "functionSignatures": [
-        "approve(address,uint256)",
-        "transfer(address,uint256)"
-      ]
-    },
-    "dai": {
-      "contractAddress": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-      "functionSignatures": [
-        "approve(address,uint256)",
-        "transfer(address,uint256)"
-      ]
-    }
+    "weth": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+    "dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
   },
   "opts": {
     "useMockSubtreeUpdateVerifier": true
