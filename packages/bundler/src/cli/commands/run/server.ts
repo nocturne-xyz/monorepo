@@ -35,10 +35,11 @@ const runServer = new Command("server")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
     const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
+    const redis = await getRedis();
     const server = new BundlerServer(
       config.tellerAddress(),
       provider,
-      getRedis(),
+      redis,
       logger
     );
 

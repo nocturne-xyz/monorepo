@@ -24,12 +24,8 @@ const runBatcher = new Command("batcher")
     const { maxLatency, batchSize, logDir, stdoutLogLevel } = options;
 
     const logger = makeLogger(logDir, "bundler", "batcher", stdoutLogLevel);
-    const batcher = new BundlerBatcher(
-      getRedis(),
-      logger,
-      maxLatency,
-      batchSize
-    );
+    const redis = await getRedis();
+    const batcher = new BundlerBatcher(redis, logger, maxLatency, batchSize);
 
     const { promise } = batcher.start();
     await promise;

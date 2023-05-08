@@ -1,10 +1,15 @@
 import IORedis from "ioredis";
 
-export function getRedis(): IORedis {
+export async function getRedis(): Promise<IORedis> {
   const redisUrl = process.env.REDIS_URL ?? "localhost:6379";
   const redisPassword = process.env.REDIS_PASSWORD;
 
-  return new IORedis(redisUrl, {
+  const redis = new IORedis(redisUrl, {
     password: redisPassword,
+    maxRetriesPerRequest: null,
+    lazyConnect: true,
   });
+
+  await redis.connect();
+  return redis;
 }

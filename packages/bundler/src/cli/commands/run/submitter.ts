@@ -40,10 +40,11 @@ const runSubmitter = new Command("submitter")
     const signingProvider = new ethers.Wallet(privateKey, provider);
 
     const logger = makeLogger(logDir, "bundler", "submitter", stdoutLogLevel);
+    const redis = await getRedis();
     const submitter = new BundlerSubmitter(
       config.tellerAddress(),
       signingProvider,
-      getRedis(),
+      redis,
       logger
     );
 
