@@ -117,9 +117,7 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransfer(receiver, value);
         } else if (assetType == AssetType.ERC721) {
-            if (value != 1) {
-                revert("ERC721 value != 1");
-            }
+            require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(address(this), receiver, id);
@@ -151,9 +149,7 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             IERC20(assetAddr).safeTransferFrom(spender, address(this), value);
         } else if (assetType == AssetType.ERC721) {
-            if (value != 1) {
-                revert("ERC721 value != 1");
-            }
+            require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
             IERC721(assetAddr).transferFrom(spender, address(this), id);
@@ -188,9 +184,7 @@ library AssetUtils {
             IERC20(assetAddr).approve(spender, 0);
             IERC20(assetAddr).approve(spender, value);
         } else if (assetType == AssetType.ERC721) {
-            if (value != 1) {
-                revert("ERC721 value != 1");
-            }
+            require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
             IERC721(assetAddr).approve(spender, id);

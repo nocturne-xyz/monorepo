@@ -33,7 +33,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     string constant CONTRACT_VERSION = "v1";
 
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
-    uint256 constant GAS_COMPENSATION = 120_000 gwei;
+    uint256 constant GAS_COMPENSATION_PER_DEPOSIT = 120_000 gwei;
 
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
@@ -167,7 +167,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 NocturneUtils.ERC20_ID,
                 depositAddr,
                 depositManager._nonce() + i,
-                GAS_COMPENSATION
+                GAS_COMPENSATION_PER_DEPOSIT
             );
         }
 
@@ -175,12 +175,13 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 totalDepositAmount = _sum(depositAmounts);
         vm.deal(
             _currentActor,
-            totalDepositAmount + (GAS_COMPENSATION * numDeposits)
+            totalDepositAmount + (GAS_COMPENSATION_PER_DEPOSIT * numDeposits)
         );
 
         vm.prank(_currentActor);
         depositManager.instantiateETHMultiDeposit{
-            value: totalDepositAmount + (GAS_COMPENSATION * numDeposits)
+            value: totalDepositAmount +
+                (GAS_COMPENSATION_PER_DEPOSIT * numDeposits)
         }(depositAmounts, depositAddr);
 
         // Update sets and sum
@@ -229,7 +230,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 NocturneUtils.ERC20_ID,
                 depositAddr,
                 depositManager._nonce() + i,
-                GAS_COMPENSATION
+                GAS_COMPENSATION_PER_DEPOSIT
             );
         }
 
@@ -238,14 +239,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         erc20.reserveTokens(_currentActor, totalDepositAmount);
 
         // Deal gas compensation
-        vm.deal(_currentActor, GAS_COMPENSATION * numDeposits);
+        vm.deal(_currentActor, GAS_COMPENSATION_PER_DEPOSIT * numDeposits);
 
         // Approve token
         vm.startPrank(_currentActor);
         erc20.approve(address(depositManager), totalDepositAmount);
 
         depositManager.instantiateErc20MultiDeposit{
-            value: GAS_COMPENSATION * numDeposits
+            value: GAS_COMPENSATION_PER_DEPOSIT * numDeposits
         }(address(erc20), depositAmounts, depositAddr);
 
         vm.stopPrank();

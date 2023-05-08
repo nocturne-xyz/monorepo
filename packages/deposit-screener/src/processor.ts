@@ -297,7 +297,7 @@ export class DepositScreenerProcessor {
           });
         break;
       default:
-        throw new Error("not supporting non-erc20 deposits");
+        throw new Error("currently only supporting erc20 deposits");
     }
 
     logger.info("waiting for receipt...");

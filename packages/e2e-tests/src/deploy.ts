@@ -340,21 +340,18 @@ async function setTestTokenCaps(
   testTokens: TestDeploymentTokens
 ): Promise<void> {
   console.log("Setting test token caps...");
-  const tx1 = await depositManager.setErc20Cap(
+  await depositManager.setErc20Cap(
     testTokens.erc20.address,
-    BigInt((2 ^ 128) - 1),
-    BigInt((2 ^ 32) - 1),
+    2n ** 32n - 1n,
+    2n ** 32n - 1n,
     18
   );
-  await tx1.wait();
-
-  const tx2 = await depositManager.setErc20Cap(
+  await depositManager.setErc20Cap(
     testTokens.gasToken.address,
-    BigInt((2 ^ 128) - 1),
-    BigInt((2 ^ 32) - 1),
+    2n ** 32n - 1n,
+    2n ** 32n - 1n,
     18
   );
-  await tx2.wait();
 }
 
 export async function deployAndWhitelistTestTokens(

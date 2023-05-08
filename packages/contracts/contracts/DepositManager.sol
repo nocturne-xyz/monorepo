@@ -116,7 +116,6 @@ contract DepositManager is
     ) {
         // Deposit value should not exceed limit on max deposit cap (uint128.max)
         require(value <= type(uint128).max, "value > uint128.max");
-        uint128 valueU128 = uint128(value);
 
         (AssetType assetType, address token, uint256 id) = AssetUtils
             .decodeAsset(encodedAsset);
@@ -137,13 +136,13 @@ contract DepositManager is
 
         // Ensure less than global cap and less than deposit size cap
         require(
-            cap.runningGlobalDeposited + valueU128 <= globalCap,
+            cap.runningGlobalDeposited + uint128(value) <= globalCap,
             "globalCap exceeded"
         );
 
         _;
 
-        _erc20Caps[token].runningGlobalDeposited += valueU128;
+        _erc20Caps[token].runningGlobalDeposited += uint128(value);
     }
 
     function setScreenerPermission(
@@ -163,6 +162,10 @@ contract DepositManager is
         require(
             globalCapWholeTokens * (10 ** precision) <= type(uint128).max,
             "globalCap > uint128.max"
+        );
+        require(
+            maxDepositSizeWholeTokens <= globalCapWholeTokens,
+            "maxDepositSize > globalCap"
         );
         _erc20Caps[token] = Erc20Cap({
             runningGlobalDeposited: 0,
