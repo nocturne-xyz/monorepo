@@ -95,6 +95,7 @@ contract DepositManagerTest is Test {
         depositManager.setScreenerPermission(SCREENER, true);
         teller.setDepositSourcePermission(address(depositManager), true);
 
+        handler.setSupportedContractAllowlistPermission(address(weth), true);
         depositManager.setErc20Cap(
             address(weth),
             GLOBAL_CAP,
@@ -107,6 +108,19 @@ contract DepositManagerTest is Test {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            handler.setSupportedContractAllowlistPermission(
+                address(ERC20s[i]),
+                true
+            );
+            handler.setSupportedContractAllowlistPermission(
+                address(ERC721s[i]),
+                true
+            );
+            handler.setSupportedContractAllowlistPermission(
+                address(ERC1155s[i]),
+                true
+            );
 
             depositManager.setErc20Cap(
                 address(ERC20s[i]),
@@ -228,6 +242,48 @@ contract DepositManagerTest is Test {
         uint256[] memory depositAmounts = new uint256[](1);
         depositAmounts[0] = depositAmount;
         depositManager.instantiateETHMultiDeposit{value: depositAmount - 1}(
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
+    function testInstantiateDepositFailureUnsupportedToken() public {
+        SimpleERC20Token token = new SimpleERC20Token();
+        token.reserveTokens(ALICE, RESERVE_AMOUNT);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), RESERVE_AMOUNT);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("!supported erc20");
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = RESERVE_AMOUNT;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
+            depositAmounts,
+            NocturneUtils.defaultStealthAddress()
+        );
+    }
+
+    function testInstantiateDepositFailureExceedsMaxDepositSize() public {
+        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
+            1;
+        SimpleERC20Token token = ERC20s[0];
+        token.reserveTokens(ALICE, overMaxSizeAmount);
+
+        vm.prank(ALICE);
+        token.approve(address(depositManager), overMaxSizeAmount);
+
+        vm.deal(ALICE, GAS_COMP_AMOUNT);
+        vm.prank(ALICE);
+        vm.expectRevert("maxDepositSize exceeded");
+
+        uint256[] memory depositAmounts = new uint256[](1);
+        depositAmounts[0] = overMaxSizeAmount;
+        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
+            address(token),
             depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
@@ -530,16 +586,35 @@ contract DepositManagerTest is Test {
         assertEq(ALICE.balance, GAS_COMP_AMOUNT * numDeposits); // TODO: screener comp so this is accurate
     }
 
-    function testCompleteDepositFailureUnsupportedToken() public {
+    // Contrieved example where asset accidentally supported in dep manager but not handler
+    function testCompleteDepositFailureUnsupportedTokenContract() public {
+        // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = new SimpleERC20Token();
+        depositManager.setErc20Cap(
+            address(token),
+            GLOBAL_CAP,
+            MAX_DEPOSIT_SIZE,
+            18
+        );
+
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
+        // Approve 50M tokens for deposit
         vm.prank(ALICE);
         token.approve(address(depositManager), RESERVE_AMOUNT);
 
+        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+            ALICE,
+            address(token),
+            RESERVE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress(),
+            depositManager._nonce(),
+            GAS_COMP_AMOUNT // 10M gas comp
+        );
+
         vm.deal(ALICE, GAS_COMP_AMOUNT);
         vm.prank(ALICE);
-        vm.expectRevert("!supported erc20");
 
         uint256[] memory depositAmounts = new uint256[](1);
         depositAmounts[0] = RESERVE_AMOUNT;
@@ -548,28 +623,18 @@ contract DepositManagerTest is Test {
             depositAmounts,
             NocturneUtils.defaultStealthAddress()
         );
-    }
 
-    function testCompleteDepositFailureExceedsMaxDepositSize() public {
-        uint256 overMaxSizeAmount = (uint256(MAX_DEPOSIT_SIZE) * (10 ** 18)) +
-            1;
-        SimpleERC20Token token = ERC20s[0];
-        token.reserveTokens(ALICE, overMaxSizeAmount);
-
-        vm.prank(ALICE);
-        token.approve(address(depositManager), overMaxSizeAmount);
-
-        vm.deal(ALICE, GAS_COMP_AMOUNT);
-        vm.prank(ALICE);
-        vm.expectRevert("maxDepositSize exceeded");
-
-        uint256[] memory depositAmounts = new uint256[](1);
-        depositAmounts[0] = overMaxSizeAmount;
-        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
-            address(token),
-            depositAmounts,
-            NocturneUtils.defaultStealthAddress()
+        bytes32 digest = depositManager.computeDigest(deposit);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        bytes memory signature = ParseUtils.rsvToSignatureBytes(
+            uint256(r),
+            uint256(s),
+            v
         );
+
+        vm.prank(SCREENER);
+        vm.expectRevert("!supported deposit asset");
+        depositManager.completeErc20Deposit(deposit, signature);
     }
 
     function testCompleteDepositFailureExceedsGlobalCap() public {

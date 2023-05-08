@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- ensure deposited and refunded assets are in allowlist and add corresponding unit tests
 - make protocol allowlist only address, remove function selector specificity
 - update invariant tests to use multideposit for erc20s and eth
 - add unit tests for multidepositing 10 deposits
