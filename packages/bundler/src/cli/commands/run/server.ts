@@ -35,8 +35,6 @@ const runServer = new Command("server")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
     const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
-
-    logger.debug("connecting to redis");
     const server = new BundlerServer(
       config.tellerAddress(),
       provider,
@@ -44,7 +42,6 @@ const runServer = new Command("server")
       logger
     );
 
-    logger.debug("starting server");
     await server.start(port);
   });
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+= add `--stdout-log-level` option to CLI
 - tag docker images with nocturnelabs org name
 - scan through all insertions starting from index 0 when recovering
 - take handler address via config in CLI via `--config-name-or-path`

@@ -16,7 +16,7 @@ services:
       context: ../..
       dockerfile: packages/bundler/Dockerfile
     restart: always
-    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3000 --log-dir /logs/bundler-server --stdout-log-level debug"
+    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3000 --log-dir /logs/bundler-server --stdout-log-level info"
     environment:
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
