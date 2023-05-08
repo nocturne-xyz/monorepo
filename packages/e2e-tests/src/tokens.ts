@@ -1,4 +1,3 @@
-import { ProtocolAllowlist } from "@nocturne-xyz/config";
 import {
   Handler,
   SimpleERC1155Token__factory,
@@ -23,7 +22,7 @@ export async function deployAndWhitelistERC20(
 
   const erc20 = await new SimpleERC20Token__factory(eoa).deploy();
 
-  const whitelistEntries: ProtocolAllowlist = new Map([
+  const whitelistEntries = new Map([
     [
       "erc20", // dummy name
       erc20.address,
@@ -52,7 +51,7 @@ export async function deployAndWhitelistERC721(
 
   const erc721 = await new SimpleERC721Token__factory(eoa).deploy();
 
-  const whitelistEntries: ProtocolAllowlist = new Map([
+  const whitelistEntries = new Map([
     [
       "erc721", // dummy name
       erc721.address,
@@ -81,7 +80,7 @@ export async function deployAndWhitelistERC1155(
 
   const erc1155 = await new SimpleERC1155Token__factory(eoa).deploy();
 
-  const whitelistEntries: ProtocolAllowlist = new Map([
+  const whitelistEntries = new Map([
     [
       "erc1155", // dummy name
       erc1155.address,

@@ -29,28 +29,28 @@
     "depositSources": ["0x51401dc811bb5740090279Ba06cfA8fcF6113778"],
     "screeners": ["0x1111beB3B2C4f22Ee086B2b38C1476A3cE7f78E8"]
   },
-  "protocolAllowlist": [
-    ["weth", "0xb16f35c0ae2912430dac15764477e179d9b9ebea"],
-    ["dai", "0x6B175474E89094C44Da98b954EedeAC495271d0F"]
-  ],
-  "gasAssets": [
-    ["weth", "0xDe09E74d4888Bc4e65F589e8c13Bce9F71DdF4c7"],
-    ["dai", "0xA3183498b579bd228aa2B62101C40CC1da978F24"]
-  ],
-  "rateLimits": [
+  "erc20s": [
     [
       "weth",
       {
-        "perAddress": "5000000000000000000n",
-        "global": "500000000000000000000n"
+        "address": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
+        "globalCap": "250000000000000000000n",
+        "maxDepositSize": "25000000000000000000n",
+        "isGasAsset": true
       }
     ],
     [
       "dai",
       {
-        "perAddress": "10000000000000000000000n",
-        "global": "1000000000000000000000000n"
+        "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        "globalCap": "500000000000000000000000n",
+        "maxDepositSize": "50000000000000000000000n",
+        "isGasAsset": true
       }
     ]
+  ],
+  "protocolAllowlist": [
+    ["weth", "0xb16f35c0ae2912430dac15764477e179d9b9ebea"],
+    ["dai", "0x6B175474E89094C44Da98b954EedeAC495271d0F"]
   ]
 }

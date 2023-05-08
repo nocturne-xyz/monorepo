@@ -42,9 +42,9 @@ export class NocturneWalletSDK {
       config = configOrNetworkName;
     }
 
-    this.gasAssets = Array.from(config.gasAssets.values()).map((address) =>
-      AssetTrait.erc20AddressToAsset(address)
-    );
+    this.gasAssets = Array.from(config.erc20s.values())
+      .filter((config) => config.isGasAsset)
+      .map(({ address }) => AssetTrait.erc20AddressToAsset(address));
 
     this.signer = signer;
     this.handlerContract = Handler__factory.connect(

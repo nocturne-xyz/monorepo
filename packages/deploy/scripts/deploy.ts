@@ -7,10 +7,8 @@ import { checkNocturneContractDeployment } from "../src/checks";
 import * as JSON from "bigint-json-serialization";
 import { Handler__factory } from "@nocturne-xyz/contracts";
 import { whitelistProtocols } from "../src/whitelist";
-import {
-  NocturneContractDeployment,
-  ProtocolAllowlist,
-} from "@nocturne-xyz/config";
+import { NocturneContractDeployment } from "@nocturne-xyz/config";
+import { Address } from "@nocturne-xyz/sdk";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
@@ -19,7 +17,7 @@ dotenv.config();
 
 interface DeploymentAndAllowlist {
   deployment: NocturneContractDeployment;
-  protocolAllowlist: ProtocolAllowlist;
+  protocolAllowlist: Map<string, Address>;
 }
 
 (async () => {

@@ -1,4 +1,3 @@
-import { ProtocolAllowlist } from "@nocturne-xyz/config";
 import { Address } from "./utils";
 import { ProxyAdmin } from "@nocturne-xyz/contracts";
 
@@ -7,7 +6,8 @@ export interface NocturneDeployConfig {
   screeners: Address[];
   subtreeBatchFillers: Address[];
   wethAddress: Address;
-  protocolAllowlist: ProtocolAllowlist;
+  // erc20s: Erc20DeployConfig[];
+  protocolAllowlist: Map<string, Address>;
   opts?: NocturneDeployOpts;
 }
 

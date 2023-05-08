@@ -5,35 +5,32 @@ import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
-export interface RateLimit {
-  perAddress: bigint;
-  global: bigint;
+interface Erc20Config {
+  address: Address;
+  globalCapWholeTokens: bigint;
+  maxDepositSizeWholeTokens: bigint;
+  precision: bigint;
+  isGasAsset: boolean;
 }
-
-export type ProtocolAllowlist = Map<string, Address>;
 
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;
+  erc20s: [string, Erc20Config][]; // ticker -> erc20 config
   protocolAllowlist: [string, Address][]; // name -> entry
-  gasAssets: [string, string][]; // ticker -> address
-  rateLimits: [string, RateLimit][]; // ticker -> rate limit
 }
 
 export class NocturneConfig {
   contracts: NocturneContractDeployment;
-  gasAssets: Map<string, string>; // ticker -> address
-  rateLimits: Map<string, RateLimit>; // ticker -> rate limit
-  protocolAllowlist: ProtocolAllowlist;
+  erc20s: Map<string, Erc20Config>; // ticker -> erc20 config
+  protocolAllowlist: Map<string, Address>;
 
   constructor(
     contracts: NocturneContractDeployment,
-    protocolAllowlist: ProtocolAllowlist,
-    gasAssets: Map<string, string>,
-    rateLimits: Map<string, RateLimit>
+    erc20s: Map<string, Erc20Config>,
+    protocolAllowlist: Map<string, Address>
   ) {
     this.contracts = contracts;
-    this.gasAssets = gasAssets;
-    this.rateLimits = rateLimits;
+    this.erc20s = erc20s;
     this.protocolAllowlist = protocolAllowlist;
   }
 
@@ -44,9 +41,8 @@ export class NocturneConfig {
 
     return new NocturneConfig(
       obj.contracts,
-      new Map(obj.protocolAllowlist),
-      new Map(obj.gasAssets),
-      new Map(obj.rateLimits)
+      new Map(obj.erc20s),
+      new Map(obj.protocolAllowlist)
     );
   }
 
@@ -58,9 +54,8 @@ export class NocturneConfig {
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
+      erc20s: Array.from(this.erc20s.entries()),
       protocolAllowlist: Array.from(this.protocolAllowlist.entries()),
-      gasAssets: Array.from(this.gasAssets.entries()),
-      rateLimits: Array.from(this.rateLimits.entries()),
     });
   }
 
@@ -76,12 +71,8 @@ export class NocturneConfig {
     return this.contracts.depositManagerProxy.proxy;
   }
 
-  gasAsset(ticker: string): Address | undefined {
-    return this.gasAssets.get(ticker);
-  }
-
-  rateLimit(ticker: string): RateLimit | undefined {
-    return this.rateLimits.get(ticker);
+  erc20(ticker: string): Erc20Config | undefined {
+    return this.erc20s.get(ticker);
   }
 
   startBlock(): number {

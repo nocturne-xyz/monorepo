@@ -20,14 +20,9 @@ import {
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 
-export type NocturneDeployConfigWithoutAllowlist = Omit<
-  NocturneDeployConfig,
-  "protocolAllowlist"
->;
-
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
-  config: NocturneDeployConfigWithoutAllowlist
+  config: NocturneDeployConfig
 ): Promise<NocturneContractDeployment> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
@@ -151,9 +146,14 @@ export async function deployNocturne(
   };
 }
 
+// export async function maybeDeployErc20s(
+//   connectedSigner: ethers.Wallet,
+//   config: NocturneDeployConfig
+// ): Promise
+
 export async function relinquishContractOwnership(
   connectedSigner: ethers.Wallet,
-  config: NocturneDeployConfigWithoutAllowlist,
+  config: NocturneDeployConfig,
   deployment: NocturneContractDeployment
 ): Promise<void> {
   const { opts } = config;
