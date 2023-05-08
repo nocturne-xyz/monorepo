@@ -1444,78 +1444,106 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
-    // Ensure op fails if it calls non-allowed contract
+    // Ensure op fails if it calls non-allowed swapper contract
     function testProcessBundleNonAllowedContract() public {
-        // Deploy new (non-whitelisted) token instead
-        SimpleERC20Token token = new SimpleERC20Token();
-        reserveAndDepositFunds(ALICE, token, 2 * PER_NOTE_AMOUNT);
+        SimpleERC20Token tokenIn = ERC20s[0];
+        reserveAndDepositFunds(ALICE, tokenIn, PER_NOTE_AMOUNT);
 
-        // Create transaction to send 3 * 50M even though only 2 * 50M is being
-        // taken up by teller
+        TokenSwapper swapper = new TokenSwapper();
+
+        Action[] memory actions = new Action[](2);
+
+        // Approve swapper to transfer tokens
+        actions[0] = Action({
+            contractAddress: address(tokenIn),
+            encodedFunction: abi.encodeWithSelector(
+                tokenIn.approve.selector,
+                address(swapper),
+                PER_NOTE_AMOUNT
+            )
+        });
+
+        // Call swapper.swap, asking for erc20/721/1155 tokens back
+        SimpleERC20Token erc20Out = ERC20s[1];
+        SimpleERC721Token erc721Out = ERC721s[1];
+        SimpleERC1155Token erc1155Out = ERC1155s[1];
+
+        uint256 erc721OutId = 0x1;
+        uint256 erc1155OutId = 0x2;
+
+        actions[1] = Action({
+            contractAddress: address(swapper),
+            encodedFunction: abi.encodeWithSelector(
+                swapper.swap.selector,
+                SwapRequest({
+                    assetInOwner: address(handler),
+                    encodedAssetIn: AssetUtils.encodeAsset(
+                        AssetType.ERC20,
+                        address(tokenIn),
+                        ERC20_ID
+                    ),
+                    assetInAmount: PER_NOTE_AMOUNT,
+                    erc20Out: address(erc20Out),
+                    erc20OutAmount: PER_NOTE_AMOUNT,
+                    erc721Out: address(erc721Out),
+                    erc721OutId: erc721OutId,
+                    erc1155Out: address(erc1155Out),
+                    erc1155OutId: erc1155OutId,
+                    erc1155OutAmount: PER_NOTE_AMOUNT
+                })
+            )
+        });
+
+        // Encode erc20Out as refund asset
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(erc20Out),
+            ERC20_ID
+        );
+
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
+                joinSplitToken: tokenIn,
+                gasToken: tokenIn,
                 root: handler.root(),
                 joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
                     PER_NOTE_AMOUNT,
-                    2
+                    1
                 ),
-                encodedRefundAssets: new EncodedAsset[](0),
+                encodedRefundAssets: encodedRefundAssets,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 2,
-                gasPrice: 50,
-                actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
-                    BOB,
-                    3 * PER_NOTE_AMOUNT
-                ), // Transfer amount exceeds withdrawn
-                atomicActions: true,
+                maxNumRefunds: 4, // 4 refund assets (including joinsplit)
+                gasPrice: 0,
+                actions: actions,
+                atomicActions: false,
                 operationFailureType: OperationFailureType.NONE
             })
         );
 
+        // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
+        assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(0));
+        assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
-            token.balanceOf(address(teller)),
-            uint256(2 * PER_NOTE_AMOUNT)
+            erc1155Out.balanceOf(address(teller), erc1155OutId),
+            uint256(0)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
-        assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertEq(token.balanceOf(address(BOB)), uint256(0));
+        assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call non-allowed protocol",
+                maybeFailureReason: "!supported refund asset",
                 assetsUnwrapped: true
             })
         );
 
-        vm.prank(BUNDLER);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
-        // op processed = false, whole op reverted
+        // One op, processed = false
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
-        assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].callSuccesses.length, uint256(0));
-        assertEq(opResults[0].callResults.length, uint256(0));
-        assert(
-            ParseUtils.hasSubstring(
-                string(opResults[0].failureReason),
-                "Cannot call non-allowed protocol"
-            )
-        );
-
-        // Alice lost some private balance due to bundler comp. Bundler has a
-        // little bit of tokens.
-        assertLt(
-            token.balanceOf(address(teller)),
-            uint256(2 * PER_NOTE_AMOUNT)
-        );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
-        assertEq(token.balanceOf(address(ALICE)), uint256(0));
-        assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
 
     function testProcessBundleSuccessfulAllRefunds() public {

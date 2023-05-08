@@ -10,6 +10,7 @@ import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/Groth16.sol";
 import {BalanceManager} from "./BalanceManager.sol";
+import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
 contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
@@ -93,7 +94,12 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     function handleDeposit(
         DepositRequest calldata deposit
     ) external override whenNotPaused onlyTeller {
-        // TODO: ensure asset is whitelisted
+        (, address assetAddr, ) = AssetUtils.decodeAsset(deposit.encodedAsset);
+        require(
+            _supportedContractAllowlist[assetAddr],
+            "!supported deposit asset"
+        );
+
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
     }
@@ -131,6 +137,17 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
     {
         require(op.chainId == block.chainid, "invalid chainid");
         require(block.timestamp <= op.deadline, "expired deadline");
+
+        // Ensure refund assets supported
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+            (, address assetAddr, ) = AssetUtils.decodeAsset(
+                op.encodedRefundAssets[i]
+            );
+            require(
+                _supportedContractAllowlist[assetAddr],
+                "!supported refund asset"
+            );
+        }
 
         // Handle all joinsplit transctions.
         /// @dev This reverts if nullifiers in op.joinSplits are not fresh
