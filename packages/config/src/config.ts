@@ -5,7 +5,7 @@ import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
 
-interface Erc20Config {
+export interface Erc20Config {
   address: Address;
   globalCapWholeTokens: bigint;
   maxDepositSizeWholeTokens: bigint;

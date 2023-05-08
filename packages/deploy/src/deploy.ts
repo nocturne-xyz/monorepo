@@ -10,6 +10,9 @@ import {
   Handler__factory,
   Teller__factory,
   DepositManager__factory,
+  SimpleERC20Token__factory,
+  DepositManager,
+  Handler,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { ProxiedContract } from "./proxy";
@@ -17,16 +20,51 @@ import {
   ProxyKind,
   TransparentProxyAddresses,
   NocturneContractDeployment,
+  Erc20Config,
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
+import { NocturneConfigProperties } from "@nocturne-xyz/config/dist/src/config";
+import { Address } from "./utils";
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneContractDeployment> {
+): Promise<NocturneConfigProperties> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
 
+  console.log("erc20s at beginning:", config.erc20s);
+
+  const erc20s = await maybeDeployErc20s(connectedSigner, config.erc20s);
+  config.erc20s = erc20s;
+
+  const contracts = await deployNocturneCoreContracts(connectedSigner, config);
+
+  const depositManager = DepositManager__factory.connect(
+    contracts.depositManagerProxy.proxy,
+    connectedSigner
+  );
+  await setErc20Caps(depositManager, config);
+
+  const handler = Handler__factory.connect(
+    contracts.handlerProxy.proxy,
+    connectedSigner
+  );
+  await whitelistProtocols(connectedSigner, config.protocolAllowlist, handler);
+
+  await relinquishContractOwnership(connectedSigner, config, contracts);
+
+  return {
+    contracts,
+    erc20s: Array.from(erc20s.entries()),
+    protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
+  };
+}
+
+export async function deployNocturneCoreContracts(
+  connectedSigner: ethers.Wallet,
+  config: NocturneDeployConfig
+): Promise<NocturneContractDeployment> {
   console.log("\ngetting network...");
   const { name, chainId } = await connectedSigner.provider.getNetwork();
   console.log("\nfetching current block number...");
@@ -146,10 +184,68 @@ export async function deployNocturne(
   };
 }
 
-// export async function maybeDeployErc20s(
-//   connectedSigner: ethers.Wallet,
-//   config: NocturneDeployConfig
-// ): Promise
+async function maybeDeployErc20s(
+  connectedSigner: ethers.Wallet,
+  erc20s: Map<string, Erc20Config>
+): Promise<Map<string, Erc20Config>> {
+  let ret = new Map(Array.from(erc20s.entries()));
+  const iSimpleErc20 = new SimpleERC20Token__factory(connectedSigner);
+
+  for (let [name, config] of Array.from(ret)) {
+    if (!ethers.utils.isAddress(config.address)) {
+      throw new Error(
+        `invalid address for ${name}. address: ${config.address}`
+      );
+    }
+
+    if (config.address == "0x0000000000000000000000000000000000000000") {
+      console.log(`deploying erc20 ${name}...`);
+      config.address = (await iSimpleErc20.deploy()).address;
+      ret.set(name, config);
+    }
+  }
+
+  return ret;
+}
+
+async function setErc20Caps(
+  depositManager: DepositManager,
+  config: NocturneDeployConfig
+): Promise<void> {
+  console.log("\nsetting deposit manager erc20 caps...");
+  for (const [name, erc20Config] of Array.from(config.erc20s)) {
+    console.log(`setting erc20 cap for ${name}...`);
+    const tx = await depositManager.setErc20Cap(
+      erc20Config.address,
+      erc20Config.globalCapWholeTokens,
+      erc20Config.maxDepositSizeWholeTokens,
+      erc20Config.precision
+    );
+    await tx.wait(config.opts?.confirmations);
+  }
+}
+
+export async function whitelistProtocols(
+  connectedSigner: ethers.Wallet,
+  protocolWhitelist: Map<string, Address>,
+  handler: Handler
+): Promise<void> {
+  handler = handler.connect(connectedSigner);
+
+  console.log("whitelisting protocols...");
+  for (const [name, contractAddress] of Array.from(protocolWhitelist)) {
+    if (!(await handler._supportedContractAllowlist(contractAddress))) {
+      console.log(
+        `whitelisting protocol: ${name}. address: ${contractAddress}.`
+      );
+      const tx = await handler.setSupportedContractAllowlistPermission(
+        contractAddress,
+        true
+      );
+      await tx.wait(1);
+    }
+  }
+}
 
 export async function relinquishContractOwnership(
   connectedSigner: ethers.Wallet,
