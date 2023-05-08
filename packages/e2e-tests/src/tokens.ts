@@ -1,4 +1,4 @@
-import { ProtocolWhitelistEntry } from "@nocturne-xyz/config";
+import { ProtocolAllowlist } from "@nocturne-xyz/config";
 import {
   Handler,
   SimpleERC1155Token__factory,
@@ -23,16 +23,10 @@ export async function deployAndWhitelistERC20(
 
   const erc20 = await new SimpleERC20Token__factory(eoa).deploy();
 
-  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+  const whitelistEntries: ProtocolAllowlist = new Map([
     [
       "erc20", // dummy name
-      {
-        contractAddress: erc20.address,
-        functionSignatures: [
-          "transfer(address,uint256)",
-          "approve(address,uint256)",
-        ],
-      },
+      erc20.address,
     ],
   ]);
 
@@ -58,13 +52,10 @@ export async function deployAndWhitelistERC721(
 
   const erc721 = await new SimpleERC721Token__factory(eoa).deploy();
 
-  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+  const whitelistEntries: ProtocolAllowlist = new Map([
     [
       "erc721", // dummy name
-      {
-        contractAddress: erc721.address,
-        functionSignatures: ["reserveToken(address,uint256)"],
-      },
+      erc721.address,
     ],
   ]);
 
@@ -90,13 +81,10 @@ export async function deployAndWhitelistERC1155(
 
   const erc1155 = await new SimpleERC1155Token__factory(eoa).deploy();
 
-  const whitelistEntries: Map<string, ProtocolWhitelistEntry> = new Map([
+  const whitelistEntries: ProtocolAllowlist = new Map([
     [
       "erc1155", // dummy name
-      {
-        contractAddress: erc1155.address,
-        functionSignatures: ["reserveTokens(address,uint256,uint256)"],
-      },
+      erc1155.address,
     ],
   ]);
 
