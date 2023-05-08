@@ -593,13 +593,6 @@ contract DepositManagerTest is Test {
 
         // Deploy and dep manager whitelist new token but not in handler
         SimpleERC20Token token = new SimpleERC20Token();
-        depositManager.setErc20Cap(
-            address(token),
-            GLOBAL_CAP,
-            MAX_DEPOSIT_SIZE,
-            18
-        );
-
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
 
         // Approve 50M tokens for deposit
@@ -616,20 +609,6 @@ contract DepositManagerTest is Test {
             GAS_COMP_AMOUNT // 10M gas comp
         );
 
-        vm.deal(ALICE, GAS_COMP_AMOUNT);
-        vm.prank(ALICE);
-
-        uint256[] memory depositAmounts = new uint256[](1);
-        depositAmounts[0] = RESERVE_AMOUNT;
-        depositManager.instantiateErc20MultiDeposit{value: GAS_COMP_AMOUNT}(
-            address(token),
-        );
-
-            RESERVE_AMOUNT,
-            NocturneUtils.ERC20_ID,
-            NocturneUtils.defaultStealthAddress(),
-            depositManager._nonce(),
-            GAS_COMP_AMOUNT // 10M gas comp
         vm.prank(ALICE);
         vm.expectRevert("!supported deposit asset");
         teller.depositFunds(deposit);
