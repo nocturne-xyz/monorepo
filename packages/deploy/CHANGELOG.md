@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- protocol whitelisting removes function selectors
 - add deploy config for sepolia
 - separate ownership transferral from contract deployment
 - add `whitelistProtocols` function

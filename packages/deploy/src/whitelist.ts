@@ -10,19 +10,16 @@ export async function whitelistProtocols(
   handler = handler.connect(connectedSigner);
 
   console.log("whitelisting protocols...");
-  for (const [name, entry] of Array.from(protocolWhitelist)) {
-    const { contractAddress, functionSignatures } = entry;
-    for (const signature of functionSignatures) {
-      if (!(await handler._supportedContractAllowlist(contractAddress))) {
-        console.log(
-          `whitelisting protocol: ${name}. address: ${contractAddress}. signature: ${signature}.`
-        );
-        const tx = await handler.setSupportedContractAllowlistPermission(
-          contractAddress,
-          true
-        );
-        await tx.wait(1);
-      }
+  for (const [name, contractAddress] of Array.from(protocolWhitelist)) {
+    if (!(await handler._supportedContractAllowlist(contractAddress))) {
+      console.log(
+        `whitelisting protocol: ${name}. address: ${contractAddress}.`
+      );
+      const tx = await handler.setSupportedContractAllowlistPermission(
+        contractAddress,
+        true
+      );
+      await tx.wait(1);
     }
   }
 }

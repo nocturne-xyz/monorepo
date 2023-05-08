@@ -10,16 +10,11 @@ export interface RateLimit {
   global: bigint;
 }
 
-export interface ProtocolWhitelistEntry {
-  contractAddress: Address;
-  functionSignatures: string[];
-}
-
-export type ProtocolAllowlist = Map<string, ProtocolWhitelistEntry>;
+export type ProtocolAllowlist = Map<string, Address>;
 
 export interface NocturneConfigProperties {
   contracts: NocturneContractDeployment;
-  protocolAllowlist: [string, ProtocolWhitelistEntry][]; // name -> entry
+  protocolAllowlist: [string, Address][]; // name -> entry
   gasAssets: [string, string][]; // ticker -> address
   rateLimits: [string, RateLimit][]; // ticker -> rate limit
 }
