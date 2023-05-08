@@ -32,10 +32,7 @@ export class ClosableAsyncIterator<T> {
   // if `exact` is set to `false`, upon closing, any leftover elements will be emitted
   // that aren't enough to fill a batch will be emitted as a final batch of size < `batchSize`.
   // if `exact` is set to true, then any leftover elements will be discarded.
-  batches(
-    batchSize: number,
-    exact: boolean = false
-  ): ClosableAsyncIterator<T[]> {
+  batches(batchSize: number, exact = false): ClosableAsyncIterator<T[]> {
     const thisIter = this.iter;
     const batched = async function* () {
       let batch: T[] = [];
