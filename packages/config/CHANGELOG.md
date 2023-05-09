@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- add unit test for serializing/deserializing config
+- remove `ProtocolAllowlist` alias
+- fix existing example and sepolia configs to fit new schema
+- remove gas assets + rate limits and consolidate info around contracts, erc20s, and whitelisted protocols
 - protocol whitelist field removes function selectors
 - create separate `docker-compose.local.yml` and `docker-compose.dev.yml` where `dev` version pulls from docker hub
 - add config for newly deployed sepolia contracts

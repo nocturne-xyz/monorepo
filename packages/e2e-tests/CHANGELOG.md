@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- integrate simplified deploy script now that deploy pkg exported function handles everything including token deployment and whitelisting
 - pass map of name to address for protocol whitelisting after removing fn selectors
 - use multideposit after deposit manager changes
 - add small function to set deposit caps to deposit manager (will be replaced by deploy script refactor to include cap setting + whitelisting all in `deployNocturne`)

@@ -335,11 +335,10 @@ export async function deployContractsWithDummyConfig(
   };
 
   const config = await deployNocturne(connectedSigner, deployConfig);
-  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
-
   checkNocturneDeployment(config, connectedSigner.provider);
 
   // Log for dev site script
+  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
