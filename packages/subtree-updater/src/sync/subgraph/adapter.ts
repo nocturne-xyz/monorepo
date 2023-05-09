@@ -37,7 +37,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     const generator = async function* () {
       let from = startMerkleIndex;
       while (!closed) {
-        let to = from + chunkSize;
+        const to = from + chunkSize;
 
         // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
