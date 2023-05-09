@@ -40,7 +40,7 @@ contract DepositManagerTest is Test {
     address SCREENER = vm.addr(SCREENER_PRIVKEY);
 
     uint256 constant RESERVE_AMOUNT = 50_000_000;
-    uint256 constant GAS_COMP_AMOUNT = 10_000_000;
+    uint256 constant GAS_COMP_AMOUNT = 150_000 * 50 gwei;
 
     uint32 constant MAX_DEPOSIT_SIZE = 100_000_000;
     uint32 constant GLOBAL_CAP = 1_000_000_000;
@@ -467,6 +467,7 @@ contract DepositManagerTest is Test {
         );
 
         vm.prank(SCREENER);
+        vm.txGasPrice(50 gwei); // average gas used 90k so x 50 (gwei) = 4.5M gwei
         depositManager.completeErc20Deposit(deposit, signature);
 
         // Deposit hash marked false again
@@ -476,13 +477,10 @@ contract DepositManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), RESERVE_AMOUNT);
         assertEq(token.balanceOf(address(depositManager)), 0);
 
-        // TODO: We want to check that some gas went to screener and rest went
-        // back to ALICE. Currently unable to because we can't set tx.gasprice
-        // in foundry. once added we should check logic for screener
-        // compensation. For now we assume all goes back to user.
+        // Ensure bundler has > 0 eth but ALICE has < GAS_COMP_AMOUNT eth
         assertEq(address(depositManager).balance, 0);
-        assertEq(SCREENER.balance, 0);
-        assertEq(ALICE.balance, GAS_COMP_AMOUNT);
+        assertGt(SCREENER.balance, 0);
+        assertLt(ALICE.balance, GAS_COMP_AMOUNT);
     }
 
     function testCompleteDepositSuccessMulti() public {
@@ -555,7 +553,7 @@ contract DepositManagerTest is Test {
         }
 
         for (uint256 i = 0; i < numDeposits; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit(true, true, true, false);
             emit DepositCompleted(
                 deposits[i].spender,
                 deposits[i].encodedAsset,
@@ -566,6 +564,7 @@ contract DepositManagerTest is Test {
             );
 
             vm.prank(SCREENER);
+            vm.txGasPrice(50 gwei);
             depositManager.completeErc20Deposit(deposits[i], signatures[i]);
 
             // Deposit hash marked false again
@@ -582,8 +581,8 @@ contract DepositManagerTest is Test {
         assertEq(token.balanceOf(address(depositManager)), 0);
 
         assertEq(address(depositManager).balance, 0);
-        assertEq(SCREENER.balance, 0);
-        assertEq(ALICE.balance, GAS_COMP_AMOUNT * numDeposits); // TODO: screener comp so this is accurate
+        assertGt(SCREENER.balance, 0);
+        assertLt(ALICE.balance, GAS_COMP_AMOUNT * numDeposits);
     }
 
     // Token not supported in handler

@@ -342,12 +342,14 @@ contract DepositManager is
 
         // NOTE: screener may be under-compensated for gas during spikes in
         // demand.
-        // NOTE: only case where screener takes more gas than it actually spent
-        // is when gasComp exactly equals req.gasCompensation (can ignore edge
-        // case and not over complicate logic)
-        uint256 gasComp = preDepositGas - gasleft() + TWO_ETH_TRANSFERS_GAS;
+        // NOTE: only case where screener takes more gas than it actually spent is when
+        // gasUsage * tx.gasprice > req.gasCompensation. If
+        // gasUsage * tx.gasprice > req.gasCompensation then there is only enough comp for one ETH
+        // transfer, in which case all gasComp might as well go to screener instead of being left
+        // in contract
+        uint256 gasUsage = preDepositGas - gasleft() + TWO_ETH_TRANSFERS_GAS;
         uint256 actualGasComp = Utils.min(
-            gasComp * tx.gasprice,
+            gasUsage * tx.gasprice,
             req.gasCompensation
         );
         if (actualGasComp > 0) {
@@ -371,7 +373,7 @@ contract DepositManager is
             req.value,
             req.depositAddr,
             req.nonce,
-            req.gasCompensation
+            actualGasComp
         );
     }
 }
