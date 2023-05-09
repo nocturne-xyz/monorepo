@@ -4,17 +4,15 @@ import {
   IterSyncOpts,
   min,
   sleep,
-  fetchNotes,
   IncludedNote,
   IncludedNoteCommitment,
-  NoteTrait,
-  IncludedEncryptedNote,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
+import { fetchNotesOrCommitments } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-const MAX_CHUNK_SIZE = 10000;
+const MAX_CHUNK_SIZE = 100_000;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
@@ -26,52 +24,34 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   iterInsertions(
-    startBlock: number,
+    startMerkleIndex: number,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;
 
-    const endBlock = opts?.endBlock;
     let closed = false;
 
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startBlock;
-      while (!closed && (!endBlock || from < endBlock)) {
+      let from = startMerkleIndex;
+      while (!closed) {
         let to = from + chunkSize;
-
-        // Only fetch up to end block
-        if (endBlock) {
-          to = min(to, endBlock);
-        }
 
         // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        to = min(to, latestIndexedBlock);
 
-        // Exceeded tip, sleep
-        if (latestIndexedBlock <= from) {
+        console.log(`fetching notes from merkle index ${from} to ${to}...`);
+        const noteOrCommitments: (IncludedNote | IncludedNoteCommitment)[] =
+          await fetchNotesOrCommitments(endpoint, from, to, latestIndexedBlock);
+
+        // if none were returned, then we've reached the end of the tree
+        // sleep and wait for more insertions
+        if (noteOrCommitments.length === 0) {
           await sleep(5_000);
           continue;
         }
-
-        console.log(`fetching notes from ${from} to ${to}...`);
-        const notes: (IncludedNote | IncludedEncryptedNote)[] =
-          await fetchNotes(endpoint, from, to);
-
-        const noteOrCommitments: (IncludedNote | IncludedNoteCommitment)[] =
-          notes.map((note) => {
-            if (NoteTrait.isEncryptedNote(note)) {
-              return {
-                noteCommitment: (note as IncludedEncryptedNote).commitment,
-                merkleIndex: (note as IncludedEncryptedNote).merkleIndex,
-              };
-            } else {
-              return note as IncludedNote;
-            }
-          });
 
         for (const noteOrCommitment of noteOrCommitments) {
           yield noteOrCommitment;
