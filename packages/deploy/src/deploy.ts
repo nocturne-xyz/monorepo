@@ -33,23 +33,28 @@ export async function deployNocturne(
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
 
-  console.log("erc20s at beginning:", config.erc20s);
-
+  // Maybe deploy erc20s
   const erc20s = await maybeDeployErc20s(connectedSigner, config.erc20s);
   config.erc20s = erc20s;
 
+  // Deploy core contracts
   const contracts = await deployNocturneCoreContracts(connectedSigner, config);
 
+  // Set erc20 caps
   const depositManager = DepositManager__factory.connect(
     contracts.depositManagerProxy.proxy,
     connectedSigner
   );
   await setErc20Caps(depositManager, config);
 
+  // Whitelist protocols and erc20s
   const handler = Handler__factory.connect(
     contracts.handlerProxy.proxy,
     connectedSigner
   );
+  for (const [name, erc20Config] of Array.from(config.erc20s)) {
+    config.protocolAllowlist.set(name, erc20Config.address);
+  }
   await whitelistProtocols(connectedSigner, config.protocolAllowlist, handler);
 
   await relinquishContractOwnership(connectedSigner, config, contracts);

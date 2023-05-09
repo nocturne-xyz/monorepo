@@ -1,15 +1,40 @@
 import {
+  DepositManager,
   DepositManager__factory,
+  Handler,
   Handler__factory,
   ProxyAdmin__factory,
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
-import { NocturneContractDeployment } from "@nocturne-xyz/config";
+import { Erc20Config, NocturneContractDeployment } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
-import { assertOrErr } from "./utils";
+import { Address, assertOrErr } from "./utils";
+import { NocturneConfigProperties } from "@nocturne-xyz/config/dist/src/config";
 
-export async function checkNocturneContractDeployment(
+export async function checkNocturneDeployment(
+  config: NocturneConfigProperties,
+  provider: ethers.providers.Provider
+): Promise<void> {
+  const depositManager = DepositManager__factory.connect(
+    config.contracts.depositManagerProxy.proxy,
+    provider
+  );
+  const handler = Handler__factory.connect(
+    config.contracts.handlerProxy.proxy,
+    provider
+  );
+
+  await checkNocturneContracts(config.contracts, provider);
+  await checkErc20Caps(depositManager, config.erc20s);
+  await checkProtocolAllowlist(
+    handler,
+    config.erc20s,
+    config.protocolAllowlist
+  );
+}
+
+async function checkNocturneContracts(
   deployment: NocturneContractDeployment,
   provider: ethers.providers.Provider
 ): Promise<void> {
@@ -122,4 +147,54 @@ export async function checkNocturneContractDeployment(
   );
 
   // TODO: is there a way to check subtree update verifier?
+}
+
+async function checkErc20Caps(
+  depositManager: DepositManager,
+  erc20s: [string, Erc20Config][]
+): Promise<void> {
+  for (const [ticker, config] of erc20s) {
+    const { globalCapWholeTokens, maxDepositSizeWholeTokens, precision } =
+      await depositManager._erc20Caps(config.address);
+    assertOrErr(
+      BigInt(globalCapWholeTokens) === config.globalCapWholeTokens,
+      `global cap for ${ticker} does not match config: ${BigInt(
+        globalCapWholeTokens
+      )} != ${config.globalCapWholeTokens}`
+    );
+    assertOrErr(
+      BigInt(maxDepositSizeWholeTokens) === config.maxDepositSizeWholeTokens,
+      `max deposit size for ${ticker} does not match config: ${BigInt(
+        maxDepositSizeWholeTokens
+      )} != ${config.maxDepositSizeWholeTokens}`
+    );
+    assertOrErr(
+      BigInt(precision) === config.precision,
+      `precision for ${ticker} does not match config: ${BigInt(precision)} != ${
+        config.precision
+      }`
+    );
+  }
+}
+
+async function checkProtocolAllowlist(
+  handler: Handler,
+  erc20s: [string, Erc20Config][],
+  protocolAllowlist: [string, Address][]
+): Promise<void> {
+  for (const [ticker, { address }] of erc20s) {
+    const isOnAllowlist = await handler._supportedContractAllowlist(address);
+    assertOrErr(
+      isOnAllowlist,
+      `erc20 ${ticker} is not on the allowlist. Address: ${address}`
+    );
+  }
+
+  for (const [name, address] of protocolAllowlist) {
+    const isOnAllowlist = await handler._supportedContractAllowlist(address);
+    assertOrErr(
+      isOnAllowlist,
+      `Protocol ${name} is not on the allowlist. Address: ${address}`
+    );
+  }
 }

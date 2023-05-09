@@ -4,6 +4,7 @@ import { deployNocturne } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
+import { checkNocturneDeployment } from "../src/checks";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
@@ -31,6 +32,8 @@ dotenv.config();
 
   const nocturneConfig = await deployNocturne(deployer, config);
   console.log(nocturneConfig);
+
+  await checkNocturneDeployment(nocturneConfig, provider);
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
