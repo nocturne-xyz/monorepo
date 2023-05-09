@@ -334,24 +334,20 @@ export async function deployContractsWithDummyConfig(
     },
   };
 
-  const configProperties = await deployNocturne(connectedSigner, deployConfig);
-  const { depositManagerProxy, tellerProxy, handlerProxy } =
-    configProperties.contracts;
+  const config = await deployNocturne(connectedSigner, deployConfig);
+  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
 
-  checkNocturneDeployment(configProperties, connectedSigner.provider);
+  checkNocturneDeployment(config, connectedSigner.provider);
 
   // Log for dev site script
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
-  console.log(
-    "ERC20 token 1 deployed at:",
-    configProperties.erc20s[0][1].address
-  );
-  console.log(
-    "ERC20 token 2 deployed at:",
-    configProperties.erc20s[1][1].address
-  );
+
+  // Also log for dev site script
+  const erc20s = Array.from(config.erc20s);
+  console.log(`ERC20 token 1 deployed at:`, erc20s[0][1].address);
+  console.log(`ERC20 token 2 deployed at:`, erc20s[1][1].address);
 
   const [depositManager, teller, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
@@ -360,11 +356,11 @@ export async function deployContractsWithDummyConfig(
   ]);
 
   return [
-    NocturneConfig.fromProperties(configProperties),
+    config,
     formatTestTokens(
       connectedSigner,
-      configProperties.erc20s[0][1].address,
-      configProperties.erc20s[1][1].address,
+      erc20s[0][1].address,
+      erc20s[1][1].address,
       erc721.address,
       erc1155.address
     ),

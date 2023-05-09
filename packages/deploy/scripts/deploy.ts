@@ -3,7 +3,6 @@ import { loadDeployConfigFromJSON } from "../src/config";
 import { deployNocturne } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
-import * as JSON from "bigint-json-serialization";
 import { checkNocturneDeployment } from "../src/checks";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
@@ -29,7 +28,6 @@ dotenv.config();
     "utf-8"
   );
   const config = loadDeployConfigFromJSON(configString);
-
   const nocturneConfig = await deployNocturne(deployer, config);
   console.log(nocturneConfig);
 
@@ -41,7 +39,7 @@ dotenv.config();
 
   fs.writeFileSync(
     `${DEPLOYS_DIR}/${configName}-${Date.now().toString()}.json`,
-    JSON.stringify(nocturneConfig),
+    nocturneConfig.toString(),
     {
       encoding: "utf8",
       flag: "w",

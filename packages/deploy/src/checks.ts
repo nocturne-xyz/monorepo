@@ -10,10 +10,10 @@ import { ethers } from "ethers";
 import { Erc20Config, NocturneContractDeployment } from "@nocturne-xyz/config";
 import { proxyAdmin, proxyImplementation } from "./proxyUtils";
 import { Address, assertOrErr } from "./utils";
-import { NocturneConfigProperties } from "@nocturne-xyz/config/dist/src/config";
+import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
 
 export async function checkNocturneDeployment(
-  config: NocturneConfigProperties,
+  config: NocturneConfig,
   provider: ethers.providers.Provider
 ): Promise<void> {
   const depositManager = DepositManager__factory.connect(
@@ -151,9 +151,9 @@ async function checkNocturneContracts(
 
 async function checkErc20Caps(
   depositManager: DepositManager,
-  erc20s: [string, Erc20Config][]
+  erc20s: Map<string, Erc20Config>
 ): Promise<void> {
-  for (const [ticker, config] of erc20s) {
+  for (const [ticker, config] of erc20s.entries()) {
     const { globalCapWholeTokens, maxDepositSizeWholeTokens, precision } =
       await depositManager._erc20Caps(config.address);
     assertOrErr(
@@ -179,10 +179,10 @@ async function checkErc20Caps(
 
 async function checkProtocolAllowlist(
   handler: Handler,
-  erc20s: [string, Erc20Config][],
-  protocolAllowlist: [string, Address][]
+  erc20s: Map<string, Erc20Config>,
+  protocolAllowlist: Map<string, Address>
 ): Promise<void> {
-  for (const [ticker, { address }] of erc20s) {
+  for (const [ticker, { address }] of erc20s.entries()) {
     const isOnAllowlist = await handler._supportedContractAllowlist(address);
     assertOrErr(
       isOnAllowlist,

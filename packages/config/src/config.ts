@@ -34,19 +34,10 @@ export class NocturneConfig {
     this.protocolAllowlist = protocolAllowlist;
   }
 
-  static fromProperties(props: NocturneConfigProperties): NocturneConfig {
-    return new NocturneConfig(
-      props.contracts,
-      new Map(props.erc20s),
-      new Map(props.protocolAllowlist)
-    );
-  }
-
   static fromObject<T extends NocturneConfigProperties>(
     obj: T
   ): NocturneConfig {
     obj = JSON.parse(JSON.stringify(obj));
-
     return new NocturneConfig(
       obj.contracts,
       new Map(obj.erc20s),
@@ -55,15 +46,15 @@ export class NocturneConfig {
   }
 
   static fromString(str: string): NocturneConfig {
-    const obj = JSON.parse(str) as NocturneConfigProperties;
-    return NocturneConfig.fromObject(obj);
+    const props: NocturneConfigProperties = JSON.parse(str);
+    return NocturneConfig.fromObject(props);
   }
 
   toString(): string {
     return JSON.stringify({
       contracts: this.contracts,
-      erc20s: Array.from(this.erc20s.entries()),
-      protocolAllowlist: Array.from(this.protocolAllowlist.entries()),
+      erc20s: Array.from(this.erc20s),
+      protocolAllowlist: Array.from(this.protocolAllowlist),
     });
   }
 
@@ -94,7 +85,7 @@ export function loadNocturneConfig(
   let json: string;
   if (fs.existsSync(networkNameOrFilePath)) {
     json = fs.readFileSync(networkNameOrFilePath).toString();
-    const parsed = JSON.parse(json) as NocturneConfigProperties;
+    const parsed: NocturneConfigProperties = JSON.parse(json);
     return NocturneConfig.fromObject(parsed);
   } else {
     return loadNocturneConfigBuiltin(networkNameOrFilePath);

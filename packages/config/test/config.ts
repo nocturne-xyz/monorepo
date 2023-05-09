@@ -1,6 +1,10 @@
 import "mocha";
 import { expect } from "chai";
-import { loadNocturneConfig } from "../src/index";
+import { NocturneConfig, loadNocturneConfig } from "../src/index";
+import * as fs from "fs";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
+const ROOT_DIR = findWorkspaceRoot()!;
 
 describe("Config", async () => {
   it("loads example config", () => {
@@ -20,5 +24,14 @@ describe("Config", async () => {
     expect(config.contracts.screeners).to.not.be.undefined;
     expect(config.erc20s.size).to.be.greaterThan(0);
     expect(config.protocolAllowlist.size).to.be.greaterThan(0);
+  });
+
+  it("serializes/deserializes config", () => {
+    const config = loadNocturneConfig("example-network");
+    const json = fs
+      .readFileSync(`${ROOT_DIR}/packages/config/configs/example-network.json`)
+      .toString();
+    const fromJSONConfig = NocturneConfig.fromString(json);
+    expect(fromJSONConfig).to.deep.equal(config);
   });
 });

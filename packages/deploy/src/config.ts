@@ -41,12 +41,6 @@ export interface NocturneDeployOpts {
 
 export function loadDeployConfigFromJSON(json: string): NocturneDeployConfig {
   const props: NocturneDeployConfigProperties = JSON.parse(json);
-  return loadDeployConfigFromProperties(props);
-}
-
-export function loadDeployConfigFromProperties(
-  props: NocturneDeployConfigProperties
-): NocturneDeployConfig {
   return {
     ...props,
     erc20s: new Map(props.erc20s),

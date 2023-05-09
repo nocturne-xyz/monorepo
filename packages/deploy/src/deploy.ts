@@ -23,13 +23,13 @@ import {
   Erc20Config,
 } from "@nocturne-xyz/config";
 import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
-import { NocturneConfigProperties } from "@nocturne-xyz/config/dist/src/config";
+import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
 import { Address } from "./utils";
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
-): Promise<NocturneConfigProperties> {
+): Promise<NocturneConfig> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
 
@@ -59,11 +59,11 @@ export async function deployNocturne(
 
   await relinquishContractOwnership(connectedSigner, config, contracts);
 
-  return {
+  return NocturneConfig.fromObject({
     contracts,
     erc20s: Array.from(erc20s.entries()),
     protocolAllowlist: Array.from(config.protocolAllowlist.entries()),
-  };
+  });
 }
 
 export async function deployNocturneCoreContracts(
