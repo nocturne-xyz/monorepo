@@ -48,4 +48,19 @@ export class ClosableAsyncIterator<T> {
 
     return new ClosableAsyncIterator(batched(), async () => await this.close());
   }
+
+  // execute a function over each item in the iterator without consuming the iterator or modifying the values
+  // NOTE: the the reference given to `f` will mutate the underlying value in the iterator, so be careful not to
+  // alias the values in the iterator
+  tap(f: (item: T) => void): ClosableAsyncIterator<T> {
+    const thisIter = this.iter;
+    const tapped = async function* () {
+      for await (const item of thisIter) {
+        f(item);
+        yield item;
+      }
+    };
+
+    return new ClosableAsyncIterator(tapped(), async () => await this.close());
+  }
 }
