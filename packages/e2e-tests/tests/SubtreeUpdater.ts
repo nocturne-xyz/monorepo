@@ -38,14 +38,14 @@ describe("subtree updater", async () => {
 
     teardown = testDeployment.teardown;
     ({ handler, depositManager } = testDeployment);
-    const { provider, contractDeployment } = testDeployment;
+    const { provider, config } = testDeployment;
 
     const [_aliceEoa, _subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
     aliceEoa = _aliceEoa;
     subtreeUpdaterEoa = _subtreeUpdaterEoa;
 
     ({ nocturneWalletSDKAlice, nocturneDBAlice } = await setupTestClient(
-      contractDeployment,
+      config,
       provider
     ));
 

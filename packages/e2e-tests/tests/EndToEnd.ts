@@ -116,7 +116,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       nocturneDBBob,
       nocturneWalletSDKBob,
       joinSplitProver,
-    } = await setupTestClient(testDeployment.contractDeployment, provider, {
+    } = await setupTestClient(testDeployment.config, provider, {
       gasAssets: new Map([["GAS", gasTokenAsset.assetAddr]]),
     }));
   });

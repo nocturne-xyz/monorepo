@@ -1,14 +1,13 @@
 import "mocha";
 import { expect } from "chai";
-import { loadNocturneConfig } from "../src/index";
+import { NocturneConfig, loadNocturneConfig } from "../src/index";
 import * as fs from "fs";
-import * as JSON from "bigint-json-serialization";
+import findWorkspaceRoot from "find-yarn-workspace-root";
+
+const ROOT_DIR = findWorkspaceRoot()!;
 
 describe("Config", async () => {
   it("loads example config", () => {
-    const jsonConfig = JSON.parse(
-      fs.readFileSync(`${__dirname}/../configs/example-network.json`).toString()
-    );
     const config = loadNocturneConfig("example-network");
 
     console.log(config);
@@ -23,24 +22,16 @@ describe("Config", async () => {
     expect(config.contracts.subtreeUpdateVerifierAddress).to.not.be.undefined;
     expect(config.contracts.depositSources).to.not.be.undefined;
     expect(config.contracts.screeners).to.not.be.undefined;
+    expect(config.erc20s.size).to.be.greaterThan(0);
     expect(config.protocolAllowlist.size).to.be.greaterThan(0);
+  });
 
-    expect(config.gasAsset("weth")!).to.eql(
-      getFromPairArray(jsonConfig.gasAssets, "weth")
-    );
-    expect(config.gasAsset("dai")!).to.eql(
-      getFromPairArray(jsonConfig.gasAssets, "dai")
-    );
-    expect(config.rateLimit("weth")!).to.eql(
-      getFromPairArray(jsonConfig.rateLimits, "weth")
-    );
-    expect(config.rateLimit("dai")!).to.eql(
-      getFromPairArray(jsonConfig.rateLimits, "dai")
-    );
+  it("serializes/deserializes config", () => {
+    const config = loadNocturneConfig("example-network");
+    const json = fs
+      .readFileSync(`${ROOT_DIR}/packages/config/configs/example-network.json`)
+      .toString();
+    const fromJSONConfig = NocturneConfig.fromString(json);
+    expect(fromJSONConfig).to.deep.equal(config);
   });
 });
-
-function getFromPairArray<T>(arr: [String, T][], ticker: string) {
-  const pair = arr.find(([t, _]) => t === ticker);
-  return pair ? pair[1] : undefined;
-}

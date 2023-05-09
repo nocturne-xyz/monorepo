@@ -8,6 +8,9 @@ import {
   DepositManager,
   DepositManager__factory,
   WETH9__factory,
+  SimpleERC721Token__factory,
+  SimpleERC1155Token__factory,
+  SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 
 import {
@@ -24,20 +27,20 @@ import {
   sleep,
   thunk,
   Asset,
+  AssetTrait,
+  AssetType,
 } from "@nocturne-xyz/sdk";
 
 import {
-  checkNocturneContractDeployment,
+  NocturneDeployConfig,
+  checkNocturneDeployment,
   deployNocturne,
 } from "@nocturne-xyz/deploy";
 
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
-import {
-  NocturneConfig,
-  NocturneContractDeployment,
-} from "@nocturne-xyz/config";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
@@ -47,15 +50,6 @@ import { KEYS_TO_WALLETS } from "./keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
-import {
-  deployAndWhitelistERC1155,
-  deployAndWhitelistERC20,
-  deployAndWhitelistERC721,
-} from "../src/tokens";
-import {
-  NocturneDeployConfigWithoutAllowlist,
-  relinquishContractOwnership,
-} from "@nocturne-xyz/deploy/dist/src/deploy";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -111,8 +105,8 @@ export interface TestDeployment {
   depositManager: DepositManager;
   teller: Teller;
   handler: Handler;
+  config: NocturneConfig;
   tokens: TestDeploymentTokens;
-  contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
   deployerEoa: ethers.Wallet;
   aliceEoa: ethers.Wallet;
@@ -279,7 +273,7 @@ export async function setupTestDeployment(
     teller,
     handler,
     tokens,
-    contractDeployment: deployment,
+    config: deployment,
     provider,
     teardown,
     deployerEoa,
@@ -294,15 +288,45 @@ export async function setupTestDeployment(
 export async function deployContractsWithDummyConfig(
   connectedSigner: ethers.Wallet,
   args: TestDeployArgs
-): Promise<[NocturneContractDeployment, TestDeploymentTokens, TestContracts]> {
+): Promise<[NocturneConfig, TestDeploymentTokens, TestContracts]> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
-  const deployConfig: NocturneDeployConfigWithoutAllowlist = {
+  const [erc721, erc1155] = await deployNonErc20Tokens(connectedSigner);
+  console.log("erc721 address:", erc721.address);
+  console.log("erc1155 address:", erc1155.address);
+
+  const deployConfig: NocturneDeployConfig = {
     proxyAdminOwner: connectedSigner.address,
     screeners: args.screeners,
     subtreeBatchFillers: args.subtreeBatchFillers,
     wethAddress: weth.address,
+    erc20s: new Map([
+      [
+        "erc20-1",
+        {
+          address: "0x0000000000000000000000000000000000000000",
+          globalCapWholeTokens: 5000n,
+          maxDepositSizeWholeTokens: 500n,
+          precision: 18n,
+          isGasAsset: true,
+        },
+      ],
+      [
+        "erc20-2",
+        {
+          address: "0x0000000000000000000000000000000000000000",
+          globalCapWholeTokens: 5000n,
+          maxDepositSizeWholeTokens: 500n,
+          precision: 18n,
+          isGasAsset: true,
+        },
+      ],
+    ]),
+    protocolAllowlist: new Map([
+      ["erc721", erc721.address],
+      ["erc1155", erc1155.address],
+    ]),
     opts: {
       useMockSubtreeUpdateVerifier:
         process.env.ACTUALLY_PROVE_SUBTREE_UPDATE == undefined,
@@ -310,13 +334,19 @@ export async function deployContractsWithDummyConfig(
     },
   };
 
-  const deployment = await deployNocturne(connectedSigner, deployConfig);
-  const { depositManagerProxy, tellerProxy, handlerProxy } = deployment;
+  const config = await deployNocturne(connectedSigner, deployConfig);
+  checkNocturneDeployment(config, connectedSigner.provider);
 
   // Log for dev site script
+  const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
+
+  // Also log for dev site script
+  const erc20s = Array.from(config.erc20s);
+  console.log(`ERC20 token 1 deployed at:`, erc20s[0][1].address);
+  console.log(`ERC20 token 2 deployed at:`, erc20s[1][1].address);
 
   const [depositManager, teller, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
@@ -324,76 +354,53 @@ export async function deployContractsWithDummyConfig(
     Handler__factory.connect(handlerProxy.proxy, connectedSigner),
   ]);
 
-  const tokens = await deployAndWhitelistTestTokens(connectedSigner, handler);
-
-  await setTestTokenCaps(depositManager, tokens);
-
-  await relinquishContractOwnership(connectedSigner, deployConfig, deployment);
-
-  await checkNocturneContractDeployment(deployment, connectedSigner.provider);
-
-  return [deployment, tokens, { teller, handler, depositManager }];
+  return [
+    config,
+    formatTestTokens(
+      connectedSigner,
+      erc20s[0][1].address,
+      erc20s[1][1].address,
+      erc721.address,
+      erc1155.address
+    ),
+    { teller, handler, depositManager },
+  ];
 }
 
-async function setTestTokenCaps(
-  depositManager: DepositManager,
-  testTokens: TestDeploymentTokens
-): Promise<void> {
-  console.log("Setting test token caps...");
-  await depositManager.setErc20Cap(
-    testTokens.erc20.address,
-    2n ** 32n - 1n,
-    2n ** 32n - 1n,
-    18
-  );
-  await depositManager.setErc20Cap(
-    testTokens.gasToken.address,
-    2n ** 32n - 1n,
-    2n ** 32n - 1n,
-    18
-  );
+async function deployNonErc20Tokens(
+  connectedSigner: ethers.Wallet
+): Promise<[SimpleERC721Token, SimpleERC1155Token]> {
+  const erc721 = await new SimpleERC721Token__factory(connectedSigner).deploy();
+  const erc1155 = await new SimpleERC1155Token__factory(
+    connectedSigner
+  ).deploy();
+  return [erc721, erc1155];
 }
 
-export async function deployAndWhitelistTestTokens(
-  deployerEoa: ethers.Wallet,
-  handler: Handler
-): Promise<TestDeploymentTokens> {
-  // Deploy tokens
-  const [erc20, erc20Asset] = await deployAndWhitelistERC20(
-    deployerEoa,
-    handler
-  );
-  console.log("ERC20 token 1 deployed at:", erc20.address); // read by dev script
-
-  const [gasToken, gasTokenAsset] = await deployAndWhitelistERC20(
-    deployerEoa,
-    handler
-  );
-  console.log("ERC20 token 2 deployed at:", gasToken.address); // read by dev script
-
-  const [erc721, erc721Ctor] = await deployAndWhitelistERC721(
-    deployerEoa,
-    handler
-  );
-  const erc721Asset = erc721Ctor(0n);
-  console.log("ERC721 deployed at:", erc721.address);
-
-  const [erc1155, erc1155Ctor] = await deployAndWhitelistERC1155(
-    deployerEoa,
-    handler
-  );
-  const erc1155Asset = erc1155Ctor(0n);
-  console.log("ERC1155 deployed at:", erc1155.address);
-
+function formatTestTokens(
+  eoa: ethers.Wallet,
+  erc20: Address,
+  gasToken: Address,
+  erc721: Address,
+  erc1155: Address
+): TestDeploymentTokens {
   return {
-    erc20,
-    erc20Asset,
-    erc721,
-    erc721Asset,
-    erc1155,
-    erc1155Asset,
-    gasToken,
-    gasTokenAsset,
+    erc20: SimpleERC20Token__factory.connect(erc20, eoa),
+    erc20Asset: AssetTrait.erc20AddressToAsset(erc20),
+    gasToken: SimpleERC20Token__factory.connect(gasToken, eoa),
+    gasTokenAsset: AssetTrait.erc20AddressToAsset(gasToken),
+    erc721: SimpleERC721Token__factory.connect(erc721, eoa),
+    erc721Asset: {
+      assetType: AssetType.ERC721,
+      assetAddr: erc721,
+      id: 0n,
+    },
+    erc1155: SimpleERC1155Token__factory.connect(erc1155, eoa),
+    erc1155Asset: {
+      assetType: AssetType.ERC721,
+      assetAddr: erc721,
+      id: 0n,
+    },
   };
 }
 
@@ -416,20 +423,11 @@ export interface ClientSetup {
 }
 
 export async function setupTestClient(
-  contractDeployment: NocturneContractDeployment,
+  config: NocturneConfig,
   provider: ethers.providers.Provider,
   opts?: SetupNocturneOpts
 ): Promise<ClientSetup> {
-  const config = new NocturneConfig(
-    contractDeployment,
-    new Map(), // dummy value, don't need whitelist here
-    // TODO: fill with real assets and rate limits in SDK gas asset and deposit
-    // screener PRs
-    opts?.gasAssets ?? new Map(Object.entries({})),
-    new Map(Object.entries({}))
-  );
-
-  const { handlerProxy } = contractDeployment;
+  const { handlerProxy } = config.contracts;
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {

@@ -1,7 +1,6 @@
 import { deployContractsWithDummyConfig } from "../src/deploy";
 import { ethers } from "ethers";
 import { CanonAddress, StealthAddressTrait, zip } from "@nocturne-xyz/sdk";
-import { NocturneConfig } from "@nocturne-xyz/config";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import fs from "fs";
 import findWorkspaceRoot from "find-yarn-workspace-root";
@@ -52,7 +51,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   console.log("deploying contracts with dummy proxy admin...");
   const [deployerEoa] = KEYS_TO_WALLETS(provider);
 
-  const [deployment, { erc20, gasToken }, { depositManager }] =
+  const [config, { erc20, gasToken }, { depositManager }] =
     await deployContractsWithDummyConfig(deployerEoa, {
       screeners: [DEPOSIT_SCREENER],
       subtreeBatchFillers: [deployerEoa.address, SUBTREE_BATCH_FILLER],
@@ -62,18 +61,6 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
   const tokens = [erc20, gasToken];
   const amounts = [tokenAmount, tokenAmount];
 
-  // both tokens are gas assets
-  const gasAssets = new Map(
-    tokens.map((token, i) => [`TOKEN-${i}`, token.address])
-  );
-
-  // no rate limits
-  const config = new NocturneConfig(
-    deployment,
-    new Map(), // dummy, protocol whitelist not important here
-    gasAssets,
-    new Map() // dummy, no rate limits
-  );
   fs.writeFileSync(CONFIG_PATH, config.toString());
 
   for (const [token, amount] of zip(tokens, amounts)) {

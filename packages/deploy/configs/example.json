@@ -3,10 +3,29 @@
   "screeners": ["0x1DAb396f790699de639cF22d0Ea7744469aCAB1a"],
   "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
   "wethAddress": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
-  "protocolAllowlist": {
-    "weth": "0xb16f35c0ae2912430dac15764477e179d9b9ebea",
-    "dai": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
-  },
+  "erc20s": [
+    [
+      "simpletoken1",
+      {
+        "address": "0x0000000000000000000000000000000000000000",
+        "globalCapWholeTokens": "500n",
+        "maxDepositSizeWholeTokens": "50n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ],
+    [
+      "simpletoken2",
+      {
+        "address": "0x0000000000000000000000000000000000000000",
+        "globalCapWholeTokens": "500n",
+        "maxDepositSizeWholeTokens": "50n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ]
+  ],
+  "protocolAllowlist": [],
   "opts": {
     "useMockSubtreeUpdateVerifier": true
   }

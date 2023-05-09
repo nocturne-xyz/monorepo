@@ -2,7 +2,8 @@ export {
   loadNocturneConfig,
   loadNocturneConfigBuiltin,
   NocturneConfig,
-  ProtocolAllowlist,
+  NocturneConfigProperties,
+  Erc20Config,
 } from "./config";
 export { NocturneContractDeployment } from "./deployment";
 export * from "./proxy";

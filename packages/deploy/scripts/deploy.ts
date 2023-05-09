@@ -1,26 +1,14 @@
 import { ethers } from "ethers";
-import { NocturneDeployConfig } from "../src/config";
-import { deployNocturne, relinquishContractOwnership } from "../src/deploy";
+import { loadDeployConfigFromJSON } from "../src/config";
+import { deployNocturne } from "../src/deploy";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
-import { checkNocturneContractDeployment } from "../src/checks";
-import * as JSON from "bigint-json-serialization";
-import { Handler__factory } from "@nocturne-xyz/contracts";
-import { whitelistProtocols } from "../src/whitelist";
-import {
-  NocturneContractDeployment,
-  ProtocolAllowlist,
-} from "@nocturne-xyz/config";
+import { checkNocturneDeployment } from "../src/checks";
 
 const CONFIGS_DIR = `${__dirname}/../configs/`;
 const DEPLOYS_DIR = `${__dirname}/../deploys/`;
 
 dotenv.config();
-
-interface DeploymentAndAllowlist {
-  deployment: NocturneContractDeployment;
-  protocolAllowlist: ProtocolAllowlist;
-}
 
 (async () => {
   const configName = process.env.CONFIG_NAME;
@@ -39,36 +27,19 @@ interface DeploymentAndAllowlist {
     `${CONFIGS_DIR}/${configName}.json`,
     "utf-8"
   );
-  const config: NocturneDeployConfig = JSON.parse(configString);
+  const config = loadDeployConfigFromJSON(configString);
+  const nocturneConfig = await deployNocturne(deployer, config);
+  console.log(nocturneConfig);
 
-  // Deploy contracts
-  const deployment = await deployNocturne(deployer, config);
-
-  // Whitelist protocols
-  const handler = Handler__factory.connect(
-    deployment.handlerProxy.proxy,
-    deployer
-  );
-  await whitelistProtocols(deployer, config.protocolAllowlist, handler);
-
-  // Relinquish ownership to proxy admin owner
-  await relinquishContractOwnership(deployer, config, deployment);
-
-  await checkNocturneContractDeployment(deployment, provider);
-
-  const deploymentAndAllowlist: DeploymentAndAllowlist = {
-    deployment,
-    protocolAllowlist: config.protocolAllowlist,
-  };
-  console.log(deploymentAndAllowlist);
+  await checkNocturneDeployment(nocturneConfig, provider);
 
   if (!fs.existsSync(DEPLOYS_DIR)) {
     fs.mkdirSync(DEPLOYS_DIR);
   }
 
   fs.writeFileSync(
-    `${DEPLOYS_DIR}/${deployment.network.name}-${Date.now().toString()}.json`,
-    JSON.stringify(deploymentAndAllowlist),
+    `${DEPLOYS_DIR}/${configName}-${Date.now().toString()}.json`,
+    nocturneConfig.toString(),
     {
       encoding: "utf8",
       flag: "w",
