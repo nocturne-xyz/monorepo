@@ -7,4 +7,6 @@ export interface SubtreeUpdaterSyncAdapter {
     startMerkleIndex: number,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment>;
+
+  fetchLatestSubtreeIndex(): Promise<number>;
 }

@@ -17,6 +17,7 @@ import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
 import { ProofJobData, SubmissionJobData } from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
+import { LeafDB } from "./db";
 
 export interface SubtreeUpdaterHandle {
   // promise that resovles when the service has fully shut down
@@ -36,10 +37,10 @@ export class SubtreeUpdater {
   // TODO: have separate keys instead of a mutex
   handlerMutex: Mutex;
   handlerContract: Handler;
-  redis: IORedis;
   adapter: SubtreeUpdaterSyncAdapter;
   logger: Logger;
 
+  leafDB: LeafDB;
   tree: SparseMerkleProver;
   prover: SubtreeUpdateProver;
 
@@ -61,7 +62,6 @@ export class SubtreeUpdater {
   ) {
     this.handlerMutex = new Mutex();
     this.handlerContract = handlerContract;
-    this.redis = redis;
     this.adapter = syncAdapter;
     this.logger = logger;
     this.prover = prover;
@@ -77,6 +77,8 @@ export class SubtreeUpdater {
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
 
+    this.leafDB = new LeafDB(redis);
+
     this.startMerkleIndex = 0;
   }
 
@@ -84,13 +86,21 @@ export class SubtreeUpdater {
     this.logger.info(
       `subtree updater starting at merkle index ${this.startMerkleIndex}`
     );
-    const proofJobs = this.jobIterator(this.startMerkleIndex, queryThrottleMs);
+    const proofJobs = this.getIterator(this.startMerkleIndex, queryThrottleMs);
 
     const queuer = async () => {
       for await (const job of proofJobs.iter) {
-        await this.proofQueue.add(PROOF_QUEUE_NAME, job, {
-          attempts: 3,
-        });
+        // add leaves to the db
+        await this.leafDB.addLeaves(job.proofInputs.leaves);
+
+        // queue up a proof job if it hasn't already been committed on-chain
+        const latestSubtrreeIndex =
+          await this.adapter.fetchLatestSubtreeIndex();
+        if (latestSubtrreeIndex < job.subtreeIndex) {
+          await this.proofQueue.add(PROOF_QUEUE_NAME, job, {
+            attempts: 3,
+          });
+        }
       }
     };
 
@@ -128,7 +138,65 @@ export class SubtreeUpdater {
     };
   }
 
-  jobIterator(
+  async recover(logger: Logger): Promise<void> {
+    logger.info("recovering from previous run");
+
+    // recover from DB
+    const batches = this.leafDB.iterAllLeaves();
+    for await (const leaves of batches) {
+      const falsy = new Array(leaves.length).fill(false);
+      this.tree.insertBatch(this.tree.count(), leaves, falsy);
+    }
+
+    this.startMerkleIndex = this.tree.count();
+  }
+
+  startProver(logger: Logger): Worker<ProofJobData, any, string> {
+    return new Worker(PROOF_QUEUE_NAME, async (job: Job<ProofJobData>) => {
+      const { proofInputs, newRoot } = job.data;
+      logger.info("handling subtree update prover job", job.data);
+
+      const proof = await this.prover.proveSubtreeUpdate(proofInputs);
+      await this.submissionQueue.add(SUBMISSION_QUEUE_NAME, { proof, newRoot });
+    });
+  }
+
+  startSubmitter(logger: Logger): Worker<SubmissionJobData, any, string> {
+    return new Worker(
+      SUBMISSION_QUEUE_NAME,
+      async (job: Job<SubmissionJobData>) => {
+        const { proof, newRoot } = job.data;
+
+        const solidityProof = packToSolidityProof(proof);
+        try {
+          logger.debug(
+            "acquiring mutex on handler contract to submit update tx"
+          );
+          await this.handlerMutex.runExclusive(async () => {
+            logger.info("submitting tx...");
+            const tx = await this.handlerContract.applySubtreeUpdate(
+              newRoot,
+              solidityProof
+            );
+            logger.info("waiting for confirmation...");
+            await tx.wait(1);
+          });
+
+          logger.info("successfully updated root", { newRoot });
+        } catch (err: any) {
+          // ignore errors that are due to duplicate submissions
+          // this can happen if there are multiple instances of subtree updaters running
+          if (!err.toString().includes("newRoot already a past root")) {
+            logger.error("error submitting proof:", { err });
+            throw err;
+          }
+          logger.warn("update already submitted by another agent");
+        }
+      }
+    );
+  }
+
+  private getIterator(
     startMerkleIndex: number,
     queryThrottleMs?: number
   ): ClosableAsyncIterator<ProofJobData> {
@@ -192,51 +260,6 @@ export class SubtreeUpdater {
 
         return { subtreeIndex, proofInputs, newRoot };
       });
-  }
-
-  startProver(logger: Logger): Worker<ProofJobData, any, string> {
-    return new Worker(PROOF_QUEUE_NAME, async (job: Job<ProofJobData>) => {
-      const { proofInputs, newRoot } = job.data;
-      logger.info("handling subtree update prover job", job.data);
-
-      const proof = await this.prover.proveSubtreeUpdate(proofInputs);
-      await this.submissionQueue.add(SUBMISSION_QUEUE_NAME, { proof, newRoot });
-    });
-  }
-
-  startSubmitter(logger: Logger): Worker<SubmissionJobData, any, string> {
-    return new Worker(
-      SUBMISSION_QUEUE_NAME,
-      async (job: Job<SubmissionJobData>) => {
-        const { proof, newRoot } = job.data;
-
-        const solidityProof = packToSolidityProof(proof);
-        try {
-          logger.debug(
-            "acquiring mutex on handler contract to submit update tx"
-          );
-          await this.handlerMutex.runExclusive(async () => {
-            logger.info("submitting tx...");
-            const tx = await this.handlerContract.applySubtreeUpdate(
-              newRoot,
-              solidityProof
-            );
-            logger.info("waiting for confirmation...");
-            await tx.wait(1);
-          });
-
-          logger.info("successfully updated root", { newRoot });
-        } catch (err: any) {
-          // ignore errors that are due to duplicate submissions
-          // this can happen if there are multiple instances of subtree updaters running
-          if (!err.toString().includes("newRoot already a past root")) {
-            logger.error("error submitting proof:", { err });
-            throw err;
-          }
-          logger.warn("update already submitted by another agent");
-        }
-      }
-    );
   }
 
   private async fillbatch(logger: Logger): Promise<void> {

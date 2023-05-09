@@ -69,4 +69,11 @@ export class SubgraphSubtreeUpdaterSyncAdapter
       closed = true;
     });
   }
+
+  async fetchLatestSubtreeIndex(): Promise<number> {
+    const latestIndexedBlock = await fetchLatestIndexedBlock(
+      this.graphqlEndpoint
+    );
+    return latestIndexedBlock;
+  }
 }

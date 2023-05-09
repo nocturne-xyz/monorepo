@@ -141,3 +141,37 @@ function includedNoteFromNoteResponse(
     merkleIndex,
   };
 }
+
+const latestSubtreeCommitQuery = `\
+  query latestSubtreeCommit() {
+    subtreeCommits(orderBy: subtreeIndex, orderDirection: desc, first: 1) {
+      subtreeIndex
+    }
+  }
+`;
+
+interface LatestSubtreeCommitResponse {
+  data: {
+    subtreeCommits: SubtreeCommitResponse[];
+  };
+}
+
+interface SubtreeCommitResponse {
+  subtreeIndex: string;
+}
+
+export async function fetchLatestSubtreeCommit(
+  endpoint: string
+): Promise<number> {
+  const query = makeSubgraphQuery<undefined, LatestSubtreeCommitResponse>(
+    endpoint,
+    latestSubtreeCommitQuery,
+    "latestSubtreeCommit"
+  );
+
+  const res = await query(undefined);
+  if (res.data.subtreeCommits.length === 0) {
+    throw new Error("no subtree commits found");
+  }
+  return parseInt(res.data.subtreeCommits[0].subtreeIndex);
+}
