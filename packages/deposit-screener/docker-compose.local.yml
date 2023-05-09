@@ -29,7 +29,6 @@ services:
       - host.docker.internal:host-gateway
     volumes:
       - ../../logs:/logs
-      - ../config/configs:/configs
 
 volumes:
   redis-data:

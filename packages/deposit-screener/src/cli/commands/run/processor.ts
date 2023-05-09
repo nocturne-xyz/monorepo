@@ -25,9 +25,12 @@ const runProcess = new Command("processor")
     "maximum period of time to wait before pulling new deposit events",
     parseInt
   )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
-    const { configNameOrPath, logDir, throttleMs } = options;
-
+    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     // TODO: enable switching on adapter impl
@@ -54,7 +57,12 @@ const runProcess = new Command("processor")
     }
     const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
-    const logger = makeLogger(logDir, "deposit-screener", "processor");
+    const logger = makeLogger(
+      logDir,
+      "deposit-screener",
+      "processor",
+      stdoutLogLevel
+    );
     const processor = new DepositScreenerProcessor(
       adapter,
       config.depositManagerAddress(),

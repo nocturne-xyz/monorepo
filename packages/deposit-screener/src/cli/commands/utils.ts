@@ -9,6 +9,7 @@ export function getRedis(redis?: IORedis): IORedis {
 
     return new IORedis(redisUrl, {
       password: redisPassword,
+      maxRetriesPerRequest: null,
     });
   }
 }

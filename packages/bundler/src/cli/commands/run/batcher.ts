@@ -16,10 +16,14 @@ const runBatcher = new Command("batcher")
     "directory to write logs to",
     "./logs/bundler-server"
   )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
-    const { maxLatency, batchSize, logDir } = options;
+    const { maxLatency, batchSize, logDir, stdoutLogLevel } = options;
 
-    const logger = makeLogger(logDir, "bundler", "batcher");
+    const logger = makeLogger(logDir, "bundler", "batcher", stdoutLogLevel);
     const batcher = new BundlerBatcher(
       getRedis(),
       logger,

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+= add `--stdout-log-level` option to CLI
 - tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
 - `yarn build:docker` now builds CLI container, not docker compose. 

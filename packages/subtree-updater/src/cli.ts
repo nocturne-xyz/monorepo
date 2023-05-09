@@ -13,10 +13,7 @@ export default async function main(): Promise<void> {
   dotenv.config();
 
   program
-    .requiredOption(
-      "--config-name-or-path <string>",
-      "deposit manager contract address"
-    )
+    .requiredOption("--config-name-or-path <string>", "name or path to config")
     .requiredOption(
       "--zkey-path <string>",
       "path to `subtreeupdate.zkey`, i.e. the proving key for the subtree update circuit"
@@ -62,6 +59,10 @@ export default async function main(): Promise<void> {
       "--log-dir <string>",
       "directory to write logs to",
       "./logs/subtree-updater"
+    )
+    .option(
+      "--stdout-log-level <string>",
+      "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
     );
 
   program.parse();
@@ -79,6 +80,7 @@ export default async function main(): Promise<void> {
     indexingStartBlock,
     fillBatches,
     logDir,
+    stdoutLogLevel,
   } = program.opts();
   const config = loadNocturneConfig(configNameOrPath);
 
@@ -114,7 +116,12 @@ export default async function main(): Promise<void> {
     );
   }
 
-  const logger = makeLogger(logDir, "subtree-updater", "server");
+  const logger = makeLogger(
+    logDir,
+    "subtree-updater",
+    "server",
+    stdoutLogLevel
+  );
   const server = new SubtreeUpdateServer(
     prover,
     config.handlerAddress(),

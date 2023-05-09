@@ -111,7 +111,7 @@ echo "Token contract addresses: $TOKEN_CONTRACT_ADDR1, $TOKEN_CONTRACT_ADDR2"
 echo "Bundler submitter private key: $BUNDLER_TX_SIGNER_KEY"
 echo "Subtree updater submitter private key: $SUBTREE_UPDATER_TX_SIGNER_KEY"
 
-CONFIG_PATH_IN_DOCKER=/configs/localhost.json
+CONFIG_PATH_IN_DOCKER=/app/configs/localhost.json
 
 # write bundler's .env file
 pushd packages/bundler
@@ -169,6 +169,8 @@ cat > .env <<- EOM
 RPC_URL=$RPC_URL
 TX_SIGNER_KEY=$SUBTREE_UPDATER_TX_SIGNER_KEY
 EOM
+
+./build_mock_docker.sh
 popd
 
 # run subtree updater

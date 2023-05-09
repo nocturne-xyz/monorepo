@@ -15,4 +15,6 @@ WORKDIR /app/packages/deposit-screener
 RUN yarn build
 RUN npm i -g
 
+COPY packages/config/configs /app/configs
+
 ENTRYPOINT ["screener-cli"]

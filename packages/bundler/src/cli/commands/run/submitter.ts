@@ -19,8 +19,12 @@ const runSubmitter = new Command("submitter")
     "directory to write logs to",
     "./logs/bundler-submitter"
   )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
-    const { configNameOrPath, logDir } = options;
+    const { configNameOrPath, logDir, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
     const privateKey = process.env.TX_SIGNER_KEY;
@@ -35,7 +39,7 @@ const runSubmitter = new Command("submitter")
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const signingProvider = new ethers.Wallet(privateKey, provider);
 
-    const logger = makeLogger(logDir, "bundler", "submitter");
+    const logger = makeLogger(logDir, "bundler", "submitter", stdoutLogLevel);
     const submitter = new BundlerSubmitter(
       config.tellerAddress(),
       signingProvider,

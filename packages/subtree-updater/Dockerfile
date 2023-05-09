@@ -29,6 +29,8 @@ WORKDIR /app/packages/subtree-updater
 RUN yarn build
 RUN npm i -g
 
+COPY packages/config/configs /app/configs
+
 WORKDIR /app
 
 ENTRYPOINT ["subtree-updater-cli"]

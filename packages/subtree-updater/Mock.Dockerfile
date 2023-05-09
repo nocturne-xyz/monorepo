@@ -23,4 +23,6 @@ RUN npm i -g
 
 WORKDIR /app
 
+COPY packages/config/configs /app/configs
+
 ENTRYPOINT ["subtree-updater-cli"]
