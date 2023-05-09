@@ -10,6 +10,6 @@ export {
   RPCSDKSyncAdapter,
 } from "./rpc";
 
-export { SubgraphSDKSyncAdapter, SubgraphUtils, fetchNotes } from "./subgraph";
+export { SubgraphSDKSyncAdapter, SubgraphUtils } from "./subgraph";
 
 export { IterSyncOpts } from "./syncAdapter";

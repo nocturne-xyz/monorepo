@@ -3,7 +3,6 @@
 ### Unreleased
 
 - add `batches` method to `ClosableAsyncIterator`
-- export `fetchNotes`
 - remove `protocolWhitelistKey` fn after removing selectors from whitelist
 - add optional `throttleMs` field to `IterSyncOpts` and implement it in all sync adapters
 - subgraph fetch functions query via `idx_gte` and `idx_lt` instead of `id_gte` and `id_lt`
