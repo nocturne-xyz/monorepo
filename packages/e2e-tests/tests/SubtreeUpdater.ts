@@ -3,28 +3,29 @@ import { ethers } from "ethers";
 import { DepositManager, Handler } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 
-import { NocturneWalletSDK, NocturneDB } from "@nocturne-xyz/sdk";
+import { NocturneWalletSDK, MockSubtreeUpdateProver } from "@nocturne-xyz/sdk";
 import { setupTestDeployment, setupTestClient } from "../src/deploy";
-import { getSubtreeUpdateProver, getSubtreeUpdaterDelay } from "../src/utils";
+import { getSubtreeUpdaterDelay, makeRedisInstance } from "../src/utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
-import { SubtreeUpdateServer } from "@nocturne-xyz/subtree-updater";
+import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import { KEYS_TO_WALLETS } from "../src/keys";
 import { depositFundsSingleToken } from "../src/deposit";
+import { SubgraphSubtreeUpdaterSyncAdapter } from "@nocturne-xyz/subtree-updater/src/sync/subgraph/adapter";
+
+const { getRedis, clearRedis } = makeRedisInstance();
 
 const PER_SPEND_AMOUNT = 100n;
 
-describe("subtree updater", async () => {
-  let teardown: () => Promise<void>;
+const logger = makeTestLogger("subtree-updater", "subtree-updater");
 
+describe("subtree updater", async () => {
   let aliceEoa: ethers.Wallet;
-  let subtreeUpdaterEoa: ethers.Wallet;
 
   let depositManager: DepositManager;
   let handler: Handler;
   let token: SimpleERC20Token;
   let nocturneWalletSDKAlice: NocturneWalletSDK;
-  let server: SubtreeUpdateServer;
-  let nocturneDBAlice: NocturneDB;
+  let subgraphUrl: string;
 
   beforeEach(async () => {
     const testDeployment = await setupTestDeployment({
@@ -37,54 +38,54 @@ describe("subtree updater", async () => {
     });
 
     teardown = testDeployment.teardown;
+    subgraphUrl =
+      testDeployment.actorConfig.configs!.subtreeUpdater!.subgraphUrl!;
     ({ handler, depositManager } = testDeployment);
     const { provider, config } = testDeployment;
 
     const [_aliceEoa, _subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
     aliceEoa = _aliceEoa;
-    subtreeUpdaterEoa = _subtreeUpdaterEoa;
 
-    ({ nocturneWalletSDKAlice, nocturneDBAlice } = await setupTestClient(
+    handler = handler.connect(_subtreeUpdaterEoa);
+
+    ({ nocturneWalletSDKAlice } = await setupTestClient(
       config,
       provider
     ));
 
     token = testDeployment.tokens.erc20;
     console.log("token deployed at: ", token.address);
-
-    server = newServer();
-    await server.init();
-    server.start();
   });
 
-  function newServer(): SubtreeUpdateServer {
-    const serverDBPath = `${__dirname}/../db/standaloneServerTestDB`;
-    const prover = getSubtreeUpdateProver();
-    const server = new SubtreeUpdateServer(
-      prover,
-      handler.address,
-      serverDBPath,
-      subtreeUpdaterEoa,
-      makeTestLogger("subtree updater", "server"),
-      { interval: 1_000 }
+  async function newSubtreeUpdater(): Promise<
+    [SubtreeUpdater, () => Promise<void>]
+  > {
+    const syncAdapter = new SubgraphSubtreeUpdaterSyncAdapter(subgraphUrl);
+    const updater = new SubtreeUpdater(
+      handler,
+      syncAdapter,
+      logger,
+      await getRedis(),
+      new MockSubtreeUpdateProver()
     );
-    return server;
-  }
 
-  async function teardownServer() {
-    await server.stop();
-    await server.dropDB();
+    const { promise, teardown } = updater.start();
+
+    return [
+      updater,
+      async () => {
+        await teardown();
+        await promise;
+      },
+    ];
   }
 
   afterEach(async () => {
-    await Promise.all([
-      nocturneDBAlice.kv.clear(),
-      teardownServer(),
-      teardown(),
-    ]);
+    await clearRedis();
   });
 
   it("can recover state", async () => {
+    let [updater, stopUpdater] = await newSubtreeUpdater();
     await depositFundsSingleToken(
       depositManager,
       token,
@@ -96,7 +97,7 @@ describe("subtree updater", async () => {
     await handler.fillBatchWithZeros();
 
     await sleep(getSubtreeUpdaterDelay());
-    await server.stop();
+    await stopUpdater();
 
     // @ts-ignore
     const root = server.updater.tree.root;
@@ -108,9 +109,9 @@ describe("subtree updater", async () => {
     const insertions = server.updater.insertions;
 
     // simulate restrart
-    // init() will recover its state from DB
-    server = newServer();
-    await server.init();
+    // recover() will recover its state from DB
+    [updater, stopUpdater] = await newSubtreeUpdater();
+    await updater.recover(logger);
 
     // @ts-ignore
     const recoveredRoot = server.updater.tree.root;
@@ -125,6 +126,8 @@ describe("subtree updater", async () => {
     expect(recoveredNextBlockToIndex).to.equal(nextBlockToIndex);
     expect(recoveredInsertionIndex).to.equal(insertionIndex);
     expect(recoveredInsertions).to.deep.equal(insertions);
+
+    await stopUpdater();
   });
 });
 
