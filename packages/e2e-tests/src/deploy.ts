@@ -40,10 +40,7 @@ import {
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
-import {
-  NocturneConfig,
-  NocturneContractDeployment,
-} from "@nocturne-xyz/config";
+import { NocturneConfig } from "@nocturne-xyz/config";
 import { startHardhat } from "./hardhat";
 import { BundlerConfig, startBundler } from "./bundler";
 import { DepositScreenerConfig, startDepositScreener } from "./screener";
@@ -108,8 +105,8 @@ export interface TestDeployment {
   depositManager: DepositManager;
   teller: Teller;
   handler: Handler;
+  config: NocturneConfig;
   tokens: TestDeploymentTokens;
-  contractDeployment: NocturneContractDeployment;
   provider: ethers.providers.JsonRpcProvider;
   deployerEoa: ethers.Wallet;
   aliceEoa: ethers.Wallet;
@@ -276,7 +273,7 @@ export async function setupTestDeployment(
     teller,
     handler,
     tokens,
-    contractDeployment: deployment,
+    config: deployment,
     provider,
     teardown,
     deployerEoa,
@@ -291,7 +288,7 @@ export async function setupTestDeployment(
 export async function deployContractsWithDummyConfig(
   connectedSigner: ethers.Wallet,
   args: TestDeployArgs
-): Promise<[NocturneContractDeployment, TestDeploymentTokens, TestContracts]> {
+): Promise<[NocturneConfig, TestDeploymentTokens, TestContracts]> {
   const weth = await new WETH9__factory(connectedSigner).deploy();
   console.log("weth address:", weth.address);
 
@@ -309,8 +306,8 @@ export async function deployContractsWithDummyConfig(
         "erc20-1",
         {
           address: "0x0000000000000000000000000000000000000000",
-          globalCapWholeTokens: 500n,
-          maxDepositSizeWholeTokens: 50n,
+          globalCapWholeTokens: 5000n,
+          maxDepositSizeWholeTokens: 500n,
           precision: 18n,
           isGasAsset: true,
         },
@@ -319,8 +316,8 @@ export async function deployContractsWithDummyConfig(
         "erc20-2",
         {
           address: "0x0000000000000000000000000000000000000000",
-          globalCapWholeTokens: 500n,
-          maxDepositSizeWholeTokens: 50n,
+          globalCapWholeTokens: 5000n,
+          maxDepositSizeWholeTokens: 500n,
           precision: 18n,
           isGasAsset: true,
         },
@@ -337,18 +334,24 @@ export async function deployContractsWithDummyConfig(
     },
   };
 
-  const deployment = await deployNocturne(connectedSigner, deployConfig);
+  const configProperties = await deployNocturne(connectedSigner, deployConfig);
   const { depositManagerProxy, tellerProxy, handlerProxy } =
-    deployment.contracts;
+    configProperties.contracts;
 
-  checkNocturneDeployment(deployment, connectedSigner.provider);
+  checkNocturneDeployment(configProperties, connectedSigner.provider);
 
   // Log for dev site script
   console.log("Teller address:", tellerProxy.proxy);
   console.log("Handler address:", handlerProxy.proxy);
   console.log("DepositManager address:", depositManagerProxy.proxy);
-  console.log("ERC20 token 1 deployed at:", deployment.erc20s[0][1].address);
-  console.log("ERC20 token 2 deployed at:", deployment.erc20s[1][1].address);
+  console.log(
+    "ERC20 token 1 deployed at:",
+    configProperties.erc20s[0][1].address
+  );
+  console.log(
+    "ERC20 token 2 deployed at:",
+    configProperties.erc20s[1][1].address
+  );
 
   const [depositManager, teller, handler] = await Promise.all([
     DepositManager__factory.connect(depositManagerProxy.proxy, connectedSigner),
@@ -357,11 +360,11 @@ export async function deployContractsWithDummyConfig(
   ]);
 
   return [
-    deployment.contracts,
+    NocturneConfig.fromProperties(configProperties),
     formatTestTokens(
       connectedSigner,
-      deployment.erc20s[0][1].address,
-      deployment.erc20s[1][1].address,
+      configProperties.erc20s[0][1].address,
+      configProperties.erc20s[1][1].address,
       erc721.address,
       erc1155.address
     ),
@@ -425,19 +428,11 @@ export interface ClientSetup {
 }
 
 export async function setupTestClient(
-  contractDeployment: NocturneContractDeployment,
+  config: NocturneConfig,
   provider: ethers.providers.Provider,
   opts?: SetupNocturneOpts
 ): Promise<ClientSetup> {
-  const config = new NocturneConfig(
-    contractDeployment,
-    new Map(), // dummy value, don't need whitelist here
-    // TODO: fill with real assets and rate limits in SDK gas asset and deposit
-    // screener PRs
-    opts?.gasAssets ?? new Map(Object.entries({}))
-  );
-
-  const { handlerProxy } = contractDeployment;
+  const { handlerProxy } = config.contracts;
 
   let syncAdapter: SDKSyncAdapter;
   if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {

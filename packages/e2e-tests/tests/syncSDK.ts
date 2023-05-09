@@ -89,7 +89,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("gas Token deployed at: ", gasToken.address);
 
       ({ nocturneWalletSDKAlice, joinSplitProver } = await setupTestClient(
-        testDeployment.contractDeployment,
+        testDeployment.config,
         provider,
         {
           syncAdapter,
