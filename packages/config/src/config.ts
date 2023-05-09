@@ -34,6 +34,14 @@ export class NocturneConfig {
     this.protocolAllowlist = protocolAllowlist;
   }
 
+  static fromProperties(props: NocturneConfigProperties): NocturneConfig {
+    return new NocturneConfig(
+      props.contracts,
+      new Map(props.erc20s),
+      new Map(props.protocolAllowlist)
+    );
+  }
+
   static fromObject<T extends NocturneConfigProperties>(
     obj: T
   ): NocturneConfig {

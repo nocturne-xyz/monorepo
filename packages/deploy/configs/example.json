@@ -10,7 +10,8 @@
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
         "maxDepositSizeWholeTokens": "50n",
-        "precision": "18n"
+        "precision": "18n",
+        "isGasAsset": true
       }
     ],
     [
@@ -19,7 +20,8 @@
         "address": "0x0000000000000000000000000000000000000000",
         "globalCapWholeTokens": "500n",
         "maxDepositSizeWholeTokens": "50n",
-        "precision": "18n"
+        "precision": "18n",
+        "isGasAsset": true
       }
     ]
   ],
