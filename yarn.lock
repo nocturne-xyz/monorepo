@@ -3819,7 +3819,7 @@ __metadata:
     winston: ^3.8.2
     wtfnode: ^0.9.1
   bin:
-    subtree-updater-cli: dist/src/cli.js
+    subtree-updater-cli: dist/src/cli/index.js
   languageName: unknown
   linkType: soft
 

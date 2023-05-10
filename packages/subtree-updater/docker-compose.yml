@@ -16,7 +16,7 @@ services:
       context: ../..
       dockerfile: packages/subtree-updater/Mock.Dockerfile
     restart: always
-    command: "run subtree-updater --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/subtree-updater --use-mock-prover"
+    command: "run subtree-updater --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/subtree-updater --use-mock-prover --fill-batch-latency-ms 3000"
     environment:
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}

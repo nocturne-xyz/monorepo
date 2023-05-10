@@ -37,6 +37,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
+        console.log(`from: ${from}`);
+        console.log(`to: ${to}`);
+        console.log(`endBlock: ${endBlock}`);
 
         // Only fetch up to end block
         if (endBlock) {
@@ -45,6 +48,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
         // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        console.log(`latestIndexedBlock: ${latestIndexedBlock}`);
         to = min(to, latestIndexedBlock);
 
         // Exceeded tip, sleep
@@ -52,6 +56,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           await sleep(5_000);
           continue;
         }
+
+        console.log(`fetching state diff from ${from} to ${to}...`);
 
         const [notes, nullifiers, lastCommittedMerkleIndex] = await Promise.all(
           [
