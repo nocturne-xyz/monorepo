@@ -395,6 +395,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         return _gasCompensationSet.getTotalForAll();
     }
 
+    function ghost_totalSuppliedGasCompensationFor(
+        address actor
+    ) public view returns (uint256) {
+        return _gasCompensationSet.getSumForActor(actor);
+    }
+
     function ghost_instantiateDepositSumETH() public view returns (uint256) {
         return _instantiateDepositSumSetETH.getTotalForAll();
     }

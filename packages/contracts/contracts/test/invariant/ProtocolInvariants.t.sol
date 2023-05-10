@@ -252,6 +252,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_deposit_screenerBalanceInBounds();
     }
 
+    function invariant_deposit_actorBalancesInBounds() external {
+        assert_deposit_actorBalancesInBounds();
+    }
+
     /*****************************
      * Operations
      *****************************/
