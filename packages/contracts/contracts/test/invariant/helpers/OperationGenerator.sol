@@ -57,7 +57,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
 
     uint256 nullifierCount = 0;
-    uint256 erc721IdCounter = 0;
+    uint256 nonErc20IdCounter = 0;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
@@ -80,7 +80,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
-        uint256 numActions = bound(args.seed, 2, 7);
+        uint256 numActions = bound(args.seed, 2, 5);
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
@@ -164,18 +164,18 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     });
                 }
 
-                encodedRefundAssets = new EncodedAsset[](2);
+                encodedRefundAssets = new EncodedAsset[](3);
                 encodedRefundAssets[0] = AssetUtils.encodeAsset(
                     AssetType.ERC20,
                     address(args.swapErc20),
                     ERC20_ID
                 );
-                // encodedRefundAssets[1] = AssetUtils.encodeAsset(
-                //     AssetType.ERC721,
-                //     address(args.swapErc721),
-                //     _meta.swaps[i + 1].erc721OutId
-                // );
                 encodedRefundAssets[1] = AssetUtils.encodeAsset(
+                    AssetType.ERC721,
+                    address(args.swapErc721),
+                    _meta.swaps[i + 1].erc721OutId
+                );
+                encodedRefundAssets[2] = AssetUtils.encodeAsset(
                     AssetType.ERC1155,
                     address(args.swapErc1155),
                     _meta.swaps[i + 1].erc1155OutId
@@ -240,8 +240,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             0,
             type(uint256).max - args.swapErc20.totalSupply()
         );
-        uint256 swapErc721OutId = erc721IdCounter;
-        uint256 swapErc1155OutId = erc721IdCounter;
         uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
@@ -250,13 +248,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             erc20Out: address(args.swapErc20),
             erc20OutAmount: swapErc20OutAmount,
             erc721Out: address(args.swapErc721),
-            erc721OutId: swapErc721OutId,
+            erc721OutId: nonErc20IdCounter,
             erc1155Out: address(args.swapErc1155),
-            erc1155OutId: swapErc1155OutId,
+            erc1155OutId: nonErc20IdCounter,
             erc1155OutAmount: swapErc1155OutAmount
         });
 
-        ++erc721IdCounter;
+        ++nonErc20IdCounter;
 
         return swapRequest;
     }

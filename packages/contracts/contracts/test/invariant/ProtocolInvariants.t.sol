@@ -171,8 +171,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         excludeSender(tellerHandler.BUNDLER_ADDRESS());
         excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
         excludeSender(SCREENER_ADDRESS);
-        excludeSender(address(depositManagerHandler));
         excludeSender(address(tellerHandler));
+        excludeSender(address(handlerHandler));
+        excludeSender(address(depositManagerHandler));
         excludeSender(address(swapper));
         excludeSender(address(teller));
         excludeSender(address(handler));
@@ -279,6 +280,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_operation_totalSwapErc20ReceivedMatchesTellerBalance();
     }
 
+    // TODO: very broken, erc721 bug somewhere in test or prod code
     // function invariant_operation_tellerOwnsAllSwapErc721s() external {
     //     assert_operation_tellerOwnsAllSwapErc721s();
     // }

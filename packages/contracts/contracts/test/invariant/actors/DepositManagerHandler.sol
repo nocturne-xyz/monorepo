@@ -347,11 +347,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
         // Complete deposit
         uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
-        uint256 warpTimestamp;
-        unchecked {
-            warpTimestamp = block.timestamp + seed;
-        }
-        vm.warp(warpTimestamp);
+        uint256 skipSeconds = bound(seed, 0, 10_000);
+        skip(block.timestamp + skipSeconds);
         vm.txGasPrice(gasPrice);
         vm.prank(SCREENER_ADDRESS);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {

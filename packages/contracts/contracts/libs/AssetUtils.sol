@@ -94,9 +94,12 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
         } else if (assetType == AssetType.ERC721) {
-            if (IERC721(assetAddr).ownerOf(id) == address(this)) {
-                value = 1;
-            }
+            // If erc721 not minted, return balance = 0
+            try IERC721(assetAddr).ownerOf(id) returns (address owner) {
+                if (owner == address(this)) {
+                    value = 1;
+                }
+            } catch {}
         } else if (assetType == AssetType.ERC1155) {
             value = IERC1155(assetAddr).balanceOf(address(this), id);
         }
