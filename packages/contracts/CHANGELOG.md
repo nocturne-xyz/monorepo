@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- unit and invariant tests now use `vm.txGasPrice` and test screener comp with non-zero comp amounts
+- rename `DepositSumSet` to `ActorSumSet`
+- fix comment on guarantees around screener compensation
 - ensure deposited and refunded assets are in allowlist and add corresponding unit tests
 - make protocol allowlist only address, remove function selector specificity
 - update invariant tests to use multideposit for erc20s and eth
