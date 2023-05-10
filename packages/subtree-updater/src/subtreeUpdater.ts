@@ -11,6 +11,7 @@ import {
   assertOrErr,
   packToSolidityProof,
   subtreeUpdateInputsFromBatch,
+  range,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -28,10 +29,12 @@ export interface SubtreeUpdaterHandle {
 }
 
 const PROOF_QUEUE_NAME = "ROOF_QUEUE";
+const PROOF_JOB_TAG = "PROOF_JOB";
 const SUBMISSION_QUEUE_NAME = "SUBMISSION_QUEUE";
+const SUBMISSION_JOB_TAG = "SUBMISSION_JOB";
 
 const BATCH_SIZE = 16;
-const FALSY_ARRAY = new Array(BATCH_SIZE).fill(false);
+const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {
   fillBatchLatency?: number;
@@ -44,6 +47,7 @@ export class SubtreeUpdater {
   adapter: SubtreeUpdaterSyncAdapter;
   logger: Logger;
 
+  redis: IORedis;
   leafDB: LeafDB;
   tree: SparseMerkleProver;
   prover: SubtreeUpdateProver;
@@ -73,6 +77,7 @@ export class SubtreeUpdater {
     this.fillBatchLatency = opts?.fillBatchLatency;
     this.fillBatchTimeout = undefined;
 
+    this.redis = redis;
     this.proofQueue = new Queue(PROOF_QUEUE_NAME, { connection: redis });
     this.submissionQueue = new Queue(SUBMISSION_QUEUE_NAME, {
       connection: redis,
@@ -102,7 +107,7 @@ export class SubtreeUpdater {
         const latestSubtrreeIndex =
           await this.adapter.fetchLatestSubtreeIndex();
         if (latestSubtrreeIndex < job.subtreeIndex) {
-          await this.proofQueue.add(PROOF_QUEUE_NAME, job, {
+          await this.proofQueue.add(PROOF_JOB_TAG, job, {
             attempts: 3,
           });
         }
@@ -157,13 +162,20 @@ export class SubtreeUpdater {
   }
 
   startProver(logger: Logger): Worker<ProofJobData, any, string> {
-    return new Worker(PROOF_QUEUE_NAME, async (job: Job<ProofJobData>) => {
-      const { proofInputs, newRoot } = job.data;
-      logger.info("handling subtree update prover job", job.data);
+    return new Worker(
+      PROOF_QUEUE_NAME,
+      async (job: Job<ProofJobData>) => {
+        const { proofInputs, newRoot } = job.data;
+        logger.info("handling subtree update prover job", job.data);
 
-      const proof = await this.prover.proveSubtreeUpdate(proofInputs);
-      await this.submissionQueue.add(SUBMISSION_QUEUE_NAME, { proof, newRoot });
-    });
+        const proof = await this.prover.proveSubtreeUpdate(proofInputs);
+        await this.submissionQueue.add(SUBMISSION_JOB_TAG, { proof, newRoot });
+      },
+      {
+        connection: this.redis,
+        autorun: true,
+      }
+    );
   }
 
   startSubmitter(logger: Logger): Worker<SubmissionJobData, any, string> {
@@ -197,6 +209,10 @@ export class SubtreeUpdater {
           }
           logger.warn("update already submitted by another agent");
         }
+      },
+      {
+        connection: this.redis,
+        autorun: true,
       }
     );
   }
@@ -248,7 +264,11 @@ export class SubtreeUpdater {
             ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
             : NoteTrait.toCommitment(noteOrCommitment as IncludedNote)
         );
-        this.tree.insertBatch(subtreeLeftmostPathIndex, leaves, FALSY_ARRAY);
+        this.tree.insertBatch(
+          subtreeLeftmostPathIndex,
+          leaves,
+          SUBTREE_INCLUDE_ARRAY
+        );
 
         const batch = notesOrCommitments.map((noteOrCommitment) =>
           NoteTrait.isCommitment(noteOrCommitment)
@@ -259,6 +279,10 @@ export class SubtreeUpdater {
         const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
+
+        // prune the leftmost leaf now that we've got the merkle root for the subtree
+        this.tree.markForPruning(subtreeLeftmostPathIndex);
+        this.tree.prune();
 
         this.logger.info("retrieved batch", {
           subtreeIndex,

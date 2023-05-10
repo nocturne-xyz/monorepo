@@ -20,6 +20,7 @@ const logger = makeTestLogger("subtree-updater", "subtree-updater");
 
 describe("subtree updater", async () => {
   let aliceEoa: ethers.Wallet;
+  let teardown: () => Promise<void>;
 
   let depositManager: DepositManager;
   let handler: Handler;
@@ -40,8 +41,8 @@ describe("subtree updater", async () => {
     teardown = testDeployment.teardown;
     subgraphUrl =
       testDeployment.actorConfig.configs!.subtreeUpdater!.subgraphUrl!;
-    ({ handler, depositManager } = testDeployment);
-    const { provider, config } = testDeployment;
+    ({ handler, depositManager, teardown } = testDeployment);
+    const { provider, contractDeployment } = testDeployment;
 
     const [_aliceEoa, _subtreeUpdaterEoa] = KEYS_TO_WALLETS(provider);
     aliceEoa = _aliceEoa;
@@ -82,6 +83,7 @@ describe("subtree updater", async () => {
 
   afterEach(async () => {
     await clearRedis();
+    await teardown();
   });
 
   it("can recover state", async () => {

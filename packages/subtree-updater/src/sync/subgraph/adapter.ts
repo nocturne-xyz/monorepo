@@ -4,11 +4,10 @@ import {
   IterSyncOpts,
   min,
   sleep,
-  IncludedNote,
-  IncludedNoteCommitment,
+  Note,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import { fetchNotesOrCommitments } from "./fetch";
+import { fetchInsertions } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -24,9 +23,9 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   iterInsertions(
-    startMerkleIndex: number,
+    startBlock: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
+  ): ClosableAsyncIterator<Note | bigint> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;
@@ -35,26 +34,29 @@ export class SubgraphSubtreeUpdaterSyncAdapter
 
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startMerkleIndex;
+      let from = startBlock;
       while (!closed) {
-        const to = from + chunkSize;
+        let to = from + chunkSize;
 
         // Only fetch up to the latest indexed block
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        to = min(to, latestIndexedBlock);
 
         console.log(`fetching notes from merkle index ${from} to ${to}...`);
-        const noteOrCommitments: (IncludedNote | IncludedNoteCommitment)[] =
-          await fetchNotesOrCommitments(endpoint, from, to, latestIndexedBlock);
+        const insertions: (Note | bigint[])[] = await fetchInsertions(
+          endpoint,
+          from,
+          to
+        );
 
-        // if none were returned, then we've reached the end of the tree
-        // sleep and wait for more insertions
-        if (noteOrCommitments.length === 0) {
-          await sleep(5_000);
-          continue;
-        }
-
-        for (const noteOrCommitment of noteOrCommitments) {
-          yield noteOrCommitment;
+        for (const insertion of insertions) {
+          if (Array.isArray(insertion)) {
+            for (const nc of insertion) {
+              yield nc;
+            }
+          } else {
+            yield insertion;
+          }
         }
 
         from = to + 1;

@@ -153,7 +153,9 @@ export function handleInsertNote(event: InsertNote): void {
   insertion.save();
 }
 
-export function handleInsertNoteCommitments(event: InsertNoteCommitments): void {
+export function handleInsertNoteCommitments(
+  event: InsertNoteCommitments
+): void {
   const totalLogIndex = getTotalLogIndex(event);
   const id = toPadded32BArray(getTotalEntityIndex(totalLogIndex, 0));
 

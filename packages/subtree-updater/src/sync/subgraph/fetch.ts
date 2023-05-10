@@ -1,145 +1,87 @@
-import {
-  AssetTrait,
-  IncludedNote,
-  IncludedNoteCommitment,
-  StealthAddress,
-  SubgraphUtils,
-} from "@nocturne-xyz/sdk";
+import { Note, SubgraphUtils, EncodedNote, NoteTrait } from "@nocturne-xyz/sdk";
 
 const { makeSubgraphQuery, totalEntityIndexFromBlockNumber } = SubgraphUtils;
 
-interface NoteResponse {
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
+interface CompressedNoteResponse {
+  ownerH1: string;
+  ownerH2: string;
   nonce: string;
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
 }
 
-interface EncryptedNoteResponse {
-  id: string;
-  idx: string;
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
-  encappedKey: string;
-  encryptedNonce: string;
-  encryptedValue: string;
-  encodedAssetAddr: string;
-  encodedAssetId: string;
-  commitment: string;
+interface InsertionResponse {
+  note: CompressedNoteResponse | null;
+  encryptedNote: string[] | null;
 }
 
-interface EncodedOrEncryptedNoteResponse {
-  merkleIndex: string;
-  note: NoteResponse | null;
-  encryptedNote: EncryptedNoteResponse | null;
-}
-
-interface FetchNotesResponse {
+interface FetchInsertionsResponse {
   data: {
-    encodedOrEncryptedNotes: EncodedOrEncryptedNoteResponse[];
+    treeInsertions: InsertionResponse[];
   };
 }
 
-interface FetchNotesVars {
-  fromMerkleIndex: string;
-  toMerkleIndex: string;
-  toEntityIndex: string;
+interface FetchInsertionsVars {
+  fromIdx: string;
+  toIdx: string;
 }
 
-const notesQuery = `\
-query fetchNotes($fromMerkleIndex: BigInt!, $toMerkleIndex: BigInt!, $toEntityIndex: Bytes!) {
-  encodedOrEncryptedNotes(where: { merkleIdx_gte: $fromMerkleIndex, merkleIdx_lt: $toMerkleIndex, idx_lt: $toEntityIndex}) {
-    merkleIndex
+const insertionsQuery = `\
+query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
+  treeInsertions(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
     note {
-      ownerH1X
-      ownerH1Y
-      ownerH2X
-      ownerH2Y
+      ownerH1
+      ownerH2
       nonce
       encodedAssetAddr
       encodedAssetId
       value
     }
-    encryptedNote {
-      commitment
-    }
+    noteCommitments
   }
 }`;
 
 // gets note or note commitments for the given merkle index range, up to `toBlock`
-// the range is inclusive - i.e. [fromMerkleIndex, toMerkleIndex]
-export async function fetchNotesOrCommitments(
+// the range is inclusive - i.e. [fromBlock, toBlock]
+export async function fetchInsertions(
   endpoint: string,
-  fromMerkleIndex: number,
-  toMerkleIndex: number,
+  fromBlock: number,
   toBlock: number
-): Promise<(IncludedNote | IncludedNoteCommitment)[]> {
-  const query = makeSubgraphQuery<FetchNotesVars, FetchNotesResponse>(
+): Promise<(Note | bigint[])[]> {
+  const query = makeSubgraphQuery<FetchInsertionsVars, FetchInsertionsResponse>(
     endpoint,
-    notesQuery,
-    "notes"
+    insertionsQuery,
+    "treeInsertions"
   );
 
-  const toEntityIndex = totalEntityIndexFromBlockNumber(
-    BigInt(toBlock + 1)
-  ).toString();
-  const res = await query({
-    fromMerkleIndex: fromMerkleIndex.toString(),
-    toMerkleIndex: toMerkleIndex.toString(),
-    toEntityIndex,
-  });
-  return res.data.encodedOrEncryptedNotes.map(
-    ({ merkleIndex, note, encryptedNote }) => {
-      if (note) {
-        return includedNoteFromNoteResponse(note, parseInt(merkleIndex));
-      } else if (encryptedNote) {
-        return {
-          merkleIndex: parseInt(merkleIndex),
-          noteCommitment: BigInt(encryptedNote.commitment),
-        };
-      } else {
-        throw new Error("res must contain either note or encryptedNote");
-      }
-    }
-  );
-}
+  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
+  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
+  const res = await query({ fromIdx, toIdx });
 
-function includedNoteFromNoteResponse(
-  noteResponse: NoteResponse,
-  merkleIndex: number
-): IncludedNote {
-  const h1X = BigInt(noteResponse.ownerH1X);
-  const h1Y = BigInt(noteResponse.ownerH1Y);
-  const h2X = BigInt(noteResponse.ownerH2X);
-  const h2Y = BigInt(noteResponse.ownerH2Y);
-  const owner: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  if (res.data.note) {
+    // TODO: get Y coordinate
+    const encodedNote: EncodedNote = {
+      owner: {
+        h1X: BigInt(res.data.note.ownerH1),
+        h1Y: 0n,
+        h2X: BigInt(res.data.note.ownerH2),
+        h2Y: 0n,
+      },
+      nonce: BigInt(res.data.note.nonce),
+      encodedAssetAddr: BigInt(res.data.note.encodedAssetAddr),
+      encodedAssetId: BigInt(res.data.note.encodedAssetId),
+      value: BigInt(res.data.note.value),
+    };
 
-  const encodedAssetAddr = BigInt(noteResponse.encodedAssetAddr);
-  const encodedAssetId = BigInt(noteResponse.encodedAssetId);
-  const asset = AssetTrait.decode({ encodedAssetAddr, encodedAssetId });
-
-  const nonce = BigInt(noteResponse.nonce);
-  const value = BigInt(noteResponse.value);
-
-  return {
-    owner,
-    asset,
-    nonce,
-    value,
-
-    merkleIndex,
-  };
+    return NoteTrait.decode(encodedNote);
+  } else if (res.data.noteCommitments) {
+    return (res.data.noteCommitments as string[]).map((commitment) =>
+      BigInt(commitment)
+    );
+  } else {
+    throw new Error("res must contain either note or noteCommitments");
+  }
 }
 
 const latestSubtreeCommitQuery = `\
