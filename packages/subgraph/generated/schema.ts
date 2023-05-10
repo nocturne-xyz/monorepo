@@ -602,3 +602,162 @@ export class SubtreeCommit extends Entity {
     this.set("subtreeIndex", Value.fromBigInt(value));
   }
 }
+
+export class TreeInsertion extends Entity {
+  constructor(id: Bytes) {
+    super();
+    this.set("id", Value.fromBytes(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TreeInsertion entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.BYTES,
+        `Entities of type TreeInsertion must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TreeInsertion", id.toBytes().toHexString(), this);
+    }
+  }
+
+  static load(id: Bytes): TreeInsertion | null {
+    return changetype<TreeInsertion | null>(
+      store.get("TreeInsertion", id.toHexString())
+    );
+  }
+
+  get id(): Bytes {
+    let value = this.get("id");
+    return value!.toBytes();
+  }
+
+  set id(value: Bytes) {
+    this.set("id", Value.fromBytes(value));
+  }
+
+  get note(): Bytes | null {
+    let value = this.get("note");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set note(value: Bytes | null) {
+    if (!value) {
+      this.unset("note");
+    } else {
+      this.set("note", Value.fromBytes(<Bytes>value));
+    }
+  }
+
+  get noteCommitments(): Array<BigInt> | null {
+    let value = this.get("noteCommitments");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBigIntArray();
+    }
+  }
+
+  set noteCommitments(value: Array<BigInt> | null) {
+    if (!value) {
+      this.unset("noteCommitments");
+    } else {
+      this.set("noteCommitments", Value.fromBigIntArray(<Array<BigInt>>value));
+    }
+  }
+}
+
+export class CompressedEncodedNote extends Entity {
+  constructor(id: Bytes) {
+    super();
+    this.set("id", Value.fromBytes(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id != null,
+      "Cannot save CompressedEncodedNote entity without an ID"
+    );
+    if (id) {
+      assert(
+        id.kind == ValueKind.BYTES,
+        `Entities of type CompressedEncodedNote must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("CompressedEncodedNote", id.toBytes().toHexString(), this);
+    }
+  }
+
+  static load(id: Bytes): CompressedEncodedNote | null {
+    return changetype<CompressedEncodedNote | null>(
+      store.get("CompressedEncodedNote", id.toHexString())
+    );
+  }
+
+  get id(): Bytes {
+    let value = this.get("id");
+    return value!.toBytes();
+  }
+
+  set id(value: Bytes) {
+    this.set("id", Value.fromBytes(value));
+  }
+
+  get ownerH1(): BigInt {
+    let value = this.get("ownerH1");
+    return value!.toBigInt();
+  }
+
+  set ownerH1(value: BigInt) {
+    this.set("ownerH1", Value.fromBigInt(value));
+  }
+
+  get ownerH2(): BigInt {
+    let value = this.get("ownerH2");
+    return value!.toBigInt();
+  }
+
+  set ownerH2(value: BigInt) {
+    this.set("ownerH2", Value.fromBigInt(value));
+  }
+
+  get nonce(): BigInt {
+    let value = this.get("nonce");
+    return value!.toBigInt();
+  }
+
+  set nonce(value: BigInt) {
+    this.set("nonce", Value.fromBigInt(value));
+  }
+
+  get encodedAssetAddr(): BigInt {
+    let value = this.get("encodedAssetAddr");
+    return value!.toBigInt();
+  }
+
+  set encodedAssetAddr(value: BigInt) {
+    this.set("encodedAssetAddr", Value.fromBigInt(value));
+  }
+
+  get encodedAssetId(): BigInt {
+    let value = this.get("encodedAssetId");
+    return value!.toBigInt();
+  }
+
+  set encodedAssetId(value: BigInt) {
+    this.set("encodedAssetId", Value.fromBigInt(value));
+  }
+
+  get value(): BigInt {
+    let value = this.get("value");
+    return value!.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
+  }
+}

@@ -1,4 +1,6 @@
 import {
+  InsertNote,
+  InsertNoteCommitments,
   JoinSplitProcessed,
   RefundProcessed,
   SubtreeUpdate,
@@ -9,6 +11,8 @@ import {
   EncryptedNote,
   SubtreeCommit,
   Nullifier,
+  CompressedEncodedNote,
+  TreeInsertion,
 } from "../generated/schema";
 import {
   getTotalLogIndex,
@@ -130,4 +134,30 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   commit.subtreeIndex = event.params.subtreeIndex;
   commit.idx = idx;
   commit.save();
+}
+
+export function handleInsertNote(event: InsertNote): void {
+  const totalLogIndex = getTotalLogIndex(event);
+  const id = toPadded32BArray(getTotalEntityIndex(totalLogIndex, 0));
+
+  const compressedNote = new CompressedEncodedNote(id);
+  compressedNote.ownerH1 = event.params.note.ownerH1;
+  compressedNote.ownerH2 = event.params.note.ownerH2;
+  compressedNote.encodedAssetAddr = event.params.note.encodedAssetAddr;
+  compressedNote.encodedAssetId = event.params.note.encodedAssetId;
+  compressedNote.value = event.params.note.value;
+  compressedNote.save();
+
+  const insertion = new TreeInsertion(id);
+  insertion.note = id;
+  insertion.save();
+}
+
+export function handleInsertNoteCommitments(event: InsertNoteCommitments): void {
+  const totalLogIndex = getTotalLogIndex(event);
+  const id = toPadded32BArray(getTotalEntityIndex(totalLogIndex, 0));
+
+  const insertion = new TreeInsertion(id);
+  insertion.noteCommitments = event.params.commitments;
+  insertion.save();
 }
