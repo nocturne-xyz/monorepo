@@ -249,6 +249,14 @@ contract InvariantsBase is Test {
                 allActors[i].balance,
                 depositManagerHandler.ghost_totalSuppliedGasCompensationFor(
                     allActors[i]
+                ),
+                string(
+                    abi.encodePacked(
+                        "actor balance too high. Address:",
+                        allActors[i],
+                        ". Balance:",
+                        allActors[i].balance
+                    )
                 )
             );
         }

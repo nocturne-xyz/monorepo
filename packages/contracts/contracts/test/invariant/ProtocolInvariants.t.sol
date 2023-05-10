@@ -280,10 +280,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_operation_totalSwapErc20ReceivedMatchesTellerBalance();
     }
 
-    // TODO: very broken, erc721 bug somewhere in test or prod code
-    // function invariant_operation_tellerOwnsAllSwapErc721s() external {
-    //     assert_operation_tellerOwnsAllSwapErc721s();
-    // }
+    function invariant_operation_tellerOwnsAllSwapErc721s() external {
+        assert_operation_tellerOwnsAllSwapErc721s();
+    }
 
     function invariant_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
         external

@@ -52,7 +52,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
     uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
-    uint256 constant DEFAULT_MAX_NUM_REFUNDS = 6;
+    uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;
 
     address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
 
