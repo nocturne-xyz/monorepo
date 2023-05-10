@@ -6,6 +6,7 @@ import {
 import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
 import { randomFr } from "./utils";
+import { decodePoint } from "./noteEncryption";
 
 export interface StealthAddress {
   h1X: bigint;
@@ -37,6 +38,13 @@ export class StealthAddressTrait {
       h2X: h2.x,
       h2Y: h2.y,
     };
+  }
+
+  static fromCompressedPoints(H1X: bigint, H2X: bigint): StealthAddress {
+    const H1 = decodePoint(H1X);
+    const H2 = decodePoint(H2X);
+
+    return StealthAddressTrait.fromPoints({ h1: H1, h2: H2 });
   }
 
   static toString(address: StealthAddress): string {
