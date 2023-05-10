@@ -248,6 +248,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_deposit_actorBalanceNeverExceedsInstantiatedErc20();
     }
 
+    function invariant_deposit_screenerBalanceInBounds() external {
+        assert_deposit_screenerBalanceInBounds();
+    }
+
     /*****************************
      * Operations
      *****************************/

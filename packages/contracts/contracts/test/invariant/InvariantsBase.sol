@@ -234,6 +234,14 @@ contract InvariantsBase is Test {
         }
     }
 
+    function assert_deposit_screenerBalanceInBounds() internal {
+        assertGe(SCREENER_ADDRESS.balance, 0);
+        assertLe(
+            SCREENER_ADDRESS.balance,
+            depositManagerHandler.ghost_totalSuppliedGasCompensation()
+        );
+    }
+
     // _______________OPERATIONS_______________
 
     function assert_operation_totalSwapErc20ReceivedMatchesTellerBalance()
