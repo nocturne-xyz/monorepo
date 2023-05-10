@@ -3326,7 +3326,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
-    "@nocturne-xyz/sdk": 1.0.106-alpha
+    "@nocturne-xyz/sdk": 1.0.108-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3385,7 +3385,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@^1.0.5-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@npm:1.0.4-alpha":
+  version: 1.0.4-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.4-alpha"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+  checksum: 205f6dc305a3e1d4456ef9348864f0489f5ce1f9e5d4333f7b9f32e78318c8ec05674a16b580991e0813b23371fd2f7498ced83e7386223dfeb4ad4c31a9f9fb
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3408,17 +3418,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:1.0.4-alpha":
-  version: 1.0.4-alpha
-  resolution: "@nocturne-xyz/config@npm:1.0.4-alpha"
-  dependencies:
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-  checksum: 205f6dc305a3e1d4456ef9348864f0489f5ce1f9e5d4333f7b9f32e78318c8ec05674a16b580991e0813b23371fd2f7498ced83e7386223dfeb4ad4c31a9f9fb
-  languageName: node
-  linkType: hard
-
-"@nocturne-xyz/contracts@1.0.22-alpha, @nocturne-xyz/contracts@^1.0.22-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.22-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3480,7 +3480,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
-    "@nocturne-xyz/sdk": 1.0.106-alpha
+    "@nocturne-xyz/sdk": 1.0.108-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3659,25 +3659,6 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
-
-"@nocturne-xyz/sdk@npm:1.0.106-alpha":
-  version: 1.0.106-alpha
-  resolution: "@nocturne-xyz/sdk@npm:1.0.106-alpha"
-  dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": ^1.0.5-alpha
-    "@nocturne-xyz/contracts": ^1.0.22-alpha
-    "@types/randombytes": ^2.0.0
-    "@zk-kit/incremental-merkle-tree": ^1.0.0
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-    ethers: ^5.7.2
-    js-sha256: ^0.9.0
-    randombytes: ^2.1.0
-    sorted-btree: ^1.8.1
-  checksum: 80441cf0403ff9626a29ce0b81190adfe5edf776e93760d34bcdd4687c2fbaa709ef562868857773e699a4e78cba9f3c06885ef9967d0857f82be8628a0c7bf4
-  languageName: node
-  linkType: hard
 
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local
