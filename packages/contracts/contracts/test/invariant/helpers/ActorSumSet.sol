@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
-struct DepositSumSet {
+struct ActorSumSet {
     mapping(address => uint256) deposits;
     address[] actors;
 }
 
 library LibDepositSumSet {
     function addToActorSum(
-        DepositSumSet storage self,
+        ActorSumSet storage self,
         address actor,
         uint256 amount
     ) internal {
@@ -19,14 +19,14 @@ library LibDepositSumSet {
     }
 
     function getSumForActor(
-        DepositSumSet storage self,
+        ActorSumSet storage self,
         address actor
     ) internal view returns (uint256) {
         return self.deposits[actor];
     }
 
     function getTotalForAll(
-        DepositSumSet storage self
+        ActorSumSet storage self
     ) public view returns (uint256) {
         uint256 totalDeposits = 0;
 

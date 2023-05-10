@@ -16,7 +16,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {DepositSumSet, LibDepositSumSet} from "../helpers/DepositSumSet.sol";
+import {ActorSumSet, LibDepositSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -25,7 +25,7 @@ import "../../../libs/Types.sol";
 contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
-    using LibDepositSumSet for DepositSumSet;
+    using LibDepositSumSet for ActorSumSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -47,7 +47,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     SimpleERC1155Token public erc1155;
 
     bytes32 public lastCall;
-    uint256 public ghost_totalSuppliedGasCompensation;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
@@ -56,13 +55,15 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     address internal _currentActor;
     uint256 internal _actorNum = 0;
 
-    DepositSumSet internal _instantiateDepositSumSetETH;
-    DepositSumSet internal _retrieveDepositSumSetETH;
-    DepositSumSet internal _completeDepositSumSetETH;
+    ActorSumSet internal _gasCompensationSet;
 
-    DepositSumSet internal _instantiateDepositSumSetErc20;
-    DepositSumSet internal _retrieveDepositSumSetErc20;
-    DepositSumSet internal _completeDepositSumSetErc20;
+    ActorSumSet internal _instantiateDepositSumSetETH;
+    ActorSumSet internal _retrieveDepositSumSetETH;
+    ActorSumSet internal _completeDepositSumSetETH;
+
+    ActorSumSet internal _instantiateDepositSumSetErc20;
+    ActorSumSet internal _retrieveDepositSumSetErc20;
+    ActorSumSet internal _completeDepositSumSetErc20;
 
     DepositRequest[] internal _depositSet;
 
@@ -137,7 +138,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         console.log("screener balance:", SCREENER_ADDRESS.balance);
         console.log(
             "total supplied gas compensation:",
-            ghost_totalSuppliedGasCompensation
+            ghost_totalSuppliedGasCompensation()
         );
         console.log("no-op", _calls["no-op"]);
     }
@@ -201,7 +202,10 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             );
         }
 
-        ghost_totalSuppliedGasCompensation += (gasCompPerDeposit * numDeposits);
+        _gasCompensationSet.addToActorSum(
+            _currentActor,
+            gasCompPerDeposit * numDeposits
+        );
     }
 
     function instantiateDepositErc20(
@@ -273,7 +277,10 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             );
         }
 
-        ghost_totalSuppliedGasCompensation += (gasCompPerDeposit * numDeposits);
+        _gasCompensationSet.addToActorSum(
+            _currentActor,
+            gasCompPerDeposit * numDeposits
+        );
     }
 
     function retrieveDepositErc20(
@@ -378,6 +385,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     function ghost_AllActors() public view returns (address[] memory) {
         return _actors.addresses();
+    }
+
+    function ghost_totalSuppliedGasCompensation()
+        public
+        view
+        returns (uint256)
+    {
+        return _gasCompensationSet.getTotalForAll();
     }
 
     function ghost_instantiateDepositSumETH() public view returns (uint256) {
