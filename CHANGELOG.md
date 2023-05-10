@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- site script runs new subtree updater:
+	- use docker compose
+	- update env file with new redis url
 - add `M1_README` for M1 users
 - move `rebuild_graph_m1.sh` to root `scripts`
 - add README to scripts dir
