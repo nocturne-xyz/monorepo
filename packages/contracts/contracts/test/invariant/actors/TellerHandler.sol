@@ -87,11 +87,26 @@ contract TellerHandler is OperationGenerator {
             joinSplitToken.balanceOf(BUNDLER_ADDRESS)
         );
 
+        console.log(
+            "Swapper joinsplit balance",
+            joinSplitToken.balanceOf(address(swapper))
+        );
+        console.log("swap erc20 received:", ghost_totalSwapErc20Received());
+
+        uint256[] memory swapErc721Ids = ghost_swapErc721IdsReceived();
+        for (uint256 i = 0; i < swapErc721Ids.length; i++) {
+            console.log("swap erc721 received id:", swapErc721Ids[i]);
+        }
+
+        uint256[] memory swapErc1155Ids = ghost_swapErc1155IdsReceived();
+        for (uint256 i = 0; i < swapErc1155Ids.length; i++) {
+            console.log("swap erc1155s received id:", swapErc1155Ids[i]);
+        }
+
         console.log("Failure reasons:");
         for (uint256 i = 0; i < _failureReasons.length; i++) {
             console.log(_failureReasons[i]);
         }
-
         console.log("Metadata:");
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             console.log("Transfer amount", _successfulTransfers[i].amount);
@@ -99,11 +114,6 @@ contract TellerHandler is OperationGenerator {
         for (uint256 i = 0; i < _successfulSwaps.length; i++) {
             console.log("Swap in amount", _successfulSwaps[i].assetInAmount);
         }
-
-        console.log(
-            "Swapper joinsplit balance",
-            joinSplitToken.balanceOf(address(swapper))
-        );
     }
 
     function processBundle(uint256 seed) external {
@@ -116,7 +126,7 @@ contract TellerHandler is OperationGenerator {
                     teller: teller,
                     handler: address(handler),
                     root: handler.root(),
-                    statefulNfGeneration: false,
+                    statefulNfGeneration: true,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
@@ -163,11 +173,7 @@ contract TellerHandler is OperationGenerator {
     }
 
     // ______VIEW______
-    function ghost_totalTransferredOutOfTeller()
-        external
-        view
-        returns (uint256)
-    {
+    function ghost_totalTransferredOutOfTeller() public view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             total += _successfulTransfers[i].amount;
@@ -178,7 +184,7 @@ contract TellerHandler is OperationGenerator {
         return total;
     }
 
-    function ghost_totalSwapErc20Received() external view returns (uint256) {
+    function ghost_totalSwapErc20Received() public view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < _successfulSwaps.length; i++) {
             total += _successfulSwaps[i].erc20OutAmount;
@@ -188,7 +194,7 @@ contract TellerHandler is OperationGenerator {
 
     function ghost_totalSwapErc1155ReceivedForId(
         uint256 id
-    ) external view returns (uint256) {
+    ) public view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < _successfulSwaps.length; i++) {
             if (_successfulSwaps[i].erc1155OutId == id) {
@@ -199,7 +205,7 @@ contract TellerHandler is OperationGenerator {
     }
 
     function ghost_swapErc721IdsReceived()
-        external
+        public
         view
         returns (uint256[] memory)
     {
@@ -207,7 +213,7 @@ contract TellerHandler is OperationGenerator {
     }
 
     function ghost_swapErc1155IdsReceived()
-        external
+        public
         view
         returns (uint256[] memory)
     {

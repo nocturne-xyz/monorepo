@@ -50,13 +50,14 @@ struct GeneratedOperationMetadata {
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
-    uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 500_000;
+    uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 6;
 
     address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
 
     uint256 nullifierCount = 0;
+    uint256 erc721IdCounter = 0;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
@@ -79,7 +80,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
-        uint256 numActions = bound(args.seed, 2, 5);
+        uint256 numActions = bound(args.seed, 2, 7);
         Action[] memory actions = new Action[](numActions);
         EncodedAsset[] memory encodedRefundAssets;
 
@@ -136,30 +137,49 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 );
                 _meta.isSwap[i + 1] = true;
 
-                // Kludge to satisfy stack limit
-                SimpleERC20Token inToken = args.joinSplitToken;
-                TokenSwapper swapper = args.swapper;
+                {
+                    // Kludge to satisfy stack limit
+                    SimpleERC20Token inToken = args.joinSplitToken;
+                    TokenSwapper swapper = args.swapper;
 
-                Action memory approveAction = Action({
-                    contractAddress: address(inToken),
-                    encodedFunction: abi.encodeWithSelector(
-                        inToken.approve.selector,
-                        address(swapper),
-                        joinSplitUseAmount
-                    )
-                });
+                    Action memory approveAction = Action({
+                        contractAddress: address(inToken),
+                        encodedFunction: abi.encodeWithSelector(
+                            inToken.approve.selector,
+                            address(swapper),
+                            joinSplitUseAmount
+                        )
+                    });
 
-                // Kludge to satisfy stack limit
-                SwapRequest memory swapRequest = _meta.swaps[i + 1];
+                    // Kludge to satisfy stack limit
+                    SwapRequest memory swapRequest = _meta.swaps[i + 1];
 
-                actions[i] = approveAction;
-                actions[i + 1] = Action({
-                    contractAddress: address(swapper),
-                    encodedFunction: abi.encodeWithSelector(
-                        swapper.swap.selector,
-                        swapRequest
-                    )
-                });
+                    actions[i] = approveAction;
+                    actions[i + 1] = Action({
+                        contractAddress: address(swapper),
+                        encodedFunction: abi.encodeWithSelector(
+                            swapper.swap.selector,
+                            swapRequest
+                        )
+                    });
+                }
+
+                encodedRefundAssets = new EncodedAsset[](2);
+                encodedRefundAssets[0] = AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(args.swapErc20),
+                    ERC20_ID
+                );
+                // encodedRefundAssets[1] = AssetUtils.encodeAsset(
+                //     AssetType.ERC721,
+                //     address(args.swapErc721),
+                //     _meta.swaps[i + 1].erc721OutId
+                // );
+                encodedRefundAssets[1] = AssetUtils.encodeAsset(
+                    AssetType.ERC1155,
+                    address(args.swapErc1155),
+                    _meta.swaps[i + 1].erc1155OutId
+                );
 
                 i += 1; // additional +1 to skip past swap action at i+1
             }
@@ -207,7 +227,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     function _createRandomSwapRequest(
         uint256 joinSplitUseAmount,
         GenerateOperationArgs memory args
-    ) internal view returns (SwapRequest memory) {
+    ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
             AssetType.ERC20,
@@ -218,13 +238,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 swapErc20OutAmount = bound(
             args.seed,
             0,
-            args.swapErc20.totalSupply()
+            type(uint256).max - args.swapErc20.totalSupply()
         );
-        uint256 swapErc721OutId = _getRandomErc721Id(
-            args.swapErc721,
-            args.seed
-        );
-        uint256 swapErc1155OutId = ERC20_ID;
+        uint256 swapErc721OutId = erc721IdCounter;
+        uint256 swapErc1155OutId = erc721IdCounter;
         uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
@@ -238,6 +255,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             erc1155OutId: swapErc1155OutId,
             erc1155OutAmount: swapErc1155OutAmount
         });
+
+        ++erc721IdCounter;
 
         return swapRequest;
     }
@@ -261,20 +280,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         joinSplitAmounts[numJoinSplits - 1] = remainingAmount;
 
         return joinSplitAmounts;
-    }
-
-    function _getRandomErc721Id(
-        SimpleERC721Token erc721,
-        uint256 seed
-    ) internal view returns (uint256 _id) {
-        for (uint256 j = 0; ; j++) {
-            if (!erc721.exists(seed)) {
-                _id = seed;
-                break;
-            }
-
-            seed++;
-        }
     }
 
     // Copied from Types.sol and built around not needing op beforehand

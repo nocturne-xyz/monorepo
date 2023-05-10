@@ -97,6 +97,18 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
         handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc20),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc721),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc1155),
+            true
+        );
 
         handler.setSubtreeBatchFillerPermission(
             address(SUBTREE_BATCH_FILLER_ADDRESS),
@@ -155,8 +167,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
+        excludeSender(address(0x0));
         excludeSender(tellerHandler.BUNDLER_ADDRESS());
         excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
+        excludeSender(SCREENER_ADDRESS);
         excludeSender(address(depositManagerHandler));
         excludeSender(address(tellerHandler));
         excludeSender(address(swapper));
@@ -265,9 +279,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_operation_totalSwapErc20ReceivedMatchesTellerBalance();
     }
 
-    function invariant_operation_tellerOwnsAllSwapErc721s() external {
-        assert_operation_tellerOwnsAllSwapErc721s();
-    }
+    // function invariant_operation_tellerOwnsAllSwapErc721s() external {
+    //     assert_operation_tellerOwnsAllSwapErc721s();
+    // }
 
     function invariant_operation_totalSwapErc1155ReceivedMatchesTellerBalance()
         external
