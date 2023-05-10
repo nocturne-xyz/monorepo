@@ -636,6 +636,15 @@ export class TreeInsertion extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
+  get idx(): BigInt {
+    let value = this.get("idx");
+    return value!.toBigInt();
+  }
+
+  set idx(value: BigInt) {
+    this.set("idx", Value.fromBigInt(value));
+  }
+
   get note(): Bytes | null {
     let value = this.get("note");
     if (!value || value.kind == ValueKind.NULL) {

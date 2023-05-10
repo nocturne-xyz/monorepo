@@ -138,11 +138,13 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
 
 export function handleInsertNote(event: InsertNote): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const id = toPadded32BArray(getTotalEntityIndex(totalLogIndex, 0));
+  const idx = getTotalEntityIndex(totalLogIndex, 0);
+  const id = toPadded32BArray(idx);
 
   const compressedNote = new CompressedEncodedNote(id);
   compressedNote.ownerH1 = event.params.note.ownerH1;
   compressedNote.ownerH2 = event.params.note.ownerH2;
+  compressedNote.nonce = event.params.note.nonce;
   compressedNote.encodedAssetAddr = event.params.note.encodedAssetAddr;
   compressedNote.encodedAssetId = event.params.note.encodedAssetId;
   compressedNote.value = event.params.note.value;
@@ -150,6 +152,7 @@ export function handleInsertNote(event: InsertNote): void {
 
   const insertion = new TreeInsertion(id);
   insertion.note = id;
+  insertion.idx = idx;
   insertion.save();
 }
 
@@ -157,9 +160,11 @@ export function handleInsertNoteCommitments(
   event: InsertNoteCommitments
 ): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const id = toPadded32BArray(getTotalEntityIndex(totalLogIndex, 0));
+  const idx = getTotalEntityIndex(totalLogIndex, 0);
+  const id = toPadded32BArray(idx);
 
   const insertion = new TreeInsertion(id);
+  insertion.idx = idx;
   insertion.noteCommitments = event.params.commitments;
   insertion.save();
 }

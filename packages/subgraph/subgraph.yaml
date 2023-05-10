@@ -18,6 +18,8 @@ dataSources:
         - EncodedNote
         - EncryptedNote
         - SubtreeCommit
+        - TreeInsertion
+        - CompressedEncodedNote
       abis:
         - name: Handler
           file: ./abis/Handler.json

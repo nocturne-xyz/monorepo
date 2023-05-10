@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add tree insertion events
 - store entity id in bigint form in new field `idx` for every entity
 - add `mainnet` (which actually points to locahost) to `networks.json`
   - TODO: figure out how to differentiate between locally-deployed mainnet and actual mainnet in config

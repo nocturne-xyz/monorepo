@@ -7,7 +7,7 @@ import {
   Note,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import { fetchInsertions } from "./fetch";
+import { fetchInsertions, fetchLatestSubtreeCommit } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -42,7 +42,12 @@ export class SubgraphSubtreeUpdaterSyncAdapter
         const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
         to = min(to, latestIndexedBlock);
 
-        console.log(`fetching notes from merkle index ${from} to ${to}...`);
+        // Exceeded tip, sleep
+        if (from > latestIndexedBlock) {
+          await sleep(1_000);
+          continue;
+        }
+
         const insertions: (Note | bigint[])[] = await fetchInsertions(
           endpoint,
           from,
@@ -73,7 +78,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   async fetchLatestSubtreeIndex(): Promise<number> {
-    const latestIndexedBlock = await fetchLatestIndexedBlock(
+    const latestIndexedBlock = await fetchLatestSubtreeCommit(
       this.graphqlEndpoint
     );
     return latestIndexedBlock;

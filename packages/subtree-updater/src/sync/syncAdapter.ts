@@ -3,7 +3,7 @@ import { ClosableAsyncIterator, IterSyncOpts, Note } from "@nocturne-xyz/sdk";
 export interface SubtreeUpdaterSyncAdapter {
   // iterate over insertions, pulling them by merkle index
   iterInsertions(
-    startMerkleIndex: number,
+    startBlock: number,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<Note | bigint>;
 

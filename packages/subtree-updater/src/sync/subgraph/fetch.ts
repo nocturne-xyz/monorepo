@@ -1,4 +1,10 @@
-import { Note, SubgraphUtils, EncodedNote, NoteTrait } from "@nocturne-xyz/sdk";
+import {
+  Note,
+  SubgraphUtils,
+  EncodedNote,
+  NoteTrait,
+  StealthAddressTrait,
+} from "@nocturne-xyz/sdk";
 
 const { makeSubgraphQuery, totalEntityIndexFromBlockNumber } = SubgraphUtils;
 
@@ -13,7 +19,7 @@ interface CompressedNoteResponse {
 
 interface InsertionResponse {
   note: CompressedNoteResponse | null;
-  encryptedNote: string[] | null;
+  noteCommitments: string[] | null;
 }
 
 interface FetchInsertionsResponse {
@@ -28,8 +34,8 @@ interface FetchInsertionsVars {
 }
 
 const insertionsQuery = `\
-query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
-  treeInsertions(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
+query fetchInsertions($fromIdx: Bytes!, $toIdx: Bytes!) {
+  treeInsertions(where: { idx_gte: $fromIdx, idx_lt: $toIdx }) {
     note {
       ownerH1
       ownerH2
@@ -59,33 +65,35 @@ export async function fetchInsertions(
   const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
   const res = await query({ fromIdx, toIdx });
 
-  if (res.data.note) {
-    // TODO: get Y coordinate
-    const encodedNote: EncodedNote = {
-      owner: {
-        h1X: BigInt(res.data.note.ownerH1),
-        h1Y: 0n,
-        h2X: BigInt(res.data.note.ownerH2),
-        h2Y: 0n,
-      },
-      nonce: BigInt(res.data.note.nonce),
-      encodedAssetAddr: BigInt(res.data.note.encodedAssetAddr),
-      encodedAssetId: BigInt(res.data.note.encodedAssetId),
-      value: BigInt(res.data.note.value),
-    };
+  return res.data.treeInsertions.map((insertion) => {
+    if (insertion.note) {
+      // TODO: get Y coordinate
+      const note = insertion.note;
+      const owner = StealthAddressTrait.fromCompressedPoints(
+        BigInt(note.ownerH1),
+        BigInt(note.ownerH2)
+      );
+      const encodedNote: EncodedNote = {
+        owner,
+        nonce: BigInt(note.nonce),
+        encodedAssetAddr: BigInt(note.encodedAssetAddr),
+        encodedAssetId: BigInt(note.encodedAssetId),
+        value: BigInt(note.value),
+      };
 
-    return NoteTrait.decode(encodedNote);
-  } else if (res.data.noteCommitments) {
-    return (res.data.noteCommitments as string[]).map((commitment) =>
-      BigInt(commitment)
-    );
-  } else {
-    throw new Error("res must contain either note or noteCommitments");
-  }
+      return NoteTrait.decode(encodedNote);
+    } else if (insertion.noteCommitments) {
+      return (insertion.noteCommitments as string[]).map((commitment) =>
+        BigInt(commitment)
+      );
+    } else {
+      throw new Error("insertion must contain either note or noteCommitments");
+    }
+  });
 }
 
 const latestSubtreeCommitQuery = `\
-  query latestSubtreeCommit() {
+  query latestSubtreeCommit {
     subtreeCommits(orderBy: subtreeIndex, orderDirection: desc, first: 1) {
       subtreeIndex
     }
@@ -113,7 +121,8 @@ export async function fetchLatestSubtreeCommit(
 
   const res = await query(undefined);
   if (res.data.subtreeCommits.length === 0) {
-    throw new Error("no subtree commits found");
+    return -1;
   }
+
   return parseInt(res.data.subtreeCommits[0].subtreeIndex);
 }

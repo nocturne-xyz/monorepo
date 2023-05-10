@@ -10,3 +10,6 @@ export interface SubmissionJobData {
   proof: BaseProof;
   newRoot: bigint;
 }
+
+export type SerializedProofJobData = string;
+export type SerializedSubmissionJobData = string;

@@ -3623,7 +3623,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.107-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.108-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3792,17 +3792,17 @@ __metadata:
     "@nocturne-xyz/config": 1.0.4-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
-    "@nocturne-xyz/sdk": 1.0.107-alpha
+    "@nocturne-xyz/sdk": 1.0.108-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
     "@types/mocha": ^10.0.0
-    "@types/node": ^18.11.9
+    "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.45.0
     "@typescript-eslint/parser": ^5.44.0
     async-mutex: ^0.4.0
     bigint-json-serialization: ^1.0.1
-    bullmq: ^3.13.1
+    bullmq: ^3.10.1
     chai: ^4.3.7
     commander: ^9.4.1
     dotenv: ^16.0.3
@@ -3810,7 +3810,7 @@ __metadata:
     eslint-config-prettier: ^8.5.0
     ethers: ^5.7.2
     find-yarn-workspace-root: ^2.0.0
-    ioredis: ^5.3.2
+    ioredis: ^5.3.1
     mocha: ^10.1.0
     prettier: ^2.8.8
     snarkjs: ^0.5.0
@@ -5926,7 +5926,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:^18.11.14, @types/node@npm:^18.11.18, @types/node@npm:^18.11.9, @types/node@npm:^18.8.0":
+"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:^18.11.14, @types/node@npm:^18.11.18, @types/node@npm:^18.8.0":
   version: 18.14.2
   resolution: "@types/node@npm:18.14.2"
   checksum: 53c07e721f6ae33de71306f6a0b75dae6066a4f55bd5484c93bd59ff25f0c5f004ceafeef509a4d0cb9e24a247efc34d50489bcc1b05a53ecc68e2fc088e65cb
@@ -9284,22 +9284,6 @@ __metadata:
     tslib: ^2.0.0
     uuid: ^9.0.0
   checksum: 1acc0961737e5237e731f7a911075c8efd2c9678ea51afaf9a552fd2e367e2dc6f0c092fe73bbfce2f09faf39d9a56926bd9bc0f740fe6ac449aed3c69824844
-  languageName: node
-  linkType: hard
-
-"bullmq@npm:^3.13.1":
-  version: 3.13.2
-  resolution: "bullmq@npm:3.13.2"
-  dependencies:
-    cron-parser: ^4.6.0
-    glob: ^8.0.3
-    ioredis: ^5.3.2
-    lodash: ^4.17.21
-    msgpackr: ^1.6.2
-    semver: ^7.3.7
-    tslib: ^2.0.0
-    uuid: ^9.0.0
-  checksum: a0290ee2686a0f350092643d744918c7adef4470cfe8c13d9edc684e7564bda89293efac6bbd422aaeecaac768ba5de4ceb14c389d4a1a82787766ada9fc0a7d
   languageName: node
   linkType: hard
 
@@ -16542,23 +16526,6 @@ __metadata:
     redis-parser: ^3.0.0
     standard-as-callback: ^2.1.0
   checksum: 6c98cb8f8772ad4bb2b6b7a0a224e4a63f4759f9a28e84205f18788552f08221d51f391c10892dca01a1b10b2804d0a7e6082b0b7decd65538a5fb6b0f4f1f82
-  languageName: node
-  linkType: hard
-
-"ioredis@npm:^5.3.2":
-  version: 5.3.2
-  resolution: "ioredis@npm:5.3.2"
-  dependencies:
-    "@ioredis/commands": ^1.1.1
-    cluster-key-slot: ^1.1.0
-    debug: ^4.3.4
-    denque: ^2.1.0
-    lodash.defaults: ^4.2.0
-    lodash.isarguments: ^3.1.0
-    redis-errors: ^1.2.0
-    redis-parser: ^3.0.0
-    standard-as-callback: ^2.1.0
-  checksum: 9a23559133e862a768778301efb68ae8c2af3c33562174b54a4c2d6574b976e85c75a4c34857991af733e35c48faf4c356e7daa8fb0a3543d85ff1768c8754bc
   languageName: node
   linkType: hard
 

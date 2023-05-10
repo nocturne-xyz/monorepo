@@ -3,12 +3,10 @@ import { SubtreeUpdaterSyncAdapter } from "./sync";
 import {
   ClosableAsyncIterator,
   InMemoryKVStore,
-  IncludedNote,
-  IncludedNoteCommitment,
+  Note,
   NoteTrait,
   SparseMerkleProver,
   SubtreeUpdateProver,
-  assertOrErr,
   packToSolidityProof,
   subtreeUpdateInputsFromBatch,
   range,
@@ -16,9 +14,9 @@ import {
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
-import { ProofJobData, SubmissionJobData } from "./types";
+import { ProofJobData, SerializedProofJobData, SerializedSubmissionJobData, SubmissionJobData } from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
-import { LeafDB } from "./db";
+import * as JSON from "bigint-json-serialization";
 
 export interface SubtreeUpdaterHandle {
   // promise that resovles when the service has fully shut down
@@ -48,14 +46,11 @@ export class SubtreeUpdater {
   logger: Logger;
 
   redis: IORedis;
-  leafDB: LeafDB;
   tree: SparseMerkleProver;
   prover: SubtreeUpdateProver;
 
   proofQueue: Queue;
   submissionQueue: Queue;
-
-  startMerkleIndex: number;
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
@@ -86,28 +81,25 @@ export class SubtreeUpdater {
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
-
-    this.leafDB = new LeafDB(redis);
-
-    this.startMerkleIndex = 0;
   }
 
   start(queryThrottleMs?: number): SubtreeUpdaterHandle {
-    this.logger.info(
-      `subtree updater starting at merkle index ${this.startMerkleIndex}`
+    const proofJobs = this.getIterator(
+      this.logger.child({ function: "iterator" }),
+      queryThrottleMs
     );
-    const proofJobs = this.getIterator(this.startMerkleIndex, queryThrottleMs);
 
     const queuer = async () => {
+      let latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex();
       for await (const job of proofJobs.iter) {
-        // add leaves to the db
-        await this.leafDB.addLeaves(job.proofInputs.leaves);
+        // only fetch latest subtree index if we need to
+        if (job.subtreeIndex > latestSubtreeIndex) {
+          latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex();
+        }
 
         // queue up a proof job if it hasn't already been committed on-chain
-        const latestSubtrreeIndex =
-          await this.adapter.fetchLatestSubtreeIndex();
-        if (latestSubtrreeIndex < job.subtreeIndex) {
-          await this.proofQueue.add(PROOF_JOB_TAG, job, {
+        if (job.subtreeIndex > latestSubtreeIndex) {
+          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job), {
             attempts: 3,
           });
         }
@@ -148,28 +140,17 @@ export class SubtreeUpdater {
     };
   }
 
-  async recover(logger: Logger): Promise<void> {
-    logger.info("recovering from previous run");
-
-    // recover from DB
-    const batches = this.leafDB.iterAllLeaves();
-    for await (const leaves of batches) {
-      const falsy = new Array(leaves.length).fill(false);
-      this.tree.insertBatch(this.tree.count(), leaves, falsy);
-    }
-
-    this.startMerkleIndex = this.tree.count();
-  }
-
-  startProver(logger: Logger): Worker<ProofJobData, any, string> {
+  startProver(logger: Logger): Worker<SerializedProofJobData, any, string> {
+    logger.info("starting subtree update prover");
     return new Worker(
       PROOF_QUEUE_NAME,
-      async (job: Job<ProofJobData>) => {
-        const { proofInputs, newRoot } = job.data;
+      async (job: Job<SerializedProofJobData>) => {
+        const { proofInputs, newRoot } = JSON.parse(job.data) as ProofJobData;
         logger.info("handling subtree update prover job", job.data);
 
-        const proof = await this.prover.proveSubtreeUpdate(proofInputs);
-        await this.submissionQueue.add(SUBMISSION_JOB_TAG, { proof, newRoot });
+        const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
+        const jobData: SubmissionJobData = { proof: proofWithPis.proof, newRoot }; 
+        await this.submissionQueue.add(SUBMISSION_JOB_TAG, JSON.stringify(jobData));
       },
       {
         connection: this.redis,
@@ -178,11 +159,12 @@ export class SubtreeUpdater {
     );
   }
 
-  startSubmitter(logger: Logger): Worker<SubmissionJobData, any, string> {
+  startSubmitter(logger: Logger): Worker<SerializedSubmissionJobData, any, string> {
+    logger.info("starting subtree update submitter");
     return new Worker(
       SUBMISSION_QUEUE_NAME,
-      async (job: Job<SubmissionJobData>) => {
-        const { proof, newRoot } = job.data;
+      async (job: Job<SerializedSubmissionJobData>) => {
+        const { proof, newRoot } = JSON.parse(job.data) as SubmissionJobData;
 
         const solidityProof = packToSolidityProof(proof);
         try {
@@ -218,14 +200,18 @@ export class SubtreeUpdater {
   }
 
   private getIterator(
-    startMerkleIndex: number,
+    logger: Logger,
     queryThrottleMs?: number
   ): ClosableAsyncIterator<ProofJobData> {
+    logger.info(`subtree updater iterator starting`);
+
+    let merkleIndex = 0;
     return this.adapter
-      .iterInsertions(startMerkleIndex, {
+      .iterInsertions(0, {
         throttleMs: queryThrottleMs,
       })
-      .tap(({ merkleIndex }) => {
+      .tap((_) => {
+        merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
           return;
         }
@@ -233,13 +219,13 @@ export class SubtreeUpdater {
         // fillBatch logic
         // main idea: keep a call to `fillBatch` on a timeout in the event loop
         // if we get an insertion, reset the timer and kick the call to `fillBatch` down the road
-        // if we organically fill the batch, we don't need to call `fillBatch`, so we can simply clear it
+        // if we organically fill the batch, we don't need to call `fillBatch` anymore, so we clear it
         // this is logically equivalent to always clearing the timeout, but only re-setting it if we haven't filled a batch organically yet
 
         clearTimeout(this.fillBatchTimeout);
 
         // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
-        if ((merkleIndex + 1) % BATCH_SIZE !== 0) {
+        if (merkleIndex % BATCH_SIZE !== 0) {
           this.fillBatchTimeout = setTimeout(
             () => this.fillbatch(this.logger.child({ function: "fillBatch" })),
             this.fillBatchLatency
@@ -247,22 +233,14 @@ export class SubtreeUpdater {
         }
       })
       .batches(BATCH_SIZE, true)
-      .map((notesOrCommitments) => {
-        assertOrErr(
-          notesOrCommitments[0].merkleIndex === this.tree.count(),
-          "merkle index mismatch"
-        );
-        assertOrErr(
-          notesOrCommitments.length % BATCH_SIZE === 0,
-          "batch does not fall on a subtree boundary"
-        );
+      .map((batch: (Note | bigint)[]) => {
         const subtreeLeftmostPathIndex = this.tree.count();
         const oldRoot = this.tree.getRoot();
 
-        const leaves = notesOrCommitments.map((noteOrCommitment) =>
+        const leaves = batch.map((noteOrCommitment) =>
           NoteTrait.isCommitment(noteOrCommitment)
-            ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
-            : NoteTrait.toCommitment(noteOrCommitment as IncludedNote)
+            ? (noteOrCommitment as bigint)
+            : NoteTrait.toCommitment(noteOrCommitment as Note)
         );
         this.tree.insertBatch(
           subtreeLeftmostPathIndex,
@@ -270,11 +248,6 @@ export class SubtreeUpdater {
           SUBTREE_INCLUDE_ARRAY
         );
 
-        const batch = notesOrCommitments.map((noteOrCommitment) =>
-          NoteTrait.isCommitment(noteOrCommitment)
-            ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
-            : NoteTrait.toNote(noteOrCommitment as IncludedNote)
-        );
         const merkleProof = this.tree.getProof(subtreeLeftmostPathIndex);
         const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
         const newRoot = this.tree.getRoot();
@@ -284,7 +257,7 @@ export class SubtreeUpdater {
         this.tree.markForPruning(subtreeLeftmostPathIndex);
         this.tree.prune();
 
-        this.logger.info("retrieved batch", {
+        this.logger.info(`got batch for subtree index ${subtreeIndex}`, {
           subtreeIndex,
           batch,
           oldRoot,
@@ -299,8 +272,12 @@ export class SubtreeUpdater {
     logger.debug("acquiring mutex on handler contract to fill batch");
     await this.handlerMutex.runExclusive(async () => {
       logger.info("filling batch...");
-      const tx = await this.handlerContract.fillBatchWithZeros();
-      await tx.wait(1);
+      try {
+        const tx = await this.handlerContract.fillBatchWithZeros();
+        await tx.wait(1);
+      } catch (err) {
+        logger.error("failed to fill batch", { err });
+      }
     });
   }
 }
