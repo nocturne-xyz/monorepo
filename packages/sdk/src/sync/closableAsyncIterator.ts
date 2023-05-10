@@ -50,8 +50,7 @@ export class ClosableAsyncIterator<T> {
   }
 
   // execute a function over each item in the iterator without consuming the iterator or modifying the values
-  // NOTE: the the reference given to `f` will mutate the underlying value in the iterator, so be careful not to
-  // alias the values in the iterator
+  // NOTE: the reference given to `f` will allow mutation of the underlying value in the iterator.
   tap(f: (item: T) => void): ClosableAsyncIterator<T> {
     const thisIter = this.iter;
     const tapped = async function* () {
