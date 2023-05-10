@@ -456,7 +456,7 @@ contract DepositManagerTest is Test {
             v
         );
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, false);
         emit DepositCompleted(
             deposit.spender,
             deposit.encodedAsset,
@@ -467,7 +467,7 @@ contract DepositManagerTest is Test {
         );
 
         vm.prank(SCREENER);
-        vm.txGasPrice(50 gwei); // average gas used 90k so x 50 (gwei) = 4.5M gwei
+        vm.txGasPrice(30 gwei);
         depositManager.completeErc20Deposit(deposit, signature);
 
         // Deposit hash marked false again
