@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "subtree-updater-cli": "dist/src/cli.js"
+    "subtree-updater-cli": "dist/src/cli/index.js"
   },
   "files": [
     "dist/**/*",

@@ -14,7 +14,12 @@ import {
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
 import { Job, Queue, Worker } from "bullmq";
-import { ProofJobData, SerializedProofJobData, SerializedSubmissionJobData, SubmissionJobData } from "./types";
+import {
+  ProofJobData,
+  SerializedProofJobData,
+  SerializedSubmissionJobData,
+  SubmissionJobData,
+} from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
 import * as JSON from "bigint-json-serialization";
 
@@ -149,8 +154,14 @@ export class SubtreeUpdater {
         logger.info("handling subtree update prover job", job.data);
 
         const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
-        const jobData: SubmissionJobData = { proof: proofWithPis.proof, newRoot }; 
-        await this.submissionQueue.add(SUBMISSION_JOB_TAG, JSON.stringify(jobData));
+        const jobData: SubmissionJobData = {
+          proof: proofWithPis.proof,
+          newRoot,
+        };
+        await this.submissionQueue.add(
+          SUBMISSION_JOB_TAG,
+          JSON.stringify(jobData)
+        );
       },
       {
         connection: this.redis,
@@ -159,7 +170,9 @@ export class SubtreeUpdater {
     );
   }
 
-  startSubmitter(logger: Logger): Worker<SerializedSubmissionJobData, any, string> {
+  startSubmitter(
+    logger: Logger
+  ): Worker<SerializedSubmissionJobData, any, string> {
     logger.info("starting subtree update submitter");
     return new Worker(
       SUBMISSION_QUEUE_NAME,

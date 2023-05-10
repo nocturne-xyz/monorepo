@@ -2,7 +2,9 @@
 
 ### Unreleased
 
-= add `--stdout-log-level` option to CLI
+- update `.env.example`
+- go back to only one docker-compose file
+- add `--stdout-log-level` option to CLI
 - processor switches on token type and calls `completeErc20Deposit`
 - add `--throttle-ms` arg to CLI
 - bump max chunk size up to 100K blocks

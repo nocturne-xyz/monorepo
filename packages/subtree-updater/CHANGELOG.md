@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update .env.example
+- add docker-compose file
 - complete overhaul, including the following changes:
 	- syncAdapter iterates over tree insertions
 	- no persistence - instead recovers by scanning through insertions from subgraph
