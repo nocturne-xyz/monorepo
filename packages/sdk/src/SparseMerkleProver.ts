@@ -222,27 +222,51 @@ export class SparseMerkleProver {
     return smt;
   }
 
+  // we can't rune a leaf if we need it to insert a new leaf or to prove membership of a leaf in the `leaves` map.
+  // we need a leaf to generate a proof if:
+  // 1. it's in the leaves map
+  // 2. it's the sibling of a leaf in the leaves map
+  // 3. it's a sibling of a leaf that we haven't inserted yet, which could be in the leaves map in the future
+  //
+  // to insert a new leaf, all of the leaves along the path to the rightmost leaf in the tree. In other words:
+  // 4. we can't prune the rightmost leaf in the tree
+  //
+  // Checking the following three conditions is equivalent to checking the above four conditions;
+  // 1. it's in the leaves map
+  // 2. it's the sibling of a leaf in the leaves map.
+  // 3. it's in the rightmost depth-1 subtree
+  //   - if the subtree is full (it has ARITY leaves) but none are in the leaves map, we can't prune the leaf because we need the path to the rightmost leaf in the tree.
+  //     this covers condition 4 in the event that the subtree has ARITY leaves.
+  //   - the subtree isn't full (it has < ARITY leaves) and none are in the leaves map, we can't prune the because we could insert another leaf, in which case we'd need this leaf because it would be a sibling
+  //     this not only covers condition 3, but also condition 4 in the event the subtree has < ARITY leaves
+  //   - in either case, if this leaf or any of its siblings are in the leaves map, then checks 1 and 2 will apply.
+  // these cases are not mutually exclusive, but if at least one of them are true,
+  // then we can't prune the leaf
+  //
+  private cannotPruneLeaf(index: number): boolean {
+    const isInLeavesMap = this.leaves.has(index);
+
+    // perform check 2 by checking the `leaves` map for a sibling of the current leaf, whose
+    // index will be the current index with any of the two least significant bits flipped
+    const isSiblingOfLeafInLeavesMap = range(1, ARITY).some((mask) =>
+      this.leaves.has(index ^ mask)
+    );
+
+    const rightmostDepthOneSubtreeSize =
+      this._count % ARITY === 0 ? ARITY : this._count % ARITY;
+    const isInRightmostDepthOneSubtree =
+      this._count - index <= rightmostDepthOneSubtreeSize;
+
+    return (
+      isInLeavesMap ||
+      isSiblingOfLeafInLeavesMap ||
+      isInRightmostDepthOneSubtree
+    );
+  }
+
   // returns number of leaves in the subtree that we can't prune
   private pruneHelper(root: TreeNode, depth: number, index = 0): number {
-    // if we're at a leaf, the we can safely prune it if we'll never need it to generate a proof.
-    // we'll need a leaf to generate a proof if:
-    // 1. it's in the leaves map
-    // 2. it's the sibling of a leaf in the leaves map
-    // 3. the tree's total leaf count is not a multiple of `ARITY` and the leaf is in the rightmost depth-1 subtree
-    //    (in this case, if we were to remove the leaf, prune, and then append another leaf,
-    //     we'd need the pruned leaf because it's a sibling of the leaf we just added)
-    // these cases are not mutually exclusive, but if at least one of them are true,
-    // then we can't prune the leaf
-    //
-    // we can check the second case by checking the `leaves` map for a sibling of the current leaf, whose
-    // index will be the current index with any of the two least significant bits flipped
-    if (
-      depth === MAX_DEPTH &&
-      (this.leaves.has(index) ||
-        range(1, ARITY).some((mask) => this.leaves.has(index ^ mask)) ||
-        (this._count % ARITY !== 0 &&
-          this._count - index <= this._count % ARITY))
-    ) {
+    if (depth === MAX_DEPTH && this.cannotPruneLeaf(index)) {
       return 1;
     }
 

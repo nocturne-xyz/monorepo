@@ -154,20 +154,17 @@ describe("SparseMerkleProver", () => {
 
   // run the test for each k mod ARITY
   for (const k of range(1, ARITY)) {
-    it(`doesn't prune the latest leaves if the tree has a number of nodes = ${k} mod ARITY (${ARITY})`, () => {
+    it(`doesn't prune the latest leaves if the tree has a number of nodes = ${k} mod ARITY (${ARITY}) and they're not in the map`, () => {
       // run the test for each k mod ARITY
       const kv = new InMemoryKVStore();
       const prover = new SparseMerkleProver(kv);
 
-      // insert one leaf with `include = true`
-      prover.insert(0, randomBaseFieldElement(), true);
-
-      // insert an multiple of ARITY number of leaves with `include = false`
-      for (const idx of range(prover.count(), prover.count() + ARITY * 10)) {
-        prover.insert(idx, randomBaseFieldElement(), false);
+      // insert a multiple of ARITY number of leaves with `include = false`
+      for (const idx of range(prover.count(), prover.count() + ARITY * 3)) {
+        prover.insert(idx, randomBaseFieldElement(), true);
       }
 
-      // insert k more leaves with `include = false` into a copy.
+      // insert k more leaves with `include = false`
       // These leaves should not be pruned because, if we were to prune it and then insert a new leaf,
       // we'd be missing at least one sibling of the leaf we just inserted.
       for (const _ of range(k)) {
@@ -181,6 +178,28 @@ describe("SparseMerkleProver", () => {
       expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
     });
   }
+
+  it(`doesn't prune latest ARITY leaves if the tree has a number of nodes = 0 mod ARITY (${ARITY}) and none of them are in the map`, () => {
+    const kv = new InMemoryKVStore();
+    const prover = new SparseMerkleProver(kv);
+
+    // insert an multiple of ARITY number of leaves with `include = false`
+    for (const idx of range(prover.count(), prover.count() + ARITY * 3)) {
+      prover.insert(idx, randomBaseFieldElement(), false);
+    }
+
+    // insert ARITY leaves with `include = true`
+    // these leaves should not be pruned
+    for (const idx of range(prover.count(), prover.count() + ARITY)) {
+      prover.insert(idx, randomBaseFieldElement(), true);
+    }
+
+    // prune
+    prover.prune();
+
+    const numLeaves = countLeaves(prover);
+    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+  });
 
   it("inserts a batch of leaves all at once", () => {
     const kv = new InMemoryKVStore();
@@ -326,21 +345,7 @@ function countLeaves(prover: SparseMerkleProver): number {
 function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
   // number of leaves should be equal to the number of leaves in the `leaves` map
   // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
-  // plus 0-ARITY more to account the for the following edge case:
-  //   If tree count is not a multiple of `ARITY`, then we need to keep the rightmost group of `ARITY` leaves in the tree
-  //   even if they're not in the `leaves` map. To illustrate why, consider the following example:a
-  //
-  //   suppose tree count is 2 mod ARITY - that means the rightmost part of the tree will have a branch with
-  //   two leaves on the left and the rest of the leaves empty. Now suppose those two leaves aren't in the `leaves` map.
-  //   If we were to prune them, insert another leaf, with the new leaf included in the leaves map,
-  //   we'd now need the two leaves we just pruned, since they're siblings of a leaf in the `leaves` map.
-  //
-  //   To account for this edge case, we add prover.count % ARITY to the result if none of the leaves in this
-  //   "unifinished" group of ARITY leaves are in the `leaves` map.
-  //    If at least one of them is in the map, then we've already accounted for it because it's a
-  //    sibling of a leaf in the `leaves` map
-
-  // get number of leaves in the leaves map
+  // plus the number of leaves in rightmost depth-1 subtree if none of its leaves are in the `leaves` map
   // @ts-ignore
   const includedLeaves = prover.leaves.size;
 
@@ -359,13 +364,16 @@ function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
 
   let res = includedLeaves + siblingIndices.size;
 
-  // account for special case
-  const k = prover.count() % ARITY;
-  const needsAdditionalLeaves =
-    //@ts-ignore
-    k > 0 && range(k).every((i) => !prover.leaves.has(prover.count - k + i));
+  // account for rightmost depth-1 subtree edge case
+  const rightmostDepthOneSubtreeSize =
+    prover.count() % ARITY === 0 ? ARITY : prover.count() % ARITY;
+  const needsAdditionalLeaves = range(rightmostDepthOneSubtreeSize).every(
+    // @ts-ignore
+    (i) => !prover.leaves.has(prover.count() - i - 1)
+  );
+
   if (needsAdditionalLeaves) {
-    res += k;
+    res += rightmostDepthOneSubtreeSize;
   }
 
   return res;
