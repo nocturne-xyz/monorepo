@@ -10,10 +10,11 @@ import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/to
 import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {IHandler} from "./interfaces/IHandler.sol";
+import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
+import {BalanceManager} from "./BalanceManager.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {BalanceManager} from "./BalanceManager.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
@@ -22,6 +23,7 @@ contract Handler is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
     BalanceManager,
+    NocturneReentrancyGuard,
     OwnableUpgradeable
 {
     mapping(address => bool) public _subtreeBatchFiller;
@@ -43,6 +45,7 @@ contract Handler is
         address subtreeUpdateVerifier
     ) external initializer {
         __Ownable_init();
+        __NocturneReentrancyGuard_init();
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 

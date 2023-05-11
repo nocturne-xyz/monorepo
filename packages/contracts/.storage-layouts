@@ -14,12 +14,10 @@
 | _nullifierSet           | mapping(uint256 => bool)    | 102  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | _merkle                 | struct OffchainMerkleTree   | 103  | 0      | 672   | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | __GAP                   | uint256[50]                 | 124  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _operationStage         | uint256                     | 174  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| __GAP                   | uint256[50]                 | 175  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _teller                 | contract ITeller            | 225  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _receivedAssets         | struct EncodedAsset[]       | 226  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _prefilledAssetBalances | mapping(bytes32 => uint256) | 227  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| __GAP                   | uint256[50]                 | 228  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _teller                 | contract ITeller            | 174  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _receivedAssets         | struct EncodedAsset[]       | 175  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _prefilledAssetBalances | mapping(bytes32 => uint256) | 176  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| __GAP                   | uint256[50]                 | 177  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 =======================
  ➡ CommitmentTreeManager
 | Name          | Type                      | Slot | Offset | Bytes | Contract                                                                     |
@@ -76,11 +74,11 @@
 | _nullifierSet               | mapping(uint256 => bool)    | 102  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | _merkle                     | struct OffchainMerkleTree   | 103  | 0      | 672   | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                       | uint256[50]                 | 124  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _operationStage             | uint256                     | 174  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| __GAP                       | uint256[50]                 | 175  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _teller                     | contract ITeller            | 225  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
-| _receivedAssets             | struct EncodedAsset[]       | 226  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| _prefilledAssetBalances     | mapping(bytes32 => uint256) | 227  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _teller                     | contract ITeller            | 174  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
+| _receivedAssets             | struct EncodedAsset[]       | 175  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _prefilledAssetBalances     | mapping(bytes32 => uint256) | 176  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| __GAP                       | uint256[50]                 | 177  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
+| _operationStage             | uint256                     | 227  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                       | uint256[50]                 | 228  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
 | _owner                      | address                     | 278  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
 | __gap                       | uint256[49]                 | 279  | 0      | 1568  | packages/contracts/contracts/Handler.sol:Handler |

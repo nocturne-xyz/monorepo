@@ -5,13 +5,12 @@ pragma abicoder v2;
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
-import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
-contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
+contract BalanceManager is CommitmentTreeManager {
     using OperationLib for Operation;
 
     ITeller public _teller;
@@ -31,7 +30,6 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         address teller,
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
-        __NocturneReentrancyGuard_init();
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
     }
