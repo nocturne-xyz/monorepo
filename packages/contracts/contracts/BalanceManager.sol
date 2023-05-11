@@ -16,12 +16,7 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
-contract BalanceManager is
-    IERC721ReceiverUpgradeable,
-    IERC1155ReceiverUpgradeable,
-    CommitmentTreeManager,
-    NocturneReentrancyGuard
-{
+contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
     ITeller public _teller;
@@ -52,12 +47,21 @@ contract BalanceManager is
         _;
     }
 
-    function onERC721Received(
-        address, // operator
-        address, // from
-        uint256 id,
-        bytes calldata // data
-    ) external override whenNotPaused returns (bytes4) {
+    function _addToAssetPrefill(
+        EncodedAsset calldata encodedAsset,
+        uint256 value
+    ) internal notErc721(encodedAsset) {
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        _prefilledAssetBalances[assetHash] += value;
+
+        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
+        emit UpdatedAssetPrefill(
+            encodedAsset,
+            _prefilledAssetBalances[assetHash]
+        );
+    }
+
+    function _onERC721Received(uint256 id) internal returns (bytes4) {
         // Must reject the transfer outside of an operation handling. We also
         // reject erc721s for prefills.
         if (
@@ -78,13 +82,7 @@ contract BalanceManager is
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
-    function onERC1155Received(
-        address, // operator
-        address, // from
-        uint256 id,
-        uint256, // value
-        bytes calldata // data
-    ) external override whenNotPaused returns (bytes4) {
+    function _onERC1155Received(uint256 id) internal returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
@@ -101,13 +99,9 @@ contract BalanceManager is
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
-    function onERC1155BatchReceived(
-        address, // operator
-        address, // from
-        uint256[] calldata ids,
-        uint256[] calldata, // values
-        bytes calldata // data
-    ) external override whenNotPaused returns (bytes4) {
+    function _onERC1155BatchReceived(
+        uint256[] calldata ids
+    ) internal returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
         if (reentrancyGuardStage() == NOT_ENTERED) {
             return 0;
@@ -131,27 +125,13 @@ contract BalanceManager is
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(
+    function _supportsInterface(
         bytes4 interfaceId
-    ) external pure override returns (bool) {
+    ) internal pure returns (bool) {
         return
             (interfaceId == type(IERC165Upgradeable).interfaceId) ||
             (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
-    }
-
-    function _addToAssetPrefill(
-        EncodedAsset calldata encodedAsset,
-        uint256 value
-    ) internal notErc721(encodedAsset) {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        _prefilledAssetBalances[assetHash] += value;
-
-        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
-        emit UpdatedAssetPrefill(
-            encodedAsset,
-            _prefilledAssetBalances[assetHash]
-        );
     }
 
     /**

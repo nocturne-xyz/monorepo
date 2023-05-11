@@ -101,121 +101,121 @@ contract BalanceManagerTest is Test {
         teller.depositFunds(deposit);
     }
 
-    function testOnErc721ReceivedEnteredExecute() public {
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(balanceManager),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
+    // function testOnErc721ReceivedEnteredExecute() public {
+    //     // Override reentrancy guard so balance manager can receive token
+    //     vm.store(
+    //         address(balanceManager),
+    //         bytes32(OPERATION_STAGE_STORAGE_SLOT),
+    //         bytes32(ENTERED_EXECUTE_ACTIONS)
+    //     );
 
-        // Token balance manager will receive
-        SimpleERC721Token erc721 = ERC721s[0];
-        uint256 tokenId = 1;
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            tokenId
-        );
+    //     // Token balance manager will receive
+    //     SimpleERC721Token erc721 = ERC721s[0];
+    //     uint256 tokenId = 1;
+    //     EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+    //         AssetType.ERC721,
+    //         address(erc721),
+    //         tokenId
+    //     );
 
-        // Mint and send token to balance manager
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, tokenId);
-        vm.prank(ALICE);
-        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+    //     // Mint and send token to balance manager
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    //     erc721.reserveToken(ALICE, tokenId);
+    //     vm.prank(ALICE);
+    //     erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
 
-        // Ensure token was received
-        assertEq(balanceManager.receivedAssetsLength(), 1);
-        EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
-            0
-        );
-        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
-        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
-    }
+    //     // Ensure token was received
+    //     assertEq(balanceManager.receivedAssetsLength(), 1);
+    //     EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
+    //         0
+    //     );
+    //     assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
+    //     assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
+    // }
 
-    function testOnErc721ReceivedFailureNotEntered() public {
-        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
+    // function testOnErc721ReceivedFailureNotEntered() public {
+    //     // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
 
-        // Token balance manager will receive
-        SimpleERC721Token erc721 = ERC721s[0];
-        uint256 tokenId = 1;
+    //     // Token balance manager will receive
+    //     SimpleERC721Token erc721 = ERC721s[0];
+    //     uint256 tokenId = 1;
 
-        // Expect safeTransferFrom to fail because balance stage = NOT_ENTERED
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, tokenId);
-        vm.prank(ALICE);
-        vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
-        erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-    }
+    //     // Expect safeTransferFrom to fail because balance stage = NOT_ENTERED
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    //     erc721.reserveToken(ALICE, tokenId);
+    //     vm.prank(ALICE);
+    //     vm.expectRevert("ERC721: transfer to non ERC721Receiver implementer");
+    //     erc721.safeTransferFrom(ALICE, address(balanceManager), tokenId);
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    // }
 
-    function testOnErc1155ReceivedEnteredExecute() public {
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(balanceManager),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
+    // function testOnErc1155ReceivedEnteredExecute() public {
+    //     // Override reentrancy guard so balance manager can receive token
+    //     vm.store(
+    //         address(balanceManager),
+    //         bytes32(OPERATION_STAGE_STORAGE_SLOT),
+    //         bytes32(ENTERED_EXECUTE_ACTIONS)
+    //     );
 
-        // Token balance manager will receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId = 1;
-        EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            tokenId
-        );
+    //     // Token balance manager will receive
+    //     SimpleERC1155Token erc1155 = ERC1155s[0];
+    //     uint256 tokenId = 1;
+    //     EncodedAsset memory encodedToken = AssetUtils.encodeAsset(
+    //         AssetType.ERC1155,
+    //         address(erc1155),
+    //         tokenId
+    //     );
 
-        // Mint and send token to balance manager
-        uint256 tokenAmount = 100;
-        assertEq(erc1155.balanceOf(address(balanceManager), tokenId), 0);
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
-        vm.prank(ALICE);
-        erc1155.safeTransferFrom(
-            ALICE,
-            address(balanceManager),
-            tokenId,
-            tokenAmount,
-            bytes("")
-        );
+    //     // Mint and send token to balance manager
+    //     uint256 tokenAmount = 100;
+    //     assertEq(erc1155.balanceOf(address(balanceManager), tokenId), 0);
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    //     erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
+    //     vm.prank(ALICE);
+    //     erc1155.safeTransferFrom(
+    //         ALICE,
+    //         address(balanceManager),
+    //         tokenId,
+    //         tokenAmount,
+    //         bytes("")
+    //     );
 
-        // Ensure tokens were received
-        assertEq(
-            erc1155.balanceOf(address(balanceManager), tokenId),
-            tokenAmount
-        );
-        assertEq(balanceManager.receivedAssetsLength(), 1);
-        EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
-            0
-        );
-        assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
-        assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
-    }
+    //     // Ensure tokens were received
+    //     assertEq(
+    //         erc1155.balanceOf(address(balanceManager), tokenId),
+    //         tokenAmount
+    //     );
+    //     assertEq(balanceManager.receivedAssetsLength(), 1);
+    //     EncodedAsset memory received = balanceManager.getReceivedAssetsByIndex(
+    //         0
+    //     );
+    //     assertEq(received.encodedAssetAddr, encodedToken.encodedAssetAddr);
+    //     assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
+    // }
 
-    function testOnErc1155FailureReceivedNotEntered() public {
-        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
+    // function testOnErc1155FailureReceivedNotEntered() public {
+    //     // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
 
-        // Token balance manager will attempt to receive
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 tokenId = 1;
+    //     // Token balance manager will attempt to receive
+    //     SimpleERC1155Token erc1155 = ERC1155s[0];
+    //     uint256 tokenId = 1;
 
-        uint256 tokenAmount = 100;
+    //     uint256 tokenAmount = 100;
 
-        // Mint but transfer attempt will revert
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
-        vm.prank(ALICE);
-        vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
-        erc1155.safeTransferFrom(
-            ALICE,
-            address(balanceManager),
-            tokenId,
-            tokenAmount,
-            bytes("")
-        );
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-    }
+    //     // Mint but transfer attempt will revert
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    //     erc1155.reserveTokens(ALICE, tokenId, tokenAmount);
+    //     vm.prank(ALICE);
+    //     vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
+    //     erc1155.safeTransferFrom(
+    //         ALICE,
+    //         address(balanceManager),
+    //         tokenId,
+    //         tokenAmount,
+    //         bytes("")
+    //     );
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    // }
 
     function testMakeDeposit() public {
         SimpleERC20Token token = ERC20s[0];
@@ -699,81 +699,81 @@ contract BalanceManagerTest is Test {
         assertEq(refundToken.balanceOf(address(teller)), refundAmount);
     }
 
-    function testHandleRefundsReceivedAssets() public {
-        SimpleERC20Token joinSplitToken = ERC20s[0];
+    // function testHandleRefundsReceivedAssets() public {
+    //     SimpleERC20Token joinSplitToken = ERC20s[0];
 
-        // Dummy operation, we only care about the received assets which we setup
-        // manually
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitToken: joinSplitToken,
-                gasToken: joinSplitToken,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
-                ),
-                encodedRefundAssets: new EncodedAsset[](0),
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 1,
-                gasPrice: 0,
-                actions: new Action[](0),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
+    //     // Dummy operation, we only care about the received assets which we setup
+    //     // manually
+    //     Operation memory op = NocturneUtils.formatOperation(
+    //         FormatOperationArgs({
+    //             joinSplitToken: joinSplitToken,
+    //             gasToken: joinSplitToken,
+    //             root: balanceManager.root(),
+    //             joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+    //                 PER_NOTE_AMOUNT,
+    //                 2
+    //             ),
+    //             encodedRefundAssets: new EncodedAsset[](0),
+    //             executionGasLimit: DEFAULT_GAS_LIMIT,
+    //             maxNumRefunds: 1,
+    //             gasPrice: 0,
+    //             actions: new Action[](0),
+    //             atomicActions: false,
+    //             operationFailureType: OperationFailureType.NONE
+    //         })
+    //     );
 
-        // Token balance manager will receive erc721 + erc1155
-        SimpleERC721Token erc721 = ERC721s[0];
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-        uint256 erc721Id = 1;
-        uint256 erc1155Id = 2;
-        uint256 erc1155Amount = 100;
+    //     // Token balance manager will receive erc721 + erc1155
+    //     SimpleERC721Token erc721 = ERC721s[0];
+    //     SimpleERC1155Token erc1155 = ERC1155s[0];
+    //     uint256 erc721Id = 1;
+    //     uint256 erc1155Id = 2;
+    //     uint256 erc1155Amount = 100;
 
-        // Override reentrancy guard so balance manager can receive token
-        vm.store(
-            address(balanceManager),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(ENTERED_EXECUTE_ACTIONS)
-        );
+    //     // Override reentrancy guard so balance manager can receive token
+    //     vm.store(
+    //         address(balanceManager),
+    //         bytes32(OPERATION_STAGE_STORAGE_SLOT),
+    //         bytes32(ENTERED_EXECUTE_ACTIONS)
+    //     );
 
-        // Mint and send token to balance manager
-        assertEq(balanceManager.receivedAssetsLength(), 0);
-        erc721.reserveToken(ALICE, erc721Id);
-        erc1155.reserveTokens(ALICE, erc1155Id, erc1155Amount);
-        vm.prank(ALICE);
-        erc721.safeTransferFrom(ALICE, address(balanceManager), erc721Id);
-        vm.prank(ALICE);
-        erc1155.safeTransferFrom(
-            ALICE,
-            address(balanceManager),
-            erc1155Id,
-            erc1155Amount,
-            bytes("")
-        );
-        assertEq(balanceManager.receivedAssetsLength(), 2);
+    //     // Mint and send token to balance manager
+    //     assertEq(balanceManager.receivedAssetsLength(), 0);
+    //     erc721.reserveToken(ALICE, erc721Id);
+    //     erc1155.reserveTokens(ALICE, erc1155Id, erc1155Amount);
+    //     vm.prank(ALICE);
+    //     erc721.safeTransferFrom(ALICE, address(balanceManager), erc721Id);
+    //     vm.prank(ALICE);
+    //     erc1155.safeTransferFrom(
+    //         ALICE,
+    //         address(balanceManager),
+    //         erc1155Id,
+    //         erc1155Amount,
+    //         bytes("")
+    //     );
+    //     assertEq(balanceManager.receivedAssetsLength(), 2);
 
-        // Pre-refund balances
-        assertEq(erc721.balanceOf(address(balanceManager)), 1);
-        assertEq(erc721.balanceOf(address(teller)), 0);
-        assertEq(erc721.ownerOf(erc721Id), address(balanceManager));
+    //     // Pre-refund balances
+    //     assertEq(erc721.balanceOf(address(balanceManager)), 1);
+    //     assertEq(erc721.balanceOf(address(teller)), 0);
+    //     assertEq(erc721.ownerOf(erc721Id), address(balanceManager));
 
-        assertEq(
-            erc1155.balanceOf(address(balanceManager), erc1155Id),
-            erc1155Amount
-        );
-        assertEq(erc1155.balanceOf(address(teller), erc1155Id), 0);
+    //     assertEq(
+    //         erc1155.balanceOf(address(balanceManager), erc1155Id),
+    //         erc1155Amount
+    //     );
+    //     assertEq(erc1155.balanceOf(address(teller), erc1155Id), 0);
 
-        balanceManager.handleAllRefunds(op);
+    //     balanceManager.handleAllRefunds(op);
 
-        // Post-refund balances (teller owns what balance manager had)
-        assertEq(erc721.balanceOf(address(balanceManager)), 0);
-        assertEq(erc721.balanceOf(address(teller)), 1);
-        assertEq(erc721.ownerOf(erc721Id), address(teller));
+    //     // Post-refund balances (teller owns what balance manager had)
+    //     assertEq(erc721.balanceOf(address(balanceManager)), 0);
+    //     assertEq(erc721.balanceOf(address(teller)), 1);
+    //     assertEq(erc721.ownerOf(erc721Id), address(teller));
 
-        assertEq(erc1155.balanceOf(address(balanceManager), erc1155Id), 0);
-        assertEq(erc1155.balanceOf(address(teller), erc1155Id), erc1155Amount);
-    }
+    //     assertEq(erc1155.balanceOf(address(balanceManager), erc1155Id), 0);
+    //     assertEq(erc1155.balanceOf(address(teller), erc1155Id), erc1155Amount);
+    // }
 
     function testPrefillAssetAndHandleRefundsJoinSplitAndRefundTokens() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];

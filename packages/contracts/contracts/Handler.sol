@@ -4,6 +4,10 @@ pragma abicoder v2;
 
 // External
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {IHandler} from "./interfaces/IHandler.sol";
 import {Utils} from "./libs/Utils.sol";
@@ -13,7 +17,13 @@ import {BalanceManager} from "./BalanceManager.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
-contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
+contract Handler is
+    IHandler,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable,
+    BalanceManager,
+    OwnableUpgradeable
+{
     mapping(address => bool) public _subtreeBatchFiller;
 
     mapping(address => bool) public _supportedContractAllowlist;
@@ -199,6 +209,41 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // joinsplits.length + encodedRefundAssets.length
         _handleAllRefunds(op);
         return opResult;
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        return _onERC721Received(id);
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        uint256, // value
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        return _onERC1155Received(id);
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata ids,
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        return _onERC1155BatchReceived(ids);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return _supportsInterface(interfaceId);
     }
 
     /**
