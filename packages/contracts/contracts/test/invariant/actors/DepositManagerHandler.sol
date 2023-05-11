@@ -16,7 +16,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {DepositSumSet, LibDepositSumSet} from "../helpers/DepositSumSet.sol";
+import {ActorSumSet, LibDepositSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -25,7 +25,7 @@ import "../../../libs/Types.sol";
 contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
-    using LibDepositSumSet for DepositSumSet;
+    using LibDepositSumSet for ActorSumSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -33,7 +33,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     string constant CONTRACT_VERSION = "v1";
 
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
-    uint256 constant GAS_COMPENSATION_PER_DEPOSIT = 120_000 gwei;
+    uint256 constant AVG_GAS_PER_COMPLETE = 130_000 gwei;
 
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
@@ -55,13 +55,15 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     address internal _currentActor;
     uint256 internal _actorNum = 0;
 
-    DepositSumSet internal _instantiateDepositSumSetETH;
-    DepositSumSet internal _retrieveDepositSumSetETH;
-    DepositSumSet internal _completeDepositSumSetETH;
+    ActorSumSet internal _gasCompensationSet;
 
-    DepositSumSet internal _instantiateDepositSumSetErc20;
-    DepositSumSet internal _retrieveDepositSumSetErc20;
-    DepositSumSet internal _completeDepositSumSetErc20;
+    ActorSumSet internal _instantiateDepositSumSetETH;
+    ActorSumSet internal _retrieveDepositSumSetETH;
+    ActorSumSet internal _completeDepositSumSetETH;
+
+    ActorSumSet internal _instantiateDepositSumSetErc20;
+    ActorSumSet internal _retrieveDepositSumSetErc20;
+    ActorSumSet internal _completeDepositSumSetErc20;
 
     DepositRequest[] internal _depositSet;
 
@@ -133,6 +135,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             "completeDepositErc20 reverts",
             _reverts["completeDepositErc20"]
         );
+        console.log("screener balance:", SCREENER_ADDRESS.balance);
+        console.log(
+            "total supplied gas compensation:",
+            ghost_totalSuppliedGasCompensation()
+        );
         console.log("no-op", _calls["no-op"]);
     }
 
@@ -146,6 +153,9 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
+
+        uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
+        uint256 gasCompPerDeposit = AVG_GAS_PER_COMPLETE * gasPrice;
         for (uint256 i = 0; i < numDeposits; i++) {
             // Get random amount
             uint256 newSeed;
@@ -167,7 +177,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 NocturneUtils.ERC20_ID,
                 depositAddr,
                 depositManager._nonce() + i,
-                GAS_COMPENSATION_PER_DEPOSIT
+                gasCompPerDeposit
             );
         }
 
@@ -175,13 +185,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 totalDepositAmount = _sum(depositAmounts);
         vm.deal(
             _currentActor,
-            totalDepositAmount + (GAS_COMPENSATION_PER_DEPOSIT * numDeposits)
+            totalDepositAmount + (gasCompPerDeposit * numDeposits)
         );
 
         vm.prank(_currentActor);
         depositManager.instantiateETHMultiDeposit{
-            value: totalDepositAmount +
-                (GAS_COMPENSATION_PER_DEPOSIT * numDeposits)
+            value: totalDepositAmount + (gasCompPerDeposit * numDeposits)
         }(depositAmounts, depositAddr);
 
         // Update sets and sum
@@ -192,6 +201,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 depositAmounts[i]
             );
         }
+
+        _gasCompensationSet.addToActorSum(
+            _currentActor,
+            gasCompPerDeposit * numDeposits
+        );
     }
 
     function instantiateDepositErc20(
@@ -209,6 +223,9 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
+
+        uint256 gasPrice = bound(seed, 0, 10_000 gwei);
+        uint256 gasCompPerDeposit = AVG_GAS_PER_COMPLETE * gasPrice;
         for (uint256 i = 0; i < numDeposits; i++) {
             // Get random amount
             uint256 newSeed;
@@ -230,7 +247,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 NocturneUtils.ERC20_ID,
                 depositAddr,
                 depositManager._nonce() + i,
-                GAS_COMPENSATION_PER_DEPOSIT
+                gasCompPerDeposit
             );
         }
 
@@ -239,14 +256,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         erc20.reserveTokens(_currentActor, totalDepositAmount);
 
         // Deal gas compensation
-        vm.deal(_currentActor, GAS_COMPENSATION_PER_DEPOSIT * numDeposits);
+        vm.deal(_currentActor, gasCompPerDeposit * numDeposits);
 
         // Approve token
         vm.startPrank(_currentActor);
         erc20.approve(address(depositManager), totalDepositAmount);
 
         depositManager.instantiateErc20MultiDeposit{
-            value: GAS_COMPENSATION_PER_DEPOSIT * numDeposits
+            value: gasCompPerDeposit * numDeposits
         }(address(erc20), depositAmounts, depositAddr);
 
         vm.stopPrank();
@@ -259,6 +276,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 depositAmounts[i]
             );
         }
+
+        _gasCompensationSet.addToActorSum(
+            _currentActor,
+            gasCompPerDeposit * numDeposits
+        );
     }
 
     function retrieveDepositErc20(
@@ -324,11 +346,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         );
 
         // Complete deposit
+        uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
         uint256 warpTimestamp;
         unchecked {
             warpTimestamp = block.timestamp + seed;
         }
         vm.warp(warpTimestamp);
+        vm.txGasPrice(gasPrice);
+        vm.prank(SCREENER_ADDRESS);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
             EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -360,6 +385,20 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     function ghost_AllActors() public view returns (address[] memory) {
         return _actors.addresses();
+    }
+
+    function ghost_totalSuppliedGasCompensation()
+        public
+        view
+        returns (uint256)
+    {
+        return _gasCompensationSet.getTotalForAll();
+    }
+
+    function ghost_totalSuppliedGasCompensationFor(
+        address actor
+    ) public view returns (uint256) {
+        return _gasCompensationSet.getSumForActor(actor);
     }
 
     function ghost_instantiateDepositSumETH() public view returns (uint256) {

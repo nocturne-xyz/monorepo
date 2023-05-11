@@ -19,7 +19,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {DepositSumSet, LibDepositSumSet} from "../helpers/DepositSumSet.sol";
+import {ActorSumSet, LibDepositSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
