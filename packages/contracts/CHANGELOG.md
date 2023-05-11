@@ -2,7 +2,8 @@
 
 ### Unreleased
 
-- move asset received hooks to handler so it can check protocol whitelist
+- move reentrancy guard from bal manager into handler
+- move asset received hooks to handler so it can check protocol whitelist (move unit tests from balance manager to handler as well)
 - add some extra parse utils used when debugging invariant tests
 - whitelist erc721/1155 in invariant tests and ensure all assets are actually being received by teller from swapper
 - deposit invariant tests add special case workaround for retrieved gas comp == gas comp cap (see inline commment)
