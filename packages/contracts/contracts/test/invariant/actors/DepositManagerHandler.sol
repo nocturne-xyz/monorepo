@@ -348,7 +348,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Complete deposit
         uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
         uint256 skipSeconds = bound(seed, 0, 10_000);
-        skip(block.timestamp + skipSeconds);
+        skip(skipSeconds);
         vm.txGasPrice(gasPrice);
         vm.prank(SCREENER_ADDRESS);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
@@ -373,6 +373,28 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             }
         } catch {
             _reverts["completeDepositErc20"] += 1;
+        }
+
+        // NOTE: The actor balance in bounds invariant kept failing even though I checked all actor
+        // balances via logs and only found balance == ghost var but never greater than. I suspect
+        // there is a bug somewhere in foundry that doesn't like assertLe(0, 0) but want to leave
+        // log here for now to check in case another failure.
+        address[] memory allActors = ghost_AllActors();
+        for (uint256 i = 0; i < allActors.length; i++) {
+            console.log(
+                string(
+                    abi.encodePacked(
+                        "Actor address:",
+                        ParseUtils.toHexString(allActors[i]),
+                        ". Balance:",
+                        ParseUtils.uintToString(allActors[i].balance),
+                        ". Expected balance cap:",
+                        ParseUtils.uintToString(
+                            ghost_totalSuppliedGasCompensationFor(allActors[i])
+                        )
+                    )
+                )
+            );
         }
 
         // TODO: track gas compensation

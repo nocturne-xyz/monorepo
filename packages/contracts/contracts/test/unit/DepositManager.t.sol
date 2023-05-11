@@ -184,6 +184,7 @@ contract DepositManagerTest is Test {
         // Token escrowed by manager contract
         assertEq(token.balanceOf(address(depositManager)), deposit.value);
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+        assertEq(ALICE.balance, 0);
     }
 
     function testInstantiateETHDepositSuccess() public {
@@ -229,6 +230,7 @@ contract DepositManagerTest is Test {
         // Token + eth escrowed by manager contract
         assertEq(weth.balanceOf(address(depositManager)), depositAmount);
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
+        ssertEq(ALICE.balance, 0);
     }
 
     function testInstantiateETHDepositNotEnoughETH() public {
@@ -515,7 +517,6 @@ contract DepositManagerTest is Test {
 
         vm.deal(ALICE, GAS_COMP_AMOUNT * numDeposits);
         vm.prank(ALICE);
-
         depositManager.instantiateErc20MultiDeposit{
             value: GAS_COMP_AMOUNT * numDeposits
         }(

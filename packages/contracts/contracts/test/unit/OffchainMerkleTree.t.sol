@@ -172,9 +172,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
         uint256 accumulatorHash = merkle.getAccumulatorHash();
         console.log("accumulatorHash", accumulatorHash);
-        (uint256 hi, uint256 lo) = TreeUtils.uint256ToFieldElemLimbs(
-            accumulatorHash
-        );
+        (uint256 hi, ) = TreeUtils.uint256ToFieldElemLimbs(accumulatorHash);
 
         console.log("accumulatorHashHi", hi);
 
