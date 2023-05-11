@@ -40,17 +40,17 @@ contract TokenSwapper is IERC721Receiver, IERC1155Receiver {
                 request.erc20OutAmount
             );
         }
-        // if (address(request.erc721Out) != address(0x0)) {
-        ISimpleERC721Token(request.erc721Out).reserveToken(
-            address(this),
-            request.erc721OutId
-        );
-        ISimpleERC721Token(request.erc721Out).safeTransferFrom(
-            address(this),
-            msg.sender,
-            request.erc721OutId
-        );
-        // }
+        if (address(request.erc721Out) != address(0x0)) {
+            ISimpleERC721Token(request.erc721Out).reserveToken(
+                address(this),
+                request.erc721OutId
+            );
+            ISimpleERC721Token(request.erc721Out).safeTransferFrom(
+                address(this),
+                msg.sender,
+                request.erc721OutId
+            );
+        }
         if (address(request.erc1155Out) != address(0x0)) {
             ISimpleERC1155Token(request.erc1155Out).reserveTokens(
                 address(this),

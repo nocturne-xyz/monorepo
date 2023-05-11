@@ -82,7 +82,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // approvals in case of a swap
         uint256 numActions = bound(args.seed, 2, 5);
         Action[] memory actions = new Action[](numActions);
-        EncodedAsset[] memory encodedRefundAssets;
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
@@ -164,21 +164,11 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     });
                 }
 
-                encodedRefundAssets = new EncodedAsset[](3);
+                encodedRefundAssets = new EncodedAsset[](1);
                 encodedRefundAssets[0] = AssetUtils.encodeAsset(
                     AssetType.ERC20,
                     address(args.swapErc20),
                     ERC20_ID
-                );
-                encodedRefundAssets[1] = AssetUtils.encodeAsset(
-                    AssetType.ERC721,
-                    address(args.swapErc721),
-                    _meta.swaps[i + 1].erc721OutId
-                );
-                encodedRefundAssets[2] = AssetUtils.encodeAsset(
-                    AssetType.ERC1155,
-                    address(args.swapErc1155),
-                    _meta.swaps[i + 1].erc1155OutId
                 );
 
                 i += 1; // additional +1 to skip past swap action at i+1

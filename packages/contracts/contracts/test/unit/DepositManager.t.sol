@@ -230,7 +230,7 @@ contract DepositManagerTest is Test {
         // Token + eth escrowed by manager contract
         assertEq(weth.balanceOf(address(depositManager)), depositAmount);
         assertEq(address(depositManager).balance, GAS_COMP_AMOUNT);
-        ssertEq(ALICE.balance, 0);
+        assertEq(ALICE.balance, 0);
     }
 
     function testInstantiateETHDepositNotEnoughETH() public {

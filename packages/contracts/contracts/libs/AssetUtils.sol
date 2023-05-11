@@ -123,7 +123,8 @@ library AssetUtils {
             require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
-            IERC721(assetAddr).transferFrom(address(this), receiver, id);
+            // we use safeTransferFrom because receiver is unknown
+            IERC721(assetAddr).safeTransferFrom(address(this), receiver, id);
         } else if (assetType == AssetType.ERC1155) {
             // uncaught revert will be propagated
             IERC1155(assetAddr).safeTransferFrom(
@@ -155,6 +156,8 @@ library AssetUtils {
             require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
+            // we use transferFrom because receiver is always this contract which we know
+            // implements onERC721Received
             IERC721(assetAddr).transferFrom(spender, address(this), id);
         } else if (assetType == AssetType.ERC1155) {
             // uncaught revert will be propagated
