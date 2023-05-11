@@ -31,7 +31,7 @@ export interface SubtreeUpdaterHandle {
   teardown: () => Promise<void>;
 }
 
-const PROOF_QUEUE_NAME = "ROOF_QUEUE";
+const PROOF_QUEUE_NAME = "PROOF_QUEUE";
 const PROOF_JOB_TAG = "PROOF_JOB";
 const SUBMISSION_QUEUE_NAME = "SUBMISSION_QUEUE";
 const SUBMISSION_JOB_TAG = "SUBMISSION_JOB";
@@ -89,7 +89,7 @@ export class SubtreeUpdater {
   }
 
   start(queryThrottleMs?: number): SubtreeUpdaterHandle {
-    const proofJobs = this.getIterator(
+    const proofJobs = this.getProofJobIterator(
       this.logger.child({ function: "iterator" }),
       queryThrottleMs
     );
@@ -212,7 +212,7 @@ export class SubtreeUpdater {
     );
   }
 
-  private getIterator(
+  private getProofJobIterator(
     logger: Logger,
     queryThrottleMs?: number
   ): ClosableAsyncIterator<ProofJobData> {
@@ -240,7 +240,10 @@ export class SubtreeUpdater {
         // if the insertion we got is not at a batch boundry, re-set the timeout because we haven't organically filled the batch yet
         if (merkleIndex % BATCH_SIZE !== 0) {
           this.fillBatchTimeout = setTimeout(
-            () => this.fillbatch(this.logger.child({ function: "fillBatch" })),
+            () =>
+              this.fillBatchWithZeros(
+                this.logger.child({ function: "fillBatch" })
+              ),
             this.fillBatchLatency
           );
         }
@@ -281,7 +284,7 @@ export class SubtreeUpdater {
       });
   }
 
-  async fillbatch(logger: Logger): Promise<void> {
+  private async fillBatchWithZeros(logger: Logger): Promise<void> {
     logger.debug("acquiring mutex on handler contract to fill batch");
     await this.handlerMutex.runExclusive(async () => {
       logger.info("filling batch...");

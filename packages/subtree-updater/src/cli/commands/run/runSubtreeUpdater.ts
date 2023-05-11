@@ -50,7 +50,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
   )
   .option(
     "--throttle-ms <number>",
-    "maximum period of time to wait before pulling new deposit events",
+    "maximum period of time to wait before pulling new insertions",
     parseInt
   )
   .action(async (options) => {
