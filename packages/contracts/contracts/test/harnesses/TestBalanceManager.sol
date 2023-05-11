@@ -82,14 +82,4 @@ contract TestBalanceManager is IHandler, BalanceManager {
     function handleAllRefunds(Operation calldata op) public {
         _handleAllRefunds(op);
     }
-
-    function receivedAssetsLength() public view returns (uint256) {
-        return _receivedAssets.length;
-    }
-
-    function getReceivedAssetsByIndex(
-        uint256 index
-    ) public view returns (EncodedAsset memory) {
-        return _receivedAssets[index];
-    }
 }
