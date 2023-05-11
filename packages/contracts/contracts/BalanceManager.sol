@@ -2,11 +2,6 @@
 pragma solidity ^0.8.17;
 pragma abicoder v2;
 
-// External
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
-import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
@@ -21,6 +16,7 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
 
     ITeller public _teller;
 
+    // erc721/1155s received via safeTransferFrom, populated by Handler received hooks
     EncodedAsset[] public _receivedAssets;
 
     // Mapping of encoded asset hash => prefilled balance
@@ -59,79 +55,6 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
             encodedAsset,
             _prefilledAssetBalances[assetHash]
         );
-    }
-
-    function _onERC721Received(uint256 id) internal returns (bytes4) {
-        // Must reject the transfer outside of an operation handling. We also
-        // reject erc721s for prefills.
-        if (
-            reentrancyGuardStage() == NOT_ENTERED ||
-            reentrancyGuardStage() == ENTERED_PREFILL
-        ) {
-            return 0;
-        }
-
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            _receivedAssets.push(
-                AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
-            );
-        }
-
-        // ENTERED_PROCESS is ok because this is when teller funds handler
-        return IERC721ReceiverUpgradeable.onERC721Received.selector;
-    }
-
-    function _onERC1155Received(uint256 id) internal returns (bytes4) {
-        // Reject the transfer outside of an operation handling / prefills
-        if (reentrancyGuardStage() == NOT_ENTERED) {
-            return 0;
-        }
-
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            _receivedAssets.push(
-                AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
-            );
-        }
-
-        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
-        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
-    }
-
-    function _onERC1155BatchReceived(
-        uint256[] calldata ids
-    ) internal returns (bytes4) {
-        // Reject the transfer outside of an operation handling / prefills
-        if (reentrancyGuardStage() == NOT_ENTERED) {
-            return 0;
-        }
-
-        // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
-            uint256 numIds = ids.length;
-            for (uint256 i = 0; i < numIds; i++) {
-                _receivedAssets.push(
-                    AssetUtils.encodeAsset(
-                        AssetType.ERC1155,
-                        msg.sender,
-                        ids[i]
-                    )
-                );
-            }
-        }
-
-        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
-        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
-    }
-
-    function _supportsInterface(
-        bytes4 interfaceId
-    ) internal pure returns (bool) {
-        return
-            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
-            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
-            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
     /**
