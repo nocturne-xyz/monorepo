@@ -58,7 +58,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositManager,
             depositErc20,
             depositErc721,
-            depositErc1155
+            depositErc1155,
+            SCREENER_PRIVKEY,
+            SCREENER_ADDRESS
         );
 
         swapper = new TokenSwapper();

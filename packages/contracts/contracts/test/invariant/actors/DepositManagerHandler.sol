@@ -35,8 +35,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
     uint256 constant AVG_GAS_PER_COMPLETE = 130_000 gwei;
 
-    uint256 constant SCREENER_PRIVKEY = 1;
-    address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
+    uint256 public SCREENER_PRIVKEY;
+    address public SCREENER_ADDRESS;
 
     // ______PUBLIC______
     TestDepositManager public depositManager;
@@ -71,12 +71,16 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         TestDepositManager _depositManager,
         SimpleERC20Token _erc20,
         SimpleERC721Token _erc721,
-        SimpleERC1155Token _erc1155
+        SimpleERC1155Token _erc1155,
+        uint256 _screenerPrivkey,
+        address _screenerAddress
     ) {
         depositManager = _depositManager;
         erc20 = _erc20;
         erc721 = _erc721;
         erc1155 = _erc1155;
+        SCREENER_PRIVKEY = _screenerPrivkey;
+        SCREENER_ADDRESS = _screenerAddress;
     }
 
     modifier createActor() {
@@ -397,7 +401,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             );
         }
 
-        // TODO: track gas compensation
+        // TODO: track exact screener gas compensation
     }
 
     // ______VIEW______
