@@ -214,6 +214,46 @@ contract Handler is
         return opResult;
     }
 
+    /**
+      @dev This function will only be message-called from `handleOperation`.
+      The call gas given is the execution gas specified by the operation.
+    */
+    function executeActions(
+        Operation calldata op
+    )
+        external
+        whenNotPaused
+        onlyThis
+        executeActionsGuard
+        returns (bool[] memory successes, bytes[] memory results)
+    {
+        uint256 numActions = op.actions.length;
+        successes = new bool[](numActions);
+        results = new bytes[](numActions);
+
+        // Execute each external call
+        for (uint256 i = 0; i < numActions; i++) {
+            (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
+            if (op.atomicActions && !successes[i]) {
+                string memory revertMsg = OperationUtils.getRevertMsg(
+                    results[i]
+                );
+                if (bytes(revertMsg).length == 0) {
+                    // TODO maybe say which action?
+                    revert("action silently reverted");
+                } else {
+                    revert(revertMsg);
+                }
+            }
+        }
+
+        // Ensure number of refunds didn't exceed max specified in op.
+        // If it did, executeActions is reverts and all action state changes
+        // are rolled back.
+        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
+        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+    }
+
     function onERC721Received(
         address, // operator
         address, // from
@@ -307,46 +347,6 @@ contract Handler is
             (interfaceId == type(IERC165Upgradeable).interfaceId) ||
             (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
-    }
-
-    /**
-      @dev This function will only be message-called from `handleOperation`.
-      The call gas given is the execution gas specified by the operation.
-    */
-    function executeActions(
-        Operation calldata op
-    )
-        external
-        whenNotPaused
-        onlyThis
-        executeActionsGuard
-        returns (bool[] memory successes, bytes[] memory results)
-    {
-        uint256 numActions = op.actions.length;
-        successes = new bool[](numActions);
-        results = new bytes[](numActions);
-
-        // Execute each external call
-        for (uint256 i = 0; i < numActions; i++) {
-            (successes[i], results[i]) = _makeExternalCall(op.actions[i]);
-            if (op.atomicActions && !successes[i]) {
-                string memory revertMsg = OperationUtils.getRevertMsg(
-                    results[i]
-                );
-                if (bytes(revertMsg).length == 0) {
-                    // TODO maybe say which action?
-                    revert("action silently reverted");
-                } else {
-                    revert(revertMsg);
-                }
-            }
-        }
-
-        // Ensure number of refunds didn't exceed max specified in op.
-        // If it did, executeActions is reverts and all action state changes
-        // are rolled back.
-        uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
-        require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
     }
 
     function _makeExternalCall(
