@@ -193,10 +193,10 @@ async function maybeDeployErc20s(
   connectedSigner: ethers.Wallet,
   erc20s: Map<string, Erc20Config>
 ): Promise<Map<string, Erc20Config>> {
-  let ret = new Map(Array.from(erc20s.entries()));
+  const ret = new Map(Array.from(erc20s.entries()));
   const iSimpleErc20 = new SimpleERC20Token__factory(connectedSigner);
 
-  for (let [name, config] of Array.from(ret)) {
+  for (const [name, config] of Array.from(ret)) {
     if (!ethers.utils.isAddress(config.address)) {
       throw new Error(
         `invalid address for ${name}. address: ${config.address}`

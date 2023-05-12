@@ -1,12 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "ethers";
-import { open } from "lmdb";
 import {
   DepositManager,
   Handler,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
-import { SubtreeUpdater } from "@nocturne-xyz/subtree-updater";
 import {
   AssetType,
   JoinSplitProver,
@@ -24,14 +22,8 @@ import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import {
-  getSubtreeUpdateProver,
-  sleep,
-  submitAndProcessOperation,
-} from "../src/utils";
-import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
+import { sleep, submitAndProcessOperation } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
-import { SyncSubtreeSubmitter } from "@nocturne-xyz/subtree-updater/dist/src/submitter";
 import { KEYS_TO_WALLETS } from "../src/keys";
 
 // 10^9 (e.g. 10 gwei if this was eth)
@@ -62,18 +54,21 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
-    let updater: SubtreeUpdater;
 
     let joinSplitProver: JoinSplitProver;
-    const logger = makeTestLogger("subtree-updater", "updater");
 
     beforeEach(async () => {
-      // don't deploy subtree updater, and don't deploy subgraph unless we're using SubgraphSyncAdapter
       const testDeployment = await setupTestDeployment({
         include: {
           bundler: true,
           subgraph: true,
           depositScreener: true,
+          subtreeUpdater: true,
+        },
+        configs: {
+          subtreeUpdater: {
+            fillBatchLatency: undefined,
+          },
         },
       });
 
@@ -96,29 +91,16 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           gasAssets: new Map([["GAS", gasToken.address]]),
         }
       ));
-
-      await newSubtreeUpdater();
     });
 
-    async function newSubtreeUpdater() {
-      const serverDB = open({ path: `${__dirname}/../db/merkleTestDB` });
-      const prover = getSubtreeUpdateProver();
-      const submitter = new SyncSubtreeSubmitter(handler);
-      updater = new SubtreeUpdater(handler, serverDB, prover, submitter);
-      await updater.init(logger);
-    }
-
-    async function applySubtreeUpdate() {
+    async function fillBatch() {
       const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
-      await updater.pollInsertionsAndTryMakeBatch(logger);
-      await updater.tryGenAndSubmitProofs(logger);
       // wait for subgraph
       await sleep(2_000);
     }
 
     afterEach(async () => {
-      await updater.dropDB();
       await teardown();
     });
 
@@ -134,8 +116,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       const ncs = depositedNotes.map(NoteTrait.toCommitment);
 
-      // apply subtree update and sync SDK
-      await applySubtreeUpdate();
+      // force subtree update by filling batch and sync SDK
+      await fillBatch();
       await nocturneWalletSDKAlice.sync();
 
       // check that DB has notes and merkle has leaves for them
@@ -169,9 +151,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
       );
 
-      // apply subtree update and sync SDK...
+      // force subtree update by filling batch and sync SDK...
       console.log("applying subtree update...");
-      await applySubtreeUpdate();
+      await fillBatch();
 
       console.log("syncing SDK...");
       await nocturneWalletSDKAlice.sync();

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- axe subtree updater recovery test
+- use new subtree updater
 - integrate simplified deploy script now that deploy pkg exported function handles everything including token deployment and whitelisting
 - pass map of name to address for protocol whitelisting after removing fn selectors
 - use multideposit after deposit manager changes

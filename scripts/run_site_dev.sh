@@ -102,6 +102,11 @@ BUNDLER_PORT="3000"
 
 # screener default config variables
 SCREENER_REDIS_URL="redis://redis:6380"
+
+# subtree updater default config variables 
+SUBTREE_UPDATER_REDIS_URL="redis://redis:6381"
+
+# subgraph url
 SUBGRAPH_URL="http://host.docker.internal:8000/subgraphs/name/nocturne"
 
 echo "DepositManager contract address: $DEPOSIT_MANAGER_CONTRACT_ADDRESS"
@@ -132,7 +137,7 @@ mkdir ./redis-data
 popd
 
 # run bundler
-docker compose -f ./packages/bundler/docker-compose.local.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
+docker compose -f ./packages/bundler/docker-compose.yml --env-file packages/bundler/.env up --build &> "$LOG_DIR/bundler-docker-compose" &
 BUNDLER_PID=$!
 
 echo "bundler running at PID: $BUNDLER_PID"
@@ -158,7 +163,7 @@ popd
 
 
 # run screener
-docker compose -f ./packages/deposit-screener/docker-compose.local.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
+docker compose -f ./packages/deposit-screener/docker-compose.yml --env-file packages/deposit-screener/.env up --build  &> "$LOG_DIR/screener-docker-compose" &
 SCREENER_PID=$!
 
 echo "screener running at PID: $SCREENER_PID"
@@ -166,15 +171,21 @@ echo "screener running at PID: $SCREENER_PID"
 # write subtree updater's .env file
 pushd packages/subtree-updater
 cat > .env <<- EOM
+REDIS_URL=$SUBTREE_UPDATER_REDIS_URL
+REDIS_PASSWORD=$REDIS_PASSWORD
+
+CONFIG_NAME_OR_PATH=$CONFIG_PATH_IN_DOCKER
+SUBGRAPH_URL=$SUBGRAPH_URL
 RPC_URL=$RPC_URL
+
 TX_SIGNER_KEY=$SUBTREE_UPDATER_TX_SIGNER_KEY
 EOM
 
-./build_mock_docker.sh
+# ./build_mock_docker.sh
 popd
 
 # run subtree updater
-docker run -v "$ROOT_DIR/logs/:/logs" -v "$ROOT_DIR/packages/config/configs:/configs" --env-file ./packages/subtree-updater/.env --add-host host.docker.internal:host-gateway docker.io/library/mock-subtree-updater --use-mock-prover --fill-batches --config-name-or-path "$CONFIG_PATH_IN_DOCKER" --log-dir "/logs/subtree-updater" --zkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate.zkey --vkey-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/vkey.json --prover-path /rapidsnark/build/prover --witness-generator-path ./circuit-artifacts/subtreeupdate/subtreeupdate_cpp/subtreeupdate &> "$LOG_DIR/subtree-updater" &
+docker compose -f ./packages/subtree-updater/docker-compose.yml --env-file packages/subtree-updater/.env up --build  &> "$LOG_DIR/subtree-updater-docker-compose" &
 SUBTREE_UPDATER_PID=$!
 
 echo "subtree updater running at PID: $SUBTREE_UPDATER_PID"

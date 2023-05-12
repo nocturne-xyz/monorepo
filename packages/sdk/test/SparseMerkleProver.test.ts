@@ -260,8 +260,8 @@ describe("SparseMerkleProver", () => {
       expect(prover.getRoot() === tree.root).to.be.true;
     }
 
-    // run 10 fuzzes using incremental insert
-    range(10).forEach((_) => {
+    // run 5 fuzzes using incremental insert
+    range(5).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
 

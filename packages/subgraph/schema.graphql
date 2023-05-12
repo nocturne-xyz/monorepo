@@ -68,3 +68,20 @@ type SubtreeCommit @entity(immutable: true) {
   newRoot: BigInt!
   subtreeIndex: BigInt!
 }
+
+type TreeInsertion @entity(immutable: true) {
+  id: Bytes!
+  idx: BigInt!
+  note: CompressedEncodedNote
+  noteCommitments: [BigInt!]
+}
+
+type CompressedEncodedNote @entity(immutable: true) {
+  id: Bytes!
+  ownerH1: BigInt!
+  ownerH2: BigInt!
+  nonce: BigInt!
+  encodedAssetAddr: BigInt!
+  encodedAssetId: BigInt!
+  value: BigInt!
+}

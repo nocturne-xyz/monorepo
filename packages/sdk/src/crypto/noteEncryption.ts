@@ -86,12 +86,12 @@ export function decryptNote(
 }
 
 // Encode a Baby Jubjub point to the base field
-function encodePoint(point: AffinePoint<bigint>): bigint {
+export function encodePoint(point: AffinePoint<bigint>): bigint {
   return point.x;
 }
 
 // Decode a Baby Jubjub point (on prime order subgroup) from a base field element
-function decodePoint(x: bigint): AffinePoint<bigint> {
+export function decodePoint(x: bigint): AffinePoint<bigint> {
   const x2 = F.mul(F.reduce(x), F.reduce(x));
   const ax2 = F.mul(BabyJubJub.A, x2);
   const dx2 = F.mul(BabyJubJub.D, x2);

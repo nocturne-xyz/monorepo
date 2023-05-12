@@ -17,6 +17,11 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   tmpDir: string;
   vkey: any;
 
+  // rapidsnark writes to files, so if we have multiple provers running at the same time,
+  // the proofs will overwrite each other. To prevent this, we use a global counter to
+  // change the filenames
+  proofId = 0;
+
   constructor(
     rapidsnarkExecutablePath: string,
     witnessGeneratorExecutablePath: string,
@@ -34,10 +39,12 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
   async proveSubtreeUpdate(
     inputs: SubtreeUpdateInputs
   ): Promise<SubtreeUpdateProofWithPublicSignals> {
-    const inputJsonPath = `${this.tmpDir}/_input.json`;
-    const witnessPath = `${this.tmpDir}/_witness.wtns`;
-    const proofJsonPath = `${this.tmpDir}/_proof.json`;
-    const publicSignalsPath = `${this.tmpDir}/_public.json`;
+    this.proofId += 1;
+
+    const inputJsonPath = `${this.tmpDir}/_input-${this.proofId}.json`;
+    const witnessPath = `${this.tmpDir}/_witness-${this.proofId}.wtns`;
+    const proofJsonPath = `${this.tmpDir}/_proof-${this.proofId}.json`;
+    const publicSignalsPath = `${this.tmpDir}/_public-${this.proofId}.json`;
 
     // create prover tmp dir if it DNE yet
     await fs.promises.mkdir(this.tmpDir, { recursive: true });
@@ -60,6 +67,13 @@ export class RapidsnarkSubtreeUpdateProver implements SubtreeUpdateProver {
 
     const proof = deserializeRapidsnarkProof(proofStr);
     const publicSignals = deserializeRapidsnarkPublicSignals(publicSignalsStr);
+
+    await Promise.all([
+      fs.promises.rm(inputJsonPath),
+      fs.promises.rm(witnessPath),
+      fs.promises.rm(proofJsonPath),
+      fs.promises.rm(publicSignalsPath),
+    ]);
 
     return {
       proof,

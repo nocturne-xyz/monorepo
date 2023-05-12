@@ -58,7 +58,7 @@ export async function syncSDK(
   for await (const diff of diffs.iter) {
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
-    console.log("nfIndices", nfIndices);
+    console.log("applied state diff for block", diff.blockNumber);
 
     // update merkle tree
     // NOTE: the tree will include leaves that haven't yet been committed via subtree updater

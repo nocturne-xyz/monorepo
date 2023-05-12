@@ -114,6 +114,7 @@ export interface TestDeployment {
   bundlerEoa: ethers.Wallet;
   subtreeUpdaterEoa: ethers.Wallet;
   screenerEoa: ethers.Wallet;
+  actorConfig: TestActorsConfig;
   teardown: () => Promise<void>;
 }
 
@@ -142,6 +143,8 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   "handlerAddress" | "txSignerKey"
 > = {
   rpcUrl: ANVIL_URL,
+  subgraphUrl: SUBGRAPH_URL,
+  fillBatchLatency: 4_000,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
@@ -169,6 +172,10 @@ export async function setupTestDeployment(
   // deploy contracts
   const provider = new ethers.providers.JsonRpcProvider(ANVIL_URL);
 
+  // keep track of any modified configs
+  const actorConfig: TestActorsConfig = structuredClone(config);
+  actorConfig.configs = actorConfig.configs ?? {};
+
   const [
     deployerEoa,
     aliceEoa,
@@ -193,6 +200,7 @@ export async function setupTestDeployment(
       ...givenSubgraphConfig,
       tellerAddress: teller.address,
     };
+    actorConfig.configs.subgraph = subgraphConfig;
 
     stopSubgraph = await startSubgraph(subgraphConfig);
     await sleep(5_000); // wait for subgraph to start up (TODO: better way to do this?)
@@ -208,6 +216,7 @@ export async function setupTestDeployment(
       tellerAddress: teller.address,
       txSignerKey: bundlerEoa.privateKey,
     };
+    actorConfig.configs.bundler = bundlerConfig;
 
     proms.push(startBundler(bundlerConfig));
   }
@@ -221,6 +230,7 @@ export async function setupTestDeployment(
       handlerAddress: handler.address,
       txSignerKey: subtreeUpdaterEoa.privateKey,
     };
+    actorConfig.configs.subtreeUpdater = subtreeUpdaterConfig;
 
     proms.push(startSubtreeUpdater(subtreeUpdaterConfig));
   }
@@ -234,6 +244,7 @@ export async function setupTestDeployment(
       attestationSignerKey: screenerEoa.privateKey,
       txSignerKey: screenerEoa.privateKey,
     };
+    actorConfig.configs.depositScreener = depositScreenerConfig;
 
     proms.push(startDepositScreener(depositScreenerConfig));
   }
@@ -269,6 +280,7 @@ export async function setupTestDeployment(
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
 
   return {
+    actorConfig,
     depositManager,
     teller,
     handler,

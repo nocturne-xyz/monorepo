@@ -2,7 +2,16 @@
 
 ### Unreleased
 
-= add `--stdout-log-level` option to CLI
+- update .env.example
+- add docker-compose file
+- complete overhaul, including the following changes:
+	- syncAdapter iterates over tree insertions
+	- no persistence - instead recovers by scanning through insertions from subgraph
+	- skips proving for already-submitted updates
+	- fillBatch logic is now based on a cancellable timeout that's overridden every time an insertion is made instead of an interval 
+	- bullMQ to handle / persist queued / unfinished / failed jobs
+	- redis instead of lmdb
+- add `--stdout-log-level` option to CLI
 - tag docker images with nocturnelabs org name
 - scan through all insertions starting from index 0 when recovering
 - take handler address via config in CLI via `--config-name-or-path`
