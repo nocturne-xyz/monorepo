@@ -222,7 +222,7 @@ export class SparseMerkleProver {
     return smt;
   }
 
-  // we can't rune a leaf if we need it to insert a new leaf or to prove membership of a leaf in the `leaves` map.
+  // we can't prune a leaf if we need it to insert a new leaf or to prove membership of a leaf in the `leaves` map.
   // we need a leaf to generate a proof if:
   // 1. it's in the leaves map
   // 2. it's the sibling of a leaf in the leaves map
@@ -231,7 +231,7 @@ export class SparseMerkleProver {
   // to insert a new leaf, all of the leaves along the path to the rightmost leaf in the tree. In other words:
   // 4. we can't prune the rightmost leaf in the tree
   //
-  // Checking the following three conditions is equivalent to checking the above four conditions;
+  // Checking the following three conditions is equivalent to checking the above four conditions:
   // 1. it's in the leaves map
   // 2. it's the sibling of a leaf in the leaves map.
   // 3. it's in the rightmost depth-1 subtree
@@ -240,8 +240,6 @@ export class SparseMerkleProver {
   //   - the subtree isn't full (it has < ARITY leaves) and none are in the leaves map, we can't prune the because we could insert another leaf, in which case we'd need this leaf because it would be a sibling
   //     this not only covers condition 3, but also condition 4 in the event the subtree has < ARITY leaves
   //   - in either case, if this leaf or any of its siblings are in the leaves map, then checks 1 and 2 will apply.
-  // these cases are not mutually exclusive, but if at least one of them are true,
-  // then we can't prune the leaf
   //
   private cannotPruneLeaf(index: number): boolean {
     const isInLeavesMap = this.leaves.has(index);
