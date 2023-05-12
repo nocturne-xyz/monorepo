@@ -3,11 +3,23 @@
   "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
   "subtreeBatchFillers": ["0xD20E7a8ADdCB5D983C064f8A184B7aa65ef23f10"],
   "wethAddress": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
-  "protocolAllowlist": {
-    "weth": "0x7b79995e5f793a07bc00c21412e50ecae098e7f9",
-    "dai": "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6"
-  },
+  "protocolAllowlist": [
+    ["weth", "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"],
+    ["dai", "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6"]
+  ],
   "opts": {
     "useMockSubtreeUpdateVerifier": false
-  }
+  },
+  "erc20s": [
+    [
+      "TEST-TOKEN",
+      {
+        "address": "0x0000000000000000000000000000000000000000",
+        "globalCapWholeTokens": "1000000n",
+        "maxDepositSizeWholeTokens": "1000n",
+        "precision": "18n",
+        "isGasAsset": true
+      }
+    ]
+  ]
 }

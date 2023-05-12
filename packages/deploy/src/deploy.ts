@@ -26,6 +26,8 @@ import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
 import { Address } from "./utils";
 
+const TEST_TOKEN_RESERVE_AMOUNT = 1_000_000_000_000_000_000_000_000n;
+
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
   config: NocturneDeployConfig
@@ -205,8 +207,16 @@ async function maybeDeployErc20s(
 
     if (config.address == "0x0000000000000000000000000000000000000000") {
       console.log(`deploying erc20 ${name}...`);
-      config.address = (await iSimpleErc20.deploy()).address;
+      const token = await iSimpleErc20.deploy();
+
+      config.address = token.address;
       ret.set(name, config);
+
+      // mint tokens to connectedSigner
+      await token.reserveTokens(
+        connectedSigner.address,
+        TEST_TOKEN_RESERVE_AMOUNT
+      );
     }
   }
 
