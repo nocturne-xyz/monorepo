@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- only prune tree after proof job is submitted to bullmq
 - update .env.example
 - add docker-compose file
 - complete overhaul, including the following changes:
