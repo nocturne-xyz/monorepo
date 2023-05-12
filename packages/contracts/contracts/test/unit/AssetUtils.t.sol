@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-
 import {AssetUtils} from "../../libs/AssetUtils.sol";
+import {ISimpleERC20Token, ISimpleERC721Token, ISimpleERC1155Token} from "../tokens/ISimpleToken.sol";
 import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../tokens/SimpleERC1155Token.sol";
@@ -20,15 +20,15 @@ contract AssetUtilsTest is Test {
         erc1155 = new SimpleERC1155Token();
     }
 
-    function testEncodeDecodeErc1155() public {
+    function testEncodeDecodeAssets() public {
         for (uint256 i = 0; i < 3; i++) {
             AssetType assetType = _uintToAssetType(i);
-            address token = _uintToToken(i);
+            address asset = _uintToAsset(i);
             uint256 id = 115792089237316195423570985008687907853269984665640564039457584007913129639933;
 
             EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
                 assetType,
-                address(token),
+                address(asset),
                 id
             );
 
@@ -39,7 +39,7 @@ contract AssetUtilsTest is Test {
             ) = AssetUtils.decodeAsset(encodedAsset);
 
             assertEq(uint256(decodedAssetType), uint256(assetType));
-            assertEq(decodedAssetAddr, address(token));
+            assertEq(decodedAssetAddr, address(asset));
             assertEq(decodedId, id);
         }
     }
@@ -56,7 +56,7 @@ contract AssetUtilsTest is Test {
         }
     }
 
-    function _uintToToken(uint256 i) internal view returns (address) {
+    function _uintToAsset(uint256 i) internal view returns (address) {
         if (i == 0) {
             return address(erc20);
         } else if (i == 1) {
@@ -64,7 +64,7 @@ contract AssetUtilsTest is Test {
         } else if (i == 2) {
             return address(erc1155);
         } else {
-            revert("Invalid token");
+            revert("Invalid asset");
         }
     }
 }
