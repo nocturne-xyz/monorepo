@@ -9,7 +9,6 @@ import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/to
 import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {IHandler} from "./interfaces/IHandler.sol";
-import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {BalanceManager} from "./BalanceManager.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -21,8 +20,7 @@ contract Handler is
     IHandler,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
-    BalanceManager,
-    NocturneReentrancyGuard
+    BalanceManager
 {
     mapping(address => bool) public _supportedContractAllowlist;
 
@@ -38,7 +36,6 @@ contract Handler is
         address teller,
         address subtreeUpdateVerifier
     ) external initializer {
-        __NocturneReentrancyGuard_init();
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
@@ -70,13 +67,6 @@ contract Handler is
             contractAddress,
             permission
         );
-    }
-
-    function addToAssetPrefill(
-        EncodedAsset calldata encodedAsset,
-        uint256 value
-    ) external onlyOwner addToAssetPrefillGuard {
-        _addToAssetPrefill(encodedAsset, value);
     }
 
     function handleDeposit(
@@ -235,18 +225,15 @@ contract Handler is
         uint256 id,
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
-        // Must reject the transfer outside of an operation handling. We also
-        // reject erc721s for prefills.
-        if (
-            reentrancyGuardStage() == NOT_ENTERED ||
-            reentrancyGuardStage() == ENTERED_PREFILL ||
-            !_supportedContractAllowlist[msg.sender]
-        ) {
+        // Must reject the transfer outside of an operation handling. Erc721s are already rejected
+        // in the addAssetToPrefill function.
+        uint256 stage = reentrancyGuardStage();
+        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
         }
 
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+        if (stage == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
             );
@@ -264,15 +251,13 @@ contract Handler is
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
-        if (
-            reentrancyGuardStage() == NOT_ENTERED ||
-            !_supportedContractAllowlist[msg.sender]
-        ) {
+        uint256 stage = reentrancyGuardStage();
+        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
         }
 
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+        if (stage == ENTERED_EXECUTE_ACTIONS) {
             _receivedAssets.push(
                 AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
             );
@@ -290,15 +275,13 @@ contract Handler is
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
         // Reject the transfer outside of an operation handling / prefills
-        if (
-            reentrancyGuardStage() == NOT_ENTERED ||
-            !_supportedContractAllowlist[msg.sender]
-        ) {
+        uint256 stage = reentrancyGuardStage();
+        if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
         }
 
         // Record the transfer if it results from executed actions
-        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+        if (stage == ENTERED_EXECUTE_ACTIONS) {
             uint256 numIds = ids.length;
             for (uint256 i = 0; i < numIds; i++) {
                 _receivedAssets.push(

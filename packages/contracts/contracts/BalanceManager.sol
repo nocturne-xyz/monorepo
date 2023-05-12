@@ -5,35 +5,46 @@ pragma abicoder v2;
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
+import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
-contract BalanceManager is CommitmentTreeManager {
+contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
+    // Teller contract to send/request assets to/from
     ITeller public _teller;
 
-    // erc721/1155s received via safeTransferFrom, populated by Handler received hooks
+    // Array of received erc721/1155s, populated by Handler onReceived hooks
     EncodedAsset[] public _receivedAssets;
 
-    // Mapping of encoded asset hash => prefilled balance
+    // Mapping of encoded asset hash => prefilled balance (prefilling balances avoids extra
+    // gas of resetting storage slots back to 0)
     mapping(bytes32 => uint256) public _prefilledAssetBalances;
 
-    // gap for upgrade safety
+    // Gap for upgrade safety
     uint256[50] private __GAP;
 
+    /// @notice Event emitted when an asset's prefill balance is increased
     event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
 
+    /// @notice Internal initializer function
+    /// @param teller Address of the teller contract
+    /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function __BalanceManager_init(
         address teller,
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
+        __NocturneReentrancyGuard_init();
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
     }
 
+    /// @notice Requires asset to not be erc721, used to restrict prefills for erc721s since
+    ///         erc721 prefills are not useful
+    /// @param encodedAsset Encoded asset to check
     modifier notErc721(EncodedAsset calldata encodedAsset) {
         (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
             .decodeAsset(encodedAsset);
@@ -41,10 +52,10 @@ contract BalanceManager is CommitmentTreeManager {
         _;
     }
 
-    function _addToAssetPrefill(
+    function addToAssetPrefill(
         EncodedAsset calldata encodedAsset,
         uint256 value
-    ) internal notErc721(encodedAsset) {
+    ) external onlyOwner addToAssetPrefillGuard notErc721(encodedAsset) {
         bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
         _prefilledAssetBalances[assetHash] += value;
 
