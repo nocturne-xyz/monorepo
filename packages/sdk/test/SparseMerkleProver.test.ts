@@ -149,7 +149,7 @@ describe("SparseMerkleProver", () => {
     prover.prune();
 
     const numLeaves = countLeaves(prover);
-    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+    expect(numLeaves).to.equal(expectedNumNonPrunableLeaves(prover));
   });
 
   // run the test for each k mod ARITY
@@ -175,7 +175,7 @@ describe("SparseMerkleProver", () => {
       prover.prune();
 
       const numLeaves = countLeaves(prover);
-      expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+      expect(numLeaves).to.equal(expectedNumNonPrunableLeaves(prover));
     });
   }
 
@@ -198,7 +198,7 @@ describe("SparseMerkleProver", () => {
     prover.prune();
 
     const numLeaves = countLeaves(prover);
-    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+    expect(numLeaves).to.equal(expectedNumNonPrunableLeaves(prover));
   });
 
   it("inserts a batch of leaves all at once", () => {
@@ -264,7 +264,7 @@ describe("SparseMerkleProver", () => {
 
     // check number of leaves
     const numLeaves = countLeaves(prover);
-    expect(numLeaves).to.equal(expctedNumNonPrunableLeaves(prover));
+    expect(numLeaves).to.equal(expectedNumNonPrunableLeaves(prover));
   });
 
   it("calculates same root as @zk-kit/incremental-merkle-tree", () => {
@@ -342,7 +342,7 @@ function countLeaves(prover: SparseMerkleProver): number {
   return numLeaves;
 }
 
-function expctedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
+function expectedNumNonPrunableLeaves(prover: SparseMerkleProver): number {
   // number of leaves should be equal to the number of leaves in the `leaves` map
   // plus the number of leaves not in the `leaves` map that are siblings of leaves in the `leaves` map
   // plus the number of leaves in rightmost depth-1 subtree if none of its leaves are in the `leaves` map

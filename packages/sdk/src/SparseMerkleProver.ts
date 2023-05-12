@@ -228,8 +228,8 @@ export class SparseMerkleProver {
   // 2. it's the sibling of a leaf in the leaves map
   // 3. it's a sibling of a leaf that we haven't inserted yet, which could be in the leaves map in the future
   //
-  // to insert a new leaf, all of the leaves along the path to the rightmost leaf in the tree. In other words:
-  // 4. we can't prune the rightmost leaf in the tree
+  // to insert a new leaf, we need all of the leaves along the path to the rightmost leaf in the tree. In other words:
+  // 4. we can't prune the rightmost leaf in the tree or any of its siblings (as we'd need them to recompute the root)
   //
   // Checking the following three conditions is equivalent to checking the above four conditions:
   // 1. it's in the leaves map
@@ -239,7 +239,7 @@ export class SparseMerkleProver {
   //     this covers condition 4 in the event that the subtree has ARITY leaves.
   //   - the subtree isn't full (it has < ARITY leaves) and none are in the leaves map, we can't prune the because we could insert another leaf, in which case we'd need this leaf because it would be a sibling
   //     this not only covers condition 3, but also condition 4 in the event the subtree has < ARITY leaves
-  //   - in either case, if this leaf or any of its siblings are in the leaves map, then checks 1 and 2 will apply.
+  //   - whether the subtree is full or not, if this leaf or any of its siblings are in the leaves map, then checks 1 and/or 2 will apply.
   //
   private cannotPruneLeaf(index: number): boolean {
     const isInLeavesMap = this.leaves.has(index);
