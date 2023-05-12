@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- disable fill batch in subtree updater by default and manually fill batches in tests
 - axe subtree updater recovery test
 - use new subtree updater
 - integrate simplified deploy script now that deploy pkg exported function handles everything including token deployment and whitelisting

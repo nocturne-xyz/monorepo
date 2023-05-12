@@ -26,7 +26,7 @@ import { NocturneDeployConfig, NocturneDeployOpts } from "./config";
 import { NocturneConfig } from "@nocturne-xyz/config/dist/src/config";
 import { Address } from "./utils";
 
-const TEST_TOKEN_RESERVE_AMOUNT = 1_000_000_000_000_000_000_000_000n;
+const TEST_TOKEN_RESERVE_AMOUNT_WHOLE = 1_000_000n;
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
@@ -215,7 +215,7 @@ async function maybeDeployErc20s(
       // mint tokens to connectedSigner
       await token.reserveTokens(
         connectedSigner.address,
-        TEST_TOKEN_RESERVE_AMOUNT
+        TEST_TOKEN_RESERVE_AMOUNT_WHOLE * config.precision
       );
     }
   }
