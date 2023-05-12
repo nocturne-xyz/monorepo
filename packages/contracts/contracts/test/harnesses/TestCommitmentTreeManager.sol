@@ -24,10 +24,6 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
         _handleRefundNote(encodedAsset, refundAddr, value);
     }
 
-    function fillBatchWithZeros() external {
-        _fillBatchWithZeros();
-    }
-
     function insertNote(EncodedNote memory note) external {
         _insertNote(note);
     }

@@ -12,15 +12,22 @@ import {TreeUtils} from "../../libs/TreeUtils.sol";
 import "../../libs/Types.sol";
 
 contract CommitmentTreeManagerInvariants is Test {
+    address constant SUBTREE_BATCH_FILLER = address(0x1);
+
     CommitmentTreeManagerHandler public commitmentTreeManagerHandler;
 
     function setUp() public virtual {
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
         TestCommitmentTreeManager commitmentTreeManager = new TestCommitmentTreeManager();
         commitmentTreeManager.initialize(address(subtreeUpdateVerifier));
+        commitmentTreeManager.setSubtreeBatchFillerPermission(
+            SUBTREE_BATCH_FILLER,
+            true
+        );
 
         commitmentTreeManagerHandler = new CommitmentTreeManagerHandler(
-            commitmentTreeManager
+            commitmentTreeManager,
+            SUBTREE_BATCH_FILLER
         );
 
         bytes4[] memory selectors = new bytes4[](6);

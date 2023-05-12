@@ -3,7 +3,6 @@ pragma solidity ^0.8.17;
 pragma abicoder v2;
 
 // External
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
@@ -23,17 +22,12 @@ contract Handler is
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
     BalanceManager,
-    NocturneReentrancyGuard,
-    OwnableUpgradeable
+    NocturneReentrancyGuard
 {
-    mapping(address => bool) public _subtreeBatchFiller;
-
     mapping(address => bool) public _supportedContractAllowlist;
 
     // gap for upgrade safety
     uint256[50] private __GAP;
-
-    event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event SupportedContractAllowlistPermissionSet(
         address contractAddress,
@@ -44,7 +38,6 @@ contract Handler is
         address teller,
         address subtreeUpdateVerifier
     ) external initializer {
-        __Ownable_init();
         __NocturneReentrancyGuard_init();
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
@@ -59,26 +52,12 @@ contract Handler is
         _;
     }
 
-    modifier onlySubtreeBatchFiller() {
-        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
-        _;
-    }
-
     function pause() external onlyOwner {
         _pause();
     }
 
     function unpause() external onlyOwner {
         _unpause();
-    }
-
-    // Gives an address permission to call `fillBatchesWithZeros`
-    function setSubtreeBatchFillerPermission(
-        address filler,
-        bool permission
-    ) external onlyOwner {
-        _subtreeBatchFiller[filler] = permission;
-        emit SubtreeBatchFillerPermissionSet(filler, permission);
     }
 
     // Gives an handler ability to call function with on the specified protocol
@@ -98,10 +77,6 @@ contract Handler is
         uint256 value
     ) external onlyOwner addToAssetPrefillGuard {
         _addToAssetPrefill(encodedAsset, value);
-    }
-
-    function fillBatchWithZeros() external onlySubtreeBatchFiller {
-        _fillBatchWithZeros();
     }
 
     function handleDeposit(

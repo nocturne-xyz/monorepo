@@ -19,6 +19,7 @@ contract CommitmentTreeManagerHandler is Test {
 
     // ______PUBLIC______
     TestCommitmentTreeManager public commitmentTreeManager;
+    address public SUBTREE_BATCH_FILLER;
 
     uint256 public ghost_joinSplitLeafCount = 0;
     uint256 public ghost_refundNotesLeafCount = 0;
@@ -37,8 +38,12 @@ contract CommitmentTreeManagerHandler is Test {
     uint256 internal _rootCounter = 0;
     uint256 internal _nullifierCounter = 0;
 
-    constructor(TestCommitmentTreeManager _commitmentTreeManager) {
+    constructor(
+        TestCommitmentTreeManager _commitmentTreeManager,
+        address _subtreeBatchFiller
+    ) {
         commitmentTreeManager = _commitmentTreeManager;
+        SUBTREE_BATCH_FILLER = _subtreeBatchFiller;
     }
 
     modifier trackCall(bytes32 key) {
@@ -110,6 +115,7 @@ contract CommitmentTreeManagerHandler is Test {
         uint256 leavesLeft = TreeUtils.BATCH_SIZE -
             commitmentTreeManager.currentBatchLen();
         if (leavesLeft != TreeUtils.BATCH_SIZE) {
+            vm.prank(SUBTREE_BATCH_FILLER);
             commitmentTreeManager.fillBatchWithZeros();
             ghost_fillBatchWithZerosLeafCount += leavesLeft;
         } else {
