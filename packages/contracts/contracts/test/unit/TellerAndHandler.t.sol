@@ -1809,7 +1809,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(tokenIn.balanceOf(address(swapper)), uint256(0));
     }
 
-    function testOnErc721ReceivedEnteredExecute() public {
+    function testOnErc721ReceivedSuccessEnteredExecute() public {
         // Override reentrancy guard so balance manager can receive token
         vm.store(
             address(handler),
@@ -1855,7 +1855,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(handler.receivedAssetsLength(), 0);
     }
 
-    function testOnErc1155ReceivedEnteredExecute() public {
+    function testOnErc1155ReceivedSuccessEnteredExecute() public {
         // Override reentrancy guard so balance manager can receive token
         vm.store(
             address(handler),
@@ -1894,7 +1894,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(received.encodedAssetId, encodedToken.encodedAssetId);
     }
 
-    function testOnErc1155FailureReceivedNotEntered() public {
+    function testOnErc1155ReceivedFailureNotEntered() public {
         // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
 
         // Token balance manager will attempt to receive
@@ -1916,6 +1916,105 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             bytes("")
         );
         assertEq(handler.receivedAssetsLength(), 0);
+    }
+
+    function testOnErc1155BatchReceivedSuccessEnteredExecute() public {
+        // Override reentrancy guard so balance manager can receive token
+        vm.store(
+            address(handler),
+            bytes32(OPERATION_STAGE_STORAGE_SLOT),
+            bytes32(ENTERED_EXECUTE_ACTIONS)
+        );
+
+        // Token balance manager will receive
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+        uint256 tokenId1 = 1;
+        uint256 tokenId2 = 2;
+        EncodedAsset memory encodedToken1 = AssetUtils.encodeAsset(
+            AssetType.ERC1155,
+            address(erc1155),
+            tokenId1
+        );
+        EncodedAsset memory encodedToken2 = AssetUtils.encodeAsset(
+            AssetType.ERC1155,
+            address(erc1155),
+            tokenId2
+        );
+
+        // Mint and send token to balance manager
+        uint256 tokenAmount = 100;
+        assertEq(erc1155.balanceOf(address(handler), tokenId1), 0);
+        assertEq(erc1155.balanceOf(address(handler), tokenId2), 0);
+        assertEq(handler.receivedAssetsLength(), 0);
+        erc1155.reserveTokens(ALICE, tokenId1, tokenAmount);
+        erc1155.reserveTokens(ALICE, tokenId2, tokenAmount);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = tokenAmount;
+        amounts[1] = tokenAmount;
+
+        vm.prank(ALICE);
+        erc1155.safeBatchTransferFrom(
+            ALICE,
+            address(handler),
+            tokenIds,
+            amounts,
+            bytes("")
+        );
+
+        // Ensure tokens were received
+        assertEq(erc1155.balanceOf(address(handler), tokenId1), tokenAmount);
+        assertEq(erc1155.balanceOf(address(handler), tokenId2), tokenAmount);
+        assertEq(handler.receivedAssetsLength(), 2);
+
+        EncodedAsset memory received1 = handler.getReceivedAssetsByIndex(0);
+        EncodedAsset memory received2 = handler.getReceivedAssetsByIndex(1);
+        assertEq(received1.encodedAssetAddr, encodedToken1.encodedAssetAddr);
+        assertEq(received1.encodedAssetId, encodedToken1.encodedAssetId);
+        assertEq(received2.encodedAssetAddr, encodedToken2.encodedAssetAddr);
+        assertEq(received2.encodedAssetId, encodedToken2.encodedAssetId);
+    }
+
+    function testOnErc1155BatchReceivedFailureNotEntered() public {
+        // NOTE: we never override the reentrancy guard, thus stage = NOT_ENTERED
+
+        // Token balance manager will receive
+        SimpleERC1155Token erc1155 = ERC1155s[0];
+        uint256 tokenId1 = 1;
+        uint256 tokenId2 = 2;
+
+        // Mint and send token to balance manager
+        uint256 tokenAmount = 100;
+
+        erc1155.reserveTokens(ALICE, tokenId1, tokenAmount);
+        erc1155.reserveTokens(ALICE, tokenId2, tokenAmount);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = tokenAmount;
+        amounts[1] = tokenAmount;
+
+        vm.prank(ALICE);
+        vm.expectRevert("ERC1155: ERC1155Receiver rejected tokens");
+        erc1155.safeBatchTransferFrom(
+            ALICE,
+            address(handler),
+            tokenIds,
+            amounts,
+            bytes("")
+        );
+
+        // Ensure tokens were not received
+        assertEq(handler.receivedAssetsLength(), 0);
+        assertEq(erc1155.balanceOf(address(handler), tokenId1), 0);
+        assertEq(erc1155.balanceOf(address(handler), tokenId2), 0);
     }
 
     function testProcessBundleFailureNotEnoughBundlerComp() public {

@@ -131,6 +131,60 @@ contract DepositManagerTest is Test {
         }
     }
 
+    function testSetErc20CapSuccess() public {
+        SimpleERC20Token token = ERC20s[0];
+        uint32 globalCapWholeTokens = 1_000;
+        uint32 maxDepositSizeWholeTokens = 100;
+        uint8 precision = 18;
+
+        depositManager.setErc20Cap(
+            address(token),
+            globalCapWholeTokens,
+            maxDepositSizeWholeTokens,
+            precision
+        );
+
+        (
+            uint128 _runningGlobalDeposited,
+            uint32 _globalCapWholeTokens,
+            uint32 _maxDepositSizeWholeTokens,
+            uint32 _lastResetTimestamp,
+            uint8 _precision
+        ) = depositManager._erc20Caps(address(token));
+        assertEq(_runningGlobalDeposited, 0);
+        assertEq(_globalCapWholeTokens, globalCapWholeTokens);
+        assertEq(_maxDepositSizeWholeTokens, maxDepositSizeWholeTokens);
+        assertEq(_lastResetTimestamp, block.timestamp);
+        assertEq(_precision, precision);
+    }
+
+    function testSetErc20CapFailureOutOfBounds() public {
+        SimpleERC20Token token = ERC20s[0];
+        uint32 globalCapWholeTokens = uint32(type(uint128).max / (10 ** 18)) +
+            5;
+        uint32 maxDepositSizeWholeTokens = 100;
+        uint8 precision = 50;
+
+        vm.expectRevert("globalCap > uint128.max");
+        depositManager.setErc20Cap(
+            address(token),
+            globalCapWholeTokens,
+            maxDepositSizeWholeTokens,
+            precision
+        );
+
+        globalCapWholeTokens = 1_000;
+        precision = 18;
+
+        vm.expectRevert("maxDepositSize > globalCap");
+        depositManager.setErc20Cap(
+            address(token),
+            globalCapWholeTokens,
+            globalCapWholeTokens + 1,
+            precision
+        );
+    }
+
     function testInstantiateDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
         token.reserveTokens(ALICE, RESERVE_AMOUNT);
