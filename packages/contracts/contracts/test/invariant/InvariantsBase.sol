@@ -29,6 +29,9 @@ contract InvariantsBase is Test {
     string constant CONTRACT_VERSION = "v1";
     address constant OWNER = address(0x1);
     address constant SUBTREE_BATCH_FILLER_ADDRESS = address(0x2);
+    address constant BUNDLER_ADDRESS = address(0x3);
+    address constant TRANSFER_RECIPIENT_ADDRESS = address(0x4);
+
     uint256 constant SCREENER_PRIVKEY = 1;
     address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
 
@@ -296,7 +299,7 @@ contract InvariantsBase is Test {
 
     function assert_operation_bundlerBalanceMatchesTracked() internal {
         assertEq(
-            depositErc20.balanceOf(address(tellerHandler.BUNDLER_ADDRESS())),
+            depositErc20.balanceOf(BUNDLER_ADDRESS),
             tellerHandler.ghost_totalBundlerPayout()
         );
     }

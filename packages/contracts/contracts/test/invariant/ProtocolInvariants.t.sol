@@ -59,8 +59,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20,
             depositErc721,
             depositErc1155,
-            SCREENER_PRIVKEY,
-            SCREENER_ADDRESS
+            SCREENER_PRIVKEY
         );
 
         swapper = new TokenSwapper();
@@ -76,7 +75,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositErc20,
             swapErc20,
             swapErc721,
-            swapErc1155
+            swapErc1155,
+            BUNDLER_ADDRESS,
+            TRANSFER_RECIPIENT_ADDRESS
         );
 
         depositManager.setErc20Cap(
@@ -178,8 +179,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         excludeSender(address(0x0));
-        excludeSender(tellerHandler.BUNDLER_ADDRESS());
-        excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
+        excludeSender(BUNDLER_ADDRESS);
+        excludeSender(TRANSFER_RECIPIENT_ADDRESS);
         excludeSender(SCREENER_ADDRESS);
         excludeSender(address(tellerHandler));
         excludeSender(address(handlerHandler));

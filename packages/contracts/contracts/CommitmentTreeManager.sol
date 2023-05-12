@@ -189,8 +189,8 @@ contract CommitmentTreeManager is
     }
 
     /// @notice Inserts a single refund note into the commitment tree
-    /// @param encodedAsset Encoded asset in which refund note is being created for
-    /// @param refundAddr Stealth address refund note is created for
+    /// @param encodedAsset Encoded asset refund note is being created for
+    /// @param refundAddr Stealth address refund note is created to
     /// @param value Value of refund note for given asset
     function _handleRefundNote(
         EncodedAsset memory encodedAsset,

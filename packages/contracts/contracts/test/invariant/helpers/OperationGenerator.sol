@@ -54,10 +54,14 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
     uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;
 
-    address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
+    address public transferRecipientAddress;
 
     uint256 nullifierCount = 0;
     uint256 nonErc20IdCounter = 0;
+
+    constructor(address _transferRecipientAddress) {
+        transferRecipientAddress = _transferRecipientAddress;
+    }
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
@@ -122,7 +126,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             if (isTransfer) {
                 _meta.transfers[i] = TransferRequest({
                     token: args.joinSplitToken,
-                    recipient: TRANSFER_RECIPIENT_ADDRESS, // TODO: track recipient
+                    recipient: transferRecipientAddress,
                     amount: joinSplitUseAmount
                 });
                 _meta.isTransfer[i] = true;

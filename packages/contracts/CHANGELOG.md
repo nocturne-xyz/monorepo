@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix invariant test address setup so all addrs come from `InvariantsBase.sol`
 - add natspec docs to CTM
 - move fill batch logic and state from handler into CTM (we already expose applySubtreeUpdate externally, all the related fillbatch logic should remain in the same contract)
 - add 16 batch proof verification to joinsplit and subtree updater verifiers
