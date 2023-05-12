@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add natspec docs to CTM
+- move fill batch logic and state from handler into CTM (we already expose applySubtreeUpdate externally, all the related fillbatch logic should remain in the same contract)
 - add 16 batch proof verification to joinsplit and subtree updater verifiers
 - update AssetUtils encode/decode test with all asset types
 - add unit tests for erc1155 batch received and erc20 cap setting
