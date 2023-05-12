@@ -28,6 +28,10 @@ contract BalanceManagerTest is Test {
     using stdJson for string;
     using OperationLib for Operation;
 
+    // Check storage layout file
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 225;
+    uint256 constant NOT_ENTERED = 1;
+
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
     uint256 constant ERC20_ID = 0;
 
@@ -599,6 +603,9 @@ contract BalanceManagerTest is Test {
         );
         refundAssets[0] = refundAsset;
 
+        // Transfer contract ownership to alice
+        balanceManager.transferOwnership(ALICE);
+
         // Reserve prefill tokens for alice
         joinSplitToken.reserveTokens(address(ALICE), 1);
         refundToken.reserveTokens(address(ALICE), 1);
@@ -609,6 +616,12 @@ contract BalanceManagerTest is Test {
         refundToken.approve(address(balanceManager), 1);
 
         balanceManager.addToAssetPrefill(joinSplitAsset, 1);
+
+        vm.store(
+            address(balanceManager),
+            bytes32(OPERATION_STAGE_STORAGE_SLOT),
+            bytes32(NOT_ENTERED)
+        );
         balanceManager.addToAssetPrefill(refundAsset, 1);
         vm.stopPrank();
 
