@@ -4,16 +4,28 @@ pragma abicoder v2;
 
 // External
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {IERC721ReceiverUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
+import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 // Internal
 import {IHandler} from "./interfaces/IHandler.sol";
+import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
+import {BalanceManager} from "./BalanceManager.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/Groth16.sol";
-import {BalanceManager} from "./BalanceManager.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
-contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
+contract Handler is
+    IHandler,
+    IERC721ReceiverUpgradeable,
+    IERC1155ReceiverUpgradeable,
+    BalanceManager,
+    NocturneReentrancyGuard,
+    OwnableUpgradeable
+{
     mapping(address => bool) public _subtreeBatchFiller;
 
     mapping(address => bool) public _supportedContractAllowlist;
@@ -33,6 +45,7 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         address subtreeUpdateVerifier
     ) external initializer {
         __Ownable_init();
+        __NocturneReentrancyGuard_init();
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
@@ -239,6 +252,101 @@ contract Handler is IHandler, BalanceManager, OwnableUpgradeable {
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+    }
+
+    function onERC721Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        // Must reject the transfer outside of an operation handling. We also
+        // reject erc721s for prefills.
+        if (
+            reentrancyGuardStage() == NOT_ENTERED ||
+            reentrancyGuardStage() == ENTERED_PREFILL ||
+            !_supportedContractAllowlist[msg.sender]
+        ) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            _receivedAssets.push(
+                AssetUtils.encodeAsset(AssetType.ERC721, msg.sender, id)
+            );
+        }
+
+        // ENTERED_PROCESS is ok because this is when teller funds handler
+        return IERC721ReceiverUpgradeable.onERC721Received.selector;
+    }
+
+    function onERC1155Received(
+        address, // operator
+        address, // from
+        uint256 id,
+        uint256, // value
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        // Reject the transfer outside of an operation handling / prefills
+        if (
+            reentrancyGuardStage() == NOT_ENTERED ||
+            !_supportedContractAllowlist[msg.sender]
+        ) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            _receivedAssets.push(
+                AssetUtils.encodeAsset(AssetType.ERC1155, msg.sender, id)
+            );
+        }
+
+        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
+        return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address, // operator
+        address, // from
+        uint256[] calldata ids,
+        uint256[] calldata, // values
+        bytes calldata // data
+    ) external override whenNotPaused returns (bytes4) {
+        // Reject the transfer outside of an operation handling / prefills
+        if (
+            reentrancyGuardStage() == NOT_ENTERED ||
+            !_supportedContractAllowlist[msg.sender]
+        ) {
+            return 0;
+        }
+
+        // Record the transfer if it results from executed actions
+        if (reentrancyGuardStage() == ENTERED_EXECUTE_ACTIONS) {
+            uint256 numIds = ids.length;
+            for (uint256 i = 0; i < numIds; i++) {
+                _receivedAssets.push(
+                    AssetUtils.encodeAsset(
+                        AssetType.ERC1155,
+                        msg.sender,
+                        ids[i]
+                    )
+                );
+            }
+        }
+
+        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
+        return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure override returns (bool) {
+        return
+            (interfaceId == type(IERC165Upgradeable).interfaceId) ||
+            (interfaceId == type(IERC721ReceiverUpgradeable).interfaceId) ||
+            (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
     function _makeExternalCall(
