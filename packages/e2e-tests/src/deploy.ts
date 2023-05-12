@@ -144,7 +144,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
 > = {
   rpcUrl: ANVIL_URL,
   subgraphUrl: SUBGRAPH_URL,
-  fillBatchLatency: 3_000,
+  fillBatchLatency: 4_000,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {

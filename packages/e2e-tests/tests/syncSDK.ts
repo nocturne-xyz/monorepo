@@ -192,6 +192,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       console.log("submitting op...");
       await submitAndProcessOperation(op);
 
+      // wait for subtree updater
+      await sleep(5_000);
+
       // sync SDK again...
       console.log("syncing SDK again...");
       await nocturneWalletSDKAlice.sync();
