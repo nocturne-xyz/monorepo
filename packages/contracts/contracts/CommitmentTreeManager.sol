@@ -10,6 +10,10 @@ import {Utils} from "./libs/Utils.sol";
 import {TreeUtils} from "./libs/TreeUtils.sol";
 import "./libs/Types.sol";
 
+/// @title CommitmentTreeManager
+/// @author Nocturne Labs
+/// @notice Manages the commitment tree, keeps track of past roots, and keeps track of used
+///         nullifiers.
 contract CommitmentTreeManager is
     Initializable,
     OwnableUpgradeable,
@@ -66,6 +70,7 @@ contract CommitmentTreeManager is
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
 
     /// @notice Internal initialization function
+    /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function __CommitmentTreeManager_init(
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
@@ -75,6 +80,7 @@ contract CommitmentTreeManager is
         _pastRoots[TreeUtils.EMPTY_TREE_ROOT] = true;
     }
 
+    /// @notice Require caller is permissioned batch filler
     modifier onlySubtreeBatchFiller() {
         require(_subtreeBatchFillers[msg.sender], "Only subtree batch filler");
         _;
