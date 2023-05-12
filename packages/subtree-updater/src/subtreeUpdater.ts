@@ -108,6 +108,10 @@ export class SubtreeUpdater {
             attempts: 3,
           });
         }
+
+        // mark leftmost leaf of subtree as ready for prune now that job has been queued
+        this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
+        this.tree.prune();
       }
     };
 
@@ -268,10 +272,6 @@ export class SubtreeUpdater {
         const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
-
-        // prune the leftmost leaf now that we've got the merkle root for the subtree
-        this.tree.markForPruning(subtreeLeftmostPathIndex);
-        this.tree.prune();
 
         this.logger.info(`got batch for subtree index ${subtreeIndex}`, {
           subtreeIndex,
