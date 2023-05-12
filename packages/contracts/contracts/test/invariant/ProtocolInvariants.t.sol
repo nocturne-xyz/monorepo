@@ -58,7 +58,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
             depositManager,
             depositErc20,
             depositErc721,
-            depositErc1155
+            depositErc1155,
+            SCREENER_PRIVKEY,
+            SCREENER_ADDRESS
         );
 
         swapper = new TokenSwapper();
@@ -97,6 +99,18 @@ contract ProtocolInvariants is Test, InvariantsBase {
             true
         );
         handler.setSupportedContractAllowlistPermission(address(swapper), true);
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc20),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc721),
+            true
+        );
+        handler.setSupportedContractAllowlistPermission(
+            address(swapErc1155),
+            true
+        );
 
         handler.setSubtreeBatchFillerPermission(
             address(SUBTREE_BATCH_FILLER_ADDRESS),
@@ -155,10 +169,13 @@ contract ProtocolInvariants is Test, InvariantsBase {
             })
         );
 
+        excludeSender(address(0x0));
         excludeSender(tellerHandler.BUNDLER_ADDRESS());
         excludeSender(tellerHandler.TRANSFER_RECIPIENT_ADDRESS());
-        excludeSender(address(depositManagerHandler));
+        excludeSender(SCREENER_ADDRESS);
         excludeSender(address(tellerHandler));
+        excludeSender(address(handlerHandler));
+        excludeSender(address(depositManagerHandler));
         excludeSender(address(swapper));
         excludeSender(address(teller));
         excludeSender(address(handler));

@@ -50,13 +50,14 @@ struct GeneratedOperationMetadata {
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     uint256 constant ERC20_ID = 0;
-    uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 500_000;
+    uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
-    uint256 constant DEFAULT_MAX_NUM_REFUNDS = 6;
+    uint256 constant DEFAULT_MAX_NUM_REFUNDS = 9;
 
     address public TRANSFER_RECIPIENT_ADDRESS = address(0x11);
 
     uint256 nullifierCount = 0;
+    uint256 nonErc20IdCounter = 0;
 
     function _generateRandomOperation(
         GenerateOperationArgs memory args
@@ -81,7 +82,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // approvals in case of a swap
         uint256 numActions = bound(args.seed, 2, 5);
         Action[] memory actions = new Action[](numActions);
-        EncodedAsset[] memory encodedRefundAssets;
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
 
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
@@ -136,30 +137,39 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 );
                 _meta.isSwap[i + 1] = true;
 
-                // Kludge to satisfy stack limit
-                SimpleERC20Token inToken = args.joinSplitToken;
-                TokenSwapper swapper = args.swapper;
+                {
+                    // Kludge to satisfy stack limit
+                    SimpleERC20Token inToken = args.joinSplitToken;
+                    TokenSwapper swapper = args.swapper;
 
-                Action memory approveAction = Action({
-                    contractAddress: address(inToken),
-                    encodedFunction: abi.encodeWithSelector(
-                        inToken.approve.selector,
-                        address(swapper),
-                        joinSplitUseAmount
-                    )
-                });
+                    Action memory approveAction = Action({
+                        contractAddress: address(inToken),
+                        encodedFunction: abi.encodeWithSelector(
+                            inToken.approve.selector,
+                            address(swapper),
+                            joinSplitUseAmount
+                        )
+                    });
 
-                // Kludge to satisfy stack limit
-                SwapRequest memory swapRequest = _meta.swaps[i + 1];
+                    // Kludge to satisfy stack limit
+                    SwapRequest memory swapRequest = _meta.swaps[i + 1];
 
-                actions[i] = approveAction;
-                actions[i + 1] = Action({
-                    contractAddress: address(swapper),
-                    encodedFunction: abi.encodeWithSelector(
-                        swapper.swap.selector,
-                        swapRequest
-                    )
-                });
+                    actions[i] = approveAction;
+                    actions[i + 1] = Action({
+                        contractAddress: address(swapper),
+                        encodedFunction: abi.encodeWithSelector(
+                            swapper.swap.selector,
+                            swapRequest
+                        )
+                    });
+                }
+
+                encodedRefundAssets = new EncodedAsset[](1);
+                encodedRefundAssets[0] = AssetUtils.encodeAsset(
+                    AssetType.ERC20,
+                    address(args.swapErc20),
+                    ERC20_ID
+                );
 
                 i += 1; // additional +1 to skip past swap action at i+1
             }
@@ -207,7 +217,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     function _createRandomSwapRequest(
         uint256 joinSplitUseAmount,
         GenerateOperationArgs memory args
-    ) internal view returns (SwapRequest memory) {
+    ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
             AssetType.ERC20,
@@ -218,13 +228,8 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         uint256 swapErc20OutAmount = bound(
             args.seed,
             0,
-            args.swapErc20.totalSupply()
+            type(uint256).max - args.swapErc20.totalSupply()
         );
-        uint256 swapErc721OutId = _getRandomErc721Id(
-            args.swapErc721,
-            args.seed
-        );
-        uint256 swapErc1155OutId = ERC20_ID;
         uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
@@ -233,11 +238,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             erc20Out: address(args.swapErc20),
             erc20OutAmount: swapErc20OutAmount,
             erc721Out: address(args.swapErc721),
-            erc721OutId: swapErc721OutId,
+            erc721OutId: nonErc20IdCounter,
             erc1155Out: address(args.swapErc1155),
-            erc1155OutId: swapErc1155OutId,
+            erc1155OutId: nonErc20IdCounter,
             erc1155OutAmount: swapErc1155OutAmount
         });
+
+        ++nonErc20IdCounter;
 
         return swapRequest;
     }
@@ -261,20 +268,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         joinSplitAmounts[numJoinSplits - 1] = remainingAmount;
 
         return joinSplitAmounts;
-    }
-
-    function _getRandomErc721Id(
-        SimpleERC721Token erc721,
-        uint256 seed
-    ) internal view returns (uint256 _id) {
-        for (uint256 j = 0; ; j++) {
-            if (!erc721.exists(seed)) {
-                _id = seed;
-                break;
-            }
-
-            seed++;
-        }
     }
 
     // Copied from Types.sol and built around not needing op beforehand

@@ -94,9 +94,12 @@ library AssetUtils {
         if (assetType == AssetType.ERC20) {
             value = IERC20(assetAddr).balanceOf(address(this));
         } else if (assetType == AssetType.ERC721) {
-            if (IERC721(assetAddr).ownerOf(id) == address(this)) {
-                value = 1;
-            }
+            // If erc721 not minted, return balance = 0
+            try IERC721(assetAddr).ownerOf(id) returns (address owner) {
+                if (owner == address(this)) {
+                    value = 1;
+                }
+            } catch {}
         } else if (assetType == AssetType.ERC1155) {
             value = IERC1155(assetAddr).balanceOf(address(this), id);
         }
@@ -120,7 +123,8 @@ library AssetUtils {
             require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
-            IERC721(assetAddr).transferFrom(address(this), receiver, id);
+            // we use safeTransferFrom because receiver is unknown
+            IERC721(assetAddr).safeTransferFrom(address(this), receiver, id);
         } else if (assetType == AssetType.ERC1155) {
             // uncaught revert will be propagated
             IERC1155(assetAddr).safeTransferFrom(
@@ -152,6 +156,8 @@ library AssetUtils {
             require(value == 1, "ERC721 value != 1");
 
             // uncaught revert will be propagated
+            // we use transferFrom because receiver is always this contract which we know
+            // implements onERC721Received
             IERC721(assetAddr).transferFrom(spender, address(this), id);
         } else if (assetType == AssetType.ERC1155) {
             // uncaught revert will be propagated

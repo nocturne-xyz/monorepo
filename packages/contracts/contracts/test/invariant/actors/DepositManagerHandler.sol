@@ -35,8 +35,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
     uint256 constant AVG_GAS_PER_COMPLETE = 130_000 gwei;
 
-    uint256 constant SCREENER_PRIVKEY = 1;
-    address SCREENER_ADDRESS = vm.addr(SCREENER_PRIVKEY);
+    uint256 public SCREENER_PRIVKEY;
+    address public SCREENER_ADDRESS;
 
     // ______PUBLIC______
     TestDepositManager public depositManager;
@@ -71,12 +71,16 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         TestDepositManager _depositManager,
         SimpleERC20Token _erc20,
         SimpleERC721Token _erc721,
-        SimpleERC1155Token _erc1155
+        SimpleERC1155Token _erc1155,
+        uint256 _screenerPrivkey,
+        address _screenerAddress
     ) {
         depositManager = _depositManager;
         erc20 = _erc20;
         erc721 = _erc721;
         erc1155 = _erc1155;
+        SCREENER_PRIVKEY = _screenerPrivkey;
+        SCREENER_ADDRESS = _screenerAddress;
     }
 
     modifier createActor() {
@@ -347,11 +351,8 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
         // Complete deposit
         uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
-        uint256 warpTimestamp;
-        unchecked {
-            warpTimestamp = block.timestamp + seed;
-        }
-        vm.warp(warpTimestamp);
+        uint256 skipSeconds = bound(seed, 0, 10_000);
+        skip(skipSeconds);
         vm.txGasPrice(gasPrice);
         vm.prank(SCREENER_ADDRESS);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
@@ -378,7 +379,29 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             _reverts["completeDepositErc20"] += 1;
         }
 
-        // TODO: track gas compensation
+        // NOTE: The actor balance in bounds invariant kept failing even though I checked all actor
+        // balances via logs and only found balance == ghost var but never greater than. I suspect
+        // there is a bug somewhere in foundry that doesn't like assertLe(0, 0) but want to leave
+        // log here for now to check in case another failure.
+        address[] memory allActors = ghost_AllActors();
+        for (uint256 i = 0; i < allActors.length; i++) {
+            console.log(
+                string(
+                    abi.encodePacked(
+                        "Actor address:",
+                        ParseUtils.toHexString(allActors[i]),
+                        ". Balance:",
+                        ParseUtils.uintToString(allActors[i].balance),
+                        ". Expected balance cap:",
+                        ParseUtils.uintToString(
+                            ghost_totalSuppliedGasCompensationFor(allActors[i])
+                        )
+                    )
+                )
+            );
+        }
+
+        // TODO: track exact screener gas compensation
     }
 
     // ______VIEW______

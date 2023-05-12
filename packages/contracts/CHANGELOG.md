@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add some extra parse utils used when debugging invariant tests
+- whitelist erc721/1155 in invariant tests and ensure all assets are actually being received by teller from swapper
+- deposit invariant tests add special case workaround for retrieved gas comp == gas comp cap (see inline commment)
+- AssetUtils `transferAssetTo` uses `erc721.safeTransferFrom`
+- AssetUtils `balanceOfAsset` avoids revert when checking erc721 `ownerOf`
 - unit and invariant tests now use `vm.txGasPrice` and test screener comp with non-zero comp amounts
 - rename `DepositSumSet` to `ActorSumSet`
 - fix comment on guarantees around screener compensation
