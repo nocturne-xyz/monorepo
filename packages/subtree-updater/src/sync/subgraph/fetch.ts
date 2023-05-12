@@ -119,6 +119,7 @@ export async function fetchLatestSubtreeCommit(
     "latestSubtreeCommit"
   );
 
+  // fetch the latest subtree commit entity by ordering by subtree index, sorting in descending order, and asking API for only the first result
   const res = await query(undefined);
   if (res.data.subtreeCommits.length === 0) {
     return -1;
