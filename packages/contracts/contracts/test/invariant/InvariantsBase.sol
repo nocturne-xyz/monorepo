@@ -253,14 +253,13 @@ contract InvariantsBase is Test {
             // logs and only found balance == ghost var but never greater than. I suspect there
             // is a bug somewhere in foundry that doesn't like assertLe(0, 0) so hardcoding a
             // statement here.
-            if (
-                (actorBalance == 0 && actorBalanceCap == 0) ||
-                actorBalanceCap == actorBalance
-            ) {
+            if (actorBalanceCap == actorBalance) {
                 continue;
             }
 
-            assertLe(actorBalance, actorBalanceCap);
+            if (actorBalance > actorBalanceCap) {
+                revert("actor balance exceeds expected cap");
+            }
         }
     }
 
