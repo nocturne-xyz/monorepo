@@ -27,7 +27,7 @@ contract CommitmentTreeManager is
     OffchainMerkleTree internal _merkle;
 
     // Set of addressed allowed to fill subtree batches with zeros
-    mapping(address => bool) public _subtreeBatchFiller;
+    mapping(address => bool) public _subtreeBatchFillers;
 
     // Gap for upgrade safety
     uint256[50] private __GAP;
@@ -76,16 +76,18 @@ contract CommitmentTreeManager is
     }
 
     modifier onlySubtreeBatchFiller() {
-        require(_subtreeBatchFiller[msg.sender], "Only subtree batch filler");
+        require(_subtreeBatchFillers[msg.sender], "Only subtree batch filler");
         _;
     }
 
     /// @notice Owner-only function, sets address permission to call `fillBatchesWithZeros`
+    /// @param filler Address to set permission for
+    /// @param permission Permission to set
     function setSubtreeBatchFillerPermission(
         address filler,
         bool permission
     ) external onlyOwner {
-        _subtreeBatchFiller[filler] = permission;
+        _subtreeBatchFillers[filler] = permission;
         emit SubtreeBatchFillerPermissionSet(filler, permission);
     }
 
@@ -98,16 +100,6 @@ contract CommitmentTreeManager is
         uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
         uint256[] memory zeros = new uint256[](numToInsert);
         _insertNoteCommitments(zeros);
-    }
-
-    function _insertNote(EncodedNote memory note) internal {
-        _merkle.insertNote(note);
-        emit InsertNote(note);
-    }
-
-    function _insertNoteCommitments(uint256[] memory ncs) internal {
-        _merkle.insertNoteCommitments(ncs);
-        emit InsertNoteCommitments(ncs);
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof
@@ -126,7 +118,7 @@ contract CommitmentTreeManager is
         emit SubtreeUpdate(newRoot, subtreeIndex);
     }
 
-    /// @notice Returns the root of the merkle tree
+    /// @notice Returns current root of the merkle tree
     function root() public view returns (uint256) {
         return _merkle.getRoot();
     }
@@ -140,6 +132,20 @@ contract CommitmentTreeManager is
     ///         included in a subtree update
     function totalCount() public view returns (uint256) {
         return _merkle.getTotalCount();
+    }
+
+    /// @notice Inserts single note into commitment tree
+    /// @param note Note to insert
+    function _insertNote(EncodedNote memory note) internal {
+        _merkle.insertNote(note);
+        emit InsertNote(note);
+    }
+
+    /// @notice Inserts several note commitments into the tree
+    /// @param ncs Note commitments to insert
+    function _insertNoteCommitments(uint256[] memory ncs) internal {
+        _merkle.insertNoteCommitments(ncs);
+        emit InsertNoteCommitments(ncs);
     }
 
     /// @notice Process a joinsplit transaction, assuming that the encoded proof is valid
