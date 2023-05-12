@@ -96,8 +96,8 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
     async function fillBatch() {
       const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
-      // wait for subgraph
-      await sleep(2_000);
+      // wait for subgraph / subtree updater
+      await sleep(5_000);
     }
 
     afterEach(async () => {
@@ -191,9 +191,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       console.log("submitting op...");
       await submitAndProcessOperation(op);
-
-      // wait for subtree updater
-      await sleep(5_000);
 
       // sync SDK again...
       console.log("syncing SDK again...");
