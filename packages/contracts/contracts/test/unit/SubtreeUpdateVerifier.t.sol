@@ -16,7 +16,6 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
     using stdJson for string;
 
     string constant BASIC_FIXTURE_PATH = "/fixtures/subtreeupdateProof.json";
-    uint256 constant NUM_PROOFS = 8;
     uint256 constant NUM_PIS = 4;
 
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
@@ -48,10 +47,10 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
         require(subtreeUpdateVerifier.verifyProof(proof, pis), "Invalid proof");
     }
 
-    function batchVerifyFixture(string memory path) public {
-        uint256[8][] memory proofs = new uint256[8][](NUM_PROOFS);
-        uint[][] memory pis = new uint256[][](NUM_PROOFS);
-        for (uint256 i = 0; i < NUM_PROOFS; i++) {
+    function batchVerifyFixture(string memory path, uint256 numProofs) public {
+        uint256[8][] memory proofs = new uint256[8][](numProofs);
+        uint[][] memory pis = new uint256[][](numProofs);
+        for (uint256 i = 0; i < numProofs; i++) {
             (
                 uint256[8] memory proof,
                 uint[] memory _pis
@@ -71,6 +70,7 @@ contract TestSubtreeUpdateVerifier is Test, JsonDecodings {
     }
 
     function testBatchVerify() public {
-        batchVerifyFixture(BASIC_FIXTURE_PATH);
+        batchVerifyFixture(BASIC_FIXTURE_PATH, 8);
+        batchVerifyFixture(BASIC_FIXTURE_PATH, 16);
     }
 }
