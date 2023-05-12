@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug in `SparseMerkleTree` where rightmost leaf is prunable, resulting in incorrect insertions
 - add `fromCompressedPoints` method to `StealthAddress` trait
 - add `batches` method to `ClosableAsyncIterator`
 - remove `protocolWhitelistKey` fn after removing selectors from whitelist

@@ -29,7 +29,7 @@
     "@nocturne-xyz/config": "1.0.4-alpha",
     "@nocturne-xyz/contracts": "1.0.22-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.3",
-    "@nocturne-xyz/sdk": "1.0.108-alpha",
+    "@nocturne-xyz/sdk": "1.0.111-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "bullmq": "^3.10.1",
