@@ -11,6 +11,10 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
+/// @title BalanceManager
+/// @author Nocturne Labs
+/// @notice Module containing logic for funding the Handler contract during operation processing and
+///         handling refunds for any remaining assets left in the Handler after operation execution.
 contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
     using OperationLib for Operation;
 
@@ -52,6 +56,13 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         _;
     }
 
+    /// @notice Add to asset prefill balance
+    /// @dev This function is only callable from owner and is not callable for erc721s
+    ///      since prefilling 721s has not apparent utility. Additionally, this function
+    ///      updates the reentrancy guard to be in ENTERED_PREFILL state so handler knows that
+    ///      receiving tokens at this stage is acceptable.
+    /// @param encodedAsset Encoded asset to add to prefill balance
+    /// @param value Amount to add to prefill balance
     function addToAssetPrefill(
         EncodedAsset calldata encodedAsset,
         uint256 value
@@ -66,14 +77,17 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         );
     }
 
-    /**
-      Process all joinSplits and request all declared publicSpend from the
-      teller, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
-
-      @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from teller with the same encodedAsset as
-      joinSplits[0].
-    */
+    /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
+    ///         commitment tree manager, then request joinSplit.publicSpend barring tokens for gas
+    ///         payment.
+    /// @dev Before looping through joinSplits, we calculate amount of gas to reserve based on
+    ///      execution gas, number of joinSplits, and number of refunds. Then we loop through
+    ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
+    ///      as possible until we have gotten as the reserve amount we originally calculated. If we
+    ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
+    /// @param op Operation to process joinSplits for
+    /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
+    ///                              teller during (batch) proof verification
     function _processJoinSplitsReservingFee(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
@@ -87,8 +101,9 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
             // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
 
-            // Defaults to requesting all publicSpend from teller
+            // Default to requesting all publicSpend from teller
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
+
             // If we still need to reserve more gas and the current
             // `joinSplit` is spending the gasAsset, then reserve what we can
             // from this `joinSplit`
@@ -116,9 +131,17 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
                 );
             }
         }
+
         require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
+    /// @notice Gather reserved gas assets and pay bundler calculated amount.
+    /// @dev Bundler can be paid less than reserved amount. Reserved amount is refunded to user's
+    /// stealth address in this case.
+    /// @param op Operation, which contains info on how much gas was reserved
+    /// @param opResult OperationResult, which contains info on how much gas was actually spent
+    /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof
+    /// @param bundler Address of the bundler to pay
     function _gatherReservedGasAssetAndPayBundler(
         Operation calldata op,
         OperationResult memory opResult,
@@ -140,10 +163,11 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         }
     }
 
-    /**
-      Get the total number of refunds to handle after making external action calls.
-      @dev This should only be called AFTER external calls have been made during action execution.
-    */
+    /// @notice Returns max number of refunds to handle.
+    /// @dev The number of refunds actually inserted into commitment tree may be less than this
+    ///      number, this is upper bound. This is used by Handler to ensure
+    ///      outstanding refunds < op.maxNumRefunds.
+    /// @param op Operation to calculate max number of refunds for
     function _totalNumRefundsToHandle(
         Operation calldata op
     ) internal view returns (uint256) {
@@ -153,11 +177,13 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
             _receivedAssets.length;
     }
 
-    /**
-      Refund all current teller assets back to refundAddr. The list of assets
-      to refund is specified in joinSplits and the state variable
-      _receivedAssets.
-    */
+    /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
+    ///         to the Teller and inserting new note commitments for the sent back assets.
+    /// @dev Checks for refunds from joinSplits, op.encodedRefundAssets, any assets received from
+    ///      onReceived hooks (erc721/1155s). A refund occurs if any of the checked assets have
+    ///      outstanding balance > 0 in the Handler. If a refund occurs, the Handler will transfer
+    ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
+    /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -176,6 +202,11 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         delete _receivedAssets;
     }
 
+    /// @notice Handle a refund for a single asset
+    /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
+    ///      back to the Teller and inserts a new note commitment into the commitment tree.
+    /// @param encodedAsset Encoded asset to check for refund
+    /// @param refundAddr Stealth address to refund to
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr
