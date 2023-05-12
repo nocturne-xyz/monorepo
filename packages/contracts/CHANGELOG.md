@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- add 16 batch proof verification to joinsplit and subtree updater verifiers
+- update AssetUtils encode/decode test with all asset types
+- add unit tests for erc1155 batch received and erc20 cap setting
 - move reentrancy guard from bal manager into handler
 - move asset received hooks to handler so it can check protocol whitelist (move unit tests from balance manager to handler as well)
 - add some extra parse utils used when debugging invariant tests
