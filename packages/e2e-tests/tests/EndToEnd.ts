@@ -157,7 +157,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
 
     const status = await submitAndProcessOperation(operation);
-    await fillSubtreeBatch();
 
     await contractChecks();
     await offchainChecks();
