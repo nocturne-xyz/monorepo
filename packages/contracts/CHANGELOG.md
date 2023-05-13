@@ -3,8 +3,7 @@
 ### Unreleased
 
 - add natspec docs to balance manager
-- `BalanceManager` inherits `NocturneReentrancy` instead of Handler so it can update guard after prefill
-- move asset prefill logic into balance manager for correct encapsulation
+- remove admin prefill logic and replace with new scheme were handling refunds attempts to reserve 1 erc20 token each time if balance == 0
 - fix invariant test address setup so all addrs come from `InvariantsBase.sol`
 - add natspec docs to CTM
 - move fill batch logic and state from handler into CTM (we already expose applySubtreeUpdate externally, all the related fillbatch logic should remain in the same contract)
