@@ -14,7 +14,7 @@ src = 'packages/contracts/contracts'
 test = 'packages/contracts/contracts/test'
 out = 'packages/contracts/foundry_artifacts'
 ffi = true
-gas_reports = ["Wallet", "Handler", "JoinSplitVerifier", "SubtreeUpdateVerifier", "TestDepositManager"]
+gas_reports = ["Teller", "TestHandler", "JoinSplitVerifier", "SubtreeUpdateVerifier", "TestDepositManager", "TestBalanceManager"]
 
 # silence warnings
 # 2018 - foundry json library modifies state but solc doesn't recognize
