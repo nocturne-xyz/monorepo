@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- disable fill batch in subtree updater by default and manually fill batches in tests
 - checker script ensures token caps are set in dep manager and everything is whitelisted as expected
 - refactor deploy fn to all handle potential token deployment, token cap setting, core contract deployment, token + protocol whitelisting, and ownership transfer
 - add erc20s field to deploy configs

@@ -291,8 +291,12 @@ export class SubtreeUpdater {
       try {
         const tx = await this.handlerContract.fillBatchWithZeros();
         await tx.wait(1);
-      } catch (err) {
-        logger.error("failed to fill batch", { err });
+      } catch (err: any) {
+        // if we get revert due to batch already being organically filled, ignore the error
+        if (!err.toString().includes("!zero fill empty batch")) {
+          logger.error("failed to fill batch", { err });
+          throw err;
+        }
       }
     });
   }
