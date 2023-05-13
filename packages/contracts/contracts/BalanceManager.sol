@@ -185,18 +185,15 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
     ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
             _handleRefundForAsset(op.joinSplits[i].encodedAsset, op.refundAddr);
         }
 
-        uint256 numRefundAssets = op.encodedRefundAssets.length;
-        for (uint256 i = 0; i < numRefundAssets; i++) {
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
             _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
         }
 
-        uint256 numReceived = _receivedAssets.length;
-        for (uint256 i = 0; i < numReceived; i++) {
+        for (uint256 i = 0; i < _receivedAssets.length; i++) {
             _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
         }
         delete _receivedAssets;
@@ -212,11 +209,11 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         StealthAddress calldata refundAddr
     ) internal {
         bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        uint256 preFilledBalance = _prefilledAssetBalances[assetHash];
+        uint256 prefilledBalance = _prefilledAssetBalances[assetHash];
 
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
-        if (currentBalance > preFilledBalance) {
-            uint256 difference = currentBalance - preFilledBalance;
+        if (currentBalance > prefilledBalance) {
+            uint256 difference = currentBalance - prefilledBalance;
             AssetUtils.transferAssetTo(
                 encodedAsset,
                 address(_teller),
@@ -224,5 +221,35 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
             );
             _handleRefundNote(encodedAsset, refundAddr, difference);
         }
+    }
+
+    function _requirePrefillBalancesRemaining(
+        Operation calldata op
+    ) internal view {
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+            _requirePrefillBalanceRemainingForAsset(
+                op.joinSplits[i].encodedAsset
+            );
+        }
+
+        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+            _requirePrefillBalanceRemainingForAsset(op.encodedRefundAssets[i]);
+        }
+
+        for (uint256 i = 0; i < _receivedAssets.length; i++) {
+            _requirePrefillBalanceRemainingForAsset(_receivedAssets[i]);
+        }
+    }
+
+    function _requirePrefillBalanceRemainingForAsset(
+        EncodedAsset memory encodedAsset
+    ) internal view {
+        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
+        uint256 prefilledBalance = _prefilledAssetBalances[assetHash];
+        uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
+        require(
+            currentBalance >= prefilledBalance,
+            "Insufficient prefill balance"
+        );
     }
 }

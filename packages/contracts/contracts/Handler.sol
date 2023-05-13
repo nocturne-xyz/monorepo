@@ -217,6 +217,9 @@ contract Handler is
         // are rolled back.
         uint256 numRefundsToHandle = _totalNumRefundsToHandle(op);
         require(op.maxNumRefunds >= numRefundsToHandle, "Too many refunds");
+
+        // Ensure actions did not result in loss of prefill balances
+        _requirePrefillBalancesRemaining(op);
     }
 
     function onERC721Received(
