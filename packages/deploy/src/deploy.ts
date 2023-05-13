@@ -215,7 +215,7 @@ async function maybeDeployErc20s(
       // mint tokens to connectedSigner
       await token.reserveTokens(
         connectedSigner.address,
-        TEST_TOKEN_RESERVE_AMOUNT_WHOLE * config.precision
+        TEST_TOKEN_RESERVE_AMOUNT_WHOLE * 10n ** config.precision
       );
     }
   }
