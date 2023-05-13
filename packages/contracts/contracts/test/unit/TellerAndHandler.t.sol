@@ -44,8 +44,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
 
     // Check storage layout file
-    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 225;
-    uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 277;
+    uint256 constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
     uint256 constant ERC20_ID = 0;
@@ -69,8 +69,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     event DepositSourcePermissionSet(address source, bool permission);
 
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
-
-    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
 
     event RefundProcessed(
         StealthAddress refundAddr,
@@ -116,6 +114,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            // Prefill the handler with 1 token
+            ERC20s[i].reserveTokens(address(handler), 1);
 
             handler.setSupportedContractAllowlistPermission(
                 address(ERC20s[i]),
@@ -374,113 +375,6 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         teller.setDepositSourcePermission(address(0x123), true);
     }
 
-    function testAddToAssetPrefillHandlerFailsNotOwner() public {
-        SimpleERC20Token erc20 = ERC20s[0];
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-
-        // Transfer ownership to alice so she can be prefiller and receive
-        // reserved erc 721/1155s
-        handler.transferOwnership(ALICE);
-
-        // Reserve tokens for ALICE and BOB
-        erc20.reserveTokens(BOB, 100);
-        erc1155.reserveTokens(BOB, 2, 100);
-
-        EncodedAsset memory encodedErc20 = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20),
-            ERC20_ID
-        );
-        EncodedAsset memory encodedErc1155BOB = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            2
-        );
-
-        // BOB attempts to prefill for erc20 and erc1155, reverts because he's
-        // not owner
-        vm.startPrank(BOB);
-        erc20.approve(address(handler), 1);
-        erc1155.setApprovalForAll(address(handler), true);
-
-        vm.expectRevert("Ownable: caller is not the owner");
-        handler.addToAssetPrefill(encodedErc20, 1);
-        vm.expectRevert("Ownable: caller is not the owner");
-        handler.addToAssetPrefill(encodedErc1155BOB, 1);
-        vm.stopPrank();
-    }
-
-    function testAddToAssetPrefillSuccessOwner() public {
-        SimpleERC20Token erc20 = ERC20s[0];
-        SimpleERC1155Token erc1155 = ERC1155s[0];
-
-        // Transfer ownership to alice so she can be prefiller and receive
-        // reserved erc 721/1155s
-        handler.transferOwnership(ALICE);
-
-        erc20.reserveTokens(ALICE, 100);
-        erc1155.reserveTokens(ALICE, 1, 100);
-
-        EncodedAsset memory encodedErc20 = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(erc20),
-            ERC20_ID
-        );
-        EncodedAsset memory encodedErc1155ALICE = AssetUtils.encodeAsset(
-            AssetType.ERC1155,
-            address(erc1155),
-            1
-        );
-
-        // ALICE (owner) prefills for erc20 and erc1155
-        vm.startPrank(ALICE);
-        erc20.approve(address(handler), 1);
-        erc1155.setApprovalForAll(address(handler), true);
-
-        vm.expectEmit(true, true, true, true);
-        emit UpdatedAssetPrefill(encodedErc20, 1);
-        handler.addToAssetPrefill(encodedErc20, 1);
-        vm.expectEmit(true, true, true, true);
-        emit UpdatedAssetPrefill(encodedErc1155ALICE, 1);
-        handler.addToAssetPrefill(encodedErc1155ALICE, 1);
-
-        assertEq(
-            handler._prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(encodedErc20)
-            ),
-            1
-        );
-        assertEq(
-            handler._prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(encodedErc1155ALICE)
-            ),
-            1
-        );
-        vm.stopPrank();
-    }
-
-    function testAddToAssetPrefillFailsErc721() public {
-        // Transfer ownership to alice so she can be prefiller and receive
-        // reserved erc 721/1155s
-        handler.transferOwnership(ALICE);
-
-        SimpleERC721Token erc721 = ERC721s[0];
-        erc721.reserveToken(ALICE, 1);
-
-        EncodedAsset memory encodedErc721ALICE = AssetUtils.encodeAsset(
-            AssetType.ERC721,
-            address(erc721),
-            1
-        );
-
-        // erc721 prefill reverts since they are not allowed
-        vm.startPrank(ALICE);
-        erc721.approve(address(handler), 1);
-        vm.expectRevert("not erc721");
-        handler.addToAssetPrefill(encodedErc721ALICE, 1);
-        vm.stopPrank();
-    }
-
     function testSetSubtreeBatchFillerHandler() public {
         vm.expectRevert("Only subtree batch filler");
         vm.prank(ALICE);
@@ -562,7 +456,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         assertEq(token.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -591,7 +485,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             uint256(PER_NOTE_AMOUNT / 2)
         );
         assertGt(token.balanceOf(BUNDLER), 0);
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(ALICE), uint256(0));
         assertEq(token.balanceOf(BOB), uint256(PER_NOTE_AMOUNT / 2));
     }
@@ -630,7 +524,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(3 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -656,7 +550,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(PER_NOTE_AMOUNT));
     }
@@ -695,7 +589,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(6 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 for prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -721,7 +615,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(4 * PER_NOTE_AMOUNT));
     }
@@ -761,7 +655,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -786,7 +680,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -827,7 +721,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -852,7 +746,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -891,7 +785,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -916,7 +810,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
     }
@@ -999,7 +893,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1089,7 +983,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1194,7 +1088,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1298,7 +1192,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1340,7 +1234,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -1376,7 +1270,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1418,7 +1312,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertEq(token.balanceOf(address(BOB)), uint256(0));
 
@@ -1451,7 +1345,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             token.balanceOf(address(teller)),
             uint256(2 * PER_NOTE_AMOUNT)
         );
-        assertEq(token.balanceOf(address(handler)), uint256(0));
+        assertEq(token.balanceOf(address(handler)), uint256(1));
         assertEq(token.balanceOf(address(ALICE)), uint256(0));
         assertGt(token.balanceOf(address(BUNDLER)), uint256(0)); // Bundler gained funds
     }
@@ -1536,7 +1430,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(erc20Out.balanceOf(address(handler)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1));
         assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
             erc1155Out.balanceOf(address(teller), erc1155OutId),
@@ -1637,7 +1531,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Ensure 50M tokensIn in teller and nothing else, swapper has 0 erc20In tokens
         assertEq(tokenIn.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
-        assertEq(erc20Out.balanceOf(address(handler)), uint256(0));
+        assertEq(erc20Out.balanceOf(address(handler)), uint256(1)); // +1 from prefill
         assertEq(erc721Out.balanceOf(address(teller)), uint256(0));
         assertEq(
             erc1155Out.balanceOf(address(teller), erc1155OutId),
@@ -1667,6 +1561,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Ensure 50M tokensIn in swapper, and all types of refund tokens back
         // in teller
+        assertEq(tokenIn.balanceOf(address(handler)), uint256(1));
         assertEq(erc20Out.balanceOf(address(teller)), uint256(PER_NOTE_AMOUNT));
         assertEq(erc721Out.balanceOf(address(teller)), uint256(1));
         assertEq(erc721Out.ownerOf(erc721OutId), address(teller));

@@ -5,7 +5,6 @@ pragma abicoder v2;
 // Internal
 import {ITeller} from "./interfaces/ITeller.sol";
 import {CommitmentTreeManager} from "./CommitmentTreeManager.sol";
-import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
@@ -15,7 +14,7 @@ import "./libs/Types.sol";
 /// @author Nocturne Labs
 /// @notice Module containing logic for funding the Handler contract during operation processing and
 ///         handling refunds for any remaining assets left in the Handler after operation execution.
-contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
+contract BalanceManager is CommitmentTreeManager {
     using OperationLib for Operation;
 
     // Teller contract to send/request assets to/from
@@ -24,15 +23,8 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
     // Array of received erc721/1155s, populated by Handler onReceived hooks
     EncodedAsset[] public _receivedAssets;
 
-    // Mapping of encoded asset hash => prefilled balance (prefilling balances avoids extra
-    // gas of resetting storage slots back to 0)
-    mapping(bytes32 => uint256) public _prefilledAssetBalances;
-
     // Gap for upgrade safety
     uint256[50] private __GAP;
-
-    /// @notice Event emitted when an asset's prefill balance is increased
-    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
 
     /// @notice Internal initializer function
     /// @param teller Address of the teller contract
@@ -41,40 +33,8 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         address teller,
         address subtreeUpdateVerifier
     ) internal onlyInitializing {
-        __NocturneReentrancyGuard_init();
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
         _teller = ITeller(teller);
-    }
-
-    /// @notice Requires asset to not be erc721, used to restrict prefills for erc721s since
-    ///         erc721 prefills are not useful
-    /// @param encodedAsset Encoded asset to check
-    modifier notErc721(EncodedAsset calldata encodedAsset) {
-        (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
-            .decodeAsset(encodedAsset);
-        require(assetType != AssetType.ERC721, "not erc721");
-        _;
-    }
-
-    /// @notice Add to asset prefill balance
-    /// @dev This function is only callable from owner and is not callable for erc721s
-    ///      since prefilling 721s has not apparent utility. Additionally, this function
-    ///      updates the reentrancy guard to be in ENTERED_PREFILL state so handler knows that
-    ///      receiving tokens at this stage is acceptable.
-    /// @param encodedAsset Encoded asset to add to prefill balance
-    /// @param value Amount to add to prefill balance
-    function addToAssetPrefill(
-        EncodedAsset calldata encodedAsset,
-        uint256 value
-    ) external onlyOwner addToAssetPrefillGuard notErc721(encodedAsset) {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        _prefilledAssetBalances[assetHash] += value;
-
-        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
-        emit UpdatedAssetPrefill(
-            encodedAsset,
-            _prefilledAssetBalances[assetHash]
-        );
     }
 
     /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
@@ -211,12 +171,13 @@ contract BalanceManager is CommitmentTreeManager, NocturneReentrancyGuard {
         EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr
     ) internal {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        uint256 preFilledBalance = _prefilledAssetBalances[assetHash];
-
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
-        if (currentBalance > preFilledBalance) {
-            uint256 difference = currentBalance - preFilledBalance;
+
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToLeave = assetType == AssetType.ERC20 ? 1 : 0;
+
+        if (currentBalance > amountToLeave) {
+            uint256 difference = currentBalance - amountToLeave;
             AssetUtils.transferAssetTo(
                 encodedAsset,
                 address(_teller),

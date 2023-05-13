@@ -10,6 +10,7 @@ import {IERC1155ReceiverUpgradeable, IERC165Upgradeable} from "@openzeppelin/con
 // Internal
 import {IHandler} from "./interfaces/IHandler.sol";
 import {BalanceManager} from "./BalanceManager.sol";
+import {NocturneReentrancyGuard} from "./NocturneReentrancyGuard.sol";
 import {Utils} from "./libs/Utils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/Groth16.sol";
@@ -20,7 +21,8 @@ contract Handler is
     IHandler,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable,
-    BalanceManager
+    BalanceManager,
+    NocturneReentrancyGuard
 {
     mapping(address => bool) public _supportedContractAllowlist;
 
@@ -36,6 +38,7 @@ contract Handler is
         address teller,
         address subtreeUpdateVerifier
     ) external initializer {
+        __NocturneReentrancyGuard_init();
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
@@ -225,8 +228,7 @@ contract Handler is
         uint256 id,
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
-        // Must reject the transfer outside of an operation handling. Erc721s are already rejected
-        // in the addAssetToPrefill function.
+        // Must reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
         if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
@@ -250,7 +252,7 @@ contract Handler is
         uint256, // value
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
-        // Reject the transfer outside of an operation handling / prefills
+        // Reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
         if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
@@ -263,7 +265,7 @@ contract Handler is
             );
         }
 
-        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
+        // ENTERED_HANDLE_OPERATION ok
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
@@ -274,7 +276,7 @@ contract Handler is
         uint256[] calldata, // values
         bytes calldata // data
     ) external override whenNotPaused returns (bytes4) {
-        // Reject the transfer outside of an operation handling / prefills
+        // Reject the transfer outside of an operation handling
         uint256 stage = reentrancyGuardStage();
         if (stage == NOT_ENTERED || !_supportedContractAllowlist[msg.sender]) {
             return 0;
@@ -294,7 +296,7 @@ contract Handler is
             }
         }
 
-        // ENTERED_PREFILL and ENTERED_HANDLE_OPERATION both ok
+        // ENTERED_HANDLE_OPERATION ok
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 

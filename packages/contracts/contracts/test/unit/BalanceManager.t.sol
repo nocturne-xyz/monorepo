@@ -29,7 +29,7 @@ contract BalanceManagerTest is Test {
     using OperationLib for Operation;
 
     // Check storage layout file
-    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 225;
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 277;
     uint256 constant NOT_ENTERED = 1;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;
@@ -73,6 +73,9 @@ contract BalanceManagerTest is Test {
             ERC20s[i] = new SimpleERC20Token();
             ERC721s[i] = new SimpleERC721Token();
             ERC1155s[i] = new SimpleERC1155Token();
+
+            // Prefill the balance manager with 1 token
+            ERC20s[i].reserveTokens(address(balanceManager), 1);
         }
     }
 
@@ -143,12 +146,15 @@ contract BalanceManagerTest is Test {
         );
 
         // Balance manager took up 100M of token
-        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
-        assertEq(token.balanceOf(address(balanceManager)), 100_000_000);
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (PER_NOTE_AMOUNT * 2) + 1
+        );
     }
 
     function testProcessJoinSplitsReservingFeeSingleFeeNote() public {
@@ -186,14 +192,14 @@ contract BalanceManagerTest is Test {
         );
 
         // Balance manager took up 50M, left 50M for bundler
-        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * PER_NOTE_AMOUNT) - totalFeeReserved
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
@@ -233,14 +239,14 @@ contract BalanceManagerTest is Test {
         );
 
         // Balance manager took up 150M - 62.5M
-        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (3 * PER_NOTE_AMOUNT) - totalFeeReserved
+            (3 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
@@ -279,14 +285,14 @@ contract BalanceManagerTest is Test {
         );
 
         // Take up 100M tokens
-        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * PER_NOTE_AMOUNT) - totalFeeReserved
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
 
         // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
@@ -307,7 +313,7 @@ contract BalanceManagerTest is Test {
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * PER_NOTE_AMOUNT) - onlyBundlerFee
+            (2 * PER_NOTE_AMOUNT) - onlyBundlerFee + 1
         );
         assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
 
@@ -529,13 +535,13 @@ contract BalanceManagerTest is Test {
         );
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * PER_NOTE_AMOUNT)
+            (2 * PER_NOTE_AMOUNT) + 1 // +1 due to prefill
         );
         assertEq(token.balanceOf(address(teller)), 0);
 
         // Expect all 100M to be refunded to teller
         balanceManager.handleAllRefunds(op);
-        assertEq(token.balanceOf(address(balanceManager)), 0);
+        assertEq(token.balanceOf(address(balanceManager)), 1);
         assertEq(token.balanceOf(address(teller)), (2 * PER_NOTE_AMOUNT));
     }
 
@@ -579,117 +585,7 @@ contract BalanceManagerTest is Test {
 
         // Expect all refund tokens to be refunded to teller
         balanceManager.handleAllRefunds(op);
-        assertEq(refundToken.balanceOf(address(balanceManager)), 0);
-        assertEq(refundToken.balanceOf(address(teller)), refundAmount);
-    }
-
-    function testPrefillAssetAndHandleRefundsJoinSplitAndRefundTokens() public {
-        SimpleERC20Token joinSplitToken = ERC20s[0];
-        SimpleERC20Token refundToken = ERC20s[1];
-
-        // Joinsplit asset
-        EncodedAsset memory joinSplitAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(joinSplitToken),
-            ERC20_ID
-        );
-
-        // Refund asset
-        EncodedAsset[] memory refundAssets = new EncodedAsset[](1);
-        EncodedAsset memory refundAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(refundToken),
-            ERC20_ID
-        );
-        refundAssets[0] = refundAsset;
-
-        // Transfer contract ownership to alice
-        balanceManager.transferOwnership(ALICE);
-
-        // Reserve prefill tokens for alice
-        joinSplitToken.reserveTokens(address(ALICE), 1);
-        refundToken.reserveTokens(address(ALICE), 1);
-
-        // Prefill with 1 unit of each token
-        vm.startPrank(ALICE);
-        joinSplitToken.approve(address(balanceManager), 1);
-        refundToken.approve(address(balanceManager), 1);
-
-        balanceManager.addToAssetPrefill(joinSplitAsset, 1);
-
-        vm.store(
-            address(balanceManager),
-            bytes32(OPERATION_STAGE_STORAGE_SLOT),
-            bytes32(NOT_ENTERED)
-        );
-        balanceManager.addToAssetPrefill(refundAsset, 1);
-        vm.stopPrank();
-
-        // Assert mappings and balances reflect the +1s
-        assertEq(
-            balanceManager._prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(joinSplitAsset)
-            ),
-            1
-        );
-        assertEq(
-            balanceManager._prefilledAssetBalances(
-                AssetUtils.hashEncodedAsset(refundAsset)
-            ),
-            1
-        );
-        assertEq(joinSplitToken.balanceOf(address(balanceManager)), 1);
-        assertEq(refundToken.balanceOf(address(balanceManager)), 1);
-
-        // Dummy operation, we manually send 10M joinsplit tokens to balance
-        // manager directly because no actual unwrapping occurs
-        Operation memory op = NocturneUtils.formatOperation(
-            FormatOperationArgs({
-                joinSplitToken: joinSplitToken,
-                gasToken: joinSplitToken,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
-                ),
-                encodedRefundAssets: refundAssets,
-                executionGasLimit: DEFAULT_GAS_LIMIT,
-                maxNumRefunds: 2,
-                gasPrice: 0,
-                actions: new Action[](0),
-                atomicActions: false,
-                operationFailureType: OperationFailureType.NONE
-            })
-        );
-
-        joinSplitToken.reserveTokens(ALICE, PER_NOTE_AMOUNT);
-        vm.prank(ALICE);
-        joinSplitToken.transfer(address(balanceManager), PER_NOTE_AMOUNT);
-
-        // Send refund tokens to balance manager
-        uint256 refundAmount = 10_000_000;
-        refundToken.reserveTokens(ALICE, refundAmount);
-        vm.prank(ALICE);
-        refundToken.transfer(address(balanceManager), refundAmount);
-
-        // Assert balance manager has amount + 1 before handling refunds
-        assertEq(
-            joinSplitToken.balanceOf(address(balanceManager)),
-            PER_NOTE_AMOUNT + 1
-        );
-        assertEq(
-            refundToken.balanceOf(address(balanceManager)),
-            refundAmount + 1
-        );
-
-        // Expect all refund tokens to be refunded to teller barring the
-        // prefilled 1s
-        balanceManager.handleAllRefunds(op);
-
-        assertEq(joinSplitToken.balanceOf(address(balanceManager)), 1);
-        assertEq(joinSplitToken.balanceOf(address(teller)), PER_NOTE_AMOUNT);
-
-        assertEq(refundToken.balanceOf(address(balanceManager)), 1);
+        assertEq(refundToken.balanceOf(address(balanceManager)), 1); // +1 due to prefill
         assertEq(refundToken.balanceOf(address(teller)), refundAmount);
     }
 }

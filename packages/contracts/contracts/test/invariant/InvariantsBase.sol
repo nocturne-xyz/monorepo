@@ -72,37 +72,7 @@ contract InvariantsBase is Test {
         );
     }
 
-    function assert_protocol_handlerAlwaysEndsWithPrefillBalances() internal {
-        // ERC20 prefills left in handler
-        bytes32 hashedErc20 = AssetUtils.hashEncodedAsset(
-            AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(depositErc20),
-                uint256(AssetType.ERC20)
-            )
-        );
-        assertEq(
-            depositErc20.balanceOf(address(handler)),
-            handlerHandler.handler()._prefilledAssetBalances(hashedErc20)
-        );
-
-        // ERC1155 prefills left in handler
-        uint256[] memory erc1155Ids = handlerHandler
-            .ghost_prefilledErc1155Ids();
-        for (uint256 i = 0; i < erc1155Ids.length; i++) {
-            bytes32 hashedErc1155 = AssetUtils.hashEncodedAsset(
-                AssetUtils.encodeAsset(
-                    AssetType.ERC1155,
-                    address(depositErc1155),
-                    erc1155Ids[i]
-                )
-            );
-            assertEq(
-                depositErc1155.balanceOf(address(handler), erc1155Ids[i]),
-                handlerHandler.handler()._prefilledAssetBalances(hashedErc1155)
-            );
-        }
-    }
+    // TODO: handler always ends with balances 0 or 1
 
     // _______________DEPOSIT_ETH_______________
 
