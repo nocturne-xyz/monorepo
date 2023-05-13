@@ -64,9 +64,7 @@ contract InvariantsBase is Test {
     function assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         internal
     {
-        uint256 tellerBalance = depositManagerHandler.erc20().balanceOf(
-            address(teller)
-        );
+        uint256 tellerBalance = depositErc20.balanceOf(address(teller));
         uint256 expectedInTeller = depositManagerHandler
             .ghost_completeDepositSumErc20() -
             tellerHandler.ghost_totalTransferredOutOfTeller() -
@@ -75,7 +73,13 @@ contract InvariantsBase is Test {
         assertEq(tellerBalance, expectedInTeller);
     }
 
-    // TODO: replace prefill balances check with check handler always ends with balances 0 or 1
+    function assert_protocol_handlerErc20BalancesAlwaysZeroOrOne() internal {
+        assertGe(depositErc20.balanceOf(address(handler)), 0);
+        assertLe(depositErc20.balanceOf(address(handler)), 1);
+
+        assertGe(swapErc20.balanceOf(address(handler)), 0);
+        assertLe(swapErc20.balanceOf(address(handler)), 1);
+    }
 
     // _______________DEPOSIT_ETH_______________
 
@@ -160,7 +164,7 @@ contract InvariantsBase is Test {
         internal
     {
         assertEq(
-            depositManagerHandler.erc20().balanceOf(
+            depositErc20.balanceOf(
                 address(depositManagerHandler.depositManager())
             ),
             depositManagerHandler.ghost_instantiateDepositSumErc20() -
@@ -176,7 +180,7 @@ contract InvariantsBase is Test {
 
         uint256 sum = 0;
         for (uint256 i = 0; i < allActors.length; i++) {
-            sum += depositManagerHandler.erc20().balanceOf(allActors[i]);
+            sum += depositErc20.balanceOf(allActors[i]);
         }
 
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
@@ -187,7 +191,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositErc20.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_retrieveDepositSumErc20For(
                     allActors[i]
                 )
@@ -202,7 +206,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
-                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositErc20.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_instantiateDepositSumErc20For(
                     allActors[i]
                 )

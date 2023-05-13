@@ -207,7 +207,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
     }
 
-    // TODO: replace with check that handler erc20 balances always 0 or 1
+    function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
+        assert_protocol_handlerErc20BalancesAlwaysZeroOrOne();
+    }
 
     /*****************************
      * Deposits ETH
