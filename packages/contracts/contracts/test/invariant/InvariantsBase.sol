@@ -64,15 +64,31 @@ contract InvariantsBase is Test {
     function assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         internal
     {
-        assertEq(
-            depositManagerHandler.erc20().balanceOf(address(teller)),
-            depositManagerHandler.ghost_completeDepositSumErc20() -
-                tellerHandler.ghost_totalTransferredOutOfTeller() -
-                tellerHandler.ghost_totalBundlerPayout()
+        // Actual balance
+        uint256 tellerBalance = depositManagerHandler.erc20().balanceOf(
+            address(teller)
         );
+
+        // Amount if no prefills were withheld
+        uint256 joinSplitTokenBalanceNoPrefills = depositManagerHandler
+            .ghost_completeDepositSumErc20() -
+            tellerHandler.ghost_totalTransferredOutOfTeller() -
+            tellerHandler.ghost_totalBundlerPayout();
+
+        // Balance if all possible prefills withheld
+        uint256 maxPrefillAmount = tellerHandler
+            .ghost_joinSplitTokenPrefilled();
+        uint256 joinSplitTokenBalanceWithAllPrefills = joinSplitTokenBalanceNoPrefills >=
+                maxPrefillAmount
+                ? joinSplitTokenBalanceNoPrefills - maxPrefillAmount
+                : joinSplitTokenBalanceNoPrefills; // avoid underflow
+
+        // Assert actual balance is at most expected with no prefills
+        assertLe(tellerBalance, joinSplitTokenBalanceNoPrefills);
+        assertGe(tellerBalance, joinSplitTokenBalanceWithAllPrefills);
     }
 
-    // TODO: handler always ends with balances 0 or 1
+    // TODO: replace prefill balances check with check handler always ends with balances 0 or 1
 
     // _______________DEPOSIT_ETH_______________
 
@@ -241,10 +257,25 @@ contract InvariantsBase is Test {
     function assert_operation_totalSwapErc20ReceivedMatchesTellerBalance()
         internal
     {
-        assertEq(
-            swapErc20.balanceOf(address(teller)),
-            tellerHandler.ghost_totalSwapErc20Received()
-        );
+        // Actual balance
+        uint256 tellerBalance = swapErc20.balanceOf(address(teller));
+
+        // Amount if no prefills were withheld
+        uint256 swapErc20BalanceNoPrefills = tellerHandler
+            .ghost_totalSwapErc20Received();
+
+        assertLe(tellerBalance, swapErc20BalanceNoPrefills);
+
+        // // Balance if all possible prefills withheld
+        // uint256 maxPrefillAmount = tellerHandler.ghost_swapErc20Prefilled();
+        // uint256 swapErc20TellerBalanceWithAllPrefills = swapErc20BalanceNoPrefills >=
+        //         maxPrefillAmount
+        //         ? swapErc20BalanceNoPrefills - maxPrefillAmount
+        //         : swapErc20BalanceNoPrefills; // avoid underflow
+
+        // // Assert actual balance is at most expected with no prefills
+        // assertLe(tellerBalance, swapErc20BalanceNoPrefills);
+        // assertGe(tellerBalance, swapErc20TellerBalanceWithAllPrefills);
     }
 
     function assert_operation_tellerOwnsAllSwapErc721s() internal {

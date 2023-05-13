@@ -44,6 +44,8 @@ contract TellerHandler is OperationGenerator {
 
     bytes32 public lastCall;
     uint256 public ghost_totalBundlerPayout;
+    uint256 public ghost_joinSplitTokenPrefilled;
+    uint256 public ghost_swapErc20Prefilled;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
@@ -171,6 +173,13 @@ contract TellerHandler is OperationGenerator {
                 }
                 _numSuccessfulActions += 1;
             }
+        }
+
+        if (meta.joinSplitTokenPrefilled) {
+            ghost_joinSplitTokenPrefilled += 1;
+        }
+        if (meta.swapErc20Prefilled) {
+            ghost_swapErc20Prefilled += 1;
         }
     }
 

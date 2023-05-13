@@ -173,6 +173,7 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
+        // TODO: document prefill logic
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
         uint256 amountToLeave = assetType == AssetType.ERC20 ? 1 : 0;
 
