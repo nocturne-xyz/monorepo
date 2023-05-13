@@ -165,6 +165,12 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Handle a refund for a single asset
     /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
     ///      back to the Teller and inserts a new note commitment into the commitment tree.
+    /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
+    ///      to withold 1 token from the refund each time if the handler's current balance is 0.
+    ///      This saves gas for future users because it avoids writing to a zeroed out storage slot
+    ///      each time for the handler's balance. This single token can technically be taken by any
+    ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
+    ///      on user gas.
     /// @param encodedAsset Encoded asset to check for refund
     /// @param refundAddr Stealth address to refund to
     function _handleRefundForAsset(
@@ -173,12 +179,11 @@ contract BalanceManager is CommitmentTreeManager {
     ) internal {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
-        // TODO: document prefill logic
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
-        uint256 amountToLeave = assetType == AssetType.ERC20 ? 1 : 0;
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
 
-        if (currentBalance > amountToLeave) {
-            uint256 difference = currentBalance - amountToLeave;
+        if (currentBalance > amountToWithhold) {
+            uint256 difference = currentBalance - amountToWithhold;
             AssetUtils.transferAssetTo(
                 encodedAsset,
                 address(_teller),

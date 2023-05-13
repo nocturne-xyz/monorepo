@@ -46,9 +46,6 @@ struct GeneratedOperationMetadata {
     SwapRequest[] swaps;
     bool[] isTransfer;
     bool[] isSwap;
-    // T/F based on whether or not handler already had 1 token of each
-    bool joinSplitTokenPrefilled;
-    bool swapErc20Prefilled;
 }
 
 contract OperationGenerator is CommonBase, StdCheats, StdUtils {
@@ -108,14 +105,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         if (runningJoinSplitAmount > gasToReserve) {
             runningJoinSplitAmount = runningJoinSplitAmount - gasToReserve;
             compensateBundler = true;
-        }
-
-        // If there's a joinSplit AND handler has no joinSplit tokens, set joinSplitTokenPrefilled to true
-        if (
-            totalJoinSplitUnwrapAmount > 0 &&
-            args.joinSplitToken.balanceOf(address(args.handler)) == 0
-        ) {
-            _meta.joinSplitTokenPrefilled = true;
         }
 
         // For each action of numActions, switch on transfer vs swap
@@ -185,15 +174,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     address(args.swapErc20),
                     ERC20_ID
                 );
-
-                // If there's a swap with > 0 erc20 out tokens AND handler has no swap tokens, set
-                // swapErc20Prefilled to true
-                if (
-                    args.swapErc20.balanceOf(address(args.handler)) == 0 &&
-                    _meta.swaps[i + 1].erc20OutAmount > 0
-                ) {
-                    _meta.swapErc20Prefilled = true;
-                }
 
                 i += 1; // additional +1 to skip past swap action at i+1
             }
