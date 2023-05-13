@@ -11,5 +11,5 @@ interface IHandler {
         address bundler
     ) external returns (OperationResult memory);
 
-    function handleDeposit(DepositRequest calldata deposit) external;
+    function handleDeposit(Deposit calldata deposit) external;
 }

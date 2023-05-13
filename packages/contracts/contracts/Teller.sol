@@ -95,7 +95,7 @@ contract Teller is
     }
 
     function depositFunds(
-        DepositRequest calldata deposit
+        Deposit calldata deposit
     ) external override whenNotPaused onlyDepositSource {
         _handler.handleDeposit(deposit);
         AssetUtils.transferAssetFrom(

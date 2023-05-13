@@ -89,7 +89,7 @@ contract Handler is
     /// @notice Sets subtree batch filler permission of the given address, only callable by Teller.
     /// @dev Function checks asset is on the allowlist to avoid unsupported tokens getting stuck.
     function handleDeposit(
-        DepositRequest calldata deposit
+        Deposit calldata deposit
     ) external override whenNotPaused onlyTeller {
         (, address assetAddr, ) = AssetUtils.decodeAsset(deposit.encodedAsset);
         require(

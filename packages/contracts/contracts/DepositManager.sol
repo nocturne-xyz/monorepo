@@ -338,7 +338,14 @@ contract DepositManager is
 
         // Approve teller for assets and deposit funds
         AssetUtils.approveAsset(req.encodedAsset, address(_teller), req.value);
-        _teller.depositFunds(req);
+        _teller.depositFunds(
+            Deposit({
+                spender: req.spender,
+                encodedAsset: req.encodedAsset,
+                value: req.value,
+                depositAddr: req.depositAddr
+            })
+        );
 
         // NOTE: screener may be under-compensated for gas during spikes in
         // demand.
