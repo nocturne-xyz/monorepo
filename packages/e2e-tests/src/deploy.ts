@@ -115,6 +115,7 @@ export interface TestDeployment {
   subtreeUpdaterEoa: ethers.Wallet;
   screenerEoa: ethers.Wallet;
   actorConfig: TestActorsConfig;
+  fillSubtreeBatch: () => Promise<void>;
   teardown: () => Promise<void>;
 }
 
@@ -144,7 +145,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
 > = {
   rpcUrl: ANVIL_URL,
   subgraphUrl: SUBGRAPH_URL,
-  fillBatchLatency: 4_000,
+  fillBatchLatency: undefined,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
@@ -279,6 +280,25 @@ export async function setupTestDeployment(
 
   console.log(`setupTestDeployment took ${Date.now() - startTime}ms.`);
 
+  const fillSubtreeBatch = async () => {
+    const handler = Handler__factory.connect(
+      deployment.handlerAddress(),
+      subtreeUpdaterEoa
+    );
+    try {
+      const tx = await handler.fillBatchWithZeros();
+      await tx.wait(1);
+    } catch (err: any) {
+      // if we get revert due to batch already being organically filled, ignore the error
+      if (!err.toString().includes("!zero fill empty batch")) {
+        console.error("error filling batch:", err);
+        throw err;
+      }
+    }
+    // wait for subgraph / subtree updater
+    await sleep(7_000);
+  };
+
   return {
     actorConfig,
     depositManager,
@@ -294,6 +314,7 @@ export async function setupTestDeployment(
     bundlerEoa,
     subtreeUpdaterEoa,
     screenerEoa,
+    fillSubtreeBatch,
   };
 }
 

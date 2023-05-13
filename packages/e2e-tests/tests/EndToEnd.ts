@@ -24,7 +24,7 @@ import {
   proveOperation,
   OperationStatus,
 } from "@nocturne-xyz/sdk";
-import { sleep, submitAndProcessOperation } from "../src/utils";
+import { submitAndProcessOperation } from "../src/utils";
 import {
   depositFundsMultiToken,
   depositFundsSingleToken,
@@ -51,6 +51,7 @@ const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
+  let fillSubtreeBatch: () => Promise<void>;
 
   let provider: ethers.providers.JsonRpcProvider;
   let aliceEoa: ethers.Wallet;
@@ -97,6 +98,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       bobEoa,
       bundlerEoa,
       depositManager,
+      fillSubtreeBatch,
     } = testDeployment);
 
     ({
@@ -155,8 +157,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
     console.log(nocturneWalletSDKAlice.merkleProver.root.hash);
 
     const status = await submitAndProcessOperation(operation);
-    // wait for subgraph / subtree updater to catch up
-    await sleep(7_000);
 
     await contractChecks();
     await offchainChecks();
@@ -174,6 +174,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    await fillSubtreeBatch();
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)
     // HH's default gas price seems to be somewhere around 1 gwei experimentally
@@ -208,6 +209,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    await fillSubtreeBatch();
 
     console.log("encode transfer erc20 action");
     const encodedFunction =
@@ -248,6 +250,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    await fillSubtreeBatch();
 
     console.log("encode transfer erc20 action");
     const encodedFunction =
@@ -363,6 +366,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
       [GAS_FAUCET_DEFAULT_AMOUNT]
     );
+    await fillSubtreeBatch();
 
     console.log("encode reserve erc721 action");
     const erc721ReserveCalldata =

@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { ethers } from "ethers";
 import {
   DepositManager,
-  Handler,
   SimpleERC20Token__factory,
 } from "@nocturne-xyz/contracts";
 import {
@@ -22,7 +21,7 @@ import {
   depositFundsMultiToken,
   depositFundsSingleToken,
 } from "../src/deposit";
-import { sleep, submitAndProcessOperation } from "../src/utils";
+import { submitAndProcessOperation } from "../src/utils";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { KEYS_TO_WALLETS } from "../src/keys";
 
@@ -45,12 +44,12 @@ describe(
 function syncTestSuite(syncAdapter: SyncAdapterOption) {
   return async () => {
     let teardown: () => Promise<void>;
+    let fillSubtreeBatch: () => Promise<void>;
     let provider: ethers.providers.Provider;
 
     let aliceEoa: ethers.Wallet;
 
     let depositManager: DepositManager;
-    let handler: Handler;
     let token: SimpleERC20Token;
     let gasToken: SimpleERC20Token;
     let nocturneWalletSDKAlice: NocturneWalletSDK;
@@ -65,14 +64,10 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
           depositScreener: true,
           subtreeUpdater: true,
         },
-        configs: {
-          subtreeUpdater: {
-            fillBatchLatency: undefined,
-          },
-        },
       });
 
-      ({ teardown, provider, depositManager, handler } = testDeployment);
+      ({ teardown, provider, depositManager, fillSubtreeBatch } =
+        testDeployment);
 
       const [_aliceEoa] = KEYS_TO_WALLETS(provider);
       aliceEoa = _aliceEoa;
@@ -93,13 +88,6 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       ));
     });
 
-    async function fillBatch() {
-      const tx = await handler.fillBatchWithZeros();
-      await tx.wait(1);
-      // wait for subgraph / subtree updater
-      await sleep(5_000);
-    }
-
     afterEach(async () => {
       await teardown();
     });
@@ -117,7 +105,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
       const ncs = depositedNotes.map(NoteTrait.toCommitment);
 
       // force subtree update by filling batch and sync SDK
-      await fillBatch();
+      await fillSubtreeBatch();
       await nocturneWalletSDKAlice.sync();
 
       // check that DB has notes and merkle has leaves for them
@@ -153,7 +141,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       // force subtree update by filling batch and sync SDK...
       console.log("applying subtree update...");
-      await fillBatch();
+      await fillSubtreeBatch();
 
       console.log("syncing SDK...");
       await nocturneWalletSDKAlice.sync();
@@ -191,6 +179,9 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
       console.log("submitting op...");
       await submitAndProcessOperation(op);
+
+      console.log("apply subtree update post-operation...");
+      await fillSubtreeBatch();
 
       // sync SDK again...
       console.log("syncing SDK again...");
