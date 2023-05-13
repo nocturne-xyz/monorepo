@@ -17,6 +17,9 @@ import {Groth16} from "./libs/Groth16.sol";
 import {AssetUtils} from "./libs/AssetUtils.sol";
 import "./libs/Types.sol";
 
+/// @title Handler
+/// @author Nocturne Labs
+/// @notice Handler contract for processing and executing operations.
 contract Handler is
     IHandler,
     IERC721ReceiverUpgradeable,
@@ -24,16 +27,21 @@ contract Handler is
     BalanceManager,
     NocturneReentrancyGuard
 {
+    // Set of callable protocols and tokens
     mapping(address => bool) public _supportedContractAllowlist;
 
-    // gap for upgrade safety
+    // Gap for upgrade safety
     uint256[50] private __GAP;
 
+    /// @notice Event emitted when a contract is given/revoked allowlist permission
     event SupportedContractAllowlistPermissionSet(
         address contractAddress,
         bool permission
     );
 
+    /// @notice Initialization function
+    /// @param teller Address of the Teller contract
+    /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function initialize(
         address teller,
         address subtreeUpdateVerifier
@@ -42,25 +50,31 @@ contract Handler is
         __BalanceManager_init(teller, subtreeUpdateVerifier);
     }
 
+    /// @notice Only callable by the handler itself (used so handler can message call itself)
     modifier onlyThis() {
         require(msg.sender == address(this), "Only this");
         _;
     }
 
+    /// @notice Only callable by the Teller contract
     modifier onlyTeller() {
         require(msg.sender == address(_teller), "Only teller");
         _;
     }
 
+    /// @notice Pauses the contract, only callable by owner
     function pause() external onlyOwner {
         _pause();
     }
 
+    /// @notice Unpauses the contract, only callable by owner
     function unpause() external onlyOwner {
         _unpause();
     }
 
-    // Gives an handler ability to call function with on the specified protocol
+    /// @notice Sets allowlist permission of the given contract, only callable by owner
+    /// @param contractAddress Address of the contract to add
+    /// @param permission Whether to enable or revoke permission
     function setSupportedContractAllowlistPermission(
         address contractAddress,
         bool permission
@@ -72,6 +86,8 @@ contract Handler is
         );
     }
 
+    /// @notice Sets subtree batch filler permission of the given address, only callable by Teller.
+    /// @dev Function checks asset is on the allowlist to avoid unsupported tokens getting stuck.
     function handleDeposit(
         DepositRequest calldata deposit
     ) external override whenNotPaused onlyTeller {

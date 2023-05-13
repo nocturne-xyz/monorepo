@@ -64,6 +64,8 @@ struct DepositRequest {
     uint256 gasCompensation;
 }
 
+// TODO: add deposit struct separate of DepositRequest
+
 struct Action {
     address contractAddress;
     bytes encodedFunction;
