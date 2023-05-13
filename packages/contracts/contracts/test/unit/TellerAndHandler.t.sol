@@ -44,7 +44,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     using TreeTestLib for TreeTest;
 
     // Check storage layout file
-    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 227;
+    uint256 constant OPERATION_STAGE_STORAGE_SLOT = 278;
     uint256 constant ENTERED_EXECUTE_ACTIONS = 4;
 
     uint256 constant DEFAULT_GAS_LIMIT = 500_000;

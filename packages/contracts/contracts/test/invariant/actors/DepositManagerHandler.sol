@@ -35,11 +35,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 constant ETH_SUPPLY = 120_500_000 ether;
     uint256 constant AVG_GAS_PER_COMPLETE = 130_000 gwei;
 
-    uint256 public SCREENER_PRIVKEY;
-    address public SCREENER_ADDRESS;
-
     // ______PUBLIC______
     TestDepositManager public depositManager;
+
+    uint256 public screenerPrivkey;
+    address public screenerAddress;
 
     WETH9 public weth;
     SimpleERC20Token public erc20;
@@ -72,15 +72,14 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         SimpleERC20Token _erc20,
         SimpleERC721Token _erc721,
         SimpleERC1155Token _erc1155,
-        uint256 _screenerPrivkey,
-        address _screenerAddress
+        uint256 _screenerPrivkey
     ) {
         depositManager = _depositManager;
         erc20 = _erc20;
         erc721 = _erc721;
         erc1155 = _erc1155;
-        SCREENER_PRIVKEY = _screenerPrivkey;
-        SCREENER_ADDRESS = _screenerAddress;
+        screenerPrivkey = _screenerPrivkey;
+        screenerAddress = vm.addr(screenerPrivkey);
     }
 
     modifier createActor() {
@@ -139,7 +138,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             "completeDepositErc20 reverts",
             _reverts["completeDepositErc20"]
         );
-        console.log("screener balance:", SCREENER_ADDRESS.balance);
+        console.log("screener balance:", screenerAddress.balance);
         console.log(
             "total supplied gas compensation:",
             ghost_totalSuppliedGasCompensation()
@@ -342,7 +341,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
         // Sign with screener
         bytes32 digest = depositManager.computeDigest(randDepositRequest);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(SCREENER_PRIVKEY, digest);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(screenerPrivkey, digest);
         bytes memory signature = ParseUtils.rsvToSignatureBytes(
             uint256(r),
             uint256(s),
@@ -354,7 +353,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 skipSeconds = bound(seed, 0, 10_000);
         skip(skipSeconds);
         vm.txGasPrice(gasPrice);
-        vm.prank(SCREENER_ADDRESS);
+        vm.prank(screenerAddress);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
             EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
                 AssetType.ERC20,

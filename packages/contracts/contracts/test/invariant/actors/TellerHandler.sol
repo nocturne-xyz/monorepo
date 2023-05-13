@@ -28,13 +28,12 @@ import "../../../libs/Types.sol";
 contract TellerHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
 
-    uint256 constant BUNDLER_PRIVKEY = 2;
-    address public BUNDLER_ADDRESS = vm.addr(BUNDLER_PRIVKEY);
-
     // ______PUBLIC______
     Teller public teller;
     Handler public handler;
     TokenSwapper public swapper;
+
+    address public bundlerAddress;
 
     SimpleERC20Token public joinSplitToken;
     SimpleERC20Token public gasToken;
@@ -64,8 +63,10 @@ contract TellerHandler is OperationGenerator {
         SimpleERC20Token _gasToken,
         SimpleERC20Token _swapErc20,
         SimpleERC721Token _swapErc721,
-        SimpleERC1155Token _swapErc1155
-    ) {
+        SimpleERC1155Token _swapErc1155,
+        address _bundlerAddress,
+        address _transferRecipientAddress
+    ) OperationGenerator(_transferRecipientAddress) {
         teller = _teller;
         handler = _handler;
         swapper = _swapper;
@@ -74,6 +75,7 @@ contract TellerHandler is OperationGenerator {
         swapErc20 = _swapErc20;
         swapErc721 = _swapErc721;
         swapErc1155 = _swapErc1155;
+        bundlerAddress = _bundlerAddress;
     }
 
     // ______EXTERNAL______
@@ -84,7 +86,7 @@ contract TellerHandler is OperationGenerator {
         console.log("Successful actions", _numSuccessfulActions);
         console.log(
             "Bundler balance",
-            joinSplitToken.balanceOf(BUNDLER_ADDRESS)
+            joinSplitToken.balanceOf(bundlerAddress)
         );
 
         console.log(
@@ -140,7 +142,7 @@ contract TellerHandler is OperationGenerator {
         bundle.operations = new Operation[](1);
         bundle.operations[0] = op;
 
-        vm.prank(BUNDLER_ADDRESS);
+        vm.prank(bundlerAddress);
         OperationResult[] memory opResults = teller.processBundle(bundle);
 
         // TODO: enable multiple ops in bundle

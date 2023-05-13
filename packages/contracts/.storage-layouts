@@ -8,29 +8,35 @@
 | _initialized            | uint8                       | 0    | 0      | 1     | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | _initializing           | bool                        | 0    | 1      | 1     | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | __gap                   | uint256[50]                 | 1    | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _paused                 | bool                        | 51   | 0      | 1     | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _owner                  | address                     | 51   | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 | __gap                   | uint256[49]                 | 52   | 0      | 1568  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _pastRoots              | mapping(uint256 => bool)    | 101  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _nullifierSet           | mapping(uint256 => bool)    | 102  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _merkle                 | struct OffchainMerkleTree   | 103  | 0      | 672   | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| __GAP                   | uint256[50]                 | 124  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _teller                 | contract ITeller            | 174  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _receivedAssets         | struct EncodedAsset[]       | 175  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| _prefilledAssetBalances | mapping(bytes32 => uint256) | 176  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
-| __GAP                   | uint256[50]                 | 177  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _paused                 | bool                        | 101  | 0      | 1     | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| __gap                   | uint256[49]                 | 102  | 0      | 1568  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _pastRoots              | mapping(uint256 => bool)    | 151  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _nullifierSet           | mapping(uint256 => bool)    | 152  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _merkle                 | struct OffchainMerkleTree   | 153  | 0      | 672   | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _subtreeBatchFillers    | mapping(address => bool)    | 174  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| __GAP                   | uint256[50]                 | 175  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _teller                 | contract ITeller            | 225  | 0      | 20    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _receivedAssets         | struct EncodedAsset[]       | 226  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| _prefilledAssetBalances | mapping(bytes32 => uint256) | 227  | 0      | 32    | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
+| __GAP                   | uint256[50]                 | 228  | 0      | 1600  | packages/contracts/contracts/BalanceManager.sol:BalanceManager |
 =======================
  ➡ CommitmentTreeManager
-| Name          | Type                      | Slot | Offset | Bytes | Contract                                                                     |
-|---------------|---------------------------|------|--------|-------|------------------------------------------------------------------------------|
-| _initialized  | uint8                     | 0    | 0      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| _initializing | bool                      | 0    | 1      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| __gap         | uint256[50]               | 1    | 0      | 1600  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| _paused       | bool                      | 51   | 0      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| __gap         | uint256[49]               | 52   | 0      | 1568  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| _pastRoots    | mapping(uint256 => bool)  | 101  | 0      | 32    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| _nullifierSet | mapping(uint256 => bool)  | 102  | 0      | 32    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| _merkle       | struct OffchainMerkleTree | 103  | 0      | 672   | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
-| __GAP         | uint256[50]               | 124  | 0      | 1600  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| Name                 | Type                      | Slot | Offset | Bytes | Contract                                                                     |
+|----------------------|---------------------------|------|--------|-------|------------------------------------------------------------------------------|
+| _initialized         | uint8                     | 0    | 0      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _initializing        | bool                      | 0    | 1      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| __gap                | uint256[50]               | 1    | 0      | 1600  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _owner               | address                   | 51   | 0      | 20    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| __gap                | uint256[49]               | 52   | 0      | 1568  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _paused              | bool                      | 101  | 0      | 1     | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| __gap                | uint256[49]               | 102  | 0      | 1568  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _pastRoots           | mapping(uint256 => bool)  | 151  | 0      | 32    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _nullifierSet        | mapping(uint256 => bool)  | 152  | 0      | 32    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _merkle              | struct OffchainMerkleTree | 153  | 0      | 672   | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| _subtreeBatchFillers | mapping(address => bool)  | 174  | 0      | 32    | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
+| __GAP                | uint256[50]               | 175  | 0      | 1600  | packages/contracts/contracts/CommitmentTreeManager.sol:CommitmentTreeManager |
 =======================
  ➡ DepositManager
 | Name                      | Type                                               | Slot | Offset | Bytes | Contract                                                       |
@@ -68,21 +74,21 @@
 | _initialized                | uint8                       | 0    | 0      | 1     | packages/contracts/contracts/Handler.sol:Handler |
 | _initializing               | bool                        | 0    | 1      | 1     | packages/contracts/contracts/Handler.sol:Handler |
 | __gap                       | uint256[50]                 | 1    | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _paused                     | bool                        | 51   | 0      | 1     | packages/contracts/contracts/Handler.sol:Handler |
+| _owner                      | address                     | 51   | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
 | __gap                       | uint256[49]                 | 52   | 0      | 1568  | packages/contracts/contracts/Handler.sol:Handler |
-| _pastRoots                  | mapping(uint256 => bool)    | 101  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| _nullifierSet               | mapping(uint256 => bool)    | 102  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| _merkle                     | struct OffchainMerkleTree   | 103  | 0      | 672   | packages/contracts/contracts/Handler.sol:Handler |
-| __GAP                       | uint256[50]                 | 124  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _teller                     | contract ITeller            | 174  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
-| _receivedAssets             | struct EncodedAsset[]       | 175  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| _prefilledAssetBalances     | mapping(bytes32 => uint256) | 176  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
-| __GAP                       | uint256[50]                 | 177  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _operationStage             | uint256                     | 227  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _paused                     | bool                        | 101  | 0      | 1     | packages/contracts/contracts/Handler.sol:Handler |
+| __gap                       | uint256[49]                 | 102  | 0      | 1568  | packages/contracts/contracts/Handler.sol:Handler |
+| _pastRoots                  | mapping(uint256 => bool)    | 151  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _nullifierSet               | mapping(uint256 => bool)    | 152  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _merkle                     | struct OffchainMerkleTree   | 153  | 0      | 672   | packages/contracts/contracts/Handler.sol:Handler |
+| _subtreeBatchFillers        | mapping(address => bool)    | 174  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| __GAP                       | uint256[50]                 | 175  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
+| _teller                     | contract ITeller            | 225  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
+| _receivedAssets             | struct EncodedAsset[]       | 226  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _prefilledAssetBalances     | mapping(bytes32 => uint256) | 227  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                       | uint256[50]                 | 228  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
-| _owner                      | address                     | 278  | 0      | 20    | packages/contracts/contracts/Handler.sol:Handler |
-| __gap                       | uint256[49]                 | 279  | 0      | 1568  | packages/contracts/contracts/Handler.sol:Handler |
-| _subtreeBatchFiller         | mapping(address => bool)    | 328  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| _operationStage             | uint256                     | 278  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
+| __GAP                       | uint256[50]                 | 279  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
 | _supportedContractAllowlist | mapping(address => bool)    | 329  | 0      | 32    | packages/contracts/contracts/Handler.sol:Handler |
 | __GAP                       | uint256[50]                 | 330  | 0      | 1600  | packages/contracts/contracts/Handler.sol:Handler |
 =======================
