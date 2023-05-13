@@ -25,7 +25,9 @@
       }
     ]
   ],
-  "protocolAllowlist": [],
+  "protocolAllowlist": [
+    ["PROTOCOL_NAME", "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"]
+  ],
   "opts": {
     "useMockSubtreeUpdateVerifier": true
   }

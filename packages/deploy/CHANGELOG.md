@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- update `README` with better instructions on how to deploy
+- update sepolia deploy config
 - reserve tokens to TX signer when deploying test erc20s
 - checker script ensures token caps are set in dep manager and everything is whitelisted as expected
 - refactor deploy fn to all handle potential token deployment, token cap setting, core contract deployment, token + protocol whitelisting, and ownership transfer
