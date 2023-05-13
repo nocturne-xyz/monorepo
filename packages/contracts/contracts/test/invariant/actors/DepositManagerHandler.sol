@@ -16,7 +16,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {ActorSumSet, LibDepositSumSet} from "../helpers/ActorSumSet.sol";
+import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -25,7 +25,7 @@ import "../../../libs/Types.sol";
 contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
-    using LibDepositSumSet for ActorSumSet;
+    using LibActorSumSet for ActorSumSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -89,11 +89,6 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             _actors.add(_currentActor);
             _actorNum += 1;
         }
-        _;
-    }
-
-    modifier useActor(uint256 actorIndexSeed) {
-        _currentActor = _actors.rand(actorIndexSeed);
         _;
     }
 

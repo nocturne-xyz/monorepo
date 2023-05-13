@@ -226,6 +226,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             uint256 actorBalance = allActors[i].balance;
+            console.logUint(actorBalance);
             uint256 actorBalanceCap = depositManagerHandler
                 .ghost_totalSuppliedGasCompensationFor(allActors[i]);
 
