@@ -640,34 +640,6 @@ contract DepositManagerTest is Test {
         assertLt(ALICE.balance, GAS_COMP_AMOUNT * numDeposits);
     }
 
-    // Token not supported in handler
-    function testCompleteDepositFailureUnsupportedTokenContract() public {
-        // Allow ALICE to direct deposit to teller
-        teller.setDepositSourcePermission(ALICE, true);
-
-        // Deploy and dep manager whitelist new token but not in handler
-        SimpleERC20Token token = new SimpleERC20Token();
-        token.reserveTokens(ALICE, RESERVE_AMOUNT);
-
-        // Approve 50M tokens for deposit
-        vm.prank(ALICE);
-        token.approve(address(teller), RESERVE_AMOUNT);
-
-        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
-            ALICE,
-            address(token),
-            RESERVE_AMOUNT,
-            NocturneUtils.ERC20_ID,
-            NocturneUtils.defaultStealthAddress(),
-            depositManager._nonce(),
-            GAS_COMP_AMOUNT // 10M gas comp
-        );
-
-        vm.prank(ALICE);
-        vm.expectRevert("!supported deposit asset");
-        teller.depositFunds(deposit);
-    }
-
     function testCompleteDepositFailureExceedsGlobalCap() public {
         SimpleERC20Token token = ERC20s[0];
         uint256 chunkAmount = (uint256(GLOBAL_CAP) * (10 ** 18)) / 10;

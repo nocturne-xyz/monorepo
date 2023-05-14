@@ -87,14 +87,12 @@ contract BalanceManagerTest is Test {
         token.reserveTokens(recipient, amount);
 
         StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
-        DepositRequest memory deposit = NocturneUtils.formatDepositRequest(
+        Deposit memory deposit = NocturneUtils.formatDeposit(
             recipient,
             address(token),
             amount,
             ERC20_ID,
-            addr,
-            0, // nonce and gasPrice irrelevant
-            0
+            addr
         );
 
         vm.prank(recipient);

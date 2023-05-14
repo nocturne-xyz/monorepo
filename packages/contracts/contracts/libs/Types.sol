@@ -64,6 +64,13 @@ struct DepositRequest {
     uint256 gasCompensation;
 }
 
+struct Deposit {
+    address spender;
+    EncodedAsset encodedAsset;
+    uint256 value;
+    StealthAddress depositAddr;
+}
+
 struct Action {
     address contractAddress;
     bytes encodedFunction;

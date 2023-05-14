@@ -23,7 +23,7 @@ contract TestBalanceManager is IHandler, BalanceManager {
 
     // Stub to make testing between Teller<>BalanceManager easier
     function handleDeposit(
-        DepositRequest calldata deposit
+        Deposit calldata deposit
     ) external override onlyTeller {
         StealthAddress calldata depositAddr = deposit.depositAddr;
         _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);

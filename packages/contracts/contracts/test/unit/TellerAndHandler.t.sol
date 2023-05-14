@@ -147,14 +147,12 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.startPrank(DEPOSIT_SOURCE);
         token.approve(address(teller), value);
         teller.depositFunds(
-            NocturneUtils.formatDepositRequest(
+            NocturneUtils.formatDeposit(
                 spender,
                 address(token),
                 value,
                 id,
-                depositAddr,
-                0, // nonce and gasPrice irrelevant once past deposit manager
-                0
+                depositAddr
             )
         );
         vm.stopPrank();
@@ -259,7 +257,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         );
 
         // Create dummy deposit
-        DepositRequest memory deposit = DepositRequest({
+        Deposit memory deposit = Deposit({
             spender: ALICE,
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -267,9 +265,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 ERC20_ID
             ),
             value: PER_NOTE_AMOUNT,
-            depositAddr: NocturneUtils.defaultStealthAddress(),
-            nonce: 0,
-            gasCompensation: 0
+            depositAddr: NocturneUtils.defaultStealthAddress()
         });
 
         // Create dummy operation
@@ -313,7 +309,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token = ERC20s[0];
 
         // Create dummy deposit
-        DepositRequest memory deposit = DepositRequest({
+        Deposit memory deposit = Deposit({
             spender: ALICE,
             encodedAsset: AssetUtils.encodeAsset(
                 AssetType.ERC20,
@@ -321,9 +317,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 ERC20_ID
             ),
             value: PER_NOTE_AMOUNT,
-            depositAddr: NocturneUtils.defaultStealthAddress(),
-            nonce: 0,
-            gasCompensation: 0
+            depositAddr: NocturneUtils.defaultStealthAddress()
         });
 
         // Create dummy operation
@@ -409,7 +403,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         vm.startPrank(ALICE); // msg.sender made to be ALICE not DEPOSIT_SOURCE
         vm.expectRevert("Only deposit source");
         teller.depositFunds(
-            DepositRequest({
+            Deposit({
                 spender: ALICE,
                 encodedAsset: AssetUtils.encodeAsset(
                     AssetType.ERC20,
@@ -417,12 +411,36 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     ERC20_ID
                 ),
                 value: PER_NOTE_AMOUNT,
-                depositAddr: NocturneUtils.defaultStealthAddress(),
-                nonce: 0,
-                gasCompensation: 0
+                depositAddr: NocturneUtils.defaultStealthAddress()
             })
         );
         vm.stopPrank();
+    }
+
+    // Token not supported in handler
+    function testCompleteDepositFailureUnsupportedTokenContract() public {
+        // Allow ALICE to direct deposit to teller
+        teller.setDepositSourcePermission(ALICE, true);
+
+        // Deploy and dep manager whitelist new token but not in handler
+        SimpleERC20Token token = new SimpleERC20Token();
+        token.reserveTokens(ALICE, PER_NOTE_AMOUNT);
+
+        // Approve 50M tokens for deposit
+        vm.prank(ALICE);
+        token.approve(address(teller), PER_NOTE_AMOUNT);
+
+        Deposit memory deposit = NocturneUtils.formatDeposit(
+            ALICE,
+            address(token),
+            PER_NOTE_AMOUNT,
+            NocturneUtils.ERC20_ID,
+            NocturneUtils.defaultStealthAddress()
+        );
+
+        vm.prank(ALICE);
+        vm.expectRevert("!supported deposit asset");
+        teller.depositFunds(deposit);
     }
 
     function testProcessBundleTransferSingleJoinSplitWithBundlerComp() public {

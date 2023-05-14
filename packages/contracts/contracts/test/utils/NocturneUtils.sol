@@ -77,7 +77,7 @@ library NocturneUtils {
         StealthAddress memory depositAddr,
         uint256 nonce,
         uint256 gasCompensation
-    ) public pure returns (DepositRequest memory) {
+    ) internal pure returns (DepositRequest memory) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
             asset,
@@ -92,6 +92,28 @@ library NocturneUtils {
                 depositAddr: depositAddr,
                 nonce: nonce,
                 gasCompensation: gasCompensation
+            });
+    }
+
+    function formatDeposit(
+        address spender,
+        address asset,
+        uint256 value,
+        uint256 id,
+        StealthAddress memory depositAddr
+    ) internal pure returns (Deposit memory) {
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            asset,
+            id
+        );
+
+        return
+            Deposit({
+                spender: spender,
+                encodedAsset: encodedAsset,
+                value: value,
+                depositAddr: depositAddr
             });
     }
 
