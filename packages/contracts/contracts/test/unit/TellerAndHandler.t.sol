@@ -962,7 +962,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // op processed = true, as internal revert happened in action
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Cannot call the Nocturne teller",
+                maybeFailureReason: "Cannot call the Nocturne Teller",
                 assetsUnwrapped: true
             })
         );
@@ -975,7 +975,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, true);
-        assertEq(opResults[0].failureReason, "Cannot call the Nocturne teller");
+        assertEq(opResults[0].failureReason, "Cannot call the Nocturne Teller");
 
         // Alice lost some private balance due to bundler comp. Bundler has a
         // little bit of tokens
