@@ -30,13 +30,18 @@ const TEST_TOKEN_RESERVE_AMOUNT_WHOLE = 1_000_000n;
 
 export async function deployNocturne(
   connectedSigner: ethers.Wallet,
-  config: NocturneDeployConfig
+  config: NocturneDeployConfig,
+  reserveTestTokens?: boolean
 ): Promise<NocturneConfig> {
   if (!connectedSigner.provider)
     throw new Error("ethers.Wallet must be connected to provider");
 
   // Maybe deploy erc20s
-  const erc20s = await maybeDeployErc20s(connectedSigner, config.erc20s);
+  const erc20s = await maybeDeployErc20s(
+    connectedSigner,
+    config.erc20s,
+    reserveTestTokens
+  );
   config.erc20s = erc20s;
 
   // Deploy core contracts
@@ -193,7 +198,8 @@ export async function deployNocturneCoreContracts(
 
 async function maybeDeployErc20s(
   connectedSigner: ethers.Wallet,
-  erc20s: Map<string, Erc20Config>
+  erc20s: Map<string, Erc20Config>,
+  reserveTestTokens?: boolean
 ): Promise<Map<string, Erc20Config>> {
   const ret = new Map(Array.from(erc20s.entries()));
   const iSimpleErc20 = new SimpleERC20Token__factory(connectedSigner);
@@ -212,11 +218,14 @@ async function maybeDeployErc20s(
       config.address = token.address;
       ret.set(name, config);
 
-      // mint tokens to connectedSigner
-      await token.reserveTokens(
-        connectedSigner.address,
-        TEST_TOKEN_RESERVE_AMOUNT_WHOLE * 10n ** config.precision
-      );
+      if (reserveTestTokens) {
+        // mint tokens to connectedSigner
+        const tx = await token.reserveTestTokens(
+          connectedSigner.address,
+          TEST_TOKEN_RESERVE_AMOUNT_WHOLE * 10n ** config.precision
+        );
+        await tx.wait(1);
+      }
     }
   }
 

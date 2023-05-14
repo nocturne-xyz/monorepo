@@ -28,7 +28,7 @@ dotenv.config();
     "utf-8"
   );
   const config = loadDeployConfigFromJSON(configString);
-  const nocturneConfig = await deployNocturne(deployer, config);
+  const nocturneConfig = await deployNocturne(deployer, config, true);
   console.log(nocturneConfig);
 
   await checkNocturneDeployment(nocturneConfig, provider);
