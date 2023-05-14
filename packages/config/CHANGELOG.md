@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- update sepolia config
 - add unit test for serializing/deserializing config
 - remove `ProtocolAllowlist` alias
 - fix existing example and sepolia configs to fit new schema

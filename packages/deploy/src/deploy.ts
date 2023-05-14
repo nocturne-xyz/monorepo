@@ -205,7 +205,8 @@ async function maybeDeployErc20s(
 
     if (config.address == "0x0000000000000000000000000000000000000000") {
       console.log(`deploying erc20 ${name}...`);
-      config.address = (await iSimpleErc20.deploy()).address;
+      const token = await iSimpleErc20.deploy();
+      config.address = token.address;
       ret.set(name, config);
     }
   }
