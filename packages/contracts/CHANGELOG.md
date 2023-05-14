@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add natspec docs for handler
+- Add separate deposit struct different from `DepositRequest`
 - add natspec docs to balance manager
 - remove admin prefill logic and replace with new scheme were handling refunds attempts to reserve 1 erc20 token each time if balance == 0
 - fix invariant test address setup so all addrs come from `InvariantsBase.sol`

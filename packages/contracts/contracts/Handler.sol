@@ -115,7 +115,7 @@ contract Handler is
     ///         2. executeActions: A revert here can be due to unpredictable reasons, mainly if
     ///            there is not enough executionGas for the actions or if the call produces more
     ///            refunds than op.maxNumRefunds (neither can be predictably simulated by bundler).
-    ///        3. _makeExternalCall: A revert here only leads to a revert if
+    ///         3. _makeExternalCall: A revert here only leads to a revert if
     ///           op.atomicActions = true (requires all actions to succeed atomically or none at
     ///           all).
     /// @dev The gas usage of an operation can be given an upper bound estimate as a function of
