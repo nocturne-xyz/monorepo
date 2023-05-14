@@ -116,8 +116,6 @@ export class NocturneFrontendSDK {
       encodedAsset,
       value,
       depositAddr,
-      nonce: 0,
-      gasCompensation: 0,
     });
   }
 
