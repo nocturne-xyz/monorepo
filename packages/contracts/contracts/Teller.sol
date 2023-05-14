@@ -131,17 +131,6 @@ contract Teller is
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    /**
-      Process a bundle of operations.
-
-      @dev The maximum gas cost of a call can be estimated without eth_estimateGas
-      1. gas cost of `OperationUtils.computeOperationDigests` and
-      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplits
-      and overall size of op
-      2. maxmimum gas cost of each handleOperation can be estimated using op
-      (refer to inline docs for `handleOperation`)
-    */
-
     /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
     ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
     ///         per op.
