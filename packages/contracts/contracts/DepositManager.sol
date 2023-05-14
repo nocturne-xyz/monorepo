@@ -16,6 +16,10 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import {Utils} from "./libs/Utils.sol";
 import "./libs/Types.sol";
 
+/// @title DepositManager
+/// @author Nocturne Labs
+/// @notice Manages inflow of assets into the Teller. Enforces global rate limits and max deposit
+///         sizes. Enables an offchain actor to filter out certain deposits.
 contract DepositManager is
     DepositManagerBase,
     ReentrancyGuardUpgradeable,
@@ -23,32 +27,55 @@ contract DepositManager is
 {
     using SafeERC20 for IERC20;
 
+    // Struct for erc20 rate limit info
     struct Erc20Cap {
-        uint128 runningGlobalDeposited; // total deposited for asset over last 1h (in precision units), uint128 leaves space for 3x10^20 whole tokens even with 18 decimals
-        uint32 globalCapWholeTokens; // global cap for asset in whole tokens, globalCapWholeTokens * 10^precision should never exceed uint128.max (checked in setter)
-        uint32 maxDepositSizeWholeTokens; // max size of a single deposit per address
-        uint32 lastResetTimestamp; // block.timestamp of last reset (limit at year 2106)
-        uint8 precision; // decimals for asset
+        // Total deposited for asset over last 1h (in precision units), uint128 leaves space for
+        // 3x10^20 whole tokens even with 18 decimals
+        uint128 runningGlobalDeposited;
+        // Global cap for asset in whole tokens, globalCapWholeTokens * 10^precision should never
+        // exceed uint128.max (checked in setter)
+        uint32 globalCapWholeTokens;
+        // Max size of a single deposit per address
+        uint32 maxDepositSizeWholeTokens;
+        // block.timestamp of last reset (limit at year 2106)
+        uint32 lastResetTimestamp;
+        // Decimals for asset, tokens = whole tokens * 10^precision
+        uint8 precision;
     }
 
+    // ERC20 ID
     uint256 constant ERC20_ID = 0;
+    // Gas cost of two ETH transfers
     uint256 constant TWO_ETH_TRANSFERS_GAS = 50_000;
+    // Seconds in an hour
     uint256 constant SECONDS_IN_HOUR = 3_600;
 
+    // Teller contract to deposit assets into
     ITeller public _teller;
+
+    // Weth contract to convert ETH into
     IWeth public _weth;
 
+    // Set of allowed deposit screeners
     mapping(address => bool) public _screeners;
+
+    // Nonce counter for deposit requests
     uint256 public _nonce;
+
+    // Set of hashes for outstanding deposits
     mapping(bytes32 => bool) public _outstandingDepositHashes;
 
+    // Mapping of erc20s to rate limit info
     mapping(address => Erc20Cap) public _erc20Caps;
 
-    // gap for upgrade safety
+    // Gap for upgrade safety
     uint256[50] private __GAP;
 
+    /// @notice Event emitted when a screener is given/revoked permission
     event ScreenerPermissionSet(address screener, bool permission);
 
+    /// @notice Event emitted when a deposit is instantiated, contains all info needed for
+    ///         screener to sign deposit
     event DepositInstantiated(
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -58,6 +85,7 @@ contract DepositManager is
         uint256 gasCompensation
     );
 
+    /// @notice Event emitted when a deposit is retrieved
     event DepositRetrieved(
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -67,6 +95,7 @@ contract DepositManager is
         uint256 gasCompensation
     );
 
+    /// @notice Event emitted when a deposit is completed
     event DepositCompleted(
         address indexed spender,
         EncodedAsset encodedAsset,
@@ -76,6 +105,11 @@ contract DepositManager is
         uint256 gasCompensation
     );
 
+    /// @notice Initializer function
+    /// @param contractName Name of the contract
+    /// @param contractVersion Version of the contract
+    /// @param teller Address of the teller contract
+    /// @param weth Address of the weth contract
     function initialize(
         string memory contractName,
         string memory contractVersion,
@@ -88,6 +122,10 @@ contract DepositManager is
         _weth = IWeth(weth);
     }
 
+    /// @notice Ensures all values in multideposit are <= maxDepositSize
+    /// @dev If erc20 has no cap, then the asset is not supported and modifier reverts
+    /// @param token Address of erc20
+    /// @param values Array of values (deposits)
     modifier enforceErc20DepositSize(address token, uint256[] calldata values) {
         Erc20Cap memory cap = _erc20Caps[token];
 
@@ -110,6 +148,12 @@ contract DepositManager is
         _;
     }
 
+    /// @notice Ensures deposit does not exceed global cap for asset
+    /// @dev Resets hourly global cap if block.timestamp > lastResetTimestamp + 1 hour
+    /// @dev Since we store running count of erc20 deposited in uint128 in Erc20Cap,
+    ///      the checked value must be < uint128.max
+    /// @param encodedAsset Encoded erc20 to check cap for
+    /// @param value Value of deposit
     modifier enforceErc20Cap(
         EncodedAsset calldata encodedAsset,
         uint256 value
@@ -145,6 +189,9 @@ contract DepositManager is
         _erc20Caps[token].runningGlobalDeposited += uint128(value);
     }
 
+    /// @notice Gives/revokes screener permission
+    /// @param screener Address of screener
+    /// @param permission Permission to set
     function setScreenerPermission(
         address screener,
         bool permission
@@ -153,6 +200,13 @@ contract DepositManager is
         emit ScreenerPermissionSet(screener, permission);
     }
 
+    /// @notice Sets global cap for erc20, only callable by owner
+    /// @dev We require that globalCapWholeTokens * (10 ** precision) <= uint128.max, since the
+    ///      running deposited tokens amount is stored in uint128.
+    /// @param token Address of erc20
+    /// @param globalCapWholeTokens Global cap for erc20 in whole tokens
+    /// @param maxDepositSizeWholeTokens Max deposit size for erc20 in whole tokens
+    /// @param precision Decimals for erc20
     function setErc20Cap(
         address token,
         uint32 globalCapWholeTokens,
@@ -176,6 +230,16 @@ contract DepositManager is
         });
     }
 
+    /// @notice Instantiates one or more deposits for an erc20 token.
+    /// @dev Screeners sign and complete deposits on behalf of users after instantiation. Because
+    ///      of this, users include gas compensation ETH with their deposit. This gas compensation
+    ///      is sent to the contract and used to cover the screener when they complete the deposit.
+    ///      Any remaining comp not used for screener compensation is returned to user.
+    /// @dev We require that msg value is divisible by values length, so that each deposit in a
+    ///      multideposit has an equal amount of gas compensation.
+    /// @param token Address of erc20
+    /// @param values Array of values (deposits)
+    /// @param depositAddr Stealth address to deposit to
     function instantiateErc20MultiDeposit(
         address token,
         uint256[] calldata values,
@@ -225,6 +289,10 @@ contract DepositManager is
         IERC20(token).safeTransferFrom(msg.sender, address(this), totalValue);
     }
 
+    /// @notice Instantiates one or more deposits for an ETH, which is converted to wETH internally.
+    /// @dev Total screener gas compensation ends up being msg.value - sum(values)
+    /// @param values Array of values (eth deposits)
+    /// @param depositAddr Stealth address to deposit to
     function instantiateETHMultiDeposit(
         uint256[] calldata values,
         StealthAddress calldata depositAddr
@@ -279,9 +347,12 @@ contract DepositManager is
         _weth.deposit{value: totalDepositAmount}();
     }
 
-    // NOTE: We accept race condition where user could technically retrieve their deposit before
-    // the screener completes it. This would grief the screener but would incur a greater cost to
-    // the user to continually instantiate + prematurely retrieve.
+    /// @notice Retrieves a deposit either prematurely because user cancelled or because screener
+    ///         never ended up completing it.
+    /// @dev We accept race condition where user could technically retrieve their deposit before
+    ///      the screener completes it. This would grief the screener but would incur a greater
+    ///      cost to the user to continually instantiate + prematurely retrieve.
+    /// @param req Deposit request corresponding to deposit to retrieve
     function retrieveDeposit(
         DepositRequest calldata req
     ) external nonReentrant {
@@ -311,6 +382,10 @@ contract DepositManager is
         );
     }
 
+    /// @notice Completes an erc20 deposit.
+    /// @dev Function reverts if completing deposit would exceed global hourly cap.
+    /// @param req Deposit request corresponding to deposit to complete
+    /// @param signature Signature from screener
     function completeErc20Deposit(
         DepositRequest calldata req,
         bytes calldata signature
@@ -318,6 +393,12 @@ contract DepositManager is
         _completeDeposit(req, signature);
     }
 
+    /// @notice Completes a deposit provides a valid screener signature on the deposit request hash.
+    /// @dev We accept that gas compensation will be be imprecise. During spikes in demand, the
+    ///      screener will lose money. During normal demand, the screener should at least break
+    ///      even, perhaps being compensated slightly higher than gas spent to smooth out spikes.
+    /// @param req Deposit request corresponding to deposit to complete
+    /// @param signature Signature from screener
     function _completeDeposit(
         DepositRequest calldata req,
         bytes calldata signature
