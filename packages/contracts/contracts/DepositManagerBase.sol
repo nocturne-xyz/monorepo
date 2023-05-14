@@ -8,6 +8,9 @@ import {EIP712Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/crypt
 // Internal
 import "./libs/Types.sol";
 
+/// @title DepositManagerBase
+/// @author Nocturne Labs
+/// @notice Base contract for DepositManager containing EIP712 signing logic for deposit requests
 abstract contract DepositManagerBase is EIP712Upgradeable {
     bytes32 public constant DEPOSIT_REQUEST_TYPEHASH =
         keccak256(
@@ -29,6 +32,9 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
             "StealthAddress(uint256 h1X,uint256 h1Y,uint256 h2X,uint256 h2Y)"
         );
 
+    /// @notice Internal initializer
+    /// @param contractName Name of the contract
+    /// @param contractVersion Version of the contract
     function __DepositManagerBase_init(
         string memory contractName,
         string memory contractVersion
@@ -36,6 +42,9 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         __EIP712_init(contractName, contractVersion);
     }
 
+    /// @notice Recovers signer from signature on deposit request
+    /// @param req Deposit request
+    /// @param signature Signature on deposit request (hash)
     function _recoverDepositRequestSigner(
         DepositRequest calldata req,
         bytes calldata signature
@@ -44,6 +53,9 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         return ECDSAUpgradeable.recover(digest, signature);
     }
 
+    /// @notice Computes EIP712 digest of deposit request
+    /// @dev The inherited EIP712 domain separator includes block.chainid for replay protection.
+    /// @param req Deposit request
     function _computeDigest(
         DepositRequest calldata req
     ) public view returns (bytes32) {
@@ -53,6 +65,8 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         return ECDSAUpgradeable.toTypedDataHash(domainSeparator, structHash);
     }
 
+    /// @notice Hashes deposit request
+    /// @param req Deposit request
     function _hashDepositRequest(
         DepositRequest memory req
     ) internal pure returns (bytes32) {
@@ -70,6 +84,8 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
             );
     }
 
+    /// @notice Hashes encoded asset
+    /// @param encodedAsset Encoded asset
     function _hashEncodedAsset(
         EncodedAsset memory encodedAsset
     ) internal pure returns (bytes32) {
@@ -83,6 +99,8 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
             );
     }
 
+    /// @notice Hashes stealth address
+    /// @param stealthAddress Stealth address
     function _hashStealthAddress(
         StealthAddress memory stealthAddress
     ) internal pure returns (bytes32) {

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add natspec docs for DepositManager and DepositManagerBase
 - add natspec docs for Teller
 - add natspec docs for handler
 - Add separate deposit struct different from `DepositRequest`
