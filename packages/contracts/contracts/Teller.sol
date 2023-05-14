@@ -22,6 +22,9 @@ import {OperationUtils} from "./libs/OperationUtils.sol";
 import {Groth16} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
+/// @title Teller
+/// @author Nocturne Labs
+/// @notice Teller stores deposited funds and serves as the entry point contract for operations.
 contract Teller is
     ITeller,
     ReentrancyGuardUpgradeable,
@@ -33,17 +36,22 @@ contract Teller is
 {
     using OperationLib for Operation;
 
+    // Handler contract
     IHandler public _handler;
 
+    // JoinSplit verifier contract
     IJoinSplitVerifier public _joinSplitVerifier;
 
+    // Set of contracts which can deposit funds into Teller
     mapping(address => bool) public _depositSources;
 
-    // gap for upgrade safety
+    // Gap for upgrade safety
     uint256[50] private __GAP;
 
+    /// @notice Event emitted when a deposit source is given/revoked permission
     event DepositSourcePermissionSet(address source, bool permission);
 
+    /// @notice Event emitted when an operation is processed/executed (one per operation)
     event OperationProcessed(
         uint256 indexed operationDigest,
         bool indexed opProcessed,
@@ -53,6 +61,9 @@ contract Teller is
         bytes[] callResults
     );
 
+    /// @notice Initializer function
+    /// @param handler Address of the handler contract
+    /// @param joinSplitVerifier Address of the joinsplit verifier contract
     function initialize(
         address handler,
         address joinSplitVerifier
@@ -63,29 +74,31 @@ contract Teller is
         _joinSplitVerifier = IJoinSplitVerifier(joinSplitVerifier);
     }
 
-    modifier onlyThis() {
-        require(msg.sender == address(this), "Only teller");
-        _;
-    }
-
+    /// @notice Only callable by the Handler, so Handler can request assets
     modifier onlyHandler() {
         require(msg.sender == address(_handler), "Only handler");
         _;
     }
 
+    /// @notice Only callable by allowed deposit source
     modifier onlyDepositSource() {
         require(_depositSources[msg.sender], "Only deposit source");
         _;
     }
 
+    /// @notice Pauses contract, only callable by owner
     function pause() external onlyOwner {
         _pause();
     }
 
+    /// @notice Unpauses contract, only callable by owner
     function unpause() external onlyOwner {
         _unpause();
     }
 
+    /// @notice Sets permission for a deposit source
+    /// @param source Address of the contract or EOA
+    /// @param permission Whether or not the source is allowed to deposit funds
     function setDepositSourcePermission(
         address source,
         bool permission
@@ -94,6 +107,9 @@ contract Teller is
         emit DepositSourcePermissionSet(source, permission);
     }
 
+    /// @notice Deposits funds into the Teller contract and calls on handler to add new notes
+    /// @dev Only callable by allowed deposit source when not paused
+    /// @param deposit Deposit
     function depositFunds(
         Deposit calldata deposit
     ) external override whenNotPaused onlyDepositSource {
@@ -105,6 +121,9 @@ contract Teller is
         );
     }
 
+    /// @notice Sends assets to the Handler to fund operation, only callable by Handler contract
+    /// @param encodedAsset Encoded asset being requested
+    /// @param value Amount of asset to send
     function requestAsset(
         EncodedAsset calldata encodedAsset,
         uint256 value
@@ -112,16 +131,10 @@ contract Teller is
         AssetUtils.transferAssetTo(encodedAsset, address(_handler), value);
     }
 
-    /**
-      Process a bundle of operations.
-
-      @dev The maximum gas cost of a call can be estimated without eth_estimateGas
-      1. gas cost of `OperationUtils.computeOperationDigests` and
-      `_verifyAllProofsMetered` can be estimated based on length of op.joinSplits
-      and overall size of op
-      2. maxmimum gas cost of each handleOperation can be estimated using op
-      (refer to inline docs for `handleOperation`)
-    */
+    /// @notice Processes a bundle of operations. Verifies all proofs, then loops through each op
+    ///         and passes to Handler for processing/execution. Emits one OperationProcessed event
+    ///         per op.
+    /// @param bundle Bundle of operations to process
     function processBundle(
         Bundle calldata bundle
     )
@@ -181,6 +194,10 @@ contract Teller is
         return opResults;
     }
 
+    /// @notice Called when Teller is safe transferred an ERC721. Always returns valid selector.
+    /// @dev We always return selector because the Handler will revert if the ERC721 contract is
+    ///      not supported mid deposit. Thus any actual deposits of unsupported ERC721s will be
+    ///      reverted too.
     function onERC721Received(
         address, // operator
         address, // from
@@ -190,6 +207,8 @@ contract Teller is
         return IERC721ReceiverUpgradeable.onERC721Received.selector;
     }
 
+    /// @notice Called when Teller is safe transferred an ERC1155. Always returns valid selector.
+    /// @dev Same rationale for ERC1155 received as ERC721 (above).
     function onERC1155Received(
         address, // operator
         address, // from
@@ -200,6 +219,9 @@ contract Teller is
         return IERC1155ReceiverUpgradeable.onERC1155Received.selector;
     }
 
+    /// @notice Called when Teller is safe batch transferred an ERC1155. Always returns valid
+    ///         selector.
+    /// @dev Same rationale for ERC1155 batched received as ERC721 (above).
     function onERC1155BatchReceived(
         address, // operator
         address, // from
@@ -210,6 +232,8 @@ contract Teller is
         return IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector;
     }
 
+    /// @notice Indicates to caller that Tandler supports ERC165, ERC721Receiver, and
+    ///         ERC1155Receiver
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
@@ -219,9 +243,14 @@ contract Teller is
             (interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId);
     }
 
-    // Verifies the joinsplit proofs of a bundle of transactions
-    // Also returns the gas used to verify per joinsplit
-    // DOES NOT check if nullifiers in each transaction has not been used
+    /// @notice Verifies or batch verifies joinSplit proofs for an array of operations.
+    /// @dev If there is a single proof, it is cheaper to single verify. If multiple proofs,
+    ///      we batch verify.
+    /// @param ops Array of operations
+    /// @param opDigests Array of operation digests in same order as the ops
+    /// @return success Whether or not all proofs were successfully verified
+    /// @return perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof (total batch
+    ///         verification cost divided by number of proofs)
     function _verifyAllProofsMetered(
         Operation[] calldata ops,
         uint256[] memory opDigests

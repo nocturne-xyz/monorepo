@@ -345,6 +345,7 @@ contract Handler is
 
     /// @notice Indicates to caller that Handler supports ERC165, ERC721Receiver, and
     ///         ERC1155Receiver
+    /// @param interfaceId Id of interface to check
     function supportsInterface(
         bytes4 interfaceId
     ) external pure override returns (bool) {
