@@ -314,7 +314,7 @@ contract Handler is
     ) internal returns (bool success, bytes memory result) {
         require(
             action.contractAddress != address(_teller),
-            "Cannot call the Nocturne teller"
+            "Cannot call the Nocturne Teller"
         );
         require(
             _supportedContractAllowlist[action.contractAddress],
