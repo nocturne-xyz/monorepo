@@ -301,7 +301,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       expect((await erc20.balanceOf(teller.address)).toBigInt()).to.equal(
         2n * PER_NOTE_AMOUNT - ALICE_TO_BOB_PUB_VAL
       );
-      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(0n);
+      expect((await erc20.balanceOf(handler.address)).toBigInt()).to.equal(1n);
     };
 
     const offchainChecks = async () => {

@@ -150,9 +150,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
         bytes4[] memory tellerHandlerSelectors = new bytes4[](1);
         tellerHandlerSelectors[0] = tellerHandler.processBundle.selector;
 
-        bytes4[] memory handlerHandlerSelectors = new bytes4[](2);
-        handlerHandlerSelectors[0] = handlerHandler.addToAssetPrefill.selector;
-        handlerHandlerSelectors[1] = handlerHandler.fillBatchWithZeros.selector;
+        bytes4[] memory handlerHandlerSelectors = new bytes4[](1);
+        handlerHandlerSelectors[0] = handlerHandler.fillBatchWithZeros.selector;
 
         targetContract(address(depositManagerHandler));
         targetSelector(
@@ -208,10 +207,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
     }
 
-    function invariant_protocol_handlerAlwaysEndsWithPrefillBalances()
-        external
-    {
-        assert_protocol_handlerAlwaysEndsWithPrefillBalances();
+    function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
+        assert_protocol_handlerErc20BalancesAlwaysZeroOrOne();
     }
 
     /*****************************

@@ -10,22 +10,25 @@ import {AssetUtils} from "./libs/AssetUtils.sol";
 import {OperationUtils} from "./libs/OperationUtils.sol";
 import "./libs/Types.sol";
 
+/// @title BalanceManager
+/// @author Nocturne Labs
+/// @notice Module containing logic for funding the Handler contract during operation processing and
+///         handling refunds for any remaining assets left in the Handler after operation execution.
 contract BalanceManager is CommitmentTreeManager {
     using OperationLib for Operation;
 
+    // Teller contract to send/request assets to/from
     ITeller public _teller;
 
-    // erc721/1155s received via safeTransferFrom, populated by Handler received hooks
+    // Array of received erc721/1155s, populated by Handler onReceived hooks
     EncodedAsset[] public _receivedAssets;
 
-    // Mapping of encoded asset hash => prefilled balance
-    mapping(bytes32 => uint256) public _prefilledAssetBalances;
-
-    // gap for upgrade safety
+    // Gap for upgrade safety
     uint256[50] private __GAP;
 
-    event UpdatedAssetPrefill(EncodedAsset encodedAsset, uint256 balance);
-
+    /// @notice Internal initializer function
+    /// @param teller Address of the teller contract
+    /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
     function __BalanceManager_init(
         address teller,
         address subtreeUpdateVerifier
@@ -34,35 +37,17 @@ contract BalanceManager is CommitmentTreeManager {
         _teller = ITeller(teller);
     }
 
-    modifier notErc721(EncodedAsset calldata encodedAsset) {
-        (AssetType assetType, address assetAddr, uint256 id) = AssetUtils
-            .decodeAsset(encodedAsset);
-        require(assetType != AssetType.ERC721, "not erc721");
-        _;
-    }
-
-    function _addToAssetPrefill(
-        EncodedAsset calldata encodedAsset,
-        uint256 value
-    ) internal notErc721(encodedAsset) {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        _prefilledAssetBalances[assetHash] += value;
-
-        AssetUtils.transferAssetFrom(encodedAsset, msg.sender, value);
-        emit UpdatedAssetPrefill(
-            encodedAsset,
-            _prefilledAssetBalances[assetHash]
-        );
-    }
-
-    /**
-      Process all joinSplits and request all declared publicSpend from the
-      teller, while reserving maxGasAssetCost of gasAsset (asset of joinsplitTxs[0])
-
-      @dev If this function returns normally without reverting, then it is safe
-      to request maxGasAssetCost from teller with the same encodedAsset as
-      joinSplits[0].
-    */
+    /// @notice For each joinSplit in op.joinSplits, check root and nullifier validity against
+    ///         commitment tree manager, then request joinSplit.publicSpend barring tokens for gas
+    ///         payment.
+    /// @dev Before looping through joinSplits, we calculate amount of gas to reserve based on
+    ///      execution gas, number of joinSplits, and number of refunds. Then we loop through
+    ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
+    ///      as possible until we have gotten as the reserve amount we originally calculated. If we
+    ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
+    /// @param op Operation to process joinSplits for
+    /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
+    ///                              teller during (batch) proof verification
     function _processJoinSplitsReservingFee(
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
@@ -76,8 +61,9 @@ contract BalanceManager is CommitmentTreeManager {
             // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
 
-            // Defaults to requesting all publicSpend from teller
+            // Default to requesting all publicSpend from teller
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
+
             // If we still need to reserve more gas and the current
             // `joinSplit` is spending the gasAsset, then reserve what we can
             // from this `joinSplit`
@@ -105,9 +91,17 @@ contract BalanceManager is CommitmentTreeManager {
                 );
             }
         }
+
         require(gasAssetToReserve == 0, "Too few gas tokens");
     }
 
+    /// @notice Gather reserved gas assets and pay bundler calculated amount.
+    /// @dev Bundler can be paid less than reserved amount. Reserved amount is refunded to user's
+    /// stealth address in this case.
+    /// @param op Operation, which contains info on how much gas was reserved
+    /// @param opResult OperationResult, which contains info on how much gas was actually spent
+    /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof
+    /// @param bundler Address of the bundler to pay
     function _gatherReservedGasAssetAndPayBundler(
         Operation calldata op,
         OperationResult memory opResult,
@@ -129,10 +123,11 @@ contract BalanceManager is CommitmentTreeManager {
         }
     }
 
-    /**
-      Get the total number of refunds to handle after making external action calls.
-      @dev This should only be called AFTER external calls have been made during action execution.
-    */
+    /// @notice Returns max number of refunds to handle.
+    /// @dev The number of refunds actually inserted into commitment tree may be less than this
+    ///      number, this is upper bound. This is used by Handler to ensure
+    ///      outstanding refunds < op.maxNumRefunds.
+    /// @param op Operation to calculate max number of refunds for
     function _totalNumRefundsToHandle(
         Operation calldata op
     ) internal view returns (uint256) {
@@ -142,11 +137,13 @@ contract BalanceManager is CommitmentTreeManager {
             _receivedAssets.length;
     }
 
-    /**
-      Refund all current teller assets back to refundAddr. The list of assets
-      to refund is specified in joinSplits and the state variable
-      _receivedAssets.
-    */
+    /// @notice Handle all refunds for an operation, potentially sending back any leftover assets
+    ///         to the Teller and inserting new note commitments for the sent back assets.
+    /// @dev Checks for refunds from joinSplits, op.encodedRefundAssets, any assets received from
+    ///      onReceived hooks (erc721/1155s). A refund occurs if any of the checked assets have
+    ///      outstanding balance > 0 in the Handler. If a refund occurs, the Handler will transfer
+    ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
+    /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
@@ -165,16 +162,28 @@ contract BalanceManager is CommitmentTreeManager {
         delete _receivedAssets;
     }
 
+    /// @notice Handle a refund for a single asset
+    /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
+    ///      back to the Teller and inserts a new note commitment into the commitment tree.
+    /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
+    ///      to withold 1 token from the refund each time if the handler's current balance is 0.
+    ///      This saves gas for future users because it avoids writing to a zeroed out storage slot
+    ///      each time for the handler's balance. This single token can technically be taken by any
+    ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
+    ///      on user gas.
+    /// @param encodedAsset Encoded asset to check for refund
+    /// @param refundAddr Stealth address to refund to
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr
     ) internal {
-        bytes32 assetHash = AssetUtils.hashEncodedAsset(encodedAsset);
-        uint256 preFilledBalance = _prefilledAssetBalances[assetHash];
-
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
-        if (currentBalance > preFilledBalance) {
-            uint256 difference = currentBalance - preFilledBalance;
+
+        (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
+        uint256 amountToWithhold = assetType == AssetType.ERC20 ? 1 : 0;
+
+        if (currentBalance > amountToWithhold) {
+            uint256 difference = currentBalance - amountToWithhold;
             AssetUtils.transferAssetTo(
                 encodedAsset,
                 address(_teller),

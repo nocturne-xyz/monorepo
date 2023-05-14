@@ -119,6 +119,16 @@ contract TellerHandler is OperationGenerator {
     }
 
     function processBundle(uint256 seed) external {
+        // Always ensure prefills exist so we don't deal with that logic in invariants
+        if (joinSplitToken.balanceOf(address(handler)) == 0) {
+            joinSplitToken.reserveTokens(address(this), 1);
+            joinSplitToken.transfer(address(handler), 1);
+        }
+        if (swapErc20.balanceOf(address(handler)) == 0) {
+            swapErc20.reserveTokens(address(this), 1);
+            swapErc20.transfer(address(handler), 1);
+        }
+
         (
             Operation memory op,
             GeneratedOperationMetadata memory meta

@@ -370,6 +370,8 @@ export async function deployContractsWithDummyConfig(
   const config = await deployNocturne(connectedSigner, deployConfig);
   checkNocturneDeployment(config, connectedSigner.provider);
 
+  await prefillErc20s(connectedSigner, config);
+
   // Log for dev site script
   const { depositManagerProxy, tellerProxy, handlerProxy } = config.contracts;
   console.log("Teller address:", tellerProxy.proxy);
@@ -408,6 +410,19 @@ async function deployNonErc20Tokens(
     connectedSigner
   ).deploy();
   return [erc721, erc1155];
+}
+
+async function prefillErc20s(
+  connectedSigner: ethers.Wallet,
+  config: NocturneConfig
+): Promise<void> {
+  for (const [_, erc20] of config.erc20s.entries()) {
+    const token = SimpleERC20Token__factory.connect(
+      erc20.address,
+      connectedSigner
+    );
+    await token.reserveTokens(config.contracts.handlerProxy.proxy, 1);
+  }
 }
 
 function formatTestTokens(

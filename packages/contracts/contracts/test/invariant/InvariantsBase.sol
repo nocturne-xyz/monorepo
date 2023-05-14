@@ -64,44 +64,21 @@ contract InvariantsBase is Test {
     function assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
         internal
     {
-        assertEq(
-            depositManagerHandler.erc20().balanceOf(address(teller)),
-            depositManagerHandler.ghost_completeDepositSumErc20() -
-                tellerHandler.ghost_totalTransferredOutOfTeller() -
-                tellerHandler.ghost_totalBundlerPayout()
-        );
+        uint256 tellerBalance = depositErc20.balanceOf(address(teller));
+        uint256 expectedInTeller = depositManagerHandler
+            .ghost_completeDepositSumErc20() -
+            tellerHandler.ghost_totalTransferredOutOfTeller() -
+            tellerHandler.ghost_totalBundlerPayout();
+
+        assertEq(tellerBalance, expectedInTeller);
     }
 
-    function assert_protocol_handlerAlwaysEndsWithPrefillBalances() internal {
-        // ERC20 prefills left in handler
-        bytes32 hashedErc20 = AssetUtils.hashEncodedAsset(
-            AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(depositErc20),
-                uint256(AssetType.ERC20)
-            )
-        );
-        assertEq(
-            depositErc20.balanceOf(address(handler)),
-            handlerHandler.handler()._prefilledAssetBalances(hashedErc20)
-        );
+    function assert_protocol_handlerErc20BalancesAlwaysZeroOrOne() internal {
+        assertGe(depositErc20.balanceOf(address(handler)), 0);
+        assertLe(depositErc20.balanceOf(address(handler)), 1);
 
-        // ERC1155 prefills left in handler
-        uint256[] memory erc1155Ids = handlerHandler
-            .ghost_prefilledErc1155Ids();
-        for (uint256 i = 0; i < erc1155Ids.length; i++) {
-            bytes32 hashedErc1155 = AssetUtils.hashEncodedAsset(
-                AssetUtils.encodeAsset(
-                    AssetType.ERC1155,
-                    address(depositErc1155),
-                    erc1155Ids[i]
-                )
-            );
-            assertEq(
-                depositErc1155.balanceOf(address(handler), erc1155Ids[i]),
-                handlerHandler.handler()._prefilledAssetBalances(hashedErc1155)
-            );
-        }
+        assertGe(swapErc20.balanceOf(address(handler)), 0);
+        assertLe(swapErc20.balanceOf(address(handler)), 1);
     }
 
     // _______________DEPOSIT_ETH_______________
@@ -187,7 +164,7 @@ contract InvariantsBase is Test {
         internal
     {
         assertEq(
-            depositManagerHandler.erc20().balanceOf(
+            depositErc20.balanceOf(
                 address(depositManagerHandler.depositManager())
             ),
             depositManagerHandler.ghost_instantiateDepositSumErc20() -
@@ -203,7 +180,7 @@ contract InvariantsBase is Test {
 
         uint256 sum = 0;
         for (uint256 i = 0; i < allActors.length; i++) {
-            sum += depositManagerHandler.erc20().balanceOf(allActors[i]);
+            sum += depositErc20.balanceOf(allActors[i]);
         }
 
         assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
@@ -214,7 +191,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositErc20.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_retrieveDepositSumErc20For(
                     allActors[i]
                 )
@@ -229,7 +206,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
-                depositManagerHandler.erc20().balanceOf(allActors[i]),
+                depositErc20.balanceOf(allActors[i]),
                 depositManagerHandler.ghost_instantiateDepositSumErc20For(
                     allActors[i]
                 )
@@ -249,6 +226,7 @@ contract InvariantsBase is Test {
 
         for (uint256 i = 0; i < allActors.length; i++) {
             uint256 actorBalance = allActors[i].balance;
+            console.logUint(actorBalance);
             uint256 actorBalanceCap = depositManagerHandler
                 .ghost_totalSuppliedGasCompensationFor(allActors[i]);
 
@@ -271,10 +249,10 @@ contract InvariantsBase is Test {
     function assert_operation_totalSwapErc20ReceivedMatchesTellerBalance()
         internal
     {
-        assertEq(
-            swapErc20.balanceOf(address(teller)),
-            tellerHandler.ghost_totalSwapErc20Received()
-        );
+        uint256 swapErc20Balance = swapErc20.balanceOf(address(teller));
+        uint256 expectedSwapErc20Balance = tellerHandler
+            .ghost_totalSwapErc20Received();
+        assertEq(swapErc20Balance, expectedSwapErc20Balance);
     }
 
     function assert_operation_tellerOwnsAllSwapErc721s() internal {

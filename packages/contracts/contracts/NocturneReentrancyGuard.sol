@@ -6,9 +6,8 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 // Modified from ReentrancyGuard.sol from OpenZeppelin contracts
 contract NocturneReentrancyGuard is Initializable {
     uint256 public constant NOT_ENTERED = 1;
-    uint256 public constant ENTERED_PREFILL = 2;
-    uint256 public constant ENTERED_HANDLE_OPERATION = 3;
-    uint256 public constant ENTERED_EXECUTE_ACTIONS = 4;
+    uint256 public constant ENTERED_HANDLE_OPERATION = 2;
+    uint256 public constant ENTERED_EXECUTE_ACTIONS = 3;
 
     uint256 private _operationStage;
 
@@ -16,18 +15,6 @@ contract NocturneReentrancyGuard is Initializable {
     uint256[50] private __GAP;
 
     function __NocturneReentrancyGuard_init() internal onlyInitializing {
-        _operationStage = NOT_ENTERED;
-    }
-
-    modifier addToAssetPrefillGuard() {
-        require(
-            _operationStage == NOT_ENTERED,
-            "Reentry into addAssetToPrefill"
-        );
-        _operationStage = ENTERED_PREFILL;
-
-        _;
-
         _operationStage = NOT_ENTERED;
     }
 

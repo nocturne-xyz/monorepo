@@ -5,7 +5,7 @@ struct ActorSumSet {
     address[] actors;
 }
 
-library LibDepositSumSet {
+library LibActorSumSet {
     function addToActorSum(
         ActorSumSet storage self,
         address actor,

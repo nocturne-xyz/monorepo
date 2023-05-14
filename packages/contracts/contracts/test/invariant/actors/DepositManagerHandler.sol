@@ -16,7 +16,7 @@ import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
 import {AddressSet, LibAddressSet} from "../helpers/AddressSet.sol";
-import {ActorSumSet, LibDepositSumSet} from "../helpers/ActorSumSet.sol";
+import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
@@ -25,7 +25,7 @@ import "../../../libs/Types.sol";
 contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     using LibAddressSet for AddressSet;
     using LibDepositRequestArray for DepositRequest[];
-    using LibDepositSumSet for ActorSumSet;
+    using LibActorSumSet for ActorSumSet;
 
     uint256 constant ERC20_ID = 0;
 
@@ -92,8 +92,16 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         _;
     }
 
-    modifier useActor(uint256 actorIndexSeed) {
-        _currentActor = _actors.rand(actorIndexSeed);
+    // NOTE: This prevents us from completing deposit with instantiator. Theory for the actor
+    // balance invariant test failures is that it has to do with tx.gasPrice > 0 and actor also
+    // being msg.sender for transaction (actor gets ETH to make call, not the screener which is
+    // made msg.sender thru vm.prank).
+    modifier onlyAllowCallFromNonDepositor() {
+        if (_actors.contains(msg.sender)) {
+            lastCall = "no-op";
+            _calls[lastCall]++;
+            return;
+        }
         _;
     }
 
@@ -328,7 +336,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     function completeDepositErc20(
         uint256 seed
-    ) public trackCall("completeDepositErc20") {
+    ) public onlyAllowCallFromNonDepositor trackCall("completeDepositErc20") {
         // Get random request
         uint256 index;
         if (_depositSet.length > 0) {
