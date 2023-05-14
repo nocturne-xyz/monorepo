@@ -127,13 +127,14 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       );
     }
 
+    const startBlock = config.startBlock();
     const updater = new SubtreeUpdater(
       handlerContract,
       adapter,
       logger,
       getRedis(),
       prover,
-      { fillBatchLatency }
+      { fillBatchLatency, startBlock }
     );
 
     const { promise } = updater.start(throttleMs);
