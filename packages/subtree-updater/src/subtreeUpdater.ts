@@ -41,6 +41,7 @@ const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {
   fillBatchLatency?: number;
+  startBlock?: number;
 }
 
 export class SubtreeUpdater {
@@ -59,6 +60,7 @@ export class SubtreeUpdater {
 
   fillBatchTimeout: NodeJS.Timeout | undefined;
   fillBatchLatency: number | undefined;
+  startBlock: number;
 
   constructor(
     handlerContract: Handler,
@@ -86,6 +88,8 @@ export class SubtreeUpdater {
     // TODO make this a redis KV store
     const kv = new InMemoryKVStore();
     this.tree = new SparseMerkleProver(kv);
+
+    this.startBlock = opts?.startBlock ?? 0;
   }
 
   start(queryThrottleMs?: number): SubtreeUpdaterHandle {
@@ -224,7 +228,7 @@ export class SubtreeUpdater {
 
     let merkleIndex = 0;
     return this.adapter
-      .iterInsertions(0, {
+      .iterInsertions(this.startBlock, {
         throttleMs: queryThrottleMs,
       })
       .tap((_) => {

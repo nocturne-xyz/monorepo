@@ -23,11 +23,6 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     "deposit manager contract address"
   )
   .option(
-    "--log-dir <string>",
-    "directory to write logs to",
-    "./logs/subtree-updater"
-  )
-  .option(
     "--use-mock-prover",
     "use mock prover to generate proofs instead of rapidsnark. If false, must supply --rapidsnark-executable-path, --witness-generator-path, --zkey-path, and --vkey-path.",
     false
@@ -53,6 +48,15 @@ export const runSubtreeUpdater = new Command("subtree-updater")
     "maximum period of time to wait before pulling new insertions",
     parseInt
   )
+  .option(
+    "--log-dir <string>",
+    "directory to write logs to",
+    "./logs/subtree-updater"
+  )
+  .option(
+    "--stdout-log-level <string>",
+    "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
+  )
   .action(async (options) => {
     const {
       configNameOrPath,
@@ -64,6 +68,7 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       witnessGeneratorPath,
       zkeyPath,
       vkeyPath,
+      stdoutLogLevel,
     } = options;
 
     const config = loadNocturneConfig(configNameOrPath);
@@ -94,7 +99,12 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       ? (fillBatchLatencyMs as number)
       : undefined;
 
-    const logger = makeLogger(logDir, "subtree-updater", "subtree-updater");
+    const logger = makeLogger(
+      logDir,
+      "subtree-updater",
+      "subtree-updater",
+      stdoutLogLevel
+    );
 
     let prover: SubtreeUpdateProver;
     if (useMockProver) {
@@ -127,13 +137,14 @@ export const runSubtreeUpdater = new Command("subtree-updater")
       );
     }
 
+    const startBlock = config.startBlock();
     const updater = new SubtreeUpdater(
       handlerContract,
       adapter,
       logger,
       getRedis(),
       prover,
-      { fillBatchLatency }
+      { fillBatchLatency, startBlock }
     );
 
     const { promise } = updater.start(throttleMs);

@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add `--stdout-log-level` post-rewrite
+- pull start block from config in cli
 - ignore fill batch failure in case where batch already filled
 - only prune tree after proof job is submitted to bullmq
 - update .env.example
