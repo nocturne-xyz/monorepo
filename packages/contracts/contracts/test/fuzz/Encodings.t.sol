@@ -57,4 +57,17 @@ contract EncodingsTest is Test {
 
         assertEq(expected, encodedPathAndhash);
     }
+
+    function testFuzz_SplitUint256ToLimbs(
+        uint8 lowerSplit,
+        uint256 number
+    ) public {
+        (uint256 hi, uint256 lo) = TreeUtils._splitUint256ToLimbs(
+            number,
+            lowerSplit
+        );
+
+        assertEq(hi, number >> lowerSplit);
+        assertEq(lo, number & ((1 << lowerSplit) - 1));
+    }
 }
