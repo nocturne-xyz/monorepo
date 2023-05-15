@@ -20,9 +20,11 @@ contract TestTreeUtils is Test {
             hi
         );
 
-        // expect ncodedPathAndHash to contain 011 as the hash bits and 12 as the index to subtree root
+        // expect encodedPathAndHash to contain 011 as the hash bits and the most significant
+        // 28 bits of the index of the idx for path bits
         uint256 expected = (3 <<
-            (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) | 12;
+            (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) |
+            (idx >> 4);
 
         assertEq(expected, encodedPathAndhash);
     }

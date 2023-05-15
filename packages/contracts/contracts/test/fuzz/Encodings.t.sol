@@ -35,8 +35,8 @@ contract EncodingsTest is Test {
         uint256 idxUnbounded,
         uint256 accumulatorHash
     ) public {
-        uint256 largestIdxBatchSizeFactorOfTreeSize = (4 ** 16) /
-            TreeUtils.BATCH_SIZE;
+        uint256 largestIdxBatchSizeFactorOfTreeSize = ((4 ** 16) /
+            TreeUtils.BATCH_SIZE) - 1;
         uint256 idxBatchSizeFactorOfTreeSize = bound(
             idxUnbounded,
             0,
@@ -51,12 +51,9 @@ contract EncodingsTest is Test {
             hi
         );
 
-        uint256 first28BitMask = uint256((1 << 28) - 1);
-        uint256 first28BitsOfIdx = uint256(idx & first28BitMask);
-
         uint256 expected = (hi <<
             (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) |
-            first28BitsOfIdx;
+            (idx >> 4);
 
         assertEq(expected, encodedPathAndhash);
     }
