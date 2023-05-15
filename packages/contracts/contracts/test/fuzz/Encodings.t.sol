@@ -35,14 +35,9 @@ contract EncodingsTest is Test {
         uint256 idxUnbounded,
         uint256 accumulatorHash
     ) public {
-        uint256 largestIdxBatchSizeFactorOfTreeSize = ((4 ** 16) /
-            TreeUtils.BATCH_SIZE) - 1;
-        uint256 idxBatchSizeFactorOfTreeSize = bound(
-            idxUnbounded,
-            0,
-            largestIdxBatchSizeFactorOfTreeSize
-        );
-        uint256 idx = idxBatchSizeFactorOfTreeSize * TreeUtils.BATCH_SIZE;
+        uint256 largestBatchIndex = ((4 ** 16) / TreeUtils.BATCH_SIZE) - 1;
+        uint256 batchIndex = bound(idxUnbounded, 0, largestBatchIndex);
+        uint256 idx = batchIndex * TreeUtils.BATCH_SIZE;
 
         (uint256 hi, ) = TreeUtils.uint256ToFieldElemLimbs(accumulatorHash);
 
@@ -53,7 +48,7 @@ contract EncodingsTest is Test {
 
         uint256 expected = (hi <<
             (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) |
-            (idx >> 4);
+            (idx >> (2 * TreeUtils.BATCH_SUBTREE_DEPTH));
 
         assertEq(expected, encodedPathAndhash);
     }

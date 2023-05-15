@@ -24,7 +24,7 @@ contract TestTreeUtils is Test {
         // 28 bits of the index of the idx for path bits
         uint256 expected = (3 <<
             (2 * (TreeUtils.DEPTH - TreeUtils.BATCH_SUBTREE_DEPTH))) |
-            (idx >> 4);
+            (idx >> (2 * TreeUtils.BATCH_SUBTREE_DEPTH));
 
         assertEq(expected, encodedPathAndhash);
     }
