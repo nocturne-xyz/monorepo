@@ -1,4 +1,4 @@
-import { utils } from "ethers";
+import { ethers, utils } from "ethers";
 import { Address } from "./types";
 
 export const ERC20_ID = 0n;
@@ -90,8 +90,9 @@ export class AssetTrait {
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
     const encodedAssetBits = encodedAssetAddr.toString(2).padStart(256, "0");
     const assetBits = encodedAssetBits.slice(96);
-    const assetAddr =
+    const assetAddrLowercase =
       "0x" + BigInt(`0b${assetBits}`).toString(16).padStart(40, "0");
+    const assetAddr = ethers.utils.getAddress(assetAddrLowercase);
 
     const assetTypeBits = encodedAssetBits.slice(94, 96);
     let assetType: AssetType;

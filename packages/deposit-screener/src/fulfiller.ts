@@ -53,7 +53,6 @@ export class DepositScreenerFulfiller {
   txSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
-  submissionQueue: Queue;
 
   constructor(
     depositManagerAddress: Address,
@@ -64,9 +63,6 @@ export class DepositScreenerFulfiller {
   ) {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
-    this.submissionQueue = new Queue(SUBMISSION_QUEUE, {
-      connection: this.redis,
-    });
 
     this.txSigner = txSigner;
     this.attestationSigner = attestationSigner;
@@ -85,6 +81,7 @@ export class DepositScreenerFulfiller {
       [...this.supportedAssets.entries()].map(([ticker, config]) => {
         // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
         const logger = parentLogger.child({ assetTicker: ticker });
+        logger.info(`starting deposit screener fulfiller for asset ${ticker}`);
         const rateLimiter = new DepositRateLimiter(
           config.globalCapWholeTokens * 10n ** config.precision,
           ONE_HOUR_IN_MS

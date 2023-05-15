@@ -171,7 +171,7 @@ export class DepositScreenerProcessor {
         const decodedAsset = AssetTrait.decode(depositRequest.encodedAsset);
         if (!this.supportedAssets.has(decodedAsset.assetAddr)) {
           childLogger.warn(
-            `received deposit request for unsupported asset ${decodedAsset}`
+            `received deposit request for unsupported asset at address ${decodedAsset.assetAddr}`
           );
           await this.db.setDepositRequestStatus(
             depositRequest,
@@ -191,7 +191,7 @@ export class DepositScreenerProcessor {
 
         if (isSafe) {
           childLogger.info(
-            "deposit passed first screening stage. pushing to fulfillment queue"
+            "deposit passed first screening stage. pushing to delay queue"
           );
           await this.scheduleSecondScreeningPhase(childLogger, depositRequest);
           await this.db.setDepositRequestStatus(
@@ -300,6 +300,7 @@ export class DepositScreenerProcessor {
         );
         const jobTag = getFulfillmentJobTag(assetTicker);
 
+        // submit to it
         await fulfillmentQueue.add(jobTag, jobData);
         await this.db.setDepositRequestStatus(
           depositRequest,
