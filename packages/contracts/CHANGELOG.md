@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add fuzz tests for asset and pathAndHash encodings
 - add natspec docs for NocturneReentrancyGuard
 - add natspec docs for DepositManager and DepositManagerBase
 - add natspec docs for Teller
