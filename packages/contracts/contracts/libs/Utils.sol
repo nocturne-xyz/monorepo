@@ -17,7 +17,8 @@ library Utils {
 
     function sum(uint256[] calldata arr) internal pure returns (uint256) {
         uint256 total = 0;
-        for (uint256 i = 0; i < arr.length; i++) {
+        uint256 arrLength = arr.length;
+        for (uint256 i = 0; i < arrLength; i++) {
             total += arr[i];
         }
         return total;

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove joinsplit compliance circuit (saved elsewhere, don't want dead code in repo though)
 - make commitment tree quaternary:
   - add slicing util templates to lib
   - decode `encodedPathAndHash` using LE ordering

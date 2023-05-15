@@ -167,7 +167,8 @@ library OperationUtils {
         EncodedAsset[] calldata encodedRefundAssets
     ) internal pure returns (bytes memory) {
         bytes memory refundAssetsPayload;
-        for (uint256 i = 0; i < encodedRefundAssets.length; i++) {
+        uint256 numRefundAssets = encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
             refundAssetsPayload = abi.encodePacked(
                 refundAssetsPayload,
                 encodedRefundAssets[i].encodedAssetAddr,

@@ -69,7 +69,8 @@ library QueueLib {
         uint256[] memory items
     ) internal returns (uint128 last) {
         last = self.last;
-        for (uint256 i = 0; i < items.length; i += 1) {
+        uint256 numItems = items.length;
+        for (uint256 i = 0; i < numItems; i += 1) {
             last += 1;
             uint256 item = items[i];
             if (item != uint256(0)) {
@@ -115,7 +116,8 @@ library QueueLib {
         Queue storage self,
         uint256 item
     ) internal view returns (bool) {
-        for (uint256 i = self.first; i <= self.last; i++) {
+        uint256 last = self.last;
+        for (uint256 i = self.first; i <= last; i++) {
             if (self.queue[i] == item) {
                 return true;
             }
