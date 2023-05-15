@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make for loop length caching consistent across all .sol files
 - add fuzz tests for asset and pathAndHash encodings
 - add natspec docs for NocturneReentrancyGuard
 - add natspec docs for DepositManager and DepositManagerBase
