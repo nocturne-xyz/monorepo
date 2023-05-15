@@ -140,7 +140,8 @@ contract Handler is
         require(block.timestamp <= op.deadline, "expired deadline");
 
         // Ensure refund assets supported
-        for (uint256 i = 0; i < op.encodedRefundAssets.length; i++) {
+        uint256 numRefundAssets = op.encodedRefundAssets.length;
+        for (uint256 i = 0; i < numRefundAssets; i++) {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 op.encodedRefundAssets[i]
             );

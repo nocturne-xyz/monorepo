@@ -61,7 +61,8 @@ library LibOffchainMerkleTree {
         OffchainMerkleTree storage self,
         uint256[] memory ncs
     ) internal {
-        for (uint256 i = 0; i < ncs.length; i++) {
+        uint256 ncsLength = ncs.length;
+        for (uint256 i = 0; i < ncsLength; i++) {
             require(ncs[i] < Utils.SNARK_SCALAR_FIELD);
             _insertUpdate(self, ncs[i]);
         }

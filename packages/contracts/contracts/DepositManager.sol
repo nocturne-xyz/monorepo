@@ -141,7 +141,9 @@ contract DepositManager is
 
         uint256 maxDepositSize = cap.maxDepositSizeWholeTokens *
             (10 ** cap.precision);
-        for (uint256 i = 0; i < values.length; i++) {
+
+        uint256 numValues = values.length;
+        for (uint256 i = 0; i < numValues; i++) {
             require(values[i] <= maxDepositSize, "maxDepositSize exceeded");
         }
 
@@ -245,7 +247,8 @@ contract DepositManager is
         uint256[] calldata values,
         StealthAddress calldata depositAddr
     ) external payable nonReentrant enforceErc20DepositSize(token, values) {
-        require(msg.value % values.length == 0, "!gas comp split");
+        uint256 numValues = values.length;
+        require(msg.value % numValues == 0, "!gas comp split");
 
         {
             EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
@@ -254,7 +257,6 @@ contract DepositManager is
                 ERC20_ID
             );
 
-            uint256 gasCompensationPerDeposit = msg.value / values.length;
             uint256 nonce = _nonce;
             DepositRequest memory req = DepositRequest({
                 spender: msg.sender,
@@ -262,10 +264,10 @@ contract DepositManager is
                 value: 0,
                 depositAddr: depositAddr,
                 nonce: 0,
-                gasCompensation: gasCompensationPerDeposit
+                gasCompensation: msg.value / numValues
             });
 
-            for (uint256 i = 0; i < values.length; i++) {
+            for (uint256 i = 0; i < numValues; i++) {
                 req.value = values[i];
                 req.nonce = nonce + i;
 
@@ -283,7 +285,7 @@ contract DepositManager is
             }
         }
 
-        _nonce += values.length;
+        _nonce += numValues;
 
         uint256 totalValue = Utils.sum(values);
         IERC20(token).safeTransferFrom(msg.sender, address(this), totalValue);
@@ -306,43 +308,45 @@ contract DepositManager is
         require(totalDepositAmount <= msg.value, "msg.value < deposit weth");
 
         uint256 gasCompensation = msg.value - totalDepositAmount;
-        require(gasCompensation % values.length == 0, "!gas comp split");
+        uint256 numValues = values.length;
+        require(gasCompensation % numValues == 0, "!gas comp split");
 
-        EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(_weth),
-            ERC20_ID
-        );
-
-        uint256 gasCompensationPerDeposit = gasCompensation / values.length;
-        uint256 nonce = _nonce;
-        DepositRequest memory req = DepositRequest({
-            spender: msg.sender,
-            encodedAsset: encodedWeth,
-            value: 0,
-            depositAddr: depositAddr,
-            nonce: 0,
-            gasCompensation: gasCompensationPerDeposit
-        });
-
-        for (uint256 i = 0; i < values.length; i++) {
-            req.value = values[i];
-            req.nonce = nonce + i;
-
-            bytes32 depositHash = _hashDepositRequest(req);
-            _outstandingDepositHashes[depositHash] = true;
-
-            emit DepositInstantiated(
-                req.spender,
-                req.encodedAsset,
-                req.value,
-                req.depositAddr,
-                req.nonce,
-                req.gasCompensation
+        {
+            EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(_weth),
+                ERC20_ID
             );
+
+            uint256 nonce = _nonce;
+            DepositRequest memory req = DepositRequest({
+                spender: msg.sender,
+                encodedAsset: encodedWeth,
+                value: 0,
+                depositAddr: depositAddr,
+                nonce: 0,
+                gasCompensation: gasCompensation / numValues
+            });
+
+            for (uint256 i = 0; i < numValues; i++) {
+                req.value = values[i];
+                req.nonce = nonce + i;
+
+                bytes32 depositHash = _hashDepositRequest(req);
+                _outstandingDepositHashes[depositHash] = true;
+
+                emit DepositInstantiated(
+                    req.spender,
+                    req.encodedAsset,
+                    req.value,
+                    req.depositAddr,
+                    req.nonce,
+                    req.gasCompensation
+                );
+            }
         }
 
-        _nonce += values.length;
+        _nonce += numValues;
 
         _weth.deposit{value: totalDepositAmount}();
     }

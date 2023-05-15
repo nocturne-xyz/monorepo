@@ -63,14 +63,17 @@ library Groth16 {
             uint256[] memory publicInputAccumulators
         )
     {
+        uint256 allPisLength = allPis.length;
+        uint256 numProofs = proofs.length;
+
         uint256 numPublicInputs = allPis[0].length;
-        for (uint256 i = 1; i < allPis.length; i++) {
+        for (uint256 i = 1; i < allPisLength; i++) {
             require(
                 numPublicInputs == allPis[i].length,
                 "Public input mismatch during batch verification."
             );
         }
-        uint256[] memory entropy = new uint256[](proofs.length);
+        uint256[] memory entropy = new uint256[](numProofs);
         publicInputAccumulators = new uint256[](numPublicInputs + 1);
 
         // Generate entropy for each proof and accumulate each PI
@@ -78,7 +81,7 @@ library Groth16 {
         uint256 challengerState = uint256(
             keccak256(abi.encode(proofs, blockhash(block.number - 1)))
         );
-        for (uint256 proofIndex = 0; proofIndex < proofs.length; proofIndex++) {
+        for (uint256 proofIndex = 0; proofIndex < numProofs; proofIndex++) {
             if (proofIndex == 0) {
                 entropy[proofIndex] = 1;
             } else {
@@ -112,11 +115,11 @@ library Groth16 {
             }
         }
 
-        proofAsandAggegateC = new Pairing.G1Point[](proofs.length + 1);
+        proofAsandAggegateC = new Pairing.G1Point[](numProofs + 1);
         proofAsandAggegateC[0] = proofs[0].A;
 
         // raise As from each proof to entropy[i]
-        for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
+        for (uint256 proofIndex = 1; proofIndex < numProofs; proofIndex++) {
             uint256 s = entropy[proofIndex];
             proofAsandAggegateC[proofIndex] = Pairing.scalar_mul(
                 proofs[proofIndex].A,
@@ -126,7 +129,7 @@ library Groth16 {
 
         // MSM(proofCs, entropy)
         Pairing.G1Point memory msmProduct = proofs[0].C;
-        for (uint256 proofIndex = 1; proofIndex < proofs.length; proofIndex++) {
+        for (uint256 proofIndex = 1; proofIndex < numProofs; proofIndex++) {
             uint256 s = entropy[proofIndex];
             Pairing.G1Point memory term = Pairing.scalar_mul(
                 proofs[proofIndex].C,
@@ -135,7 +138,7 @@ library Groth16 {
             msmProduct = Pairing.addition(msmProduct, term);
         }
 
-        proofAsandAggegateC[proofs.length] = msmProduct;
+        proofAsandAggegateC[numProofs] = msmProduct;
 
         return (proofAsandAggegateC, publicInputAccumulators);
     }
@@ -145,13 +148,14 @@ library Groth16 {
         uint256[8][] memory proof8s,
         uint256[][] memory allPis
     ) internal view returns (bool success) {
+        uint256 proof8sLength = proof8s.length;
         require(
-            allPis.length == proof8s.length,
+            allPis.length == proof8sLength,
             "Invalid inputs length for a batch"
         );
 
-        Proof[] memory proofs = new Proof[](proof8s.length);
-        for (uint256 i = 0; i < proof8s.length; i++) {
+        Proof[] memory proofs = new Proof[](proof8sLength);
+        for (uint256 i = 0; i < proof8sLength; i++) {
             proofs[i] = _proof8ToStruct(proof8s[i]);
         }
 
@@ -212,7 +216,9 @@ library Groth16 {
             vk.IC[0],
             publicInputAccumulators[0]
         );
-        for (uint256 i = 1; i < publicInputAccumulators.length; i++) {
+
+        uint256 piAccumulatorsLength = publicInputAccumulators.length;
+        for (uint256 i = 1; i < piAccumulatorsLength; i++) {
             Pairing.G1Point memory product = Pairing.scalar_mul(
                 vk.IC[i],
                 publicInputAccumulators[i]
