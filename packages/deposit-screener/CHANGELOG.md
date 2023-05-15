@@ -2,6 +2,13 @@
 
 ### Unreleased
 
+- add fulfiller to `docker-compose.yml`
+- add fulfiller to CLI
+- add fulfillment queue logic in `DepositScreenerFulfiller`
+  - have separate fulfillment queue for each asset
+  - make a bullmq `Worker` for each queue that enforces rate limit
+  - move tx submission into fulfiller
+- add `DepositRateLimiter` that keeps track of a moving window of recent deposits and can check if rate limit would be exceeded.
 - update `.env.example`
 - go back to only one docker-compose file
 - add `--stdout-log-level` option to CLI

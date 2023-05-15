@@ -50,6 +50,7 @@ export class DepositScreenerFulfiller {
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
+  txSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
   submissionQueue: Queue;
@@ -67,12 +68,14 @@ export class DepositScreenerFulfiller {
       connection: this.redis,
     });
 
+    this.txSigner = txSigner;
     this.attestationSigner = attestationSigner;
+    this.signerMutex = new Mutex();
+
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
       txSigner
     );
-    this.signerMutex = new Mutex();
 
     this.supportedAssets = supportedAssets;
   }
@@ -167,7 +170,7 @@ export class DepositScreenerFulfiller {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
       // TODO: fetch from config instead
-      chainId: BigInt(await this.attestationSigner.getChainId()),
+      chainId: BigInt(await this.txSigner.getChainId()),
       verifyingContract: this.depositManagerContract.address,
     };
 

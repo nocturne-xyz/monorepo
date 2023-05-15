@@ -9,7 +9,7 @@ import { loadNocturneConfig } from "@nocturne-xyz/config";
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. must supply deposit manager contract address as options."
+    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply conifig via `--config-path-or-name`"
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -44,18 +44,7 @@ const runProcess = new Command("processor")
     if (!rpcUrl) {
       throw new Error("missing RPC_URL");
     }
-    const txSignerKey = process.env.TX_SIGNER_KEY;
-    if (!txSignerKey) {
-      throw new Error("missing TX_SIGNER_KEY");
-    }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-    const txSigner = new ethers.Wallet(txSignerKey, provider);
-
-    const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
-    if (!attestationSignerKey) {
-      throw new Error("missing ATTESTATION_SIGNER_KEY");
-    }
-    const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
     const logger = makeLogger(
       logDir,
@@ -66,8 +55,7 @@ const runProcess = new Command("processor")
     const processor = new DepositScreenerProcessor(
       adapter,
       config.depositManagerAddress(),
-      attestationSigner,
-      txSigner,
+      provider,
       getRedis(),
       logger,
       config.erc20s,
