@@ -26,6 +26,7 @@ const runFulfiller = new Command("fulfiller")
   .action(async (options) => {
     const { configNameOrPath, logDir, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
+    console.log(config);
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {

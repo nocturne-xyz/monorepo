@@ -33,7 +33,7 @@ services:
       context: ../..
       dockerfile: packages/deposit-screener/Dockerfile
     restart: always
-    command: "run fulfiller --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-processor"
+    command: "run fulfiller --config-name-or-path ${CONFIG_NAME_OR_PATH} --log-dir /logs/deposit-screener-fulfiller"
     environment:
       - REDIS_URL=${REDIS_URL}
       - REDIS_PASSWORD=${REDIS_PASSWORD}

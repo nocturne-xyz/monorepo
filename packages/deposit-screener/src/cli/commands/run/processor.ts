@@ -32,6 +32,7 @@ const runProcess = new Command("processor")
   .action(async (options) => {
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
+    console.log("config", config);
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;

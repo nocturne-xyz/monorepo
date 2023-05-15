@@ -3323,7 +3323,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
-    "@nocturne-xyz/config": 1.0.4-alpha
+    "@nocturne-xyz/config": 1.0.6-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
     "@nocturne-xyz/sdk": 1.0.114-alpha
@@ -3385,7 +3385,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.5-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@1.0.6-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3407,16 +3407,6 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
-
-"@nocturne-xyz/config@npm:1.0.4-alpha":
-  version: 1.0.4-alpha
-  resolution: "@nocturne-xyz/config@npm:1.0.4-alpha"
-  dependencies:
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-  checksum: 205f6dc305a3e1d4456ef9348864f0489f5ce1f9e5d4333f7b9f32e78318c8ec05674a16b580991e0813b23371fd2f7498ced83e7386223dfeb4ad4c31a9f9fb
-  languageName: node
-  linkType: hard
 
 "@nocturne-xyz/contracts@1.0.22-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
@@ -3477,7 +3467,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
-    "@nocturne-xyz/config": 1.0.5-alpha
+    "@nocturne-xyz/config": 1.0.6-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
     "@nocturne-xyz/sdk": 1.0.114-alpha
@@ -3771,7 +3761,7 @@ __metadata:
   resolution: "@nocturne-xyz/subtree-updater@workspace:packages/subtree-updater"
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": 1.0.4-alpha
+    "@nocturne-xyz/config": 1.0.6-alpha
     "@nocturne-xyz/contracts": 1.0.22-alpha
     "@nocturne-xyz/offchain-utils": 0.1.3
     "@nocturne-xyz/sdk": 1.0.114-alpha
