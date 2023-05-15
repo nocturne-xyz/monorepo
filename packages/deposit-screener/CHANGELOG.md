@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add window recovery logic to fulfiller
 - add fulfiller to `docker-compose.yml`
 - add fulfiller to CLI
 - add fulfillment queue logic in `DepositScreenerFulfiller`

@@ -87,10 +87,28 @@ export class DepositScreenerFulfiller {
           ONE_HOUR_IN_MS
         );
 
+        let recovered = false;
+        const maybeRecover = async () => {
+          if (!recovered) {
+            const cap = await this.depositManagerContract._erc20Caps(
+              config.address
+            );
+            rateLimiter.add({
+              amount:
+                cap.runningGlobalDeposited.toBigInt() *
+                10n ** BigInt(cap.precision),
+              timestamp: cap.lastResetTimestamp + ONE_HOUR_IN_MS,
+            });
+            recovered = true;
+          }
+        };
+
         // make a worker listening to the current asset's fulfillment queue
         const worker = new Worker(
           getFulfillmentQueueName(ticker),
           async (job: Job<DepositRequestJobData>) => {
+            await maybeRecover();
+
             const depositRequest: DepositRequest = JSON.parse(
               job.data.depositRequestJson
             );
@@ -127,12 +145,15 @@ export class DepositScreenerFulfiller {
             }
 
             // otherwise, sign and submit it
-            await this.signAndSubmitDeposit(childLogger, depositRequest).catch(
-              (e) => {
-                childLogger.error(e);
-                throw new Error(e);
-              }
-            );
+            const timestamp = await this.signAndSubmitDeposit(
+              childLogger,
+              depositRequest
+            ).catch((e) => {
+              childLogger.error(e);
+              throw new Error(e);
+            });
+
+            rateLimiter.add({ amount: depositRequest.value, timestamp });
           },
           { connection: this.redis, autorun: true }
         );
@@ -161,10 +182,11 @@ export class DepositScreenerFulfiller {
     };
   }
 
+  // returns timestamp of the block that the deposit was included in
   async signAndSubmitDeposit(
     logger: Logger,
     depositRequest: DepositRequest
-  ): Promise<void> {
+  ): Promise<number> {
     const domain: EIP712Domain = {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
@@ -218,9 +240,11 @@ export class DepositScreenerFulfiller {
         depositRequest,
         DepositRequestStatus.Completed
       );
+
+      const block = await this.txSigner.provider.getBlock(receipt.blockNumber);
+      return block.timestamp;
     } else {
-      // NOTE: not sure if possible that tx submission passes but event not found
-      logger.error(
+      throw new Error(
         `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
       );
     }
