@@ -4,6 +4,10 @@ export function zip<T, U>(a: T[], b: U[]): [T, U][] {
   return a.map((x, i) => [x, b[i]]);
 }
 
+export function unzip<T, U>(a: [T, U][]): [T[], U[]] {
+  return [a.map(([a, _]) => a), a.map(([_, b]) => b)];
+}
+
 export function range(start: number, stop?: number, step = 1): number[] {
   if (!stop) {
     stop = start;

@@ -2,6 +2,7 @@ export { sortNotesByValue, getJoinSplitRequestTotalValue, sleep } from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {
   zip,
+  unzip,
   range,
   groupByArr,
   groupByMap,

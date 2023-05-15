@@ -70,6 +70,7 @@ const runProcess = new Command("processor")
       txSigner,
       getRedis(),
       logger,
+      config.erc20s,
       config.contracts.startBlock
     );
 
