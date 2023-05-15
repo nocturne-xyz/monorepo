@@ -12,12 +12,11 @@ import { DepositRateLimiter } from "./rateLimiter";
 import { DepositScreenerDB } from "./db";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
-import { Job, Queue, Worker } from "bullmq";
+import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
 import {
   DepositRequestJobData,
   DepositRequestStatus,
-  SUBMISSION_QUEUE,
   getFulfillmentQueueName,
 } from "./types";
 import {
@@ -34,6 +33,7 @@ import {
   DEPOSIT_MANAGER_CONTRACT_NAME,
   DEPOSIT_MANAGER_CONTRACT_VERSION,
 } from "./typedData/constants";
+import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
 export interface DepositScreenerFulfillerHandle {
@@ -91,9 +91,11 @@ export class DepositScreenerFulfiller {
         const worker = new Worker(
           getFulfillmentQueueName(ticker),
           async (job: Job<DepositRequestJobData>) => {
-            logger.debug("attempting to fulfill deposit request");
             const depositRequest: DepositRequest = JSON.parse(
               job.data.depositRequestJson
+            );
+            logger.info(
+              `attempting to fulfill deposit request: ${depositRequest}`
             );
             const hash = hashDepositRequest(depositRequest);
             const childLogger = logger.child({

@@ -298,6 +298,7 @@ export class DepositScreenerProcessor {
           getFulfillmentQueueName(assetTicker),
           { connection: this.redis }
         );
+
         const jobTag = getFulfillmentJobTag(assetTicker);
 
         // submit to it

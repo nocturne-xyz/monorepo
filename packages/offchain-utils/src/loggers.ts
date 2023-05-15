@@ -100,16 +100,8 @@ export function makeTestLogger(service: string, processName: string): Logger {
     format: presets.cli.dev,
     // add metadata saying which process this log is coming from
     defaultMeta: { service, process: processName },
-    exceptionHandlers: [
-      new transports.Console({
-        level: "error",
-      }),
-    ],
-    rejectionHandlers: [
-      new transports.Console({
-        level: "error",
-      }),
-    ],
+    exceptionHandlers: [new transports.Console()],
+    rejectionHandlers: [new transports.Console()],
     transports: [
       new transports.Console({
         level: logLevel,

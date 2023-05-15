@@ -23,7 +23,7 @@ export class DepositRateLimiter {
   }
 
   windowSum(): bigint {
-    return this.windowSum();
+    return this.sum;
   }
 
   add(entry: RateLimitWindowEntry): void {
