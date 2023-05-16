@@ -5,7 +5,7 @@ export interface RateLimitWindowEntry {
   amount: bigint;
 }
 
-export class DepositRateLimiter {
+export class RateLimitWindow {
   rateLimit: bigint;
   period: number;
   sum: bigint;

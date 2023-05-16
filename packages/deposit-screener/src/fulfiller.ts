@@ -8,7 +8,7 @@ import {
   parseEventsFromContractReceipt,
   unzip,
 } from "@nocturne-xyz/sdk";
-import { DepositRateLimiter } from "./rateLimiter";
+import { RateLimitWindow } from "./rateLimitWindow";
 import { DepositScreenerDB } from "./db";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
@@ -88,20 +88,8 @@ export class DepositScreenerFulfiller {
           logger.info(
             `starting deposit screener fulfiller for asset ${ticker}`
           );
-          const rateLimiter = new DepositRateLimiter(
-            config.globalCapWholeTokens * 10n ** config.precision,
-            ONE_HOUR_IN_MS
-          );
-          const cap = await this.depositManagerContract._erc20Caps(
-            config.address
-          );
-          rateLimiter.add({
-            amount:
-              cap.runningGlobalDeposited.toBigInt() *
-              10n ** BigInt(cap.precision),
-            timestamp: cap.lastResetTimestamp + ONE_HOUR_IN_MS,
-          });
 
+          const window = await this.getRateLimitWindowForAsset(config);
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
             getFulfillmentQueueName(ticker),
@@ -120,10 +108,10 @@ export class DepositScreenerFulfiller {
               });
 
               // update rate limit window
-              rateLimiter.removeOldEntries();
+              window.removeOldEntries();
 
               // if the deposit would exceed the rate limit, pause the queue
-              if (rateLimiter.wouldExceedRateLimit(depositRequest.value)) {
+              if (window.wouldExceedRateLimit(depositRequest.value)) {
                 childLogger.warn(
                   `fulfilling deposit ${hash} would exceed rate limit`
                 );
@@ -131,7 +119,7 @@ export class DepositScreenerFulfiller {
                 // not sure if it's possible for the RHS to be < 0, but my gut tells me it is so adding the check just to be safe
                 const queueDelay = max(
                   0,
-                  rateLimiter.timeWhenAmountAvailable(depositRequest.value) -
+                  window.timeWhenAmountAvailable(depositRequest.value) -
                     Date.now()
                 );
 
@@ -155,7 +143,7 @@ export class DepositScreenerFulfiller {
               );
               const timestamp = block.timestamp;
 
-              rateLimiter.add({ amount: depositRequest.value, timestamp });
+              window.add({ amount: depositRequest.value, timestamp });
             },
             { connection: this.redis, autorun: true }
           );
@@ -250,5 +238,22 @@ export class DepositScreenerFulfiller {
         `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
       );
     }
+  }
+
+  async getRateLimitWindowForAsset(
+    asset: Erc20Config
+  ): Promise<RateLimitWindow> {
+    const window = new RateLimitWindow(
+      asset.globalCapWholeTokens * 10n ** asset.precision,
+      ONE_HOUR_IN_MS
+    );
+    const cap = await this.depositManagerContract._erc20Caps(asset.address);
+    window.add({
+      amount:
+        cap.runningGlobalDeposited.toBigInt() * 10n ** BigInt(cap.precision),
+      timestamp: cap.lastResetTimestamp + ONE_HOUR_IN_MS,
+    });
+
+    return window;
   }
 }
