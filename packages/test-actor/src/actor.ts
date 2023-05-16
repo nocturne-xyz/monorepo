@@ -13,6 +13,7 @@ import {
   Asset,
   randomBigInt,
   OperationRequestBuilder,
+  computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -150,7 +151,7 @@ export class TestActor {
     }
     const [asset, value] = maybeErc20AndValue;
 
-    let opRequest;
+    let opRequest: OperationRequest;
     if (true) {
       opRequest = await this.erc20TransferOpRequest(asset, value);
     } else {
@@ -160,7 +161,10 @@ export class TestActor {
     // prepare, sign, and prove
     const preSign = await this.sdk.prepareOperation(opRequest);
     const signed = this.sdk.signOperation(preSign);
-    const proven = proveOperation(this.prover, signed);
+
+    console.log(`proving operation: ${computeOperationDigest(signed)}`);
+    const proven = await proveOperation(this.prover, signed);
+    console.log(JSON.stringify(proven));
 
     // submit
     const res = await fetch(`${this.bundlerEndpoint}/relay`, {
@@ -222,5 +226,6 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  return Math.random() < 0.5;
+  // return Math.random() < 0.5;
+  return false;
 }
