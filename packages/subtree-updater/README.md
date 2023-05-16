@@ -41,7 +41,6 @@ ACTUALLY_PROVE_SUBTREE_UPDATE=true USE_RAPIDSNARK=true yarn test:e2e
 One can additionally pass in optional arguments:
 
 - `--network <endpoint>`: connect to a different RPC node enpoint
-- `--dbPath <path>`: persist state somewhere other than `./db` (the default)
 - `--tmp-dir <path>`: write intermediate files from rapidsnark somewhere other than `./prover-tmp` (the default)
 - `--interval <seconds>`: specify how often subtree updater should poll
 - `--fill-batches`: make the updater fill batches

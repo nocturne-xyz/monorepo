@@ -22,6 +22,7 @@ import {
   testGasAssets,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
+import { MockEthToTokenConverter } from "../src/conversion";
 
 const { gatherNotes } = __private;
 
@@ -102,6 +103,7 @@ describe("prepareOperation", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
 
@@ -148,6 +150,7 @@ describe("prepareOperation", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
 
@@ -199,6 +202,7 @@ describe("prepareOperation", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
     const refundAddr = signer.generateRandomStealthAddress();
@@ -252,6 +256,7 @@ describe("prepareOperation", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
 
@@ -296,6 +301,7 @@ describe("prepareOperation", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
 

@@ -10,6 +10,7 @@ import { OperationRequestBuilder } from "../src";
 import { prepareOperation } from "../src/prepareOperation";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { signOperation } from "../src/signOperation";
+import { MockEthToTokenConverter } from "../src/conversion";
 
 describe("signOperation", () => {
   it("signs an operation with 1 action, 1 unwrap, 1 payment", async () => {
@@ -20,6 +21,7 @@ describe("signOperation", () => {
     const deps = {
       db: nocturneDB,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       merkle: merkleProver,
       viewer: signer,
       handlerContract,
