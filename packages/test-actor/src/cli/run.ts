@@ -4,7 +4,6 @@ import {
   Teller__factory,
 } from "@nocturne-xyz/contracts";
 import {
-  DepositRequest,
   InMemoryKVStore,
   SparseMerkleProver,
   NocturneDB,
@@ -26,8 +25,8 @@ export const run = new Command("run")
     "must supply .env file with RPC_URL, BUNDLER_URL, SUBGRAPH_URL, TX_SIGNER_KEY, and NOCTURNE_SPENDING_KEY."
   )
   .requiredOption(
-    "--nocturne-config-path <string>",
-    "path to serialized NocturneConfig"
+    "--config-name-or-path <string>",
+    "config name or path to Nocturne contract JSON config file"
   )
   .requiredOption(
     "--wasm-path <string>",
@@ -39,21 +38,11 @@ export const run = new Command("run")
     "--op-requests-path <string>",
     "path to a JSON file containing the set of op requests the actor will perform"
   )
-  .option(
-    "--deposit-requests-path <string>",
-    "path to a JSON file containing the set of deposit requests the actor will perform"
-  )
   .action(async (options) => {
-    const {
-      nocturneConfigPath,
-      wasmPath,
-      zkeyPath,
-      vkeyPath,
-      opRequestsPath,
-      depositRequestsPath,
-    } = options;
+    const { configNameOrPath, wasmPath, zkeyPath, vkeyPath, opRequestsPath } =
+      options;
 
-    const config = loadNocturneConfig(nocturneConfigPath);
+    const config = loadNocturneConfig(configNameOrPath);
 
     const rpcUrl = process.env.RPC_URL;
     if (!rpcUrl) {
@@ -108,18 +97,9 @@ export const run = new Command("run")
       syncAdapter
     );
 
-    const vkey = JSON.parse(vkeyPath);
+    const vkeyStr = fs.readFileSync(vkeyPath).toString();
+    const vkey = JSON.parse(vkeyStr);
     const prover = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-
-    let depositRequests: DepositRequest[] = [];
-    if (depositRequestsPath) {
-      const depositRequestsStr = fs
-        .readFileSync(depositRequestsPath)
-        .toString();
-      depositRequests = BigintJSON.parse(
-        depositRequestsStr
-      ) as DepositRequest[];
-    }
 
     let opRequests: OperationRequest[] = [];
     if (opRequestsPath) {
@@ -127,13 +107,20 @@ export const run = new Command("run")
       opRequests = BigintJSON.parse(opRequestsStr) as OperationRequest[];
     }
 
+    const testTokens = new Map(
+      Array.from(config.erc20s.entries()).filter(([key]) =>
+        key.toLowerCase().includes("test")
+      )
+    );
+
     const actor = new TestActor(
+      signingProvider,
       teller,
       depositManager,
       sdk,
       prover,
       bundlerEndpoint,
-      depositRequests,
+      testTokens,
       opRequests
     );
 

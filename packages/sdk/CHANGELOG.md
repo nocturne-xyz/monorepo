@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add default indexing throttle to SDK to avoid subgraph rate limits
+- draw start block from config in wallet sdk
+- wallet sdk holds ref to `NocturneConfig`
+- fix subgraph indexing bug where we try to destructure props from empty state diff obj
+- DB can return undefined for unknown start block
 - fix bug in `SparseMerkleTree` where rightmost leaf is prunable, resulting in incorrect insertions
 - add `fromCompressedPoints` method to `StealthAddress` trait
 - add `batches` method to `ClosableAsyncIterator`

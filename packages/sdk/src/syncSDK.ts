@@ -18,8 +18,10 @@ import { consecutiveChunks } from "./utils/functional";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
+const DEFAULT_THROTTLE_MS = 2000;
 
 export interface SyncOpts {
+  startBlock: number;
   // defaults to `false`.
   // If this is set to `true`, `sync` will only update the DB
   // and will not update the in-memory tree.
@@ -38,7 +40,7 @@ export async function syncSDK(
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
-  const nextBlockToSync = await db.nextBlock();
+  const nextBlockToSync = (await db.nextBlock()) ?? opts?.startBlock ?? 0;
   const currentBlock = await provider.getBlockNumber();
   console.log(
     `syncing SDK from block ${nextBlockToSync} to ${currentBlock}...`
@@ -47,6 +49,7 @@ export async function syncSDK(
   const newDiffs = adapter.iterStateDiffs(nextBlockToSync, {
     maxChunkSize: NOTES_MAX_CHUNK_SIZE,
     endBlock: currentBlock,
+    throttleMs: DEFAULT_THROTTLE_MS,
   });
 
   // decrypt notes and compute nullifiers

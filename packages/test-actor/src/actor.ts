@@ -1,57 +1,50 @@
 import {
   DepositManager,
-  SimpleERC1155Token__factory,
   SimpleERC20Token__factory,
-  SimpleERC721Token__factory,
   Teller,
 } from "@nocturne-xyz/contracts";
 import {
-  DepositRequest,
   NocturneWalletSDK,
   OperationRequest,
   sleep,
   JoinSplitProver,
   proveOperation,
-  AssetTrait,
-  AssetType,
-  EncodedAsset,
-  StealthAddress,
 } from "@nocturne-xyz/sdk";
-import { randomInt } from "crypto";
 import * as JSON from "bigint-json-serialization";
+import { Erc20Config } from "@nocturne-xyz/config";
+import { ethers } from "ethers";
 
-interface DepositToDispatch {
-  encodedAsset: EncodedAsset;
-  value: bigint;
-  depositAddr: StealthAddress;
-}
+const FIVE_MINUTES_AS_MILLIS = 5 * 60 * 1000;
 
 export class TestActor {
+  txSigner: ethers.Wallet;
   teller: Teller;
   depositManager: DepositManager;
   sdk: NocturneWalletSDK;
   prover: JoinSplitProver;
   bundlerEndpoint: string;
 
-  depositRequests: DepositToDispatch[];
+  erc20s: Map<string, Erc20Config>;
   opRequests: OperationRequest[];
 
   constructor(
+    txSigner: ethers.Wallet,
     teller: Teller,
     depositManager: DepositManager,
     sdk: NocturneWalletSDK,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
-    depositRequests: DepositRequest[],
+    erc20s: Map<string, Erc20Config>,
     opRequests: OperationRequest[]
   ) {
+    this.txSigner = txSigner;
     this.teller = teller;
     this.depositManager = depositManager;
     this.sdk = sdk;
     this.prover = prover;
     this.bundlerEndpoint = bundlerEndpoint;
 
-    this.depositRequests = depositRequests;
+    this.erc20s = erc20s;
     this.opRequests = opRequests;
   }
 
@@ -60,8 +53,10 @@ export class TestActor {
       await this.sdk.sync();
 
       if (flipCoin()) {
+        console.log("switched on deposit");
         await this.deposit();
       } else {
+        console.log("switched on operation");
         await this.operation();
       }
     }
@@ -99,66 +94,50 @@ export class TestActor {
 
   private async deposit() {
     // choose a random deposit request and set its nonce
-    const deposit = randomElem(this.depositRequests);
+    console.log(`erc20 entries: ${Array.from(this.erc20s.entries())}`);
+    const [erc20Name, erc20Config] = randomElem(
+      Array.from(this.erc20s.entries())
+    );
+    const randomValue = randomInt(1_000);
 
-    // approve asset to depositManager
-    const asset = AssetTrait.decode(deposit.encodedAsset);
-    switch (asset.assetType) {
-      case AssetType.ERC20: {
-        const contract = SimpleERC20Token__factory.connect(
-          asset.assetAddr,
-          this.depositManager.signer
-        );
-        const tx = await contract.approve(
-          this.depositManager.address,
-          deposit.value
-        );
-        await tx.wait(1);
-        break;
-      }
-      case AssetType.ERC721: {
-        const contract = SimpleERC721Token__factory.connect(
-          asset.assetAddr,
-          this.depositManager.signer
-        );
-        const tx = await contract.approve(
-          this.depositManager.address,
-          asset.id
-        );
-        await tx.wait(1);
-        break;
-      }
-      case AssetType.ERC1155: {
-        const contract = SimpleERC1155Token__factory.connect(
-          asset.assetAddr,
-          this.depositManager.signer
-        );
-        // NOTE: AFAICT ERC1155 only has "approveAll"
-        const tx = await contract.setApprovalForAll(
-          this.depositManager.address,
-          true
-        );
-        await tx.wait(1);
-        break;
-      }
-    }
+    console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
+    const erc20Token = SimpleERC20Token__factory.connect(
+      erc20Config.address,
+      this.txSigner
+    );
+    const reserveTx = await erc20Token.reserveTokens(
+      this.txSigner.address,
+      randomValue
+    );
+    await reserveTx.wait(1);
+
+    console.log(`approving tokens. token: ${erc20Name}, value: ${randomValue}`);
+    const approveTx = await erc20Token.approve(
+      this.depositManager.address,
+      randomValue
+    );
+    await approveTx.wait(1);
 
     // submit
     console.log(
-      `instantiating erc20 deposit request ${JSON.stringify(deposit)}`
+      `instantiating erc20 deposit request for ${erc20Name} with value ${randomValue}`
     );
     const instantiateDepositTx =
       await this.depositManager.instantiateErc20MultiDeposit(
-        asset.assetAddr,
-        [deposit.value],
-        deposit.depositAddr
+        erc20Token.address,
+        [randomValue],
+        this.sdk.signer.generateRandomStealthAddress()
       );
     await instantiateDepositTx.wait(1);
 
     // TODO request from deposit screener instead
     console.log("waiting for deposit to be processed");
-    await sleep(10_000);
+    await sleep(FIVE_MINUTES_AS_MILLIS);
   }
+}
+
+function randomInt(max: number) {
+  return Math.floor(Math.random() * max);
 }
 
 function randomElem<T>(arr: T[]): T {
@@ -166,5 +145,5 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  return Math.random() < 0.5;
+  return true; // TODO: make 50% after deposits work
 }

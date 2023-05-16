@@ -19,6 +19,7 @@ import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 
 export class NocturneWalletSDK {
+  protected config: NocturneConfig;
   protected handlerContract: Handler;
   protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
@@ -35,20 +36,19 @@ export class NocturneWalletSDK {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter
   ) {
-    let config: NocturneConfig;
     if (typeof configOrNetworkName == "string") {
-      config = loadNocturneConfig(configOrNetworkName);
+      this.config = loadNocturneConfig(configOrNetworkName);
     } else {
-      config = configOrNetworkName;
+      this.config = configOrNetworkName;
     }
 
-    this.gasAssets = Array.from(config.erc20s.values())
+    this.gasAssets = Array.from(this.config.erc20s.values())
       .filter((config) => config.isGasAsset)
       .map(({ address }) => AssetTrait.erc20AddressToAsset(address));
 
     this.signer = signer;
     this.handlerContract = Handler__factory.connect(
-      config.handlerAddress(),
+      this.config.handlerAddress(),
       provider
     );
     this.merkleProver = merkleProver;
@@ -61,7 +61,10 @@ export class NocturneWalletSDK {
       provider: this.handlerContract.provider,
       viewer: this.signer,
     };
-    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
+    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver, {
+      startBlock: this.config.contracts.startBlock,
+      skipMerkleProverUpdates: false,
+    });
   }
 
   async prepareOperation(
