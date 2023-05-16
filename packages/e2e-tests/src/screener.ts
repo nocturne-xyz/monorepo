@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { TeardownFn, makeRedisInstance } from "./utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import {
-  DepositScreenerProcessor,
+  DepositScreenerScreener,
   DepositScreenerFulfiller,
   SubgraphScreenerSyncAdapter,
 } from "@nocturne-xyz/deposit-screener";
@@ -24,7 +24,7 @@ export async function startDepositScreener(
   supportedAssets: Map<string, Erc20Config>
 ): Promise<TeardownFn> {
   const redis = await getRedis();
-  const stopProcessor = await startDepositScreenerProcessor(
+  const stopProcessor = await startDepositScreenerScreener(
     config,
     redis,
     supportedAssets
@@ -42,7 +42,7 @@ export async function startDepositScreener(
   };
 }
 
-async function startDepositScreenerProcessor(
+async function startDepositScreenerScreener(
   config: DepositScreenerConfig,
   redis: IORedis,
   supportedAssets: Map<string, Erc20Config>
@@ -52,7 +52,7 @@ async function startDepositScreenerProcessor(
   const adapter = new SubgraphScreenerSyncAdapter(subgraphUrl);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const logger = makeTestLogger("deposit-screener", "processor");
-  const processor = new DepositScreenerProcessor(
+  const screener = new DepositScreenerScreener(
     adapter,
     depositManagerAddress,
     provider,
@@ -61,7 +61,7 @@ async function startDepositScreenerProcessor(
     supportedAssets
   );
 
-  const { promise, teardown } = await processor.start();
+  const { promise, teardown } = await screener.start();
   return async () => {
     await teardown();
     await promise;

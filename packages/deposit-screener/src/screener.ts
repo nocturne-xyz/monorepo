@@ -31,14 +31,14 @@ import { secsToMillis } from "./utils";
 import { Logger } from "winston";
 import { Erc20Config } from "@nocturne-xyz/config";
 
-export interface DepositScreenerProcessorHandle {
+export interface DepositScreenerScreenerHandle {
   // promise that resolves when the service is done
   promise: Promise<void>;
   // function to teardown the service
   teardown: () => Promise<void>;
 }
 
-export class DepositScreenerProcessor {
+export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
@@ -89,7 +89,7 @@ export class DepositScreenerProcessor {
 
   async start(
     queryThrottleMs?: number
-  ): Promise<DepositScreenerProcessorHandle> {
+  ): Promise<DepositScreenerScreenerHandle> {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );

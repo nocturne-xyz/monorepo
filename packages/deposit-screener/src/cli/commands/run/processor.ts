@@ -1,10 +1,11 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
-import { DepositScreenerProcessor } from "../../../processor";
+import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { DepositScreenerFulfiller } from "../../../fulfiller";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -47,13 +48,25 @@ const runProcess = new Command("processor")
     }
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
+    const txSignerKey = process.env.TX_SIGNER_KEY;
+    if (!txSignerKey) {
+      throw new Error("missing TX_SIGNER_KEY");
+    }
+    const txSigner = new ethers.Wallet(txSignerKey, provider);
+
+    const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
+    if (!attestationSignerKey) {
+      throw new Error("missing ATTESTATION_SIGNER_KEY");
+    }
+    const attestationSigner = new ethers.Wallet(attestationSignerKey);
+
     const logger = makeLogger(
       logDir,
       "deposit-screener",
       "processor",
       stdoutLogLevel
     );
-    const processor = new DepositScreenerProcessor(
+    const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress(),
       provider,
@@ -63,8 +76,18 @@ const runProcess = new Command("processor")
       config.contracts.startBlock
     );
 
-    const { promise } = await processor.start(throttleMs);
-    await promise;
+    const fulfiller = new DepositScreenerFulfiller(
+      config.depositManagerAddress(),
+      txSigner,
+      attestationSigner,
+      getRedis(),
+      config.erc20s
+    );
+
+    const screenerHandle = await screener.start(throttleMs);
+    const fulfillerHandle = fulfiller.start(logger);
+
+    await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
   });
 
 export default runProcess;

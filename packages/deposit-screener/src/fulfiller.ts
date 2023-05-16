@@ -77,6 +77,9 @@ export class DepositScreenerFulfiller {
   }
 
   start(parentLogger: Logger): DepositScreenerFulfillerHandle {
+    // we have 1 fulfillment queue per asset. this is because the rate limit is queue-wide,
+    // we have no way to only rate limit a subset of the jobs in a queue, so we can't implement
+    // per-asset rate limits with a single fulfillment queue
     const [proms, closeFns] = unzip(
       [...this.supportedAssets.entries()].map(([ticker, config]) => {
         // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
@@ -145,13 +148,18 @@ export class DepositScreenerFulfiller {
             }
 
             // otherwise, sign and submit it
-            const timestamp = await this.signAndSubmitDeposit(
+            const receipt = await this.signAndSubmitDeposit(
               childLogger,
               depositRequest
             ).catch((e) => {
               childLogger.error(e);
               throw new Error(e);
             });
+
+            const block = await this.txSigner.provider.getBlock(
+              receipt.blockNumber
+            );
+            const timestamp = block.timestamp;
 
             rateLimiter.add({ amount: depositRequest.value, timestamp });
           },
@@ -186,7 +194,7 @@ export class DepositScreenerFulfiller {
   async signAndSubmitDeposit(
     logger: Logger,
     depositRequest: DepositRequest
-  ): Promise<number> {
+  ): Promise<ethers.ContractReceipt> {
     const domain: EIP712Domain = {
       name: DEPOSIT_MANAGER_CONTRACT_NAME,
       version: DEPOSIT_MANAGER_CONTRACT_VERSION,
@@ -241,8 +249,7 @@ export class DepositScreenerFulfiller {
         DepositRequestStatus.Completed
       );
 
-      const block = await this.txSigner.provider.getBlock(receipt.blockNumber);
-      return block.timestamp;
+      return receipt;
     } else {
       throw new Error(
         `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
