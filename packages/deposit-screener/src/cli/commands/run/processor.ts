@@ -1,15 +1,16 @@
 import { Command } from "commander";
 import { ethers } from "ethers";
-import { DepositScreenerProcessor } from "../../../processor";
+import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { getRedis } from "../utils";
 import { makeLogger } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { DepositScreenerFulfiller } from "../../../fulfiller";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply .env file with REDIS_URL, RPC_URL, TX_SIGNER_KEY, and SUBGRAPH_URL. must supply deposit manager contract address as options."
+    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply conifig via `--config-path-or-name`"
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -32,6 +33,7 @@ const runProcess = new Command("processor")
   .action(async (options) => {
     const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
+    console.log("config", config);
 
     // TODO: enable switching on adapter impl
     const subgraphEndpoint = process.env.SUBGRAPH_URL;
@@ -44,11 +46,12 @@ const runProcess = new Command("processor")
     if (!rpcUrl) {
       throw new Error("missing RPC_URL");
     }
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+
     const txSignerKey = process.env.TX_SIGNER_KEY;
     if (!txSignerKey) {
       throw new Error("missing TX_SIGNER_KEY");
     }
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
     const txSigner = new ethers.Wallet(txSignerKey, provider);
 
     const attestationSignerKey = process.env.ATTESTATION_SIGNER_KEY;
@@ -63,18 +66,28 @@ const runProcess = new Command("processor")
       "processor",
       stdoutLogLevel
     );
-    const processor = new DepositScreenerProcessor(
+    const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress(),
-      attestationSigner,
-      txSigner,
+      provider,
       getRedis(),
       logger,
+      config.erc20s,
       config.contracts.startBlock
     );
 
-    const { promise } = await processor.start(throttleMs);
-    await promise;
+    const fulfiller = new DepositScreenerFulfiller(
+      config.depositManagerAddress(),
+      txSigner,
+      attestationSigner,
+      getRedis(),
+      config.erc20s
+    );
+
+    const screenerHandle = await screener.start(throttleMs);
+    const fulfillerHandle = await fulfiller.start(logger);
+
+    await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
   });
 
 export default runProcess;

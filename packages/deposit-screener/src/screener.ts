@@ -5,10 +5,8 @@ import {
 import {
   Address,
   AssetTrait,
-  AssetType,
   ClosableAsyncIterator,
   DepositRequest,
-  parseEventsFromContractReceipt,
 } from "@nocturne-xyz/sdk";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
@@ -20,34 +18,27 @@ import {
   DepositEventType,
   DepositRequestStatus,
   DELAYED_DEPOSIT_QUEUE,
-  DelayedDepositJobData,
+  DepositRequestJobData,
   DELAYED_DEPOSIT_JOB_TAG,
+  getFulfillmentJobTag,
+  getFulfillmentQueueName,
 } from "./types";
 import IORedis from "ioredis";
 import { DelayCalculator, DummyDelayCalculator } from "./delay";
-import {
-  EIP712Domain,
-  hashDepositRequest,
-  signDepositRequest,
-} from "./typedData";
-import {
-  DEPOSIT_MANAGER_CONTRACT_NAME,
-  DEPOSIT_MANAGER_CONTRACT_VERSION,
-} from "./typedData/constants";
-import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
+import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { TypedDataSigner } from "@ethersproject/abstract-signer"; // TODO: replace with ethers post update
+import { Erc20Config } from "@nocturne-xyz/config";
 
-export interface DepositScreenerProcessorHandle {
+export interface DepositScreenerScreenerHandle {
   // promise that resolves when the service is done
   promise: Promise<void>;
   // function to teardown the service
   teardown: () => Promise<void>;
 }
 
-export class DepositScreenerProcessor {
+export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
@@ -55,18 +46,19 @@ export class DepositScreenerProcessor {
   delayQueue: Queue;
   db: DepositScreenerDB;
   redis: IORedis;
-  attestationSigner: TypedDataSigner;
-  txSigner: ethers.Wallet;
   logger: Logger;
   startBlock: number;
+
+  // Address => ticker
+  supportedAssets: Map<Address, string>;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
     depositManagerAddress: Address,
-    attestationSigner: TypedDataSigner,
-    txSigner: ethers.Wallet,
+    provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
+    supportedAssets: Map<string, Erc20Config>,
     startBlock?: number
   ) {
     this.redis = redis;
@@ -75,24 +67,32 @@ export class DepositScreenerProcessor {
 
     this.startBlock = startBlock ?? 0;
 
-    this.attestationSigner = attestationSigner;
-    this.txSigner = txSigner;
-
     this.depositManagerContract = DepositManager__factory.connect(
       depositManagerAddress,
-      txSigner
+      provider
     );
 
     this.db = new DepositScreenerDB(redis);
+
     this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
 
     this.screeningApi = new DummyScreeningApi();
     this.delayCalculator = new DummyDelayCalculator();
+
+    this.supportedAssets = new Map(
+      [...supportedAssets.entries()].map(([ticker, config]) => [
+        config.address,
+        ticker,
+      ])
+    );
   }
 
   async start(
     queryThrottleMs?: number
-  ): Promise<DepositScreenerProcessorHandle> {
+  ): Promise<DepositScreenerScreenerHandle> {
+    this.logger.info(
+      `DepositManager contract: ${this.depositManagerContract.address}.`
+    );
     const nextBlockToSync = (await this.db.getNextBlock()) ?? this.startBlock;
     this.logger.info(
       `processing deposit requests starting from block ${nextBlockToSync}`
@@ -112,26 +112,26 @@ export class DepositScreenerProcessor {
       throw new Error("error in deposit processor screener: " + err);
     });
 
-    const submitter = this.startSubmitter(
-      this.logger.child({ function: "submitter" })
+    const arbiter = this.startArbiter(
+      this.logger.child({ function: "arbiter" })
     );
 
-    const submitterProm = new Promise<void>((resolve) => {
-      submitter.on("closed", () => {
-        this.logger.info("submitter stopped");
+    const arbiterProm = new Promise<void>((resolve) => {
+      arbiter.on("closed", () => {
+        this.logger.info("arbiter stopped");
         resolve();
       });
     });
 
     return {
       promise: (async () => {
-        await Promise.all([screenerProm, submitterProm]);
+        await Promise.all([screenerProm, arbiterProm]);
       })(),
       teardown: async () => {
         await depositEvents.close();
         await screenerProm;
-        await submitter.close();
-        await submitterProm;
+        await arbiter.close();
+        await arbiterProm;
       },
     };
   }
@@ -161,49 +161,74 @@ export class DepositScreenerProcessor {
           gasCompensation,
         };
 
-        const result = await this.handleDepositRequest(
-          logger.child({ depositRequest }),
-          depositRequest
+        const hash = hashDepositRequest(depositRequest);
+        const childLogger = logger.child({
+          depositRequestSpender: depositRequest.spender,
+          depositReququestNonce: depositRequest.nonce,
+          depositRequestHash: hash,
+        });
+
+        const decodedAsset = AssetTrait.decode(depositRequest.encodedAsset);
+        if (!this.supportedAssets.has(decodedAsset.assetAddr)) {
+          childLogger.warn(
+            `received deposit request for unsupported asset at address ${decodedAsset.assetAddr}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.UnsupportedAsset
+          );
+          continue;
+        }
+
+        childLogger.debug(`checking deposit request`);
+        const { isSafe, reason } = await checkDepositRequest(
+          logger,
+          depositRequest,
+          {
+            ...this,
+          }
         );
-        await this.db.setDepositRequestStatus(depositRequest, result);
+
+        if (isSafe) {
+          childLogger.info(
+            "deposit passed first screening stage. pushing to delay queue"
+          );
+          await this.scheduleSecondScreeningPhase(childLogger, depositRequest);
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.PassedFirstScreen
+          );
+        } else {
+          childLogger.warn(
+            `deposit failed first screening stage with reason ${reason}`
+          );
+          await this.db.setDepositRequestStatus(
+            depositRequest,
+            DepositRequestStatus.FailedScreen
+          );
+        }
       }
       await this.db.setNextBlock(batch.blockNumber);
     }
   }
 
-  async handleDepositRequest(
+  async scheduleSecondScreeningPhase(
     logger: Logger,
     depositRequest: DepositRequest
-  ): Promise<DepositRequestStatus> {
-    logger.debug(`checking deposit request`);
-    const status = await checkDepositRequest(logger, depositRequest, {
-      ...this,
-    });
-
-    if (status == DepositRequestStatus.PassedScreen) {
-      await this.enqueueDepositRequest(logger, depositRequest);
-      return DepositRequestStatus.Enqueued;
-    } else {
-      logger.warn(`deposit request not queued with status ${status}`);
-      return status;
-    }
-  }
-
-  async enqueueDepositRequest(
-    logger: Logger,
-    depositRequest: DepositRequest
-  ): Promise<DepositRequestStatus> {
-    logger.debug(`calculating deposit request delay`);
+  ): Promise<void> {
+    logger.debug(`calculating delay until second phase of screening`);
     const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
       depositRequest
     );
 
     const depositRequestJson = JSON.stringify(depositRequest);
-    const jobData: DelayedDepositJobData = {
+    const jobData: DepositRequestJobData = {
       depositRequestJson,
     };
 
-    logger.info(`enqueuing deposit request with delay ${delaySeconds} seconds`);
+    logger.info(
+      `scheduling second phase of screening to start in ${delaySeconds} seconds`
+    );
     await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
       delay: secsToMillis(delaySeconds),
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
@@ -213,18 +238,14 @@ export class DepositScreenerProcessor {
         delay: 1000,
       },
     });
-    return DepositRequestStatus.Enqueued;
   }
 
-  startSubmitter(logger: Logger): Worker<DelayedDepositJobData, any, string> {
-    logger.info("starting submitter...");
-    logger.info(
-      `DepositManager contract: ${this.depositManagerContract.address}.`
-    );
+  startArbiter(logger: Logger): Worker<DepositRequestJobData, any, string> {
+    logger.info("starting arbiter...");
 
     return new Worker(
       DELAYED_DEPOSIT_QUEUE,
-      async (job: Job<DelayedDepositJobData>) => {
+      async (job: Job<DepositRequestJobData>) => {
         logger.debug("processing deposit request");
         const depositRequest: DepositRequest = JSON.parse(
           job.data.depositRequestJson
@@ -235,6 +256,15 @@ export class DepositScreenerProcessor {
           depositReququestNonce: depositRequest.nonce,
           depositRequestHash: hash,
         });
+
+        const assetAddr = AssetTrait.decode(
+          depositRequest.encodedAsset
+        ).assetAddr;
+        if (!this.supportedAssets.has(assetAddr)) {
+          throw new Error(
+            `received deposit request for unsupported asset ${assetAddr} in arbiter. This should have been caught by screener`
+          );
+        }
 
         childLogger.info("processing deposit request");
 
@@ -249,80 +279,36 @@ export class DepositScreenerProcessor {
           depositRequest
         );
         if (!valid) {
-          childLogger.warn(`deposit no longer passes screening`);
+          childLogger.warn(`deposit failed second screening screening`);
           return;
         }
 
-        await this.signAndSubmitDeposit(childLogger, depositRequest).catch(
-          (e) => {
-            childLogger.error(e);
-            throw new Error(e);
-          }
+        childLogger.info(
+          `deposit request passed screening. pushing to fulfillment queue`
+        );
+
+        const depositRequestJson = JSON.stringify(depositRequest);
+        const jobData: DepositRequestJobData = {
+          depositRequestJson,
+        };
+
+        // figure out which fulfillment queue to add to
+        const assetTicker = this.supportedAssets.get(assetAddr)!;
+        const fulfillmentQueue = new Queue(
+          getFulfillmentQueueName(assetTicker),
+          { connection: this.redis }
+        );
+
+        const jobTag = getFulfillmentJobTag(assetTicker);
+
+        // submit to it
+        await fulfillmentQueue.add(jobTag, jobData);
+        await this.db.setDepositRequestStatus(
+          depositRequest,
+          DepositRequestStatus.AwaitingFulfillment
         );
       },
       { connection: this.redis, autorun: true }
     );
-  }
-
-  async signAndSubmitDeposit(
-    logger: Logger,
-    depositRequest: DepositRequest
-  ): Promise<void> {
-    const domain: EIP712Domain = {
-      name: DEPOSIT_MANAGER_CONTRACT_NAME,
-      version: DEPOSIT_MANAGER_CONTRACT_VERSION,
-      // TODO: fetch from config instead
-      chainId: BigInt(await this.txSigner.getChainId()),
-      verifyingContract: this.depositManagerContract.address,
-    };
-
-    logger.info("signing deposit request");
-    const signature = await signDepositRequest(
-      this.attestationSigner,
-      domain,
-      depositRequest
-    );
-
-    const asset = AssetTrait.decode(depositRequest.encodedAsset);
-
-    let tx: ethers.ContractTransaction;
-    switch (asset.assetType) {
-      case AssetType.ERC20:
-        logger.info("submitting completeDeposit tx...");
-        tx = await this.depositManagerContract
-          .completeErc20Deposit(depositRequest, signature)
-          .catch((e) => {
-            logger.error(e);
-            throw new Error(e);
-          });
-        break;
-      default:
-        throw new Error("currently only supporting erc20 deposits");
-    }
-
-    logger.info("waiting for receipt...");
-    const receipt = await tx.wait(1);
-    logger.info("completeDeposit receipt:", receipt);
-
-    const matchingEvents = parseEventsFromContractReceipt(
-      receipt,
-      this.depositManagerContract.interface.getEvent("DepositCompleted")
-    ) as DepositCompletedEvent[];
-    logger.info("matching events:", matchingEvents);
-
-    if (matchingEvents.length > 0) {
-      logger.info(
-        `deposit signed and submitted. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
-      );
-      await this.db.setDepositRequestStatus(
-        depositRequest,
-        DepositRequestStatus.Completed
-      );
-    } else {
-      // NOTE: not sure if possible that tx submission passes but event not found
-      logger.error(
-        `deposit request failed. Spender: ${depositRequest.spender}. Nonce: ${depositRequest.nonce}`
-      );
-    }
   }
 }

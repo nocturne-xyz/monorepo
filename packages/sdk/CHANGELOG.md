@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- fix bug resulting from `AssetTrait.decode` not returning checksum addresses
+- add `unzip` to utils
 - add default indexing throttle to SDK to avoid subgraph rate limits
 - draw start block from config in wallet sdk
 - wallet sdk holds ref to `NocturneConfig`

@@ -192,6 +192,7 @@ export async function setupTestDeployment(
       subtreeBatchFillers: [deployerEoa.address, subtreeUpdaterEoa.address],
     });
 
+  console.log("erc20s:", deployment.erc20s);
   // Deploy subgraph first, as other services depend on it
   let stopSubgraph: undefined | (() => Promise<void>);
   if (config.include.subgraph) {
@@ -247,7 +248,7 @@ export async function setupTestDeployment(
     };
     actorConfig.configs.depositScreener = depositScreenerConfig;
 
-    proms.push(startDepositScreener(depositScreenerConfig));
+    proms.push(startDepositScreener(depositScreenerConfig, deployment.erc20s));
   }
 
   const actorTeardownFns = await Promise.all(proms);

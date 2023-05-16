@@ -180,8 +180,6 @@ RPC_URL=$RPC_URL
 
 TX_SIGNER_KEY=$SUBTREE_UPDATER_TX_SIGNER_KEY
 EOM
-
-# ./build_mock_docker.sh
 popd
 
 # run subtree updater

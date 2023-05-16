@@ -1,10 +1,13 @@
 import { ethers } from "ethers";
-import { makeRedisInstance } from "./utils";
+import { TeardownFn, makeRedisInstance } from "./utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import {
-  DepositScreenerProcessor,
+  DepositScreenerScreener,
+  DepositScreenerFulfiller,
   SubgraphScreenerSyncAdapter,
 } from "@nocturne-xyz/deposit-screener";
+import { Erc20Config } from "@nocturne-xyz/config";
+import IORedis from "ioredis";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -17,34 +20,79 @@ export interface DepositScreenerConfig {
 const { getRedis, clearRedis } = makeRedisInstance();
 
 export async function startDepositScreener(
-  config: DepositScreenerConfig
-): Promise<() => Promise<void>> {
-  const {
-    depositManagerAddress,
-    subgraphUrl,
-    rpcUrl,
-    attestationSignerKey,
-    txSignerKey,
-  } = config;
+  config: DepositScreenerConfig,
+  supportedAssets: Map<string, Erc20Config>
+): Promise<TeardownFn> {
+  const redis = await getRedis();
+  const stopProcessor = await startDepositScreenerScreener(
+    config,
+    redis,
+    supportedAssets
+  );
+  const stopFulfiller = await startDepositScreenerFulfiller(
+    config,
+    redis,
+    supportedAssets
+  );
+
+  return async () => {
+    await stopProcessor();
+    await stopFulfiller();
+    await clearRedis();
+  };
+}
+
+async function startDepositScreenerScreener(
+  config: DepositScreenerConfig,
+  redis: IORedis,
+  supportedAssets: Map<string, Erc20Config>
+): Promise<TeardownFn> {
+  const { depositManagerAddress, subgraphUrl, rpcUrl } = config;
 
   const adapter = new SubgraphScreenerSyncAdapter(subgraphUrl);
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-  const txSigner = new ethers.Wallet(txSignerKey, provider);
-  const attestationSigner = new ethers.Wallet(attestationSignerKey);
   const logger = makeTestLogger("deposit-screener", "processor");
-  const processor = new DepositScreenerProcessor(
+  const screener = new DepositScreenerScreener(
     adapter,
     depositManagerAddress,
-    attestationSigner,
-    txSigner,
-    await getRedis(),
-    logger
+    provider,
+    redis,
+    logger,
+    supportedAssets
   );
 
-  const { promise, teardown } = await processor.start();
+  const { promise, teardown } = await screener.start();
   return async () => {
     await teardown();
     await promise;
-    await clearRedis();
+  };
+}
+
+async function startDepositScreenerFulfiller(
+  config: DepositScreenerConfig,
+  redis: IORedis,
+  supportedAssets: Map<string, Erc20Config>
+): Promise<TeardownFn> {
+  const { depositManagerAddress, rpcUrl, attestationSignerKey, txSignerKey } =
+    config;
+
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+  const txSigner = new ethers.Wallet(txSignerKey, provider);
+  const attestationSigner = new ethers.Wallet(attestationSignerKey);
+
+  const fulfiller = new DepositScreenerFulfiller(
+    depositManagerAddress,
+    txSigner,
+    attestationSigner,
+    redis,
+    supportedAssets
+  );
+
+  const logger = makeTestLogger("deposit-screener", "fulfiller");
+  const { promise, teardown } = await fulfiller.start(logger);
+
+  return async () => {
+    await teardown();
+    await promise;
   };
 }
