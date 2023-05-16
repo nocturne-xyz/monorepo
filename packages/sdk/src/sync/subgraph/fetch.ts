@@ -216,7 +216,7 @@ export async function fetchLastCommittedMerkleIndex(
     FetchSubtreeCommitsResponse
   >(endpoint, subtreeCommitQuery, "last committed merkle index");
   const res = await query({ toBlock });
-  if (res.data.subtreeCommits.length === 0) {
+  if (!res.data || res.data.subtreeCommits.length === 0) {
     return -1;
   } else {
     const subtreeIndices = res.data.subtreeCommits.map((commit) =>

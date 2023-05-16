@@ -16,7 +16,6 @@ const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 const NEXT_MERKLE_INDEX_KEY = "NEXT_MERKLE_INDEX";
-const DEFAULT_START_BLOCK = 0;
 
 // ceil(log10(2^32))
 const MAX_MERKLE_INDEX_DIGITS = 10;
@@ -34,11 +33,9 @@ export class NocturneDB {
   //  assetKey => merkleIndex[]
   //  nullifierKey => merkleIndex
   public kv: KVStore;
-  private startBlock: number;
 
-  constructor(kv: KVStore, opts?: NocturneDBOpts) {
+  constructor(kv: KVStore) {
     this.kv = kv;
-    this.startBlock = opts?.startBlock ?? DEFAULT_START_BLOCK;
   }
 
   static formatIndexKey(merkleIndex: number): string {
@@ -129,8 +126,8 @@ export class NocturneDB {
   /// return the next block number the DB has not yet been synced to
   // this is more/less a "version" number
   // returns `this.startBlock` if it's undefined
-  async nextBlock(): Promise<number> {
-    return (await this.kv.getNumber(NEXT_BLOCK_KEY)) ?? this.startBlock;
+  async nextBlock(): Promise<number | undefined> {
+    return await this.kv.getNumber(NEXT_BLOCK_KEY);
   }
 
   // update `nextBlock()`.
