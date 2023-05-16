@@ -90,6 +90,7 @@ export class DepositScreenerFulfiller {
           );
 
           const window = await this.getRateLimitWindowForAsset(config);
+
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
             getFulfillmentQueueName(ticker),
