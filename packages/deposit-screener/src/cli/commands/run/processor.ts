@@ -85,7 +85,7 @@ const runProcess = new Command("processor")
     );
 
     const screenerHandle = await screener.start(throttleMs);
-    const fulfillerHandle = fulfiller.start(logger);
+    const fulfillerHandle = await fulfiller.start(logger);
 
     await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
   });

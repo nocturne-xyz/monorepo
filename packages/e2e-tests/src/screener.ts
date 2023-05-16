@@ -29,7 +29,7 @@ export async function startDepositScreener(
     redis,
     supportedAssets
   );
-  const stopFulfiller = startDepositScreenerFulfiller(
+  const stopFulfiller = await startDepositScreenerFulfiller(
     config,
     redis,
     supportedAssets
@@ -68,11 +68,11 @@ async function startDepositScreenerScreener(
   };
 }
 
-function startDepositScreenerFulfiller(
+async function startDepositScreenerFulfiller(
   config: DepositScreenerConfig,
   redis: IORedis,
   supportedAssets: Map<string, Erc20Config>
-): TeardownFn {
+): Promise<TeardownFn> {
   const { depositManagerAddress, rpcUrl, attestationSignerKey, txSignerKey } =
     config;
 
@@ -89,7 +89,7 @@ function startDepositScreenerFulfiller(
   );
 
   const logger = makeTestLogger("deposit-screener", "fulfiller");
-  const { promise, teardown } = fulfiller.start(logger);
+  const { promise, teardown } = await fulfiller.start(logger);
 
   return async () => {
     await teardown();
