@@ -152,7 +152,7 @@ describe("handleGasForOperationRequest", async () => {
     expect(joinSplitRequestForGas.unwrapValue > 1_000_000).to.be.true;
   });
 
-  it("adds a joinsplit request for gasAssetB when gas price is nonzeo, there exists a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
+  it("adds a joinsplit request for gasAssetB when gas price is nonzero, there exists a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]

@@ -11,6 +11,7 @@ import {
   NocturneWalletSDK,
   OperationRequest,
   SubgraphSDKSyncAdapter,
+  MockEthToTokenConverter,
 } from "@nocturne-xyz/sdk";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
@@ -94,7 +95,8 @@ export const run = new Command("run")
       config,
       merkleProver,
       db,
-      syncAdapter
+      syncAdapter,
+      new MockEthToTokenConverter()
     );
 
     const vkeyStr = fs.readFileSync(vkeyPath).toString();

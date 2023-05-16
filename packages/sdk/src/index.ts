@@ -1,4 +1,5 @@
 export * from "./utils";
+export * from "./conversion";
 export * from "./primitives";
 export * from "./proof";
 export * from "./crypto";

@@ -29,6 +29,7 @@ import {
   Asset,
   AssetTrait,
   AssetType,
+  MockEthToTokenConverter,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -538,6 +539,7 @@ function setupNocturneWalletSDK(
     config,
     merkleProver,
     nocturneDB,
-    syncAdapter
+    syncAdapter,
+    new MockEthToTokenConverter()
   );
 }
