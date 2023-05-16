@@ -164,13 +164,23 @@ export class DepositScreenerFulfiller {
       )
     );
 
-    return {
-      promise: (async () => {
+    const teardown = async () => {
+      await Promise.all(closeFns.map((fn) => fn()));
+    };
+
+    const promise = (async () => {
+      try {
         await Promise.all(proms);
-      })(),
-      teardown: async () => {
-        await Promise.all(closeFns.map((fn) => fn()));
-      },
+      } catch (err) {
+        parentLogger.error(`error in fulfiller: ${err}`, err);
+        await teardown();
+        throw err;
+      }
+    })();
+
+    return {
+      promise,
+      teardown,
     };
   }
 

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- close other workers/iters/async "threads" when one of them fails
 - add `--stdout-log-level` post-rewrite
 - pull start block from config in cli
 - ignore fill batch failure in case where batch already filled

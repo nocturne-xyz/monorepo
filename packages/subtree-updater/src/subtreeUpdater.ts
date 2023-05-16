@@ -138,18 +138,28 @@ export class SubtreeUpdater {
     });
     const queuerProm = queuer();
 
-    return {
-      promise: (async () => {
+    const teardown = async () => {
+      await proofJobs.close();
+      await queuerProm;
+      await prover.close();
+      await proverProm;
+      await submitter.close();
+      await submitterProm;
+    };
+
+    const promise = (async () => {
+      try {
         await Promise.all([submitterProm, proverProm, queuerProm]);
-      })(),
-      teardown: async () => {
-        await proofJobs.close();
-        await queuerProm;
-        await prover.close();
-        await proverProm;
-        await submitter.close();
-        await submitterProm;
-      },
+      } catch (err) {
+        this.logger.error(`error in subtree updater: ${err}`, err);
+        await teardown();
+        throw err;
+      }
+    })();
+
+    return {
+      promise,
+      teardown,
     };
   }
 
