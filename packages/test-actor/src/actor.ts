@@ -10,7 +10,6 @@ import {
   JoinSplitProver,
   proveOperation,
 } from "@nocturne-xyz/sdk";
-import { randomInt } from "crypto";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
@@ -54,8 +53,10 @@ export class TestActor {
       await this.sdk.sync();
 
       if (flipCoin()) {
+        console.log("switched on deposit");
         await this.deposit();
       } else {
+        console.log("switched on operation");
         await this.operation();
       }
     }
@@ -93,12 +94,13 @@ export class TestActor {
 
   private async deposit() {
     // choose a random deposit request and set its nonce
+    console.log(`erc20 entries: ${Array.from(this.erc20s.entries())}`);
     const [erc20Name, erc20Config] = randomElem(
       Array.from(this.erc20s.entries())
     );
     const randomValue = randomInt(1_000);
 
-    // reserve and approve tokens
+    console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
     const erc20Token = SimpleERC20Token__factory.connect(
       erc20Config.address,
       this.txSigner
@@ -109,6 +111,7 @@ export class TestActor {
     );
     await reserveTx.wait(1);
 
+    console.log(`approving tokens. token: ${erc20Name}, value: ${randomValue}`);
     const approveTx = await erc20Token.approve(
       this.depositManager.address,
       randomValue
@@ -131,6 +134,10 @@ export class TestActor {
     console.log("waiting for deposit to be processed");
     await sleep(FIVE_MINUTES_AS_MILLIS);
   }
+}
+
+function randomInt(max: number) {
+  return Math.floor(Math.random() * max);
 }
 
 function randomElem<T>(arr: T[]): T {

@@ -107,6 +107,12 @@ export const run = new Command("run")
       opRequests = BigintJSON.parse(opRequestsStr) as OperationRequest[];
     }
 
+    const testTokens = new Map(
+      Array.from(config.erc20s.entries()).filter(([key]) =>
+        key.toLowerCase().includes("test")
+      )
+    );
+
     const actor = new TestActor(
       signingProvider,
       teller,
@@ -114,7 +120,7 @@ export const run = new Command("run")
       sdk,
       prover,
       bundlerEndpoint,
-      config.erc20s,
+      testTokens,
       opRequests
     );
 

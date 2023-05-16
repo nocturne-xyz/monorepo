@@ -18,7 +18,7 @@ import { consecutiveChunks } from "./utils/functional";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
-const DEFAULT_THROTTLE_MS = 5000;
+const DEFAULT_THROTTLE_MS = 2000;
 
 export interface SyncOpts {
   startBlock: number;

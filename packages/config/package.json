@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "check": "tsc --noEmit",
+    "check": "yarn clean && tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./test",
