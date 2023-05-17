@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- close other workers/iters/async "threads" when one of them fails
 - add window recovery logic to fulfiller
 - add fulfiller to `docker-compose.yml`
 - add fulfiller to CLI

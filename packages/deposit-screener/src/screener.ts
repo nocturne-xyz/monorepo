@@ -123,16 +123,26 @@ export class DepositScreenerScreener {
       });
     });
 
-    return {
-      promise: (async () => {
+    const teardown = async () => {
+      await depositEvents.close();
+      await screenerProm;
+      await arbiter.close();
+      await arbiterProm;
+    };
+
+    const promise = (async () => {
+      try {
         await Promise.all([screenerProm, arbiterProm]);
-      })(),
-      teardown: async () => {
-        await depositEvents.close();
-        await screenerProm;
-        await arbiter.close();
-        await arbiterProm;
-      },
+      } catch (err) {
+        this.logger.error(`error in deposit screener screener: ${err}`, err);
+        await teardown();
+        throw err;
+      }
+    })();
+
+    return {
+      promise,
+      teardown,
     };
   }
 
