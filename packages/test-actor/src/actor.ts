@@ -98,11 +98,13 @@ export class TestActor {
 
   private async deposit(): Promise<boolean> {
     // choose a random deposit request and set its nonce
-    console.log(`erc20 entries: ${Array.from(this.erc20s.entries())}`);
+    console.log(
+      `erc20 entries: ${JSON.stringify(Array.from(this.erc20s.entries()))}`
+    );
     const [erc20Name, erc20Config] = randomElem(
       Array.from(this.erc20s.entries())
     );
-    const randomValue = randomInt(1_000);
+    const randomValue = randomInt(100_000_000_000);
 
     console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
     const erc20Token = SimpleERC20Token__factory.connect(
@@ -138,7 +140,7 @@ export class TestActor {
       receipt,
       this.depositManager.interface.getEvent("DepositInstantiated")
     ) as DepositInstantiatedEvent[];
-    console.log(`instantiate deposit tx: ${matchingEvents}`);
+    console.log(`instantiate deposit tx: ${JSON.stringify(matchingEvents)}`);
 
     return true;
   }
