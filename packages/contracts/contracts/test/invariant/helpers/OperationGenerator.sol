@@ -33,6 +33,7 @@ struct GenerateOperationArgs {
     // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
     // teller invariant tests hang for no apparent reason
     bool statefulNfGeneration;
+    uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -42,6 +43,7 @@ struct GenerateOperationArgs {
 }
 
 struct GeneratedOperationMetadata {
+    uint256 totalJoinSplitAmount;
     TransferRequest[] transfers;
     SwapRequest[] swaps;
     bool[] isTransfer;
@@ -85,13 +87,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
         uint256 numActions = bound(args.seed, 2, 5);
-        Action[] memory actions = new Action[](numActions);
-        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](0);
-
-        _meta.transfers = new TransferRequest[](numActions);
-        _meta.swaps = new SwapRequest[](numActions);
-        _meta.isTransfer = new bool[](numActions);
-        _meta.isSwap = new bool[](numActions);
 
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
@@ -101,85 +96,26 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         );
 
         bool compensateBundler = false;
-        uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount;
-        if (runningJoinSplitAmount > gasToReserve) {
-            runningJoinSplitAmount = runningJoinSplitAmount - gasToReserve;
+        if (totalJoinSplitUnwrapAmount > gasToReserve) {
+            totalJoinSplitUnwrapAmount =
+                totalJoinSplitUnwrapAmount -
+                gasToReserve;
             compensateBundler = true;
         }
 
-        // For each action of numActions, switch on transfer vs swap
-        for (uint256 i = 0; i < numActions; i++) {
-            bool isTransfer = bound(args.seed, 0, 1) == 0;
-            uint256 joinSplitUseAmount = bound(
-                args.seed,
-                0,
-                runningJoinSplitAmount
-            );
+        Action[] memory actions = new Action[](numActions);
+        (actions, _meta) = _formatActions(
+            args,
+            totalJoinSplitUnwrapAmount,
+            numActions
+        );
 
-            // Swap request requires two actions, if at end of array just fill with transfer and
-            // use the rest
-            if (i == numActions - 1) {
-                isTransfer = true;
-                joinSplitUseAmount = runningJoinSplitAmount;
-            }
-
-            if (isTransfer) {
-                _meta.transfers[i] = TransferRequest({
-                    token: args.joinSplitToken,
-                    recipient: transferRecipientAddress,
-                    amount: joinSplitUseAmount
-                });
-                _meta.isTransfer[i] = true;
-
-                actions[i] = NocturneUtils.formatTransferAction(
-                    _meta.transfers[i]
-                );
-            } else {
-                _meta.swaps[i + 1] = _createRandomSwapRequest(
-                    joinSplitUseAmount,
-                    args
-                );
-                _meta.isSwap[i + 1] = true;
-
-                {
-                    // Kludge to satisfy stack limit
-                    SimpleERC20Token inToken = args.joinSplitToken;
-                    TokenSwapper swapper = args.swapper;
-
-                    Action memory approveAction = Action({
-                        contractAddress: address(inToken),
-                        encodedFunction: abi.encodeWithSelector(
-                            inToken.approve.selector,
-                            address(swapper),
-                            joinSplitUseAmount
-                        )
-                    });
-
-                    // Kludge to satisfy stack limit
-                    SwapRequest memory swapRequest = _meta.swaps[i + 1];
-
-                    actions[i] = approveAction;
-                    actions[i + 1] = Action({
-                        contractAddress: address(swapper),
-                        encodedFunction: abi.encodeWithSelector(
-                            swapper.swap.selector,
-                            swapRequest
-                        )
-                    });
-                }
-
-                encodedRefundAssets = new EncodedAsset[](1);
-                encodedRefundAssets[0] = AssetUtils.encodeAsset(
-                    AssetType.ERC20,
-                    address(args.swapErc20),
-                    ERC20_ID
-                );
-
-                i += 1; // additional +1 to skip past swap action at i+1
-            }
-
-            runningJoinSplitAmount -= joinSplitUseAmount;
-        }
+        EncodedAsset[] memory encodedRefundAssets = new EncodedAsset[](1);
+        encodedRefundAssets[0] = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(args.swapErc20),
+            ERC20_ID
+        );
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitToken: args.joinSplitToken,
@@ -218,8 +154,109 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         }
     }
 
+    function _formatActions(
+        GenerateOperationArgs memory args,
+        uint256 totalJoinSplitAmount,
+        uint256 numActions
+    )
+        internal
+        returns (
+            Action[] memory _actions,
+            GeneratedOperationMetadata memory _meta
+        )
+    {
+        _actions = new Action[](numActions);
+        _meta.totalJoinSplitAmount = totalJoinSplitAmount;
+        _meta.transfers = new TransferRequest[](numActions);
+        _meta.swaps = new SwapRequest[](numActions);
+        _meta.isTransfer = new bool[](numActions);
+        _meta.isSwap = new bool[](numActions);
+
+        uint256 runningJoinSplitAmount = totalJoinSplitAmount;
+
+        // For each action of numActions, switch on transfer vs swap
+        for (uint256 i = 0; i < numActions; i++) {
+            bool isTransfer = bound(args.seed, 0, 1) == 0;
+
+            uint256 transferOrSwapBound;
+            unchecked {
+                transferOrSwapBound =
+                    runningJoinSplitAmount +
+                    args.exceedJoinSplitsMarginInTokens;
+            }
+            uint256 transferOrSwapAmount = bound(
+                args.seed,
+                0,
+                transferOrSwapBound
+            );
+
+            // Swap request requires two actions, if at end of array just fill with transfer and
+            // use the rest
+            if (i == numActions - 1) {
+                isTransfer = true;
+            }
+
+            if (isTransfer) {
+                {
+                    _meta.transfers[i] = TransferRequest({
+                        token: args.joinSplitToken,
+                        recipient: transferRecipientAddress,
+                        amount: transferOrSwapAmount
+                    });
+                    _meta.isTransfer[i] = true;
+
+                    _actions[i] = NocturneUtils.formatTransferAction(
+                        _meta.transfers[i]
+                    );
+                }
+            } else {
+                {
+                    _meta.swaps[i + 1] = _createRandomSwapRequest(
+                        transferOrSwapAmount,
+                        args
+                    );
+                    _meta.isSwap[i + 1] = true;
+
+                    {
+                        // Kludge to satisfy stack limit
+                        SimpleERC20Token inToken = args.joinSplitToken;
+                        TokenSwapper swapper = args.swapper;
+
+                        Action memory approveAction = Action({
+                            contractAddress: address(inToken),
+                            encodedFunction: abi.encodeWithSelector(
+                                inToken.approve.selector,
+                                address(swapper),
+                                transferOrSwapAmount
+                            )
+                        });
+
+                        // Kludge to satisfy stack limit
+                        SwapRequest memory swapRequest = _meta.swaps[i + 1];
+
+                        _actions[i] = approveAction;
+                        _actions[i + 1] = Action({
+                            contractAddress: address(swapper),
+                            encodedFunction: abi.encodeWithSelector(
+                                swapper.swap.selector,
+                                swapRequest
+                            )
+                        });
+                    }
+
+                    i += 1; // additional +1 to skip past swap action at i+1
+                }
+
+                runningJoinSplitAmount -= Utils.min(
+                    transferOrSwapAmount,
+                    runningJoinSplitAmount
+                ); // avoid underflow
+            }
+        }
+    }
+
     function _createRandomSwapRequest(
-        uint256 joinSplitUseAmount,
+        uint256 swapInAmount,
         GenerateOperationArgs memory args
     ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
@@ -238,7 +275,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
             encodedAssetIn: encodedAssetIn,
-            assetInAmount: joinSplitUseAmount,
+            assetInAmount: swapInAmount,
             erc20Out: address(args.swapErc20),
             erc20OutAmount: swapErc20OutAmount,
             erc721Out: address(args.swapErc721),

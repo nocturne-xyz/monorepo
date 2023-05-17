@@ -43,7 +43,10 @@ contract TellerHandler is OperationGenerator {
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
+    uint256 public ghost_totalJoinSplitUnwrapped;
     uint256 public ghost_totalBundlerPayout;
+    uint256 public ghost_numberOfTimesPrefillTaken;
+    uint256 public ghost_numberOfTimesPrefillRefilled;
 
     // ______INTERNAL______
     mapping(bytes32 => uint256) internal _calls;
@@ -129,6 +132,8 @@ contract TellerHandler is OperationGenerator {
             swapErc20.transfer(address(handler), 1);
         }
 
+        bool prefillExists = joinSplitToken.balanceOf(address(handler)) > 0;
+
         (
             Operation memory op,
             GeneratedOperationMetadata memory meta
@@ -139,6 +144,7 @@ contract TellerHandler is OperationGenerator {
                     handler: address(handler),
                     root: handler.root(),
                     statefulNfGeneration: true,
+                    exceedJoinSplitsMarginInTokens: 1,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
@@ -181,6 +187,16 @@ contract TellerHandler is OperationGenerator {
                 }
                 _numSuccessfulActions += 1;
             }
+        }
+
+        ghost_totalJoinSplitUnwrapped += meta.totalJoinSplitAmount;
+
+        if (prefillExists && joinSplitToken.balanceOf(address(handler)) == 0) {
+            ghost_numberOfTimesPrefillTaken += 1;
+        } else if (
+            !prefillExists && joinSplitToken.balanceOf(address(handler)) > 0
+        ) {
+            ghost_numberOfTimesPrefillRefilled += 1;
         }
     }
 
