@@ -21,8 +21,8 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
-      - name: install Rapidsnark dependencies
-        run: sudo yum install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
+      # - name: install Rapidsnark dependencies
+      #   run: sudo yum install -y gcc-c++ make gmp-devel libsodium nasm nlohmann-json3-devel
       - name: yarn install
         run: |
           yarn install --immutable
