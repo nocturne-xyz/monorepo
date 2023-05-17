@@ -144,7 +144,7 @@ contract TellerHandler is OperationGenerator {
                     handler: address(handler),
                     root: handler.root(),
                     statefulNfGeneration: true,
-                    exceedJoinSplitChance: 1,
+                    exceedJoinSplitMarginTokens: 1,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
@@ -191,14 +191,12 @@ contract TellerHandler is OperationGenerator {
 
         ghost_totalJoinSplitUnwrapped += meta.totalJoinSplitAmount;
 
-        if (prefillExists) {
-            if (joinSplitToken.balanceOf(address(handler)) == 0) {
-                ghost_numberOfTimesPrefillTaken += 1;
-            }
-        } else {
-            if (joinSplitToken.balanceOf(address(handler)) > 0) {
-                ghost_numberOfTimesPrefillRefilled += 1;
-            }
+        if (prefillExists && joinSplitToken.balanceOf(address(handler)) == 0) {
+            ghost_numberOfTimesPrefillTaken += 1;
+        } else if (
+            !prefillExists && joinSplitToken.balanceOf(address(handler)) > 0
+        ) {
+            ghost_numberOfTimesPrefillRefilled += 1;
         }
     }
 

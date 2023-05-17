@@ -33,7 +33,7 @@ struct GenerateOperationArgs {
     // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
     // teller invariant tests hang for no apparent reason
     bool statefulNfGeneration;
-    uint8 exceedJoinSplitChance;
+    uint8 exceedJoinSplitMarginTokens;
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -182,7 +182,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             unchecked {
                 transferOrSwapBound =
                     runningJoinSplitAmount +
-                    args.exceedJoinSplitChance;
+                    args.exceedJoinSplitMarginTokens;
             }
             uint256 transferOrSwapAmount = bound(
                 args.seed,
