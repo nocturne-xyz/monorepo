@@ -139,6 +139,7 @@ contract TellerHandler is OperationGenerator {
                     handler: address(handler),
                     root: handler.root(),
                     statefulNfGeneration: true,
+                    exceedJoinSplitChance: 1,
                     swapper: swapper,
                     joinSplitToken: joinSplitToken,
                     gasToken: gasToken,
