@@ -2,12 +2,17 @@ name: Build/Cache Docker + E2E Tests
 on: [push]
 jobs:
   build-and-test-e2e:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: checkout repo and get submodules
         uses: actions/checkout@v3
         with:
           submodules: recursive
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::123456789100:role/my-github-actions-role
+          aws-region: us-east-2
       - name: cache dependencies
         uses: actions/cache@v2
         with:
