@@ -172,19 +172,25 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         // For each action of numActions, switch on transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
             bool isTransfer = bound(args.seed, 0, 1) == 0;
-            uint256 joinSplitUseAmount = bound(
+
+            uint256 transferOrSwapBound;
+            unchecked {
+                transferOrSwapBound =
+                    runningJoinSplitAmount +
+                    ((args.exceedJoinSplitChance * runningJoinSplitAmount) /
+                        100);
+            }
+            uint256 transferOrSwapAmount = bound(
                 args.seed,
                 0,
-                runningJoinSplitAmount
+                transferOrSwapBound
             );
-            uint256 transferOrSwapAmount = joinSplitUseAmount +
-                ((args.exceedJoinSplitChance * joinSplitUseAmount) / 100);
 
             // Swap request requires two actions, if at end of array just fill with transfer and
             // use the rest
             if (i == numActions - 1) {
                 isTransfer = true;
-                joinSplitUseAmount = runningJoinSplitAmount;
+                transferOrSwapAmount = runningJoinSplitAmount;
             }
 
             if (isTransfer) {
@@ -218,7 +224,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                             encodedFunction: abi.encodeWithSelector(
                                 inToken.approve.selector,
                                 address(swapper),
-                                joinSplitUseAmount
+                                transferOrSwapAmount
                             )
                         });
 
@@ -238,7 +244,10 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     i += 1; // additional +1 to skip past swap action at i+1
                 }
 
-                runningJoinSplitAmount -= joinSplitUseAmount;
+                runningJoinSplitAmount -= Utils.min(
+                    transferOrSwapAmount,
+                    runningJoinSplitAmount
+                ); // avoid underflow
             }
         }
     }
