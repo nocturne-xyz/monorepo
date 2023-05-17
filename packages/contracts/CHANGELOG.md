@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add room for over transfer/swap in invariant tests
 - make for loop length caching consistent across all .sol files
 - add fuzz tests for asset and pathAndHash encodings
 - add natspec docs for NocturneReentrancyGuard
