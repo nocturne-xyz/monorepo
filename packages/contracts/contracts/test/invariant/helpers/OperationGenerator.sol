@@ -33,7 +33,7 @@ struct GenerateOperationArgs {
     // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
     // teller invariant tests hang for no apparent reason
     bool statefulNfGeneration;
-    uint8 exceedJoinSplitChance; // 0-100
+    uint8 exceedJoinSplitChance; // 0-1e18
     TokenSwapper swapper;
     SimpleERC20Token joinSplitToken;
     SimpleERC20Token gasToken;
@@ -43,6 +43,7 @@ struct GenerateOperationArgs {
 }
 
 struct GeneratedOperationMetadata {
+    uint256 totalJoinSplitAmount;
     TransferRequest[] transfers;
     SwapRequest[] swaps;
     bool[] isTransfer;
@@ -95,16 +96,17 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         );
 
         bool compensateBundler = false;
-        uint256 runningJoinSplitAmount = totalJoinSplitUnwrapAmount;
-        if (runningJoinSplitAmount > gasToReserve) {
-            runningJoinSplitAmount = runningJoinSplitAmount - gasToReserve;
+        if (totalJoinSplitUnwrapAmount > gasToReserve) {
+            totalJoinSplitUnwrapAmount =
+                totalJoinSplitUnwrapAmount -
+                gasToReserve;
             compensateBundler = true;
         }
 
         Action[] memory actions = new Action[](numActions);
         (actions, _meta) = _formatActions(
             args,
-            runningJoinSplitAmount,
+            totalJoinSplitUnwrapAmount,
             numActions
         );
 
@@ -154,7 +156,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
     function _formatActions(
         GenerateOperationArgs memory args,
-        uint256 runningJoinSplitAmount,
+        uint256 totalJoinSplitAmount,
         uint256 numActions
     )
         internal
@@ -164,10 +166,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         )
     {
         _actions = new Action[](numActions);
+        _meta.totalJoinSplitAmount = totalJoinSplitAmount;
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
         _meta.isTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
+
+        uint256 runningJoinSplitAmount = totalJoinSplitAmount;
 
         // For each action of numActions, switch on transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
@@ -178,7 +183,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                 transferOrSwapBound =
                     runningJoinSplitAmount +
                     ((args.exceedJoinSplitChance * runningJoinSplitAmount) /
-                        100);
+                        1e18);
             }
             uint256 transferOrSwapAmount = bound(
                 args.seed,
@@ -190,7 +195,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             // use the rest
             if (i == numActions - 1) {
                 isTransfer = true;
-                transferOrSwapAmount = runningJoinSplitAmount;
             }
 
             if (isTransfer) {

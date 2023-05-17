@@ -281,4 +281,13 @@ contract InvariantsBase is Test {
             tellerHandler.ghost_totalBundlerPayout()
         );
     }
+
+    function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped()
+        internal
+    {
+        assertLe(
+            tellerHandler.ghost_totalTransferredOutOfTeller(),
+            tellerHandler.ghost_totalJoinSplitUnwrapped()
+        );
+    }
 }

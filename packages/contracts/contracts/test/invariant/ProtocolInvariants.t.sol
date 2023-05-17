@@ -301,4 +301,10 @@ contract ProtocolInvariants is Test, InvariantsBase {
     function invariant_operation_bundlerBalanceMatchesTracked() external {
         assert_operation_bundlerBalanceMatchesTracked();
     }
+
+    function invariant_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped()
+        external
+    {
+        assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped();
+    }
 }

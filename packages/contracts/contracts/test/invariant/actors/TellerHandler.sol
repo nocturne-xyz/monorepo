@@ -43,6 +43,7 @@ contract TellerHandler is OperationGenerator {
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
+    uint256 public ghost_totalJoinSplitUnwrapped;
     uint256 public ghost_totalBundlerPayout;
 
     // ______INTERNAL______
@@ -183,6 +184,8 @@ contract TellerHandler is OperationGenerator {
                 _numSuccessfulActions += 1;
             }
         }
+
+        ghost_totalJoinSplitUnwrapped += meta.totalJoinSplitAmount;
     }
 
     // ______VIEW______
