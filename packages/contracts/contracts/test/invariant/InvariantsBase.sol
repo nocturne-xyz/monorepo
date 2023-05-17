@@ -61,14 +61,17 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
-        internal
-    {
+    function assert_protocol_tellerBalanceConsistent() internal {
         uint256 tellerBalance = depositErc20.balanceOf(address(teller));
+
+        // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
+        // we need to add the number of times prefills are taken to make up for over subtraction
         uint256 expectedInTeller = depositManagerHandler
-            .ghost_completeDepositSumErc20() -
+            .ghost_completeDepositSumErc20() +
+            tellerHandler.ghost_numberOfTimesPrefillTaken() -
             tellerHandler.ghost_totalTransferredOutOfTeller() -
-            tellerHandler.ghost_totalBundlerPayout();
+            tellerHandler.ghost_totalBundlerPayout() -
+            tellerHandler.ghost_numberOfTimesPrefillRefilled();
 
         assertEq(tellerBalance, expectedInTeller);
     }
@@ -282,12 +285,13 @@ contract InvariantsBase is Test {
         );
     }
 
-    function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped()
+    function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken()
         internal
     {
         assertLe(
             tellerHandler.ghost_totalTransferredOutOfTeller(),
-            tellerHandler.ghost_totalJoinSplitUnwrapped()
+            tellerHandler.ghost_totalJoinSplitUnwrapped() +
+                tellerHandler.ghost_numberOfTimesPrefillTaken()
         );
     }
 }

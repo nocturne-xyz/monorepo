@@ -201,10 +201,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20()
-        external
-    {
-        assert_protocol_tellerBalanceEqualsCompletedDepositSumMinusTransferedOutPlusBundlerPayoutErc20();
+    function invariant_protocol_tellerBalanceConsistent() external {
+        assert_protocol_tellerBalanceConsistent();
     }
 
     function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
@@ -302,9 +300,9 @@ contract ProtocolInvariants is Test, InvariantsBase {
         assert_operation_bundlerBalanceMatchesTracked();
     }
 
-    function invariant_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped()
+    function invariant_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken()
         external
     {
-        assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrapped();
+        assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken();
     }
 }
