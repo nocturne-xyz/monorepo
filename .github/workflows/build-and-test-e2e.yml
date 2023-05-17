@@ -8,11 +8,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::123456789100:role/my-github-actions-role
-          aws-region: us-east-2
       - name: cache dependencies
         uses: actions/cache@v2
         with:
@@ -28,7 +23,7 @@ jobs:
       - name: install foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly-f3c20d5664c8773d4ec3b2b67148cc1032f48f58
+          version: nightly-e15e33a07c0920189fc336391f538c3dad53da73
       - name: yarn install
         run: |
           yarn install --immutable
