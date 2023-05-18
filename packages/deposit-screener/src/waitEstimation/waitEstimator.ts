@@ -2,8 +2,9 @@ import { Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
 import { DepositRequestJobData, DepositRequestStatus } from "../types";
 import { Logger } from "winston";
-import { Address, Asset } from "@nocturne-xyz/sdk";
+import { Address, Asset, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
+import { hashDepositRequest } from "../typedData";
 
 export enum QueueType {
   Screener,
@@ -11,7 +12,11 @@ export enum QueueType {
 }
 
 export interface WaitEstimator {
-  estimateWaitTime(queue: QueueType, delay: number): Promise<number>;
+  estimateWaitTimeSeconds(
+    queue: QueueType,
+    asset: Asset,
+    delay: number
+  ): Promise<number>;
 }
 
 interface EstimateExistingWaitDeps {
@@ -22,10 +27,11 @@ interface EstimateExistingWaitDeps {
   fulfillerQueue: Queue<DepositRequestJobData>;
 }
 
-export async function estimateWaitTimeForExisting(
+export async function estimateWaitTimeSecondsForExisting(
   deps: EstimateExistingWaitDeps,
-  depositHash: string
+  depositRequest: DepositRequest
 ): Promise<number | undefined> {
+  const depositHash = hashDepositRequest(depositRequest);
   const status = await deps.db.getDepositRequestStatus(depositHash);
 
   if (!status) {
@@ -63,7 +69,12 @@ export async function estimateWaitTimeForExisting(
     delayInCurrentQueue = jobData.delay;
   }
 
-  return deps.waitEstimator.estimateWaitTime(queueType, delayInCurrentQueue);
+  const asset = AssetTrait.decode(depositRequest.encodedAsset);
+  return deps.waitEstimator.estimateWaitTimeSeconds(
+    queueType,
+    asset,
+    delayInCurrentQueue
+  );
 }
 
 interface EstimateProspectiveWaitDeps {
@@ -71,7 +82,7 @@ interface EstimateProspectiveWaitDeps {
   screenerDelayCalculator: ScreenerDelayCalculator;
 }
 
-export async function estimateWaitTimeForProspective(
+export async function estimateWaitTimeSecondsForProspective(
   deps: EstimateProspectiveWaitDeps,
   spender: Address,
   asset: Asset,
@@ -84,5 +95,11 @@ export async function estimateWaitTimeForProspective(
       value
     );
 
-  return deps.waitEstimator.estimateWaitTime(QueueType.Screener, screenerDelay);
+  const additionalWaitTime = await deps.waitEstimator.estimateWaitTimeSeconds(
+    QueueType.Screener,
+    asset,
+    screenerDelay
+  );
+
+  return screenerDelay + additionalWaitTime;
 }

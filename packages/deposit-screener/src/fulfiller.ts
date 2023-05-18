@@ -46,7 +46,7 @@ export interface DepositScreenerFulfillerHandle {
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
-  supportedAssets: Map<string, Erc20Config>;
+  supportedAssets: Map<string, Erc20Config>; // TODO: make this more generic
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
