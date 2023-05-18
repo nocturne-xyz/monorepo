@@ -28,14 +28,14 @@ interface EstimateExistingWaitDeps {
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
+// NOTE: This function can throw errors
 export async function estimateWaitTimeSecondsForExisting(
   deps: EstimateExistingWaitDeps,
   depositHash: string
-): Promise<number | undefined> {
+): Promise<number> {
   const status = await deps.db.getDepositRequestStatus(depositHash);
-
   if (!status) {
-    return undefined;
+    throw new Error(`No status found for deposit hash ${depositHash}`);
   }
 
   let queueType: QueueType;
@@ -47,7 +47,7 @@ export async function estimateWaitTimeSecondsForExisting(
       queueType = QueueType.Fulfiller;
       break;
     default:
-      return undefined; // TODO: maybe throw err here?
+      throw new Error(`Unrecognized status ${status}`);
   }
 
   let delayInCurrentQueue: number;
@@ -55,32 +55,31 @@ export async function estimateWaitTimeSecondsForExisting(
   if (queueType == QueueType.Screener) {
     const maybeJobData = await deps.screenerQueue.getJob(depositHash);
     if (!maybeJobData) {
-      deps.logger.warn(
+      throw new Error(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
-      return undefined;
     }
     delayInCurrentQueue = maybeJobData.delay;
     jobData = maybeJobData;
   } else {
     const depositRequest = await deps.db.getDepositRequest(depositHash);
     if (!depositRequest) {
-      return undefined;
+      throw new Error(
+        `No deposit request found for deposit hash ${depositHash}`
+      );
     }
 
     const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
     const fulfillerQueue = deps.fulfillerQueues.get(assetAddr);
     if (!fulfillerQueue) {
-      deps.logger.error(`No fulfiller queue for asset ${assetAddr}`);
-      return undefined;
+      throw new Error(`No fulfiller queue for asset ${assetAddr}`);
     }
 
     const maybeJobData = await fulfillerQueue.getJob(depositHash);
     if (!maybeJobData) {
-      deps.logger.warn(
+      throw new Error(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
-      return undefined;
     }
     delayInCurrentQueue = maybeJobData.delay;
     jobData = maybeJobData;
@@ -104,12 +103,13 @@ interface EstimateProspectiveWaitDeps {
   waitEstimator: WaitEstimator;
 }
 
+// NOTE: This function can throw error
 export async function estimateWaitTimeSecondsForProspective(
   deps: EstimateProspectiveWaitDeps,
   spender: Address,
   assetAddr: Address,
   value: bigint
-): Promise<number | undefined> {
+): Promise<number> {
   const passesScreen = await deps.screeningApi.validDepositRequest(
     spender,
     assetAddr,
@@ -117,7 +117,9 @@ export async function estimateWaitTimeSecondsForProspective(
   );
 
   if (!passesScreen) {
-    return undefined;
+    throw new Error(
+      `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
+    );
   }
 
   const screenerDelay =

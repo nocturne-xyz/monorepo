@@ -21,17 +21,6 @@ export interface DepositStatusHandlerDeps {
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
-const returnDepositNotFoundError = (
-  logger: Logger,
-  res: Response,
-  depositHash: string
-) => {
-  const errorMsg = `deposit request with hash ${depositHash} not found`;
-  logger.warn(errorMsg);
-  res.statusMessage = errorMsg;
-  res.status(400).json(errorMsg);
-};
-
 export function makeDepositStatusHandler({
   logger,
   db,
@@ -44,22 +33,27 @@ export function makeDepositStatusHandler({
 
     const maybeStatus = await db.getDepositRequestStatus(depositHash);
     if (!maybeStatus) {
-      returnDepositNotFoundError(logger, res, depositHash);
+      const errorMsg = `deposit request with hash ${depositHash} not found`;
+      logger.warn(errorMsg);
+      res.statusMessage = errorMsg;
+      res.status(400).json(errorMsg);
       return;
     }
 
-    // TODO: clarify assumptions, estimateWait should never return undefined if we passed
-    // maybeStatus check
-    const maybeDelay = await estimateWaitTimeSecondsForExisting(
-      { logger, db, waitEstimator, screenerQueue, fulfillerQueues },
-      depositHash
-    );
-    if (!maybeDelay) {
-      returnDepositNotFoundError(logger, res, depositHash);
+    let delay: number;
+    try {
+      delay = await estimateWaitTimeSecondsForExisting(
+        { logger, db, waitEstimator, screenerQueue, fulfillerQueues },
+        depositHash
+      );
+    } catch (err) {
+      logger.warn(err);
+      res.statusMessage = String(err);
+      res.status(400).json(err);
       return;
     }
 
-    res.json({ status: maybeStatus, estimatedWaitSeconds: maybeDelay });
+    res.json({ status: maybeStatus, estimatedWaitSeconds: delay });
   };
 }
 
@@ -97,22 +91,22 @@ export function makeQuoteHandler({
       return;
     }
 
-    const quote = await estimateWaitTimeSecondsForProspective(
-      {
-        screeningApi,
-        screenerDelayCalculator,
-        waitEstimator,
-      },
-      quoteRequest.spender,
-      quoteRequest.assetAddr,
-      quoteRequest.value
-    );
-
-    if (!quote) {
-      const errorMsg = `deposit quote failed screening. spender: ${quoteRequest.spender}. asset: ${quoteRequest.assetAddr}. value: ${quoteRequest.value}`;
-      logger.warn(errorMsg);
-      res.statusMessage = errorMsg;
-      res.status(400).json(errorMsg);
+    let quote: number;
+    try {
+      quote = await estimateWaitTimeSecondsForProspective(
+        {
+          screeningApi,
+          screenerDelayCalculator,
+          waitEstimator,
+        },
+        quoteRequest.spender,
+        quoteRequest.assetAddr,
+        quoteRequest.value
+      );
+    } catch (err) {
+      logger.warn(err);
+      res.statusMessage = String(err);
+      res.status(400).json(err);
       return;
     }
 
