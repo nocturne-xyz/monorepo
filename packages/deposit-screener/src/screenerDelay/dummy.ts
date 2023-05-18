@@ -1,13 +1,13 @@
-import { Address, Asset } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/sdk";
 
 export class DummyScreenerDelayCalculator {
   async calculateDelaySeconds(
     spender: Address,
-    asset: Asset,
+    assetAddr: Address,
     value: bigint
   ): Promise<number> {
     spender;
-    asset;
+    assetAddr;
     value;
     return 0;
   }

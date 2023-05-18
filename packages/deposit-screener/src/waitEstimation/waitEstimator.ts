@@ -2,7 +2,7 @@ import { Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
 import { DepositRequestJobData, DepositRequestStatus } from "../types";
 import { Logger } from "winston";
-import { Address, Asset, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
+import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { hashDepositRequest } from "../typedData";
 
@@ -14,7 +14,7 @@ export enum QueueType {
 export interface WaitEstimator {
   estimateWaitTimeSeconds(
     queue: QueueType,
-    asset: Asset,
+    assetAddr: Address,
     delay: number
   ): Promise<number>;
 }
@@ -69,10 +69,10 @@ export async function estimateWaitTimeSecondsForExisting(
     delayInCurrentQueue = jobData.delay;
   }
 
-  const asset = AssetTrait.decode(depositRequest.encodedAsset);
+  const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
   return deps.waitEstimator.estimateWaitTimeSeconds(
     queueType,
-    asset,
+    assetAddr,
     delayInCurrentQueue
   );
 }
@@ -85,19 +85,19 @@ interface EstimateProspectiveWaitDeps {
 export async function estimateWaitTimeSecondsForProspective(
   deps: EstimateProspectiveWaitDeps,
   spender: Address,
-  asset: Asset,
+  assetAddr: Address,
   value: bigint
 ): Promise<number | undefined> {
   const screenerDelay =
     await deps.screenerDelayCalculator.calculateDelaySeconds(
       spender,
-      asset,
+      assetAddr,
       value
     );
 
   const additionalWaitTime = await deps.waitEstimator.estimateWaitTimeSeconds(
     QueueType.Screener,
-    asset,
+    assetAddr,
     screenerDelay
   );
 

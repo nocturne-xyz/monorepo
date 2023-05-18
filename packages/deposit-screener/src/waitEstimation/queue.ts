@@ -1,17 +1,17 @@
 import { Queue } from "bullmq";
 import { QueueType, WaitEstimator } from "./waitEstimator";
 import { DepositRequestJobData } from "../types";
-import { Asset, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
+import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 
 export class QueueWaitEstimator implements WaitEstimator {
   screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Asset, Queue<DepositRequestJobData>>;
-  rateLimits: Map<Asset, bigint>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  rateLimits: Map<Address, bigint>;
 
   constructor(
     screenerQueue: Queue,
-    fulfillerQueues: Map<Asset, Queue<DepositRequestJobData>>,
-    rateLimits: Map<Asset, bigint>
+    fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>,
+    rateLimits: Map<Address, bigint>
   ) {
     this.screenerQueue = screenerQueue;
     this.fulfillerQueues = fulfillerQueues;
@@ -20,7 +20,7 @@ export class QueueWaitEstimator implements WaitEstimator {
 
   async estimateWaitTimeSeconds(
     queueType: QueueType,
-    asset: Asset,
+    assetAddr: Address,
     delay: number
   ): Promise<number> {
     let depositsAhead: DepositRequest[] = [];
@@ -35,15 +35,16 @@ export class QueueWaitEstimator implements WaitEstimator {
       ]
         .filter((job) => job.delay < delay)
         .map((job) => JSON.parse(job.data.depositRequestJson) as DepositRequest)
-        .filter((deposit) =>
-          AssetTrait.isSame(AssetTrait.decode(deposit.encodedAsset), asset)
+        .filter(
+          (deposit) =>
+            AssetTrait.decode(deposit.encodedAsset).assetAddr == assetAddr
         );
       depositsAhead.push(...depositsAheadInScreenerQueue);
     }
 
-    const fulfillerQueue = this.fulfillerQueues.get(asset);
+    const fulfillerQueue = this.fulfillerQueues.get(assetAddr);
     if (!fulfillerQueue) {
-      throw new Error(`No fulfiller queue for asset ${asset}`);
+      throw new Error(`No fulfiller queue for asset ${assetAddr}`);
     }
 
     const fulfillerDelayed = await fulfillerQueue.getDelayed();
@@ -70,9 +71,9 @@ export class QueueWaitEstimator implements WaitEstimator {
       0n
     );
 
-    const rateLimit = this.rateLimits.get(asset);
+    const rateLimit = this.rateLimits.get(assetAddr);
     if (!rateLimit) {
-      throw new Error(`No rate limit for asset ${asset}`);
+      throw new Error(`No rate limit for asset ${assetAddr}`);
     }
 
     const waitHours = Number(totalValueAhead / rateLimit);

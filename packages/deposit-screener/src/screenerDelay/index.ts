@@ -1,9 +1,9 @@
-import { Address, Asset } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/sdk";
 
 export interface ScreenerDelayCalculator {
   calculateDelaySeconds(
     spender: Address,
-    asset: Asset,
+    assetAddr: Address,
     value: bigint
   ): Promise<number>;
 }

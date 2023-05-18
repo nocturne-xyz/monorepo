@@ -232,7 +232,7 @@ export class DepositScreenerScreener {
     logger.debug(`calculating delay until second phase of screening`);
     const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
       depositRequest.spender,
-      AssetTrait.decode(depositRequest.encodedAsset),
+      AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
       depositRequest.value
     );
 
