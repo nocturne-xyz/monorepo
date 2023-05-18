@@ -5,6 +5,7 @@ import { Logger } from "winston";
 import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { hashDepositRequest } from "../typedData";
+import { ScreeningApi } from "../screening";
 
 export enum QueueType {
   Screener,
@@ -78,8 +79,9 @@ export async function estimateWaitTimeSecondsForExisting(
 }
 
 interface EstimateProspectiveWaitDeps {
-  waitEstimator: WaitEstimator;
+  screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
+  waitEstimator: WaitEstimator;
 }
 
 export async function estimateWaitTimeSecondsForProspective(
@@ -88,6 +90,16 @@ export async function estimateWaitTimeSecondsForProspective(
   assetAddr: Address,
   value: bigint
 ): Promise<number | undefined> {
+  const passesScreen = await deps.screeningApi.validDepositRequest(
+    spender,
+    assetAddr,
+    value
+  );
+
+  if (!passesScreen) {
+    return undefined;
+  }
+
   const screenerDelay =
     await deps.screenerDelayCalculator.calculateDelaySeconds(
       spender,

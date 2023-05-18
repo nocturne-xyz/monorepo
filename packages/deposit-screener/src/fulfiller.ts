@@ -46,7 +46,7 @@ export interface DepositScreenerFulfillerHandle {
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
-  supportedAssetRateLimits: Map<string, Address>;
+  supportedAssets: Map<string, Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
@@ -73,7 +73,7 @@ export class DepositScreenerFulfiller {
       txSigner
     );
 
-    this.supportedAssetRateLimits = new Map(
+    this.supportedAssets = new Map(
       Array.from(supportedErc20s).map(([ticker, config]) => [
         ticker,
         config.address,
@@ -87,87 +87,85 @@ export class DepositScreenerFulfiller {
     // per-asset rate limits with a single fulfillment queue
     const [proms, closeFns] = unzip(
       await Promise.all(
-        [...this.supportedAssetRateLimits.entries()].map(
-          async ([ticker, address]) => {
-            // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
-            const logger = parentLogger.child({ ticker: ticker });
-            logger.info(
-              `starting deposit screener fulfiller for asset ${address}`
-            );
+        [...this.supportedAssets.entries()].map(async ([ticker, address]) => {
+          // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
+          const logger = parentLogger.child({ ticker: ticker });
+          logger.info(
+            `starting deposit screener fulfiller for asset ${address}`
+          );
 
-            const window = await this.getErc20RateLimitWindow(address);
+          const window = await this.getErc20RateLimitWindow(address);
 
-            // make a worker listening to the current asset's fulfillment queue
-            const worker = new Worker(
-              getFulfillmentQueueName(ticker),
-              async (job: Job<DepositRequestJobData>) => {
-                const depositRequest: DepositRequest = JSON.parse(
-                  job.data.depositRequestJson
-                );
-                logger.info(
-                  `attempting to fulfill deposit request: ${depositRequest}`
-                );
-                const hash = hashDepositRequest(depositRequest);
-                const childLogger = logger.child({
-                  depositRequestSpender: depositRequest.spender,
-                  depositReququestNonce: depositRequest.nonce,
-                  depositRequestHash: hash,
-                });
-
-                // update rate limit window
-                window.removeOldEntries();
-
-                // if the deposit would exceed the rate limit, pause the queue
-                if (window.wouldExceedRateLimit(depositRequest.value)) {
-                  childLogger.warn(
-                    `fulfilling deposit ${hash} would exceed rate limit`
-                  );
-
-                  // not sure if it's possible for the RHS to be < 0, but my gut tells me it is so adding the check just to be safe
-                  const queueDelay = max(
-                    0,
-                    window.timeWhenAmountAvailable(depositRequest.value) -
-                      Date.now()
-                  );
-
-                  childLogger.debug(`delaying`);
-                  await worker.rateLimit(queueDelay);
-
-                  throw Worker.RateLimitError();
-                }
-
-                // otherwise, sign and submit it
-                const receipt = await this.signAndSubmitDeposit(
-                  childLogger,
-                  depositRequest
-                ).catch((e) => {
-                  childLogger.error(e);
-                  throw new Error(e);
-                });
-
-                const block = await this.txSigner.provider.getBlock(
-                  receipt.blockNumber
-                );
-                const timestamp = block.timestamp;
-
-                window.add({ amount: depositRequest.value, timestamp });
-              },
-              { connection: this.redis, autorun: true }
-            );
-
-            const prom = new Promise<void>((resolve) => {
-              worker.on("closed", () => {
-                logger.info(`fulfiller for asset ${address} closed`);
-                resolve();
+          // make a worker listening to the current asset's fulfillment queue
+          const worker = new Worker(
+            getFulfillmentQueueName(ticker),
+            async (job: Job<DepositRequestJobData>) => {
+              const depositRequest: DepositRequest = JSON.parse(
+                job.data.depositRequestJson
+              );
+              logger.info(
+                `attempting to fulfill deposit request: ${depositRequest}`
+              );
+              const hash = hashDepositRequest(depositRequest);
+              const childLogger = logger.child({
+                depositRequestSpender: depositRequest.spender,
+                depositReququestNonce: depositRequest.nonce,
+                depositRequestHash: hash,
               });
-            });
-            const closeFn = async () => {
-              await worker.close();
-            };
 
-            return [prom, closeFn];
-          }
-        )
+              // update rate limit window
+              window.removeOldEntries();
+
+              // if the deposit would exceed the rate limit, pause the queue
+              if (window.wouldExceedRateLimit(depositRequest.value)) {
+                childLogger.warn(
+                  `fulfilling deposit ${hash} would exceed rate limit`
+                );
+
+                // not sure if it's possible for the RHS to be < 0, but my gut tells me it is so adding the check just to be safe
+                const queueDelay = max(
+                  0,
+                  window.timeWhenAmountAvailable(depositRequest.value) -
+                    Date.now()
+                );
+
+                childLogger.debug(`delaying`);
+                await worker.rateLimit(queueDelay);
+
+                throw Worker.RateLimitError();
+              }
+
+              // otherwise, sign and submit it
+              const receipt = await this.signAndSubmitDeposit(
+                childLogger,
+                depositRequest
+              ).catch((e) => {
+                childLogger.error(e);
+                throw new Error(e);
+              });
+
+              const block = await this.txSigner.provider.getBlock(
+                receipt.blockNumber
+              );
+              const timestamp = block.timestamp;
+
+              window.add({ amount: depositRequest.value, timestamp });
+            },
+            { connection: this.redis, autorun: true }
+          );
+
+          const prom = new Promise<void>((resolve) => {
+            worker.on("closed", () => {
+              logger.info(`fulfiller for asset ${address} closed`);
+              resolve();
+            });
+          });
+          const closeFn = async () => {
+            await worker.close();
+          };
+
+          return [prom, closeFn];
+        })
       )
     );
 

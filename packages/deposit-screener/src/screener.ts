@@ -292,7 +292,9 @@ export class DepositScreenerScreener {
         }
 
         const valid = await this.screeningApi.validDepositRequest(
-          depositRequest
+          depositRequest.spender,
+          AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+          depositRequest.value
         );
         if (!valid) {
           childLogger.warn(`deposit failed second screening screening`);
