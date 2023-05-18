@@ -270,6 +270,10 @@ export class SubtreeUpdater {
       .map((batch: (Note | bigint)[]) => {
         const subtreeLeftmostPathIndex = this.tree.count();
         const oldRoot = this.tree.getRoot();
+        logger.debug(
+          `got batch with leftmost index ${subtreeLeftmostPathIndex}`,
+          { batch }
+        );
 
         const leaves = batch.map((noteOrCommitment) =>
           NoteTrait.isCommitment(noteOrCommitment)
@@ -287,11 +291,12 @@ export class SubtreeUpdater {
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
 
-        this.logger.info(`got batch for subtree index ${subtreeIndex}`, {
+        logger.info(`creating proof job at subtree index ${subtreeIndex}`, {
           subtreeIndex,
           batch,
           oldRoot,
           newRoot,
+          proofInputs,
         });
 
         return { subtreeIndex, proofInputs, newRoot };
