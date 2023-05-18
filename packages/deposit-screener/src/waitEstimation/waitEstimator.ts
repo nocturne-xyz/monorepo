@@ -1,11 +1,11 @@
-import { Queue } from "bullmq";
+import { Job, Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
 import { DepositRequestJobData, DepositRequestStatus } from "../types";
 import { Logger } from "winston";
 import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
-import { hashDepositRequest } from "../typedData";
 import { ScreeningApi } from "../screening";
+import * as JSON from "bigint-json-serialization";
 
 export enum QueueType {
   Screener,
@@ -30,9 +30,8 @@ interface EstimateExistingWaitDeps {
 
 export async function estimateWaitTimeSecondsForExisting(
   deps: EstimateExistingWaitDeps,
-  depositRequest: DepositRequest
+  depositHash: string
 ): Promise<number | undefined> {
-  const depositHash = hashDepositRequest(depositRequest);
   const status = await deps.db.getDepositRequestStatus(depositHash);
 
   if (!status) {
@@ -52,23 +51,30 @@ export async function estimateWaitTimeSecondsForExisting(
   }
 
   let delayInCurrentQueue: number;
+  let jobData: Job<DepositRequestJobData, any, string>;
   if (queueType == QueueType.Screener) {
-    const jobData = await deps.screenerQueue.getJob(depositHash);
-    if (!jobData) {
+    const maybeJobData = await deps.screenerQueue.getJob(depositHash);
+    if (!maybeJobData) {
       const errMsg = `Could not find job in screener queue for deposit hash ${depositHash}`;
       deps.logger.error(errMsg);
       throw new Error(errMsg);
     }
-    delayInCurrentQueue = jobData.delay;
+    delayInCurrentQueue = maybeJobData.delay;
+    jobData = maybeJobData;
   } else {
-    const jobData = await deps.fulfillerQueue.getJob(depositHash);
-    if (!jobData) {
+    const maybeJobData = await deps.fulfillerQueue.getJob(depositHash);
+    if (!maybeJobData) {
       const errMsg = `Could not find job in screener queue for deposit hash ${depositHash}`;
       deps.logger.error(errMsg);
       throw new Error(errMsg);
     }
-    delayInCurrentQueue = jobData.delay;
+    delayInCurrentQueue = maybeJobData.delay;
+    jobData = maybeJobData;
   }
+
+  const depositRequest: DepositRequest = JSON.parse(
+    jobData.data.depositRequestJson
+  );
 
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
   return deps.waitEstimator.estimateWaitTimeSeconds(

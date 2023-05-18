@@ -3,13 +3,67 @@ import { tryParseQuoteRequest } from "./requestValidation";
 import { Logger } from "winston";
 import {
   WaitEstimator,
+  estimateWaitTimeSecondsForExisting,
   estimateWaitTimeSecondsForProspective,
 } from "./waitEstimation";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { Address } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from "./screening";
+import { DepositScreenerDB } from "./db";
+import { Queue } from "bullmq";
+import { DepositRequestJobData } from "./types";
 
-interface QuoteHandlerDeps {
+export interface DepositStatusHandlerDeps {
+  db: DepositScreenerDB;
+  logger: Logger;
+  waitEstimator: WaitEstimator;
+  screenerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueue: Queue<DepositRequestJobData>;
+}
+
+const returnDepositNotFoundError = (
+  logger: Logger,
+  res: Response,
+  depositHash: string
+) => {
+  const errorMsg = `deposit request with hash ${depositHash} not found`;
+  logger.warn(errorMsg);
+  res.statusMessage = errorMsg;
+  res.status(400).json(errorMsg);
+};
+
+export function makeDepositStatusHandler({
+  logger,
+  db,
+  waitEstimator,
+  screenerQueue,
+  fulfillerQueue,
+}: DepositStatusHandlerDeps): RequestHandler {
+  return async (req: Request, res: Response) => {
+    const depositHash = req.params.depositHash;
+
+    const maybeStatus = await db.getDepositRequestStatus(depositHash);
+    if (!maybeStatus) {
+      returnDepositNotFoundError(logger, res, depositHash);
+      return;
+    }
+
+    // TODO: clarify assumptions, estimateWait should never return undefined if we passed
+    // maybeStatus check
+    const maybeDelay = await estimateWaitTimeSecondsForExisting(
+      { logger, db, waitEstimator, screenerQueue, fulfillerQueue },
+      depositHash
+    );
+    if (!maybeDelay) {
+      returnDepositNotFoundError(logger, res, depositHash);
+      return;
+    }
+
+    res.json({ status: maybeStatus, estimatedWaitSeconds: maybeDelay });
+  };
+}
+
+export interface QuoteHandlerDeps {
   logger: Logger;
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
