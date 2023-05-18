@@ -17,7 +17,7 @@ import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
-  DELAYED_DEPOSIT_QUEUE,
+  SCREENER_DELAY_QUEUE,
   DepositRequestJobData,
   DELAYED_DEPOSIT_JOB_TAG,
   getFulfillmentJobTag,
@@ -32,7 +32,6 @@ import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { Erc20Config } from "@nocturne-xyz/config";
 
 export interface DepositScreenerScreenerHandle {
   // promise that resolves when the service is done
@@ -46,7 +45,7 @@ export class DepositScreenerScreener {
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
   delayCalculator: ScreenerDelayCalculator;
-  delayQueue: Queue<DepositRequestJobData>;
+  screenerDelayQueue: Queue<DepositRequestJobData>;
   db: DepositScreenerDB;
   redis: IORedis;
   logger: Logger;
@@ -61,7 +60,7 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
-    supportedAssets: Map<string, Erc20Config>,
+    supportedAssets: Map<Address, string>,
     startBlock?: number
   ) {
     this.redis = redis;
@@ -77,17 +76,14 @@ export class DepositScreenerScreener {
 
     this.db = new DepositScreenerDB(redis);
 
-    this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
+    this.screenerDelayQueue = new Queue(SCREENER_DELAY_QUEUE, {
+      connection: redis,
+    });
 
     this.screeningApi = new DummyScreeningApi();
     this.delayCalculator = new DummyScreenerDelayCalculator();
 
-    this.supportedAssets = new Map(
-      [...supportedAssets.entries()].map(([ticker, config]) => [
-        config.address,
-        ticker,
-      ])
-    );
+    this.supportedAssets = supportedAssets;
   }
 
   async start(
@@ -156,23 +152,11 @@ export class DepositScreenerScreener {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
-        logger.debug(`received deposit event`, event);
-        const {
-          spender,
-          encodedAsset,
-          value,
-          depositAddr,
-          nonce,
-          gasCompensation,
-        } = event;
+        logger.debug(`received deposit event, storing in DB`, event);
         const depositRequest: DepositRequest = {
-          spender,
-          encodedAsset,
-          value,
-          depositAddr,
-          nonce,
-          gasCompensation,
+          ...event,
         };
+        await this.db.storeDepositRequest(depositRequest);
 
         const hash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
@@ -244,7 +228,7 @@ export class DepositScreenerScreener {
     logger.info(
       `scheduling second phase of screening to start in ${delaySeconds} seconds`
     );
-    await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+    await this.screenerDelayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
       // TODO: make jobId = depositHash
       delay: secsToMillis(delaySeconds),
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
@@ -260,7 +244,7 @@ export class DepositScreenerScreener {
     logger.info("starting arbiter...");
 
     return new Worker(
-      DELAYED_DEPOSIT_QUEUE,
+      SCREENER_DELAY_QUEUE,
       async (job: Job<DepositRequestJobData>) => {
         logger.debug("processing deposit request");
         const depositRequest: DepositRequest = JSON.parse(

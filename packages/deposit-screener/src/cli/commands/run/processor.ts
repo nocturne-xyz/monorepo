@@ -66,13 +66,20 @@ const runProcess = new Command("processor")
       "processor",
       stdoutLogLevel
     );
+    const supportedAssets = new Map(
+      Array.from(config.erc20s.entries()).map(([ticker, config]) => [
+        config.address,
+        ticker,
+      ])
+    );
+
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress(),
       provider,
       getRedis(),
       logger,
-      config.erc20s,
+      supportedAssets,
       config.contracts.startBlock
     );
 
@@ -81,7 +88,7 @@ const runProcess = new Command("processor")
       txSigner,
       attestationSigner,
       getRedis(),
-      config.erc20s
+      supportedAssets
     );
 
     const screenerHandle = await screener.start(throttleMs);

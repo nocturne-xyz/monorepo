@@ -1,4 +1,3 @@
-import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetTrait,
@@ -46,7 +45,7 @@ export interface DepositScreenerFulfillerHandle {
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
-  supportedAssets: Map<string, Address>;
+  supportedAssets: Map<Address, string>; // address => ticker
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
@@ -59,7 +58,7 @@ export class DepositScreenerFulfiller {
     txSigner: ethers.Wallet,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
-    supportedErc20s: Map<string, Erc20Config>
+    supportedAssets: Map<Address, string>
   ) {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
@@ -73,12 +72,7 @@ export class DepositScreenerFulfiller {
       txSigner
     );
 
-    this.supportedAssets = new Map(
-      Array.from(supportedErc20s).map(([ticker, config]) => [
-        ticker,
-        config.address,
-      ])
-    );
+    this.supportedAssets = supportedAssets;
   }
 
   async start(parentLogger: Logger): Promise<DepositScreenerFulfillerHandle> {
@@ -87,7 +81,7 @@ export class DepositScreenerFulfiller {
     // per-asset rate limits with a single fulfillment queue
     const [proms, closeFns] = unzip(
       await Promise.all(
-        [...this.supportedAssets.entries()].map(async ([ticker, address]) => {
+        [...this.supportedAssets.entries()].map(async ([address, ticker]) => {
           // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
           const logger = parentLogger.child({ ticker: ticker });
           logger.info(

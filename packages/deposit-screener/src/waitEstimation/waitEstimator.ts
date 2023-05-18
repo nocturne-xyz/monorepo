@@ -25,7 +25,7 @@ interface EstimateExistingWaitDeps {
   logger: Logger;
   waitEstimator: WaitEstimator;
   screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
 export async function estimateWaitTimeSecondsForExisting(
@@ -55,18 +55,32 @@ export async function estimateWaitTimeSecondsForExisting(
   if (queueType == QueueType.Screener) {
     const maybeJobData = await deps.screenerQueue.getJob(depositHash);
     if (!maybeJobData) {
-      const errMsg = `Could not find job in screener queue for deposit hash ${depositHash}`;
-      deps.logger.error(errMsg);
-      throw new Error(errMsg);
+      deps.logger.warn(
+        `Could not find job in screener queue for deposit hash ${depositHash}`
+      );
+      return undefined;
     }
     delayInCurrentQueue = maybeJobData.delay;
     jobData = maybeJobData;
   } else {
-    const maybeJobData = await deps.fulfillerQueue.getJob(depositHash);
+    const depositRequest = await deps.db.getDepositRequest(depositHash);
+    if (!depositRequest) {
+      return undefined;
+    }
+
+    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
+    const fulfillerQueue = deps.fulfillerQueues.get(assetAddr);
+    if (!fulfillerQueue) {
+      deps.logger.error(`No fulfiller queue for asset ${assetAddr}`);
+      return undefined;
+    }
+
+    const maybeJobData = await fulfillerQueue.getJob(depositHash);
     if (!maybeJobData) {
-      const errMsg = `Could not find job in screener queue for deposit hash ${depositHash}`;
-      deps.logger.error(errMsg);
-      throw new Error(errMsg);
+      deps.logger.warn(
+        `Could not find job in screener queue for deposit hash ${depositHash}`
+      );
+      return undefined;
     }
     delayInCurrentQueue = maybeJobData.delay;
     jobData = maybeJobData;

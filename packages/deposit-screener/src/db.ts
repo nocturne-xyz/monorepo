@@ -2,6 +2,7 @@ import { DepositRequest } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 import { hashDepositRequest } from "./typedData";
 import { DepositRequestStatus } from "./types";
+import * as JSON from "bigint-json-serialization";
 
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 
@@ -55,6 +56,22 @@ export class DepositScreenerDB {
       DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
     const val = await this.redis.get(key);
     return val ? (val as DepositRequestStatus) : undefined;
+  }
+
+  async storeDepositRequest(depositRequest: DepositRequest): Promise<void> {
+    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
+    await this.redis.set(key, JSON.stringify(depositRequest));
+  }
+
+  async getDepositRequest(
+    depositHash: string
+  ): Promise<DepositRequest | undefined> {
+    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositHash);
+    const val = await this.redis.get(key);
+    if (!val) {
+      return undefined;
+    }
+    return JSON.parse(val) as DepositRequest;
   }
 
   async setDepositAmountForAddress(

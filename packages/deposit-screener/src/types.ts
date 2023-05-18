@@ -1,5 +1,7 @@
 import { DepositRequest } from "@nocturne-xyz/sdk";
 
+export const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
 export enum DepositEventType {
   Instantiated = "Instantiated",
   Retrieved = "Retrieved",
@@ -22,8 +24,8 @@ export enum DepositRequestStatus {
 export const SUBMISSION_QUEUE = "DepositSubmissionQueue";
 export const SUBMISSION_JOB_TAG = "DEPOSIT_SUBMISSION";
 
-export const DELAYED_DEPOSIT_QUEUE = "DelayedDepositQueue";
-export const DELAYED_DEPOSIT_JOB_TAG = "DELAYED_DEPOSIT";
+export const SCREENER_DELAY_QUEUE = "ScreenerDelayQueue";
+export const DELAYED_DEPOSIT_JOB_TAG = "SCREENER_DELAY";
 
 export function getFulfillmentQueueName(ticker: string): string {
   return `${FULFILLMENT_QUEUE}_${ticker}`;

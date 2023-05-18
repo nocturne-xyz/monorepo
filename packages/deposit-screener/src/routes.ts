@@ -18,7 +18,7 @@ export interface DepositStatusHandlerDeps {
   logger: Logger;
   waitEstimator: WaitEstimator;
   screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
 const returnDepositNotFoundError = (
@@ -37,7 +37,7 @@ export function makeDepositStatusHandler({
   db,
   waitEstimator,
   screenerQueue,
-  fulfillerQueue,
+  fulfillerQueues,
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     const depositHash = req.params.depositHash;
@@ -51,7 +51,7 @@ export function makeDepositStatusHandler({
     // TODO: clarify assumptions, estimateWait should never return undefined if we passed
     // maybeStatus check
     const maybeDelay = await estimateWaitTimeSecondsForExisting(
-      { logger, db, waitEstimator, screenerQueue, fulfillerQueue },
+      { logger, db, waitEstimator, screenerQueue, fulfillerQueues },
       depositHash
     );
     if (!maybeDelay) {
