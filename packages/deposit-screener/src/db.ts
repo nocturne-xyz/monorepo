@@ -18,9 +18,12 @@ export class DepositScreenerDB {
   }
 
   private static formatDepositRequestStatusKey(
-    depositRequest: DepositRequest
+    depositRequestOrHash: DepositRequest | string
   ): string {
-    return DEPOSIT_REQUEST_STAGE_PREFIX + hashDepositRequest(depositRequest);
+    if (typeof depositRequestOrHash !== "string") {
+      depositRequestOrHash = hashDepositRequest(depositRequestOrHash);
+    }
+    return DEPOSIT_REQUEST_STAGE_PREFIX + depositRequestOrHash;
   }
 
   private static formatPerAddressDepositAmountKey(address: string): string {
@@ -37,17 +40,19 @@ export class DepositScreenerDB {
   }
 
   async setDepositRequestStatus(
-    depositRequest: DepositRequest,
+    depositRequestOrHash: DepositRequest | string,
     status: DepositRequestStatus
   ): Promise<void> {
-    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
+    const key =
+      DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
     await this.redis.set(key, status.toString());
   }
 
   async getDepositRequestStatus(
-    depositRequest: DepositRequest
+    depositRequestOrHash: DepositRequest | string
   ): Promise<DepositRequestStatus | undefined> {
-    const key = DepositScreenerDB.formatDepositRequestStatusKey(depositRequest);
+    const key =
+      DepositScreenerDB.formatDepositRequestStatusKey(depositRequestOrHash);
     const val = await this.redis.get(key);
     return val ? (val as DepositRequestStatus) : undefined;
   }

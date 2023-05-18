@@ -24,7 +24,10 @@ import {
   getFulfillmentQueueName,
 } from "./types";
 import IORedis from "ioredis";
-import { DelayCalculator, DummyDelayCalculator } from "./delay";
+import {
+  ScreenerDelayCalculator,
+  DummyScreenerDelayCalculator,
+} from "./screenerDelay";
 import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
@@ -42,8 +45,8 @@ export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
-  delayCalculator: DelayCalculator;
-  delayQueue: Queue;
+  delayCalculator: ScreenerDelayCalculator;
+  delayQueue: Queue<DepositRequestJobData>;
   db: DepositScreenerDB;
   redis: IORedis;
   logger: Logger;
@@ -77,7 +80,7 @@ export class DepositScreenerScreener {
     this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
 
     this.screeningApi = new DummyScreeningApi();
-    this.delayCalculator = new DummyDelayCalculator();
+    this.delayCalculator = new DummyScreenerDelayCalculator();
 
     this.supportedAssets = new Map(
       [...supportedAssets.entries()].map(([ticker, config]) => [
@@ -228,7 +231,9 @@ export class DepositScreenerScreener {
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
     const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
-      depositRequest
+      depositRequest.spender,
+      AssetTrait.decode(depositRequest.encodedAsset),
+      depositRequest.value
     );
 
     const depositRequestJson = JSON.stringify(depositRequest);
@@ -240,6 +245,7 @@ export class DepositScreenerScreener {
       `scheduling second phase of screening to start in ${delaySeconds} seconds`
     );
     await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+      // TODO: make jobId = depositHash
       delay: secsToMillis(delaySeconds),
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
       attempts: 5,
@@ -312,7 +318,7 @@ export class DepositScreenerScreener {
         const jobTag = getFulfillmentJobTag(assetTicker);
 
         // submit to it
-        await fulfillmentQueue.add(jobTag, jobData);
+        await fulfillmentQueue.add(jobTag, jobData); // TODO: make jobId = depositHash
         await this.db.setDepositRequestStatus(
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment
