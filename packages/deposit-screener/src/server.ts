@@ -14,7 +14,9 @@ import { DepositScreenerDB } from "./db";
 import { WaitEstimator } from "./waitEstimation";
 import { Address } from "@nocturne-xyz/sdk";
 import { QueueWaitEstimator } from "./waitEstimation/queue";
-import { makeDepositStatusHandler } from "./routes";
+import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
+import { ScreenerDelayCalculator } from "./screenerDelay";
+import { ScreeningApi } from "./screening";
 
 export interface TickerAndRateLimit {
   ticker: Address;
@@ -25,18 +27,25 @@ export class DepositScreenerServer {
   redis: IORedis;
   logger: Logger;
   db: DepositScreenerDB;
+  screeningApi: ScreeningApi;
+  screenerDelayCalculator: ScreenerDelayCalculator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
   waitEstimator: WaitEstimator;
+  supportedAssets: Map<Address, string>;
 
   constructor(
     redis: IORedis,
     logger: Logger,
+    screeningApi: ScreeningApi,
+    screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssetRateLimits: Map<Address, TickerAndRateLimit>
   ) {
     this.redis = redis;
     this.logger = logger;
     this.db = new DepositScreenerDB(redis);
+    this.screeningApi = screeningApi;
+    this.screenerDelayCalculator = screenerDelayCalculator;
     this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, { connection: redis });
     this.fulfillerQueues = new Map(
       Array.from(supportedAssetRateLimits.values()).map(({ ticker }) => {
@@ -57,6 +66,12 @@ export class DepositScreenerServer {
       this.fulfillerQueues,
       rateLimits
     );
+
+    this.supportedAssets = new Map(
+      Array.from(supportedAssetRateLimits.entries()).map(
+        ([address, { ticker }]) => [address, ticker]
+      )
+    );
   }
 
   start(port: number): () => Promise<void> {
@@ -70,6 +85,17 @@ export class DepositScreenerServer {
         waitEstimator: this.waitEstimator,
         screenerQueue: this.screenerQueue,
         fulfillerQueues: this.fulfillerQueues,
+      })
+    );
+
+    router.get(
+      "/quote",
+      makeQuoteHandler({
+        logger: this.logger,
+        screeningApi: this.screeningApi,
+        screenerDelayCalculator: this.screenerDelayCalculator,
+        waitEstimator: this.waitEstimator,
+        supportedAssets: this.supportedAssets,
       })
     );
 

@@ -62,7 +62,7 @@ export interface QuoteHandlerDeps {
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
   waitEstimator: WaitEstimator;
-  supportedAssets: Set<Address>;
+  supportedAssets: Map<Address, string>;
 }
 
 export function makeQuoteHandler({
