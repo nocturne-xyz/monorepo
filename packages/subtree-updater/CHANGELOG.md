@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- get `subtreeIndex`, not `subtreeBatchOffset` from subgraph when determining whether or not to enqueue proof job
 - close other workers/iters/async "threads" when one of them fails
 - add `--stdout-log-level` post-rewrite
 - pull start block from config in cli

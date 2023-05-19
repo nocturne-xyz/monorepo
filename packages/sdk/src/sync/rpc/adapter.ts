@@ -92,7 +92,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         if (subtreeUpdateCommits.length > 0) {
           nextMerkleIndex = maxArray(
             subtreeUpdateCommits.map(
-              (c) => (c.subtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE
+              (c) => c.subtreeBatchOffset + BinaryPoseidonTree.BATCH_SIZE - 1
             )
           );
         }

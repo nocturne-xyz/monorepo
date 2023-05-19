@@ -4,7 +4,9 @@ import {
   EncodedNote,
   NoteTrait,
   StealthAddressTrait,
+  assertOrErr,
 } from "@nocturne-xyz/sdk";
+import { BATCH_SIZE } from "../../subtreeUpdater";
 
 const { makeSubgraphQuery, totalEntityIndexFromBlockNumber } = SubgraphUtils;
 
@@ -94,8 +96,8 @@ export async function fetchInsertions(
 
 const latestSubtreeCommitQuery = `\
   query latestSubtreeCommit {
-    subtreeCommits(orderBy: subtreeIndex, orderDirection: desc, first: 1) {
-      subtreeIndex
+    subtreeCommits(orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
+      subtreeBatchOffset
     }
   }
 `;
@@ -107,10 +109,10 @@ interface LatestSubtreeCommitResponse {
 }
 
 interface SubtreeCommitResponse {
-  subtreeIndex: string;
+  subtreeBatchOffset: string;
 }
 
-export async function fetchLatestSubtreeCommit(
+export async function fetchLatestCommittedSubtreeIndex(
   endpoint: string
 ): Promise<number> {
   const query = makeSubgraphQuery<undefined, LatestSubtreeCommitResponse>(
@@ -125,5 +127,12 @@ export async function fetchLatestSubtreeCommit(
     return -1;
   }
 
-  return parseInt(res.data.subtreeCommits[0].subtreeIndex);
+  const subtreeBatchOffset = parseInt(
+    res.data.subtreeCommits[0].subtreeBatchOffset
+  );
+  assertOrErr(
+    subtreeBatchOffset % BATCH_SIZE === 0,
+    `received invalid leftmost leaf index from subgraph: ${res.data.subtreeCommits[0].subtreeBatchOffset}`
+  );
+  return subtreeBatchOffset / BATCH_SIZE;
 }

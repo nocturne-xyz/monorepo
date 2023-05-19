@@ -13,7 +13,8 @@
     "@nocturne-xyz/sdk#build": {
       "dependsOn": [
         "@nocturne-xyz/contracts#build",
-        "@nocturne-xyz/config#build"
+        "@nocturne-xyz/config#build",
+        "@nocturne-xyz/subgraph#build"
       ]
     },
     "@nocturne-xyz/deploy#build": {

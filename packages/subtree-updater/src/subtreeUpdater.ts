@@ -36,7 +36,7 @@ const PROOF_JOB_TAG = "PROOF_JOB";
 const SUBMISSION_QUEUE_NAME = "SUBMISSION_QUEUE";
 const SUBMISSION_JOB_TAG = "SUBMISSION_JOB";
 
-const BATCH_SIZE = 16;
+export const BATCH_SIZE = 16;
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {
@@ -108,9 +108,7 @@ export class SubtreeUpdater {
 
         // queue up a proof job if it hasn't already been committed on-chain
         if (job.subtreeIndex > latestSubtreeIndex) {
-          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job), {
-            attempts: 3,
-          });
+          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
         }
 
         // mark leftmost leaf of subtree as ready for prune now that job has been queued
@@ -178,7 +176,14 @@ export class SubtreeUpdater {
         };
         await this.submissionQueue.add(
           SUBMISSION_JOB_TAG,
-          JSON.stringify(jobData)
+          JSON.stringify(jobData),
+          {
+            attempts: 3,
+            backoff: {
+              type: "fixed",
+              delay: 1000,
+            },
+          }
         );
       },
       {
@@ -270,6 +275,10 @@ export class SubtreeUpdater {
       .map((batch: (Note | bigint)[]) => {
         const subtreeLeftmostPathIndex = this.tree.count();
         const oldRoot = this.tree.getRoot();
+        logger.debug(
+          `got batch with leftmost index ${subtreeLeftmostPathIndex}`,
+          { batch }
+        );
 
         const leaves = batch.map((noteOrCommitment) =>
           NoteTrait.isCommitment(noteOrCommitment)
@@ -287,11 +296,12 @@ export class SubtreeUpdater {
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
 
-        this.logger.info(`got batch for subtree index ${subtreeIndex}`, {
+        logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
           subtreeIndex,
           batch,
           oldRoot,
           newRoot,
+          proofInputs,
         });
 
         return { subtreeIndex, proofInputs, newRoot };

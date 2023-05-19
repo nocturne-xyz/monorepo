@@ -131,7 +131,7 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   const commit = new SubtreeCommit(id);
 
   commit.newRoot = event.params.newRoot;
-  commit.subtreeIndex = event.params.subtreeIndex;
+  commit.subtreeBatchOffset = event.params.subtreeBatchOffset;
   commit.idx = idx;
   commit.save();
 }

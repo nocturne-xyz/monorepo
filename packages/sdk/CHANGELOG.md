@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug in `subtreeUpdateInputsFromBatch` encoding path in wrong endianness
 - fix bug resulting from `AssetTrait.decode` not returning checksum addresses
 - add `unzip` to utils
 - add default indexing throttle to SDK to avoid subgraph rate limits

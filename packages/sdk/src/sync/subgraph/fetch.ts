@@ -1,10 +1,10 @@
 import { StealthAddress } from "../../crypto";
 import {
   AssetTrait,
-  BinaryPoseidonTree,
   IncludedEncryptedNote,
   IncludedNote,
 } from "../../primitives";
+import { BATCH_SIZE } from "../../primitives/treeConstants";
 import { maxArray } from "../../utils";
 import { makeSubgraphQuery, totalEntityIndexFromBlockNumber } from "./utils";
 
@@ -193,14 +193,13 @@ interface FetchSubtreeCommitsVars {
 }
 
 interface SubtreeCommitResponse {
-  newRoot: string;
-  subtreeIndex: string;
+  subtreeBatchOffset: string;
 }
 
 const subtreeCommitQuery = `
   query fetchSubtreeCommits($toBlock: Int!) {
-    subtreeCommits(block: { number: $toBlock }, orderBy: subtreeIndex, orderDirection: desc, first: 1) {
-      subtreeIndex
+    subtreeCommits(block: { number: $toBlock }, orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
+      subtreeBatchOffset
     }
   }
 `;
@@ -219,12 +218,12 @@ export async function fetchLastCommittedMerkleIndex(
   if (!res.data || res.data.subtreeCommits.length === 0) {
     return -1;
   } else {
-    const subtreeIndices = res.data.subtreeCommits.map((commit) =>
-      parseInt(commit.subtreeIndex)
+    const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
+      parseInt(commit.subtreeBatchOffset)
     );
-    const maxSubtreeIndex = maxArray(subtreeIndices);
+    const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
 
-    return (maxSubtreeIndex + 1) * BinaryPoseidonTree.BATCH_SIZE - 1;
+    return maxSubtreeBatchOffset + BATCH_SIZE - 1;
   }
 }
 

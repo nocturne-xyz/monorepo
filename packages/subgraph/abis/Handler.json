@@ -4,31 +4,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "contractAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "permission",
-        "type": "bool"
-      }
-    ],
-    "name": "CallableContractAllowlistPermissionSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
@@ -422,11 +397,30 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "subtreeIndex",
+        "name": "subtreeBatchOffset",
         "type": "uint256"
       }
     ],
     "name": "SubtreeUpdate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "permission",
+        "type": "bool"
+      }
+    ],
+    "name": "SupportedContractAllowlistPermissionSet",
     "type": "event"
   },
   {
@@ -440,37 +434,6 @@
       }
     ],
     "name": "Unpaused",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetAddr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetId",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EncodedAsset",
-        "name": "encodedAsset",
-        "type": "tuple"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "balance",
-        "type": "uint256"
-      }
-    ],
-    "name": "UpdatedAssetPrefill",
     "type": "event"
   },
   {
@@ -501,19 +464,6 @@
   },
   {
     "inputs": [],
-    "name": "ENTERED_PREFILL",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "NOT_ENTERED",
     "outputs": [
       {
@@ -523,44 +473,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint192",
-        "name": "",
-        "type": "uint192"
-      }
-    ],
-    "name": "_callableContractAllowlist",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "encodedFunctionData",
-        "type": "bytes"
-      }
-    ],
-    "name": "_extractFunctionSelector",
-    "outputs": [
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      }
-    ],
-    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -604,25 +516,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "_prefilledAssetBalances",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
@@ -652,7 +545,26 @@
         "type": "address"
       }
     ],
-    "name": "_subtreeBatchFiller",
+    "name": "_subtreeBatchFillers",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "_supportedContractAllowlist",
     "outputs": [
       {
         "internalType": "bool",
@@ -674,36 +586,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetAddr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetId",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct EncodedAsset",
-        "name": "encodedAsset",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "addToAssetPrefill",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1102,19 +984,9 @@
             "internalType": "struct StealthAddress",
             "name": "depositAddr",
             "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "gasCompensation",
-            "type": "uint256"
           }
         ],
-        "internalType": "struct DepositRequest",
+        "internalType": "struct Deposit",
         "name": "deposit",
         "type": "tuple"
       }
@@ -1672,29 +1544,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "contractAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "bool",
-        "name": "permission",
-        "type": "bool"
-      }
-    ],
-    "name": "setCallableContractAllowlistPermission",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "filler",
         "type": "address"
       },
@@ -1705,6 +1554,24 @@
       }
     ],
     "name": "setSubtreeBatchFillerPermission",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "contractAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "permission",
+        "type": "bool"
+      }
+    ],
+    "name": "setSupportedContractAllowlistPermission",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
