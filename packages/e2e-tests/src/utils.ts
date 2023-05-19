@@ -15,6 +15,7 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/sdk";
+import { DepositRequestStatus } from "@nocturne-xyz/deposit-screener";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -29,6 +30,11 @@ const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
+
+export interface DepositStatusResponse {
+  status: DepositRequestStatus;
+  estimatedWaitSeconds: number;
+}
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -65,6 +71,24 @@ export function getSubtreeUpdaterDelay(): number {
   }
 
   return MOCK_SUBTREE_UPDATER_DELAY;
+}
+
+export async function queryDepositStatus(
+  depositHash: string
+): Promise<DepositStatusResponse> {
+  console.log(`query deposit status for ${depositHash}`);
+
+  try {
+    const res = await fetch(`http://localhost:3001/status/${depositHash}`, {
+      method: "GET",
+    });
+    const statusRes = await res.json();
+    console.log(`screener returned status ${depositHash} ${statusRes}`);
+    return JSON.parse(statusRes) as DepositStatusResponse;
+  } catch (err) {
+    console.log("error getting deposit status: ", err);
+    throw err;
+  }
 }
 
 export async function submitAndProcessOperation(

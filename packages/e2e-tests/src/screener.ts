@@ -19,6 +19,7 @@ export interface DepositScreenerConfig {
   rpcUrl: string;
   attestationSignerKey: string;
   txSignerKey: string;
+  dummyScreeningDelay?: number;
 }
 
 const { getRedis, clearRedis } = makeRedisInstance();
@@ -50,6 +51,7 @@ export async function startDepositScreener(
     supportedAssetsSet
   );
   const stopServer = startDepositScreenerServer(
+    config,
     redis,
     supportedAssetRateLimits
   );
@@ -78,9 +80,8 @@ async function startDepositScreenerScreener(
     provider,
     redis,
     logger,
-    // TODO: use real screening api and delay calculator
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelay),
     supportedAssets
   );
 
@@ -123,6 +124,7 @@ async function startDepositScreenerFulfiller(
 }
 
 function startDepositScreenerServer(
+  config: DepositScreenerConfig,
   redis: IORedis,
   supportedAssetRateLimits: Map<Address, bigint>
 ): TeardownFn {
@@ -131,9 +133,8 @@ function startDepositScreenerServer(
   const server = new DepositScreenerServer(
     logger,
     redis,
-    // TODO: use real screening api and delay calculator
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelay),
     supportedAssetRateLimits
   );
 
