@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- rename the `subtreeIndex` field of `SubtreeUpdate` event to `subtreeBatchOffset`
 - have teller balance invariants account for taking/refilling prefills
 - add transferred out < joinsplits unwrapped invariant
 - add room for over transfer/swap in invariant tests

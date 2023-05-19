@@ -593,13 +593,13 @@ export class SubtreeCommit extends Entity {
     this.set("newRoot", Value.fromBigInt(value));
   }
 
-  get subtreeIndex(): BigInt {
-    let value = this.get("subtreeIndex");
+  get subtreeBatchOffset(): BigInt {
+    let value = this.get("subtreeBatchOffset");
     return value!.toBigInt();
   }
 
-  set subtreeIndex(value: BigInt) {
-    this.set("subtreeIndex", Value.fromBigInt(value));
+  set subtreeBatchOffset(value: BigInt) {
+    this.set("subtreeBatchOffset", Value.fromBigInt(value));
   }
 }
 

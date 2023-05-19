@@ -296,7 +296,7 @@ export class SubtreeUpdater {
         const newRoot = this.tree.getRoot();
         const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
 
-        logger.info(`creating proof job at subtree index ${subtreeIndex}`, {
+        logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
           subtreeIndex,
           batch,
           oldRoot,

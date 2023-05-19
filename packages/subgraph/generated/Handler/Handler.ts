@@ -10,32 +10,6 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
-export class CallableContractAllowlistPermissionSet extends ethereum.Event {
-  get params(): CallableContractAllowlistPermissionSet__Params {
-    return new CallableContractAllowlistPermissionSet__Params(this);
-  }
-}
-
-export class CallableContractAllowlistPermissionSet__Params {
-  _event: CallableContractAllowlistPermissionSet;
-
-  constructor(event: CallableContractAllowlistPermissionSet) {
-    this._event = event;
-  }
-
-  get contractAddress(): Address {
-    return this._event.parameters[0].value.toAddress();
-  }
-
-  get selector(): Bytes {
-    return this._event.parameters[1].value.toBytes();
-  }
-
-  get permission(): boolean {
-    return this._event.parameters[2].value.toBoolean();
-  }
-}
-
 export class Initialized extends ethereum.Event {
   get params(): Initialized__Params {
     return new Initialized__Params(this);
@@ -433,8 +407,30 @@ export class SubtreeUpdate__Params {
     return this._event.parameters[0].value.toBigInt();
   }
 
-  get subtreeIndex(): BigInt {
+  get subtreeBatchOffset(): BigInt {
     return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class SupportedContractAllowlistPermissionSet extends ethereum.Event {
+  get params(): SupportedContractAllowlistPermissionSet__Params {
+    return new SupportedContractAllowlistPermissionSet__Params(this);
+  }
+}
+
+export class SupportedContractAllowlistPermissionSet__Params {
+  _event: SupportedContractAllowlistPermissionSet;
+
+  constructor(event: SupportedContractAllowlistPermissionSet) {
+    this._event = event;
+  }
+
+  get contractAddress(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get permission(): boolean {
+    return this._event.parameters[1].value.toBoolean();
   }
 }
 
@@ -453,40 +449,6 @@ export class Unpaused__Params {
 
   get account(): Address {
     return this._event.parameters[0].value.toAddress();
-  }
-}
-
-export class UpdatedAssetPrefill extends ethereum.Event {
-  get params(): UpdatedAssetPrefill__Params {
-    return new UpdatedAssetPrefill__Params(this);
-  }
-}
-
-export class UpdatedAssetPrefill__Params {
-  _event: UpdatedAssetPrefill;
-
-  constructor(event: UpdatedAssetPrefill) {
-    this._event = event;
-  }
-
-  get encodedAsset(): UpdatedAssetPrefillEncodedAssetStruct {
-    return changetype<UpdatedAssetPrefillEncodedAssetStruct>(
-      this._event.parameters[0].value.toTuple()
-    );
-  }
-
-  get balance(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-}
-
-export class UpdatedAssetPrefillEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
   }
 }
 
@@ -1117,29 +1079,6 @@ export class Handler extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  ENTERED_PREFILL(): BigInt {
-    let result = super.call(
-      "ENTERED_PREFILL",
-      "ENTERED_PREFILL():(uint256)",
-      []
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_ENTERED_PREFILL(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "ENTERED_PREFILL",
-      "ENTERED_PREFILL():(uint256)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   NOT_ENTERED(): BigInt {
     let result = super.call("NOT_ENTERED", "NOT_ENTERED():(uint256)", []);
 
@@ -1153,54 +1092,6 @@ export class Handler extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  _callableContractAllowlist(param0: BigInt): boolean {
-    let result = super.call(
-      "_callableContractAllowlist",
-      "_callableContractAllowlist(uint192):(bool)",
-      [ethereum.Value.fromUnsignedBigInt(param0)]
-    );
-
-    return result[0].toBoolean();
-  }
-
-  try__callableContractAllowlist(param0: BigInt): ethereum.CallResult<boolean> {
-    let result = super.tryCall(
-      "_callableContractAllowlist",
-      "_callableContractAllowlist(uint192):(bool)",
-      [ethereum.Value.fromUnsignedBigInt(param0)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBoolean());
-  }
-
-  _extractFunctionSelector(encodedFunctionData: Bytes): Bytes {
-    let result = super.call(
-      "_extractFunctionSelector",
-      "_extractFunctionSelector(bytes):(bytes4)",
-      [ethereum.Value.fromBytes(encodedFunctionData)]
-    );
-
-    return result[0].toBytes();
-  }
-
-  try__extractFunctionSelector(
-    encodedFunctionData: Bytes
-  ): ethereum.CallResult<Bytes> {
-    let result = super.tryCall(
-      "_extractFunctionSelector",
-      "_extractFunctionSelector(bytes):(bytes4)",
-      [ethereum.Value.fromBytes(encodedFunctionData)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   _nullifierSet(param0: BigInt): boolean {
@@ -1243,29 +1134,6 @@ export class Handler extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  _prefilledAssetBalances(param0: Bytes): BigInt {
-    let result = super.call(
-      "_prefilledAssetBalances",
-      "_prefilledAssetBalances(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(param0)]
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try__prefilledAssetBalances(param0: Bytes): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "_prefilledAssetBalances",
-      "_prefilledAssetBalances(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(param0)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   _receivedAssets(param0: BigInt): Handler___receivedAssetsResult {
     let result = super.call(
       "_receivedAssets",
@@ -1299,20 +1167,45 @@ export class Handler extends ethereum.SmartContract {
     );
   }
 
-  _subtreeBatchFiller(param0: Address): boolean {
+  _subtreeBatchFillers(param0: Address): boolean {
     let result = super.call(
-      "_subtreeBatchFiller",
-      "_subtreeBatchFiller(address):(bool)",
+      "_subtreeBatchFillers",
+      "_subtreeBatchFillers(address):(bool)",
       [ethereum.Value.fromAddress(param0)]
     );
 
     return result[0].toBoolean();
   }
 
-  try__subtreeBatchFiller(param0: Address): ethereum.CallResult<boolean> {
+  try__subtreeBatchFillers(param0: Address): ethereum.CallResult<boolean> {
     let result = super.tryCall(
-      "_subtreeBatchFiller",
-      "_subtreeBatchFiller(address):(bool)",
+      "_subtreeBatchFillers",
+      "_subtreeBatchFillers(address):(bool)",
+      [ethereum.Value.fromAddress(param0)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
+  _supportedContractAllowlist(param0: Address): boolean {
+    let result = super.call(
+      "_supportedContractAllowlist",
+      "_supportedContractAllowlist(address):(bool)",
+      [ethereum.Value.fromAddress(param0)]
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try__supportedContractAllowlist(
+    param0: Address
+  ): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "_supportedContractAllowlist",
+      "_supportedContractAllowlist(address):(bool)",
       [ethereum.Value.fromAddress(param0)]
     );
     if (result.reverted) {
@@ -1673,52 +1566,6 @@ export class Handler extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-}
-
-export class AddToAssetPrefillCall extends ethereum.Call {
-  get inputs(): AddToAssetPrefillCall__Inputs {
-    return new AddToAssetPrefillCall__Inputs(this);
-  }
-
-  get outputs(): AddToAssetPrefillCall__Outputs {
-    return new AddToAssetPrefillCall__Outputs(this);
-  }
-}
-
-export class AddToAssetPrefillCall__Inputs {
-  _call: AddToAssetPrefillCall;
-
-  constructor(call: AddToAssetPrefillCall) {
-    this._call = call;
-  }
-
-  get encodedAsset(): AddToAssetPrefillCallEncodedAssetStruct {
-    return changetype<AddToAssetPrefillCallEncodedAssetStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-
-  get value(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-}
-
-export class AddToAssetPrefillCall__Outputs {
-  _call: AddToAssetPrefillCall;
-
-  constructor(call: AddToAssetPrefillCall) {
-    this._call = call;
-  }
-}
-
-export class AddToAssetPrefillCallEncodedAssetStruct extends ethereum.Tuple {
-  get encodedAssetAddr(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[1].toBigInt();
   }
 }
 
@@ -2115,14 +1962,6 @@ export class HandleDepositCallDepositStruct extends ethereum.Tuple {
     return changetype<HandleDepositCallDepositDepositAddrStruct>(
       this[3].toTuple()
     );
-  }
-
-  get nonce(): BigInt {
-    return this[4].toBigInt();
-  }
-
-  get gasCompensation(): BigInt {
-    return this[5].toBigInt();
   }
 }
 
@@ -2708,44 +2547,6 @@ export class RenounceOwnershipCall__Outputs {
   }
 }
 
-export class SetCallableContractAllowlistPermissionCall extends ethereum.Call {
-  get inputs(): SetCallableContractAllowlistPermissionCall__Inputs {
-    return new SetCallableContractAllowlistPermissionCall__Inputs(this);
-  }
-
-  get outputs(): SetCallableContractAllowlistPermissionCall__Outputs {
-    return new SetCallableContractAllowlistPermissionCall__Outputs(this);
-  }
-}
-
-export class SetCallableContractAllowlistPermissionCall__Inputs {
-  _call: SetCallableContractAllowlistPermissionCall;
-
-  constructor(call: SetCallableContractAllowlistPermissionCall) {
-    this._call = call;
-  }
-
-  get contractAddress(): Address {
-    return this._call.inputValues[0].value.toAddress();
-  }
-
-  get selector(): Bytes {
-    return this._call.inputValues[1].value.toBytes();
-  }
-
-  get permission(): boolean {
-    return this._call.inputValues[2].value.toBoolean();
-  }
-}
-
-export class SetCallableContractAllowlistPermissionCall__Outputs {
-  _call: SetCallableContractAllowlistPermissionCall;
-
-  constructor(call: SetCallableContractAllowlistPermissionCall) {
-    this._call = call;
-  }
-}
-
 export class SetSubtreeBatchFillerPermissionCall extends ethereum.Call {
   get inputs(): SetSubtreeBatchFillerPermissionCall__Inputs {
     return new SetSubtreeBatchFillerPermissionCall__Inputs(this);
@@ -2776,6 +2577,40 @@ export class SetSubtreeBatchFillerPermissionCall__Outputs {
   _call: SetSubtreeBatchFillerPermissionCall;
 
   constructor(call: SetSubtreeBatchFillerPermissionCall) {
+    this._call = call;
+  }
+}
+
+export class SetSupportedContractAllowlistPermissionCall extends ethereum.Call {
+  get inputs(): SetSupportedContractAllowlistPermissionCall__Inputs {
+    return new SetSupportedContractAllowlistPermissionCall__Inputs(this);
+  }
+
+  get outputs(): SetSupportedContractAllowlistPermissionCall__Outputs {
+    return new SetSupportedContractAllowlistPermissionCall__Outputs(this);
+  }
+}
+
+export class SetSupportedContractAllowlistPermissionCall__Inputs {
+  _call: SetSupportedContractAllowlistPermissionCall;
+
+  constructor(call: SetSupportedContractAllowlistPermissionCall) {
+    this._call = call;
+  }
+
+  get contractAddress(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get permission(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+}
+
+export class SetSupportedContractAllowlistPermissionCall__Outputs {
+  _call: SetSupportedContractAllowlistPermissionCall;
+
+  constructor(call: SetSupportedContractAllowlistPermissionCall) {
     this._call = call;
   }
 }

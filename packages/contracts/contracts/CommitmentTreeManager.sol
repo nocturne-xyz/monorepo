@@ -67,7 +67,7 @@ contract CommitmentTreeManager is
     event InsertNoteCommitments(uint256[] commitments);
 
     /// @notice Event emitted when a subtree (and subsequently the main tree's root) are updated
-    event SubtreeUpdate(uint256 newRoot, uint256 subtreeIndex);
+    event SubtreeUpdate(uint256 newRoot, uint256 subtreeBatchOffset);
 
     /// @notice Internal initialization function
     /// @param subtreeUpdateVerifier Address of the subtree update verifier contract
@@ -117,11 +117,11 @@ contract CommitmentTreeManager is
     ) external whenNotPaused {
         require(!_pastRoots[newRoot], "newRoot already a past root");
 
-        uint256 subtreeIndex = _merkle.getCount();
+        uint256 subtreeBatchOffset = _merkle.getCount();
         _merkle.applySubtreeUpdate(newRoot, proof);
         _pastRoots[newRoot] = true;
 
-        emit SubtreeUpdate(newRoot, subtreeIndex);
+        emit SubtreeUpdate(newRoot, subtreeBatchOffset);
     }
 
     /// @notice Returns current root of the merkle tree

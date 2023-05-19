@@ -170,7 +170,7 @@ export async function fetchJoinSplits(
 
 interface SubtreeUpdateCommit {
   newRoot: bigint;
-  subtreeIndex: number;
+  subtreeBatchOffset: number;
 }
 
 // fetches subtree commits in block range [from, to]
@@ -196,9 +196,9 @@ export async function fetchSubtreeUpdateCommits(
       a.logIndex - b.logIndex
   );
 
-  return events.map(({ args: { newRoot, subtreeIndex } }) => ({
+  return events.map(({ args: { newRoot, subtreeBatchOffset } }) => ({
     newRoot: newRoot.toBigInt(),
-    subtreeIndex: subtreeIndex.toNumber(),
+    subtreeBatchOffset: subtreeBatchOffset.toNumber(),
   }));
 }
 

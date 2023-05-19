@@ -7,7 +7,7 @@ import {
   Note,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import { fetchInsertions, fetchLatestSubtreeCommit } from "./fetch";
+import { fetchInsertions, fetchLatestCommittedSubtreeIndex } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -78,7 +78,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   async fetchLatestSubtreeIndex(): Promise<number> {
-    const latestIndexedBlock = await fetchLatestSubtreeCommit(
+    const latestIndexedBlock = await fetchLatestCommittedSubtreeIndex(
       this.graphqlEndpoint
     );
     return latestIndexedBlock;
