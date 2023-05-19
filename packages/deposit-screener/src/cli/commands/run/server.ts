@@ -1,13 +1,14 @@
 import { Command } from "commander";
-import { ethers } from "ethers";
-import { BundlerServer } from "../../../server";
+import { DepositScreenerServer } from "../../../server";
 import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
+import { DummyScreeningApi } from "../../../screening";
+import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 
 const runServer = new Command("server")
-  .summary("run bundler server")
+  .summary("run deposit screener server")
   .description(
-    "must supply .env file with REDIS_URL and RPC_URL. must supply configPathOrName and port as options."
+    "must supply .env file with REDIS_URL. must supply configPathOrName and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -27,18 +28,21 @@ const runServer = new Command("server")
     const { configNameOrPath, port, logDir, stdoutLogLevel } = options;
     const config = loadNocturneConfig(configNameOrPath);
 
-    const rpcUrl = process.env.RPC_URL;
-    if (!rpcUrl) {
-      throw new Error("missing RPC_URL");
-    }
-    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    const supportedAssetRateLimits = new Map(
+      Array.from(config.erc20s.values()).map((config) => [
+        config.address,
+        BigInt(config.globalCapWholeTokens) * 10n ** config.precision,
+      ])
+    );
 
     const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
-    const server = new BundlerServer(
-      config.tellerAddress(),
-      provider,
+    const server = new DepositScreenerServer(
       getRedis(),
-      logger
+      logger,
+      // TODO: use real screening api and delay calculator
+      new DummyScreeningApi(),
+      new DummyScreenerDelayCalculator(),
+      supportedAssetRateLimits
     );
 
     server.start(port);

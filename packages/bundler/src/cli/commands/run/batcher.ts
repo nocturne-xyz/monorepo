@@ -1,7 +1,6 @@
 import { Command } from "commander";
 import { BundlerBatcher } from "../../../batcher";
-import { getRedis } from "../../utils";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 
 const runBatcher = new Command("batcher")
   .summary("run bundler batcher")

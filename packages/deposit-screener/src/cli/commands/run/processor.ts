@@ -2,15 +2,14 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
-import { getRedis } from "../utils";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply conifig via `--config-path-or-name`"
+    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply configPathOrName as option"
   )
   .requiredOption(
     "--config-name-or-path <string>",
