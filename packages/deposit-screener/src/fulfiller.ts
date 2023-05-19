@@ -78,9 +78,9 @@ export class DepositScreenerFulfiller {
     // per-asset rate limits with a single fulfillment queue
     const [proms, closeFns] = unzip(
       await Promise.all(
-        [...this.supportedAssets.entries()].map(async ([address, ticker]) => {
+        [...this.supportedAssets.values()].map(async (address) => {
           // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
-          const logger = this.logger.child({ ticker: ticker });
+          const logger = this.logger.child({ assetAddr: address });
           logger.info(
             `starting deposit screener fulfiller for asset ${address}`
           );
@@ -89,7 +89,7 @@ export class DepositScreenerFulfiller {
 
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
-            getFulfillmentQueueName(ticker),
+            getFulfillmentQueueName(address),
             async (job: Job<DepositRequestJobData>) => {
               const depositRequest: DepositRequest = JSON.parse(
                 job.data.depositRequestJson

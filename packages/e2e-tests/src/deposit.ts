@@ -4,19 +4,13 @@ import {
   AssetType,
   StealthAddress,
   Note,
-  // parseEventsFromContractReceipt,
   DepositRequest,
   AssetTrait,
   zip,
 } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
-import {
-  DepositRequestStatus,
-  hashDepositRequest,
-} from "@nocturne-xyz/deposit-screener";
-import { expect } from "chai";
-// import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
+import { hashDepositRequest } from "@nocturne-xyz/deposit-screener";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
@@ -49,14 +43,17 @@ export async function depositFundsMultiToken(
   }
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
-  await sleep(15_000); // wait for deposit screener
 
-  // for (const depositRequest of depositRequests) {
-  //   const depositHash = hashDepositRequest(depositRequest);
-  //   const status = await queryDepositStatus(depositHash);
-  //   console.log(status);
-  //   expect(status.status).to.eql(DepositRequestStatus.Completed);
-  // }
+  let ctr = 0;
+  while (ctr < 15) {
+    for (const depositRequest of depositRequests) {
+      const depositHash = hashDepositRequest(depositRequest);
+      const status = await queryDepositStatus(depositHash);
+      console.log(status);
+    }
+    await sleep(1_000);
+    ctr++;
+  }
 
   return zip(depositRequests, notes);
 }
@@ -146,38 +143,3 @@ async function makeDeposit(
     },
   ];
 }
-
-// function makeDepositFn(
-//   depositManager: DepositManager,
-//   eoa: ethers.Wallet,
-//   stealthAddress: StealthAddress
-// ): (
-//   token: SimpleERC20Token,
-//   amount: bigint,
-//   noteNonce: number
-// ) => Promise<[ContractTransaction, Note]> {
-//   return async (token: SimpleERC20Token, amount: bigint, noteNonce: number) => {
-//     const asset = {
-//       assetType: AssetType.ERC20,
-//       assetAddr: token.address,
-//       id: 0n,
-//     };
-
-//     console.log(
-//       `instantiating deposit for ${amount} of token ${token.address}`
-//     );
-//     const instantiateDepositTx = await depositManager
-//       .connect(eoa)
-//       .instantiateErc20MultiDeposit(token.address, [amount], stealthAddress);
-
-//     return [
-//       instantiateDepositTx,
-//       {
-//         owner: stealthAddress,
-//         nonce: BigInt(noteNonce),
-//         asset,
-//         value: amount,
-//       },
-//     ];
-//   };
-// }

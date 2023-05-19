@@ -19,7 +19,7 @@ export interface DepositScreenerConfig {
   rpcUrl: string;
   attestationSignerKey: string;
   txSignerKey: string;
-  dummyScreeningDelay?: number;
+  dummyScreeningDelaySeconds?: number;
 }
 
 const { getRedis, clearRedis } = makeRedisInstance();
@@ -81,7 +81,7 @@ async function startDepositScreenerScreener(
     redis,
     logger,
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelay),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 3),
     supportedAssets
   );
 
@@ -134,7 +134,7 @@ function startDepositScreenerServer(
     logger,
     redis,
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelay),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 3),
     supportedAssetRateLimits
   );
 

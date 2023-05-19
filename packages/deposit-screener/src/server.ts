@@ -18,11 +18,6 @@ import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { ScreeningApi } from "./screening";
 
-export interface TickerAndRateLimit {
-  ticker: Address;
-  rateLimit: bigint;
-}
-
 export class DepositScreenerServer {
   logger: Logger;
   redis: IORedis;

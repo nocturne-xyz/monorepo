@@ -141,7 +141,7 @@ export class DepositScreenerScreener {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
-        logger.debug(`received deposit event, storing in DB`, event);
+        logger.info(`received deposit event, storing in DB`, event);
         const depositRequest: DepositRequest = {
           ...event,
         };

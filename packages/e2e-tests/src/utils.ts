@@ -75,19 +75,17 @@ export function getSubtreeUpdaterDelay(): number {
 
 export async function queryDepositStatus(
   depositHash: string
-): Promise<DepositStatusResponse> {
+): Promise<DepositStatusResponse | undefined> {
   console.log(`query deposit status for ${depositHash}`);
 
   try {
     const res = await fetch(`http://localhost:3001/status/${depositHash}`, {
       method: "GET",
     });
-    const statusRes = await res.json();
-    console.log(`screener returned status ${depositHash} ${statusRes}`);
-    return JSON.parse(statusRes) as DepositStatusResponse;
+    return (await res.json()) as DepositStatusResponse;
   } catch (err) {
     console.log("error getting deposit status: ", err);
-    throw err;
+    // throw err;
   }
 }
 
