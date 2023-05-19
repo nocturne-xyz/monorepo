@@ -24,8 +24,8 @@ export interface TickerAndRateLimit {
 }
 
 export class DepositScreenerServer {
-  redis: IORedis;
   logger: Logger;
+  redis: IORedis;
   db: DepositScreenerDB;
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
@@ -35,14 +35,14 @@ export class DepositScreenerServer {
   supportedAssets: Set<Address>;
 
   constructor(
-    redis: IORedis,
     logger: Logger,
+    redis: IORedis,
     screeningApi: ScreeningApi,
     screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssetRateLimits: Map<Address, bigint>
   ) {
-    this.redis = redis;
     this.logger = logger;
+    this.redis = redis;
     this.db = new DepositScreenerDB(redis);
     this.screeningApi = screeningApi;
     this.screenerDelayCalculator = screenerDelayCalculator;

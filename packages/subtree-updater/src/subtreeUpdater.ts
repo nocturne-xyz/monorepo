@@ -22,14 +22,7 @@ import {
 } from "./types";
 import { Handler } from "@nocturne-xyz/contracts";
 import * as JSON from "bigint-json-serialization";
-
-export interface SubtreeUpdaterHandle {
-  // promise that resovles when the service has fully shut down
-  promise: Promise<void>;
-
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 const PROOF_QUEUE_NAME = "PROOF_QUEUE";
 const PROOF_JOB_TAG = "PROOF_JOB";
@@ -92,7 +85,7 @@ export class SubtreeUpdater {
     this.startBlock = opts?.startBlock ?? 0;
   }
 
-  start(queryThrottleMs?: number): SubtreeUpdaterHandle {
+  start(queryThrottleMs?: number): ActorHandle {
     const proofJobs = this.getProofJobIterator(
       this.logger.child({ function: "iterator" }),
       queryThrottleMs

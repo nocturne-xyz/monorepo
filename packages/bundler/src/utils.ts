@@ -1,10 +1,4 @@
-export interface ActorHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  // this must return
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export function actorChain(...actors: ActorHandle[]): ActorHandle {
   const promise = (async () => {

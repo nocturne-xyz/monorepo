@@ -5,10 +5,13 @@ import {
   DepositScreenerScreener,
   DepositScreenerFulfiller,
   SubgraphScreenerSyncAdapter,
+  DepositScreenerServer,
+  DummyScreeningApi,
 } from "@nocturne-xyz/deposit-screener";
 import { Erc20Config } from "@nocturne-xyz/config";
 import IORedis from "ioredis";
 import { Address } from "@nocturne-xyz/sdk";
+import { DummyScreenerDelayCalculator } from "@nocturne-xyz/deposit-screener/dist/src/screenerDelay";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -29,6 +32,13 @@ export async function startDepositScreener(
   const supportedAssetsSet = new Set(
     Array.from(supportedAssets.values()).map((config) => config.address)
   );
+  const supportedAssetRateLimits = new Map(
+    Array.from(supportedAssets.values()).map((config) => [
+      config.address,
+      BigInt(config.globalCapWholeTokens) * 10n ** BigInt(config.precision),
+    ])
+  );
+
   const stopProcessor = await startDepositScreenerScreener(
     config,
     redis,
@@ -39,10 +49,15 @@ export async function startDepositScreener(
     redis,
     supportedAssetsSet
   );
+  const stopServer = startDepositScreenerServer(
+    redis,
+    supportedAssetRateLimits
+  );
 
   return async () => {
     await stopProcessor();
     await stopFulfiller();
+    await stopServer();
     await clearRedis();
   };
 }
@@ -63,6 +78,9 @@ async function startDepositScreenerScreener(
     provider,
     redis,
     logger,
+    // TODO: use real screening api and delay calculator
+    new DummyScreeningApi(),
+    new DummyScreenerDelayCalculator(),
     supportedAssets
   );
 
@@ -85,7 +103,10 @@ async function startDepositScreenerFulfiller(
   const txSigner = new ethers.Wallet(txSignerKey, provider);
   const attestationSigner = new ethers.Wallet(attestationSignerKey);
 
+  const logger = makeTestLogger("deposit-screener", "fulfiller");
+
   const fulfiller = new DepositScreenerFulfiller(
+    logger,
     depositManagerAddress,
     txSigner,
     attestationSigner,
@@ -93,11 +114,28 @@ async function startDepositScreenerFulfiller(
     supportedAssets
   );
 
-  const logger = makeTestLogger("deposit-screener", "fulfiller");
-  const { promise, teardown } = await fulfiller.start(logger);
+  const { promise, teardown } = await fulfiller.start();
 
   return async () => {
     await teardown();
     await promise;
   };
+}
+
+function startDepositScreenerServer(
+  redis: IORedis,
+  supportedAssetRateLimits: Map<Address, bigint>
+): TeardownFn {
+  const logger = makeTestLogger("deposit-screener", "server");
+
+  const server = new DepositScreenerServer(
+    logger,
+    redis,
+    // TODO: use real screening api and delay calculator
+    new DummyScreeningApi(),
+    new DummyScreenerDelayCalculator(),
+    supportedAssetRateLimits
+  );
+
+  return server.start(3001);
 }

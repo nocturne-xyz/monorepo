@@ -5,6 +5,8 @@ import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
 import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
+import { DummyScreeningApi } from "../../../screening";
+import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
@@ -75,11 +77,15 @@ const runProcess = new Command("processor")
       provider,
       getRedis(),
       logger,
+      // TODO: use real screening api and delay calculator
+      new DummyScreeningApi(),
+      new DummyScreenerDelayCalculator(),
       supportedAssets,
       config.contracts.startBlock
     );
 
     const fulfiller = new DepositScreenerFulfiller(
+      logger,
       config.depositManagerAddress(),
       txSigner,
       attestationSigner,
@@ -88,7 +94,7 @@ const runProcess = new Command("processor")
     );
 
     const screenerHandle = await screener.start(throttleMs);
-    const fulfillerHandle = await fulfiller.start(logger);
+    const fulfillerHandle = await fulfiller.start();
 
     await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
   });

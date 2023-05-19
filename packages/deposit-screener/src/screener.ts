@@ -12,7 +12,7 @@ import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
-import { DummyScreeningApi, ScreeningApi } from "./screening";
+import { ScreeningApi } from "./screening";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
@@ -24,21 +24,12 @@ import {
   getFulfillmentQueueName,
 } from "./types";
 import IORedis from "ioredis";
-import {
-  ScreenerDelayCalculator,
-  DummyScreenerDelayCalculator,
-} from "./screenerDelay";
+import { ScreenerDelayCalculator } from "./screenerDelay";
 import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-
-export interface DepositScreenerScreenerHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
@@ -58,6 +49,8 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
+    screeningApi: ScreeningApi,
+    screenerDelayCalculator: ScreenerDelayCalculator,
     supportedAssets: Set<Address>,
     startBlock?: number
   ) {
@@ -78,15 +71,13 @@ export class DepositScreenerScreener {
       connection: redis,
     });
 
-    this.screeningApi = new DummyScreeningApi();
-    this.delayCalculator = new DummyScreenerDelayCalculator();
+    this.screeningApi = screeningApi;
+    this.delayCalculator = screenerDelayCalculator;
 
     this.supportedAssets = supportedAssets;
   }
 
-  async start(
-    queryThrottleMs?: number
-  ): Promise<DepositScreenerScreenerHandle> {
+  async start(queryThrottleMs?: number): Promise<ActorHandle> {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );

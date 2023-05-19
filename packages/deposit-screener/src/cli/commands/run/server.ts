@@ -37,8 +37,8 @@ const runServer = new Command("server")
 
     const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
     const server = new DepositScreenerServer(
-      getRedis(),
       logger,
+      getRedis(),
       // TODO: use real screening api and delay calculator
       new DummyScreeningApi(),
       new DummyScreenerDelayCalculator(),

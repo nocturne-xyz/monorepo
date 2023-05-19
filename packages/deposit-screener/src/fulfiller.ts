@@ -34,17 +34,12 @@ import {
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-
-export interface DepositScreenerFulfillerHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
+  logger: Logger;
   supportedAssets: Set<Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
@@ -54,12 +49,14 @@ export class DepositScreenerFulfiller {
   db: DepositScreenerDB;
 
   constructor(
+    logger: Logger,
     depositManagerAddress: Address,
     txSigner: ethers.Wallet,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
     supportedAssets: Set<Address>
   ) {
+    this.logger = logger;
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
 
@@ -75,7 +72,7 @@ export class DepositScreenerFulfiller {
     this.supportedAssets = supportedAssets;
   }
 
-  async start(parentLogger: Logger): Promise<DepositScreenerFulfillerHandle> {
+  async start(): Promise<ActorHandle> {
     // we have 1 fulfillment queue per asset. this is because the rate limit is queue-wide,
     // we have no way to only rate limit a subset of the jobs in a queue, so we can't implement
     // per-asset rate limits with a single fulfillment queue
@@ -83,7 +80,7 @@ export class DepositScreenerFulfiller {
       await Promise.all(
         [...this.supportedAssets.entries()].map(async ([address, ticker]) => {
           // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
-          const logger = parentLogger.child({ ticker: ticker });
+          const logger = this.logger.child({ ticker: ticker });
           logger.info(
             `starting deposit screener fulfiller for asset ${address}`
           );
@@ -171,7 +168,7 @@ export class DepositScreenerFulfiller {
       try {
         await Promise.all(proms);
       } catch (err) {
-        parentLogger.error(`error in fulfiller: ${err}`, err);
+        this.logger.error(`error in fulfiller: ${err}`, err);
         await teardown();
         throw err;
       }
