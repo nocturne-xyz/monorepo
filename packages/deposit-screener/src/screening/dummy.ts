@@ -2,7 +2,7 @@ import { Address } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from ".";
 
 export class DummyScreeningApi implements ScreeningApi {
-  async validDepositRequest(
+  async isSafeDepositRequest(
     spender: Address,
     assetAddr: Address,
     value: bigint

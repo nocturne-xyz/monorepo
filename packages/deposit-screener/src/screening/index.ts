@@ -1,7 +1,7 @@
 import { Address } from "@nocturne-xyz/sdk";
 
 export interface ScreeningApi {
-  validDepositRequest(
+  isSafeDepositRequest(
     spender: Address,
     assetAddr: Address,
     value: bigint

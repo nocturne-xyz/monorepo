@@ -50,9 +50,7 @@ export class DepositScreenerScreener {
   redis: IORedis;
   logger: Logger;
   startBlock: number;
-
-  // Address => ticker
-  supportedAssets: Map<Address, string>;
+  supportedAssets: Set<Address>;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -60,7 +58,7 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
-    supportedAssets: Map<Address, string>,
+    supportedAssets: Set<Address>,
     startBlock?: number
   ) {
     this.redis = redis;
@@ -103,7 +101,7 @@ export class DepositScreenerScreener {
       { maxChunkSize: 100_000, throttleMs: queryThrottleMs }
     );
 
-    const screenerProm = this.runScreener(
+    const screenerProm = this.startScreener(
       this.logger.child({ function: "screener" }),
       depositEvents
     ).catch((err) => {
@@ -145,7 +143,7 @@ export class DepositScreenerScreener {
     };
   }
 
-  async runScreener(
+  async startScreener(
     logger: Logger,
     depositEvents: ClosableAsyncIterator<DepositEventsBatch>
   ): Promise<void> {
@@ -164,18 +162,6 @@ export class DepositScreenerScreener {
           depositReququestNonce: depositRequest.nonce,
           depositRequestHash: hash,
         });
-
-        const decodedAsset = AssetTrait.decode(depositRequest.encodedAsset);
-        if (!this.supportedAssets.has(decodedAsset.assetAddr)) {
-          childLogger.warn(
-            `received deposit request for unsupported asset at address ${decodedAsset.assetAddr}`
-          );
-          await this.db.setDepositRequestStatus(
-            depositRequest,
-            DepositRequestStatus.UnsupportedAsset
-          );
-          continue;
-        }
 
         childLogger.debug(`checking deposit request`);
         const { isSafe, reason } = await checkDepositRequest(
@@ -230,8 +216,8 @@ export class DepositScreenerScreener {
     );
     await this.screenerDelayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
       jobId: hashDepositRequest(depositRequest),
-      // TODO: make jobId = depositHash
       delay: secsToMillis(delaySeconds),
+      // TODO: do we need retries?
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
       attempts: 5,
       backoff: {
@@ -278,7 +264,7 @@ export class DepositScreenerScreener {
           return; // Already retrieved or completed
         }
 
-        const valid = await this.screeningApi.validDepositRequest(
+        const valid = await this.screeningApi.isSafeDepositRequest(
           depositRequest.spender,
           AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
           depositRequest.value
@@ -298,16 +284,14 @@ export class DepositScreenerScreener {
         };
 
         // figure out which fulfillment queue to add to
-        const assetTicker = this.supportedAssets.get(assetAddr)!;
-        const fulfillmentQueue = new Queue(
-          getFulfillmentQueueName(assetTicker),
-          { connection: this.redis }
-        );
+        const fulfillmentQueue = new Queue(getFulfillmentQueueName(assetAddr), {
+          connection: this.redis,
+        });
 
-        const jobTag = getFulfillmentJobTag(assetTicker);
+        const jobTag = getFulfillmentJobTag(assetAddr);
 
         // submit to it
-        await fulfillmentQueue.add(jobTag, jobData, { jobId: depositHash }); // TODO: make jobId = depositHash
+        await fulfillmentQueue.add(jobTag, jobData, { jobId: depositHash });
         await this.db.setDepositRequestStatus(
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment

@@ -45,7 +45,7 @@ export interface DepositScreenerFulfillerHandle {
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
-  supportedAssets: Map<Address, string>; // address => ticker
+  supportedAssets: Set<Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
@@ -58,7 +58,7 @@ export class DepositScreenerFulfiller {
     txSigner: ethers.Wallet,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
-    supportedAssets: Map<Address, string>
+    supportedAssets: Set<Address>
   ) {
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);

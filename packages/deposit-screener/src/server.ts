@@ -32,14 +32,14 @@ export class DepositScreenerServer {
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
   waitEstimator: WaitEstimator;
-  supportedAssets: Map<Address, string>;
+  supportedAssets: Set<Address>;
 
   constructor(
     redis: IORedis,
     logger: Logger,
     screeningApi: ScreeningApi,
     screenerDelayCalculator: ScreenerDelayCalculator,
-    supportedAssetRateLimits: Map<Address, TickerAndRateLimit>
+    supportedAssetRateLimits: Map<Address, bigint>
   ) {
     this.redis = redis;
     this.logger = logger;
@@ -48,30 +48,21 @@ export class DepositScreenerServer {
     this.screenerDelayCalculator = screenerDelayCalculator;
     this.screenerQueue = new Queue(SCREENER_DELAY_QUEUE, { connection: redis });
     this.fulfillerQueues = new Map(
-      Array.from(supportedAssetRateLimits.values()).map(({ ticker }) => {
+      Array.from(supportedAssetRateLimits.keys()).map((address) => {
         return [
-          ticker,
-          new Queue(getFulfillmentQueueName(ticker), { connection: redis }),
+          address,
+          new Queue(getFulfillmentQueueName(address), { connection: redis }),
         ];
       })
     );
 
-    const rateLimits = new Map(
-      Array.from(supportedAssetRateLimits.entries()).map(
-        ([address, { rateLimit }]) => [address, rateLimit]
-      )
-    );
     this.waitEstimator = new QueueWaitEstimator(
       this.screenerQueue,
       this.fulfillerQueues,
-      rateLimits
+      supportedAssetRateLimits
     );
 
-    this.supportedAssets = new Map(
-      Array.from(supportedAssetRateLimits.entries()).map(
-        ([address, { ticker }]) => [address, ticker]
-      )
-    );
+    this.supportedAssets = new Set(Array.from(supportedAssetRateLimits.keys()));
   }
 
   start(port: number): () => Promise<void> {

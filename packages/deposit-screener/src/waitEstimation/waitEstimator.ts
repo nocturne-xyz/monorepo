@@ -46,8 +46,10 @@ export async function estimateWaitTimeSecondsForExisting(
     case DepositRequestStatus.AwaitingFulfillment:
       queueType = QueueType.Fulfiller;
       break;
+    case DepositRequestStatus.Completed:
+      return 0; // TODO: is desired behavior?
     default:
-      throw new Error(`Unrecognized status ${status}`);
+      throw new Error(`Deposit does not exist or failed`);
   }
 
   let delayInCurrentQueue: number;
@@ -110,7 +112,7 @@ export async function estimateWaitTimeSecondsForProspective(
   assetAddr: Address,
   value: bigint
 ): Promise<number> {
-  const passesScreen = await deps.screeningApi.validDepositRequest(
+  const passesScreen = await deps.screeningApi.isSafeDepositRequest(
     spender,
     assetAddr,
     value

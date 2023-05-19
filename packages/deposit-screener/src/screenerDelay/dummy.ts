@@ -1,6 +1,14 @@
 import { Address } from "@nocturne-xyz/sdk";
 
 export class DummyScreenerDelayCalculator {
+  delaySeconds: number = 0;
+
+  constructor(delaySeconds?: number) {
+    if (delaySeconds) {
+      this.delaySeconds = delaySeconds;
+    }
+  }
+
   async calculateDelaySeconds(
     spender: Address,
     assetAddr: Address,
@@ -9,6 +17,6 @@ export class DummyScreenerDelayCalculator {
     spender;
     assetAddr;
     value;
-    return 0;
+    return this.delaySeconds;
   }
 }

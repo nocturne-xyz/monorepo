@@ -66,11 +66,8 @@ const runProcess = new Command("processor")
       "processor",
       stdoutLogLevel
     );
-    const supportedAssets = new Map(
-      Array.from(config.erc20s.entries()).map(([ticker, config]) => [
-        config.address,
-        ticker,
-      ])
+    const supportedAssets = new Set(
+      Array.from(config.erc20s.values()).map(({ address }) => address)
     );
 
     const screener = new DepositScreenerScreener(
