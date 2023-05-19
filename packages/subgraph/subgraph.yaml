@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       abi: Handler
-      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -32,7 +32,7 @@ dataSources:
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
         - event: InsertNote((uint256,uint256,uint256,uint256,uint256,uint256))
-          handler: handleInsertNote 
+          handler: handleInsertNote
         - event: InsertNoteCommitments(uint256[])
           handler: handleInsertNoteCommitments
       file: ./src/handler.ts
@@ -41,7 +41,7 @@ dataSources:
     network: mainnet
     source:
       abi: DepositManager
-      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+      address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
       startBlock: 0
     mapping:
       kind: ethereum/events
