@@ -229,6 +229,7 @@ export class DepositScreenerScreener {
       `scheduling second phase of screening to start in ${delaySeconds} seconds`
     );
     await this.screenerDelayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+      jobId: hashDepositRequest(depositRequest),
       // TODO: make jobId = depositHash
       delay: secsToMillis(delaySeconds),
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
@@ -250,11 +251,11 @@ export class DepositScreenerScreener {
         const depositRequest: DepositRequest = JSON.parse(
           job.data.depositRequestJson
         );
-        const hash = hashDepositRequest(depositRequest);
+        const depositHash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
           depositRequestSpender: depositRequest.spender,
           depositReququestNonce: depositRequest.nonce,
-          depositRequestHash: hash,
+          depositRequestHash: depositHash,
         });
 
         const assetAddr = AssetTrait.decode(
@@ -269,7 +270,9 @@ export class DepositScreenerScreener {
         childLogger.info("processing deposit request");
 
         const inSet =
-          await this.depositManagerContract._outstandingDepositHashes(hash);
+          await this.depositManagerContract._outstandingDepositHashes(
+            depositHash
+          );
         if (!inSet) {
           childLogger.warn(`deposit already retrieved or completed`);
           return; // Already retrieved or completed
@@ -304,7 +307,7 @@ export class DepositScreenerScreener {
         const jobTag = getFulfillmentJobTag(assetTicker);
 
         // submit to it
-        await fulfillmentQueue.add(jobTag, jobData); // TODO: make jobId = depositHash
+        await fulfillmentQueue.add(jobTag, jobData, { jobId: depositHash }); // TODO: make jobId = depositHash
         await this.db.setDepositRequestStatus(
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment
