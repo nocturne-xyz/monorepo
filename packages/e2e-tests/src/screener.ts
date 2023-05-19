@@ -8,6 +8,7 @@ import {
 } from "@nocturne-xyz/deposit-screener";
 import { Erc20Config } from "@nocturne-xyz/config";
 import IORedis from "ioredis";
+import { Address } from "@nocturne-xyz/sdk";
 
 export interface DepositScreenerConfig {
   depositManagerAddress: string;
@@ -24,15 +25,19 @@ export async function startDepositScreener(
   supportedAssets: Map<string, Erc20Config>
 ): Promise<TeardownFn> {
   const redis = await getRedis();
+
+  const supportedAssetsSet = new Set(
+    Array.from(supportedAssets.values()).map((config) => config.address)
+  );
   const stopProcessor = await startDepositScreenerScreener(
     config,
     redis,
-    supportedAssets
+    supportedAssetsSet
   );
   const stopFulfiller = await startDepositScreenerFulfiller(
     config,
     redis,
-    supportedAssets
+    supportedAssetsSet
   );
 
   return async () => {
@@ -45,7 +50,7 @@ export async function startDepositScreener(
 async function startDepositScreenerScreener(
   config: DepositScreenerConfig,
   redis: IORedis,
-  supportedAssets: Map<string, Erc20Config>
+  supportedAssets: Set<Address>
 ): Promise<TeardownFn> {
   const { depositManagerAddress, subgraphUrl, rpcUrl } = config;
 
@@ -71,7 +76,7 @@ async function startDepositScreenerScreener(
 async function startDepositScreenerFulfiller(
   config: DepositScreenerConfig,
   redis: IORedis,
-  supportedAssets: Map<string, Erc20Config>
+  supportedAssets: Set<Address>
 ): Promise<TeardownFn> {
   const { depositManagerAddress, rpcUrl, attestationSignerKey, txSignerKey } =
     config;

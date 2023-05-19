@@ -1,5 +1,6 @@
 import { ValidateFunction } from "ajv";
 import { ErrString } from "./types";
+import * as JSON from "bigint-json-serialization";
 
 export function parseRequestBody(body: any): any {
   return JSON.parse(JSON.stringify(body));
