@@ -137,12 +137,45 @@ export class SubtreeUpdater {
     const queuerProm = queuer();
 
     const teardown = async () => {
-      await proofJobs.close();
-      await queuerProm;
-      await prover.close();
-      await proverProm;
-      await submitter.close();
-      await submitterProm;
+      try {
+        this.logger.debug("calling proofJobs.close()");
+        await proofJobs.close();
+      } catch (err) {
+        this.logger.debug("error closing proofJobs", err);
+      }
+
+      try {
+        this.logger.debug("calling prover.close()");
+        await prover.close();
+      } catch (err) {
+        this.logger.debug("error closing prover", err);
+      }
+
+      try {
+        this.logger.debug("calling submitter.close()");
+        await submitter.close();
+      } catch (err) {
+        this.logger.debug("error closing submitter", err);
+      }
+
+      this.logger.debug("awaiting proms");
+      try {
+        await queuerProm;
+      } catch (err: any) {
+        this.logger.debug("queuer prom rejected with err", err);
+      }
+
+      try {
+        await proverProm;
+      } catch (err: any) {
+        this.logger.debug("prover prom rejected with err", err);
+      }
+
+      try {
+        await submitterProm;
+      } catch (err: any) {
+        this.logger.debug("submitter prom rejected with err", err);
+      }
     };
 
     const promise = (async () => {
