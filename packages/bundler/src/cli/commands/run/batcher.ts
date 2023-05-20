@@ -4,7 +4,7 @@ import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 
 const runBatcher = new Command("batcher")
   .summary("run bundler batcher")
-  .description("must supply .env file with REDIS_URL.")
+  .description("must supply .env file with REDIS_URL and REDIS_PASSWORD.")
   .option("--batch-size <number>", "batch size")
   .option(
     "--max-latency <number>",

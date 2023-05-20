@@ -8,7 +8,7 @@ import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 const runServer = new Command("server")
   .summary("run deposit screener server")
   .description(
-    "must supply .env file with REDIS_URL. must supply config-name-or-path and port as options."
+    "must supply .env file with REDIS_URL and REDIS_PASSWORD. must supply config-name-or-path and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",

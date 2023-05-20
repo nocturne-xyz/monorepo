@@ -7,7 +7,7 @@ import { loadNocturneConfig } from "@nocturne-xyz/config";
 const runSubmitter = new Command("submitter")
   .summary("run bundler submitter")
   .description(
-    "must supply .env file with REDIS_URL, RPC_URL, and TX_SIGNER_KEY. must also supply configPathOrName as an option."
+    "must supply .env file with REDIS_URL,REDIS_PASSWORD, RPC_URL, and TX_SIGNER_KEY. must also supply configPathOrName as an option."
   )
   .requiredOption(
     "--config-name-or-path <string>",
