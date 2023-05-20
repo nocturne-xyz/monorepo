@@ -15,7 +15,7 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/sdk";
-import { DepositRequestStatus } from "@nocturne-xyz/deposit-screener";
+import { DepositStatusResponse } from "@nocturne-xyz/deposit-screener";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -30,11 +30,6 @@ const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
-
-export interface DepositStatusResponse {
-  status: DepositRequestStatus;
-  estimatedWaitSeconds: number;
-}
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

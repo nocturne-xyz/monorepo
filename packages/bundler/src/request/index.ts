@@ -18,3 +18,5 @@ export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
 function checkRelayError(data: any): ErrString | undefined {
   return checkInputError(validateRelay, data);
 }
+
+export * from "./request";

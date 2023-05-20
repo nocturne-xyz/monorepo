@@ -1,5 +1,9 @@
 import { Request, RequestHandler, Response } from "express";
-import { tryParseQuoteRequest } from "./requestValidation";
+import {
+  DepositStatusResponse,
+  QuoteResponse,
+  tryParseQuoteRequest,
+} from "./request";
 import { Logger } from "winston";
 import {
   estimateWaitAheadSecondsForExisting,
@@ -52,7 +56,11 @@ export function makeDepositStatusHandler({
       return;
     }
 
-    res.json({ status: maybeStatus, estimatedWaitSeconds: delay });
+    const response: DepositStatusResponse = {
+      status: maybeStatus,
+      estimatedWaitSeconds: delay,
+    };
+    res.json(response);
   };
 }
 
@@ -113,6 +121,7 @@ export function makeQuoteHandler({
       return;
     }
 
-    res.json({ estimatedWaitSeconds: quote });
+    const response: QuoteResponse = { estimatedWaitSeconds: quote };
+    res.json(response);
   };
 }
