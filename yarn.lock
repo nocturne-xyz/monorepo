@@ -3569,7 +3569,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/local-prover@1.0.2-alpha, @nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
+"@nocturne-xyz/local-prover@workspace:^, @nocturne-xyz/local-prover@workspace:packages/local-prover":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/local-prover@workspace:packages/local-prover"
   dependencies:
@@ -3799,10 +3799,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
-    "@nocturne-xyz/config": 1.0.7-alpha
-    "@nocturne-xyz/contracts": 1.0.23-alpha
-    "@nocturne-xyz/local-prover": 1.0.2-alpha
-    "@nocturne-xyz/sdk": 1.0.118-alpha
+    "@nocturne-xyz/config": "workspace:^"
+    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/local-prover": "workspace:^"
+    "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5

@@ -21,10 +21,10 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/config": "1.0.7-alpha",
-    "@nocturne-xyz/contracts": "1.0.23-alpha",
-    "@nocturne-xyz/local-prover": "1.0.2-alpha",
-    "@nocturne-xyz/sdk": "1.0.118-alpha",
+    "@nocturne-xyz/config": "workspace:^",
+    "@nocturne-xyz/contracts": "workspace:^",
+    "@nocturne-xyz/local-prover": "workspace:^",
+    "@nocturne-xyz/sdk": "workspace:^",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "commander": "^10.0.0",
