@@ -122,18 +122,40 @@ export class SubtreeUpdater {
       this.logger.child({ function: "submitter" })
     );
 
-    const submitterProm = new Promise<void>((resolve) => {
+    const submitterProm = new Promise<void>((resolve, reject) => {
       submitter.on("closed", () => {
         this.logger.info("submitter stopped");
         resolve();
       });
+
+      submitter.on("error", (err) => {
+        this.logger.error("submitter error", err);
+        reject(err);
+      });
+
+      submitter.on("failed", () => {
+        this.logger.error("submitter job failed");
+        reject(new Error("submitter job failed"));
+      });
     });
-    const proverProm = new Promise<void>((resolve) => {
+
+    const proverProm = new Promise<void>((resolve, reject) => {
       prover.on("closed", () => {
         this.logger.info("prover stopped");
         resolve();
       });
+
+      prover.on("error", (err) => {
+        this.logger.error("prover error", err);
+        reject(err);
+      });
+
+      prover.on("failed", () => {
+        this.logger.info("prover job failed");
+        reject(new Error("prover job failed"));
+      });
     });
+
     const queuerProm = queuer();
 
     const teardown = async () => {
@@ -209,14 +231,7 @@ export class SubtreeUpdater {
         };
         await this.submissionQueue.add(
           SUBMISSION_JOB_TAG,
-          JSON.stringify(jobData),
-          {
-            attempts: 3,
-            backoff: {
-              type: "fixed",
-              delay: 1000,
-            },
-          }
+          JSON.stringify(jobData)
         );
       },
       {
