@@ -115,6 +115,8 @@ export class BundlerSubmitter {
       return;
     }
 
+    logger = logger.child({ txHash: tx?.hash });
+
     logger.debug("waiting for confirmation...");
     const receipt = await tx.wait(1);
 

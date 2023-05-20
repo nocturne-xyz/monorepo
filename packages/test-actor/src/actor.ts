@@ -22,6 +22,7 @@ import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/Depos
 
 const FIVE_MINUTES_AS_MILLIS = 5 * 60 * 1000;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
+const ONE_ETH_IN_WEI = 10n ** 18n;
 
 export class TestActor {
   txSigner: ethers.Wallet;
@@ -106,7 +107,10 @@ export class TestActor {
     const [erc20Name, erc20Config] = randomElem(
       Array.from(this.erc20s.entries())
     );
-    const randomValue = randomInt(100_000_000_000);
+    const randomValue = randomBigintInRange(
+      ONE_ETH_IN_WEI,
+      10n * ONE_ETH_IN_WEI
+    );
 
     console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
     const erc20Token = SimpleERC20Token__factory.connect(
@@ -223,6 +227,10 @@ function randomInt(max: number) {
 
 function randomBigIntBounded(max: bigint) {
   return randomBigInt() % max;
+}
+
+function randomBigintInRange(min: bigint, max: bigint) {
+  return randomBigIntBounded(max - min) + min;
 }
 
 function randomElem<T>(arr: T[]): T {
