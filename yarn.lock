@@ -3408,16 +3408,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@npm:1.0.2-alpha":
-  version: 1.0.2-alpha
-  resolution: "@nocturne-xyz/config@npm:1.0.2-alpha"
-  dependencies:
-    big-integer: ^1.6.42
-    bigint-json-serialization: ^1.0.1
-  checksum: 7bd1604a44e98cc5a88931d03a6d0d117c4f16d2946f9387ecd1fdb1b9e26a3ce8d37a54e9b763bdd1b84792ac71a2ffa762eb761ea979b20e34fbcccf471243
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/contracts@1.0.23-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
@@ -3809,7 +3799,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/test-actor@workspace:packages/test-actor"
   dependencies:
-    "@nocturne-xyz/config": 1.0.2-alpha
+    "@nocturne-xyz/config": 1.0.7-alpha
     "@nocturne-xyz/contracts": 1.0.23-alpha
     "@nocturne-xyz/local-prover": 1.0.2-alpha
     "@nocturne-xyz/sdk": 1.0.118-alpha
