@@ -280,6 +280,7 @@ export class SubtreeUpdater {
         throttleMs: queryThrottleMs,
       })
       .tap((_) => {
+        logger.debug(`got insertion at merkleIndex ${merkleIndex}`);
         merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
           return;

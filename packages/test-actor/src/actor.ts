@@ -58,6 +58,8 @@ export class TestActor {
   async run(): Promise<void> {
     while (true) {
       await this.sdk.sync();
+      const balances = await this.sdk.getAllAssetBalances();
+      console.log("balances: ", balances);
 
       let actionTaken = false;
       if (flipCoin()) {
@@ -228,6 +230,6 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  // return Math.random() < 0.5;
-  return false;
+  return Math.random() < 0.5;
+  // return true;
 }
