@@ -7,6 +7,7 @@
 - expose two methods in `waitEstimation` to estimate time for existing deposits and for prospective deposits
 - add `waitEstimation` module which takes queue and delay and gives rough estimate of aggregate delay
 - rename `delay` module to `screenerDelay` so its clear its delay from first screen to second
+- DB stores depositHash -> depositRequest in screener for future use (alternative was using subgraph)
 - close other workers/iters/async "threads" when one of them fails
 - add window recovery logic to fulfiller
 - add fulfiller to `docker-compose.yml`

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make req/res structs in `request` module
 - move redis, ajv, and actor related utils to `offchain-utils` pkg
 - update `.env.example`
 - go back to only one docker-compose file
