@@ -2,12 +2,13 @@
 
 ### Unreleased
 
+- move redis, ajv, and actor related utils to `offchain-utils` pkg
 - update `.env.example`
-- go back to only one docker-compose file 
+- go back to only one docker-compose file
 - add `--stdout-log-level` option to CLI
 - tag docker image with nocturnelabs org name
 - add `yarn build:docker-compose` which builds docker compose
-- `yarn build:docker` now builds CLI container, not docker compose. 
+- `yarn build:docker` now builds CLI container, not docker compose.
 - submitter checks `op.opProcessed` for failures and marks failed execution if so
 - CLI uses config package to get contract addresses
 - remove gas hardcode in submitter `processBundle`

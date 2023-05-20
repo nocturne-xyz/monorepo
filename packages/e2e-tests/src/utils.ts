@@ -84,8 +84,7 @@ export async function queryDepositStatus(
     });
     return (await res.json()) as DepositStatusResponse;
   } catch (err) {
-    console.log("error getting deposit status: ", err);
-    // throw err;
+    console.error("error getting deposit status: ", err);
   }
 }
 

@@ -16,7 +16,7 @@ export interface WaitEstimator {
   estimateWaitTimeSeconds(
     queue: QueueType,
     assetAddr: Address,
-    delay: number
+    jobDelayMs: number
   ): Promise<number>;
 }
 
@@ -52,7 +52,7 @@ export async function estimateWaitTimeSecondsForExisting(
       throw new Error(`Deposit does not exist or failed`);
   }
 
-  let delayInCurrentQueue: number;
+  let delayInCurrentQueueMs: number;
   let jobData: Job<DepositRequestJobData, any, string>;
   if (queueType == QueueType.Screener) {
     const maybeJobData = await deps.screenerQueue.getJob(depositHash);
@@ -61,7 +61,7 @@ export async function estimateWaitTimeSecondsForExisting(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    delayInCurrentQueue = maybeJobData.delay;
+    delayInCurrentQueueMs = maybeJobData.delay;
     jobData = maybeJobData;
   } else {
     const depositRequest = await deps.db.getDepositRequest(depositHash);
@@ -83,7 +83,7 @@ export async function estimateWaitTimeSecondsForExisting(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    delayInCurrentQueue = maybeJobData.delay;
+    delayInCurrentQueueMs = maybeJobData.delay;
     jobData = maybeJobData;
   }
 
@@ -95,7 +95,7 @@ export async function estimateWaitTimeSecondsForExisting(
   return deps.waitEstimator.estimateWaitTimeSeconds(
     queueType,
     assetAddr,
-    delayInCurrentQueue
+    delayInCurrentQueueMs
   );
 }
 

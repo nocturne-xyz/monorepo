@@ -7,7 +7,7 @@ import { loadNocturneConfig } from "@nocturne-xyz/config";
 const runServer = new Command("server")
   .summary("run bundler server")
   .description(
-    "must supply .env file with REDIS_URL and RPC_URL. must supply configPathOrName and port as options."
+    "must supply .env file with REDIS_URL and RPC_URL. must supply config-name-or-path and port as options."
   )
   .requiredOption(
     "--config-name-or-path <string>",

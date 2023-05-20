@@ -21,7 +21,7 @@ export class QueueWaitEstimator implements WaitEstimator {
   async estimateWaitTimeSeconds(
     queueType: QueueType,
     assetAddr: Address,
-    delay: number
+    jobDelayMs: number
   ): Promise<number> {
     let depositsAhead: DepositRequest[] = [];
     if (queueType == QueueType.Screener) {
@@ -33,7 +33,7 @@ export class QueueWaitEstimator implements WaitEstimator {
         ...screenerDelayed,
         ...screenerWaiting,
       ]
-        .filter((job) => job.delay < delay)
+        .filter((job) => job.delay < jobDelayMs)
         .map((job) => JSON.parse(job.data.depositRequestJson) as DepositRequest)
         .filter(
           (deposit) =>
@@ -58,7 +58,7 @@ export class QueueWaitEstimator implements WaitEstimator {
     } else {
       // filter out those before the deposit in question in fulfiller queue
       depositsAheadInFulfillerQueue = [...fulfillerDelayed, ...fulfillerWaiting]
-        .filter((job) => job.delay < delay)
+        .filter((job) => job.delay < jobDelayMs)
         .map(
           (job) => JSON.parse(job.data.depositRequestJson) as DepositRequest
         );

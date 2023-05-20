@@ -11,7 +11,7 @@ import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply configPathOrName as option"
+    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply config-name-or-path as option"
   )
   .requiredOption(
     "--config-name-or-path <string>",

@@ -87,15 +87,17 @@ export async function depositFundsSingleToken(
   }
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
-  await sleep(15_000); // wait for deposit screener
 
-  // for (const tx of txs) {
-  //   const receipt = await tx.wait();
-  //   const depositCompletedEvent = parseEventsFromContractReceipt(
-  //     receipt,
-  //     this.tellerContract.interface.getEvent("DepositCompleted")
-  //   )[0] as DepositCompletedEvent;
-  // }
+  let ctr = 0;
+  while (ctr < 15) {
+    for (const depositRequest of depositRequests) {
+      const depositHash = hashDepositRequest(depositRequest);
+      const status = await queryDepositStatus(depositHash);
+      console.log(status);
+    }
+    await sleep(1_000);
+    ctr++;
+  }
 
   return zip(depositRequests, notes);
 }

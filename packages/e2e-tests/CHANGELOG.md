@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- have deposit script collect deposit requests and console log status while waiting for screener to complete instantiated deposits
+- start screener server in `screener.ts` start fn
 - disable fill batch in subtree updater by default and manually fill batches in tests
 - axe subtree updater recovery test
 - use new subtree updater
