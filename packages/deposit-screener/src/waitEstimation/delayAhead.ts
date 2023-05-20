@@ -2,7 +2,8 @@ import { Queue } from "bullmq";
 import { QueueType } from ".";
 import { DepositRequestJobData } from "../types";
 import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
-import { secsToMillis } from "../utils";
+
+const SECS_IN_HOUR = 60 * 60;
 
 export interface EstimateDelayAheadFromQueuesDeps {
   screenerQueue: Queue<DepositRequestJobData>;
@@ -18,9 +19,8 @@ export async function estimateWaitAheadSeconds(
   }: EstimateDelayAheadFromQueuesDeps,
   queueType: QueueType,
   assetAddr: Address,
-  jobDelaySeconds: number
+  jobDelayMs: number
 ): Promise<number> {
-  const jobDelayMs = secsToMillis(jobDelaySeconds);
   let depositsAhead: DepositRequest[] = [];
   if (queueType == QueueType.Screener) {
     const screenerDelayed = await screenerQueue.getDelayed();
@@ -73,5 +73,5 @@ export async function estimateWaitAheadSeconds(
   }
 
   const waitHours = Number(totalValueAhead / rateLimit);
-  return waitHours * 60 * 60;
+  return waitHours / SECS_IN_HOUR;
 }

@@ -45,7 +45,7 @@ export async function estimateWaitAheadSecondsForExisting(
       throw new Error(`Deposit does not exist or failed`);
   }
 
-  let delayInCurrentQueueMs: number;
+  let jobDelayMs: number;
   let jobData: Job<DepositRequestJobData, any, string>;
   if (queueType == QueueType.Screener) {
     const maybeJobData = await screenerQueue.getJob(depositHash);
@@ -54,7 +54,7 @@ export async function estimateWaitAheadSecondsForExisting(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    delayInCurrentQueueMs = maybeJobData.delay;
+    jobDelayMs = maybeJobData.delay;
     jobData = maybeJobData;
   } else {
     const depositRequest = await db.getDepositRequest(depositHash);
@@ -76,7 +76,7 @@ export async function estimateWaitAheadSecondsForExisting(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    delayInCurrentQueueMs = maybeJobData.delay;
+    jobDelayMs = maybeJobData.delay;
     jobData = maybeJobData;
   }
 
@@ -89,7 +89,7 @@ export async function estimateWaitAheadSecondsForExisting(
   const enqueuedToNowDifferenceSeconds =
     currentUnixDateInSeconds() - enqueuedDate;
   const secondsLeftInJobDelay =
-    Math.floor(delayInCurrentQueueMs / 1000) - enqueuedToNowDifferenceSeconds;
+    Math.ceil(jobDelayMs / 1000) - enqueuedToNowDifferenceSeconds;
 
   // Get time for jobs ahead of job
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
@@ -101,7 +101,7 @@ export async function estimateWaitAheadSecondsForExisting(
     },
     queueType,
     assetAddr,
-    millisToSeconds(delayInCurrentQueueMs)
+    jobDelayMs
   );
 
   return secondsLeftInJobDelay + delayAhead;
@@ -152,7 +152,7 @@ export async function estimateWaitAheadSecondsForProspective(
     },
     QueueType.Screener,
     assetAddr,
-    screenerDelay
+    millisToSeconds(screenerDelay)
   );
 
   return screenerDelay + delayAhead;

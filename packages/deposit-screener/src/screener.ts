@@ -27,7 +27,7 @@ import IORedis from "ioredis";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
-import { secsToMillis } from "./utils";
+import { currentUnixDateInSeconds, secsToMillis } from "./utils";
 import { Logger } from "winston";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
@@ -200,7 +200,7 @@ export class DepositScreenerScreener {
     const depositRequestJson = JSON.stringify(depositRequest);
     const jobData: DepositRequestJobData = {
       depositRequestJson,
-      enqueuedDateString: JSON.stringify(Date.now()),
+      enqueuedDateString: JSON.stringify(currentUnixDateInSeconds()),
     };
 
     logger.info(
@@ -273,7 +273,7 @@ export class DepositScreenerScreener {
         const depositRequestJson = JSON.stringify(depositRequest);
         const jobData: DepositRequestJobData = {
           depositRequestJson,
-          enqueuedDateString: JSON.stringify(Date.now()),
+          enqueuedDateString: JSON.stringify(currentUnixDateInSeconds()),
         };
 
         // figure out which fulfillment queue to add to

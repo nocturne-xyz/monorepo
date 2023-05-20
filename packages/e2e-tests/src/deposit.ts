@@ -45,7 +45,7 @@ export async function depositFundsMultiToken(
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
   let ctr = 0;
-  while (ctr < 15) {
+  while (ctr < 20) {
     for (const depositRequest of depositRequests) {
       const depositHash = hashDepositRequest(depositRequest);
       const status = await queryDepositStatus(depositHash);
@@ -89,7 +89,7 @@ export async function depositFundsSingleToken(
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
   let ctr = 0;
-  while (ctr < 15) {
+  while (ctr < 20) {
     for (const depositRequest of depositRequests) {
       const depositHash = hashDepositRequest(depositRequest);
       const status = await queryDepositStatus(depositHash);

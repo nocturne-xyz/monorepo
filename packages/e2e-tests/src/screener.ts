@@ -81,7 +81,7 @@ async function startDepositScreenerScreener(
     redis,
     logger,
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 3),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 5),
     supportedAssets
   );
 
@@ -134,7 +134,7 @@ function startDepositScreenerServer(
     logger,
     redis,
     new DummyScreeningApi(),
-    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 3),
+    new DummyScreenerDelayCalculator(config.dummyScreeningDelaySeconds ?? 5),
     supportedAssetRateLimits
   );
 
