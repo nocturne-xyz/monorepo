@@ -1,7 +1,7 @@
 import { Address } from "@nocturne-xyz/sdk";
 
 export class DummyScreenerDelayCalculator {
-  delaySeconds: number = 0;
+  delaySeconds = 0;
 
   constructor(delaySeconds?: number) {
     if (delaySeconds) {

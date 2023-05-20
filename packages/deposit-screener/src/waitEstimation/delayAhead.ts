@@ -21,7 +21,7 @@ export async function estimateWaitAheadSeconds(
   assetAddr: Address,
   jobDelayMs: number
 ): Promise<number> {
-  let depositsAhead: DepositRequest[] = [];
+  const depositsAhead: DepositRequest[] = [];
   if (queueType == QueueType.Screener) {
     const screenerDelayed = await screenerQueue.getDelayed();
     const screenerWaiting = await screenerQueue.getWaiting();
