@@ -38,4 +38,5 @@ const FULFILLMENT_JOB_TAG = "DEPOSIT_FULFILLMENT";
 
 export type DepositRequestJobData = {
   depositRequestJson: string;
+  enqueuedDateString: string;
 };

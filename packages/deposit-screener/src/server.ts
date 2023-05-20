@@ -11,9 +11,7 @@ import {
   getFulfillmentQueueName,
 } from "./types";
 import { DepositScreenerDB } from "./db";
-import { WaitEstimator } from "./waitEstimation";
 import { Address } from "@nocturne-xyz/sdk";
-import { QueueWaitEstimator } from "./waitEstimation/queue";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { ScreeningApi } from "./screening";
@@ -26,8 +24,7 @@ export class DepositScreenerServer {
   screenerDelayCalculator: ScreenerDelayCalculator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
-  waitEstimator: WaitEstimator;
-  supportedAssets: Set<Address>;
+  supportedAssetRateLimits: Map<Address, bigint>;
 
   constructor(
     logger: Logger,
@@ -51,13 +48,7 @@ export class DepositScreenerServer {
       })
     );
 
-    this.waitEstimator = new QueueWaitEstimator(
-      this.screenerQueue,
-      this.fulfillerQueues,
-      supportedAssetRateLimits
-    );
-
-    this.supportedAssets = new Set(Array.from(supportedAssetRateLimits.keys()));
+    this.supportedAssetRateLimits = supportedAssetRateLimits;
   }
 
   start(port: number): () => Promise<void> {
@@ -68,9 +59,9 @@ export class DepositScreenerServer {
       makeDepositStatusHandler({
         logger: this.logger,
         db: this.db,
-        waitEstimator: this.waitEstimator,
         screenerQueue: this.screenerQueue,
         fulfillerQueues: this.fulfillerQueues,
+        rateLimits: this.supportedAssetRateLimits,
       })
     );
 
@@ -80,8 +71,9 @@ export class DepositScreenerServer {
         logger: this.logger,
         screeningApi: this.screeningApi,
         screenerDelayCalculator: this.screenerDelayCalculator,
-        waitEstimator: this.waitEstimator,
-        supportedAssets: this.supportedAssets,
+        screenerQueue: this.screenerQueue,
+        fulfillerQueues: this.fulfillerQueues,
+        rateLimits: this.supportedAssetRateLimits,
       })
     );
 

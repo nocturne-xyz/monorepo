@@ -200,6 +200,7 @@ export class DepositScreenerScreener {
     const depositRequestJson = JSON.stringify(depositRequest);
     const jobData: DepositRequestJobData = {
       depositRequestJson,
+      enqueuedDateString: JSON.stringify(Date.now()),
     };
 
     logger.info(
@@ -272,6 +273,7 @@ export class DepositScreenerScreener {
         const depositRequestJson = JSON.stringify(depositRequest);
         const jobData: DepositRequestJobData = {
           depositRequestJson,
+          enqueuedDateString: JSON.stringify(Date.now()),
         };
 
         // figure out which fulfillment queue to add to

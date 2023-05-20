@@ -2,9 +2,8 @@ import { Request, RequestHandler, Response } from "express";
 import { tryParseQuoteRequest } from "./requestValidation";
 import { Logger } from "winston";
 import {
-  WaitEstimator,
-  estimateWaitTimeSecondsForExisting,
-  estimateWaitTimeSecondsForProspective,
+  estimateWaitAheadSecondsForExisting,
+  estimateWaitAheadSecondsForProspective,
 } from "./waitEstimation";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { Address } from "@nocturne-xyz/sdk";
@@ -16,17 +15,17 @@ import { DepositRequestJobData } from "./types";
 export interface DepositStatusHandlerDeps {
   db: DepositScreenerDB;
   logger: Logger;
-  waitEstimator: WaitEstimator;
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  rateLimits: Map<Address, bigint>;
 }
 
 export function makeDepositStatusHandler({
   logger,
   db,
-  waitEstimator,
   screenerQueue,
   fulfillerQueues,
+  rateLimits,
 }: DepositStatusHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     const depositHash = req.params.depositHash;
@@ -42,8 +41,8 @@ export function makeDepositStatusHandler({
 
     let delay: number;
     try {
-      delay = await estimateWaitTimeSecondsForExisting(
-        { logger, db, waitEstimator, screenerQueue, fulfillerQueues },
+      delay = await estimateWaitAheadSecondsForExisting(
+        { db, screenerQueue, fulfillerQueues, rateLimits },
         depositHash
       );
     } catch (err) {
@@ -61,16 +60,18 @@ export interface QuoteHandlerDeps {
   logger: Logger;
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
-  waitEstimator: WaitEstimator;
-  supportedAssets: Set<Address>;
+  screenerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
+  rateLimits: Map<Address, bigint>;
 }
 
 export function makeQuoteHandler({
   logger,
   screeningApi,
   screenerDelayCalculator,
-  waitEstimator,
-  supportedAssets,
+  screenerQueue,
+  fulfillerQueues,
+  rateLimits,
 }: QuoteHandlerDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     const errorOrQuoteRequest = tryParseQuoteRequest(req.body);
@@ -83,7 +84,7 @@ export function makeQuoteHandler({
 
     const quoteRequest = errorOrQuoteRequest;
 
-    if (!supportedAssets.has(quoteRequest.assetAddr)) {
+    if (!rateLimits.has(quoteRequest.assetAddr)) {
       const errorMsg = `asset ${quoteRequest.assetAddr} is not supported`;
       logger.warn(errorMsg);
       res.statusMessage = errorMsg;
@@ -93,11 +94,13 @@ export function makeQuoteHandler({
 
     let quote: number;
     try {
-      quote = await estimateWaitTimeSecondsForProspective(
+      quote = await estimateWaitAheadSecondsForProspective(
         {
           screeningApi,
           screenerDelayCalculator,
-          waitEstimator,
+          screenerQueue,
+          fulfillerQueues,
+          rateLimits,
         },
         quoteRequest.spender,
         quoteRequest.assetAddr,
