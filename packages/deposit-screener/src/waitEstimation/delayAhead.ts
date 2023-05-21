@@ -72,6 +72,7 @@ export async function estimateWaitAheadSeconds(
     throw new Error(`No rate limit for asset ${assetAddr}`);
   }
 
-  const waitHours = Number(totalValueAhead / rateLimit);
+  // Must do fraction-preserving div using numbers
+  const waitHours = Number(totalValueAhead) / Number(rateLimit);
   return waitHours / SECS_IN_HOUR;
 }
