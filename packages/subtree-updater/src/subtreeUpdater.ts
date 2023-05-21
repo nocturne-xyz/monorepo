@@ -144,53 +144,26 @@ export class SubtreeUpdater {
       });
 
       prover.on("failed", () => {
-        this.logger.info("prover job failed");
-        reject(new Error("prover job failed"));
+        this.logger.info("prover failed");
+        reject(new Error("prover failed"));
       });
     });
 
     const queuerProm = queuer();
 
     const teardown = async () => {
-      try {
-        this.logger.debug("calling proofJobs.close()");
-        await proofJobs.close();
-      } catch (err) {
-        this.logger.debug("error closing proofJobs", err);
-      }
+      const results = await Promise.allSettled([
+        proofJobs.close(),
+        prover.close(),
+        submitter.close(),
+      ]);
 
-      try {
-        this.logger.debug("calling prover.close()");
-        await prover.close();
-      } catch (err) {
-        this.logger.debug("error closing prover", err);
-      }
-
-      try {
-        this.logger.debug("calling submitter.close()");
-        await submitter.close();
-      } catch (err) {
-        this.logger.debug("error closing submitter", err);
-      }
-
-      this.logger.debug("awaiting proms");
-      try {
-        await queuerProm;
-      } catch (err: any) {
-        this.logger.debug("queuer prom rejected with err", err);
-      }
-
-      try {
-        await proverProm;
-      } catch (err: any) {
-        this.logger.debug("prover prom rejected with err", err);
-      }
-
-      try {
-        await submitterProm;
-      } catch (err: any) {
-        this.logger.debug("submitter prom rejected with err", err);
-      }
+      const teardownResults = {
+        closeProofJobs: results[0],
+        closeProver: results[1],
+        closeSubmitter: results[2],
+      };
+      this.logger.debug(`teardown completed with results`, { teardownResults });
     };
 
     const promise = (async () => {

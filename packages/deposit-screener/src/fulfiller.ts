@@ -158,7 +158,7 @@ export class DepositScreenerFulfiller {
     );
 
     const teardown = async () => {
-      await Promise.all(closeFns.map((fn) => fn()));
+      await Promise.allSettled(closeFns.map((fn) => fn()));
     };
 
     const promise = (async () => {
