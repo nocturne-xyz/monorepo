@@ -35,14 +35,6 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
       return;
     }
 
-    let id;
-    try {
-      id = BigInt(assetID);
-    } catch {
-      alert("Invalid asset ID");
-      return;
-    }
-
     let value;
     try {
       value = Number(amount);
@@ -54,11 +46,11 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
     const { decimals } = await getTokenDetails(
       assetType,
       assetAddress,
-      sdk.tellerContract.provider
+      sdk.depositManagerContract.provider
     );
     const tokenUnitsValue = formatTokenAmountEvmRepr(value, decimals);
 
-    await sdk.depositFunds(assetType, assetAddress, id, tokenUnitsValue);
+    await sdk.instantiateErc20Deposits(assetAddress, [tokenUnitsValue], 0n);
   };
 
   return (
