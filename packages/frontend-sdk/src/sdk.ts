@@ -21,6 +21,7 @@ import {
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
+import { DepositQuoteResponse, DepositStatusResponse } from "./types";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -30,19 +31,22 @@ export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
-  bundlerEndpoint: string;
   depositManagerContract: DepositManager;
+  bundlerEndpoint: string;
+  screenerEndpoint: string;
 
   private constructor(
-    bundlerEndpoint: string,
     depositManagerContract: DepositManager,
+    screenerEndpoint: string,
+    bundlerEndpoint: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
-    this.bundlerEndpoint = bundlerEndpoint;
     this.depositManagerContract = depositManagerContract;
+    this.screenerEndpoint = screenerEndpoint;
+    this.bundlerEndpoint = bundlerEndpoint;
   }
 
   /**
@@ -54,8 +58,9 @@ export class NocturneFrontendSDK {
    * @param vkey Vkey object
    */
   static async instantiate(
-    bundlerEndpoint: string,
     depositManagerAddress: string,
+    screenerEndpoint: string,
+    bundlerEndpoint: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
@@ -65,8 +70,9 @@ export class NocturneFrontendSDK {
         depositManagerAddress
       );
     return new NocturneFrontendSDK(
-      bundlerEndpoint,
       depositManagerContract,
+      screenerEndpoint,
+      bundlerEndpoint,
       wasmPath,
       zkeyPath,
       vkey
@@ -123,6 +129,50 @@ export class NocturneFrontendSDK {
       values,
       depositAddr
     );
+  }
+
+  /**
+   * Fetch status of existing deposit request given its hash.
+   *
+   * @param depositHash Deposit hash
+   */
+  async fetchDepositRequestStatus(
+    depositHash: string
+  ): Promise<DepositStatusResponse> {
+    const res = await fetch(
+      `http://${this.screenerEndpoint}/status/${depositHash}`,
+      {
+        method: "GET",
+      }
+    );
+    return (await res.json()) as DepositStatusResponse;
+  }
+
+  /**
+   * Fetch quote of wait time in seconds given spender, assetAddr, and value.
+   *
+   * @param erc20Address Asset address
+   * @param totalValue Asset amount
+   */
+  async fetchDepositQuote(
+    erc20Address: Address,
+    totalValue: bigint
+  ): Promise<DepositQuoteResponse> {
+    const signer = await getWindowSigner();
+    const spender = await signer.getAddress();
+
+    const res = await fetch(`http://${this.screenerEndpoint}/quote`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        spender,
+        assetAddr: erc20Address,
+        value: totalValue,
+      }),
+    });
+    return (await res.json()) as DepositQuoteResponse;
   }
 
   /**
@@ -286,16 +336,18 @@ export class NocturneFrontendSDK {
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
-  bundlerEndpoint: string,
   depositManagerContractAddress: string,
+  screenerEndpoint: string,
+  bundlerEndpoint: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
-    bundlerEndpoint,
     depositManagerContractAddress,
+    screenerEndpoint,
+    bundlerEndpoint,
     wasmPath,
     zkeyPath,
     vkey as VerifyingKey

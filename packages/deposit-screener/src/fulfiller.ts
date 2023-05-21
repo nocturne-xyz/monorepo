@@ -3,6 +3,7 @@ import {
   AssetTrait,
   AssetType,
   DepositRequest,
+  DepositRequestStatus,
   max,
   parseEventsFromContractReceipt,
   unzip,
@@ -13,11 +14,7 @@ import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
-import {
-  DepositRequestJobData,
-  DepositRequestStatus,
-  getFulfillmentQueueName,
-} from "./types";
+import { DepositRequestJobData, getFulfillmentQueueName } from "./types";
 import {
   DepositManager,
   DepositManager__factory,

@@ -1,5 +1,4 @@
-import { Address } from "@nocturne-xyz/sdk";
-import { DepositRequestStatus } from "../types";
+import { Address, DepositRequestStatus } from "@nocturne-xyz/sdk";
 
 export interface QuoteRequest {
   spender: Address;

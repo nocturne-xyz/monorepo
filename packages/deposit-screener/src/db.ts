@@ -1,7 +1,6 @@
-import { DepositRequest } from "@nocturne-xyz/sdk";
+import { DepositRequest, DepositRequestStatus } from "@nocturne-xyz/sdk";
 import IORedis from "ioredis";
 import { hashDepositRequest } from "./typedData";
-import { DepositRequestStatus } from "./types";
 import * as JSON from "bigint-json-serialization";
 
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";

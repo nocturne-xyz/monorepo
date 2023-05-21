@@ -7,6 +7,7 @@ import {
   AssetTrait,
   ClosableAsyncIterator,
   DepositRequest,
+  DepositRequestStatus,
 } from "@nocturne-xyz/sdk";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
@@ -16,7 +17,6 @@ import { ScreeningApi } from "./screening";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
-  DepositRequestStatus,
   SCREENER_DELAY_QUEUE,
   DepositRequestJobData,
   DELAYED_DEPOSIT_JOB_TAG,

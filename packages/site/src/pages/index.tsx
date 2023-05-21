@@ -116,8 +116,8 @@ const Index = () => {
 
   useEffect(() => {
     loadNocturneFrontendSDK(
-      BUNDLER_ENDPOINT,
-      DEPOSIT_MANAGER_CONTRACT_ADDRESS
+      DEPOSIT_MANAGER_CONTRACT_ADDRESS,
+      BUNDLER_ENDPOINT
     ).then((sdk) => {
       setFrontendSDK(sdk);
     });
