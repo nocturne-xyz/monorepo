@@ -74,5 +74,5 @@ export async function estimateWaitAheadSeconds(
 
   // Must do fraction-preserving div using numbers
   const waitHours = Number(totalValueAhead) / Number(rateLimit);
-  return waitHours / SECS_IN_HOUR;
+  return Math.floor(waitHours * SECS_IN_HOUR);
 }
