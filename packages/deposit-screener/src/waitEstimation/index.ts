@@ -1,41 +1,28 @@
 import { Job } from "bullmq";
 import { DepositScreenerDB } from "../db";
-import { DepositRequestJobData, DepositRequestStatus } from "../types";
-import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
+import { DepositRequestJobData } from "../types";
+import { Address, AssetTrait, DepositRequestStatus } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
-import * as JSON from "bigint-json-serialization";
-import { millisToSeconds } from "../utils";
 import {
   EstimateDelayAheadFromQueuesDeps,
-  calculateTotalValueAheadInAsset,
+  calculateTotalValueAheadInAssetInclusive,
+  findScreenerQueueJobClosestInDelay,
 } from "./delayAhead";
-
-const SECS_IN_HOUR = 60 * 60;
+import {
+  calculateTimeLeftInJobDelaySeconds,
+  convertAssetTotalToDelaySeconds,
+} from "./time";
 
 export enum QueueType {
   Screener,
   Fulfiller,
 }
 
-function convertAssetTotalToDelaySeconds(
-  assetAddr: Address,
-  totalValue: bigint,
-  rateLimits: Map<Address, bigint>
-): number {
-  const rateLimit = rateLimits.get(assetAddr);
-  if (!rateLimit) {
-    throw new Error(`No rate limit for asset ${assetAddr}`);
-  }
-
-  // Must do fraction-preserving div using numbers
-  const waitHours = Number(totalValue) / Number(rateLimit);
-  return Math.floor(waitHours * SECS_IN_HOUR);
-}
-
 export interface EstimateExistingWaitDeps
   extends EstimateDelayAheadFromQueuesDeps {
   db: DepositScreenerDB;
+  rateLimits: Map<Address, bigint>;
 }
 
 // NOTE: This function can throw errors
@@ -43,11 +30,21 @@ export async function estimateWaitAheadSecondsForExisting(
   { db, screenerQueue, fulfillerQueues, rateLimits }: EstimateExistingWaitDeps,
   depositHash: string
 ): Promise<number> {
+  // get deposit request status
   const status = await db.getDepositRequestStatus(depositHash);
   if (!status) {
     throw new Error(`No status found for deposit hash ${depositHash}`);
   }
 
+  // recover deposit request struct so we know what asset
+  const depositRequest = await db.getDepositRequest(depositHash);
+  if (!depositRequest) {
+    throw new Error(`No deposit request found for deposit hash ${depositHash}`);
+  }
+
+  const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
+
+  // determine which queue deposit is in based on status
   let queueType: QueueType;
   switch (status) {
     case DepositRequestStatus.PassedFirstScreen:
@@ -57,68 +54,47 @@ export async function estimateWaitAheadSecondsForExisting(
       queueType = QueueType.Fulfiller;
       break;
     case DepositRequestStatus.Completed:
-      return 0; // TODO: is desired behavior?
+      return 0;
     default:
       throw new Error(`Deposit does not exist or failed`);
   }
 
-  let jobDelayMs: number;
-  let jobData: Job<DepositRequestJobData, any, string>;
+  // get job from corresponding queue
+  let job: Job<DepositRequestJobData, any, string>;
   if (queueType == QueueType.Screener) {
-    const maybeJobData = await screenerQueue.getJob(depositHash);
-    if (!maybeJobData) {
+    const maybeJob = await screenerQueue.getJob(depositHash);
+    if (!maybeJob) {
       throw new Error(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    jobDelayMs = maybeJobData.delay;
-    jobData = maybeJobData;
+    job = maybeJob;
   } else {
-    const depositRequest = await db.getDepositRequest(depositHash);
-    if (!depositRequest) {
-      throw new Error(
-        `No deposit request found for deposit hash ${depositHash}`
-      );
-    }
-
-    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
     const fulfillerQueue = fulfillerQueues.get(assetAddr);
     if (!fulfillerQueue) {
       throw new Error(`No fulfiller queue for asset ${assetAddr}`);
     }
 
-    const maybeJobData = await fulfillerQueue.getJob(depositHash);
-    if (!maybeJobData) {
+    const maybeJob = await fulfillerQueue.getJob(depositHash);
+    if (!maybeJob) {
       throw new Error(
         `Could not find job in screener queue for deposit hash ${depositHash}`
       );
     }
-    jobDelayMs = maybeJobData.delay;
-    jobData = maybeJobData;
+    job = maybeJob;
   }
 
-  const depositRequest: DepositRequest = JSON.parse(
-    jobData.data.depositRequestJson
-  );
+  // get existing job delay
+  const secondsLeftInJobDelay = calculateTimeLeftInJobDelaySeconds(job);
 
-  // Get time left in job delay
-  const enqueuedDateMs = jobData.timestamp;
-  const enqueuedToNowDifferenceMs = Date.now() - enqueuedDateMs;
-  const secondsLeftInJobDelay = Math.ceil(
-    (jobDelayMs - enqueuedToNowDifferenceMs) / 1000
-  );
-
-  // Get time for jobs ahead of job
-  const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
-  const valueAhead = await calculateTotalValueAheadInAsset(
+  // Get value ahead of job
+  const valueAhead = await calculateTotalValueAheadInAssetInclusive(
     {
       screenerQueue,
       fulfillerQueues,
-      rateLimits,
     },
     queueType,
-    assetAddr,
-    jobDelayMs
+    job
   );
 
   return (
@@ -131,6 +107,7 @@ export interface EstimateProspectiveWaitDeps
   extends EstimateDelayAheadFromQueuesDeps {
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
+  rateLimits: Map<Address, bigint>;
 }
 
 // NOTE: This function can throw error
@@ -146,34 +123,46 @@ export async function estimateWaitAheadSecondsForProspective(
   assetAddr: Address,
   value: bigint
 ): Promise<number> {
+  // ensure passes screen
   const passesScreen = await screeningApi.isSafeDepositRequest(
     spender,
     assetAddr,
     value
   );
-
   if (!passesScreen) {
     throw new Error(
       `Prospective deposit request failed screening. spender: ${spender}. assetAddr: ${assetAddr}, value: ${value}`
     );
   }
 
+  // calculate hypothetical screener delay
   const screenerDelay = await screenerDelayCalculator.calculateDelaySeconds(
     spender,
     assetAddr,
     value
   );
 
-  const valueAhead = await calculateTotalValueAheadInAsset(
-    {
-      screenerQueue,
-      fulfillerQueues,
-      rateLimits,
-    },
-    QueueType.Screener,
+  // find closest job in screener queue to hypothetical job
+  const closestJob = await findScreenerQueueJobClosestInDelay(
+    screenerQueue,
     assetAddr,
-    millisToSeconds(screenerDelay)
+    screenerDelay
   );
+
+  // calculate value ahead of closest job
+  let valueAhead: bigint;
+  if (!closestJob) {
+    valueAhead = 0n;
+  } else {
+    valueAhead = await calculateTotalValueAheadInAssetInclusive(
+      {
+        screenerQueue,
+        fulfillerQueues,
+      },
+      QueueType.Screener,
+      closestJob
+    );
+  }
 
   return (
     screenerDelay +
