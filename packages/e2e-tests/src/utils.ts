@@ -1,4 +1,5 @@
 import {
+  DepositStatusResponse,
   MockSubtreeUpdateProver,
   OperationStatus,
   ProvenOperation,
@@ -15,7 +16,6 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/sdk";
-import { DepositStatusResponse } from "@nocturne-xyz/deposit-screener";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;

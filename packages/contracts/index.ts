@@ -15,6 +15,7 @@ export type { IERC1155Interface } from './src/IERC1155';
 export type { TransparentUpgradeableProxy } from './src/TransparentUpgradeableProxy';
 export type { ProxyAdmin } from './src/ProxyAdmin';
 export type { Versioned } from './src/Versioned';
+export type { WETH9 } from './src/WETH9';
 
 export { DepositManager__factory } from './src/factories/DepositManager__factory';
 export { Teller__factory } from './src/factories/Teller__factory';

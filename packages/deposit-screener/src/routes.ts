@@ -9,7 +9,7 @@ import { ScreenerDelayCalculator } from "./screenerDelay";
 import {
   Address,
   DepositStatusResponse,
-  QuoteResponse,
+  DepositQuoteResponse,
 } from "@nocturne-xyz/sdk";
 import { ScreeningApi } from "./screening";
 import { DepositScreenerDB } from "./db";
@@ -121,7 +121,7 @@ export function makeQuoteHandler({
       return;
     }
 
-    const response: QuoteResponse = { estimatedWaitSeconds: quote };
+    const response: DepositQuoteResponse = { estimatedWaitSeconds: quote };
     res.json(response);
   };
 }
