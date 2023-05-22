@@ -1,7 +1,23 @@
 {
   "name": "monorepo",
   "workspaces": [
-    "packages/*"
+    "packages/bundler",
+    "packages/circuits",
+    "packages/config",
+    "packages/contracts",
+    "packages/deploy",
+    "packages/deposit-screener",
+    "packages/e2e-tests",
+    "packages/frontend-sdk",
+    "packages/local-prover",
+    "packages/offchain-utils",
+    "packages/sdk",
+    "packages/site",
+    "packages/site-new",
+    "packages/snap",
+    "packages/subgraph",
+    "packages/subtree-updater",
+    "packages/test-actor"
   ],
   "scripts": {
     "build": "yarn turbo run --no-daemon build",
@@ -27,6 +43,9 @@
   },
   "packageManager": "yarn@3.2.0",
   "engines": {
+    "node": "18.12.1"
+  },
+  "volta": {
     "node": "18.12.1"
   }
 }

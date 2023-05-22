@@ -52,3 +52,6 @@ circuit-artifacts/subtreeupdate
 
 .idea/
 .nvmrc
+
+# Ignore while interface is in monorepo (due to @nocturne_xyz/frontend-sdk)
+packages/interface/
