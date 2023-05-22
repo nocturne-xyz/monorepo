@@ -5,7 +5,7 @@ import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
 import * as JSON from "bigint-json-serialization";
-import { currentUnixDateInSeconds, millisToSeconds } from "../utils";
+import { millisToSeconds } from "../utils";
 import {
   EstimateDelayAheadFromQueuesDeps,
   estimateWaitAheadSeconds,
@@ -85,11 +85,11 @@ export async function estimateWaitAheadSecondsForExisting(
   );
 
   // Get time left in job delay
-  const enqueuedDate: number = JSON.parse(jobData.data.enqueuedDateString);
-  const enqueuedToNowDifferenceSeconds =
-    currentUnixDateInSeconds() - enqueuedDate;
-  const secondsLeftInJobDelay =
-    Math.ceil(jobDelayMs / 1000) - enqueuedToNowDifferenceSeconds;
+  const enqueuedDateMs = jobData.timestamp;
+  const enqueuedToNowDifferenceMs = Date.now() - enqueuedDateMs;
+  const secondsLeftInJobDelay = Math.ceil(
+    (jobDelayMs - enqueuedToNowDifferenceMs) / 1000
+  );
 
   // Get time for jobs ahead of job
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
