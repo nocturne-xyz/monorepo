@@ -9,7 +9,7 @@ import {
   ProvenOperationJobData,
   PROVEN_OPERATION_JOB_TAG,
 } from "../src/common";
-import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
+import { VALID_RELAY_REQUEST } from "./utils";
 import { makeTestLogger } from "@nocturne-xyz/offchain-utils";
 import { sleep } from "../src/utils";
 import { BatcherDB, StatusDB } from "../src/db";
@@ -51,7 +51,7 @@ describe("BundlerBatcher", async () => {
   async function enqueueOperation(
     queue: Queue<ProvenOperationJobData>
   ): Promise<string> {
-    let operationObj = VALID_PROVEN_OPERATION_OBJ;
+    let operationObj = VALID_RELAY_REQUEST.operation;
     operationObj.executionGasLimit =
       Math.floor(Math.random() * 100000).toString() + "n";
     const operationJson = JSON.stringify(operationObj);

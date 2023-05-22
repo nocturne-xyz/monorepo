@@ -1,4 +1,4 @@
-import { OperationStatus, ProvenOperation } from "@nocturne-xyz/sdk";
+import { OperationStatus, ProvenOperation } from "../primitives";
 
 export interface RelayRequest {
   operation: ProvenOperation;
