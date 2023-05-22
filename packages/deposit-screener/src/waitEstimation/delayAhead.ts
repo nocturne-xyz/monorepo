@@ -3,15 +3,13 @@ import { QueueType } from ".";
 import { DepositRequestJobData } from "../types";
 import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 
-const SECS_IN_HOUR = 60 * 60;
-
 export interface EstimateDelayAheadFromQueuesDeps {
   screenerQueue: Queue<DepositRequestJobData>;
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
   rateLimits: Map<Address, bigint>;
 }
 
-export async function estimateWaitAheadSeconds(
+export async function calculateTotalValueAheadInAsset(
   {
     screenerQueue,
     fulfillerQueues,
@@ -20,7 +18,7 @@ export async function estimateWaitAheadSeconds(
   queueType: QueueType,
   assetAddr: Address,
   jobDelayMs: number
-): Promise<number> {
+): Promise<bigint> {
   const depositsAhead: DepositRequest[] = [];
   if (queueType == QueueType.Screener) {
     const screenerDelayed = await screenerQueue.getDelayed();
@@ -62,17 +60,5 @@ export async function estimateWaitAheadSeconds(
 
   depositsAhead.push(...depositsAheadInFulfillerQueue);
 
-  const totalValueAhead = depositsAhead.reduce(
-    (acc, deposit) => acc + deposit.value,
-    0n
-  );
-
-  const rateLimit = rateLimits.get(assetAddr);
-  if (!rateLimit) {
-    throw new Error(`No rate limit for asset ${assetAddr}`);
-  }
-
-  // Must do fraction-preserving div using numbers
-  const waitHours = Number(totalValueAhead) / Number(rateLimit);
-  return Math.floor(waitHours * SECS_IN_HOUR);
+  return depositsAhead.reduce((acc, deposit) => acc + deposit.value, 0n);
 }

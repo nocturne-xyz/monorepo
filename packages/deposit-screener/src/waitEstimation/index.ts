@@ -8,12 +8,29 @@ import * as JSON from "bigint-json-serialization";
 import { millisToSeconds } from "../utils";
 import {
   EstimateDelayAheadFromQueuesDeps,
-  estimateWaitAheadSeconds,
+  calculateTotalValueAheadInAsset,
 } from "./delayAhead";
+
+const SECS_IN_HOUR = 60 * 60;
 
 export enum QueueType {
   Screener,
   Fulfiller,
+}
+
+function convertAssetTotalToDelaySeconds(
+  assetAddr: Address,
+  totalValue: bigint,
+  rateLimits: Map<Address, bigint>
+): number {
+  const rateLimit = rateLimits.get(assetAddr);
+  if (!rateLimit) {
+    throw new Error(`No rate limit for asset ${assetAddr}`);
+  }
+
+  // Must do fraction-preserving div using numbers
+  const waitHours = Number(totalValue) / Number(rateLimit);
+  return Math.floor(waitHours * SECS_IN_HOUR);
 }
 
 export interface EstimateExistingWaitDeps
@@ -93,7 +110,7 @@ export async function estimateWaitAheadSecondsForExisting(
 
   // Get time for jobs ahead of job
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
-  const delayAhead = await estimateWaitAheadSeconds(
+  const valueAhead = await calculateTotalValueAheadInAsset(
     {
       screenerQueue,
       fulfillerQueues,
@@ -104,7 +121,10 @@ export async function estimateWaitAheadSecondsForExisting(
     jobDelayMs
   );
 
-  return secondsLeftInJobDelay + delayAhead;
+  return (
+    secondsLeftInJobDelay +
+    convertAssetTotalToDelaySeconds(assetAddr, valueAhead, rateLimits)
+  );
 }
 
 export interface EstimateProspectiveWaitDeps
@@ -144,7 +164,7 @@ export async function estimateWaitAheadSecondsForProspective(
     value
   );
 
-  const delayAhead = await estimateWaitAheadSeconds(
+  const valueAhead = await calculateTotalValueAheadInAsset(
     {
       screenerQueue,
       fulfillerQueues,
@@ -155,5 +175,8 @@ export async function estimateWaitAheadSecondsForProspective(
     millisToSeconds(screenerDelay)
   );
 
-  return screenerDelay + delayAhead;
+  return (
+    screenerDelay +
+    convertAssetTotalToDelaySeconds(assetAddr, valueAhead, rateLimits)
+  );
 }
