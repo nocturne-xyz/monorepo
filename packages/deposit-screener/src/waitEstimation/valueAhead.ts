@@ -9,34 +9,6 @@ export interface EstimateDelayAheadFromQueuesDeps {
   fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
-export async function findScreenerQueueJobClosestInDelay(
-  screenerQueue: Queue<DepositRequestJobData>,
-  assetAddr: Address,
-  delayMs: number
-): Promise<Job<DepositRequestJobData> | undefined> {
-  const screenerDelayed = await screenerQueue.getDelayed();
-  const screenerWaiting = await screenerQueue.getWaiting();
-
-  const screenerJobs = [...screenerDelayed, ...screenerWaiting];
-  const screenerJobsAhead = screenerJobs
-    .filter((job) => {
-      const depositRequest: DepositRequest = JSON.parse(
-        job.data.depositRequestJson
-      );
-      return (
-        AssetTrait.decode(depositRequest.encodedAsset).assetAddr == assetAddr
-      );
-    })
-    .filter((job) => job.delay <= delayMs);
-  screenerJobsAhead.sort((a, b) => b.delay - a.delay);
-
-  if (screenerJobsAhead.length == 0) {
-    return undefined;
-  } else {
-    return screenerJobsAhead[0];
-  }
-}
-
 export async function calculateTotalValueAheadInAssetInclusive(
   { screenerQueue, fulfillerQueues }: EstimateDelayAheadFromQueuesDeps,
   queueType: QueueType,

@@ -1,12 +1,7 @@
 import { Job, Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
-import { DepositRequestJobData } from "../types";
-import {
-  Address,
-  AssetTrait,
-  DepositRequest,
-  DepositRequestStatus,
-} from "@nocturne-xyz/sdk";
+import { DepositRequestJobData, DepositRequestStatus } from "../types";
+import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
 import {
