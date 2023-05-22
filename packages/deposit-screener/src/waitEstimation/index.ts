@@ -1,14 +1,18 @@
-import { Job } from "bullmq";
+import { Job, Queue } from "bullmq";
 import { DepositScreenerDB } from "../db";
 import { DepositRequestJobData } from "../types";
-import { Address, AssetTrait, DepositRequestStatus } from "@nocturne-xyz/sdk";
+import {
+  Address,
+  AssetTrait,
+  DepositRequest,
+  DepositRequestStatus,
+} from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
 import {
   EstimateDelayAheadFromQueuesDeps,
   calculateTotalValueAheadInAssetInclusive,
-  findScreenerQueueJobClosestInDelay,
-} from "./delayAhead";
+} from "./valueAhead";
 import {
   calculateTimeLeftInJobDelaySeconds,
   convertAssetTotalToDelaySeconds,
@@ -168,4 +172,32 @@ export async function estimateWaitAheadSecondsForProspective(
     screenerDelay +
     convertAssetTotalToDelaySeconds(assetAddr, valueAhead, rateLimits)
   );
+}
+
+async function findScreenerQueueJobClosestInDelay(
+  screenerQueue: Queue<DepositRequestJobData>,
+  assetAddr: Address,
+  delayMs: number
+): Promise<Job<DepositRequestJobData> | undefined> {
+  const screenerDelayed = await screenerQueue.getDelayed();
+  const screenerWaiting = await screenerQueue.getWaiting();
+
+  const screenerJobs = [...screenerDelayed, ...screenerWaiting];
+  const screenerJobsAhead = screenerJobs
+    .filter((job) => {
+      const depositRequest: DepositRequest = JSON.parse(
+        job.data.depositRequestJson
+      );
+      return (
+        AssetTrait.decode(depositRequest.encodedAsset).assetAddr == assetAddr
+      );
+    })
+    .filter((job) => job.delay <= delayMs);
+  screenerJobsAhead.sort((a, b) => b.delay - a.delay);
+
+  if (screenerJobsAhead.length == 0) {
+    return undefined;
+  } else {
+    return screenerJobsAhead[0];
+  }
 }
