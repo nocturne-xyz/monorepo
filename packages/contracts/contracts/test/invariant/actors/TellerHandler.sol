@@ -189,7 +189,7 @@ contract TellerHandler is OperationGenerator {
             }
         }
 
-        ghost_totalJoinSplitUnwrapped += meta.totalJoinSplitAmount;
+        ghost_totalJoinSplitUnwrapped += _totalJoinSplitTokenAmountInOp(op);
 
         if (prefillExists && joinSplitToken.balanceOf(address(handler)) == 0) {
             ghost_numberOfTimesPrefillTaken += 1;
@@ -264,5 +264,19 @@ contract TellerHandler is OperationGenerator {
                 handleJoinSplitGas +
                 opResult.executionGas +
                 handleRefundGas);
+    }
+
+    function _totalJoinSplitTokenAmountInOp(
+        Operation memory op
+    ) internal view returns (uint256) {
+        uint256 total = 0;
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+            EncodedAsset memory encodedAsset = op.joinSplits[i].encodedAsset;
+            (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
+            if (assetAddr == address(joinSplitToken)) {
+                total += op.joinSplits[i].publicSpend;
+            }
+        }
+        return total;
     }
 }
