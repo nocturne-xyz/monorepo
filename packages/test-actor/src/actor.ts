@@ -9,12 +9,20 @@ import {
   sleep,
   JoinSplitProver,
   proveOperation,
+  parseEventsFromContractReceipt,
+  Asset,
+  randomBigInt,
+  OperationRequestBuilder,
+  computeOperationDigest,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
+import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
 const FIVE_MINUTES_AS_MILLIS = 5 * 60 * 1000;
+const ONE_DAY_SECONDS = 60n * 60n * 24n;
+const ONE_ETH_IN_WEI = 10n ** 18n;
 
 export class TestActor {
   txSigner: ethers.Wallet;
@@ -51,54 +59,58 @@ export class TestActor {
   async run(): Promise<void> {
     while (true) {
       await this.sdk.sync();
+      const balances = await this.sdk.getAllAssetBalances();
+      console.log("balances: ", balances);
 
+      let actionTaken = false;
       if (flipCoin()) {
         console.log("switched on deposit");
-        await this.deposit();
+        actionTaken = await this.deposit();
       } else {
         console.log("switched on operation");
-        await this.operation();
+        actionTaken = await this.randomOperation();
+      }
+
+      if (actionTaken) {
+        await sleep(FIVE_MINUTES_AS_MILLIS);
       }
     }
   }
 
-  /// helpers
+  private async getRandomErc20AndValue(): Promise<[Asset, bigint] | undefined> {
+    const assetsWithBalance = await this.sdk.getAllAssetBalances();
 
-  private async operation() {
-    // choose a random opRequest
-    const opRequest = randomElem(this.opRequests);
+    // Try for random asset
+    const randomAsset = randomElem(assetsWithBalance);
 
-    // prepare, sign, and prove
-    const preSign = await this.sdk.prepareOperation(opRequest);
-    const signed = this.sdk.signOperation(preSign);
-    const proven = proveOperation(this.prover, signed);
-
-    // submit
-    const res = await fetch(`${this.bundlerEndpoint}/relay`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(proven),
-    });
-
-    const resJSON = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        `failed to submit proven operation to bundler: ${JSON.stringify(
-          resJSON
-        )}`
-      );
+    // If random chosen doesn't have any funds, find the first one with funds
+    if (randomAsset.balance > 0) {
+      const value = randomBigIntBounded(randomAsset.balance);
+      return [randomAsset.asset, value];
+    } else {
+      for (const asset of assetsWithBalance) {
+        if (asset.balance > 0) {
+          const value = randomBigIntBounded(randomAsset.balance);
+          return [asset.asset, value];
+        }
+      }
     }
+
+    return undefined;
   }
 
-  private async deposit() {
+  private async deposit(): Promise<boolean> {
     // choose a random deposit request and set its nonce
-    console.log(`erc20 entries: ${Array.from(this.erc20s.entries())}`);
+    console.log(
+      `erc20 entries: ${JSON.stringify(Array.from(this.erc20s.entries()))}`
+    );
     const [erc20Name, erc20Config] = randomElem(
       Array.from(this.erc20s.entries())
     );
-    const randomValue = randomInt(1_000);
+    const randomValue = randomBigintInRange(
+      ONE_ETH_IN_WEI,
+      10n * ONE_ETH_IN_WEI
+    );
 
     console.log(`reserving tokens. token: ${erc20Name}, value: ${randomValue}`);
     const erc20Token = SimpleERC20Token__factory.connect(
@@ -128,11 +140,84 @@ export class TestActor {
         [randomValue],
         this.sdk.signer.generateRandomStealthAddress()
       );
-    await instantiateDepositTx.wait(1);
+    const receipt = await instantiateDepositTx.wait(1);
 
-    // TODO request from deposit screener instead
-    console.log("waiting for deposit to be processed");
-    await sleep(FIVE_MINUTES_AS_MILLIS);
+    const matchingEvents = parseEventsFromContractReceipt(
+      receipt,
+      this.depositManager.interface.getEvent("DepositInstantiated")
+    ) as DepositInstantiatedEvent[];
+    console.log(`instantiate deposit tx: ${JSON.stringify(matchingEvents)}`);
+
+    return true;
+  }
+
+  private async randomOperation(): Promise<boolean> {
+    // choose a random joinsplit asset for oprequest
+    const maybeErc20AndValue = await this.getRandomErc20AndValue();
+    if (!maybeErc20AndValue) {
+      return false;
+    }
+    const [asset, value] = maybeErc20AndValue;
+
+    let opRequest: OperationRequest;
+    if (true) {
+      opRequest = await this.erc20TransferOpRequest(asset, value);
+    } else {
+      // TODO: add swapper call case and replace if(true) with flipcoin
+    }
+
+    // prepare, sign, and prove
+    const preSign = await this.sdk.prepareOperation(opRequest);
+    const signed = this.sdk.signOperation(preSign);
+
+    console.log(`proving operation: ${computeOperationDigest(signed)}`);
+    const proven = await proveOperation(this.prover, signed);
+    console.log(JSON.stringify(proven));
+
+    // submit
+    const res = await fetch(`${this.bundlerEndpoint}/relay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(proven),
+    });
+
+    const resJSON = await res.json();
+    if (!res.ok) {
+      throw new Error(
+        `failed to submit proven operation to bundler: ${JSON.stringify(
+          resJSON
+        )}`
+      );
+    }
+
+    return true;
+  }
+
+  private async erc20TransferOpRequest(
+    asset: Asset,
+    value: bigint
+  ): Promise<OperationRequest> {
+    const simpleErc20 = SimpleERC20Token__factory.connect(
+      asset.assetAddr,
+      this.txSigner
+    );
+    const transferData =
+      SimpleERC20Token__factory.createInterface().encodeFunctionData(
+        "transfer",
+        [this.txSigner.address, value] // transfer funds back to self
+      );
+
+    return new OperationRequestBuilder()
+      .unwrap(asset, value)
+      .action(simpleErc20.address, transferData)
+      .chainId(BigInt(await this.txSigner.getChainId()))
+      .deadline(
+        BigInt((await this.txSigner.provider.getBlock("latest")).timestamp) +
+          ONE_DAY_SECONDS
+      )
+      .build();
   }
 }
 
@@ -140,10 +225,19 @@ function randomInt(max: number) {
   return Math.floor(Math.random() * max);
 }
 
+function randomBigIntBounded(max: bigint) {
+  return randomBigInt() % max;
+}
+
+function randomBigintInRange(min: bigint, max: bigint) {
+  return randomBigIntBounded(max - min) + min;
+}
+
 function randomElem<T>(arr: T[]): T {
   return arr[randomInt(arr.length)];
 }
 
 function flipCoin(): boolean {
-  return true; // TODO: make 50% after deposits work
+  return Math.random() < 0.5;
+  // return true;
 }

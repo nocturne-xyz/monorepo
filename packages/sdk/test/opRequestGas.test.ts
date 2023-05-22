@@ -13,6 +13,7 @@ import {
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
 import { JoinSplitRequest } from "../src/operationRequest";
+import { MockEthToTokenConverter } from "../src/conversion";
 
 chai.use(chaiAsPromised);
 
@@ -34,6 +35,7 @@ describe("handleGasForOperationRequest", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
     };
 
     const builder = new OperationRequestBuilder();
@@ -57,7 +59,7 @@ describe("handleGasForOperationRequest", async () => {
     expect(gasCompAccountedOpRequest.gasAsset).to.eql(DUMMY_GAS_ASSET);
   });
 
-  it("adds gas comp to existing joinsplit when gas price is nonzero, ∃ a joinsplit unwrapping gasAsset, and user has enough", async () => {
+  it("adds gas comp to existing joinsplit when gas price is nonzero, there exists a joinsplit unwrapping gasAsset, and user has enough", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin]
@@ -68,6 +70,7 @@ describe("handleGasForOperationRequest", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
     };
 
     const builder = new OperationRequestBuilder();
@@ -98,7 +101,7 @@ describe("handleGasForOperationRequest", async () => {
     expect(gasAccountedJoinSplitRequest.unwrapValue > 1_000_000).to.be.true;
   });
 
-  it("adds a joinsplit request including gas comp when gas price is nonzero, ∄ a joinsplit unwrapping a gasAsset, and user has enough of it", async () => {
+  it("adds a joinsplit request including gas comp when gas price is nonzero, there does not exist a joinsplit unwrapping a gasAsset, and user has enough of it", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, stablescam]
@@ -109,6 +112,7 @@ describe("handleGasForOperationRequest", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
     };
 
     const builder = new OperationRequestBuilder();
@@ -148,7 +152,7 @@ describe("handleGasForOperationRequest", async () => {
     expect(joinSplitRequestForGas.unwrapValue > 1_000_000).to.be.true;
   });
 
-  it("adds a joinsplit request for gasAssetB when gas price is nonzeo, ∃ a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
+  it("adds a joinsplit request for gasAssetB when gas price is nonzero, there exists a joinsplit unwrapping gasAssetA, user doesn't have enough gasAssetA, but user does have enough gasAssetB", async () => {
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [500_000n, 500_000n, 500_000n, 2_000_000n],
       [shitcoin, shitcoin, shitcoin, stablescam]
@@ -158,6 +162,7 @@ describe("handleGasForOperationRequest", async () => {
       merkle: merkleProver,
       viewer: signer,
       gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
       db: nocturneDB,
     };
 

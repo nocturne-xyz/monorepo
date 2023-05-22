@@ -61,7 +61,7 @@ export async function checkRevertError(
       data,
     });
 
-    logger.info("operation gas estimate: ", est);
+    logger.info("operation gas estimate: ", { est: est.toBigInt() });
     return undefined;
   } catch (e) {
     return `operation reverts with: ${e}`;

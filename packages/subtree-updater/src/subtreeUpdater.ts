@@ -122,27 +122,82 @@ export class SubtreeUpdater {
       this.logger.child({ function: "submitter" })
     );
 
-    const submitterProm = new Promise<void>((resolve) => {
+    const submitterProm = new Promise<void>((resolve, reject) => {
       submitter.on("closed", () => {
         this.logger.info("submitter stopped");
         resolve();
       });
+
+      submitter.on("error", (err) => {
+        this.logger.error("submitter error", err);
+        reject(err);
+      });
+
+      submitter.on("failed", () => {
+        this.logger.error("submitter job failed");
+        reject(new Error("submitter job failed"));
+      });
     });
-    const proverProm = new Promise<void>((resolve) => {
+
+    const proverProm = new Promise<void>((resolve, reject) => {
       prover.on("closed", () => {
         this.logger.info("prover stopped");
         resolve();
       });
+
+      prover.on("error", (err) => {
+        this.logger.error("prover error", err);
+        reject(err);
+      });
+
+      prover.on("failed", () => {
+        this.logger.info("prover job failed");
+        reject(new Error("prover job failed"));
+      });
     });
+
     const queuerProm = queuer();
 
     const teardown = async () => {
-      await proofJobs.close();
-      await queuerProm;
-      await prover.close();
-      await proverProm;
-      await submitter.close();
-      await submitterProm;
+      try {
+        this.logger.debug("calling proofJobs.close()");
+        await proofJobs.close();
+      } catch (err) {
+        this.logger.debug("error closing proofJobs", err);
+      }
+
+      try {
+        this.logger.debug("calling prover.close()");
+        await prover.close();
+      } catch (err) {
+        this.logger.debug("error closing prover", err);
+      }
+
+      try {
+        this.logger.debug("calling submitter.close()");
+        await submitter.close();
+      } catch (err) {
+        this.logger.debug("error closing submitter", err);
+      }
+
+      this.logger.debug("awaiting proms");
+      try {
+        await queuerProm;
+      } catch (err: any) {
+        this.logger.debug("queuer prom rejected with err", err);
+      }
+
+      try {
+        await proverProm;
+      } catch (err: any) {
+        this.logger.debug("prover prom rejected with err", err);
+      }
+
+      try {
+        await submitterProm;
+      } catch (err: any) {
+        this.logger.debug("submitter prom rejected with err", err);
+      }
     };
 
     const promise = (async () => {
@@ -176,14 +231,7 @@ export class SubtreeUpdater {
         };
         await this.submissionQueue.add(
           SUBMISSION_JOB_TAG,
-          JSON.stringify(jobData),
-          {
-            attempts: 3,
-            backoff: {
-              type: "fixed",
-              delay: 1000,
-            },
-          }
+          JSON.stringify(jobData)
         );
       },
       {
@@ -247,6 +295,7 @@ export class SubtreeUpdater {
         throttleMs: queryThrottleMs,
       })
       .tap((_) => {
+        logger.debug(`got insertion at merkleIndex ${merkleIndex}`);
         merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
           return;

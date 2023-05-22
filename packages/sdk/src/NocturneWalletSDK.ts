@@ -17,6 +17,7 @@ import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { EthToTokenConverter } from "./conversion";
 
 export class NocturneWalletSDK {
   protected config: NocturneConfig;
@@ -24,9 +25,10 @@ export class NocturneWalletSDK {
   protected merkleProver: SparseMerkleProver;
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
+  protected tokenConverter: EthToTokenConverter;
 
   readonly signer: NocturneSigner;
-  readonly gasAssets: Asset[];
+  readonly gasAssets: Map<string, Asset>;
 
   constructor(
     signer: NocturneSigner,
@@ -34,7 +36,8 @@ export class NocturneWalletSDK {
     configOrNetworkName: NocturneConfig | string,
     merkleProver: SparseMerkleProver,
     db: NocturneDB,
-    syncAdapter: SDKSyncAdapter
+    syncAdapter: SDKSyncAdapter,
+    tokenConverter: EthToTokenConverter
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -42,9 +45,13 @@ export class NocturneWalletSDK {
       this.config = configOrNetworkName;
     }
 
-    this.gasAssets = Array.from(this.config.erc20s.values())
-      .filter((config) => config.isGasAsset)
-      .map(({ address }) => AssetTrait.erc20AddressToAsset(address));
+    this.gasAssets = new Map(
+      Array.from(this.config.erc20s.entries())
+        .filter(([_, config]) => config.isGasAsset)
+        .map(([ticker, config]) => {
+          return [ticker, AssetTrait.erc20AddressToAsset(config.address)];
+        })
+    );
 
     this.signer = signer;
     this.handlerContract = Handler__factory.connect(
@@ -54,6 +61,7 @@ export class NocturneWalletSDK {
     this.merkleProver = merkleProver;
     this.db = db;
     this.syncAdapter = syncAdapter;
+    this.tokenConverter = tokenConverter;
   }
 
   async sync(): Promise<void> {
@@ -73,6 +81,7 @@ export class NocturneWalletSDK {
     const deps = {
       db: this.db,
       gasAssets: this.gasAssets,
+      tokenConverter: this.tokenConverter,
       handlerContract: this.handlerContract,
       merkle: this.merkleProver,
       viewer: this.signer,

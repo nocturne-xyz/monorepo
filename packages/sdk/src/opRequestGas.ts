@@ -21,6 +21,7 @@ import { groupByMap } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { EthToTokenConverter } from "./conversion";
 
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
@@ -42,7 +43,8 @@ const PER_REFUND_GAS = 80_000n;
 export interface HandleOpRequestGasDeps {
   db: NocturneDB;
   handlerContract: Handler;
-  gasAssets: Asset[];
+  gasAssets: Map<string, Asset>;
+  tokenConverter: EthToTokenConverter;
   merkle: SparseMerkleProver;
 }
 
@@ -96,7 +98,7 @@ export async function handleGasForOperationRequest(
 
     // compute an estimate of the total amount of gas the op will cost given the gas params
     // we add 1 to `maxNumRefund` because we may add another joinSplitRequest to pay for gas
-    const totalGasEstimate =
+    const totalGasEstimateWei =
       gasPrice *
       (executionGasLimit +
         BigInt(gasEstimatedOpRequest.joinSplitRequests.length) *
@@ -112,7 +114,8 @@ export async function handleGasForOperationRequest(
         gasAssets,
         db,
         gasEstimatedOpRequest.joinSplitRequests,
-        totalGasEstimate
+        totalGasEstimateWei,
+        deps.tokenConverter
       );
 
     // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
@@ -138,10 +141,11 @@ export async function handleGasForOperationRequest(
 // returns the updated JoinSplitRequests and the gas asset used to pay for gas if the user can afford gas
 // if the user can't afford gas, returns an empty array and undefined.
 async function tryUpdateJoinSplitRequestsForGasEstimate(
-  gasAssets: Asset[],
+  gasAssets: Map<string, Asset>,
   db: NocturneDB,
   joinSplitRequests: JoinSplitRequest[],
-  gasEstimate: bigint
+  gasEstimateWei: bigint,
+  tokenConverter: EthToTokenConverter
 ): Promise<[JoinSplitRequest[], Asset | undefined]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
@@ -149,9 +153,14 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     (request) => request.asset.assetAddr
   );
 
+  const gasEstimatesInGasAssets = await tokenConverter.gasEstimatesInGasAssets(
+    gasEstimateWei,
+    Array.from(gasAssets.keys())
+  );
+
   // attempt to modify an existing joinsplit request to include additional gas comp
   // iterate through each gas asset
-  for (const gasAsset of gasAssets) {
+  for (const [ticker, gasAsset] of gasAssets.entries()) {
     // for each, check if we're already unwrapping that asset in at least one joinsplit request
     const matchingRequests = joinSplitRequestsByAsset.get(gasAsset.assetAddr);
 
@@ -167,8 +176,12 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
       );
 
       // if they do, modify one of the requests to include the gas, and we're done
-      if (totalOwnedGasAsset >= gasEstimate + totalAmountInMatchingRequests) {
-        matchingRequests[0].unwrapValue += gasEstimate;
+      const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
+      if (
+        totalOwnedGasAsset >=
+        estimateInGasAsset + totalAmountInMatchingRequests
+      ) {
+        matchingRequests[0].unwrapValue += gasEstimateWei;
         joinSplitRequestsByAsset.set(gasAsset.assetAddr, matchingRequests);
 
         return [Array.from(joinSplitRequestsByAsset.values()).flat(), gasAsset];
@@ -179,15 +192,15 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   // if we couldn't find an existing joinsplit with a supported gas asset,
   // attempt to make a new joinsplit request to include the gas comp
   // iterate through each gas asset
-  for (const gasAsset of gasAssets.values()) {
-    // for each, check if the user has enough of it to cover gas
+  for (const [ticker, gasAsset] of gasAssets.entries()) {
+    // if user has enough gas token, create a new joinsplit request to include the gas, add it
+    // to the list, and we're done
     const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
-
-    // if they do, create a new joinsplit request to include the gas, add it to the list, and we're done
-    if (totalOwnedGasAsset >= gasEstimate) {
+    const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
+    if (totalOwnedGasAsset >= estimateInGasAsset) {
       const modifiedJoinSplitRequests = [
         ...joinSplitRequests,
-        { asset: gasAsset, unwrapValue: gasEstimate },
+        { asset: gasAsset, unwrapValue: estimateInGasAsset },
       ];
 
       return [modifiedJoinSplitRequests, gasAsset];
@@ -249,7 +262,6 @@ async function estimateGasForOperationRequest(
   }
 
   // if gasPrice is not specified, get it from RPC node
-  // TODO - add conversion logic to set gasPrice if gasAsset isn't ETH
   gasPrice =
     gasPrice ?? (await handlerContract.provider.getGasPrice()).toBigInt();
 
