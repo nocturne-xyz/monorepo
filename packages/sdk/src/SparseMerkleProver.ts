@@ -3,7 +3,13 @@ import { assertOrErr, zip } from "./utils";
 import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
-import { omitIndices, range } from "./utils/functional";
+import {
+  consecutiveChunks,
+  omitIndices,
+  partition,
+  range,
+} from "./utils/functional";
+import { start } from "repl";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -42,7 +48,14 @@ export interface TreeNode {
 export interface SMTDump {
   root: TreeNode;
   leaves: Array<[number, bigint]>;
+  uncommittedLeaves: UncommittedLeaf[];
   _count: number;
+}
+
+interface UncommittedLeaf {
+  index: number;
+  leaf: bigint;
+  include: boolean;
 }
 
 // (0 means left, 1 means right)
@@ -73,6 +86,7 @@ export class SparseMerkleProver {
   private _count: number;
   private root: TreeNode;
   private leaves: Map<number, bigint>;
+  private uncommittedLeaves: UncommittedLeaf[];
   private kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -81,6 +95,7 @@ export class SparseMerkleProver {
       hash: ZERO_HASHES[MAX_DEPTH],
     };
     this.leaves = new Map();
+    this.uncommittedLeaves = [];
     this._count = 0;
     this.kv = kv;
   }
@@ -111,7 +126,7 @@ export class SparseMerkleProver {
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
     assertOrErr(
-      startIndex < ARITY ** MAX_DEPTH,
+      startIndex + leaves.length < ARITY ** MAX_DEPTH,
       `index must be < ${ARITY}^maxDepth`
     );
     assertOrErr(startIndex >= this._count, "index must be >= tree count");
@@ -133,6 +148,69 @@ export class SparseMerkleProver {
     }
 
     this._count = startIndex + leaves.length;
+  }
+
+  insertUncommitted(index: number, leaf: bigint, include = true): void {
+    assertOrErr(
+      index < ARITY ** MAX_DEPTH,
+      `index must be < ${ARITY}^maxDepth`
+    );
+    assertOrErr(index >= this._count, "index must be >= tree count");
+    assertOrErr(
+      this.uncommittedLeaves.length === 0 ||
+        index >=
+          this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index,
+      "insertions must be monotonic in index"
+    );
+
+    this.uncommittedLeaves.push({ index, leaf, include });
+  }
+
+  insertBatchUncommitted(
+    startIndex: number,
+    leaves: bigint[],
+    includes: boolean[]
+  ): void {
+    assertOrErr(
+      startIndex + leaves.length < ARITY ** MAX_DEPTH,
+      `index must be < ${ARITY}^maxDepth`
+    );
+    assertOrErr(startIndex >= this._count, "index must be >= tree count");
+    assertOrErr(
+      leaves.length === includes.length,
+      "leaves and includes must be the same length"
+    );
+
+    this.uncommittedLeaves.push(
+      ...range(startIndex, leaves.length).map((index) => ({
+        index,
+        leaf: leaves[index - startIndex],
+        include: includes[index - startIndex],
+      }))
+    );
+  }
+
+  commitUpToIndex(commitIndex: number): void {
+    const [newlyCommitted, uncommitted] = partition(
+      this.uncommittedLeaves,
+      ({ index }) => index >= this._count && index <= commitIndex
+    );
+    if (newlyCommitted.length === 0) {
+      return;
+    }
+
+    for (const batch of consecutiveChunks(
+      newlyCommitted,
+      ({ index }) => index
+    )) {
+      this.insertBatch(
+        batch[0].index,
+        batch.map(({ leaf }) => leaf),
+        batch.map(({ include }) => include)
+      );
+    }
+
+    this.uncommittedLeaves = uncommitted;
   }
 
   markForPruning(index: number): void {
@@ -202,6 +280,7 @@ export class SparseMerkleProver {
     const dump: SMTDump = {
       root: this.root,
       leaves: Array.from(this.leaves),
+      uncommittedLeaves: this.uncommittedLeaves,
       _count: this._count,
     };
     await this.kv.putString(SMT_DUMP_KEY, JSON.stringify(dump));
@@ -218,6 +297,7 @@ export class SparseMerkleProver {
     smt.root = dump.root;
     smt.leaves = new Map(dump.leaves);
     smt._count = dump._count;
+    smt.uncommittedLeaves = dump.uncommittedLeaves;
 
     return smt;
   }
