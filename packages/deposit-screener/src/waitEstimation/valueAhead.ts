@@ -1,47 +1,7 @@
 import { Job, Queue } from "bullmq";
-import { QueueType } from ".";
 import { DepositRequestJobData } from "../types";
-import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
+import { AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
-
-export interface EstimateDelayAheadFromQueuesDeps {
-  screenerQueue: Queue<DepositRequestJobData>;
-  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
-}
-
-export async function calculateTotalValueAheadInAssetInclusive(
-  { screenerQueue, fulfillerQueues }: EstimateDelayAheadFromQueuesDeps,
-  queueType: QueueType,
-  job: Job<DepositRequestJobData>
-): Promise<bigint> {
-  const depositRequest: DepositRequest = JSON.parse(
-    job.data.depositRequestJson
-  );
-  const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
-
-  let valueAhead = 0n;
-  const fulfillerQueue = fulfillerQueues.get(assetAddr);
-  if (!fulfillerQueue) {
-    throw new Error(`No fulfiller queue for asset ${assetAddr}`);
-  }
-
-  if (queueType == QueueType.Screener) {
-    // if in screener queue, add value ahead for both queues
-    valueAhead += await totalValueAheadInScreenerQueueInclusive(
-      screenerQueue,
-      job
-    );
-    valueAhead += await totalValueInFulfillerQueue(fulfillerQueue);
-  } else {
-    // otherwise just ahead value ahead in fulfiller queue
-    valueAhead += await totalValueAheadInFulfillerQueueInclusive(
-      fulfillerQueue,
-      job
-    );
-  }
-
-  return valueAhead;
-}
 
 export async function totalValueAheadInScreenerQueueInclusive(
   screenerQueue: Queue<DepositRequestJobData>,

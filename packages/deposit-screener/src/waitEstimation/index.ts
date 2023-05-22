@@ -5,23 +5,20 @@ import { Address, AssetTrait, DepositRequest } from "@nocturne-xyz/sdk";
 import { ScreenerDelayCalculator } from "../screenerDelay";
 import { ScreeningApi } from "../screening";
 import {
-  EstimateDelayAheadFromQueuesDeps,
-  calculateTotalValueAheadInAssetInclusive,
+  totalValueAheadInFulfillerQueueInclusive,
+  totalValueAheadInScreenerQueueInclusive,
+  totalValueInFulfillerQueue,
 } from "./valueAhead";
 import {
   calculateTimeLeftInJobDelaySeconds,
   convertAssetTotalToDelaySeconds,
 } from "./time";
 
-export enum QueueType {
-  Screener,
-  Fulfiller,
-}
-
-export interface EstimateExistingWaitDeps
-  extends EstimateDelayAheadFromQueuesDeps {
+export interface EstimateExistingWaitDeps {
   db: DepositScreenerDB;
   rateLimits: Map<Address, bigint>;
+  screenerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
 // NOTE: This function can throw errors
@@ -42,25 +39,15 @@ export async function estimateWaitAheadSecondsForExisting(
   }
 
   const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
-
-  // determine which queue deposit is in based on status
-  let queueType: QueueType;
-  switch (status) {
-    case DepositRequestStatus.PassedFirstScreen:
-      queueType = QueueType.Screener;
-      break;
-    case DepositRequestStatus.AwaitingFulfillment:
-      queueType = QueueType.Fulfiller;
-      break;
-    case DepositRequestStatus.Completed:
-      return 0;
-    default:
-      throw new Error(`Deposit does not exist or failed`);
+  const fulfillerQueue = fulfillerQueues.get(assetAddr);
+  if (!fulfillerQueue) {
+    throw new Error(`No fulfiller queue for asset ${assetAddr}`);
   }
 
-  // get job from corresponding queue
-  let job: Job<DepositRequestJobData, any, string>;
-  if (queueType == QueueType.Screener) {
+  /// Get asset value ahead of deposit
+  let valueAhead: bigint;
+  let job: Job<DepositRequestJobData>;
+  if (status == DepositRequestStatus.PassedFirstScreen) {
     const maybeJob = await screenerQueue.getJob(depositHash);
     if (!maybeJob) {
       throw new Error(
@@ -68,12 +55,14 @@ export async function estimateWaitAheadSecondsForExisting(
       );
     }
     job = maybeJob;
-  } else {
-    const fulfillerQueue = fulfillerQueues.get(assetAddr);
-    if (!fulfillerQueue) {
-      throw new Error(`No fulfiller queue for asset ${assetAddr}`);
-    }
 
+    const valueAheadInScreenerQueue =
+      await totalValueAheadInScreenerQueueInclusive(screenerQueue, job);
+    const valueInFulfillerQueue = await totalValueInFulfillerQueue(
+      fulfillerQueue
+    );
+    valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
+  } else if (status == DepositRequestStatus.AwaitingFulfillment) {
     const maybeJob = await fulfillerQueue.getJob(depositHash);
     if (!maybeJob) {
       throw new Error(
@@ -81,20 +70,21 @@ export async function estimateWaitAheadSecondsForExisting(
       );
     }
     job = maybeJob;
+
+    valueAhead = await totalValueAheadInFulfillerQueueInclusive(
+      fulfillerQueue,
+      job
+    );
+  } else if (status == DepositRequestStatus.Completed) {
+    return 0;
+  } else {
+    throw new Error(
+      `Deposit does not exist or failed. depositHash: ${depositHash}`
+    );
   }
 
   // get existing job delay
   const secondsLeftInJobDelay = calculateTimeLeftInJobDelaySeconds(job);
-
-  // Get value ahead of job
-  const valueAhead = await calculateTotalValueAheadInAssetInclusive(
-    {
-      screenerQueue,
-      fulfillerQueues,
-    },
-    queueType,
-    job
-  );
 
   return (
     secondsLeftInJobDelay +
@@ -102,11 +92,12 @@ export async function estimateWaitAheadSecondsForExisting(
   );
 }
 
-export interface EstimateProspectiveWaitDeps
-  extends EstimateDelayAheadFromQueuesDeps {
+export interface EstimateProspectiveWaitDeps {
   screeningApi: ScreeningApi;
   screenerDelayCalculator: ScreenerDelayCalculator;
   rateLimits: Map<Address, bigint>;
+  screenerQueue: Queue<DepositRequestJobData>;
+  fulfillerQueues: Map<Address, Queue<DepositRequestJobData>>;
 }
 
 // NOTE: This function can throw error
@@ -134,6 +125,11 @@ export async function estimateWaitAheadSecondsForProspective(
     );
   }
 
+  const fulfillerQueue = fulfillerQueues.get(assetAddr);
+  if (!fulfillerQueue) {
+    throw new Error(`No fulfiller queue for asset ${assetAddr}`);
+  }
+
   // calculate hypothetical screener delay
   const screenerDelay = await screenerDelayCalculator.calculateDelaySeconds(
     spender,
@@ -153,14 +149,12 @@ export async function estimateWaitAheadSecondsForProspective(
   if (!closestJob) {
     valueAhead = 0n;
   } else {
-    valueAhead = await calculateTotalValueAheadInAssetInclusive(
-      {
-        screenerQueue,
-        fulfillerQueues,
-      },
-      QueueType.Screener,
-      closestJob
+    const valueAheadInScreenerQueue =
+      await totalValueAheadInScreenerQueueInclusive(screenerQueue, closestJob);
+    const valueInFulfillerQueue = await totalValueInFulfillerQueue(
+      fulfillerQueue
     );
+    valueAhead = valueAheadInScreenerQueue + valueInFulfillerQueue;
   }
 
   return (
