@@ -43,7 +43,6 @@ struct GenerateOperationArgs {
 }
 
 struct GeneratedOperationMetadata {
-    uint256 totalJoinSplitAmount;
     TransferRequest[] transfers;
     SwapRequest[] swaps;
     bool[] isTransfer;
@@ -77,6 +76,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             0,
             args.joinSplitToken.balanceOf(address(args.teller))
         );
+        uint256 totalJoinSplitForActions = totalJoinSplitUnwrapAmount;
 
         // Get random args.joinSplitPublicSpends
         uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
@@ -96,17 +96,15 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         );
 
         bool compensateBundler = false;
-        if (totalJoinSplitUnwrapAmount > gasToReserve) {
-            totalJoinSplitUnwrapAmount =
-                totalJoinSplitUnwrapAmount -
-                gasToReserve;
+        if (totalJoinSplitForActions > gasToReserve) {
+            totalJoinSplitForActions = totalJoinSplitForActions - gasToReserve;
             compensateBundler = true;
         }
 
         Action[] memory actions = new Action[](numActions);
         (actions, _meta) = _formatActions(
             args,
-            totalJoinSplitUnwrapAmount,
+            totalJoinSplitForActions,
             numActions
         );
 
@@ -166,7 +164,6 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         )
     {
         _actions = new Action[](numActions);
-        _meta.totalJoinSplitAmount = totalJoinSplitAmount;
         _meta.transfers = new TransferRequest[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
         _meta.isTransfer = new bool[](numActions);

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix invariant `TellerHandler` bug where joinSplitUnwrapAmount > gasComp led to opMeta.totalJoinSplitUnwrapped being lower than actual (fixed by just gathering total joinsplit amount directly from op)
 - rename the `subtreeIndex` field of `SubtreeUpdate` event to `subtreeBatchOffset`
 - have teller balance invariants account for taking/refilling prefills
 - add transferred out < joinsplits unwrapped invariant
