@@ -6,7 +6,7 @@ import {
 } from "./request";
 import { Logger } from "winston";
 import {
-  estimateWaitAheadSecondsForExisting,
+  estimateSecondsUntilDepositCompletion,
   estimateWaitAheadSecondsForProspective,
 } from "./waitEstimation";
 import { ScreenerDelayCalculator } from "./screenerDelay";
@@ -45,7 +45,7 @@ export function makeDepositStatusHandler({
 
     let delay: number;
     try {
-      delay = await estimateWaitAheadSecondsForExisting(
+      delay = await estimateSecondsUntilDepositCompletion(
         { db, screenerQueue, fulfillerQueues, rateLimits },
         depositHash
       );

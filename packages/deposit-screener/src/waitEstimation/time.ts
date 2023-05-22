@@ -1,10 +1,11 @@
 import { Job } from "bullmq";
 import { DepositRequestJobData } from "../types";
 import { Address } from "@nocturne-xyz/sdk";
+import { divideDecimalPreserving } from "../utils";
 
 const SECS_IN_HOUR = 60 * 60;
 
-export function calculateTimeLeftInJobDelaySeconds(
+export function calculateSecondsLeftInJobDelay(
   job: Job<DepositRequestJobData>
 ): number {
   const jobDelayMs = job.delay;
@@ -26,7 +27,9 @@ export function convertAssetTotalToDelaySeconds(
     throw new Error(`No rate limit for asset ${assetAddr}`);
   }
 
-  // Must do fraction-preserving div using numbers
-  const waitHours = Number(totalValue) / Number(rateLimit);
+  // NOTE: 3 decimal places is fine because largest possible totalValue = 2^128. Internally,
+  // divideDecimalPreserving will multiply totalValue by 10^precision (1000) which has no overflow
+  // risk since largest bigint is 2^231 - 1
+  const waitHours = divideDecimalPreserving(totalValue, rateLimit, 3);
   return Math.ceil(waitHours * SECS_IN_HOUR);
 }

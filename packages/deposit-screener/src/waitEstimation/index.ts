@@ -10,7 +10,7 @@ import {
   totalValueInFulfillerQueue,
 } from "./valueAhead";
 import {
-  calculateTimeLeftInJobDelaySeconds,
+  calculateSecondsLeftInJobDelay,
   convertAssetTotalToDelaySeconds,
 } from "./time";
 
@@ -22,7 +22,7 @@ export interface EstimateExistingWaitDeps {
 }
 
 // NOTE: This function can throw errors
-export async function estimateWaitAheadSecondsForExisting(
+export async function estimateSecondsUntilDepositCompletion(
   { db, screenerQueue, fulfillerQueues, rateLimits }: EstimateExistingWaitDeps,
   depositHash: string
 ): Promise<number> {
@@ -84,7 +84,7 @@ export async function estimateWaitAheadSecondsForExisting(
   }
 
   // get existing job delay
-  const secondsLeftInJobDelay = calculateTimeLeftInJobDelaySeconds(job);
+  const secondsLeftInJobDelay = calculateSecondsLeftInJobDelay(job);
 
   return (
     secondsLeftInJobDelay +
