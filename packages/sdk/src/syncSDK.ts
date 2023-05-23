@@ -83,7 +83,6 @@ async function updateMerkle(
     (noteOrCommitment) => noteOrCommitment.merkleIndex
   );
   for (const batch of batches) {
-    console.log("batch", batch);
     const startIndex = batch[0].merkleIndex;
     const leaves = [];
     const includes = [];
