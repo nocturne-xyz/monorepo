@@ -10,7 +10,7 @@ export interface DepositFormProps {
 }
 
 export const DepositForm = ({ sdk }: DepositFormProps) => {
-  const [assetType, setAssetType] = useState("");
+  const [assetType, setAssetType] = useState("ETH");
   const [assetAddress, setAssetAddress] = useState("");
   const [amount, setAmount] = useState("0");
   const [assetID, setAssetID] = useState("0");
@@ -98,7 +98,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
             type="number"
             value={amount}
             onChange={handleAmountChange}
-            disabled={assetType === "ERC721"}
+            disabled={assetType === "1"}
           />
         </label>
         <br />
@@ -109,7 +109,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
             type="text"
             value={assetID.toString()}
             onChange={handleAssetIDChange}
-            disabled={assetType === "ERC20"}
+            disabled={assetType === "0" || assetType === "ETH"}
           />
         </label>
         <br /> <br />

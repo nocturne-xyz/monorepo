@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix DepositForm bugs post adding ETH
 - make deposit form include ETH as option
 - add methods for querying screener for status and quote
 - fix deposit functionality for erc20 and eth deposits
