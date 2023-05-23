@@ -17,5 +17,5 @@ export {
   AssetType,
   AssetTrait,
 } from "./asset";
-export { DepositRequest, DepositRequestStatus } from "./deposit";
+export { hashDepositRequest } from "./depositHash";
 export { computeOperationDigest } from "./operationDigest";

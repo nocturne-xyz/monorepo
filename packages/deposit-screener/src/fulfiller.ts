@@ -4,6 +4,7 @@ import {
   AssetType,
   DepositRequest,
   DepositRequestStatus,
+  hashDepositRequest,
   max,
   parseEventsFromContractReceipt,
   unzip,
@@ -19,11 +20,7 @@ import {
   DepositManager,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
-import {
-  EIP712Domain,
-  hashDepositRequest,
-  signDepositRequest,
-} from "./typedData";
+import { EIP712Domain, signDepositRequest } from "./typedData";
 import { Mutex } from "async-mutex";
 import {
   DEPOSIT_MANAGER_CONTRACT_NAME,

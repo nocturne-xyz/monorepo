@@ -7,10 +7,10 @@ import {
   DepositRequest,
   AssetTrait,
   zip,
+  hashDepositRequest,
 } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
-import { hashDepositRequest } from "@nocturne-xyz/deposit-screener";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
