@@ -3,6 +3,7 @@ import { Note, NoteTrait, AssetTrait, TreeConstants } from "../primitives";
 import { bigintToBEPadded, bigInt256ToFieldElems } from "../utils";
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
+import { merklePathToIndex } from "../utils/misc";
 
 export interface SubtreeUpdateProofWithPublicSignals {
   proof: BaseProof;
@@ -103,16 +104,15 @@ export function subtreeUpdateInputsFromBatch(
   console.log("accumulatorHashHi", accumulatorHashHi);
 
   const siblings = merkleProof.siblings.slice(TreeConstants.SUBTREE_DEPTH);
-  // reduceRight because path indices are stored in order from leaf to root, not root to leaf
-  const idx = merkleProof.pathIndices.reduceRight(
-    (idx, pathIndex) => (idx << 2n) | BigInt(pathIndex),
-    0n
+  const idx = merklePathToIndex(
+    merkleProof.pathIndices.map(BigInt),
+    "LEAF_TO_ROOT"
   );
   console.log("index", idx);
 
   // encodedPathAndHash
-  const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
-  console.log("encodedPathAndHash", encodedPathAndHash);
+  const encodedPathAndHash = encodePathAndHash(idx, accumulatorHashHi);
+  console.log("encodedPathAndHash", encodePathAndHash);
 
   return {
     encodedPathAndHash,

@@ -20,3 +20,16 @@ export function getJoinSplitRequestTotalValue(
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function merklePathToIndex(
+  pathIndices: bigint[],
+  direction: "ROOT_TO_LEAF" | "LEAF_TO_ROOT"
+): bigint {
+  pathIndices =
+    direction === "ROOT_TO_LEAF" ? pathIndices : pathIndices.reverse();
+
+  return pathIndices.reduce(
+    (idx, pathIndex) => (idx << 2n) | BigInt(pathIndex),
+    0n
+  );
+}
