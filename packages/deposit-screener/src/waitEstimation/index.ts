@@ -47,7 +47,9 @@ export async function estimateSecondsUntilDepositCompletion(
   /// Get asset value ahead of deposit
   let valueAhead: bigint;
   let job: Job<DepositRequestJobData>;
-  if (status == DepositRequestStatus.PassedFirstScreen) {
+  if (status == DepositRequestStatus.Completed) {
+    return 0;
+  } else if (status == DepositRequestStatus.PassedFirstScreen) {
     const maybeJob = await screenerQueue.getJob(depositHash);
     if (!maybeJob) {
       throw new Error(
@@ -75,8 +77,6 @@ export async function estimateSecondsUntilDepositCompletion(
       fulfillerQueue,
       job
     );
-  } else if (status == DepositRequestStatus.Completed) {
-    return 0;
   } else {
     throw new Error(
       `Deposit does not exist or failed. depositHash: ${depositHash}`
@@ -101,7 +101,7 @@ export interface EstimateProspectiveWaitDeps {
 }
 
 // NOTE: This function can throw error
-export async function estimateWaitAheadSecondsForProspective(
+export async function estimateSecondsUntilCompletionForProspectiveDeposit(
   {
     screeningApi,
     screenerDelayCalculator,

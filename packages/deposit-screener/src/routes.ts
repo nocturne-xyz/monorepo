@@ -7,7 +7,7 @@ import {
 import { Logger } from "winston";
 import {
   estimateSecondsUntilDepositCompletion,
-  estimateWaitAheadSecondsForProspective,
+  estimateSecondsUntilCompletionForProspectiveDeposit,
 } from "./waitEstimation";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { Address } from "@nocturne-xyz/sdk";
@@ -102,7 +102,7 @@ export function makeQuoteHandler({
 
     let quote: number;
     try {
-      quote = await estimateWaitAheadSecondsForProspective(
+      quote = await estimateSecondsUntilCompletionForProspectiveDeposit(
         {
           screeningApi,
           screenerDelayCalculator,
