@@ -68,7 +68,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
 
   // unpack second new note
 
-  idx = getTotalEntityIndex(totalLogIndex, 2);
+  idx = getTotalEntityIndex(totalLogIndex, 3);
   id = toPadded32BArray(idx);
   const encryptedNoteB = new EncryptedNote(id);
 
