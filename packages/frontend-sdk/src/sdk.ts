@@ -264,7 +264,7 @@ export class NocturneFrontendSDK {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(operation),
+      body: JSON.stringify({ operation }),
     });
 
     const resJSON = await res.json();
