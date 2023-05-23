@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make cli manually exit when `ActorHandle` promise resolves
 - move req/res types into sdk so it can be shared with fe-sdk
 - remove all usage of ticker in processor and server (strictly worse than address, more clutter)
 - add server component which exposes `/status/:depositHash` and `/quote`

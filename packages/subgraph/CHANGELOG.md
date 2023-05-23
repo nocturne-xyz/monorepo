@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix typo in `handleJoinSplit`
 - rename `subtreeIndex` in tree insertion entities to `subtreeBatchOffset`
 - add tree insertion events
 - store entity id in bigint form in new field `idx` for every entity

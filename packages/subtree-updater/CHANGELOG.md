@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- make cli manually exit when `ActorHandle` promise resolves
 - get `subtreeIndex`, not `subtreeBatchOffset` from subgraph when determining whether or not to enqueue proof job
 - close other workers/iters/async "threads" when one of them fails
 - add `--stdout-log-level` post-rewrite
