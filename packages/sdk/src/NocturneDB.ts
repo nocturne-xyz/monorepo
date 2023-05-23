@@ -23,10 +23,6 @@ const MAX_MERKLE_INDEX_DIGITS = 10;
 export type AssetKey = string;
 type AllNotes = Map<AssetKey, IncludedNote[]>;
 
-export interface NocturneDBOpts {
-  startBlock?: number;
-}
-
 export class NocturneDB {
   // store the following mappings:
   //  merkleIndexKey => Note

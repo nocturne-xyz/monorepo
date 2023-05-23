@@ -4,8 +4,8 @@ import {
   SparseMerkleProver,
   OperationRequest,
   NocturneDB,
-  // RPCSDKSyncAdapter,
   SubgraphSDKSyncAdapter,
+  MockEthToTokenConverter,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -57,9 +57,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   request,
 }) => {
   const kvStore = new SnapKvStore();
-  const nocturneDB = new NocturneDB(kvStore, {
-    startBlock: config.startBlock(),
-  });
+  const nocturneDB = new NocturneDB(kvStore);
   const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
 
   const signer = await getNocturneSignerFromBIP44();
@@ -74,7 +72,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     config,
     merkleProver,
     nocturneDB,
-    syncAdapter
+    syncAdapter,
+    new MockEthToTokenConverter()
   );
 
   console.log("Switching on method: ", request.method);
