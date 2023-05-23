@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add DepositForm to test site for fe-sdk testing
 - Pass in `chainid` and `deadline` to operation request in test site
 - Remove hardcoded vault address after wallet <> handler separation
 - remove "sync" buttons from test site

@@ -36,6 +36,7 @@ import { DEPOSIT_MANAGER_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 import { ethers } from "ethers";
 import { RPC_URL } from "../config/contracts";
+import { SCREENER_ENDPOINT } from "../config/bundler";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
@@ -117,7 +118,8 @@ const Index = () => {
   useEffect(() => {
     loadNocturneFrontendSDK(
       DEPOSIT_MANAGER_CONTRACT_ADDRESS,
-      BUNDLER_ENDPOINT
+      BUNDLER_ENDPOINT,
+      SCREENER_ENDPOINT
     ).then((sdk) => {
       setFrontendSDK(sdk);
     });

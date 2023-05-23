@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug in deploy.ts where weth was not being whitelisted
 - remove `makeDepositFn` in place of directly callable function
 - have deposit script collect deposit requests and console log status while waiting for screener to complete instantiated deposits
 - start screener server in `screener.ts` start fn

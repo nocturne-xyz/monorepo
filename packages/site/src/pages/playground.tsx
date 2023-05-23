@@ -10,7 +10,7 @@ import {
   DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
 import { DEPOSIT_MANAGER_CONTRACT_ADDRESS } from "../config";
-import { BUNDLER_ENDPOINT } from "../config/bundler";
+import { BUNDLER_ENDPOINT, SCREENER_ENDPOINT } from "../config/bundler";
 
 const Container = styled.div`
   display: flex;
@@ -64,7 +64,8 @@ const Playground = () => {
   useEffect(() => {
     loadNocturneFrontendSDK(
       DEPOSIT_MANAGER_CONTRACT_ADDRESS,
-      BUNDLER_ENDPOINT
+      BUNDLER_ENDPOINT,
+      SCREENER_ENDPOINT
     ).then((sdk) => {
       console.log("instantiated frontend sdk");
       setFrontendSDK(sdk);

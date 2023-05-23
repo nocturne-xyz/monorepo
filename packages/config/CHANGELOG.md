@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `request` module which contains req/res types for bundler/screener servers
 - update sepolia config
 - update sepolia config
 - add unit test for serializing/deserializing config

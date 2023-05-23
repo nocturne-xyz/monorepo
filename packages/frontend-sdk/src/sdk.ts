@@ -54,7 +54,6 @@ export class NocturneFrontendSDK {
    * Instantiate new `NocturneFrontendSDK` instance.
    *
    * @param depositManagerContractAddress Teller contract address
-   * @param wethAddress WETH address
    * @param screenerEndpoint Screener endpoint
    * @param bundlerEndpoint Bundler endpoint
    * @param wasPath Joinsplit wasm path
@@ -63,7 +62,6 @@ export class NocturneFrontendSDK {
    */
   static async instantiate(
     depositManagerAddress: string,
-    wethAddress: string,
     screenerEndpoint: string,
     bundlerEndpoint: string,
     wasmPath: string,
@@ -361,7 +359,6 @@ export class NocturneFrontendSDK {
  * wasm, joinsplit.zkey, joinSplitVkey.json).
  *
  * @param depositManagerAddress Teller contract address
- * @param wethAddress WETH address
  * @param screenerEndpoint Screener endpoint
  * @param bundlerEndpoint Bundler endpoint
  * @param wasmPath Wasm path
@@ -370,7 +367,6 @@ export class NocturneFrontendSDK {
  */
 export async function loadNocturneFrontendSDK(
   depositManagerAddress: Address,
-  wethAddress: Address,
   screenerEndpoint: string,
   bundlerEndpoint: string,
   wasmPath: string = WASM_PATH,
@@ -380,7 +376,6 @@ export async function loadNocturneFrontendSDK(
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
     depositManagerAddress,
-    wethAddress,
     screenerEndpoint,
     bundlerEndpoint,
     wasmPath,
