@@ -94,7 +94,7 @@ export async function submitAndProcessOperation(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(op),
+      body: JSON.stringify({ operation: op }),
     });
     const resJson = await res.json();
     console.log("bundler server response: ", resJson);
