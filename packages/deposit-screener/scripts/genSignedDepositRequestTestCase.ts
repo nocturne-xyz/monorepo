@@ -1,7 +1,12 @@
-import { AssetTrait, AssetType, DepositRequest } from "@nocturne-xyz/sdk";
+import {
+  AssetTrait,
+  AssetType,
+  DepositRequest,
+  hashDepositRequest,
+} from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import { EIP712Domain, hashDepositRequest, signDepositRequest } from "../src";
+import { EIP712Domain, signDepositRequest } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";

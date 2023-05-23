@@ -110,6 +110,15 @@ export interface ProvenOperation extends BaseOperation {
 
 export type Operation = PreSignOperation | SignedOperation | ProvenOperation;
 
+export interface DepositRequest {
+  spender: string;
+  encodedAsset: EncodedAsset;
+  value: bigint;
+  depositAddr: StealthAddress;
+  nonce: bigint;
+  gasCompensation: bigint;
+}
+
 export enum OperationStatus {
   QUEUED = "QUEUED",
   PRE_BATCH = "PRE_BATCH",
@@ -119,4 +128,12 @@ export enum OperationStatus {
   OPERATION_PROCESSING_FAILED = "OPERATION_PROCESSING_FAILED",
   OPERATION_EXECUTION_FAILED = "OPERATION_EXECUTION_FAILED",
   BUNDLE_REVERTED = "BUNDLE_REVERTED",
+}
+
+export enum DepositRequestStatus {
+  DoesNotExist = "DoesNotExist",
+  FailedScreen = "FailedScreen",
+  PassedFirstScreen = "PassedFirstScreen",
+  AwaitingFulfillment = "AwaitingFulfillment",
+  Completed = "Completed",
 }

@@ -14,6 +14,7 @@ import {
   proveOperation,
   DepositStatusResponse,
   DepositQuoteResponse,
+  RelayRequest,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -30,6 +31,11 @@ const VKEY_PATH = "/joinSplitVkey.json";
 
 export type BundlerOperationID = string;
 
+export interface Endpoints {
+  screenerEndpoint: string;
+  bundlerEndpoint: string;
+}
+
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   depositManagerContract: DepositManager;
@@ -38,16 +44,15 @@ export class NocturneFrontendSDK {
 
   private constructor(
     depositManagerContract: DepositManager,
-    screenerEndpoint: string,
-    bundlerEndpoint: string,
+    endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.depositManagerContract = depositManagerContract;
-    this.screenerEndpoint = screenerEndpoint;
-    this.bundlerEndpoint = bundlerEndpoint;
+    this.screenerEndpoint = endpoints.screenerEndpoint;
+    this.bundlerEndpoint = endpoints.bundlerEndpoint;
   }
 
   /**
@@ -62,8 +67,7 @@ export class NocturneFrontendSDK {
    */
   static async instantiate(
     depositManagerAddress: string,
-    screenerEndpoint: string,
-    bundlerEndpoint: string,
+    endpoints: Endpoints,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
@@ -75,8 +79,7 @@ export class NocturneFrontendSDK {
     );
     return new NocturneFrontendSDK(
       depositManagerContract,
-      screenerEndpoint,
-      bundlerEndpoint,
+      endpoints,
       wasmPath,
       zkeyPath,
       vkey
@@ -264,7 +267,7 @@ export class NocturneFrontendSDK {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(operation),
+      body: JSON.stringify({ operation } as RelayRequest),
     });
 
     const resJSON = await res.json();
@@ -367,8 +370,7 @@ export class NocturneFrontendSDK {
  */
 export async function loadNocturneFrontendSDK(
   depositManagerAddress: Address,
-  screenerEndpoint: string,
-  bundlerEndpoint: string,
+  endpoints: Endpoints,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
@@ -376,8 +378,7 @@ export async function loadNocturneFrontendSDK(
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
     depositManagerAddress,
-    screenerEndpoint,
-    bundlerEndpoint,
+    endpoints,
     wasmPath,
     zkeyPath,
     vkey as VerifyingKey

@@ -116,11 +116,10 @@ const Index = () => {
   const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK(
-      DEPOSIT_MANAGER_CONTRACT_ADDRESS,
-      BUNDLER_ENDPOINT,
-      SCREENER_ENDPOINT
-    ).then((sdk) => {
+    loadNocturneFrontendSDK(DEPOSIT_MANAGER_CONTRACT_ADDRESS, {
+      screenerEndpoint: SCREENER_ENDPOINT,
+      bundlerEndpoint: BUNDLER_ENDPOINT,
+    }).then((sdk) => {
       setFrontendSDK(sdk);
     });
   }, [loadNocturneFrontendSDK]);

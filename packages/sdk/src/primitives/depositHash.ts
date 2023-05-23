@@ -1,9 +1,7 @@
-import {
-  DepositRequest,
-  EncodedAsset,
-  StealthAddress,
-} from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
+import { DepositRequest } from "./types";
+import { EncodedAsset } from "./asset";
+import { StealthAddress } from "../crypto";
 
 const DEPOSIT_REQUEST_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],

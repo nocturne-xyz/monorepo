@@ -8,6 +8,7 @@ import {
   ClosableAsyncIterator,
   DepositRequest,
   DepositRequestStatus,
+  hashDepositRequest,
 } from "@nocturne-xyz/sdk";
 import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
@@ -25,7 +26,6 @@ import {
 } from "./types";
 import IORedis from "ioredis";
 import { ScreenerDelayCalculator } from "./screenerDelay";
-import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
