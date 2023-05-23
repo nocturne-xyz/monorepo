@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
+- add `getAllCommittedBalance` to `NocturneWalletSDK`
+- make `gatherNotes` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
+- add `getAllCommittedNotes` and `getCommittedNotesForAsset` to `NotesDB`
+- SMP doesn't put uncommitted notes into tree, keeping them in a persistent list instead
 - move screener deposit hash calc method into sdk primitives
 - fix bug in `subtreeUpdateInputsFromBatch` encoding path in wrong endianness
 - fix bug resulting from `AssetTrait.decode` not returning checksum addresses
