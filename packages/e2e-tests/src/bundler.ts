@@ -80,5 +80,11 @@ function startBundlerServer(config: BundlerConfig, redis: IORedis): TeardownFn {
     config.ignoreGas
   );
 
-  return server.start(3000);
+  const { promise, teardown } = server.start(3000);
+  promise.catch((err) => {
+    console.error("bundler server error", err);
+    throw err;
+  });
+
+  return teardown;
 }

@@ -10,6 +10,7 @@ import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import { makeGetOperationStatusHandler, makeRelayHandler } from "./routes";
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerServer {
   redis: IORedis;
@@ -38,7 +39,7 @@ export class BundlerServer {
     this.ignoreGas = ignoreGas;
   }
 
-  start(port: number): () => Promise<void> {
+  start(port: number): ActorHandle {
     const router = express.Router();
     router.post(
       "/relay",
@@ -89,12 +90,31 @@ export class BundlerServer {
       this.logger.info(`listening at ${os.hostname()}:${port}`);
     });
 
-    return () =>
-      new Promise((resolve) => {
+    const promise = new Promise<void>((resolve, reject) => {
+      server.on("close", () => {
+        this.logger.info("server closed");
+        resolve();
+      });
+
+      server.on("error", (err) => {
+        this.logger.error("server error", err);
+        reject();
+      });
+
+      // TODO: any other stuff we should listen to here?
+    });
+
+    const teardown = () =>
+      new Promise<void>((resolve) => {
         server.close(() => {
           this.logger.info("closed");
           resolve();
         });
       });
+
+    return {
+      promise,
+      teardown,
+    };
   }
 }

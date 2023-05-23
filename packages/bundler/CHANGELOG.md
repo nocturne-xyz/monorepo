@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- make cli manually exit when `ActorHandle` promise resolves
+- make `BundlerServer.start()` return `ActorHandle`
 - change `/relay` request structure to have operation embedded on obj `{ operation: {...}}`
 - move req/res types into sdk so it can be shared with fe-sdk
 - make req/res structs in `request` module

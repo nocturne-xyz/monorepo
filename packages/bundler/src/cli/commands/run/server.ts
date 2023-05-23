@@ -41,7 +41,8 @@ const runServer = new Command("server")
       logger
     );
 
-    server.start(port);
+    const { promise } = server.start(port);
+    await promise;
   });
 
 export default runServer;
