@@ -10,7 +10,7 @@ import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import { makeGetOperationStatusHandler, makeRelayHandler } from "./routes";
-import { ActorHandle } from "./utils";
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerServer {
   redis: IORedis;
