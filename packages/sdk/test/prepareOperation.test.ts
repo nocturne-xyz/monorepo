@@ -90,6 +90,28 @@ describe("gatherNotes", () => {
     // check to ensure the 1 token notes are different
     expect(sortedNotes[0].nonce).to.not.equal(sortedNotes[1].nonce);
   });
+
+  it("ignores uncommitted notes", async () => {
+    // insert 4 notes, but the last one is uncommitted
+    const [nocturneDB] = await setup(
+      [5n, 15n, 10n, 30n],
+      range(4).map((_) => stablescam),
+      {
+        nextMerkleIndex: 3,
+      }
+    );
+
+    // get notes for 30 tokens
+    // we should not get the 30 token note, since it is uncommitted
+    // instead, we should get the other three notes
+    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    expect(notes).to.have.lengthOf(3);
+
+    const sortedNotes = sortNotesByValue(notes);
+    expect(sortedNotes[0].value).to.equal(5n);
+    expect(sortedNotes[1].value).to.equal(10n);
+    expect(sortedNotes[2].value).to.equal(15n);
+  });
 });
 
 describe("prepareOperation", async () => {

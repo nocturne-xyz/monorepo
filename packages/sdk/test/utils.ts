@@ -59,12 +59,13 @@ export function getDummyHex(bump: number): string {
 }
 
 export interface TestSetupOpts {
-  mockMerkle: boolean;
+  nextMerkleIndex?: number;
 }
 
 export async function setup(
   noteAmounts: bigint[],
-  assets: Asset[]
+  assets: Asset[],
+  opts?: TestSetupOpts
 ): Promise<[NocturneDB, SparseMerkleProver, NocturneSigner, Handler]> {
   const signer = new NocturneSigner(1n);
 
@@ -85,6 +86,7 @@ export async function setup(
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
   await nocturneDB.storeNotes(notesWithNullfiers);
+  await nocturneDB.setNextMerkleIndex(opts?.nextMerkleIndex ?? notes.length);
 
   const leaves = notes.map((note) => NoteTrait.toCommitment(note));
   merkleProver.insertBatch(
