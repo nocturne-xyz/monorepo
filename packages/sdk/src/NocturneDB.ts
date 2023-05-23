@@ -15,7 +15,7 @@ const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
-const NEXT_MERKLE_INDEX_KEY = "NEXT_MERKLE_INDEX";
+const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
 // ceil(log10(2^32))
 const MAX_MERKLE_INDEX_DIGITS = 10;
@@ -127,8 +127,8 @@ export class NocturneDB {
    */
   async getCommittedNotesForAsset(asset: Asset): Promise<IncludedNote[]> {
     const notes = await this.getNotesForAsset(asset);
-    const nextMerkleIndex = await this.nextMerkleIndex();
-    return notes.filter((note) => note.merkleIndex < nextMerkleIndex);
+    const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
+    return notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex);
   }
 
   /// return the next block number the DB has not yet been synced to
@@ -143,21 +143,25 @@ export class NocturneDB {
     await this.kv.putNumber(NEXT_BLOCK_KEY, currentBlock);
   }
 
-  // index of the next note (dummy or not) to be committed
-  async nextMerkleIndex(): Promise<number> {
-    return (await this.kv.getNumber(NEXT_MERKLE_INDEX_KEY)) ?? 0;
+  // index of the last note (dummy or not) to be committed
+  async lastCommittedMerkleIndex(): Promise<number> {
+    return (await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY)) ?? 0;
   }
 
-  // update `nextMerkleIndex()`
-  async setNextMerkleIndex(index: number): Promise<void> {
-    await this.kv.putNumber(NEXT_MERKLE_INDEX_KEY, index);
+  // update `lastCommittedMerkleIndex()`
+  async setLastCommittedMerkleIndex(index: number): Promise<void> {
+    await this.kv.putNumber(LAST_COMMITTED_MERKLE_INDEX_KEY, index);
   }
 
   // applies a single state diff to the DB
   // returns the merkle indices of the notes that were nullified
   async applyStateDiff(diff: StateDiff): Promise<number[]> {
-    const { notesAndCommitments, nullifiers, nextMerkleIndex, blockNumber } =
-      diff;
+    const {
+      notesAndCommitments,
+      nullifiers,
+      lastCommittedMerkleIndex,
+      blockNumber,
+    } = diff;
 
     // TODO: make this all one write
     // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
@@ -167,7 +171,7 @@ export class NocturneDB {
       ) as IncludedNoteWithNullifier[]
     );
     const nfIndices = await this.nullifyNotes(nullifiers);
-    await this.setNextMerkleIndex(nextMerkleIndex);
+    await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
     await this.setNextBlock(blockNumber + 1);
 
     return nfIndices;
@@ -228,11 +232,11 @@ export class NocturneDB {
    */
   async getAllCommittedNotes(): Promise<AllNotes> {
     const allNotes = await this.getAllNotes();
-    const nextMerkleIndex = await this.nextMerkleIndex();
+    const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
     return new Map(
       Array.from(allNotes.entries()).map(([assetKey, notes]) => [
         assetKey,
-        notes.filter((note) => note.merkleIndex < nextMerkleIndex),
+        notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex),
       ])
     );
   }

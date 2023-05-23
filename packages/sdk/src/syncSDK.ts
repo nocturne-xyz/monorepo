@@ -62,7 +62,7 @@ export async function syncSDK(
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
     await updateMerkle(
       merkle,
-      diff.nextMerkleIndex - 1,
+      diff.lastCommittedMerkleIndex,
       diff.notesAndCommitments,
       nfIndices
     );
@@ -114,7 +114,12 @@ async function updateMerkle(
 
 function decryptStateDiff(
   viewer: NocturneViewer,
-  { notes, nullifiers, nextMerkleIndex, blockNumber }: EncryptedStateDiff
+  {
+    notes,
+    nullifiers,
+    lastCommittedMerkleIndex,
+    blockNumber,
+  }: EncryptedStateDiff
 ): StateDiff {
   const notesAndCommitments = notes.map((note) => {
     const isOwn = viewer.isOwnAddress(note.owner);
@@ -153,7 +158,7 @@ function decryptStateDiff(
   return {
     notesAndCommitments,
     nullifiers,
-    nextMerkleIndex,
+    lastCommittedMerkleIndex,
     blockNumber,
   };
 }

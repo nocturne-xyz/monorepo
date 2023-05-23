@@ -157,8 +157,7 @@ export class SparseMerkleProver {
     assertOrErr(index >= this._count, "index must be >= tree count");
     assertOrErr(
       this.uncommittedLeaves.length === 0 ||
-        index >=
-          this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index,
+        index > this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index,
       "insertions must be monotonic in index"
     );
 
@@ -178,6 +177,11 @@ export class SparseMerkleProver {
     assertOrErr(
       leaves.length === includes.length,
       "leaves and includes must be the same length"
+    );
+    assertOrErr(
+      this.uncommittedLeaves.length === 0 ||
+        startIndex >
+          this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index
     );
 
     this.uncommittedLeaves.push(

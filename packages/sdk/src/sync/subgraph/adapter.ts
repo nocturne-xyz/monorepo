@@ -67,12 +67,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           ]
         );
 
-        const nextMerkleIndex = lastCommittedMerkleIndex + 1;
-
         const stateDiff: EncryptedStateDiff = {
           notes,
           nullifiers,
-          nextMerkleIndex,
+          lastCommittedMerkleIndex,
           blockNumber: to,
         };
 

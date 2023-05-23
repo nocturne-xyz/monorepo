@@ -59,7 +59,7 @@ export function getDummyHex(bump: number): string {
 }
 
 export interface TestSetupOpts {
-  nextMerkleIndex?: number;
+  lastCommittedMerkleIndex?: number;
 }
 
 export async function setup(
@@ -86,7 +86,9 @@ export async function setup(
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
   await nocturneDB.storeNotes(notesWithNullfiers);
-  await nocturneDB.setNextMerkleIndex(opts?.nextMerkleIndex ?? notes.length);
+  await nocturneDB.setLastCommittedMerkleIndex(
+    opts?.lastCommittedMerkleIndex ?? notes.length - 1
+  );
 
   const leaves = notes.map((note) => NoteTrait.toCommitment(note));
   merkleProver.insertBatch(

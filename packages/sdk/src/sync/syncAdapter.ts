@@ -11,8 +11,8 @@ interface BaseStateDiff {
   // new nullifiers in arbitrary order
   nullifiers: Nullifier[];
 
-  // `merkleIndex` of the next leaf to be committed to the commitment tree
-  nextMerkleIndex: number;
+  // `merkleIndex` of the last leaf to be committed to the commitment tree
+  lastCommittedMerkleIndex: number;
 
   // last block of the range this StateDiff represents
   blockNumber: number;
