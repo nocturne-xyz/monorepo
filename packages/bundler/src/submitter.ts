@@ -14,13 +14,7 @@ import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
 import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
-
-export interface BundlerSubmitterHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerSubmitter {
   redis: IORedis;
@@ -50,7 +44,7 @@ export class BundlerSubmitter {
     );
   }
 
-  start(): BundlerSubmitterHandle {
+  start(): ActorHandle {
     const worker = new Worker(
       OPERATION_BATCH_QUEUE,
       async (job: Job<OperationBatchJobData>) => {

@@ -11,6 +11,23 @@ services:
     expose:
       - 6380
 
+  server:
+    build:
+      context: ../..
+      dockerfile: packages/bundler/Dockerfile
+    restart: always
+    command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3001 --log-dir /logs/deposit-screener-server --stdout-log-level info"
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - CONFIG_NAME_OR_PATH=${CONFIG_NAME_OR_PATH}
+    ports:
+      - "3001:3001"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ../../logs:/logs
+
   processor:
     build:
       context: ../..

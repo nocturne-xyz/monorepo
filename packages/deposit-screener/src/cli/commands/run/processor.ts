@@ -2,15 +2,16 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { DepositScreenerScreener } from "../../../screener";
 import { SubgraphScreenerSyncAdapter } from "../../../sync/subgraph/adapter";
-import { getRedis } from "../utils";
-import { makeLogger } from "@nocturne-xyz/offchain-utils";
+import { makeLogger, getRedis } from "@nocturne-xyz/offchain-utils";
 import { loadNocturneConfig } from "@nocturne-xyz/config";
 import { DepositScreenerFulfiller } from "../../../fulfiller";
+import { DummyScreeningApi } from "../../../screening";
+import { DummyScreenerDelayCalculator } from "../../../screenerDelay";
 
 const runProcess = new Command("processor")
   .summary("process deposit requests")
   .description(
-    "must supply the following environment variables: REDIS_URL, RPC_URL, and SUBGRAPH_URL. must supply conifig via `--config-path-or-name`"
+    "must supply the following environment variables: REDIS_URL, REDIS_PASSWORD, RPC_URL, and SUBGRAPH_URL. must supply config-name-or-path as option"
   )
   .requiredOption(
     "--config-name-or-path <string>",
@@ -66,26 +67,34 @@ const runProcess = new Command("processor")
       "processor",
       stdoutLogLevel
     );
+    const supportedAssets = new Set(
+      Array.from(config.erc20s.values()).map(({ address }) => address)
+    );
+
     const screener = new DepositScreenerScreener(
       adapter,
       config.depositManagerAddress(),
       provider,
       getRedis(),
       logger,
-      config.erc20s,
+      // TODO: use real screening api and delay calculator
+      new DummyScreeningApi(),
+      new DummyScreenerDelayCalculator(),
+      supportedAssets,
       config.contracts.startBlock
     );
 
     const fulfiller = new DepositScreenerFulfiller(
+      logger,
       config.depositManagerAddress(),
       txSigner,
       attestationSigner,
       getRedis(),
-      config.erc20s
+      supportedAssets
     );
 
     const screenerHandle = await screener.start(throttleMs);
-    const fulfillerHandle = await fulfiller.start(logger);
+    const fulfillerHandle = await fulfiller.start();
 
     await Promise.all([screenerHandle.promise, fulfillerHandle.promise]);
   });

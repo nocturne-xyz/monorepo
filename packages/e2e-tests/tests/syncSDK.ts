@@ -11,6 +11,7 @@ import {
   proveOperation,
   OperationRequestBuilder,
   NoteTrait,
+  unzip,
 } from "@nocturne-xyz/sdk";
 import {
   SyncAdapterOption,
@@ -94,7 +95,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
 
     it("syncs notes and latest non-zero leaves after subtree update", async () => {
       // deposit notes...
-      const depositedNotes = await depositFundsSingleToken(
+      const depositRequestsAndNotes = await depositFundsSingleToken(
         depositManager,
         token,
         aliceEoa,
@@ -102,6 +103,7 @@ function syncTestSuite(syncAdapter: SyncAdapterOption) {
         [100n, 100n]
       );
 
+      const depositedNotes = unzip(depositRequestsAndNotes)[1];
       const ncs = depositedNotes.map(NoteTrait.toCommitment);
 
       // force subtree update by filling batch and sync SDK

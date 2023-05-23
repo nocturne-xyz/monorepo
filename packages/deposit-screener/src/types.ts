@@ -1,4 +1,6 @@
-import { DepositRequest } from "@nocturne-xyz/sdk";
+import { Address, DepositRequest } from "@nocturne-xyz/sdk";
+
+export const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export enum DepositEventType {
   Instantiated = "Instantiated",
@@ -12,7 +14,6 @@ export interface DepositEvent extends DepositRequest {
 
 export enum DepositRequestStatus {
   DoesNotExist = "DoesNotExist",
-  UnsupportedAsset = "UnsupportedAsset",
   FailedScreen = "FailedScreen",
   PassedFirstScreen = "PassedFirstScreen",
   AwaitingFulfillment = "AwaitingFulfillment",
@@ -22,14 +23,14 @@ export enum DepositRequestStatus {
 export const SUBMISSION_QUEUE = "DepositSubmissionQueue";
 export const SUBMISSION_JOB_TAG = "DEPOSIT_SUBMISSION";
 
-export const DELAYED_DEPOSIT_QUEUE = "DelayedDepositQueue";
-export const DELAYED_DEPOSIT_JOB_TAG = "DELAYED_DEPOSIT";
+export const SCREENER_DELAY_QUEUE = "ScreenerDelayQueue";
+export const DELAYED_DEPOSIT_JOB_TAG = "SCREENER_DELAY";
 
-export function getFulfillmentQueueName(ticker: string): string {
-  return `${FULFILLMENT_QUEUE}_${ticker}`;
+export function getFulfillmentQueueName(assetAddr: Address): string {
+  return `${FULFILLMENT_QUEUE}_${assetAddr}`;
 }
-export function getFulfillmentJobTag(ticker: string): string {
-  return `${FULFILLMENT_JOB_TAG}_${ticker}`;
+export function getFulfillmentJobTag(assetAddr: Address): string {
+  return `${FULFILLMENT_JOB_TAG}_${assetAddr}`;
 }
 
 const FULFILLMENT_QUEUE = "DepositFulfillmentQueue";

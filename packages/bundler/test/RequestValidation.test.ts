@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { tryParseRelayRequest } from "../src/requestValidation";
+import { tryParseRelayRequest } from "../src/request";
 import { VALID_PROVEN_OPERATION_OBJ } from "./utils";
 
 describe("JSON Request Validation", async () => {

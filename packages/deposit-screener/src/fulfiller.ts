@@ -1,4 +1,3 @@
-import { Erc20Config } from "@nocturne-xyz/config";
 import {
   Address,
   AssetTrait,
@@ -35,18 +34,13 @@ import {
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-
-export interface DepositScreenerFulfillerHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export class DepositScreenerFulfiller {
-  supportedAssets: Map<string, Erc20Config>;
+  logger: Logger;
+  supportedAssets: Set<Address>;
   signerMutex: Mutex;
   depositManagerContract: DepositManager;
   attestationSigner: ethers.Wallet;
@@ -55,12 +49,14 @@ export class DepositScreenerFulfiller {
   db: DepositScreenerDB;
 
   constructor(
+    logger: Logger,
     depositManagerAddress: Address,
     txSigner: ethers.Wallet,
     attestationSigner: ethers.Wallet,
     redis: IORedis,
-    supportedAssets: Map<string, Erc20Config>
+    supportedAssets: Set<Address>
   ) {
+    this.logger = logger;
     this.redis = redis;
     this.db = new DepositScreenerDB(redis);
 
@@ -76,24 +72,24 @@ export class DepositScreenerFulfiller {
     this.supportedAssets = supportedAssets;
   }
 
-  async start(parentLogger: Logger): Promise<DepositScreenerFulfillerHandle> {
+  async start(): Promise<ActorHandle> {
     // we have 1 fulfillment queue per asset. this is because the rate limit is queue-wide,
     // we have no way to only rate limit a subset of the jobs in a queue, so we can't implement
     // per-asset rate limits with a single fulfillment queue
     const [proms, closeFns] = unzip(
       await Promise.all(
-        [...this.supportedAssets.entries()].map(async ([ticker, config]) => {
+        [...this.supportedAssets.values()].map(async (address) => {
           // make a rate limiter with the current asset's global rate limit and set the period to 1 hour
-          const logger = parentLogger.child({ assetTicker: ticker });
+          const logger = this.logger.child({ assetAddr: address });
           logger.info(
-            `starting deposit screener fulfiller for asset ${ticker}`
+            `starting deposit screener fulfiller for asset ${address}`
           );
 
-          const window = await this.getRateLimitWindowForAsset(config);
+          const window = await this.getErc20RateLimitWindow(address);
 
           // make a worker listening to the current asset's fulfillment queue
           const worker = new Worker(
-            getFulfillmentQueueName(ticker),
+            getFulfillmentQueueName(address),
             async (job: Job<DepositRequestJobData>) => {
               const depositRequest: DepositRequest = JSON.parse(
                 job.data.depositRequestJson
@@ -151,7 +147,7 @@ export class DepositScreenerFulfiller {
 
           const prom = new Promise<void>((resolve) => {
             worker.on("closed", () => {
-              logger.info(`fulfiller for asset ${ticker} closed`);
+              logger.info(`fulfiller for asset ${address} closed`);
               resolve();
             });
           });
@@ -172,7 +168,7 @@ export class DepositScreenerFulfiller {
       try {
         await Promise.all(proms);
       } catch (err) {
-        parentLogger.error(`error in fulfiller: ${err}`, err);
+        this.logger.error(`error in fulfiller: ${err}`, err);
         await teardown();
         throw err;
       }
@@ -251,17 +247,16 @@ export class DepositScreenerFulfiller {
     }
   }
 
-  async getRateLimitWindowForAsset(
-    asset: Erc20Config
+  async getErc20RateLimitWindow(
+    erc20Address: Address
   ): Promise<RateLimitWindow> {
+    const cap = await this.depositManagerContract._erc20Caps(erc20Address);
     const window = new RateLimitWindow(
-      asset.globalCapWholeTokens * 10n ** asset.precision,
+      BigInt(cap.globalCapWholeTokens) * 10n ** BigInt(cap.precision),
       ONE_HOUR_IN_MS
     );
-    const cap = await this.depositManagerContract._erc20Caps(asset.address);
     window.add({
-      amount:
-        cap.runningGlobalDeposited.toBigInt() * 10n ** BigInt(cap.precision),
+      amount: cap.runningGlobalDeposited.toBigInt(),
       timestamp: cap.lastResetTimestamp + ONE_HOUR_IN_MS,
     });
 

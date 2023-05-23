@@ -3325,7 +3325,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.7-alpha
     "@nocturne-xyz/contracts": 1.0.23-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.3
+    "@nocturne-xyz/offchain-utils": 0.1.4
     "@nocturne-xyz/sdk": 1.0.118-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3469,19 +3469,23 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.7-alpha
     "@nocturne-xyz/contracts": 1.0.23-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.3
+    "@nocturne-xyz/offchain-utils": 0.1.4
     "@nocturne-xyz/sdk": 1.0.118-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
     "@types/commander": ^2.12.2
+    "@types/cors": ^2.8.13
+    "@types/express": ^4.17.17
     "@types/mocha": ^10.0.0
+    "@types/morgan": ^1.9.4
     "@types/node": ^18.8.0
     "@types/randombytes": ^2.0.0
     "@types/sinon": ^10.0.13
     "@types/sinon-chai": ^3.2.9
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    ajv: ^8.12.0
     async-mutex: ^0.4.0
     big-integer: ^1.6.42
     bigint-json-serialization: ^1.0.1
@@ -3489,14 +3493,17 @@ __metadata:
     chai: ^4.3.6
     chai-as-promised: ^7.1.1
     commander: ^10.0.0
+    cors: ^2.8.5
     dotenv: ^16.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     ethers: ^5.7.2
+    express: ^4.18.2
     find-yarn-workspace-root: ^2.0.0
     ioredis: ^5.3.1
     js-sha256: ^0.9.0
     mocha: ^10.1.0
+    morgan: ^1.10.0
     prettier: ^2.8.8
     randombytes: ^2.1.0
     sinon: ^15.0.1
@@ -3596,13 +3603,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/offchain-utils@0.1.3, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+"@nocturne-xyz/offchain-utils@0.1.4, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
     "@types/node": ^18.8.0
     "@typescript-eslint/eslint-plugin": ^5.20.0
     "@typescript-eslint/parser": ^5.20.0
+    ajv: ^8.12.0
+    bigint-json-serialization: ^1.0.1
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     prettier: ^2.8.8
@@ -3763,7 +3772,7 @@ __metadata:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.7-alpha
     "@nocturne-xyz/contracts": 1.0.23-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.3
+    "@nocturne-xyz/offchain-utils": 0.1.4
     "@nocturne-xyz/sdk": 1.0.118-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
@@ -5708,7 +5717,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:^4.17.14":
+"@types/express@npm:^4.17.14, @types/express@npm:^4.17.17":
   version: 4.17.17
   resolution: "@types/express@npm:4.17.17"
   dependencies:
@@ -6894,7 +6903,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.11.2, ajv@npm:^8.8.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.0.1, ajv@npm:^8.11.2, ajv@npm:^8.12.0, ajv@npm:^8.8.0":
   version: 8.12.0
   resolution: "ajv@npm:8.12.0"
   dependencies:
@@ -13055,7 +13064,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 

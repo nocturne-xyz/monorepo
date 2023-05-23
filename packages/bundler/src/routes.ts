@@ -16,7 +16,11 @@ import {
 import * as JSON from "bigint-json-serialization";
 import { NullifierDB, StatusDB } from "./db";
 import { ethers } from "ethers";
-import { tryParseRelayRequest } from "./requestValidation";
+import {
+  OperationStatusResponse,
+  RelayResponse,
+  tryParseRelayRequest,
+} from "./request";
 import { Logger } from "winston";
 
 export interface HandleRelayDeps {
@@ -98,21 +102,25 @@ export function makeRelayHandler({
     }
 
     // Enqueue operation and add all inflight nullifiers
-    const jobId = await postJob(
-      queue,
-      statusDB,
-      nullifierDB,
-      redis,
-      childLogger,
-      operation
-    ).catch((err) => {
+    let jobId;
+    try {
+      jobId = await postJob(
+        queue,
+        statusDB,
+        nullifierDB,
+        redis,
+        childLogger,
+        operation
+      );
+    } catch (err) {
       const msg = "failed to enqueue operation";
       childLogger.error(msg, err);
       res.status(500).json({ error: msg });
       return;
-    });
+    }
 
-    res.json({ id: jobId });
+    const response: RelayResponse = { id: jobId };
+    res.json(response);
   };
 }
 
@@ -132,7 +140,9 @@ export function makeGetOperationStatusHandler({
       childLogger.info(
         `found operation with digest ${req.params.id} with status: ${status}`
       );
-      res.json({ status });
+
+      const response: OperationStatusResponse = { status };
+      res.json(response);
     } else {
       childLogger.warn(`could not find operation with digest ${req.params.id}`);
       res.status(404).json({ error: "operation not found" });

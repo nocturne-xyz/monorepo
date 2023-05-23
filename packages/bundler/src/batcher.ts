@@ -14,8 +14,9 @@ import {
   PROVEN_OPERATION_QUEUE,
 } from "./common";
 import * as JSON from "bigint-json-serialization";
-import { ActorHandle, actorChain } from "./utils";
+import { actorChain } from "./utils";
 import { Logger } from "winston";
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerBatcher {
   redis: IORedis;

@@ -12,45 +12,36 @@ import { Job, Queue, Worker } from "bullmq";
 import { ethers } from "ethers";
 import { checkDepositRequest } from "./check";
 import { DepositScreenerDB } from "./db";
-import { DummyScreeningApi, ScreeningApi } from "./screening";
+import { ScreeningApi } from "./screening";
 import { DepositEventsBatch, ScreenerSyncAdapter } from "./sync/syncAdapter";
 import {
   DepositEventType,
   DepositRequestStatus,
-  DELAYED_DEPOSIT_QUEUE,
+  SCREENER_DELAY_QUEUE,
   DepositRequestJobData,
   DELAYED_DEPOSIT_JOB_TAG,
   getFulfillmentJobTag,
   getFulfillmentQueueName,
 } from "./types";
 import IORedis from "ioredis";
-import { DelayCalculator, DummyDelayCalculator } from "./delay";
+import { ScreenerDelayCalculator } from "./screenerDelay";
 import { hashDepositRequest } from "./typedData";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { Erc20Config } from "@nocturne-xyz/config";
-
-export interface DepositScreenerScreenerHandle {
-  // promise that resolves when the service is done
-  promise: Promise<void>;
-  // function to teardown the service
-  teardown: () => Promise<void>;
-}
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
   depositManagerContract: DepositManager;
   screeningApi: ScreeningApi;
-  delayCalculator: DelayCalculator;
-  delayQueue: Queue;
+  delayCalculator: ScreenerDelayCalculator;
+  screenerDelayQueue: Queue<DepositRequestJobData>;
   db: DepositScreenerDB;
   redis: IORedis;
   logger: Logger;
   startBlock: number;
-
-  // Address => ticker
-  supportedAssets: Map<Address, string>;
+  supportedAssets: Set<Address>;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -58,7 +49,9 @@ export class DepositScreenerScreener {
     provider: ethers.providers.Provider,
     redis: IORedis,
     logger: Logger,
-    supportedAssets: Map<string, Erc20Config>,
+    screeningApi: ScreeningApi,
+    screenerDelayCalculator: ScreenerDelayCalculator,
+    supportedAssets: Set<Address>,
     startBlock?: number
   ) {
     this.redis = redis;
@@ -74,22 +67,17 @@ export class DepositScreenerScreener {
 
     this.db = new DepositScreenerDB(redis);
 
-    this.delayQueue = new Queue(DELAYED_DEPOSIT_QUEUE, { connection: redis });
+    this.screenerDelayQueue = new Queue(SCREENER_DELAY_QUEUE, {
+      connection: redis,
+    });
 
-    this.screeningApi = new DummyScreeningApi();
-    this.delayCalculator = new DummyDelayCalculator();
+    this.screeningApi = screeningApi;
+    this.delayCalculator = screenerDelayCalculator;
 
-    this.supportedAssets = new Map(
-      [...supportedAssets.entries()].map(([ticker, config]) => [
-        config.address,
-        ticker,
-      ])
-    );
+    this.supportedAssets = supportedAssets;
   }
 
-  async start(
-    queryThrottleMs?: number
-  ): Promise<DepositScreenerScreenerHandle> {
+  async start(queryThrottleMs?: number): Promise<ActorHandle> {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );
@@ -104,7 +92,7 @@ export class DepositScreenerScreener {
       { maxChunkSize: 100_000, throttleMs: queryThrottleMs }
     );
 
-    const screenerProm = this.runScreener(
+    const screenerProm = this.startScreener(
       this.logger.child({ function: "screener" }),
       depositEvents
     ).catch((err) => {
@@ -146,30 +134,18 @@ export class DepositScreenerScreener {
     };
   }
 
-  async runScreener(
+  async startScreener(
     logger: Logger,
     depositEvents: ClosableAsyncIterator<DepositEventsBatch>
   ): Promise<void> {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
-        logger.debug(`received deposit event`, event);
-        const {
-          spender,
-          encodedAsset,
-          value,
-          depositAddr,
-          nonce,
-          gasCompensation,
-        } = event;
+        logger.info(`received deposit event, storing in DB`, event);
         const depositRequest: DepositRequest = {
-          spender,
-          encodedAsset,
-          value,
-          depositAddr,
-          nonce,
-          gasCompensation,
+          ...event,
         };
+        await this.db.storeDepositRequest(depositRequest);
 
         const hash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
@@ -177,18 +153,6 @@ export class DepositScreenerScreener {
           depositReququestNonce: depositRequest.nonce,
           depositRequestHash: hash,
         });
-
-        const decodedAsset = AssetTrait.decode(depositRequest.encodedAsset);
-        if (!this.supportedAssets.has(decodedAsset.assetAddr)) {
-          childLogger.warn(
-            `received deposit request for unsupported asset at address ${decodedAsset.assetAddr}`
-          );
-          await this.db.setDepositRequestStatus(
-            depositRequest,
-            DepositRequestStatus.UnsupportedAsset
-          );
-          continue;
-        }
 
         childLogger.debug(`checking deposit request`);
         const { isSafe, reason } = await checkDepositRequest(
@@ -228,7 +192,9 @@ export class DepositScreenerScreener {
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
     const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
-      depositRequest
+      depositRequest.spender,
+      AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+      depositRequest.value
     );
 
     const depositRequestJson = JSON.stringify(depositRequest);
@@ -239,8 +205,10 @@ export class DepositScreenerScreener {
     logger.info(
       `scheduling second phase of screening to start in ${delaySeconds} seconds`
     );
-    await this.delayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+    await this.screenerDelayQueue.add(DELAYED_DEPOSIT_JOB_TAG, jobData, {
+      jobId: hashDepositRequest(depositRequest),
       delay: secsToMillis(delaySeconds),
+      // TODO: do we need retries?
       // if the job fails, re-try it at most 5x with exponential backoff (1s, 2s, 4s)
       attempts: 5,
       backoff: {
@@ -254,17 +222,17 @@ export class DepositScreenerScreener {
     logger.info("starting arbiter...");
 
     return new Worker(
-      DELAYED_DEPOSIT_QUEUE,
+      SCREENER_DELAY_QUEUE,
       async (job: Job<DepositRequestJobData>) => {
         logger.debug("processing deposit request");
         const depositRequest: DepositRequest = JSON.parse(
           job.data.depositRequestJson
         );
-        const hash = hashDepositRequest(depositRequest);
+        const depositHash = hashDepositRequest(depositRequest);
         const childLogger = logger.child({
           depositRequestSpender: depositRequest.spender,
           depositReququestNonce: depositRequest.nonce,
-          depositRequestHash: hash,
+          depositRequestHash: depositHash,
         });
 
         const assetAddr = AssetTrait.decode(
@@ -279,14 +247,18 @@ export class DepositScreenerScreener {
         childLogger.info("processing deposit request");
 
         const inSet =
-          await this.depositManagerContract._outstandingDepositHashes(hash);
+          await this.depositManagerContract._outstandingDepositHashes(
+            depositHash
+          );
         if (!inSet) {
           childLogger.warn(`deposit already retrieved or completed`);
           return; // Already retrieved or completed
         }
 
-        const valid = await this.screeningApi.validDepositRequest(
-          depositRequest
+        const valid = await this.screeningApi.isSafeDepositRequest(
+          depositRequest.spender,
+          AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+          depositRequest.value
         );
         if (!valid) {
           childLogger.warn(`deposit failed second screening screening`);
@@ -303,16 +275,14 @@ export class DepositScreenerScreener {
         };
 
         // figure out which fulfillment queue to add to
-        const assetTicker = this.supportedAssets.get(assetAddr)!;
-        const fulfillmentQueue = new Queue(
-          getFulfillmentQueueName(assetTicker),
-          { connection: this.redis }
-        );
+        const fulfillmentQueue = new Queue(getFulfillmentQueueName(assetAddr), {
+          connection: this.redis,
+        });
 
-        const jobTag = getFulfillmentJobTag(assetTicker);
+        const jobTag = getFulfillmentJobTag(assetAddr);
 
         // submit to it
-        await fulfillmentQueue.add(jobTag, jobData);
+        await fulfillmentQueue.add(jobTag, jobData, { jobId: depositHash });
         await this.db.setDepositRequestStatus(
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment

@@ -6,8 +6,8 @@ import {
 } from "@nocturne-xyz/sdk";
 import { Teller } from "@nocturne-xyz/contracts";
 import { NullifierDB } from "./db";
-import { ErrString } from "./common";
 import { Logger } from "winston";
+import { ErrString } from "@nocturne-xyz/offchain-utils";
 
 export async function checkNullifierConflictError(
   db: NullifierDB,

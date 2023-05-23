@@ -15,6 +15,7 @@ import { WasmSubtreeUpdateProver } from "@nocturne-xyz/local-prover";
 import IORedis from "ioredis";
 import { RedisMemoryServer } from "redis-memory-server";
 import { thunk } from "@nocturne-xyz/sdk";
+import { DepositStatusResponse } from "@nocturne-xyz/deposit-screener";
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const EXECUTABLE_CMD = `${ROOT_DIR}/rapidsnark/build/prover`;
@@ -65,6 +66,21 @@ export function getSubtreeUpdaterDelay(): number {
   }
 
   return MOCK_SUBTREE_UPDATER_DELAY;
+}
+
+export async function queryDepositStatus(
+  depositHash: string
+): Promise<DepositStatusResponse | undefined> {
+  console.log(`query deposit status for ${depositHash}`);
+
+  try {
+    const res = await fetch(`http://localhost:3001/status/${depositHash}`, {
+      method: "GET",
+    });
+    return (await res.json()) as DepositStatusResponse;
+  } catch (err) {
+    console.error("error getting deposit status: ", err);
+  }
 }
 
 export async function submitAndProcessOperation(
