@@ -1,16 +1,16 @@
 import { Request, RequestHandler, Response } from "express";
-import {
-  DepositStatusResponse,
-  QuoteResponse,
-  tryParseQuoteRequest,
-} from "./request";
+import { tryParseQuoteRequest } from "./request";
 import { Logger } from "winston";
 import {
   estimateSecondsUntilDepositCompletion,
   estimateSecondsUntilCompletionForProspectiveDeposit,
 } from "./waitEstimation";
 import { ScreenerDelayCalculator } from "./screenerDelay";
-import { Address } from "@nocturne-xyz/sdk";
+import {
+  Address,
+  DepositStatusResponse,
+  DepositQuoteResponse,
+} from "@nocturne-xyz/sdk";
 import { ScreeningApi } from "./screening";
 import { DepositScreenerDB } from "./db";
 import { Queue } from "bullmq";
@@ -121,7 +121,7 @@ export function makeQuoteHandler({
       return;
     }
 
-    const response: QuoteResponse = { estimatedWaitSeconds: quote };
+    const response: DepositQuoteResponse = { estimatedWaitSeconds: quote };
     res.json(response);
   };
 }

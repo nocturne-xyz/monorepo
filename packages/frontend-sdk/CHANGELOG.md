@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- make deposit form include ETH as option
+- add methods for querying screener for status and quote
+- fix deposit functionality for erc20 and eth deposits
 - Add displays for `OPERATION_PROCESSING_FAILED` AND `OPERATION_EXECUTION_FAILED`
 - add error message for `BUNDLE_REVERTED` to `TransactionTracker`
 - Remove references to `vault` and instead approve `wallet`

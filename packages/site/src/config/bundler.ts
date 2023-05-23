@@ -4,3 +4,6 @@
  */
 export const BUNDLER_ENDPOINT =
   process.env.REACT_APP_BUNDLER_ENDPOINT ?? "http://localhost:3000";
+
+export const SCREENER_ENDPOINT =
+  process.env.REACT_APP_SCREENER_ENDPOINT ?? "http://localhost:3001";

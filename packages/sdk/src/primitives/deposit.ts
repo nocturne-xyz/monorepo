@@ -9,3 +9,11 @@ export interface DepositRequest {
   nonce: bigint;
   gasCompensation: bigint;
 }
+
+export enum DepositRequestStatus {
+  DoesNotExist = "DoesNotExist",
+  FailedScreen = "FailedScreen",
+  PassedFirstScreen = "PassedFirstScreen",
+  AwaitingFulfillment = "AwaitingFulfillment",
+  Completed = "Completed",
+}

@@ -4,9 +4,11 @@ import {
   checkInputError,
 } from "@nocturne-xyz/offchain-utils";
 import validateQuote from "./quote";
-import { QuoteRequest } from "./requests";
+import { DepositQuoteRequest } from "@nocturne-xyz/sdk";
 
-export function tryParseQuoteRequest(body: any): ErrString | QuoteRequest {
+export function tryParseQuoteRequest(
+  body: any
+): ErrString | DepositQuoteRequest {
   const maybeErr = checkInputError(validateQuote, body);
   if (maybeErr) {
     return maybeErr;
@@ -14,5 +16,3 @@ export function tryParseQuoteRequest(body: any): ErrString | QuoteRequest {
     return parseRequestBody(body);
   }
 }
-
-export * from "./requests";

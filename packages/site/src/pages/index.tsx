@@ -30,11 +30,13 @@ import {
   NocturneFrontendSDK,
   BundlerOperationID,
   formatTokenAmountEvmRepr,
+  DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
-import { TELLER_CONTRACT_ADDRESS } from "../config";
+import { DEPOSIT_MANAGER_CONTRACT_ADDRESS } from "../config";
 import { TxModal } from "../components/TxModal";
 import { ethers } from "ethers";
 import { RPC_URL } from "../config/contracts";
+import { SCREENER_ENDPOINT } from "../config/bundler";
 
 const ERC20_ID = 0n;
 const TOKEN_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
@@ -114,11 +116,13 @@ const Index = () => {
   const [txModalIsOpen, setTxModalIsOpen] = useState(false);
 
   useEffect(() => {
-    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, TELLER_CONTRACT_ADDRESS).then(
-      (sdk) => {
-        setFrontendSDK(sdk);
-      }
-    );
+    loadNocturneFrontendSDK(
+      DEPOSIT_MANAGER_CONTRACT_ADDRESS,
+      BUNDLER_ENDPOINT,
+      SCREENER_ENDPOINT
+    ).then((sdk) => {
+      setFrontendSDK(sdk);
+    });
   }, [loadNocturneFrontendSDK]);
 
   const handleConnectClick = async () => {
@@ -296,6 +300,17 @@ const Index = () => {
                 onClick={handleConnectClick}
                 disabled={!state.installedSnap}
               />
+            </Card>
+          )}
+          {shouldDisplayReconnectButton(state.installedSnap) && (
+            <Card
+              content={{
+                title: "Deposit",
+                description:
+                  "Deposit assets into your Nocturne private account",
+              }}
+            >
+              {nocturneFrontendSDK && <DepositForm sdk={nocturneFrontendSDK} />}
             </Card>
           )}
           <Card

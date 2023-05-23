@@ -1,13 +1,12 @@
-import { Address } from "@nocturne-xyz/sdk";
-import { DepositRequestStatus } from "../types";
+import { Address, DepositRequestStatus } from "../primitives";
 
-export interface QuoteRequest {
+export interface DepositQuoteRequest {
   spender: Address;
   assetAddr: Address;
   value: bigint;
 }
 
-export interface QuoteResponse {
+export interface DepositQuoteResponse {
   estimatedWaitSeconds: number;
 }
 

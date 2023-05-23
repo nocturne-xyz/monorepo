@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- change `/relay` request structure to have operation embedded on obj `{ operation: {...}}`
+- move req/res types into sdk so it can be shared with fe-sdk
 - make req/res structs in `request` module
 - move redis, ajv, and actor related utils to `offchain-utils` pkg
 - update `.env.example`

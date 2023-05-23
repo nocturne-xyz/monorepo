@@ -9,8 +9,8 @@ import {
   AssetBalancesDisplay,
   DepositForm,
 } from "@nocturne-xyz/frontend-sdk";
-import { TELLER_CONTRACT_ADDRESS } from "../config";
-import { BUNDLER_ENDPOINT } from "../config/bundler";
+import { DEPOSIT_MANAGER_CONTRACT_ADDRESS } from "../config";
+import { BUNDLER_ENDPOINT, SCREENER_ENDPOINT } from "../config/bundler";
 
 const Container = styled.div`
   display: flex;
@@ -62,12 +62,14 @@ const Playground = () => {
   const [nocturneFrontendSDK, setFrontendSDK] = useState<NocturneFrontendSDK>();
 
   useEffect(() => {
-    loadNocturneFrontendSDK(BUNDLER_ENDPOINT, TELLER_CONTRACT_ADDRESS).then(
-      (sdk) => {
-        console.log("instantiated frontend sdk");
-        setFrontendSDK(sdk);
-      }
-    );
+    loadNocturneFrontendSDK(
+      DEPOSIT_MANAGER_CONTRACT_ADDRESS,
+      BUNDLER_ENDPOINT,
+      SCREENER_ENDPOINT
+    ).then((sdk) => {
+      console.log("instantiated frontend sdk");
+      setFrontendSDK(sdk);
+    });
   }, [loadNocturneFrontendSDK, state.installedSnap]);
 
   const sync = async () => {

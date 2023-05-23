@@ -6,6 +6,8 @@ import {
   OperationStatus,
   computeOperationDigest,
   ProvenOperation,
+  RelayResponse,
+  OperationStatusResponse,
 } from "@nocturne-xyz/sdk";
 import { Teller } from "@nocturne-xyz/contracts";
 import {
@@ -16,11 +18,7 @@ import {
 import * as JSON from "bigint-json-serialization";
 import { NullifierDB, StatusDB } from "./db";
 import { ethers } from "ethers";
-import {
-  OperationStatusResponse,
-  RelayResponse,
-  tryParseRelayRequest,
-} from "./request";
+import { tryParseRelayRequest } from "./request";
 import { Logger } from "winston";
 
 export interface HandleRelayDeps {
@@ -46,15 +44,15 @@ export function makeRelayHandler({
 }: HandleRelayDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     logger.debug("validating request");
-    const errorOrOperation = tryParseRelayRequest(req.body);
-    if (typeof errorOrOperation == "string") {
-      logger.warn("request validation failed", errorOrOperation);
-      res.statusMessage = errorOrOperation;
-      res.status(400).json(errorOrOperation);
+    const errorOrRelayRequest = tryParseRelayRequest(req.body);
+    if (typeof errorOrRelayRequest == "string") {
+      logger.warn("request validation failed", errorOrRelayRequest);
+      res.statusMessage = errorOrRelayRequest;
+      res.status(400).json(errorOrRelayRequest);
       return;
     }
 
-    const operation = errorOrOperation;
+    const operation = errorOrRelayRequest.operation;
     const digest = computeOperationDigest(operation);
     const childLogger = logger.child({ opDigest: digest });
 

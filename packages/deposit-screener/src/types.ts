@@ -12,14 +12,6 @@ export interface DepositEvent extends DepositRequest {
   type: DepositEventType;
 }
 
-export enum DepositRequestStatus {
-  DoesNotExist = "DoesNotExist",
-  FailedScreen = "FailedScreen",
-  PassedFirstScreen = "PassedFirstScreen",
-  AwaitingFulfillment = "AwaitingFulfillment",
-  Completed = "Completed",
-}
-
 export const SUBMISSION_QUEUE = "DepositSubmissionQueue";
 export const SUBMISSION_JOB_TAG = "DEPOSIT_SUBMISSION";
 

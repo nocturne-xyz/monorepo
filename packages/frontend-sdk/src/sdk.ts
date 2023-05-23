@@ -4,7 +4,6 @@ import {
   SignedOperation,
   StealthAddress,
   AssetWithBalance,
-  AssetTrait,
   AssetType,
   Address,
   JoinSplitProofWithPublicSignals,
@@ -13,11 +12,16 @@ import {
   VerifyingKey,
   computeOperationDigest,
   proveOperation,
+  DepositStatusResponse,
+  DepositQuoteResponse,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
-import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
+import {
+  DepositManager,
+  DepositManager__factory,
+} from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
@@ -28,95 +32,174 @@ export type BundlerOperationID = string;
 
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
+  depositManagerContract: DepositManager;
   bundlerEndpoint: string;
-  tellerContract: Teller;
+  screenerEndpoint: string;
 
   private constructor(
+    depositManagerContract: DepositManager,
+    screenerEndpoint: string,
     bundlerEndpoint: string,
-    tellerContract: Teller,
     wasmPath: string,
     zkeyPath: string,
     vkey: VerifyingKey
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
+    this.depositManagerContract = depositManagerContract;
+    this.screenerEndpoint = screenerEndpoint;
     this.bundlerEndpoint = bundlerEndpoint;
-    this.tellerContract = tellerContract;
   }
 
   /**
    * Instantiate new `NocturneFrontendSDK` instance.
    *
-   * @param tellerContractAddress Teller contract address
+   * @param depositManagerContractAddress Teller contract address
+   * @param screenerEndpoint Screener endpoint
+   * @param bundlerEndpoint Bundler endpoint
    * @param wasPath Joinsplit wasm path
    * @param zkeyPath Joinsplit zkey path
    * @param vkey Vkey object
    */
   static async instantiate(
+    depositManagerAddress: string,
+    screenerEndpoint: string,
     bundlerEndpoint: string,
-    tellerContractAddress: string,
     wasmPath: string,
     zkeyPath: string,
     vkey: any
   ): Promise<NocturneFrontendSDK> {
-    const tellerContract = await NocturneFrontendSDK.connectTellerContract(
-      tellerContractAddress
+    const signer = await getWindowSigner();
+    const depositManagerContract = DepositManager__factory.connect(
+      depositManagerAddress,
+      signer
     );
     return new NocturneFrontendSDK(
+      depositManagerContract,
+      screenerEndpoint,
       bundlerEndpoint,
-      tellerContract,
       wasmPath,
       zkeyPath,
       vkey
     );
   }
 
-  private static async connectTellerContract(
-    tellerContractAddress: string
-  ): Promise<Teller> {
+  /**
+   * Call `depositManager.instantiateErc20MultiDeposit` given the provided
+   * `erc20Address`, `valuse`, and `gasCompPerDeposit`.
+   *
+   * @param values Asset amounts
+   * @param gasCompensationPerDeposit Gas compensation per deposit
+   */
+  async instantiateETHDeposits(
+    values: bigint[],
+    gasCompensationPerDeposit: bigint
+  ): Promise<ContractTransaction> {
     const signer = await getWindowSigner();
-    return Teller__factory.connect(tellerContractAddress, signer);
+
+    const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
+    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+    const totalValue = ethToWrap + gasCompRequired;
+
+    const signerBalance = (await signer.getBalance()).toBigInt();
+    if (signerBalance < totalValue) {
+      throw new Error(
+        `signer does not have enough balance for gas comp + eth to wrap. balance: ${signerBalance}. gasComp required: ${gasCompRequired}. eth to wrap: ${ethToWrap}`
+      );
+    }
+
+    const depositAddr = await this.getRandomizedAddr();
+    return this.depositManagerContract.instantiateETHMultiDeposit(
+      values,
+      depositAddr,
+      { value: totalValue }
+    );
   }
 
   /**
-   * Call `tellerContract.depositFunds` given the provided `assetType`,
-   * `assetAddress`, `value`, and `assetId`.
+   * Call `depositManager.instantiateErc20MultiDeposit` given the provided
+   * `erc20Address`, `valuse`, and `gasCompPerDeposit`.
    *
-   * @param assetType Asset type
-   * @param assetAddress Asset address
-   * @param value Asset amount
-   * @param assetId Asset id
+   * @param erc20Address Asset address
+   * @param values Asset amounts
+   * @param gasCompensationPerDeposit Gas compensation per deposit
    */
-  async depositFunds(
-    assetType: AssetType,
-    assetAddress: Address,
-    assetId: bigint,
-    value: bigint
+  async instantiateErc20Deposits(
+    erc20Address: Address,
+    values: bigint[],
+    gasCompensationPerDeposit: bigint
   ): Promise<ContractTransaction> {
-    const spender = await this.tellerContract.signer.getAddress();
-    const depositAddr = await this.getRandomizedAddr();
-    const encodedAsset = AssetTrait.encode({
-      assetType,
-      assetAddr: assetAddress,
-      id: assetId,
-    });
-
     const signer = await getWindowSigner();
-    const tokenContract = getTokenContract(assetType, assetAddress, signer);
-    if (assetType == AssetType.ERC20) {
-      await tokenContract.approve(this.tellerContract.address, value);
-    } else if (assetType == AssetType.ERC721) {
-      await tokenContract.approve(this.tellerContract.address, assetId);
-    } else if (assetType == AssetType.ERC1155) {
-      await tokenContract.setApprovalForAll(this.tellerContract.address, true);
+    const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
+
+    const signerBalance = (await signer.getBalance()).toBigInt();
+    if (signerBalance < gasCompRequired) {
+      throw new Error(
+        `signer does not have enough balance for gas comp. balance: ${signerBalance}. gasComp required: ${gasCompRequired}`
+      );
     }
 
-    // TODO: currently broken as is, fix once we have deposit screener agent
-    return this.tellerContract.depositFunds({
-      spender,
-      encodedAsset,
-      value,
-      depositAddr,
+    const totalValue = values.reduce((acc, val) => acc + val, 0n);
+
+    const erc20Contract = getTokenContract(
+      AssetType.ERC20,
+      erc20Address,
+      signer
+    );
+    await erc20Contract.approve(
+      this.depositManagerContract.address,
+      totalValue
+    );
+
+    const depositAddr = await this.getRandomizedAddr();
+    return this.depositManagerContract.instantiateErc20MultiDeposit(
+      erc20Address,
+      values,
+      depositAddr
+    );
+  }
+
+  /**
+   * Fetch status of existing deposit request given its hash.
+   *
+   * @param depositHash Deposit hash
+   */
+  async fetchDepositRequestStatus(
+    depositHash: string
+  ): Promise<DepositStatusResponse> {
+    const res = await fetch(
+      `http://${this.screenerEndpoint}/status/${depositHash}`,
+      {
+        method: "GET",
+      }
+    );
+    return (await res.json()) as DepositStatusResponse;
+  }
+
+  /**
+   * Fetch quote of wait time in seconds given spender, assetAddr, and value.
+   *
+   * @param erc20Address Asset address
+   * @param totalValue Asset amount
+   */
+  async fetchDepositQuote(
+    erc20Address: Address,
+    totalValue: bigint
+  ): Promise<DepositQuoteResponse> {
+    const signer = await getWindowSigner();
+    const spender = await signer.getAddress();
+
+    const res = await fetch(`http://${this.screenerEndpoint}/quote`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        spender,
+        assetAddr: erc20Address,
+        value: totalValue,
+      }),
     });
+    return (await res.json()) as DepositQuoteResponse;
   }
 
   /**
@@ -275,21 +358,26 @@ export class NocturneFrontendSDK {
  * vkey. Circuit file paths default to caller's current directory (joinsplit.
  * wasm, joinsplit.zkey, joinSplitVkey.json).
  *
+ * @param depositManagerAddress Teller contract address
+ * @param screenerEndpoint Screener endpoint
+ * @param bundlerEndpoint Bundler endpoint
  * @param wasmPath Wasm path
  * @param zkeyPath Zkey path
  * @param vkeyPath Vkey path
  */
 export async function loadNocturneFrontendSDK(
+  depositManagerAddress: Address,
+  screenerEndpoint: string,
   bundlerEndpoint: string,
-  tellerContractAddress: string,
   wasmPath: string = WASM_PATH,
   zkeyPath: string = ZKEY_PATH,
   vkeyPath: string = VKEY_PATH
 ): Promise<NocturneFrontendSDK> {
   const vkey = JSON.parse(await (await fetch(vkeyPath)).text());
   return await NocturneFrontendSDK.instantiate(
+    depositManagerAddress,
+    screenerEndpoint,
     bundlerEndpoint,
-    tellerContractAddress,
     wasmPath,
     zkeyPath,
     vkey as VerifyingKey

@@ -5,6 +5,7 @@ export * from "./proof";
 export * from "./crypto";
 export * from "./store";
 export * from "./sync";
+export * from "./request";
 
 export {
   OperationRequest,

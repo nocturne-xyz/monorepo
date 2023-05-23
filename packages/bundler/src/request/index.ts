@@ -1,4 +1,4 @@
-import { ProvenOperation } from "@nocturne-xyz/sdk";
+import { RelayRequest } from "@nocturne-xyz/sdk";
 import validateRelay from "./relay";
 import {
   ErrString,
@@ -6,7 +6,7 @@ import {
   parseRequestBody,
 } from "@nocturne-xyz/offchain-utils";
 
-export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
+export function tryParseRelayRequest(body: any): ErrString | RelayRequest {
   const maybeErr = checkInputError(validateRelay, body);
   if (maybeErr) {
     return maybeErr;
@@ -14,5 +14,3 @@ export function tryParseRelayRequest(body: any): ErrString | ProvenOperation {
     return parseRequestBody(body);
   }
 }
-
-export * from "./request";

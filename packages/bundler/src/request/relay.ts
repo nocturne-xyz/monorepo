@@ -98,7 +98,7 @@ const joinSplitsType = {
   items: joinSplitType,
 };
 
-export const relaySchema = {
+export const provenOperationType = {
   type: "object",
   required: [
     "joinSplits",
@@ -125,6 +125,15 @@ export const relaySchema = {
     chainId: bigintType,
     deadline: bigintType,
     atomicActions: booleanType,
+  },
+  additionalProperties: false,
+};
+
+const relaySchema = {
+  type: "object",
+  required: ["operation"],
+  properties: {
+    operation: provenOperationType,
   },
   additionalProperties: false,
 };
