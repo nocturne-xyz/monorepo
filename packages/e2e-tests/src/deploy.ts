@@ -357,6 +357,16 @@ export async function deployContractsWithDummyConfig(
           isGasAsset: true,
         },
       ],
+      [
+        "weth",
+        {
+          address: weth.address,
+          globalCapWholeTokens: 5000n,
+          maxDepositSizeWholeTokens: 500n,
+          precision: 18n,
+          isGasAsset: true,
+        },
+      ],
     ]),
     protocolAllowlist: new Map([
       ["erc721", erc721.address],
@@ -369,9 +379,11 @@ export async function deployContractsWithDummyConfig(
     },
   };
 
+  console.log("deploying contracts...");
   const config = await deployNocturne(connectedSigner, deployConfig);
   checkNocturneDeployment(config, connectedSigner.provider);
 
+  console.log("prefilling");
   await prefillErc20s(connectedSigner, config);
 
   // Log for dev site script
@@ -418,12 +430,14 @@ async function prefillErc20s(
   connectedSigner: ethers.Wallet,
   config: NocturneConfig
 ): Promise<void> {
-  for (const [_, erc20] of config.erc20s.entries()) {
-    const token = SimpleERC20Token__factory.connect(
-      erc20.address,
-      connectedSigner
-    );
-    await token.reserveTokens(config.contracts.handlerProxy.proxy, 1);
+  for (const [name, erc20] of config.erc20s.entries()) {
+    if (name != "weth") {
+      const token = SimpleERC20Token__factory.connect(
+        erc20.address,
+        connectedSigner
+      );
+      await token.reserveTokens(config.contracts.handlerProxy.proxy, 1);
+    }
   }
 }
 

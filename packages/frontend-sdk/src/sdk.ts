@@ -21,8 +21,6 @@ import * as JSON from "bigint-json-serialization";
 import {
   DepositManager,
   DepositManager__factory,
-  WETH9,
-  WETH9__factory,
 } from "@nocturne-xyz/contracts";
 import { ContractTransaction } from "ethers";
 
@@ -35,13 +33,11 @@ export type BundlerOperationID = string;
 export class NocturneFrontendSDK {
   joinSplitProver: WasmJoinSplitProver;
   depositManagerContract: DepositManager;
-  wethContract: WETH9;
   bundlerEndpoint: string;
   screenerEndpoint: string;
 
   private constructor(
     depositManagerContract: DepositManager,
-    wethContract: WETH9,
     screenerEndpoint: string,
     bundlerEndpoint: string,
     wasmPath: string,
@@ -50,7 +46,6 @@ export class NocturneFrontendSDK {
   ) {
     this.joinSplitProver = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
     this.depositManagerContract = depositManagerContract;
-    this.wethContract = wethContract;
     this.screenerEndpoint = screenerEndpoint;
     this.bundlerEndpoint = bundlerEndpoint;
   }
@@ -80,11 +75,8 @@ export class NocturneFrontendSDK {
       depositManagerAddress,
       signer
     );
-    const wethContract = WETH9__factory.connect(wethAddress, signer);
-
     return new NocturneFrontendSDK(
       depositManagerContract,
-      wethContract,
       screenerEndpoint,
       bundlerEndpoint,
       wasmPath,
@@ -108,24 +100,20 @@ export class NocturneFrontendSDK {
 
     const ethToWrap = values.reduce((acc, val) => acc + val, 0n);
     const gasCompRequired = gasCompensationPerDeposit * BigInt(values.length);
-    const totalValue = gasCompRequired + ethToWrap;
+    const totalValue = ethToWrap + gasCompRequired;
 
     const signerBalance = (await signer.getBalance()).toBigInt();
-    if (signerBalance < gasCompRequired + ethToWrap) {
+    if (signerBalance < totalValue) {
       throw new Error(
         `signer does not have enough balance for gas comp + eth to wrap. balance: ${signerBalance}. gasComp required: ${gasCompRequired}. eth to wrap: ${ethToWrap}`
       );
     }
 
-    await this.wethContract.approve(
-      this.depositManagerContract.address,
-      totalValue
-    );
-
     const depositAddr = await this.getRandomizedAddr();
     return this.depositManagerContract.instantiateETHMultiDeposit(
       values,
-      depositAddr
+      depositAddr,
+      { value: totalValue }
     );
   }
 

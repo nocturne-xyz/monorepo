@@ -1,4 +1,4 @@
-import { AssetType, AssetTrait } from "@nocturne-xyz/sdk";
+import { AssetTrait } from "@nocturne-xyz/sdk";
 import React, { useState } from "react";
 import { Button } from "./Buttons";
 import { isAddress } from "ethers/lib/utils";
@@ -10,13 +10,13 @@ export interface DepositFormProps {
 }
 
 export const DepositForm = ({ sdk }: DepositFormProps) => {
-  const [assetType, setAssetType] = useState<AssetType>(AssetType.ERC20);
+  const [assetType, setAssetType] = useState("");
   const [assetAddress, setAssetAddress] = useState("");
   const [amount, setAmount] = useState("0");
   const [assetID, setAssetID] = useState("0");
 
   const handleAssetTypeChange = (event: any) => {
-    setAssetType(AssetTrait.parseAssetType(event.target.value));
+    setAssetType(event.target.value);
   };
 
   const handleAssetIDChange = (event: any) => {
@@ -30,27 +30,40 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
   };
 
   const handleDepositFunds = async () => {
-    if (!isAddress(assetAddress)) {
-      alert("Invalid asset address");
-      return;
+    if (assetType === "ETH") {
+      let value;
+      try {
+        value = Number(amount);
+      } catch {
+        alert("Invalid amount");
+        return;
+      }
+
+      const tokenUnitsValue = formatTokenAmountEvmRepr(value, 18);
+      await sdk.instantiateETHDeposits([tokenUnitsValue], 0n);
+    } else {
+      if (!isAddress(assetAddress)) {
+        alert("Invalid asset address");
+        return;
+      }
+
+      let value;
+      try {
+        value = Number(amount);
+      } catch {
+        alert("Invalid amount");
+        return;
+      }
+
+      const { decimals } = await getTokenDetails(
+        AssetTrait.parseAssetType(assetType),
+        assetAddress,
+        sdk.depositManagerContract.provider
+      );
+      const tokenUnitsValue = formatTokenAmountEvmRepr(value, decimals);
+
+      await sdk.instantiateErc20Deposits(assetAddress, [tokenUnitsValue], 0n);
     }
-
-    let value;
-    try {
-      value = Number(amount);
-    } catch {
-      alert("Invalid amount");
-      return;
-    }
-
-    const { decimals } = await getTokenDetails(
-      assetType,
-      assetAddress,
-      sdk.depositManagerContract.provider
-    );
-    const tokenUnitsValue = formatTokenAmountEvmRepr(value, decimals);
-
-    await sdk.instantiateErc20Deposits(assetAddress, [tokenUnitsValue], 0n);
   };
 
   return (
@@ -60,9 +73,10 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
           Asset Type
           <br />
           <select value={assetType} onChange={handleAssetTypeChange}>
-            <option value={AssetType.ERC20.toString()}>ERC20</option>
-            <option value={AssetType.ERC721.toString()}>ERC721</option>
-            <option value={AssetType.ERC1155.toString()}>ERC1155</option>
+            <option value={"ETH"}>ETH</option>
+            <option value={"0"}>ERC20</option>
+            <option value={"1"}>ERC721</option>
+            <option value={"2"}>ERC1155</option>
           </select>
         </label>
         <br />
@@ -73,6 +87,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
             style={{ resize: "none", width: "70%", height: "30px" }}
             value={assetAddress}
             onChange={(event) => setAssetAddress(event.target.value)}
+            disabled={assetType === "ETH"}
           />
         </label>
         <br />
@@ -83,7 +98,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
             type="number"
             value={amount}
             onChange={handleAmountChange}
-            disabled={assetType === AssetType.ERC721}
+            disabled={assetType === "ERC721"}
           />
         </label>
         <br />
@@ -94,7 +109,7 @@ export const DepositForm = ({ sdk }: DepositFormProps) => {
             type="text"
             value={assetID.toString()}
             onChange={handleAssetIDChange}
-            disabled={assetType === AssetType.ERC20}
+            disabled={assetType === "ERC20"}
           />
         </label>
         <br /> <br />
