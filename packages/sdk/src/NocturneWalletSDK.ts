@@ -71,7 +71,6 @@ export class NocturneWalletSDK {
     };
     await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver, {
       startBlock: this.config.contracts.startBlock,
-      skipMerkleProverUpdates: false,
     });
   }
 
@@ -110,13 +109,27 @@ export class NocturneWalletSDK {
     });
   }
 
+  async getAllCommittedAssetBalances(): Promise<AssetWithBalance[]> {
+    const notes = await this.db.getAllCommittedNotes();
+    return Array.from(notes.entries()).map(([assetString, notes]) => {
+      const asset = NocturneDB.parseAssetKey(assetString);
+      const balance = notes.reduce((a, b) => a + b.value, 0n);
+      return {
+        asset,
+        balance,
+      };
+    });
+  }
+
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
-      // check that the user has enough notes to cover the request
-      const notes = await this.db.getNotesForAsset(joinSplitRequest.asset);
+      // check that the user has enough committed notes to cover the request
+      const notes = await this.db.getCommittedNotesForAsset(
+        joinSplitRequest.asset
+      );
       const balance = notes.reduce((acc, note) => acc + note.value, 0n);
       if (balance < requestedAmount) {
         return false;

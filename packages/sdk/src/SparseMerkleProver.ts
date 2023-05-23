@@ -9,7 +9,6 @@ import {
   partition,
   range,
 } from "./utils/functional";
-import { start } from "repl";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -182,7 +181,7 @@ export class SparseMerkleProver {
     );
 
     this.uncommittedLeaves.push(
-      ...range(startIndex, leaves.length).map((index) => ({
+      ...range(startIndex, startIndex + leaves.length).map((index) => ({
         index,
         leaf: leaves[index - startIndex],
         include: includes[index - startIndex],
