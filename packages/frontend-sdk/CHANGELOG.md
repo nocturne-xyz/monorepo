@@ -2,6 +2,9 @@
 
 ### Unreleased
 
+- make endpoint passing struct based to avoid future mixups
+- fix DepositForm bugs post adding ETH
+- fix `submitProvenOperation` function to use new relay schema
 - make deposit form include ETH as option
 - add methods for querying screener for status and quote
 - fix deposit functionality for erc20 and eth deposits

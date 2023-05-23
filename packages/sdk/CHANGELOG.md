@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move screener deposit hash calc method into sdk primitives
 - fix bug in `subtreeUpdateInputsFromBatch` encoding path in wrong endianness
 - fix bug resulting from `AssetTrait.decode` not returning checksum addresses
 - add `unzip` to utils
