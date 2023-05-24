@@ -100,7 +100,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         const diff: EncryptedStateDiff = {
           notes,
           nullifiers,
-          nextMerkleIndex,
+          lastCommittedMerkleIndex: nextMerkleIndex - 1,
           blockNumber: to,
         };
         yield diff;

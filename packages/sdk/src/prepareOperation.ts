@@ -108,7 +108,7 @@ async function gatherNotes(
   asset: Asset
 ): Promise<IncludedNote[]> {
   // check that the user has enough notes to cover the request
-  const notes = await db.getNotesForAsset(asset);
+  const notes = await db.getCommittedNotesForAsset(asset);
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
     throw new Error(

@@ -22,10 +22,6 @@ const DEFAULT_THROTTLE_MS = 2000;
 
 export interface SyncOpts {
   startBlock: number;
-  // defaults to `false`.
-  // If this is set to `true`, `sync` will only update the DB
-  // and will not update the in-memory tree.
-  skipMerkleProverUpdates: boolean;
 }
 
 export interface SyncDeps {
@@ -63,21 +59,23 @@ export async function syncSDK(
     const nfIndices = await db.applyStateDiff(diff);
     console.log("applied state diff for block", diff.blockNumber);
 
-    // update merkle tree
-    // NOTE: the tree will include leaves that haven't yet been committed via subtree updater
-    // TODO: check for uncommitted notes `prepareOperation`
-    if (!opts?.skipMerkleProverUpdates) {
-      await updateMerkle(merkle, diff.notesAndCommitments, nfIndices);
-    }
+    // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
+    await updateMerkle(
+      merkle,
+      diff.lastCommittedMerkleIndex,
+      diff.notesAndCommitments,
+      nfIndices
+    );
   }
 }
 
 async function updateMerkle(
   merkle: SparseMerkleProver,
+  latestCommittedMerkleIndex: number,
   notesAndCommitments: (IncludedNote | IncludedNoteCommitment)[],
   nfIndices: number[]
 ): Promise<void> {
-  // add new leaves
+  // add all new leaves as uncommitted leaves
   const batches = consecutiveChunks(
     notesAndCommitments,
     (noteOrCommitment) => noteOrCommitment.merkleIndex
@@ -97,8 +95,11 @@ async function updateMerkle(
         includes.push(true);
       }
     }
-    merkle.insertBatch(startIndex, leaves, includes);
+    merkle.insertBatchUncommitted(startIndex, leaves, includes);
   }
+
+  // commit up to latest subtree commit
+  merkle.commitUpToIndex(latestCommittedMerkleIndex);
 
   console.log("merkle root:", merkle.getRoot());
 
@@ -107,12 +108,18 @@ async function updateMerkle(
     merkle.markForPruning(index);
   }
 
+  // persist merkle to underlying KV store
   await merkle.persist();
 }
 
 function decryptStateDiff(
   viewer: NocturneViewer,
-  { notes, nullifiers, nextMerkleIndex, blockNumber }: EncryptedStateDiff
+  {
+    notes,
+    nullifiers,
+    lastCommittedMerkleIndex,
+    blockNumber,
+  }: EncryptedStateDiff
 ): StateDiff {
   const notesAndCommitments = notes.map((note) => {
     const isOwn = viewer.isOwnAddress(note.owner);
@@ -151,7 +158,7 @@ function decryptStateDiff(
   return {
     notesAndCommitments,
     nullifiers,
-    nextMerkleIndex,
+    lastCommittedMerkleIndex,
     blockNumber,
   };
 }

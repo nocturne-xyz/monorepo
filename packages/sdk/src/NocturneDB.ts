@@ -15,7 +15,7 @@ const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
-const NEXT_MERKLE_INDEX_KEY = "NEXT_MERKLE_INDEX";
+const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
 // ceil(log10(2^32))
 const MAX_MERKLE_INDEX_DIGITS = 10;
@@ -119,6 +119,18 @@ export class NocturneDB {
     return await this.getNotesByMerkleIndices(indices);
   }
 
+  /**
+   * Get all *committed* notes for an asset
+   *
+   * @param asset the asset to get notes for
+   * @returns notes an array of notes for the asset. The array has no guaranteed order.
+   */
+  async getCommittedNotesForAsset(asset: Asset): Promise<IncludedNote[]> {
+    const notes = await this.getNotesForAsset(asset);
+    const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
+    return notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex);
+  }
+
   /// return the next block number the DB has not yet been synced to
   // this is more/less a "version" number
   // returns `this.startBlock` if it's undefined
@@ -131,21 +143,25 @@ export class NocturneDB {
     await this.kv.putNumber(NEXT_BLOCK_KEY, currentBlock);
   }
 
-  // index of the next note (dummy or not) to be committed
-  async nextMerkleIndex(): Promise<number> {
-    return (await this.kv.getNumber(NEXT_MERKLE_INDEX_KEY)) ?? 0;
+  // index of the last note (dummy or not) to be committed
+  async lastCommittedMerkleIndex(): Promise<number> {
+    return (await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY)) ?? 0;
   }
 
-  // update `nextMerkleIndex()`
-  async setNextMerkleIndex(index: number): Promise<void> {
-    await this.kv.putNumber(NEXT_MERKLE_INDEX_KEY, index);
+  // update `lastCommittedMerkleIndex()`
+  async setLastCommittedMerkleIndex(index: number): Promise<void> {
+    await this.kv.putNumber(LAST_COMMITTED_MERKLE_INDEX_KEY, index);
   }
 
   // applies a single state diff to the DB
   // returns the merkle indices of the notes that were nullified
   async applyStateDiff(diff: StateDiff): Promise<number[]> {
-    const { notesAndCommitments, nullifiers, nextMerkleIndex, blockNumber } =
-      diff;
+    const {
+      notesAndCommitments,
+      nullifiers,
+      lastCommittedMerkleIndex,
+      blockNumber,
+    } = diff;
 
     // TODO: make this all one write
     // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
@@ -155,20 +171,31 @@ export class NocturneDB {
       ) as IncludedNoteWithNullifier[]
     );
     const nfIndices = await this.nullifyNotes(nullifiers);
-    await this.setNextMerkleIndex(nextMerkleIndex);
+    await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
     await this.setNextBlock(blockNumber + 1);
 
     return nfIndices;
   }
 
   /**
-   * Get total value for an asset
+   * Get total value of all notes for a given asset
    *
-   * @param asset the asset to get value for
-   * @returns value of all notes for the asset summed up
+   * @param asset the asset to get balance for
+   * @returns total value of all notes for the asset summed up
    */
   async getBalanceForAsset(asset: Asset): Promise<bigint> {
     const notes = await this.getNotesForAsset(asset);
+    return notes.reduce((a, b) => a + b.value, 0n);
+  }
+
+  /**
+   * Get total value of all *committed* notes for a given asset
+   *
+   * @param asset the asset to get balance for
+   * @returns total value of all *committed* notes for the asset summed up
+   */
+  async getCommittedBalanceForAsset(asset: Asset): Promise<bigint> {
+    const notes = await this.getCommittedNotesForAsset(asset);
     return notes.reduce((a, b) => a + b.value, 0n);
   }
 
@@ -195,6 +222,23 @@ export class NocturneDB {
     }
 
     return allNotes;
+  }
+
+  /**
+   * Get all *committed* notes in the KV store
+   *
+   * @returns allNotes a map of all notes in the KV store. keys are the `NoteAssetKey` for an asset,
+   *          and values are an array of `IncludedNote`s for that asset. The array has no guaranteed order.
+   */
+  async getAllCommittedNotes(): Promise<AllNotes> {
+    const allNotes = await this.getAllNotes();
+    const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
+    return new Map(
+      Array.from(allNotes.entries()).map(([assetKey, notes]) => [
+        assetKey,
+        notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex),
+      ])
+    );
   }
 
   private static makeNoteKV<N extends Note>(merkleIndex: number, note: N): KV {
