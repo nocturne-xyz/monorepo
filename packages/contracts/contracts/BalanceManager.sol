@@ -52,43 +52,54 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
-        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
-
-        // process nullifiers and insert new noteCommitments for each joinSplit
+		// process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         _handleJoinSplits(op.joinSplits);
 
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Default to requesting all publicSpend from teller
-            uint256 valueToTransfer = op.joinSplits[i].publicSpend;
+        // Get gas asset and amount to reserve
+        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
+        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
-            // If we still need to reserve more gas and the current
-            // `joinSplit` is spending the gasAsset, then reserve what we can
-            // from this `joinSplit`
+        // Loop through joinSplits and gather assets, reserving gas asset as needed
+		uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            EncodedAsset calldata encodedAsset = op
+                .joinSplits[subarrayStartIndex]
+                .encodedAsset;
+
+            // Get largest possible subarray for current asset and sum of publicSpend
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+            uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
+                    op.joinSplits,
+                    subarrayStartIndex,
+                    subarrayEndIndex
+                );
+
             if (
                 gasAssetToReserve > 0 &&
-                AssetUtils.eq(encodedGasAsset, op.joinSplits[i].encodedAsset)
+                AssetUtils.eq(encodedGasAsset, encodedAsset)
             ) {
-                // We will reserve as much as we can, upto the public spend
-                // amount or the maximum amount to be reserved
-                uint256 gasPaymentThisJoinSplit = Utils.min(
-                    op.joinSplits[i].publicSpend,
+                uint256 reserveValue = Utils.min(
+                    valueToGatherForSubarray,
                     gasAssetToReserve
                 );
-                // Deduct gas payment from value to transfer to teller
-                valueToTransfer -= gasPaymentThisJoinSplit;
-                // Deduct gas payment from the amount to be reserved
-                gasAssetToReserve -= gasPaymentThisJoinSplit;
+
+                valueToGatherForSubarray -= reserveValue;
+                gasAssetToReserve -= reserveValue;
             }
 
+            subarrayStartIndex = subarrayEndIndex + 1;
+
             // If value to transfer is 0, skip the transfer
-            if (valueToTransfer > 0) {
-                _teller.requestAsset(
-                    op.joinSplits[i].encodedAsset,
-                    valueToTransfer
-                );
+            if (valueToGatherForSubarray > 0) {
+                _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
         }
 
@@ -220,5 +231,42 @@ contract BalanceManager is CommitmentTreeManager {
         }
 
         return 0;
+    }
+
+    /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
+    /// @dev Used so we can take sum(subarray) make single call teller.requestAsset(asset, sum)
+    ///      instead of calling teller.requestAsset multiple times for the same asset
+    /// @param joinSplits op.joinSplits
+    /// @param startIndex Index to start searching from
+    function _getHighestContiguousJoinSplitIndex(
+        JoinSplit[] calldata joinSplits,
+        uint256 startIndex
+    ) private pure returns (uint256) {
+        EncodedAsset calldata startAsset = joinSplits[startIndex].encodedAsset;
+        uint256 highestContiguousIndex = startIndex;
+        for (uint256 i = startIndex + 1; i < joinSplits.length; i++) {
+            if (AssetUtils.eq(startAsset, joinSplits[i].encodedAsset)) {
+                highestContiguousIndex = i;
+            } else {
+                break;
+            }
+        }
+        return highestContiguousIndex;
+    }
+
+    /// @notice Get sum of public spends for a contiguous subarray of joinsplits
+    /// @param joinSplits op joinSplits
+    /// @param startIndex Index to start summing from
+    /// @param endIndex Index to end summing at (inclusive)
+    function _sumJoinSplitPublicSpendsInclusive(
+        JoinSplit[] calldata joinSplits,
+        uint256 startIndex,
+        uint256 endIndex
+    ) private pure returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            sum += joinSplits[i].publicSpend;
+        }
+        return sum;
     }
 }
