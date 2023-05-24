@@ -9,18 +9,15 @@ import {
   bigintToBEPadded,
   randomBigInt,
   range,
+  TreeConstants,
 } from "../src";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
-import {
-  ARITY,
-  MAX_DEPTH,
-  SparseMerkleProver,
-  TreeNode,
-  ZERO_VALUE,
-} from "../src/SparseMerkleProver";
+import { SparseMerkleProver, TreeNode } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 import { sha256 } from "js-sha256";
 import { encodePathAndHash } from "../src/proof/subtreeUpdate";
+
+const { ARITY, ZERO_VALUE, DEPTH } = TreeConstants;
 
 chai.use(chaiAsPromised);
 
@@ -286,7 +283,7 @@ describe("SparseMerkleProver", () => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
         poseidonBN,
-        MAX_DEPTH,
+        DEPTH,
         ZERO_VALUE,
         ARITY
       );
@@ -300,7 +297,7 @@ describe("SparseMerkleProver", () => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
         poseidonBN,
-        MAX_DEPTH,
+        DEPTH,
         ZERO_VALUE,
         ARITY
       );
@@ -320,7 +317,7 @@ describe("SparseMerkleProver", () => {
       const prover = new SparseMerkleProver(kv);
       const tree = new IncrementalMerkleTree(
         poseidonBN,
-        MAX_DEPTH,
+        DEPTH,
         ZERO_VALUE,
         ARITY
       );
@@ -437,7 +434,7 @@ function countLeaves(prover: SparseMerkleProver): number {
   // do an inorder traversal of the tree to count the number of leaves
   let numLeaves = 0;
   const traverse = (node: TreeNode, depth: number) => {
-    if (depth === MAX_DEPTH) {
+    if (depth === DEPTH) {
       numLeaves++;
       return;
     }
