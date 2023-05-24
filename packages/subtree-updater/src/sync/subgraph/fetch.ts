@@ -20,7 +20,7 @@ interface CompressedNoteResponse {
 }
 
 interface InsertionResponse {
-  note: CompressedNoteResponse | null;
+  notes: CompressedNoteResponse[] | null;
   noteCommitments: string[] | null;
 }
 
@@ -38,7 +38,7 @@ interface FetchInsertionsVars {
 const insertionsQuery = `\
 query fetchInsertions($fromIdx: Bytes!, $toIdx: Bytes!) {
   treeInsertions(where: { idx_gte: $fromIdx, idx_lt: $toIdx }) {
-    note {
+    notes {
       ownerH1
       ownerH2
       nonce
@@ -50,13 +50,13 @@ query fetchInsertions($fromIdx: Bytes!, $toIdx: Bytes!) {
   }
 }`;
 
-// gets note or note commitments for the given merkle index range, up to `toBlock`
+// gets notes or note commitments for the given merkle index range, up to `toBlock`
 // the range is inclusive - i.e. [fromBlock, toBlock]
-export async function fetchInsertions(
+export async function fetchInsertionBatches(
   endpoint: string,
   fromBlock: number,
   toBlock: number
-): Promise<(Note | bigint[])[]> {
+): Promise<(Note[] | bigint[])[]> {
   const query = makeSubgraphQuery<FetchInsertionsVars, FetchInsertionsResponse>(
     endpoint,
     insertionsQuery,
@@ -68,22 +68,22 @@ export async function fetchInsertions(
   const res = await query({ fromIdx, toIdx });
 
   return res.data.treeInsertions.map((insertion) => {
-    if (insertion.note) {
-      // TODO: get Y coordinate
-      const note = insertion.note;
-      const owner = StealthAddressTrait.fromCompressedPoints(
-        BigInt(note.ownerH1),
-        BigInt(note.ownerH2)
-      );
-      const encodedNote: EncodedNote = {
-        owner,
-        nonce: BigInt(note.nonce),
-        encodedAssetAddr: BigInt(note.encodedAssetAddr),
-        encodedAssetId: BigInt(note.encodedAssetId),
-        value: BigInt(note.value),
-      };
+    if (insertion.notes) {
+      return insertion.notes.map((note) => {
+        const owner = StealthAddressTrait.fromCompressedPoints(
+          BigInt(note.ownerH1),
+          BigInt(note.ownerH2)
+        );
+        const encodedNote: EncodedNote = {
+          owner,
+          nonce: BigInt(note.nonce),
+          encodedAssetAddr: BigInt(note.encodedAssetAddr),
+          encodedAssetId: BigInt(note.encodedAssetId),
+          value: BigInt(note.value),
+        };
 
-      return NoteTrait.decode(encodedNote);
+        return NoteTrait.decode(encodedNote);
+      });
     } else if (insertion.noteCommitments) {
       return (insertion.noteCommitments as string[]).map((commitment) =>
         BigInt(commitment)
