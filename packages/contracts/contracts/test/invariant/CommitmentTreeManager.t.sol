@@ -32,10 +32,10 @@ contract CommitmentTreeManagerInvariants is Test {
 
         bytes4[] memory selectors = new bytes4[](6);
         selectors[0] = commitmentTreeManagerHandler.applySubtreeUpdate.selector;
-        selectors[1] = commitmentTreeManagerHandler.handleJoinSplit.selector;
-        selectors[2] = commitmentTreeManagerHandler.handleRefundNote.selector;
+        selectors[1] = commitmentTreeManagerHandler.handleJoinSplits.selector;
+        selectors[2] = commitmentTreeManagerHandler.handleRefundNotes.selector;
         selectors[3] = commitmentTreeManagerHandler.fillBatchWithZeros.selector;
-        selectors[4] = commitmentTreeManagerHandler.insertNote.selector;
+        selectors[4] = commitmentTreeManagerHandler.insertNotes.selector;
         selectors[5] = commitmentTreeManagerHandler
             .insertNoteCommitments
             .selector;

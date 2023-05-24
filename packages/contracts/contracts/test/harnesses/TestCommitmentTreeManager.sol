@@ -12,20 +12,21 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
         __CommitmentTreeManager_init(subtreeUpdateVerifier);
     }
 
-    function handleJoinSplit(JoinSplit calldata joinSplit) external {
-        _handleJoinSplit(joinSplit);
+    function handleJoinSplits(JoinSplit[] calldata joinSplits) external {
+        _handleJoinSplits(joinSplits);
     }
 
-    function handleRefundNote(
-        EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr,
-        uint256 value
+    function handleRefundNotes(
+        EncodedAsset[] memory encodedAssets,
+        StealthAddress[] memory refundAddrs,
+        uint256[] memory values,
+        uint256 numRefunds
     ) external {
-        _handleRefundNote(encodedAsset, refundAddr, value);
+        _handleRefundNotes(encodedAssets, refundAddrs, values, numRefunds);
     }
 
-    function insertNote(EncodedNote memory note) external {
-        _insertNote(note);
+    function insertNotes(EncodedNote[] memory notes) external {
+        _insertNotes(notes);
     }
 
     function insertNoteCommitments(uint256[] memory ncs) external {
@@ -33,7 +34,7 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
     }
 
     function currentBatchLen() external view returns (uint256) {
-        return _merkle.batchLen;
+        return _merkle.batchLenPlusOne - 1;
     }
 
     function accumulatorQueueLen() external view returns (uint256) {

@@ -14,9 +14,10 @@ struct OffchainMerkleTree {
     // number of non-zero leaves in the tree
     // INVARIANT: bottom `LOG2_BATCH_SIZE` bits of `count` should all be zero
     uint128 count;
-    // number of leaves in the batch
-    // when this gets to TreeUtils.BATCH_SIZE, we compute accumulatorHash and push te the accumulatorQueue
-    uint128 batchLen;
+    // number of leaves in the batch, plus one
+    // when this gets to TreeUtils.BATCH_SIZE + 1, we compute accumulatorHash and push te the accumulatorQueue
+    // we store batch size + 1 to avoid "clearing" the storage slot and save gas
+    uint128 batchLenPlusOne;
     // root of the merkle tree
     uint256 root;
     // buffer containing uncommitted update hashes
@@ -42,30 +43,35 @@ library LibOffchainMerkleTree {
         // root starts as the root of the empty depth-32 tree.
         self.root = TreeUtils.EMPTY_TREE_ROOT;
         self.count = 0;
-        self.batchLen = 0;
+        self.batchLenPlusOne = 1;
         self.subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             subtreeUpdateVerifier
         );
         self.accumulatorQueue.initialize();
+
+        for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
+            self.batch[i] = TreeUtils.ZERO_VALUE;
+        }
     }
 
-    function insertNote(
+    function insertNotes(
         OffchainMerkleTree storage self,
-        EncodedNote memory note
+        EncodedNote[] memory notes
     ) internal {
-        uint256 hashedNote = TreeUtils.sha256Note(note);
-        _insertUpdate(self, hashedNote);
+        uint256 numNotes = notes.length;
+        uint256[] memory noteHashes = new uint256[](numNotes);
+        for (uint256 i = 0; i < numNotes; i++) {
+            noteHashes[i] = TreeUtils.sha256Note(notes[i]);
+        }
+
+        _insertUpdates(self, noteHashes);
     }
 
     function insertNoteCommitments(
         OffchainMerkleTree storage self,
         uint256[] memory ncs
     ) internal {
-        uint256 ncsLength = ncs.length;
-        for (uint256 i = 0; i < ncsLength; i++) {
-            require(ncs[i] < Utils.SNARK_SCALAR_FIELD);
-            _insertUpdate(self, ncs[i]);
-        }
+        _insertUpdates(self, ncs);
     }
 
     function applySubtreeUpdate(
@@ -105,7 +111,8 @@ library LibOffchainMerkleTree {
     ) internal view returns (uint128) {
         return
             self.count +
-            self.batchLen +
+            self.batchLenPlusOne -
+            1 +
             uint128(TreeUtils.BATCH_SIZE) *
             uint128(self.accumulatorQueue.length());
     }
@@ -141,39 +148,38 @@ library LibOffchainMerkleTree {
     function _computeAccumulatorHash(
         OffchainMerkleTree storage self
     ) internal view returns (uint256) {
-        require(
-            self.batchLen == TreeUtils.BATCH_SIZE,
-            "batchLen != TreeUtils.BATCH_SIZE"
-        );
-
         uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
-        for (uint256 i = 0; i < TreeUtils.BATCH_SIZE; i++) {
+        uint256 batchLen = uint256(self.batchLenPlusOne) - 1;
+        for (uint256 i = 0; i < batchLen; i++) {
             batch[i] = self.batch[i];
+        }
+        for (uint256 i = batchLen; i < TreeUtils.BATCH_SIZE; i++) {
+            batch[i] = TreeUtils.ZERO_VALUE;
         }
 
         return uint256(TreeUtils.sha256FieldElems(batch));
     }
 
     function _accumulate(OffchainMerkleTree storage self) internal {
-        require(
-            self.batchLen == TreeUtils.BATCH_SIZE,
-            "batchLen != TreeUtils.BATCH_SIZE"
-        );
-
         uint256 accumulatorHash = _computeAccumulatorHash(self);
         self.accumulatorQueue.enqueue(accumulatorHash);
-        self.batchLen = 0;
     }
 
-    function _insertUpdate(
+    function _insertUpdates(
         OffchainMerkleTree storage self,
-        uint256 update
+        uint256[] memory updates
     ) internal {
-        self.batch[self.batchLen] = update;
-        self.batchLen += 1;
-
-        if (self.batchLen == TreeUtils.BATCH_SIZE) {
-            _accumulate(self);
+        uint256 batchLen = uint256(self.batchLenPlusOne) - 1;
+        uint256 updatesLength = updates.length;
+        uint256 updateIdx = 0;
+        while (updateIdx < updatesLength) {
+            self.batch[batchLen++] = updates[updateIdx++];
+            if (batchLen == TreeUtils.BATCH_SIZE) {
+                _accumulate(self);
+                batchLen = 0;
+            }
         }
+
+        self.batchLenPlusOne = uint128(batchLen + 1);
     }
 }

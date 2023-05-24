@@ -59,10 +59,10 @@ contract CommitmentTreeManagerHandler is Test {
         console.log("CommitmentTreeManagerHandler call summary:");
         console.log("-------------------");
         console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
-        console.log("handleJoinSplit", _calls["handleJoinSplit"]);
-        console.log("handleRefundNote", _calls["handleRefundNote"]);
+        console.log("handleJoinSplits", _calls["handleJoinSplits"]);
+        console.log("handleRefundNotes", _calls["handleRefundNotes"]);
         console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
-        console.log("insertNote", _calls["insertNote"]);
+        console.log("insertNotes", _calls["insertNotes"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
         console.log("no-op", _calls["no-op"]);
     }
@@ -79,36 +79,45 @@ contract CommitmentTreeManagerHandler is Test {
         }
     }
 
-    function handleJoinSplit(
-        JoinSplit memory joinSplit
-    ) public trackCall("handleJoinSplit") {
-        joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
-        joinSplit.nullifierA = _nullifierCounter;
-        joinSplit.nullifierB = _nullifierCounter + 1;
-        joinSplit.newNoteACommitment = bound(
-            joinSplit.newNoteACommitment,
-            0,
-            Utils.SNARK_SCALAR_FIELD - 1
-        );
-        joinSplit.newNoteBCommitment = bound(
-            joinSplit.newNoteBCommitment,
-            0,
-            Utils.SNARK_SCALAR_FIELD - 1
-        );
-        commitmentTreeManager.handleJoinSplit(joinSplit);
+    function handleJoinSplits(
+        JoinSplit[] memory joinSplits
+    ) public trackCall("handleJoinSplits") {
+        uint256 numJoinSplits = joinSplits.length;
+        for (uint256 i = 0; i < joinSplits.length; i++) {
+            joinSplits[i].commitmentTreeRoot = commitmentTreeManager.root();
+            joinSplits[i].nullifierA = _nullifierCounter;
+            joinSplits[i].nullifierB = _nullifierCounter + 1;
+            joinSplits[i].newNoteACommitment = bound(
+                joinSplits[i].newNoteACommitment,
+                0,
+                Utils.SNARK_SCALAR_FIELD - 1
+            );
+            joinSplits[i].newNoteBCommitment = bound(
+                joinSplits[i].newNoteBCommitment,
+                0,
+                Utils.SNARK_SCALAR_FIELD - 1
+            );
+        }
 
-        lastHandledJoinSplit = joinSplit;
-        _nullifierCounter += 2;
-        ghost_joinSplitLeafCount += 2; // call could not have completed without adding 2 leaves
+        commitmentTreeManager.handleJoinSplits(joinSplits);
+        lastHandledJoinSplit = joinSplits[numJoinSplits - 1];
+        _nullifierCounter += 2 * numJoinSplits;
+        ghost_joinSplitLeafCount += 2 * numJoinSplits; // call could not have completed without adding 2 leaves
     }
 
-    function handleRefundNote(
-        EncodedAsset memory encodedAsset,
-        StealthAddress memory refundAddr,
-        uint256 value
-    ) public trackCall("handleRefundNote") {
-        commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, value);
-        ghost_refundNotesLeafCount += 1;
+    function handleRefundNotes(
+        EncodedAsset[] memory encodedAssets,
+        StealthAddress[] memory refundAddrs,
+        uint256[] memory values,
+        uint256 numRefunds
+    ) public trackCall("handleRefundNotes") {
+        commitmentTreeManager.handleRefundNotes(
+            encodedAssets,
+            refundAddrs,
+            values,
+            numRefunds
+        );
+        ghost_refundNotesLeafCount += numRefunds;
     }
 
     function fillBatchWithZeros() public trackCall("fillBatchWithZeros") {
@@ -123,11 +132,11 @@ contract CommitmentTreeManagerHandler is Test {
         }
     }
 
-    function insertNote(
-        EncodedNote memory note
-    ) public trackCall("insertNote") {
-        commitmentTreeManager.insertNote(note);
-        ghost_insertNoteLeafCount += 1;
+    function insertNotes(
+        EncodedNote[] memory notes
+    ) public trackCall("insertNotes") {
+        commitmentTreeManager.insertNotes(notes);
+        ghost_insertNoteLeafCount += notes.length;
     }
 
     function insertNoteCommitments(

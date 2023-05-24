@@ -60,10 +60,10 @@ contract CommitmentTreeManager is
         JoinSplit joinSplit
     );
 
-    /// @notice Event emitted when a new note is inserted into the tree
-    event InsertNote(EncodedNote note);
+    /// @notice Event emitted when a new batch of notes is inserted into the tree
+    event InsertNotes(EncodedNote[] note);
 
-    /// @notice Event emitted when a new batch of note commitments is inserted
+    /// @notice Event emitted when a new batch of note commitments is inserted into the tree
     event InsertNoteCommitments(uint256[] commitments);
 
     /// @notice Event emitted when a subtree (and subsequently the main tree's root) are updated
@@ -101,11 +101,18 @@ contract CommitmentTreeManager is
     /// @dev This function allows the an entity to expedite process of being able to update
     ///      the merkle tree root. The caller of this function
     function fillBatchWithZeros() external onlySubtreeBatchFiller {
-        require(_merkle.batchLen > 0, "!zero fill empty batch");
+        uint256 batchLen = uint256(_merkle.batchLenPlusOne) - 1;
+        require(_merkle.batchLenPlusOne > 0, "!zero fill empty batch");
 
-        uint256 numToInsert = TreeUtils.BATCH_SIZE - _merkle.batchLen;
-        uint256[] memory zeros = new uint256[](numToInsert);
-        _insertNoteCommitments(zeros);
+        // instead of actually inserting the zeros, we emit an event saying we inserted zeros
+        // and then we call `_accumulate`. This prevents BATCH_SIZE - batchLen + 1 storage writes
+        uint256[] memory zeros = new uint256[](TreeUtils.BATCH_SIZE - batchLen);
+        for (uint256 i = 0; i < zeros.length; i++) {
+            zeros[i] = TreeUtils.ZERO_VALUE;
+        }
+        emit InsertNoteCommitments(zeros);
+
+        _merkle._accumulate();
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof
@@ -140,11 +147,11 @@ contract CommitmentTreeManager is
         return _merkle.getTotalCount();
     }
 
-    /// @notice Inserts single note into commitment tree
-    /// @param note Note to insert
-    function _insertNote(EncodedNote memory note) internal {
-        _merkle.insertNote(note);
-        emit InsertNote(note);
+    /// @notice Inserts a batch of notes into commitment tree
+    /// @param notes batch of notes to insert
+    function _insertNotes(EncodedNote[] memory notes) internal {
+        _merkle.insertNotes(notes);
+        emit InsertNotes(notes);
     }
 
     /// @notice Inserts several note commitments into the tree
@@ -154,80 +161,97 @@ contract CommitmentTreeManager is
         emit InsertNoteCommitments(ncs);
     }
 
-    /// @notice Process a joinsplit transaction, assuming that the encoded proof is valid
+    /// @notice Process several joinsplits, assuming that their proofs have already been verified
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
-    /// @param joinSplit Joinsplit to process
-    function _handleJoinSplit(JoinSplit calldata joinSplit) internal {
-        // Check validity of both nullifiers
-        require(
-            _pastRoots[joinSplit.commitmentTreeRoot],
-            "Tree root not past root"
-        );
-        require(
-            !_nullifierSet[joinSplit.nullifierA],
-            "Nullifier A already used"
-        );
-        require(
-            !_nullifierSet[joinSplit.nullifierB],
-            "Nullifier B already used"
-        );
-        require(
-            joinSplit.nullifierA != joinSplit.nullifierB,
-            "2 nfs should !equal"
-        );
+    /// @param joinSplits calldata array of Joinsplits to process
+    function _handleJoinSplits(JoinSplit[] calldata joinSplits) internal {
+        uint256 numJoinSplits = joinSplits.length;
+        uint256[] memory noteCommitments = new uint256[](numJoinSplits * 2);
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            JoinSplit calldata joinSplit = joinSplits[i];
+            // Check validity of both nullifiers
+            require(
+                _pastRoots[joinSplit.commitmentTreeRoot],
+                "Tree root not past root"
+            );
+            require(
+                !_nullifierSet[joinSplit.nullifierA],
+                "Nullifier A already used"
+            );
+            require(
+                !_nullifierSet[joinSplit.nullifierB],
+                "Nullifier B already used"
+            );
+            require(
+                joinSplit.nullifierA != joinSplit.nullifierB,
+                "2 nfs should !equal"
+            );
 
-        // Mark nullifiers as used
-        _nullifierSet[joinSplit.nullifierA] = true;
-        _nullifierSet[joinSplit.nullifierB] = true;
+            // Mark nullifiers as used
+            _nullifierSet[joinSplit.nullifierA] = true;
+            _nullifierSet[joinSplit.nullifierB] = true;
 
-        // Compute newNote indices in the merkle tree
-        uint128 newNoteIndexA = _merkle.getTotalCount();
-        uint128 newNoteIndexB = newNoteIndexA + 1;
+            // Compute newNote indices in the merkle tree
+            uint128 newNoteIndexA = _merkle.getTotalCount();
+            uint128 newNoteIndexB = newNoteIndexA + 1;
 
-        // Insert new note commitments
-        uint256[] memory noteCommitments = new uint256[](2);
-        noteCommitments[0] = joinSplit.newNoteACommitment;
-        noteCommitments[1] = joinSplit.newNoteBCommitment;
+            // Insert new note commitments
+            noteCommitments[i * 2] = joinSplit.newNoteACommitment;
+            noteCommitments[i * 2 + 1] = joinSplit.newNoteBCommitment;
+
+            emit JoinSplitProcessed(
+                joinSplit.nullifierA,
+                joinSplit.nullifierB,
+                newNoteIndexA,
+                newNoteIndexB,
+                joinSplit
+            );
+        }
+
         _insertNoteCommitments(noteCommitments);
-
-        emit JoinSplitProcessed(
-            joinSplit.nullifierA,
-            joinSplit.nullifierB,
-            newNoteIndexA,
-            newNoteIndexB,
-            joinSplit
-        );
     }
 
-    /// @notice Inserts a single refund note into the commitment tree
-    /// @param encodedAsset Encoded asset refund note is being created for
-    /// @param refundAddr Stealth address refund note is created to
-    /// @param value Value of refund note for given asset
-    function _handleRefundNote(
-        EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr,
-        uint256 value
+    /// @notice Inserts a batch of refund notes into the commitment tree
+    /// @param encodedAssets Encoded assets for each refund note
+    /// @param refundAddrs Stealth addresses for each refund note
+    /// @param values Values for each refund note
+    function _handleRefundNotes(
+        EncodedAsset[] memory encodedAssets,
+        StealthAddress[] memory refundAddrs,
+        uint256[] memory values,
+        uint256 numRefunds
     ) internal {
-        uint128 index = _merkle.getTotalCount();
-        EncodedNote memory note = EncodedNote({
-            ownerH1: refundAddr.h1X,
-            ownerH2: refundAddr.h2X,
-            nonce: index,
-            encodedAssetAddr: encodedAsset.encodedAssetAddr,
-            encodedAssetId: encodedAsset.encodedAssetId,
-            value: value
-        });
+        require(numRefunds <= encodedAssets.length, "len mismatch");
+        require(numRefunds <= refundAddrs.length, "len mismatch");
+        require(numRefunds <= values.length, "len mismatch");
 
-        _insertNote(note);
+        EncodedNote[] memory notes = new EncodedNote[](numRefunds);
+        uint128 offset = _merkle.getTotalCount();
+        for (uint256 i = 0; i < numRefunds; i++) {
+            EncodedAsset memory encodedAsset = encodedAssets[i];
+            StealthAddress memory refundAddr = refundAddrs[i];
+            uint256 value = values[i];
 
-        emit RefundProcessed(
-            refundAddr,
-            index,
-            encodedAsset.encodedAssetAddr,
-            encodedAsset.encodedAssetId,
-            value,
-            index
-        );
+            notes[i] = EncodedNote({
+                ownerH1: refundAddr.h1X,
+                ownerH2: refundAddr.h2X,
+                nonce: offset + i,
+                encodedAssetAddr: encodedAsset.encodedAssetAddr,
+                encodedAssetId: encodedAsset.encodedAssetId,
+                value: value
+            });
+
+            emit RefundProcessed(
+                refundAddr,
+                offset + i,
+                encodedAsset.encodedAssetAddr,
+                encodedAsset.encodedAssetId,
+                value,
+                offset + uint128(i)
+            );
+        }
+
+        _insertNotes(notes);
     }
 }
