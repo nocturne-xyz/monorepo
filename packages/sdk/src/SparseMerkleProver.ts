@@ -70,8 +70,6 @@ for (let i = 1; i <= DEPTH; i++) {
   ZERO_HASHES.push(poseidonBN(new Array(ARITY).fill(ZERO_HASHES[i - 1])));
 }
 
-console.log("ZERO_HASHES", ZERO_HASHES);
-
 const NO_CHILDREN = new Array(ARITY).fill(undefined);
 
 function zeroHashAtDepth(depth: number): bigint {
