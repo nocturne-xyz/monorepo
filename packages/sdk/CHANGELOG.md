@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-- change `NocturneDB.nextMerkleIndex()` to `lastCommittedMerkleIndex`
+- change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
 - add `getAllCommittedBalance` to `NocturneWalletSDK`
 - make `gatherNotes` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
