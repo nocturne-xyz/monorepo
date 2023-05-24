@@ -55,6 +55,7 @@ contract CommitmentTreeManager is
     event JoinSplitProcessed(
         uint256 indexed oldNoteANullifier,
         uint256 indexed oldNoteBNullifier,
+        EncodedAsset encodedAsset,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
         JoinSplit joinSplit
@@ -158,7 +159,10 @@ contract CommitmentTreeManager is
     /// @dev This function should be re-entry safe. Nullifiers are be marked
     ///      used as soon as they are checked to be valid.
     /// @param joinSplit Joinsplit to process
-    function _handleJoinSplit(JoinSplit calldata joinSplit) internal {
+    function _handleJoinSplit(
+        JoinSplit calldata joinSplit,
+        EncodedAsset memory encodedAsset
+    ) internal {
         // Check validity of both nullifiers
         require(
             _pastRoots[joinSplit.commitmentTreeRoot],
@@ -194,6 +198,7 @@ contract CommitmentTreeManager is
         emit JoinSplitProcessed(
             joinSplit.nullifierA,
             joinSplit.nullifierB,
+            encodedAsset,
             newNoteIndexA,
             newNoteIndexB,
             joinSplit

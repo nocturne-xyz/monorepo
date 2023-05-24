@@ -58,11 +58,25 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
+        // Ensure all joinsplit roots and nullifiers are valid
+        uint256 numAssets = op.encodedAssetsWithLastIndex.length;
+        uint previousLastIndex = 0;
+        for (uint256 assetIndex = 0; assetIndex < numAssets; assetIndex++) {
+            EncodedAssetWithLastIndex memory encodedAssetWithLastIndex = op
+                .encodedAssetsWithLastIndex[assetIndex];
 
-        // Ensure all joinsplit roots + nullifiers are valid against commitment tree
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleJoinSplit(op.joinSplits[i]);
+            for (
+                uint256 i = previousLastIndex;
+                i <= encodedAssetWithLastIndex.lastIndex;
+                i++
+            ) {
+                _handleJoinSplit(
+                    op.joinSplits[i],
+                    encodedAssetWithLastIndex.encodedAsset
+                );
+            }
+
+            previousLastIndex = encodedAssetWithLastIndex.lastIndex + 1;
         }
 
         // Get amount of gas asset to reserve, if gasPrice == 0 then user indicated no gas comp for
@@ -85,7 +99,6 @@ contract BalanceManager is CommitmentTreeManager {
         }
 
         // Gather gas assets from teller to handler
-        uint256 numAssets = op.encodedAssetsWithLastIndex.length;
         uint256 startIndex = 0;
         for (uint256 assetIndex = 0; assetIndex < numAssets; assetIndex++) {
             EncodedAssetWithLastIndex memory encodedAssetWithLastIndex = op

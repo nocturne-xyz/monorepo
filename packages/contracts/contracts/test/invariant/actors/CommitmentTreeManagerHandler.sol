@@ -80,7 +80,8 @@ contract CommitmentTreeManagerHandler is Test {
     }
 
     function handleJoinSplit(
-        JoinSplit memory joinSplit
+        JoinSplit memory joinSplit,
+        EncodedAsset memory encodedAsset
     ) public trackCall("handleJoinSplit") {
         joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
         joinSplit.nullifierA = _nullifierCounter;
@@ -95,7 +96,7 @@ contract CommitmentTreeManagerHandler is Test {
             0,
             Utils.SNARK_SCALAR_FIELD - 1
         );
-        commitmentTreeManager.handleJoinSplit(joinSplit);
+        commitmentTreeManager.handleJoinSplit(joinSplit, encodedAsset);
 
         lastHandledJoinSplit = joinSplit;
         _nullifierCounter += 2;

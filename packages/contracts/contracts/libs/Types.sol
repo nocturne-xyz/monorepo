@@ -50,22 +50,6 @@ struct JoinSplit {
     EncryptedNote newNoteBEncrypted;
 }
 
-struct JoinSplitEmitted {
-    uint256 commitmentTreeRoot;
-    uint256 nullifierA;
-    uint256 nullifierB;
-    uint256 newNoteACommitment;
-    uint256 newNoteBCommitment;
-    uint256 encSenderCanonAddrC1X;
-    uint256 encSenderCanonAddrC2X;
-    uint256[8] proof;
-    // TODO: event should not naively emit entire struct?
-    EncodedAsset encodedAsset; // include encodedAsset
-    uint256 publicSpend;
-    EncryptedNote newNoteAEncrypted;
-    EncryptedNote newNoteBEncrypted;
-}
-
 struct EncodedNote {
     uint256 ownerH1;
     uint256 ownerH2;
