@@ -45,6 +45,9 @@ contract BalanceManager is CommitmentTreeManager {
     ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
     ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
+    /// @dev We attempt to group asset transfers to handler by contiguous subarrays of joinsplits
+    ///      for same asset. User can group however they like but contiguous group saves them gas
+    ///      by reducing number of teller.requestAsset calls.
     /// @param op Operation to process joinSplits for
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
     ///                              teller during (batch) proof verification
