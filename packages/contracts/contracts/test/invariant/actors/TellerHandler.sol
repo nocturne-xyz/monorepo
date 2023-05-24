@@ -27,6 +27,7 @@ import "../../../libs/Types.sol";
 
 contract TellerHandler is OperationGenerator {
     using LibTokenIdSet for TokenIdSet;
+    using OperationLib for Operation;
 
     // ______PUBLIC______
     Teller public teller;
@@ -269,14 +270,12 @@ contract TellerHandler is OperationGenerator {
     function _totalJoinSplitTokenAmountInOp(
         Operation memory op
     ) internal view returns (uint256) {
-        uint256 total = 0;
+        // TODO: assumes all joinsplits are the same token (which is case for now)
+        uint256 totalValue = 0;
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
-            EncodedAsset memory encodedAsset = op.joinSplits[i].encodedAsset;
-            (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-            if (assetAddr == address(joinSplitToken)) {
-                total += op.joinSplits[i].publicSpend;
-            }
+            totalValue += op.joinSplits[i].publicSpend;
         }
-        return total;
+
+        return totalValue;
     }
 }

@@ -1970,7 +1970,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Check OperationProcessed event emits processed = false
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Too few gas tokens",
+                maybeFailureReason: "!enough gas asset",
                 assetsUnwrapped: false
             })
         );
@@ -1985,7 +1985,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assert(
             ParseUtils.hasSubstring(
                 string(opResults[0].failureReason),
-                "Too few gas tokens"
+                "!enough gas asset"
             )
         );
 

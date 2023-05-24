@@ -103,7 +103,6 @@ struct Operation {
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
-    bool hasGasAsset;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
@@ -155,9 +154,7 @@ library OperationLib {
             return false;
         }
 
-        uint256 previousLastIndex = self
-            .encodedAssetsWithLastIndex[0]
-            .lastIndex;
+        uint256 previousLastIndex = 0;
         for (uint256 i = 0; i < self.encodedAssetsWithLastIndex.length; i++) {
             // each index must always be less than or equal to number of joinsplits
             if (
@@ -169,7 +166,6 @@ library OperationLib {
 
             // indices must be strictly increasing
             if (
-                i > 0 &&
                 self.encodedAssetsWithLastIndex[i].lastIndex <=
                 previousLastIndex
             ) {
@@ -180,6 +176,19 @@ library OperationLib {
         }
 
         return true;
+    }
+
+    function totalAssetValueForJoinSplitsInRangeInclusive(
+        Operation calldata self,
+        uint256 startIndex,
+        uint256 endIndex
+    ) internal pure returns (uint256) {
+        uint256 totalValue = 0;
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            totalValue += self.joinSplits[i].publicSpend;
+        }
+
+        return totalValue;
     }
 
     function maxGasLimit(

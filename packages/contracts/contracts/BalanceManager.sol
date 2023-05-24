@@ -52,47 +52,55 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
-        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
-
         uint256 numJoinSplits = op.joinSplits.length;
+
+        // Ensure all joinsplit roots + nullifiers are valid against commitment tree
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Process nullifiers in the current joinSplit, will throw if
-            // they are not fresh
             _handleJoinSplit(op.joinSplits[i]);
-
-            // Default to requesting all publicSpend from teller
-            uint256 valueToTransfer = op.joinSplits[i].publicSpend;
-
-            // If we still need to reserve more gas and the current
-            // `joinSplit` is spending the gasAsset, then reserve what we can
-            // from this `joinSplit`
-            if (
-                gasAssetToReserve > 0 &&
-                AssetUtils.eq(encodedGasAsset, op.joinSplits[i].encodedAsset)
-            ) {
-                // We will reserve as much as we can, upto the public spend
-                // amount or the maximum amount to be reserved
-                uint256 gasPaymentThisJoinSplit = Utils.min(
-                    op.joinSplits[i].publicSpend,
-                    gasAssetToReserve
-                );
-                // Deduct gas payment from value to transfer to teller
-                valueToTransfer -= gasPaymentThisJoinSplit;
-                // Deduct gas payment from the amount to be reserved
-                gasAssetToReserve -= gasPaymentThisJoinSplit;
-            }
-
-            // If value to transfer is 0, skip the transfer
-            if (valueToTransfer > 0) {
-                _teller.requestAsset(
-                    op.joinSplits[i].encodedAsset,
-                    valueToTransfer
-                );
-            }
         }
 
-        require(gasAssetToReserve == 0, "Too few gas tokens");
+        // Get amount of gas asset to reserve
+        uint256 firstAssetReserveValue = 0;
+        if (op.gasPrice > 0) {
+            uint256 firstAssetLastJoinSplitIndex = op
+                .encodedAssetsWithLastIndex[0]
+                .lastIndex;
+            uint256 maxGasAssetCost = op.maxGasAssetCost(perJoinSplitVerifyGas);
+
+            require(
+                op.totalAssetValueForJoinSplitsInRangeInclusive(
+                    0,
+                    firstAssetLastJoinSplitIndex
+                ) >= maxGasAssetCost,
+                "!enough gas asset"
+            );
+            firstAssetReserveValue = maxGasAssetCost;
+        }
+
+        // Gather gas assets from teller to handler
+        uint256 numAssets = op.encodedAssetsWithLastIndex.length;
+        uint256 startIndex = 0;
+        for (uint256 i = 0; i < numAssets; i++) {
+            EncodedAssetWithLastIndex memory encodedAssetWithLastIndex = op
+                .encodedAssetsWithLastIndex[i];
+
+            uint256 valueToGather = op
+                .totalAssetValueForJoinSplitsInRangeInclusive(
+                    startIndex,
+                    encodedAssetWithLastIndex.lastIndex
+                );
+
+            if (i == 0) {
+                valueToGather -= firstAssetReserveValue;
+            }
+
+            startIndex = encodedAssetWithLastIndex.lastIndex + 1;
+
+            _teller.requestAsset(
+                encodedAssetWithLastIndex.encodedAsset,
+                valueToGather
+            );
+        }
     }
 
     /// @notice Gather reserved gas assets and pay bundler calculated amount.
@@ -145,9 +153,12 @@ contract BalanceManager is CommitmentTreeManager {
     ///      the asset back to the Teller and insert a new note commitment into the commitment tree.
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleRefundForAsset(op.joinSplits[i].encodedAsset, op.refundAddr);
+        uint256 numAssets = op.encodedAssetsWithLastIndex.length;
+        for (uint256 i = 0; i < numAssets; i++) {
+            _handleRefundForAsset(
+                op.encodedAssetsWithLastIndex[i].encodedAsset,
+                op.refundAddr
+            );
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;

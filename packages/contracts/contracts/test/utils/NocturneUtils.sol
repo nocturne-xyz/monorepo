@@ -229,7 +229,6 @@ library NocturneUtils {
                 newNoteBCommitment: uint256(i),
                 newNoteBEncrypted: newNoteBEncrypted,
                 proof: dummyProof(),
-                encodedAsset: encodedAsset,
                 publicSpend: args.joinSplitPublicSpends[i],
                 encSenderCanonAddrC1X: 0,
                 encSenderCanonAddrC2X: 0
@@ -248,8 +247,18 @@ library NocturneUtils {
             deadline = 0;
         }
 
+        EncodedAssetWithLastIndex[]
+            memory encodedAssetsWithLastIndex = new EncodedAssetWithLastIndex[](
+                1
+            );
+        encodedAssetsWithLastIndex[0] = EncodedAssetWithLastIndex({
+            encodedAsset: encodedAsset,
+            lastIndex: joinSplits.length - 1
+        });
+
         Operation memory op = Operation({
             joinSplits: joinSplits,
+            encodedAssetsWithLastIndex: encodedAssetsWithLastIndex,
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
             actions: args.actions,

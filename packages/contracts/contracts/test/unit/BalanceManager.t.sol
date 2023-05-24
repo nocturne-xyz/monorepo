@@ -355,7 +355,7 @@ contract BalanceManagerTest is Test {
         assertGt(totalFeeReserved, PER_NOTE_AMOUNT);
 
         // Expect revert due to not having enough to pay fee
-        vm.expectRevert("Too few gas tokens");
+        vm.expectRevert("!enough gas asset");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
