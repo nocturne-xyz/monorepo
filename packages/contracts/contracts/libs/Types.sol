@@ -132,50 +132,47 @@ struct Bundle {
 }
 
 library OperationLib {
-    function hasValidJoinSplitIndices(
+    function ensureValidEncodedAssetsWithLastIndex(
         Operation calldata self
-    ) internal pure returns (bool) {
+    ) internal pure {
         // disallow operation with no joinsplits
-        if (
-            self.encodedAssetsWithLastIndex.length == 0 ||
-            self.joinSplits.length == 0
-        ) {
-            return false;
-        }
+        require(
+            self.encodedAssetsWithLastIndex.length > 0 &&
+                self.joinSplits.length > 0,
+            "empty joinsplits or assets"
+        );
 
         // last asset last index must equal index of final joinsplit
-        if (
+        require(
             self
                 .encodedAssetsWithLastIndex[
                     self.encodedAssetsWithLastIndex.length - 1
                 ]
-                .lastIndex != self.joinSplits.length - 1
-        ) {
-            return false;
-        }
+                .lastIndex == self.joinSplits.length - 1,
+            "last index != joinsplit.length-1"
+        );
 
         uint256 previousLastIndex = 0;
         for (uint256 i = 0; i < self.encodedAssetsWithLastIndex.length; i++) {
-            // each index must always be less than or equal to number of joinsplits
-            if (
-                self.encodedAssetsWithLastIndex[i].lastIndex >
-                self.joinSplits.length - 1
-            ) {
-                return false;
-            }
-
-            // indices must be strictly increasing
-            if (
+            // each index always <= to joinsplits.length - 1
+            require(
                 self.encodedAssetsWithLastIndex[i].lastIndex <=
-                previousLastIndex
-            ) {
-                return false;
+                    self.joinSplits.length - 1,
+                "middle index > joinsplit.length-1"
+            );
+
+            // indices must be strictly increasing (if i == 0, previousLastIndex can be 0 if only 1
+            // joinsplit)
+            if (i > 0) {
+                require(
+                    self.encodedAssetsWithLastIndex[i].lastIndex >
+                        previousLastIndex,
+                    "!increasing indices"
+                );
             }
 
             previousLastIndex = self.encodedAssetsWithLastIndex[i].lastIndex;
         }
-
-        return true;
     }
 
     function totalAssetValueForJoinSplitsInRangeInclusive(

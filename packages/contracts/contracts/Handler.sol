@@ -27,6 +27,8 @@ contract Handler is
     BalanceManager,
     NocturneReentrancyGuard
 {
+    using OperationLib for Operation;
+
     // Set of callable protocols and tokens
     mapping(address => bool) public _supportedContractAllowlist;
 
@@ -138,6 +140,7 @@ contract Handler is
     {
         require(op.chainId == block.chainid, "invalid chainid");
         require(block.timestamp <= op.deadline, "expired deadline");
+        op.ensureValidEncodedAssetsWithLastIndex();
 
         // Ensure refund assets supported
         uint256 numRefundAssets = op.encodedRefundAssets.length;

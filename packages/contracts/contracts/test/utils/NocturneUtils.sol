@@ -58,6 +58,43 @@ library NocturneUtils {
         }
     }
 
+    function dummyJoinSplit() internal pure returns (JoinSplit memory) {
+        return
+            JoinSplit({
+                commitmentTreeRoot: 0,
+                nullifierA: 0,
+                nullifierB: 0,
+                newNoteACommitment: uint256(0),
+                newNoteAEncrypted: EncryptedNote({
+                    owner: StealthAddress({
+                        h1X: uint256(123),
+                        h1Y: uint256(123),
+                        h2X: uint256(123),
+                        h2Y: uint256(123)
+                    }),
+                    encappedKey: uint256(111),
+                    encryptedNonce: uint256(111),
+                    encryptedValue: uint256(111)
+                }),
+                newNoteBCommitment: uint256(0),
+                newNoteBEncrypted: EncryptedNote({
+                    owner: StealthAddress({
+                        h1X: uint256(123),
+                        h1Y: uint256(123),
+                        h2X: uint256(123),
+                        h2Y: uint256(123)
+                    }),
+                    encappedKey: uint256(111),
+                    encryptedNonce: uint256(111),
+                    encryptedValue: uint256(111)
+                }),
+                proof: NocturneUtils.dummyProof(),
+                publicSpend: 0,
+                encSenderCanonAddrC1X: 0,
+                encSenderCanonAddrC2X: 0
+            });
+    }
+
     function fillJoinSplitPublicSpends(
         uint256 perJoinSplitPublicSpend,
         uint256 numJoinSplits

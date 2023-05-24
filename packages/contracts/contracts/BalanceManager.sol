@@ -45,6 +45,12 @@ contract BalanceManager is CommitmentTreeManager {
     ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
     ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
+    /// @dev We do NOT check that op.encodedAssetsWithLastIndex entries are all unique assets. If
+    ///      user has repeated same asset multiple times in op.encodedAssetsWithLastIndex, this
+    ///      incurs more gas for user but is not a security concern. Loop will simply perform more
+    ///      calls of teller.requestAsset but the end state will be the same.
+    /// @dev If user has provided incorrect op.encodedAssetsWithLastIndex (assets do not match
+    ///      notes in tree), handleJoinSplits will fail the nullifier checks and revert.
     /// @param op Operation to process joinSplits for
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
     ///                              teller during (batch) proof verification
@@ -59,7 +65,8 @@ contract BalanceManager is CommitmentTreeManager {
             _handleJoinSplit(op.joinSplits[i]);
         }
 
-        // Get amount of gas asset to reserve
+        // Get amount of gas asset to reserve, if gasPrice == 0 then user indicated no gas comp for
+        // bundler. Gas asset is always first asset in list if gas comp.
         uint256 firstAssetReserveValue = 0;
         if (op.gasPrice > 0) {
             uint256 firstAssetLastJoinSplitIndex = op
@@ -80,9 +87,9 @@ contract BalanceManager is CommitmentTreeManager {
         // Gather gas assets from teller to handler
         uint256 numAssets = op.encodedAssetsWithLastIndex.length;
         uint256 startIndex = 0;
-        for (uint256 i = 0; i < numAssets; i++) {
+        for (uint256 assetIndex = 0; assetIndex < numAssets; assetIndex++) {
             EncodedAssetWithLastIndex memory encodedAssetWithLastIndex = op
-                .encodedAssetsWithLastIndex[i];
+                .encodedAssetsWithLastIndex[assetIndex];
 
             uint256 valueToGather = op
                 .totalAssetValueForJoinSplitsInRangeInclusive(
@@ -90,7 +97,7 @@ contract BalanceManager is CommitmentTreeManager {
                     encodedAssetWithLastIndex.lastIndex
                 );
 
-            if (i == 0) {
+            if (assetIndex == 0 && firstAssetReserveValue > 0) {
                 valueToGather -= firstAssetReserveValue;
             }
 
