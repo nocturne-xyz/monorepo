@@ -10,6 +10,7 @@ import {
   packToSolidityProof,
   subtreeUpdateInputsFromBatch,
   range,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -24,12 +25,13 @@ import { Handler } from "@nocturne-xyz/contracts";
 import * as JSON from "bigint-json-serialization";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
+const { BATCH_SIZE } = TreeConstants;
+
 const PROOF_QUEUE_NAME = "PROOF_QUEUE";
 const PROOF_JOB_TAG = "PROOF_JOB";
 const SUBMISSION_QUEUE_NAME = "SUBMISSION_QUEUE";
 const SUBMISSION_JOB_TAG = "SUBMISSION_JOB";
 
-export const BATCH_SIZE = 16;
 const SUBTREE_INCLUDE_ARRAY = [true, ...range(BATCH_SIZE - 1).map(() => false)];
 
 export interface SubtreeUpdaterOpts {

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- import `BATCH_SIZE` from `TreeConstants`
 - make cli manually exit when `ActorHandle` promise resolves
 - get `subtreeIndex`, not `subtreeBatchOffset` from subgraph when determining whether or not to enqueue proof job
 - close other workers/iters/async "threads" when one of them fails

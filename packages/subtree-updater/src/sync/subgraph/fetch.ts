@@ -5,8 +5,10 @@ import {
   NoteTrait,
   StealthAddressTrait,
   assertOrErr,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
-import { BATCH_SIZE } from "../../subtreeUpdater";
+
+const { BATCH_SIZE } = TreeConstants;
 
 const { makeSubgraphQuery, totalEntityIndexFromBlockNumber } = SubgraphUtils;
 
