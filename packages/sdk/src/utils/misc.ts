@@ -25,8 +25,9 @@ export function merklePathToIndex(
   pathIndices: bigint[],
   direction: "ROOT_TO_LEAF" | "LEAF_TO_ROOT"
 ): bigint {
-  pathIndices =
-    direction === "ROOT_TO_LEAF" ? pathIndices : pathIndices.reverse();
+  if (direction === "LEAF_TO_ROOT") {
+    pathIndices = [...pathIndices].reverse();
+  }
 
   return pathIndices.reduce(
     (idx, pathIndex) => (idx << 2n) | BigInt(pathIndex),
