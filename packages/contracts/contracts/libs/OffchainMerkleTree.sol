@@ -160,6 +160,11 @@ library LibOffchainMerkleTree {
         return uint256(TreeUtils.sha256FieldElems(batch));
     }
 
+    function _fillBatchWithZeros(OffchainMerkleTree storage self) internal {
+        _accumulate(self);
+        self.batchLenPlusOne = 1;
+    }
+
     function _accumulate(OffchainMerkleTree storage self) internal {
         uint256 accumulatorHash = _computeAccumulatorHash(self);
         self.accumulatorQueue.enqueue(accumulatorHash);

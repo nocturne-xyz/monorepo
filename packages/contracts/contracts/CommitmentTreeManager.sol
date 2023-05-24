@@ -112,7 +112,7 @@ contract CommitmentTreeManager is
         }
         emit InsertNoteCommitments(zeros);
 
-        _merkle._accumulate();
+        _merkle._fillBatchWithZeros();
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof

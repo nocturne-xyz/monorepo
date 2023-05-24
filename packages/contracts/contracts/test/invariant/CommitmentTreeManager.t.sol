@@ -67,7 +67,7 @@ contract CommitmentTreeManagerInvariants is Test {
     }
 
     function invariant_handledJoinSplitNullifiersMarkedTrue() external {
-        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplits") {
             (
                 ,
                 uint256 nullifierA,
@@ -97,18 +97,21 @@ contract CommitmentTreeManagerInvariants is Test {
     }
 
     function invariant_totalCountIncreasesByExpected() external {
-        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplits") {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 2,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    2 *
+                    commitmentTreeManagerHandler.handleJoinSplitsLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()
             );
         } else if (
-            commitmentTreeManagerHandler.lastCall() == "handleRefundNote"
+            commitmentTreeManagerHandler.lastCall() == "handleRefundNotes"
         ) {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    commitmentTreeManagerHandler.handleRefundNotesLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()
@@ -125,9 +128,10 @@ contract CommitmentTreeManagerInvariants is Test {
                     .commitmentTreeManager()
                     .totalCount()
             );
-        } else if (commitmentTreeManagerHandler.lastCall() == "insertNote") {
+        } else if (commitmentTreeManagerHandler.lastCall() == "insertNotes") {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    commitmentTreeManagerHandler.insertNotesLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()
