@@ -333,7 +333,6 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       nullifierB: joinSplit.nullifierB,
       newNoteACommitment: joinSplit.newNoteACommitment,
       newNoteBCommitment: joinSplit.newNoteBCommitment,
-      encodedAsset: joinSplit.encodedAsset,
       publicSpend: joinSplit.publicSpend,
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
@@ -343,14 +342,14 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     };
   });
   return {
+    joinSplits: provenJoinSplits,
+    encodedAssetsWithLastIndex: op.encodedAssetsWithLastIndex,
     refundAddr: op.refundAddr,
     encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
-    encodedGasAsset: op.encodedGasAsset,
     executionGasLimit: op.executionGasLimit,
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,
-    joinSplits: provenJoinSplits,
     chainId: op.chainId,
     deadline: op.deadline,
     atomicActions: op.atomicActions,

@@ -11,6 +11,7 @@ import {
   Asset,
   AssetTrait,
   PreSignOperation,
+  PreGroupedJoinSplit,
 } from "./primitives";
 import {
   NocturneViewer,
@@ -25,8 +26,10 @@ import {
   min,
   iterChunks,
   getJoinSplitRequestTotalValue,
+  groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
+import { EncodedAsset, EncodedAssetWithLastIndex } from "./primitives/asset";
 
 export const __private = {
   gatherNotes,
@@ -38,22 +41,33 @@ export interface PrepareOperationDeps {
   merkle: SparseMerkleProver;
 }
 
+interface PreSignJoinSplitsAndEncodedAssetsWithLastIndex {
+  joinSplits: PreSignJoinSplit[];
+  encodedAssetsWithLastIndex: EncodedAssetWithLastIndex[];
+}
+
 export async function prepareOperation(
   deps: PrepareOperationDeps,
   opRequest: GasAccountedOperationRequest
 ): Promise<PreSignOperation> {
   const { refundAssets, joinSplitRequests, chainId, deadline } = opRequest;
   const encodedRefundAssets = refundAssets.map(AssetTrait.encode);
-  const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
+  const maybeEncodedGasAsset =
+    opRequest.gasPrice > 0 ? AssetTrait.encode(opRequest.gasAsset) : undefined;
 
   // prepare joinSplits
-  const joinSplits = (
+  const preGroupedJoinSplits = (
     await Promise.all(
       joinSplitRequests.map((joinSplitRequest) => {
         return prepareJoinSplits(deps, joinSplitRequest);
       })
     )
   ).flat();
+
+  const { joinSplits, encodedAssetsWithLastIndex } = groupJoinSplits(
+    preGroupedJoinSplits,
+    maybeEncodedGasAsset
+  );
 
   // if refundAddr is not set, generate a random one
   const refundAddr =
@@ -64,8 +78,8 @@ export async function prepareOperation(
     ...opRequest,
     refundAddr,
     joinSplits,
+    encodedAssetsWithLastIndex,
     encodedRefundAssets,
-    encodedGasAsset,
     chainId,
     deadline,
     atomicActions: true, // always default to atomic until we find reason not to
@@ -74,10 +88,51 @@ export async function prepareOperation(
   return op as PreSignOperation;
 }
 
+function groupJoinSplits(
+  preGroupedJoinSplits: PreGroupedJoinSplit[],
+  maybeEncodedGasAsset: EncodedAsset | undefined
+): PreSignJoinSplitsAndEncodedAssetsWithLastIndex {
+  const groups = groupByArr(preGroupedJoinSplits, (joinSplit) =>
+    AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
+  );
+
+  let encodedAssetsWithLastIndex: EncodedAssetWithLastIndex[] = [];
+  let joinSplits: PreSignJoinSplit[] = [];
+  if (maybeEncodedGasAsset) {
+    for (let i = 0; i < groups.length; i++) {
+      if (groups[i][0].encodedAsset === maybeEncodedGasAsset) {
+        // If group is gas asset group ,remove gas joinSplits from groups
+        const gasJoinSplits = groups.splice(i, 1)[0];
+
+        // Push gas assets to joinsplits and encodedAssetsWithLastIndex
+        joinSplits.push(...gasJoinSplits);
+        encodedAssetsWithLastIndex.push({
+          encodedAsset: maybeEncodedGasAsset,
+          lastIndex: gasJoinSplits.length - 1,
+        });
+        break;
+      }
+    }
+  }
+
+  for (const group of groups) {
+    joinSplits.push(...group);
+    encodedAssetsWithLastIndex.push({
+      encodedAsset: group[0].encodedAsset,
+      lastIndex: joinSplits.length + group.length - 1,
+    });
+  }
+
+  return {
+    joinSplits,
+    encodedAssetsWithLastIndex,
+  };
+}
+
 async function prepareJoinSplits(
   { db, viewer, merkle }: PrepareOperationDeps,
   joinSplitRequest: JoinSplitRequest
-): Promise<PreSignJoinSplit[]> {
+): Promise<PreGroupedJoinSplit[]> {
   const notes = await gatherNotes(
     db,
     getJoinSplitRequestTotalValue(joinSplitRequest),
@@ -166,7 +221,7 @@ async function getJoinSplitsFromNotes(
   paymentAmount: bigint,
   amountLeftOver: bigint,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit[]> {
+): Promise<PreGroupedJoinSplit[]> {
   // add a dummy note if there are an odd number of notes.
   if (notes.length % 2 == 1) {
     const newAddr = viewer.generateRandomStealthAddress();
@@ -217,7 +272,7 @@ async function makeJoinSplit(
   paymentAmount: bigint,
   amountToReturn: bigint,
   receiver?: CanonAddress
-): Promise<PreSignJoinSplit> {
+): Promise<PreGroupedJoinSplit> {
   const sender = viewer.canonicalAddress();
   // if receiver not given, assumme the sender is the receiver
   receiver = receiver ?? sender;

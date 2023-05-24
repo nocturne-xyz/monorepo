@@ -20,6 +20,11 @@ export interface EncodedAsset {
   encodedAssetId: bigint;
 }
 
+export interface EncodedAssetWithLastIndex {
+  encodedAsset: EncodedAsset;
+  lastIndex: number;
+}
+
 export interface AssetWithBalance {
   asset: Asset;
   balance: bigint;
@@ -130,5 +135,10 @@ export class AssetTrait {
       assetAddr: address,
       id: ERC20_ID,
     };
+  }
+
+  static encodedAssetToString(encodedAsset: EncodedAsset): string {
+    const { encodedAssetAddr, encodedAssetId } = encodedAsset;
+    return `${encodedAssetAddr.toString()}:${encodedAssetId.toString()}`;
   }
 }

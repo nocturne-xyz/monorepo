@@ -1,7 +1,7 @@
 import { StealthAddress } from "../crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
-import { Asset, EncodedAsset } from "./asset";
+import { Asset, EncodedAsset, EncodedAssetWithLastIndex } from "./asset";
 
 export const SNARK_SCALAR_FIELD =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -57,13 +57,22 @@ export interface BaseJoinSplit {
   nullifierB: bigint;
   newNoteACommitment: bigint;
   newNoteBCommitment: bigint;
-  encodedAsset: EncodedAsset;
   publicSpend: bigint;
   newNoteAEncrypted: EncryptedNote;
   newNoteBEncrypted: EncryptedNote;
 }
 
-export interface PreSignJoinSplit extends BaseJoinSplit {
+export interface PreGroupedJoinSplit extends BaseJoinSplit {
+  encodedAsset: EncodedAsset;
+  oldNoteA: IncludedNote;
+  oldNoteB: IncludedNote;
+  newNoteA: Note;
+  newNoteB: Note;
+  merkleProofA: MerkleProofInput;
+  merkleProofB: MerkleProofInput;
+}
+
+export interface PreSignJoinSplit extends Omit<BaseJoinSplit, "encodedAsset"> {
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -86,8 +95,8 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
 interface BaseOperation {
   refundAddr: StealthAddress;
   encodedRefundAssets: EncodedAsset[];
+  encodedAssetsWithLastIndex: EncodedAssetWithLastIndex[];
   actions: Action[];
-  encodedGasAsset: EncodedAsset;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;

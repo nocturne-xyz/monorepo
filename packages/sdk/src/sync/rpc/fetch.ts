@@ -94,6 +94,7 @@ export async function fetchJoinSplits(
     const {
       oldNoteANullifier,
       oldNoteBNullifier,
+      encodedAsset,
       newNoteAIndex,
       newNoteBIndex,
       joinSplit,
@@ -106,7 +107,6 @@ export async function fetchJoinSplits(
       newNoteAEncrypted,
       newNoteBCommitment,
       newNoteBEncrypted,
-      encodedAsset,
       publicSpend,
     } = joinSplit;
     const { encodedAssetAddr, encodedAssetId } = encodedAsset;
