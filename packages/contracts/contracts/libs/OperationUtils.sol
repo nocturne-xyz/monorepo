@@ -32,7 +32,25 @@ library OperationUtils {
         for (uint256 i = 0; i < numOps; i++) {
             Operation memory op = ops[i];
             uint256 numJoinSplitsForOp = op.joinSplits.length;
+
+            EncodedAsset memory currentEncodedAsset = op
+                .encodedAssetsWithLastIndex[0]
+                .encodedAsset;
+            uint256 currentEncodedAssetLastIndex = op
+                .encodedAssetsWithLastIndex[0]
+                .lastIndex;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
+                if (j > currentEncodedAssetLastIndex) {
+                    uint256 newEncodedAssetIndex = currentEncodedAssetLastIndex +
+                            1;
+                    currentEncodedAsset = op
+                        .encodedAssetsWithLastIndex[newEncodedAssetIndex]
+                        .encodedAsset;
+                    currentEncodedAssetLastIndex = op
+                        .encodedAssetsWithLastIndex[newEncodedAssetIndex]
+                        .lastIndex;
+                }
+
                 proofs[index] = op.joinSplits[j].proof;
                 allPis[index] = new uint256[](11);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
@@ -44,14 +62,8 @@ library OperationUtils {
                 allPis[index][6] = op.joinSplits[j].encSenderCanonAddrC1X;
                 allPis[index][7] = op.joinSplits[j].encSenderCanonAddrC2X;
                 allPis[index][8] = digests[i];
-                allPis[index][9] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetAddr;
-                allPis[index][10] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetId;
+                allPis[index][9] = currentEncodedAsset.encodedAssetAddr;
+                allPis[index][10] = currentEncodedAsset.encodedAssetId;
                 index++;
             }
         }
@@ -78,6 +90,9 @@ library OperationUtils {
         // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
             _createJoinSplitsPayload(op.joinSplits),
+            _createEncodedAssetsWithLastIndexPayload(
+                op.encodedAssetsWithLastIndex
+            ),
             abi.encodePacked(
                 op.refundAddr.h1X,
                 op.refundAddr.h1Y,
@@ -93,6 +108,7 @@ library OperationUtils {
         );
         payload = abi.encodePacked(
             payload,
+            op.hasGasAsset,
             op.executionGasLimit,
             op.maxNumRefunds,
             op.gasPrice,
@@ -137,6 +153,32 @@ library OperationUtils {
         return abi.decode(reason, (string)); // All that remains is the revert string
     }
 
+    function _createEncodedAssetsWithLastIndexPayload(
+        EncodedAssetWithLastIndex[] calldata encodedAssetsWithLastIndex
+    ) internal pure returns (bytes memory) {
+        bytes memory encodedAssetsWithLastIndexPayload;
+        uint256 numEncodedAssetsWithLastIndex = encodedAssetsWithLastIndex
+            .length;
+        for (uint256 i = 0; i < numEncodedAssetsWithLastIndex; i++) {
+            encodedAssetsWithLastIndexPayload = abi.encodePacked(
+                encodedAssetsWithLastIndexPayload,
+                keccak256(
+                    abi.encodePacked(
+                        encodedAssetsWithLastIndex[i]
+                            .encodedAsset
+                            .encodedAssetAddr,
+                        encodedAssetsWithLastIndex[i]
+                            .encodedAsset
+                            .encodedAssetId,
+                        encodedAssetsWithLastIndex[i].lastIndex
+                    )
+                )
+            );
+        }
+
+        return encodedAssetsWithLastIndexPayload;
+    }
+
     function _createJoinSplitsPayload(
         JoinSplit[] calldata joinSplits
     ) internal pure returns (bytes memory) {
@@ -152,9 +194,7 @@ library OperationUtils {
                         joinSplits[i].nullifierB,
                         joinSplits[i].newNoteACommitment,
                         joinSplits[i].newNoteBCommitment,
-                        joinSplits[i].publicSpend,
-                        joinSplits[i].encodedAsset.encodedAssetAddr,
-                        joinSplits[i].encodedAsset.encodedAssetId
+                        joinSplits[i].publicSpend
                     )
                 )
             );

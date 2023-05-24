@@ -17,6 +17,11 @@ struct EncodedAsset {
     uint256 encodedAssetId;
 }
 
+struct EncodedAssetWithLastIndex {
+    EncodedAsset encodedAsset;
+    uint256 lastIndex;
+}
+
 struct StealthAddress {
     uint256 h1X;
     uint256 h1Y;
@@ -40,7 +45,22 @@ struct JoinSplit {
     uint256 encSenderCanonAddrC1X;
     uint256 encSenderCanonAddrC2X;
     uint256[8] proof;
-    EncodedAsset encodedAsset;
+    uint256 publicSpend;
+    EncryptedNote newNoteAEncrypted;
+    EncryptedNote newNoteBEncrypted;
+}
+
+struct JoinSplitEmitted {
+    uint256 commitmentTreeRoot;
+    uint256 nullifierA;
+    uint256 nullifierB;
+    uint256 newNoteACommitment;
+    uint256 newNoteBCommitment;
+    uint256 encSenderCanonAddrC1X;
+    uint256 encSenderCanonAddrC2X;
+    uint256[8] proof;
+    // TODO: event should not naively emit entire struct?
+    EncodedAsset encodedAsset; // include encodedAsset
     uint256 publicSpend;
     EncryptedNote newNoteAEncrypted;
     EncryptedNote newNoteBEncrypted;
@@ -78,10 +98,12 @@ struct Action {
 
 struct Operation {
     JoinSplit[] joinSplits;
+    EncodedAssetWithLastIndex[] encodedAssetsWithLastIndex;
     StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
+    bool hasGasAsset;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
@@ -111,6 +133,55 @@ struct Bundle {
 }
 
 library OperationLib {
+    function hasValidJoinSplitIndices(
+        Operation calldata self
+    ) internal pure returns (bool) {
+        // disallow operation with no joinsplits
+        if (
+            self.encodedAssetsWithLastIndex.length == 0 ||
+            self.joinSplits.length == 0
+        ) {
+            return false;
+        }
+
+        // last asset last index must equal index of final joinsplit
+        if (
+            self
+                .encodedAssetsWithLastIndex[
+                    self.encodedAssetsWithLastIndex.length - 1
+                ]
+                .lastIndex != self.joinSplits.length - 1
+        ) {
+            return false;
+        }
+
+        uint256 previousLastIndex = self
+            .encodedAssetsWithLastIndex[0]
+            .lastIndex;
+        for (uint256 i = 0; i < self.encodedAssetsWithLastIndex.length; i++) {
+            // each index must always be less than or equal to number of joinsplits
+            if (
+                self.encodedAssetsWithLastIndex[i].lastIndex >
+                self.joinSplits.length - 1
+            ) {
+                return false;
+            }
+
+            // indices must be strictly increasing
+            if (
+                i > 0 &&
+                self.encodedAssetsWithLastIndex[i].lastIndex <=
+                previousLastIndex
+            ) {
+                return false;
+            }
+
+            previousLastIndex = self.encodedAssetsWithLastIndex[i].lastIndex;
+        }
+
+        return true;
+    }
+
     function maxGasLimit(
         Operation calldata self,
         uint256 perJoinSplitVerifyGas
