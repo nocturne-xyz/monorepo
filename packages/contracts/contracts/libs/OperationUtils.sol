@@ -100,11 +100,7 @@ library OperationUtils {
                 op.refundAddr.h2Y
             ),
             _createRefundAssetsPayload(op.encodedRefundAssets),
-            _createActionsPayload(op.actions),
-            abi.encodePacked(
-                op.encodedGasAsset.encodedAssetAddr,
-                op.encodedGasAsset.encodedAssetId
-            )
+            _createActionsPayload(op.actions)
         );
         payload = abi.encodePacked(
             payload,

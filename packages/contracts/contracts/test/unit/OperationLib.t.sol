@@ -62,6 +62,7 @@ contract OperationLibTest is Test {
         Operation memory op;
         op.joinSplits = joinSplits;
         op.encodedAssetsWithLastIndex = encodedAssetsWithLastIndex;
+        op.gasPrice = 1;
 
         vm.expectRevert("empty joinsplits or assets");
         testOperationLib.ensureValidEncodedAssetsWithLastIndex(op);

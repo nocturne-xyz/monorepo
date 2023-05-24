@@ -299,11 +299,6 @@ library NocturneUtils {
             refundAddr: defaultStealthAddress(),
             encodedRefundAssets: args.encodedRefundAssets,
             actions: args.actions,
-            encodedGasAsset: AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(args.gasToken),
-                ERC20_ID
-            ),
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,

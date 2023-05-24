@@ -86,7 +86,6 @@ struct Operation {
     StealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
-    EncodedAsset encodedGasAsset;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
@@ -119,11 +118,18 @@ library OperationLib {
     function ensureValidEncodedAssetsWithLastIndex(
         Operation calldata self
     ) internal pure {
-        // disallow operation with no joinsplits
+        // Disallow empty joinsplits and assets
+        // TODO: allow for gasPrice = 0?
         require(
             self.encodedAssetsWithLastIndex.length > 0 &&
                 self.joinSplits.length > 0,
             "empty joinsplits or assets"
+        );
+
+        // num joinsplits >= num assets
+        require(
+            self.joinSplits.length >= self.encodedAssetsWithLastIndex.length,
+            "num joinsplits < assets"
         );
 
         // last asset last index must equal index of final joinsplit

@@ -136,10 +136,15 @@ contract BalanceManager is CommitmentTreeManager {
         uint256 perJoinSplitVerifyGas,
         address bundler
     ) internal {
-        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         if (gasAssetAmount > 0) {
+            // NOTE: we know there is at least one asset since was checked in
+            // ensureValidEncodedAssetsWithLastIndex
+            EncodedAsset memory encodedGasAsset = op
+                .encodedAssetsWithLastIndex[0]
+                .encodedAsset;
+
             // Request reserved gasAssetAmount from teller.
             /// @dev This is safe because _processJoinSplitsReservingFee is
             /// guaranteed to have reserved gasAssetAmount since it didn't throw.
