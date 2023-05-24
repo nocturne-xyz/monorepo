@@ -1,6 +1,7 @@
+import { Bytes } from "@graphprotocol/graph-ts";
 import {
-  InsertNote,
   InsertNoteCommitments,
+  InsertNotes,
   JoinSplitProcessed,
   RefundProcessed,
   SubtreeUpdate,
@@ -136,22 +137,30 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   commit.save();
 }
 
-export function handleInsertNote(event: InsertNote): void {
+export function handleInsertNotes(event: InsertNotes): void {
   const totalLogIndex = getTotalLogIndex(event);
   const idx = getTotalEntityIndex(totalLogIndex, 0);
   const id = toPadded32BArray(idx);
-
-  const compressedNote = new CompressedEncodedNote(id);
-  compressedNote.ownerH1 = event.params.note.ownerH1;
-  compressedNote.ownerH2 = event.params.note.ownerH2;
-  compressedNote.nonce = event.params.note.nonce;
-  compressedNote.encodedAssetAddr = event.params.note.encodedAssetAddr;
-  compressedNote.encodedAssetId = event.params.note.encodedAssetId;
-  compressedNote.value = event.params.note.value;
-  compressedNote.save();
-
   const insertion = new TreeInsertion(id);
-  insertion.note = id;
+
+  const notes = new Array<Bytes>(event.params.notes.length);
+  for (let i = 0; i < event.params.notes.length; i++) {
+    const note = event.params.notes[i];
+    const idx = getTotalEntityIndex(totalLogIndex, i + 1);
+    const id = toPadded32BArray(idx);
+    const compressedNote = new CompressedEncodedNote(id);
+    compressedNote.ownerH1 = note.ownerH1;
+    compressedNote.ownerH2 = note.ownerH2;
+    compressedNote.nonce = note.nonce;
+    compressedNote.encodedAssetAddr = note.encodedAssetAddr;
+    compressedNote.encodedAssetId = note.encodedAssetId;
+    compressedNote.value = note.value;
+    compressedNote.save();
+
+    notes[i] = id;
+  }
+
+  insertion.notes = notes;
   insertion.idx = idx;
   insertion.save();
 }

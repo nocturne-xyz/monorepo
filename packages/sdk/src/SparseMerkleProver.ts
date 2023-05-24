@@ -1,6 +1,6 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { assertOrErr, zip } from "./utils";
-import { poseidonBN, BN254ScalarField } from "@nocturne-xyz/circuit-utils";
+import { poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 import {
@@ -9,7 +9,7 @@ import {
   partition,
   range,
 } from "./utils/functional";
-import { ethers } from "ethers";
+import { ZERO_VALUE, DEPTH, ARITY } from "./primitives/treeConstants";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -62,18 +62,11 @@ interface UncommittedLeaf {
 type PathIndex = number;
 
 const SMT_DUMP_KEY = "SMT_DUMP";
-export const ARITY = 4;
-export const MAX_DEPTH = 16;
-
-// keccak256("nocturne") % p
-export const ZERO_VALUE = BN254ScalarField.reduce(
-  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("nocturne")))
-);
 
 // TODO: turn these into constants
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
 export const ZERO_HASHES = [ZERO_VALUE];
-for (let i = 1; i <= MAX_DEPTH; i++) {
+for (let i = 1; i <= DEPTH; i++) {
   ZERO_HASHES.push(poseidonBN(new Array(ARITY).fill(ZERO_HASHES[i - 1])));
 }
 
@@ -82,7 +75,7 @@ console.log("ZERO_HASHES", ZERO_HASHES);
 const NO_CHILDREN = new Array(ARITY).fill(undefined);
 
 function zeroHashAtDepth(depth: number): bigint {
-  return ZERO_HASHES[MAX_DEPTH - depth - 1];
+  return ZERO_HASHES[DEPTH - depth - 1];
 }
 
 function emptyNode(depth: number): TreeNode {
@@ -99,7 +92,7 @@ export class SparseMerkleProver {
   constructor(kv: KVStore) {
     this.root = {
       children: [...NO_CHILDREN],
-      hash: ZERO_HASHES[MAX_DEPTH],
+      hash: ZERO_HASHES[DEPTH],
     };
     this.leaves = new Map();
     this.uncommittedLeaves = [];
@@ -116,10 +109,7 @@ export class SparseMerkleProver {
   }
 
   insert(index: number, leaf: bigint, include = true): void {
-    assertOrErr(
-      index < ARITY ** MAX_DEPTH,
-      `index must be < ${ARITY}^maxDepth`
-    );
+    assertOrErr(index < ARITY ** DEPTH, `index must be < ${ARITY}^maxDepth`);
     assertOrErr(index >= this._count, "index must be >= tree count");
 
     this.root = this.insertInner(this.root, [leaf], pathIndexReverse(index));
@@ -133,7 +123,7 @@ export class SparseMerkleProver {
 
   insertBatch(startIndex: number, leaves: bigint[], includes: boolean[]): void {
     assertOrErr(
-      startIndex + leaves.length < ARITY ** MAX_DEPTH,
+      startIndex + leaves.length < ARITY ** DEPTH,
       `index must be < ${ARITY}^maxDepth`
     );
     assertOrErr(startIndex >= this._count, "index must be >= tree count");
@@ -158,10 +148,7 @@ export class SparseMerkleProver {
   }
 
   insertUncommitted(index: number, leaf: bigint, include = true): void {
-    assertOrErr(
-      index < ARITY ** MAX_DEPTH,
-      `index must be < ${ARITY}^maxDepth`
-    );
+    assertOrErr(index < ARITY ** DEPTH, `index must be < ${ARITY}^maxDepth`);
     assertOrErr(index >= this._count, "index must be >= tree count");
     assertOrErr(
       this.uncommittedLeaves.length === 0 ||
@@ -178,7 +165,7 @@ export class SparseMerkleProver {
     includes: boolean[]
   ): void {
     assertOrErr(
-      startIndex + leaves.length < ARITY ** MAX_DEPTH,
+      startIndex + leaves.length < ARITY ** DEPTH,
       `index must be < ${ARITY}^maxDepth`
     );
     assertOrErr(startIndex >= this._count, "index must be >= tree count");
@@ -355,7 +342,7 @@ export class SparseMerkleProver {
 
   // returns number of leaves in the subtree that we can't prune
   private pruneHelper(root: TreeNode, depth: number, index = 0): number {
-    if (depth === MAX_DEPTH && this.cannotPruneLeaf(index)) {
+    if (depth === DEPTH && this.cannotPruneLeaf(index)) {
       return 1;
     }
 
@@ -387,7 +374,7 @@ export class SparseMerkleProver {
     pathMask: number,
     depth = 0
   ): [bigint[][], PathIndex[]] {
-    if (depth === MAX_DEPTH) {
+    if (depth === DEPTH) {
       return [[], []];
     }
 
@@ -418,7 +405,7 @@ export class SparseMerkleProver {
     if (leaves.length === 0) return root;
 
     // we're at the leaf
-    if (depth === MAX_DEPTH) {
+    if (depth === DEPTH) {
       return { hash: leaves.shift()!, children: [...NO_CHILDREN] };
     }
 
@@ -451,7 +438,7 @@ export class SparseMerkleProver {
   private fillLeft(root: TreeNode, leaves: bigint[], depth: number): TreeNode {
     if (leaves.length === 0) return root;
 
-    if (depth === MAX_DEPTH) {
+    if (depth === DEPTH) {
       return { hash: leaves.shift()!, children: [...NO_CHILDREN] };
     }
 

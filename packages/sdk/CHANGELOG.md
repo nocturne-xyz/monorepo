@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- move rest of tree constants into `treeConstants.ts`
 - change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
 - add `getAllCommittedBalance` to `NocturneWalletSDK`

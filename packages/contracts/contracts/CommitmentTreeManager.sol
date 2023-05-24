@@ -61,7 +61,7 @@ contract CommitmentTreeManager is
     );
 
     /// @notice Event emitted when a new batch of notes is inserted into the tree
-    event InsertNotes(EncodedNote[] note);
+    event InsertNotes(EncodedNote[] notes);
 
     /// @notice Event emitted when a new batch of note commitments is inserted into the tree
     event InsertNoteCommitments(uint256[] commitments);
