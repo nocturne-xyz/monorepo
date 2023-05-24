@@ -112,7 +112,7 @@ export function subtreeUpdateInputsFromBatch(
 
   // encodedPathAndHash
   const encodedPathAndHash = encodePathAndHash(BigInt(idx), accumulatorHashHi);
-  console.log("encodedPathAndHash", encodePathAndHash);
+  console.log("encodedPathAndHash", encodedPathAndHash);
 
   return {
     encodedPathAndHash,
@@ -130,7 +130,10 @@ export function subtreeUpdateInputsFromBatch(
   };
 }
 
-function encodePathAndHash(idx: bigint, accumulatorHashHi: bigint): bigint {
+export function encodePathAndHash(
+  idx: bigint,
+  accumulatorHashHi: bigint
+): bigint {
   idx = BigInt.asUintN(256, idx);
   accumulatorHashHi = BigInt.asUintN(256, accumulatorHashHi);
 

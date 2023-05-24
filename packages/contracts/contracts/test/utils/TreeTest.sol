@@ -13,7 +13,7 @@ struct TreeTest {
 
 library TreeTestLib {
     uint256 public constant EMPTY_SUBTREE_ROOT =
-        13867732332339151465497925642082178974038372652152621168903203076445231043372;
+        6810774033780416412415162199345403563615586099663557224316660575326988281139;
 
     function initialize(
         TreeTest storage self,
@@ -34,6 +34,9 @@ library TreeTestLib {
         uint256[] memory scratch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < batch.length; i++) {
             scratch[i] = batch[i];
+        }
+        for (uint256 i = batch.length; i < TreeUtils.BATCH_SIZE; i++) {
+            scratch[i] = TreeUtils.ZERO_VALUE;
         }
 
         for (

@@ -1,7 +1,15 @@
 import "mocha";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { InMemoryKVStore, randomBigInt, range } from "../src";
+import {
+  InMemoryKVStore,
+  NoteTrait,
+  StealthAddressTrait,
+  bigInt256ToFieldElems,
+  bigintToBEPadded,
+  randomBigInt,
+  range,
+} from "../src";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import {
   ARITY,
@@ -11,6 +19,8 @@ import {
   ZERO_VALUE,
 } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
+import { sha256 } from "js-sha256";
+import { encodePathAndHash } from "../src/proof/subtreeUpdate";
 
 chai.use(chaiAsPromised);
 
@@ -333,6 +343,93 @@ describe("SparseMerkleProver", () => {
 
       expect(check).to.be.true;
     });
+  });
+
+  it.skip("generates test constants for testTreeTest in contracts", () => {
+    // from idx 0, insert 420, 69, and print root
+    const kv = new InMemoryKVStore();
+    const prover = new SparseMerkleProver(kv);
+
+    prover.insert(0, 420n, false);
+    prover.insert(1, 69n, false);
+
+    console.log("root: ", prover.getRoot().toString());
+
+    // from idx 16, insert 9, 1, 1449, and print root
+    prover.insert(16, 9n, false);
+    prover.insert(17, 1n, false);
+    prover.insert(18, 1449n, false);
+
+    console.log("root: ", prover.getRoot().toString());
+  });
+
+  it.skip("generates test constants for testCalculatePublicInputs in contracts", () => {
+    const kv = new InMemoryKVStore();
+    const prover = new SparseMerkleProver(kv);
+
+    // copy of what's in packages/contracts/contracts/test/unit/OffchainMerkleTree.t.sol
+    const dummyNote = NoteTrait.decode({
+      owner: StealthAddressTrait.fromCompressedPoints(
+        20053872845712750666020333248434368879858874000328815279916175647306793909806n,
+        10878178814994881930842668029692572520203302021151403528591159382456948662398n
+      ),
+      nonce: 1n,
+      encodedAssetAddr: 917551056842671309452305380979543736893630245704n,
+      encodedAssetId: 5n,
+      value: 100n,
+    });
+
+    const dummyNc = NoteTrait.toCommitment(dummyNote);
+
+    // accumulator hash / path
+    {
+      // construct a batch with the following sequence:
+      // 1 note, 4 notes, 9 ncs, 2 notes
+      const batch = [
+        dummyNote,
+        ...range(4).map(() => dummyNote),
+        ...range(9).map(() => dummyNc),
+        ...range(2).map(() => dummyNote),
+      ];
+
+      const accumulatorHashPreimage: number[] = [];
+      for (const noteOrCommitment of batch) {
+        if (typeof noteOrCommitment === "bigint") {
+          accumulatorHashPreimage.push(
+            ...bigintToBEPadded(noteOrCommitment, 32)
+          );
+        } else {
+          accumulatorHashPreimage.push(...NoteTrait.sha256(noteOrCommitment));
+        }
+      }
+
+      const accumulatorHashU256 = BigInt(
+        "0x" + sha256.hex(accumulatorHashPreimage)
+      );
+      console.log("accumulatorHash", accumulatorHashU256);
+      const [accumulatorHashHi, accumulatorHash] =
+        bigInt256ToFieldElems(accumulatorHashU256);
+
+      console.log("accumulatorHashHi", accumulatorHashHi);
+      console.log("encoded accumulator hash: ", accumulatorHash.toString());
+
+      const encodedPathAndHash = encodePathAndHash(
+        BigInt(0),
+        accumulatorHashHi
+      );
+      console.log("encodedPathAndHash: ", encodedPathAndHash);
+    }
+
+    // new root
+    {
+      // insert the commitments into tree
+      const batch = new Array(16).fill(dummyNc);
+      const includes = new Array(16).fill(true);
+      prover.insertBatch(0, batch, includes);
+
+      // print new root
+      console.log("new root: ", prover.getRoot().toString());
+    }
   });
 });
 
