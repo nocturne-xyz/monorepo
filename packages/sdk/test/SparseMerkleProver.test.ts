@@ -8,6 +8,7 @@ import {
   MAX_DEPTH,
   SparseMerkleProver,
   TreeNode,
+  ZERO_VALUE,
 } from "../src/SparseMerkleProver";
 import { IncrementalMerkleTree } from "@zk-kit/incremental-merkle-tree";
 
@@ -273,7 +274,12 @@ describe("SparseMerkleProver", () => {
     // check empty batch case
     {
       const prover = new SparseMerkleProver(kv);
-      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+      const tree = new IncrementalMerkleTree(
+        poseidonBN,
+        MAX_DEPTH,
+        ZERO_VALUE,
+        ARITY
+      );
 
       prover.insertBatch(0, [], []);
       expect(prover.getRoot() === tree.root).to.be.true;
@@ -282,7 +288,12 @@ describe("SparseMerkleProver", () => {
     // run 5 fuzzes using incremental insert
     range(5).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
-      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+      const tree = new IncrementalMerkleTree(
+        poseidonBN,
+        MAX_DEPTH,
+        ZERO_VALUE,
+        ARITY
+      );
 
       const numLeaves = Number(randomBigInt() % 30n);
       for (const idx of range(prover.count(), prover.count() + numLeaves)) {
@@ -297,7 +308,12 @@ describe("SparseMerkleProver", () => {
     // run 5 fuzzes using batch insert
     range(5).forEach((_) => {
       const prover = new SparseMerkleProver(kv);
-      const tree = new IncrementalMerkleTree(poseidonBN, MAX_DEPTH, 0n, ARITY);
+      const tree = new IncrementalMerkleTree(
+        poseidonBN,
+        MAX_DEPTH,
+        ZERO_VALUE,
+        ARITY
+      );
 
       const numLeaves = Number(randomBigInt() % 100n);
       const batch = range(numLeaves).map(randomBaseFieldElement);

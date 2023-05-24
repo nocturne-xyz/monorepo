@@ -1,6 +1,6 @@
 import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 import { assertOrErr, zip } from "./utils";
-import { poseidonBN } from "@nocturne-xyz/circuit-utils";
+import { poseidonBN, BN254ScalarField } from "@nocturne-xyz/circuit-utils";
 import { KVStore } from "./store";
 import * as JSON from "bigint-json-serialization";
 import {
@@ -9,6 +9,7 @@ import {
   partition,
   range,
 } from "./utils/functional";
+import { ethers } from "ethers";
 
 // high level idea:
 // want to sync a local replica of the tree such that
@@ -64,12 +65,19 @@ const SMT_DUMP_KEY = "SMT_DUMP";
 export const ARITY = 4;
 export const MAX_DEPTH = 16;
 
+// keccak256("nocturne") % p
+export const ZERO_VALUE = BN254ScalarField.reduce(
+  BigInt(ethers.utils.keccak256(ethers.utils.toUtf8Bytes("nocturne")))
+);
+
 // TODO: turn these into constants
 // ZERO_HASH[i] = root hash of empty merkle tree of depth i
-export const ZERO_HASHES = [0n];
+export const ZERO_HASHES = [ZERO_VALUE];
 for (let i = 1; i <= MAX_DEPTH; i++) {
   ZERO_HASHES.push(poseidonBN(new Array(ARITY).fill(ZERO_HASHES[i - 1])));
 }
+
+console.log("ZERO_HASHES", ZERO_HASHES);
 
 const NO_CHILDREN = new Array(ARITY).fill(undefined);
 
