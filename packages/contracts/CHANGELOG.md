@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- replace `handleRefundNote` with `handleRefundNotes`, which inserts notes to tree's batch array in one go to save on SSTOREs
+- replace `handleJoinSplit` with `handleJoinSplits`, which inserts NCs to tree's batch array in one go to save on SSTOREs
+- don't actually store zero values to storage in `fillBatchWithZeros`. Just emit the correct events, update counts, and accumulate.
+- keep `batchLenPlusOne` instead of `batchLen` to avoid setting it to 0
+- use `ZERO_VALUE = keccak256("nocturne") % p` instead of `0` as the dummy value in the tree
 - fix invariant `TellerHandler` bug where joinSplitUnwrapAmount > gasComp led to opMeta.totalJoinSplitUnwrapped being lower than actual (fixed by just gathering total joinsplit amount directly from op)
 - rename the `subtreeIndex` field of `SubtreeUpdate` event to `subtreeBatchOffset`
 - have teller balance invariants account for taking/refilling prefills

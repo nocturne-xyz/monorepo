@@ -37,7 +37,7 @@ template SubtreeUpdate4(r) {
     component inner = SubtreeUpdate(r, s);
 
     // root of the depth-2 subtree
-    inner.emptySubtreeRoot <== 13867732332339151465497925642082178974038372652152621168903203076445231043372;
+    inner.emptySubtreeRoot <== 6810774033780416412415162199345403563615586099663557224316660575326988281139;
 
     for (var i = 0; i < r; i++) {
         inner.siblings[i] <== siblings[i];
