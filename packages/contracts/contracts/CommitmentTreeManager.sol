@@ -101,7 +101,7 @@ contract CommitmentTreeManager is
     /// @dev This function allows the an entity to expedite process of being able to update
     ///      the merkle tree root. The caller of this function
     function fillBatchWithZeros() external onlySubtreeBatchFiller {
-        uint256 batchLen = uint256(_merkle.batchLenPlusOne) - 1;
+        uint256 batchLen = _merkle._batchLen();
         require(_merkle.batchLenPlusOne > 0, "!zero fill empty batch");
 
         // instead of actually inserting the zeros, we emit an event saying we inserted zeros
@@ -110,9 +110,9 @@ contract CommitmentTreeManager is
         for (uint256 i = 0; i < zeros.length; i++) {
             zeros[i] = TreeUtils.ZERO_VALUE;
         }
-        emit InsertNoteCommitments(zeros);
 
         _merkle._fillBatchWithZeros();
+        emit InsertNoteCommitments(zeros);
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof
@@ -167,7 +167,7 @@ contract CommitmentTreeManager is
     /// @param joinSplits calldata array of Joinsplits to process
     function _handleJoinSplits(JoinSplit[] calldata joinSplits) internal {
         uint256 numJoinSplits = joinSplits.length;
-        uint256[] memory noteCommitments = new uint256[](numJoinSplits * 2);
+        uint256[] memory newNoteCommitments = new uint256[](numJoinSplits * 2);
         uint128 offset = _merkle.getTotalCount();
         for (uint256 i = 0; i < numJoinSplits; i++) {
             JoinSplit calldata joinSplit = joinSplits[i];
@@ -198,8 +198,8 @@ contract CommitmentTreeManager is
             uint128 newNoteIndexB = offset + uint128(2 * i + 1);
 
             // Insert new note commitments
-            noteCommitments[i * 2] = joinSplit.newNoteACommitment;
-            noteCommitments[i * 2 + 1] = joinSplit.newNoteBCommitment;
+            newNoteCommitments[i * 2] = joinSplit.newNoteACommitment;
+            newNoteCommitments[i * 2 + 1] = joinSplit.newNoteBCommitment;
 
             emit JoinSplitProcessed(
                 joinSplit.nullifierA,
@@ -210,28 +210,29 @@ contract CommitmentTreeManager is
             );
         }
 
-        _insertNoteCommitments(noteCommitments);
+        _insertNoteCommitments(newNoteCommitments);
     }
 
     /// @notice Inserts a batch of refund notes into the commitment tree
     /// @param encodedAssets Encoded assets for each refund note
-    /// @param refundAddrs Stealth addresses for each refund note
     /// @param values Values for each refund note
+    /// @param refundAddr Stealth addresses for each refund note
+    /// @param numRefunds Number of refund notes to insert
     function _handleRefundNotes(
         EncodedAsset[] memory encodedAssets,
-        StealthAddress[] memory refundAddrs,
         uint256[] memory values,
+        StealthAddress calldata refundAddr,
         uint256 numRefunds
     ) internal {
-        require(numRefunds <= encodedAssets.length, "len mismatch");
-        require(numRefunds <= refundAddrs.length, "len mismatch");
-        require(numRefunds <= values.length, "len mismatch");
+        require(
+            numRefunds <= encodedAssets.length && numRefunds <= values.length,
+            "len mismatch"
+        );
 
         EncodedNote[] memory notes = new EncodedNote[](numRefunds);
         uint128 offset = _merkle.getTotalCount();
         for (uint256 i = 0; i < numRefunds; i++) {
             EncodedAsset memory encodedAsset = encodedAssets[i];
-            StealthAddress memory refundAddr = refundAddrs[i];
             uint256 value = values[i];
 
             notes[i] = EncodedNote({

@@ -7,7 +7,7 @@ import "../libs/Types.sol";
 
 // helpers for converting to/from field elems, uint256s, and/or bytes, and hashing them
 library Utils {
-    uint256 public constant SNARK_SCALAR_FIELD =
+    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     // return the minimum of the two values

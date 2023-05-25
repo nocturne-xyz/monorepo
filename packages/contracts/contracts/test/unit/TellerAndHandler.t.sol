@@ -37,7 +37,7 @@ import "../../libs/Types.sol";
 
 contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     using LibOffchainMerkleTree for OffchainMerkleTree;
-    uint256 public constant SNARK_SCALAR_FIELD =
+    uint256 public constant BN254_SCALAR_FIELD_MODULUS =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     using stdJson for string;

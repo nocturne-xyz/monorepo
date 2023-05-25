@@ -101,7 +101,7 @@ library OperationUtils {
             op.atomicActions
         );
 
-        return uint256(keccak256(payload)) % Utils.SNARK_SCALAR_FIELD;
+        return uint256(keccak256(payload)) % Utils.BN254_SCALAR_FIELD_MODULUS;
     }
 
     function calculateBundlerGasAssetPayout(

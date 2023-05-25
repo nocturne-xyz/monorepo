@@ -3,7 +3,7 @@ import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { Asset, EncodedAsset } from "./asset";
 
-export const SNARK_SCALAR_FIELD =
+export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 export const BLOCK_GAS_LIMIT = 30_000_000n;
 

@@ -100,14 +100,12 @@ contract Handler is
         );
 
         EncodedAsset[] memory encodedAssets = new EncodedAsset[](1);
-        StealthAddress[] memory depositAddrs = new StealthAddress[](1);
         uint256[] memory values = new uint256[](1);
 
         encodedAssets[0] = deposit.encodedAsset;
-        depositAddrs[0] = deposit.depositAddr;
         values[0] = deposit.value;
 
-        _handleRefundNotes(encodedAssets, depositAddrs, values, 1);
+        _handleRefundNotes(encodedAssets, values, deposit.depositAddr, 1);
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks

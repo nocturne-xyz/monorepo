@@ -101,12 +101,12 @@ contract CommitmentTreeManagerHandler is Test {
             joinSplits[i].newNoteACommitment = bound(
                 joinSplits[i].newNoteACommitment,
                 0,
-                Utils.SNARK_SCALAR_FIELD - 1
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
             );
             joinSplits[i].newNoteBCommitment = bound(
                 joinSplits[i].newNoteBCommitment,
                 0,
-                Utils.SNARK_SCALAR_FIELD - 1
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
             );
         }
 
@@ -118,16 +118,24 @@ contract CommitmentTreeManagerHandler is Test {
     }
 
     function handleRefundNotes(
-        uint256[3] memory seeds
+        uint256 seed
     ) public trackCall("handleRefundNotes") {
-        uint256 numRefunds = bound(seeds[0], 0, 17);
+        uint256[6] memory r = [
+            uint256(keccak256(abi.encodePacked(seed, uint8(0)))),
+            uint256(keccak256(abi.encodePacked(seed, uint8(1)))),
+            uint256(keccak256(abi.encodePacked(seed, uint8(2)))),
+            uint256(keccak256(abi.encodePacked(seed, uint8(3)))),
+            uint256(keccak256(abi.encodePacked(seed, uint8(4)))),
+            uint256(keccak256(abi.encodePacked(seed, uint8(5))))
+        ];
+        uint256 numRefunds = bound(r[0], 0, 17);
 
         if (numRefunds == 0) {
             lastCall = "no-op";
             return;
         }
 
-        uint256 maxNumRefunds = bound(seeds[1], numRefunds, numRefunds + 20);
+        uint256 maxNumRefunds = bound(r[1], numRefunds, numRefunds + 20);
 
         EncodedAsset[] memory encodedAssets = new EncodedAsset[](maxNumRefunds);
         StealthAddress[] memory refundAddrs = new StealthAddress[](
@@ -135,36 +143,34 @@ contract CommitmentTreeManagerHandler is Test {
         );
         uint256[] memory values = new uint256[](maxNumRefunds);
 
+        StealthAddress memory refundAddr = StealthAddress({
+            h1X: bound(r[2], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
+            h1Y: bound(r[3], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
+            h2X: bound(r[4], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
+            h2Y: bound(r[5], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1)
+        });
+
         for (uint256 i = 0; i < maxNumRefunds; i++) {
-            uint256[6] memory seeds = [
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(0)))),
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(1)))),
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(2)))),
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(3)))),
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(4)))),
-                uint256(keccak256(abi.encodePacked(seeds[2], i, uint8(5))))
-            ];
+            uint256 r1 = uint256(
+                keccak256(abi.encodePacked(seed, uint8(6 + i), uint8(0)))
+            );
+            uint256 r2 = uint256(
+                keccak256(abi.encodePacked(seed, uint8(6 + i), uint8(1)))
+            );
 
             encodedAssets[i] = AssetUtils.encodeAsset(
                 AssetType.ERC20,
-                address(uint160(bound(seeds[0], 0, (1 << 160) - 1))),
+                address(uint160(bound(r1, 0, (1 << 160) - 1))),
                 ERC20_ID
             );
 
-            refundAddrs[i] = StealthAddress({
-                h1X: bound(seeds[1], 0, Utils.SNARK_SCALAR_FIELD - 1),
-                h1Y: bound(seeds[2], 0, Utils.SNARK_SCALAR_FIELD - 1),
-                h2X: bound(seeds[3], 0, Utils.SNARK_SCALAR_FIELD - 1),
-                h2Y: bound(seeds[4], 0, Utils.SNARK_SCALAR_FIELD - 1)
-            });
-
-            values[i] = bound(seeds[5], 0, (1 << 252) - 1);
+            values[i] = bound(r2, 0, (1 << 252) - 1);
         }
 
         commitmentTreeManager.handleRefundNotes(
             encodedAssets,
-            refundAddrs,
             values,
+            refundAddr,
             numRefunds
         );
         ghost_refundNotesLeafCount += numRefunds;
@@ -195,7 +201,7 @@ contract CommitmentTreeManagerHandler is Test {
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
         for (uint256 i = 0; i < ncs.length; i++) {
-            ncs[i] = bound(ncs[i], 0, Utils.SNARK_SCALAR_FIELD - 1);
+            ncs[i] = bound(ncs[i], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
         }
 
         commitmentTreeManager.insertNoteCommitments(ncs);

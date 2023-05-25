@@ -43,7 +43,7 @@ library LibOffchainMerkleTree {
         // root starts as the root of the empty depth-32 tree.
         self.root = TreeUtils.EMPTY_TREE_ROOT;
         self.count = 0;
-        self.batchLenPlusOne = 1;
+        _setBatchLen(self, 0);
         self.subtreeUpdateVerifier = ISubtreeUpdateVerifier(
             subtreeUpdateVerifier
         );
@@ -111,8 +111,7 @@ library LibOffchainMerkleTree {
     ) internal view returns (uint128) {
         return
             self.count +
-            self.batchLenPlusOne -
-            1 +
+            _batchLen(self) +
             uint128(TreeUtils.BATCH_SIZE) *
             uint128(self.accumulatorQueue.length());
     }
@@ -121,6 +120,19 @@ library LibOffchainMerkleTree {
         OffchainMerkleTree storage self
     ) external view returns (uint256) {
         return self.accumulatorQueue.peek();
+    }
+
+    function _batchLen(
+        OffchainMerkleTree storage self
+    ) internal view returns (uint128) {
+        return self.batchLenPlusOne - 1;
+    }
+
+    function _setBatchLen(
+        OffchainMerkleTree storage self,
+        uint128 batchLen
+    ) internal {
+        self.batchLenPlusOne = batchLen + 1;
     }
 
     function _calculatePublicInputs(
@@ -161,8 +173,8 @@ library LibOffchainMerkleTree {
     }
 
     function _fillBatchWithZeros(OffchainMerkleTree storage self) internal {
-        _accumulate(self, uint256(self.batchLenPlusOne) - 1);
-        self.batchLenPlusOne = 1;
+        _accumulate(self, uint256(_batchLen(self)));
+        _setBatchLen(self, 0);
     }
 
     function _accumulate(
@@ -177,17 +189,20 @@ library LibOffchainMerkleTree {
         OffchainMerkleTree storage self,
         uint256[] memory updates
     ) internal {
-        uint256 batchLen = uint256(self.batchLenPlusOne) - 1;
+        uint256 batchLen = uint256(_batchLen(self));
         uint256 updatesLength = updates.length;
         uint256 updateIdx = 0;
         while (updateIdx < updatesLength) {
-            self.batch[batchLen++] = updates[updateIdx++];
+            self.batch[batchLen] = updates[updateIdx];
+            batchLen += 1;
+            updateIdx += 1;
+
             if (batchLen == TreeUtils.BATCH_SIZE) {
                 _accumulate(self, batchLen);
                 batchLen = 0;
             }
         }
 
-        self.batchLenPlusOne = uint128(batchLen + 1);
+        _setBatchLen(self, uint128(batchLen));
     }
 }

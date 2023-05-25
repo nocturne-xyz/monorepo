@@ -150,52 +150,48 @@ contract BalanceManager is CommitmentTreeManager {
         EncodedAsset[] memory refundAssets = new EncodedAsset[](
             op.maxNumRefunds
         );
-        StealthAddress[] memory refundAddrs = new StealthAddress[](
-            op.maxNumRefunds
-        );
         uint256[] memory values = new uint256[](op.maxNumRefunds);
-        uint256 refundidx = 0;
+        uint256 refundIdx = 0;
 
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            uint256 value = _getRefundValueForNote(
+            uint256 value = _refundTellerAndReturnAmount(
                 op.joinSplits[i].encodedAsset
             );
             if (value > 0) {
-                refundAssets[refundidx] = op.joinSplits[i].encodedAsset;
-                refundAddrs[refundidx] = op.refundAddr;
-                values[refundidx] = value;
-                refundidx++;
+                refundAssets[refundIdx] = op.joinSplits[i].encodedAsset;
+                values[refundIdx] = value;
+                refundIdx++;
             }
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            uint256 value = _getRefundValueForNote(op.encodedRefundAssets[i]);
+            uint256 value = _refundTellerAndReturnAmount(
+                op.encodedRefundAssets[i]
+            );
             if (value > 0) {
-                refundAssets[refundidx] = op.encodedRefundAssets[i];
-                refundAddrs[refundidx] = op.refundAddr;
-                values[refundidx] = value;
-                refundidx++;
+                refundAssets[refundIdx] = op.encodedRefundAssets[i];
+                values[refundIdx] = value;
+                refundIdx++;
             }
         }
 
         uint256 numReceived = _receivedAssets.length;
         for (uint256 i = 0; i < numReceived; i++) {
-            uint256 value = _getRefundValueForNote(_receivedAssets[i]);
+            uint256 value = _refundTellerAndReturnAmount(_receivedAssets[i]);
             if (value > 0) {
-                refundAssets[refundidx] = _receivedAssets[i];
-                refundAddrs[refundidx] = op.refundAddr;
-                values[refundidx] = value;
-                refundidx++;
+                refundAssets[refundIdx] = _receivedAssets[i];
+                values[refundIdx] = value;
+                refundIdx++;
             }
         }
 
-        _handleRefundNotes(refundAssets, refundAddrs, values, refundidx);
+        _handleRefundNotes(refundAssets, values, op.refundAddr, refundIdx);
 
         delete _receivedAssets;
     }
 
-    /// @notice Determine refund value for a single asset
+    /// @notice Refund the teller for the given asset and return the amount refunded
     /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
     ///      back to the Teller and retruns the value of the new note to create
     /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
@@ -205,7 +201,7 @@ contract BalanceManager is CommitmentTreeManager {
     ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
     ///      on user gas.
     /// @param encodedAsset Encoded asset to check for refund
-    function _getRefundValueForNote(
+    function _refundTellerAndReturnAmount(
         EncodedAsset memory encodedAsset
     ) internal returns (uint256) {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);

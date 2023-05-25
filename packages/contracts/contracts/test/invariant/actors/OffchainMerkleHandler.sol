@@ -72,7 +72,7 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
         for (uint256 i = 0; i < ncs.length; i++) {
-            ncs[i] = bound(ncs[i], 0, Utils.SNARK_SCALAR_FIELD - 1);
+            ncs[i] = bound(ncs[i], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
         }
         merkle.insertNoteCommitments(ncs);
     }
