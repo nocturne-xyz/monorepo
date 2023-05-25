@@ -58,7 +58,7 @@ contract CommitmentTreeManagerInvariants is Test {
             commitmentTreeManagerHandler.ghost_joinSplitLeafCount() +
                 commitmentTreeManagerHandler.ghost_refundNotesLeafCount() +
                 commitmentTreeManagerHandler
-                    .ghost_fillBatchWithZerosLeafCount() +
+                    .ghostfillBatchWithZerosLeafCount() +
                 commitmentTreeManagerHandler.ghost_insertNoteLeafCount() +
                 commitmentTreeManagerHandler
                     .ghost_insertNoteCommitmentsLeafCount(),

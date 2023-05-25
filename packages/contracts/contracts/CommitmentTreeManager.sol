@@ -101,7 +101,7 @@ contract CommitmentTreeManager is
     /// @dev This function allows the an entity to expedite process of being able to update
     ///      the merkle tree root. The caller of this function
     function fillBatchWithZeros() external onlySubtreeBatchFiller {
-        uint256 batchLen = _merkle._batchLen();
+        uint256 batchLen = _merkle.getBatchLen();
         require(_merkle.batchLenPlusOne > 0, "!zero fill empty batch");
 
         // instead of actually inserting the zeros, we emit an event saying we inserted zeros
@@ -111,7 +111,7 @@ contract CommitmentTreeManager is
             zeros[i] = TreeUtils.ZERO_VALUE;
         }
 
-        _merkle._fillBatchWithZeros();
+        _merkle.fillBatchWithZeros();
         emit InsertNoteCommitments(zeros);
     }
 

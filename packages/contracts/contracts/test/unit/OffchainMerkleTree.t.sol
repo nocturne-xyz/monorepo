@@ -95,7 +95,7 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
 
         // apply subtree update
         // before applying update, offchain service needs to insert a bunch of stuff
-        merkle._fillBatchWithZeros();
+        merkle.fillBatchWithZeros();
 
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);

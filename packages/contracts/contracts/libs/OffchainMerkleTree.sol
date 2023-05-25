@@ -111,7 +111,7 @@ library LibOffchainMerkleTree {
     ) internal view returns (uint128) {
         return
             self.count +
-            _batchLen(self) +
+            getBatchLen(self) +
             uint128(TreeUtils.BATCH_SIZE) *
             uint128(self.accumulatorQueue.length());
     }
@@ -122,7 +122,7 @@ library LibOffchainMerkleTree {
         return self.accumulatorQueue.peek();
     }
 
-    function _batchLen(
+    function getBatchLen(
         OffchainMerkleTree storage self
     ) internal view returns (uint128) {
         return self.batchLenPlusOne - 1;
@@ -172,8 +172,8 @@ library LibOffchainMerkleTree {
         return uint256(TreeUtils.sha256FieldElems(batch));
     }
 
-    function _fillBatchWithZeros(OffchainMerkleTree storage self) internal {
-        _accumulate(self, uint256(_batchLen(self)));
+    function fillBatchWithZeros(OffchainMerkleTree storage self) internal {
+        _accumulate(self, uint256(getBatchLen(self)));
         _setBatchLen(self, 0);
     }
 
@@ -189,13 +189,13 @@ library LibOffchainMerkleTree {
         OffchainMerkleTree storage self,
         uint256[] memory updates
     ) internal {
-        uint256 batchLen = uint256(_batchLen(self));
+        uint256 batchLen = uint256(getBatchLen(self));
         uint256 updatesLength = updates.length;
         uint256 updateIdx = 0;
         while (updateIdx < updatesLength) {
             self.batch[batchLen] = updates[updateIdx];
-            batchLen += 1;
-            updateIdx += 1;
+            batchLen++;
+            updateIdx++;
 
             if (batchLen == TreeUtils.BATCH_SIZE) {
                 _accumulate(self, batchLen);

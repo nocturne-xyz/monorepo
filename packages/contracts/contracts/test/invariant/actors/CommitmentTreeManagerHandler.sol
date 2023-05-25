@@ -26,7 +26,7 @@ contract CommitmentTreeManagerHandler is Test {
 
     uint256 public ghost_joinSplitLeafCount = 0;
     uint256 public ghost_refundNotesLeafCount = 0;
-    uint256 public ghost_fillBatchWithZerosLeafCount = 0;
+    uint256 public ghostfillBatchWithZerosLeafCount = 0;
     uint256 public ghost_insertNoteLeafCount = 0;
     uint256 public ghost_insertNoteCommitmentsLeafCount = 0;
 
@@ -43,6 +43,7 @@ contract CommitmentTreeManagerHandler is Test {
     mapping(bytes32 => uint256) internal _calls;
     uint256 internal _rootCounter = 0;
     uint256 internal _nullifierCounter = 0;
+    uint256 internal seedRerandomizationCounter = 0;
 
     constructor(
         TestCommitmentTreeManager _commitmentTreeManager,
@@ -114,28 +115,24 @@ contract CommitmentTreeManagerHandler is Test {
         lastHandledJoinSplit = joinSplits[numJoinSplits - 1];
         handleJoinSplitsLength = numJoinSplits;
         _nullifierCounter += 2 * numJoinSplits;
-        ghost_joinSplitLeafCount += 2 * numJoinSplits; // call could not have completed without adding 2 leaves
+        ghost_joinSplitLeafCount += 2 * numJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves
     }
 
     function handleRefundNotes(
         uint256 seed
     ) public trackCall("handleRefundNotes") {
-        uint256[6] memory r = [
-            uint256(keccak256(abi.encodePacked(seed, uint8(0)))),
-            uint256(keccak256(abi.encodePacked(seed, uint8(1)))),
-            uint256(keccak256(abi.encodePacked(seed, uint8(2)))),
-            uint256(keccak256(abi.encodePacked(seed, uint8(3)))),
-            uint256(keccak256(abi.encodePacked(seed, uint8(4)))),
-            uint256(keccak256(abi.encodePacked(seed, uint8(5))))
-        ];
-        uint256 numRefunds = bound(r[0], 0, 17);
+        uint256 numRefunds = bound(_reRandomize(seed), 0, 17);
 
         if (numRefunds == 0) {
             lastCall = "no-op";
             return;
         }
 
-        uint256 maxNumRefunds = bound(r[1], numRefunds, numRefunds + 20);
+        uint256 maxNumRefunds = bound(
+            _reRandomize(seed),
+            numRefunds,
+            numRefunds + 20
+        );
 
         EncodedAsset[] memory encodedAssets = new EncodedAsset[](maxNumRefunds);
         StealthAddress[] memory refundAddrs = new StealthAddress[](
@@ -144,27 +141,36 @@ contract CommitmentTreeManagerHandler is Test {
         uint256[] memory values = new uint256[](maxNumRefunds);
 
         StealthAddress memory refundAddr = StealthAddress({
-            h1X: bound(r[2], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
-            h1Y: bound(r[3], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
-            h2X: bound(r[4], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1),
-            h2Y: bound(r[5], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1)
+            h1X: bound(
+                _reRandomize(seed),
+                0,
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
+            ),
+            h1Y: bound(
+                _reRandomize(seed),
+                0,
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
+            ),
+            h2X: bound(
+                _reRandomize(seed),
+                0,
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
+            ),
+            h2Y: bound(
+                _reRandomize(seed),
+                0,
+                Utils.BN254_SCALAR_FIELD_MODULUS - 1
+            )
         });
 
         for (uint256 i = 0; i < maxNumRefunds; i++) {
-            uint256 r1 = uint256(
-                keccak256(abi.encodePacked(seed, uint8(6 + i), uint8(0)))
-            );
-            uint256 r2 = uint256(
-                keccak256(abi.encodePacked(seed, uint8(6 + i), uint8(1)))
-            );
-
             encodedAssets[i] = AssetUtils.encodeAsset(
                 AssetType.ERC20,
-                address(uint160(bound(r1, 0, (1 << 160) - 1))),
+                address(uint160(bound(_reRandomize(seed), 0, (1 << 160) - 1))),
                 ERC20_ID
             );
 
-            values[i] = bound(r2, 0, (1 << 252) - 1);
+            values[i] = bound(_reRandomize(seed), 0, (1 << 252) - 1);
         }
 
         commitmentTreeManager.handleRefundNotes(
@@ -183,7 +189,7 @@ contract CommitmentTreeManagerHandler is Test {
         if (leavesLeft != TreeUtils.BATCH_SIZE) {
             vm.prank(subtreeBatchFiller);
             commitmentTreeManager.fillBatchWithZeros();
-            ghost_fillBatchWithZerosLeafCount += leavesLeft;
+            ghostfillBatchWithZerosLeafCount += leavesLeft;
         } else {
             lastCall = "no-op";
         }
@@ -207,5 +213,19 @@ contract CommitmentTreeManagerHandler is Test {
         commitmentTreeManager.insertNoteCommitments(ncs);
         insertNoteCommitmentsLength = ncs.length;
         ghost_insertNoteCommitmentsLeafCount += ncs.length;
+    }
+
+    function _reRandomize(uint256 seed) internal returns (uint256) {
+        uint256 newRandom;
+        unchecked {
+            newRandom = uint256(
+                keccak256(
+                    abi.encodePacked(seed, uint256(seedRerandomizationCounter))
+                )
+            );
+            seedRerandomizationCounter++;
+        }
+
+        return newRandom;
     }
 }
