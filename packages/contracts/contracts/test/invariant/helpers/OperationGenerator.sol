@@ -57,6 +57,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
     address public transferRecipientAddress;
 
+    uint256 seedRerandomizationCounter = 0;
     uint256 nullifierCount = 0;
     uint256 nonErc20IdCounter = 0;
 
@@ -80,13 +81,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
 
         // Get random args.joinSplitPublicSpends
         uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
-            args.seed,
+            _reRandomize(args.seed),
             totalJoinSplitUnwrapAmount
         );
 
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
-        uint256 numActions = bound(args.seed, 2, 5);
+        uint256 numActions = bound(_reRandomize(args.seed), 2, 5);
 
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
@@ -152,8 +153,13 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             } else {
                 // Overflow here doesn't matter given all we need are random nfs
                 unchecked {
-                    _op.joinSplits[i].nullifierA = args.seed + (2 * i);
-                    _op.joinSplits[i].nullifierB = args.seed + (2 * i) + 1;
+                    _op.joinSplits[i].nullifierA =
+                        _reRandomize(args.seed) +
+                        (2 * i);
+                    _op.joinSplits[i].nullifierB =
+                        _reRandomize(args.seed) +
+                        (2 * i) +
+                        1;
                 }
             }
         }
@@ -189,7 +195,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
                     args.exceedJoinSplitsMarginInTokens;
             }
             uint256 transferOrSwapAmount = bound(
-                args.seed,
+                _reRandomize(args.seed),
                 0,
                 transferOrSwapBound
             );
@@ -271,11 +277,15 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
         );
 
         uint256 swapErc20OutAmount = bound(
-            args.seed,
+            _reRandomize(args.seed),
             0,
             type(uint256).max - args.swapErc20.totalSupply()
         );
-        uint256 swapErc1155OutAmount = bound(args.seed, 0, 10_000_000);
+        uint256 swapErc1155OutAmount = bound(
+            _reRandomize(args.seed),
+            0,
+            10_000_000
+        );
         SwapRequest memory swapRequest = SwapRequest({
             assetInOwner: address(args.handler),
             encodedAssetIn: encodedAssetIn,
@@ -297,14 +307,18 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
     function _randomizeJoinSplitAmounts(
         uint256 seed,
         uint256 totalAmount
-    ) internal view returns (uint256[] memory) {
+    ) internal returns (uint256[] memory) {
         uint256 numJoinSplits = bound(seed, 1, 5); // at most 5 joinsplits
         uint256[] memory joinSplitAmounts = new uint256[](numJoinSplits);
 
         uint256 remainingAmount = totalAmount;
         for (uint256 i = 0; i < numJoinSplits - 1; i++) {
             // Generate a random amount for the current join split and update the remaining amount
-            uint256 randomAmount = bound(seed, 0, remainingAmount);
+            uint256 randomAmount = bound(
+                _reRandomize(seed),
+                0,
+                remainingAmount
+            );
             joinSplitAmounts[i] = randomAmount;
             remainingAmount -= randomAmount;
         }
@@ -329,7 +343,15 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * maxNumRefunds);
     }
 
-    function _reRandomize(uint256 seed) public pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(seed)));
+    function _reRandomize(uint256 seed) internal returns (uint256) {
+        uint256 newRandom;
+        unchecked {
+            newRandom = uint256(
+                keccak256(abi.encodePacked(seed + seedRerandomizationCounter))
+            );
+            seedRerandomizationCounter++;
+        }
+
+        return newRandom;
     }
 }
