@@ -88,6 +88,7 @@ interface BaseOperation {
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
   encodedGasAsset: EncodedAsset;
+  gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;

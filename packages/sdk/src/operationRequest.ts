@@ -26,6 +26,7 @@ export interface GasAccountedOperationRequest
     OperationRequest,
     "executionGasLimit" | "maxNumRefunds" | "gasPrice"
   > {
+  gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
