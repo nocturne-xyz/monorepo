@@ -168,6 +168,7 @@ contract CommitmentTreeManager is
     function _handleJoinSplits(JoinSplit[] calldata joinSplits) internal {
         uint256 numJoinSplits = joinSplits.length;
         uint256[] memory noteCommitments = new uint256[](numJoinSplits * 2);
+        uint128 offset = _merkle.getTotalCount();
         for (uint256 i = 0; i < numJoinSplits; i++) {
             JoinSplit calldata joinSplit = joinSplits[i];
             // Check validity of both nullifiers
@@ -193,8 +194,8 @@ contract CommitmentTreeManager is
             _nullifierSet[joinSplit.nullifierB] = true;
 
             // Compute newNote indices in the merkle tree
-            uint128 newNoteIndexA = _merkle.getTotalCount();
-            uint128 newNoteIndexB = newNoteIndexA + 1;
+            uint128 newNoteIndexA = offset + uint128(2 * i);
+            uint128 newNoteIndexB = offset + uint128(2 * i + 1);
 
             // Insert new note commitments
             noteCommitments[i * 2] = joinSplit.newNoteACommitment;

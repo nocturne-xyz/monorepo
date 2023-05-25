@@ -32,7 +32,7 @@ dataSources:
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
         - event: InsertNotes((uint256,uint256,uint256,uint256,uint256,uint256)[])
-          handler: handleInsertNote
+          handler: handleInsertNotes
         - event: InsertNoteCommitments(uint256[])
           handler: handleInsertNoteCommitments
       file: ./src/handler.ts

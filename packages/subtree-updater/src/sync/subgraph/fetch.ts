@@ -70,7 +70,8 @@ export async function fetchInsertionBatches(
   const res = await query({ fromIdx, toIdx });
 
   return res.data.treeInsertions.map((insertion) => {
-    if (insertion.notes) {
+    console.log(insertion);
+    if (insertion.notes && insertion.notes.length > 0) {
       return insertion.notes.map((note) => {
         const owner = StealthAddressTrait.fromCompressedPoints(
           BigInt(note.ownerH1),

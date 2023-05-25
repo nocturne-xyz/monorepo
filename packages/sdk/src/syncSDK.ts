@@ -95,6 +95,7 @@ async function updateMerkle(
         includes.push(true);
       }
     }
+    console.log("[syncSdk] got batch", batch);
     merkle.insertBatchUncommitted(startIndex, leaves, includes);
   }
 

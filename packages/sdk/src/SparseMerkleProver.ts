@@ -174,7 +174,8 @@ export class SparseMerkleProver {
     assertOrErr(
       this.uncommittedLeaves.length === 0 ||
         startIndex >
-          this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index
+          this.uncommittedLeaves[this.uncommittedLeaves.length - 1].index,
+      "insertions must be monotonic in index"
     );
 
     this.uncommittedLeaves.push(
