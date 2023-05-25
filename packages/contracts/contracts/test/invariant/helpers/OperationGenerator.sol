@@ -115,13 +115,19 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             ERC20_ID
         );
 
+        uint256 gasAssetRefundThreshold = bound(
+            _reRandomize(args.seed),
+            0,
+            totalJoinSplitUnwrapAmount
+        );
+
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitToken: args.joinSplitToken,
             gasToken: args.gasToken,
             root: args.root,
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
-            gasAssetRefundThreshold: 0, // TODO: add nonzero amount
+            gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
             maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps
             gasPrice: compensateBundler ? 1 : 0,
@@ -321,5 +327,9 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             ((perJoinSplitVerifyGas + GAS_PER_JOINSPLIT_HANDLE) *
                 numJoinSplits) +
             ((GAS_PER_REFUND_TREE + GAS_PER_REFUND_HANDLE) * maxNumRefunds);
+    }
+
+    function _reRandomize(uint256 seed) public pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(seed)));
     }
 }

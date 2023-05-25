@@ -378,6 +378,9 @@ contract BalanceManagerTest is Test {
             opResult
         );
 
+        // What the bundler would've been paid is less than totalFeeReserved (special case now because of gasAssetRefundThreshold)
+        assertLt(onlyBundlerFee, totalFeeReserved);
+
         balanceManager.gatherReservedGasAssetAndPayBundler(
             op,
             opResult,
