@@ -286,7 +286,78 @@ contract BalanceManagerTest is Test {
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
 
-        // Take up 100M tokens
+        // Take up 50M tokens (50M reserved)
+        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
+        );
+
+        // Only bundler fee: 50 * (executionGas + verificationGas + handleJoinSplitGas + handleRefundGas)
+        // 50 * (500k + (2 * 170k) + (2 * 50k)) = 47M
+        // NOTE: verification gas defaults to numJoinSplits * GAS_PER_JOINSPLIT_VERIFY formatDummyOperationResult defaults to this to ensure bundler fee is not whole reserved amnt
+        OperationResult memory opResult = NocturneUtils
+            .formatDummyOperationResult(op);
+        uint256 onlyBundlerFee = balanceManager.calculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
+
+        balanceManager.gatherReservedGasAssetAndPayBundler(
+            op,
+            opResult,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
+            BUNDLER
+        );
+        assertEq(
+            token.balanceOf(address(balanceManager)),
+            (2 * PER_NOTE_AMOUNT) - onlyBundlerFee + 1
+        );
+        assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
+    }
+
+    function testGatherReservedGasAssetAndPayBundlerBelowRefundThreshold()
+        public
+    {
+        SimpleERC20Token token = ERC20s[0];
+
+        // Reserves + deposits 100M of token
+        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 2);
+
+        // Unwrap 100M and set gas price to 50
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitToken: token,
+                gasToken: token,
+                root: balanceManager.root(),
+                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
+                    PER_NOTE_AMOUNT,
+                    2
+                ),
+                encodedRefundAssets: new EncodedAsset[](0),
+                // threshold = sum(publicSpend) means it will always pay bundler whole amount
+                gasAssetRefundThreshold: 2 * PER_NOTE_AMOUNT,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 50,
+                actions: new Action[](0),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // 50 * (executionGas + (2 * joinSplitGas) + (2 * refundGas))
+        // 50 * (500k + (2 * 170k) + (2 * 80k)) = 50M
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
+
+        // Take up 50M tokens, reserving 50M
         assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
@@ -313,13 +384,13 @@ contract BalanceManagerTest is Test {
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             BUNDLER
         );
+
+        // assert entire fee reserved went to bundler this time due to high refund threshold
         assertEq(
             token.balanceOf(address(balanceManager)),
-            (2 * PER_NOTE_AMOUNT) - onlyBundlerFee + 1
+            (2 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
-        assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
-
-        // TODO: pay out subtree updater
+        assertEq(token.balanceOf(BUNDLER), totalFeeReserved);
     }
 
     function testProcessJoinSplitsFailureNotEnoughForFee() public {
