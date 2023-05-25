@@ -134,6 +134,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -174,6 +175,7 @@ contract BalanceManagerTest is Test {
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
+                gasAssetRefundThreshold: 0,
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
@@ -220,6 +222,7 @@ contract BalanceManagerTest is Test {
                     3
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -249,7 +252,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
-    function testProcessJoinSplitsReservingFeeAndPayBundler() public {
+    function testGatherReservedGasAssetAndPayBundler() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
@@ -266,6 +269,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -336,6 +340,7 @@ contract BalanceManagerTest is Test {
                     3
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -379,6 +384,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -413,6 +419,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -448,6 +455,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -483,6 +491,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -517,6 +526,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0, // don't reserve any gas, teller takes up all
@@ -566,6 +576,7 @@ contract BalanceManagerTest is Test {
                     2
                 ),
                 encodedRefundAssets: refundAssets,
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,

@@ -82,6 +82,7 @@ struct Operation {
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;
+    uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;

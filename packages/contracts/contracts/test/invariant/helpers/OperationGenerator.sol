@@ -121,6 +121,7 @@ contract OperationGenerator is CommonBase, StdCheats, StdUtils {
             root: args.root,
             joinSplitPublicSpends: joinSplitPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
+            gasAssetRefundThreshold: 0, // TODO: add nonzero amount
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
             maxNumRefunds: DEFAULT_MAX_NUM_REFUNDS, // TODO: take based on number of swaps
             gasPrice: compensateBundler ? 1 : 0,
