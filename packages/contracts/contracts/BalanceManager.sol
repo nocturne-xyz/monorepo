@@ -112,6 +112,10 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Gather reserved gas assets and pay bundler calculated amount.
     /// @dev Bundler can be paid less than reserved amount. Reserved amount is refunded to user's
     /// stealth address in this case.
+    /// @dev If the amount of gas asset remaining after bundler payout is less than the operation's
+    ///      gasAssetRefundThreshold, we just give the remaining amount to bundler. This is because
+    ///      the cost of handling refund for dust note and later proving ownership of the dust note
+    ///      will outweigh the actual value of the note.
     /// @param op Operation, which contains info on how much gas was reserved
     /// @param opResult OperationResult, which contains info on how much gas was actually spent
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof
@@ -134,7 +138,7 @@ contract BalanceManager is CommitmentTreeManager {
             uint256 bundlerPayout = OperationUtils
                 .calculateBundlerGasAssetPayout(op, opResult);
             if (gasAssetReserved - bundlerPayout < op.gasAssetRefundThreshold) {
-                bundlerPayout = gasAssetReserved;
+                bundlerPayout = gasAssetReserved; // Give all to bundler if under threshold
             }
 
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
