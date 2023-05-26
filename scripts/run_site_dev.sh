@@ -1,11 +1,43 @@
 #!/bin/bash
 
+cleanup() {
+    echo "SIGINT signal caught, cleaning up..."
+    docker stop $(docker ps -aq)
+    docker rm $(docker ps -aq)
+    echo "——————————————————————————————"
+    echo "Done 🧹🧹🧹"
+    exit
+}
+
+# Calls cleanup() upon CTRL+C or early exit
+trap cleanup SIGINT SIGTERM EXIT
+
 # https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
 ROOT_DIR="$SCRIPT_DIR/../"
 cd $ROOT_DIR
 
 LOG_DIR="$ROOT_DIR/site-dev-logs"
+
+pre_startup() {
+    echo "Preparing environment..."
+    if ! docker info > /dev/null 2>&1; then
+    echo "Docker is not running; please start it then retry. Exiting."
+    exit 1
+    fi
+    # Clean up any old or lurking docker containers
+    echo "Cleaning up lurking docker containers..."
+    docker stop $(docker ps -aq)
+    docker rm $(docker ps -aq)
+    # Clean up old logs, if they exists
+    echo "Cleaning up old logs..."
+    rm -rf $LOG_DIR
+    rm -rf $ROOT_DIR/logs
+
+}
+
+pre_startup
+
 mkdir -p $LOG_DIR
 mkdir -p $ROOT_DIR/logs
 echo "outputting logs to $LOG_DIR/"
