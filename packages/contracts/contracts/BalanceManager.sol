@@ -55,7 +55,7 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-		// process nullifiers and insert new noteCommitments for each joinSplit
+        // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         _handleJoinSplits(op.joinSplits);
 
@@ -64,7 +64,7 @@ contract BalanceManager is CommitmentTreeManager {
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
         // Loop through joinSplits and gather assets, reserving gas asset as needed
-		uint256 numJoinSplits = op.joinSplits.length;
+        uint256 numJoinSplits = op.joinSplits.length;
         for (
             uint256 subarrayStartIndex = 0;
             subarrayStartIndex < numJoinSplits;
