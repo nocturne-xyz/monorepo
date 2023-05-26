@@ -55,12 +55,12 @@ contract BalanceManager is CommitmentTreeManager {
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
         uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
+        // process nullifiers and insert new noteCommitments for each joinSplit
+        // will throw an error if nullifiers are invalid or tree root invalid
+        _handleJoinSplits(op.joinSplits);
+
         uint256 numJoinSplits = op.joinSplits.length;
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Process nullifiers in the current joinSplit, will throw if
-            // they are not fresh
-            _handleJoinSplit(op.joinSplits[i]);
-
             // Default to requesting all publicSpend from teller
             uint256 valueToTransfer = op.joinSplits[i].publicSpend;
 
@@ -146,25 +146,54 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
+
+        EncodedAsset[] memory refundAssets = new EncodedAsset[](
+            op.maxNumRefunds
+        );
+        uint256[] memory values = new uint256[](op.maxNumRefunds);
+        uint256 refundIdx = 0;
+
         for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleRefundForAsset(op.joinSplits[i].encodedAsset, op.refundAddr);
+            uint256 value = _refundTellerAndReturnAmount(
+                op.joinSplits[i].encodedAsset
+            );
+            if (value > 0) {
+                refundAssets[refundIdx] = op.joinSplits[i].encodedAsset;
+                values[refundIdx] = value;
+                refundIdx++;
+            }
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
+            uint256 value = _refundTellerAndReturnAmount(
+                op.encodedRefundAssets[i]
+            );
+            if (value > 0) {
+                refundAssets[refundIdx] = op.encodedRefundAssets[i];
+                values[refundIdx] = value;
+                refundIdx++;
+            }
         }
 
         uint256 numReceived = _receivedAssets.length;
         for (uint256 i = 0; i < numReceived; i++) {
-            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
+            uint256 value = _refundTellerAndReturnAmount(_receivedAssets[i]);
+            if (value > 0) {
+                refundAssets[refundIdx] = _receivedAssets[i];
+                values[refundIdx] = value;
+                refundIdx++;
+            }
         }
+
+        _handleRefundNotes(refundAssets, values, op.refundAddr, refundIdx);
+
         delete _receivedAssets;
     }
 
-    /// @notice Handle a refund for a single asset
+    /// @notice Refund the teller for the given asset and return the amount refunded
     /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
-    ///      back to the Teller and inserts a new note commitment into the commitment tree.
+    ///      back to the Teller and retruns the value of the new note to create
     /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
     ///      to withold 1 token from the refund each time if the handler's current balance is 0.
     ///      This saves gas for future users because it avoids writing to a zeroed out storage slot
@@ -172,11 +201,9 @@ contract BalanceManager is CommitmentTreeManager {
     ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
     ///      on user gas.
     /// @param encodedAsset Encoded asset to check for refund
-    /// @param refundAddr Stealth address to refund to
-    function _handleRefundForAsset(
-        EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr
-    ) internal {
+    function _refundTellerAndReturnAmount(
+        EncodedAsset memory encodedAsset
+    ) internal returns (uint256) {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
@@ -189,7 +216,9 @@ contract BalanceManager is CommitmentTreeManager {
                 address(_teller),
                 difference
             );
-            _handleRefundNote(encodedAsset, refundAddr, difference);
+            return difference;
         }
+
+        return 0;
     }
 }

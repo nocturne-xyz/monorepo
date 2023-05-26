@@ -72,7 +72,7 @@ type SubtreeCommit @entity(immutable: true) {
 type TreeInsertion @entity(immutable: true) {
   id: Bytes!
   idx: BigInt!
-  note: CompressedEncodedNote
+  notes: [CompressedEncodedNote!]
   noteCommitments: [BigInt!]
 }
 

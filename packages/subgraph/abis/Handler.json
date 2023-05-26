@@ -16,6 +16,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256[]",
+        "name": "commitments",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "InsertNoteCommitments",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "components": [
           {
             "internalType": "uint256",
@@ -49,25 +62,12 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct EncodedNote",
-        "name": "note",
-        "type": "tuple"
+        "internalType": "struct EncodedNote[]",
+        "name": "notes",
+        "type": "tuple[]"
       }
     ],
-    "name": "InsertNote",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "commitments",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "InsertNoteCommitments",
+    "name": "InsertNotes",
     "type": "event"
   },
   {

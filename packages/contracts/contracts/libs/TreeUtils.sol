@@ -8,8 +8,12 @@ library TreeUtils {
     uint256 public constant DEPTH = 16;
     uint256 public constant BATCH_SIZE = 16;
     uint256 public constant BATCH_SUBTREE_DEPTH = 2;
+
+    // uint256(keccak256("nocturne")) % BN254_SCALAR_FIELD_MODULUS
+    uint256 public constant ZERO_VALUE =
+        11826002903343228749062904299844230482823860030613873531382924534593825466831;
     uint256 public constant EMPTY_TREE_ROOT =
-        9533201250583817767896570092866591469094150406835227552485691564931228351592;
+        14425423529089750832921210739722026857026797579827942712639385657619324990872;
 
     // packs a field element for the `encodedPathAndHash` input to the subtree update verifier
     // `subtreeIdx` is the index of the subtree's leftmost element in the tree

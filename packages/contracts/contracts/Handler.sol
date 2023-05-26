@@ -99,8 +99,13 @@ contract Handler is
             "!supported deposit asset"
         );
 
-        StealthAddress calldata depositAddr = deposit.depositAddr;
-        _handleRefundNote(deposit.encodedAsset, depositAddr, deposit.value);
+        EncodedAsset[] memory encodedAssets = new EncodedAsset[](1);
+        uint256[] memory values = new uint256[](1);
+
+        encodedAssets[0] = deposit.encodedAsset;
+        values[0] = deposit.value;
+
+        _handleRefundNotes(encodedAssets, values, deposit.depositAddr, 1);
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks

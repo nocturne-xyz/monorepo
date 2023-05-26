@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- in `genSubtreeUpdateTestCase`, get zero value, depth, and arity from `TreeConstants`
 - update fixture scripts
 - `genJoinSplitTestCase` prints out proving time
 - add `encRandomness` to `genJoinSplitTestCase`

@@ -35,7 +35,7 @@ contract OffchainMerkleInvariants is Test {
         assertEq(offchainMerkleHandler.getCount() % TreeUtils.BATCH_SIZE, 0);
     }
 
-    function invariant_batchLengthNotExceedingBatchSize() external {
+    function invariantgetBatchLengthNotExceedingBatchSize() external {
         assertLt(offchainMerkleHandler.batchLen(), TreeUtils.BATCH_SIZE);
     }
 

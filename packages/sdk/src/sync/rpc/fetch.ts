@@ -10,7 +10,7 @@ import {
   JoinSplitProcessedEvent,
   SubtreeUpdateEvent,
   InsertNoteCommitmentsEvent,
-  InsertNoteEvent,
+  InsertNotesEvent,
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
@@ -222,14 +222,14 @@ export async function fetchInsertions(
     from,
     to
   );
-  const noteEventsProm: Promise<InsertNoteEvent[]> = queryEvents(
+  const noteEventsProm: Promise<InsertNotesEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNote(),
+    contract.filters.InsertNotes(),
     from,
     to
   );
 
-  const [noteCommitmentEvents, noteEvents] = await Promise.all([
+  const [noteCommitmentEvents, notesEvents] = await Promise.all([
     ncEventsProm,
     noteEventsProm,
   ]);
@@ -250,36 +250,37 @@ export async function fetchInsertions(
     insertions.push(...orderedNoteCommitments);
   }
 
-  for (const event of noteEvents) {
-    const noteValues = event.args.note;
+  for (const event of notesEvents) {
+    const notes = event.args.notes;
+    for (const noteValues of notes) {
+      const owner = {
+        h1X: noteValues.ownerH1.toBigInt(),
+        h2X: noteValues.ownerH2.toBigInt(),
+        h1Y: 0n,
+        h2Y: 0n,
+      };
 
-    const owner = {
-      h1X: noteValues.ownerH1.toBigInt(),
-      h2X: noteValues.ownerH2.toBigInt(),
-      h1Y: 0n,
-      h2Y: 0n,
-    };
+      const encoddAsset: EncodedAsset = {
+        encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
+        encodedAssetId: noteValues.encodedAssetId.toBigInt(),
+      };
 
-    const encoddAsset: EncodedAsset = {
-      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-    };
+      const asset = AssetTrait.decode(encoddAsset);
 
-    const asset = AssetTrait.decode(encoddAsset);
+      const note: Note = {
+        owner,
+        nonce: noteValues.nonce.toBigInt(),
+        asset,
+        value: noteValues.value.toBigInt(),
+      };
 
-    const note: Note = {
-      owner,
-      nonce: noteValues.nonce.toBigInt(),
-      asset,
-      value: noteValues.value.toBigInt(),
-    };
-
-    insertions.push({
-      insertion: note,
-      blockNumber: event.blockNumber,
-      txIdx: event.transactionIndex,
-      logIdx: event.logIndex,
-    });
+      insertions.push({
+        insertion: note,
+        blockNumber: event.blockNumber,
+        txIdx: event.transactionIndex,
+        logIdx: event.logIndex,
+      });
+    }
   }
 
   insertions = insertions.sort(

@@ -645,20 +645,20 @@ export class TreeInsertion extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get note(): Bytes | null {
-    let value = this.get("note");
+  get notes(): Array<Bytes> | null {
+    let value = this.get("notes");
     if (!value || value.kind == ValueKind.NULL) {
       return null;
     } else {
-      return value.toBytes();
+      return value.toBytesArray();
     }
   }
 
-  set note(value: Bytes | null) {
+  set notes(value: Array<Bytes> | null) {
     if (!value) {
-      this.unset("note");
+      this.unset("notes");
     } else {
-      this.set("note", Value.fromBytes(<Bytes>value));
+      this.set("notes", Value.fromBytesArray(<Array<Bytes>>value));
     }
   }
 

@@ -31,8 +31,8 @@ dataSources:
           handler: handleRefund
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
-        - event: InsertNote((uint256,uint256,uint256,uint256,uint256,uint256))
-          handler: handleInsertNote
+        - event: InsertNotes((uint256,uint256,uint256,uint256,uint256,uint256)[])
+          handler: handleInsertNotes
         - event: InsertNoteCommitments(uint256[])
           handler: handleInsertNoteCommitments
       file: ./src/handler.ts

@@ -32,10 +32,10 @@ contract CommitmentTreeManagerInvariants is Test {
 
         bytes4[] memory selectors = new bytes4[](6);
         selectors[0] = commitmentTreeManagerHandler.applySubtreeUpdate.selector;
-        selectors[1] = commitmentTreeManagerHandler.handleJoinSplit.selector;
-        selectors[2] = commitmentTreeManagerHandler.handleRefundNote.selector;
+        selectors[1] = commitmentTreeManagerHandler.handleJoinSplits.selector;
+        selectors[2] = commitmentTreeManagerHandler.handleRefundNotes.selector;
         selectors[3] = commitmentTreeManagerHandler.fillBatchWithZeros.selector;
-        selectors[4] = commitmentTreeManagerHandler.insertNote.selector;
+        selectors[4] = commitmentTreeManagerHandler.insertNotes.selector;
         selectors[5] = commitmentTreeManagerHandler
             .insertNoteCommitments
             .selector;
@@ -58,7 +58,7 @@ contract CommitmentTreeManagerInvariants is Test {
             commitmentTreeManagerHandler.ghost_joinSplitLeafCount() +
                 commitmentTreeManagerHandler.ghost_refundNotesLeafCount() +
                 commitmentTreeManagerHandler
-                    .ghost_fillBatchWithZerosLeafCount() +
+                    .ghostfillBatchWithZerosLeafCount() +
                 commitmentTreeManagerHandler.ghost_insertNoteLeafCount() +
                 commitmentTreeManagerHandler
                     .ghost_insertNoteCommitmentsLeafCount(),
@@ -67,7 +67,7 @@ contract CommitmentTreeManagerInvariants is Test {
     }
 
     function invariant_handledJoinSplitNullifiersMarkedTrue() external {
-        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplits") {
             (
                 ,
                 uint256 nullifierA,
@@ -97,18 +97,21 @@ contract CommitmentTreeManagerInvariants is Test {
     }
 
     function invariant_totalCountIncreasesByExpected() external {
-        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplit") {
+        if (commitmentTreeManagerHandler.lastCall() == "handleJoinSplits") {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 2,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    2 *
+                    commitmentTreeManagerHandler.handleJoinSplitsLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()
             );
         } else if (
-            commitmentTreeManagerHandler.lastCall() == "handleRefundNote"
+            commitmentTreeManagerHandler.lastCall() == "handleRefundNotes"
         ) {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    commitmentTreeManagerHandler.handleRefundNotesLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()
@@ -125,9 +128,10 @@ contract CommitmentTreeManagerInvariants is Test {
                     .commitmentTreeManager()
                     .totalCount()
             );
-        } else if (commitmentTreeManagerHandler.lastCall() == "insertNote") {
+        } else if (commitmentTreeManagerHandler.lastCall() == "insertNotes") {
             assertEq(
-                commitmentTreeManagerHandler.preCallTotalCount() + 1,
+                commitmentTreeManagerHandler.preCallTotalCount() +
+                    commitmentTreeManagerHandler.insertNotesLength(),
                 commitmentTreeManagerHandler
                     .commitmentTreeManager()
                     .totalCount()

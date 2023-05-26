@@ -7,7 +7,10 @@ import {
   Note,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import { fetchInsertions, fetchLatestCommittedSubtreeIndex } from "./fetch";
+import {
+  fetchInsertionBatches,
+  fetchLatestCommittedSubtreeIndex,
+} from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -48,18 +51,14 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           continue;
         }
 
-        const insertions: (Note | bigint[])[] = await fetchInsertions(
+        const batches: (Note[] | bigint[])[] = await fetchInsertionBatches(
           endpoint,
           from,
           to
         );
 
-        for (const insertion of insertions) {
-          if (Array.isArray(insertion)) {
-            for (const nc of insertion) {
-              yield nc;
-            }
-          } else {
+        for (const batch of batches) {
+          for (const insertion of batch) {
             yield insertion;
           }
         }

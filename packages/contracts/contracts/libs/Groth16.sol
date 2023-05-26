@@ -28,7 +28,7 @@ library Groth16 {
         Pairing.G1Point memory vk_x = vk.IC[0];
         for (uint i = 0; i < pi.length; i++) {
             require(
-                pi[i] < Utils.SNARK_SCALAR_FIELD,
+                pi[i] < Utils.BN254_SCALAR_FIELD_MODULUS,
                 "Malformed public input."
             );
             vk_x = Pairing.addition(
@@ -95,22 +95,22 @@ library Groth16 {
             publicInputAccumulators[0] = addmod(
                 publicInputAccumulators[0],
                 entropy[proofIndex],
-                Utils.SNARK_SCALAR_FIELD
+                Utils.BN254_SCALAR_FIELD_MODULUS
             );
             for (uint256 i = 0; i < numPublicInputs; i++) {
                 require(
-                    allPis[proofIndex][i] < Utils.SNARK_SCALAR_FIELD,
+                    allPis[proofIndex][i] < Utils.BN254_SCALAR_FIELD_MODULUS,
                     "Malformed public input"
                 );
-                // accumulate the exponent with extra entropy mod Utils.SNARK_SCALAR_FIELD
+                // accumulate the exponent with extra entropy mod Utils.BN254_SCALAR_FIELD_MODULUS
                 publicInputAccumulators[i + 1] = addmod(
                     publicInputAccumulators[i + 1],
                     mulmod(
                         entropy[proofIndex],
                         allPis[proofIndex][i],
-                        Utils.SNARK_SCALAR_FIELD
+                        Utils.BN254_SCALAR_FIELD_MODULUS
                     ),
-                    Utils.SNARK_SCALAR_FIELD
+                    Utils.BN254_SCALAR_FIELD_MODULUS
                 );
             }
         }

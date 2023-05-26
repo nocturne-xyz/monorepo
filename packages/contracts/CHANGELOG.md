@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- replace `handleRefundNote` with `handleRefundNotes`, which inserts notes to tree's batch array in one go to save on SSTOREs
+- replace `handleJoinSplit` with `handleJoinSplits`, which inserts NCs to tree's batch array in one go to save on SSTOREs
+- don't actually store zero values to storage in `fillBatchWithZeros`. Just emit the correct events, update counts, and accumulate.
+- keep `batchLenPlusOne` instead of `batchLen` to avoid setting it to 0
+- use `ZERO_VALUE = keccak256("nocturne") % p` instead of `0` as the dummy value in the tree
 - fix invariant `TellerHandler` bug where joinSplitUnwrapAmount > gasComp led to opMeta.totalJoinSplitUnwrapped being lower than actual (fixed by just gathering total joinsplit amount directly from op)
 - rename the `subtreeIndex` field of `SubtreeUpdate` event to `subtreeBatchOffset`
 - have teller balance invariants account for taking/refilling prefills
@@ -86,7 +91,7 @@
 - add encrypted sender canonical address to `JoinSplit` struct
 - Remove unused fns in `Queue.sol`
 - Simplify `AssetUtils` to not have pass through fns
-- Simplify `Utils` to only contain min function and SNARK_SCALAR_FIELD (no longer an "everything" utils file)
+- Simplify `Utils` to only contain min function and BN254_SCALAR_FIELD_MODULUS (no longer an "everything" utils file)
 - Move tree-related utils in `Utils.sol` into `TreeUtils.sol`
 - Encapsulate `Groth16.Proof` struct to Groth16 library so we don't have `Utils.proof8ToStruct` floating around everywhere
 - underscore library methods that are only used internally within library currently

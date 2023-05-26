@@ -28,27 +28,45 @@ export class Initialized__Params {
   }
 }
 
-export class InsertNote extends ethereum.Event {
-  get params(): InsertNote__Params {
-    return new InsertNote__Params(this);
+export class InsertNoteCommitments extends ethereum.Event {
+  get params(): InsertNoteCommitments__Params {
+    return new InsertNoteCommitments__Params(this);
   }
 }
 
-export class InsertNote__Params {
-  _event: InsertNote;
+export class InsertNoteCommitments__Params {
+  _event: InsertNoteCommitments;
 
-  constructor(event: InsertNote) {
+  constructor(event: InsertNoteCommitments) {
     this._event = event;
   }
 
-  get note(): InsertNoteNoteStruct {
-    return changetype<InsertNoteNoteStruct>(
-      this._event.parameters[0].value.toTuple()
-    );
+  get commitments(): Array<BigInt> {
+    return this._event.parameters[0].value.toBigIntArray();
   }
 }
 
-export class InsertNoteNoteStruct extends ethereum.Tuple {
+export class InsertNotes extends ethereum.Event {
+  get params(): InsertNotes__Params {
+    return new InsertNotes__Params(this);
+  }
+}
+
+export class InsertNotes__Params {
+  _event: InsertNotes;
+
+  constructor(event: InsertNotes) {
+    this._event = event;
+  }
+
+  get notes(): Array<InsertNotesNotesStruct> {
+    return this._event.parameters[0].value.toTupleArray<
+      InsertNotesNotesStruct
+    >();
+  }
+}
+
+export class InsertNotesNotesStruct extends ethereum.Tuple {
   get ownerH1(): BigInt {
     return this[0].toBigInt();
   }
@@ -71,24 +89,6 @@ export class InsertNoteNoteStruct extends ethereum.Tuple {
 
   get value(): BigInt {
     return this[5].toBigInt();
-  }
-}
-
-export class InsertNoteCommitments extends ethereum.Event {
-  get params(): InsertNoteCommitments__Params {
-    return new InsertNoteCommitments__Params(this);
-  }
-}
-
-export class InsertNoteCommitments__Params {
-  _event: InsertNoteCommitments;
-
-  constructor(event: InsertNoteCommitments) {
-    this._event = event;
-  }
-
-  get commitments(): Array<BigInt> {
-    return this._event.parameters[0].value.toBigIntArray();
   }
 }
 

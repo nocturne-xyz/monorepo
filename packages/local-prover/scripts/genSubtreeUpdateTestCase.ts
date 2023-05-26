@@ -33,7 +33,12 @@ const nocturneSigner = new NocturneSigner(sk);
 const stealthAddr = nocturneSigner.generateRandomStealthAddress();
 
 // start with empty tree
-const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
+const tree = new IncrementalMerkleTree(
+  poseidonBN,
+  TreeConstants.DEPTH,
+  TreeConstants.ZERO_VALUE,
+  TreeConstants.ARITY
+);
 
 // dummy notes
 const batch: (Note | bigint)[] = [

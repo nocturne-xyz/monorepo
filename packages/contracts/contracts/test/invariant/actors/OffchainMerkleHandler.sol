@@ -56,23 +56,23 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
         console.log("-------------------");
         console.log("OffchainMerkleHandler call summary:");
         console.log("-------------------");
-        console.log("insertNote", _calls["insertNote"]);
+        console.log("insertNote", _calls["insertNotes"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
         console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
         console.log("no-op", _calls["no-op"]);
     }
 
-    function insertNote(
-        EncodedNote memory note
-    ) public trackCall("insertNote") {
-        merkle.insertNote(note);
+    function insertNotes(
+        EncodedNote[] memory notes
+    ) public trackCall("insertNotes") {
+        merkle.insertNotes(notes);
     }
 
     function insertNoteCommitments(
         uint256[] memory ncs
     ) public trackCall("insertNoteCommitments") {
         for (uint256 i = 0; i < ncs.length; i++) {
-            ncs[i] = bound(ncs[i], 0, Utils.SNARK_SCALAR_FIELD - 1);
+            ncs[i] = bound(ncs[i], 0, Utils.BN254_SCALAR_FIELD_MODULUS - 1);
         }
         merkle.insertNoteCommitments(ncs);
     }
@@ -102,7 +102,7 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
     }
 
     function batchLen() public view returns (uint128) {
-        return merkle.batchLen;
+        return merkle.batchLenPlusOne - 1;
     }
 
     function accumulatorQueueLength() public view returns (uint256) {

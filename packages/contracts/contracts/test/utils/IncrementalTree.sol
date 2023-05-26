@@ -22,7 +22,7 @@ struct IncrementalTree {
 /// the integrity of the tree.
 library LibIncrementalTree {
     uint8 internal constant MAX_DEPTH = 32;
-    uint256 internal constant SNARK_SCALAR_FIELD =
+    uint256 internal constant BN254_SCALAR_FIELD_MODULUS =
         21888242871839275222246405745257275088548364400416034343698204186575808495617;
 
     /// @dev Initializes a tree.
@@ -35,7 +35,10 @@ library LibIncrementalTree {
         uint256 zero,
         IHasherT3 hasherT3
     ) internal {
-        require(zero < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(
+            zero < BN254_SCALAR_FIELD_MODULUS,
+            "Leaf must be < snark field"
+        );
         require(
             depth > 0 && depth <= MAX_DEPTH,
             "Depth must be between 1 and 32"
@@ -56,7 +59,10 @@ library LibIncrementalTree {
     /// @param self: Tree data.
     /// @param leaf: Leaf to be inserted.
     function insert(IncrementalTree storage self, uint256 leaf) internal {
-        require(leaf < SNARK_SCALAR_FIELD, "Leaf must be < snark field");
+        require(
+            leaf < BN254_SCALAR_FIELD_MODULUS,
+            "Leaf must be < snark field"
+        );
         require(
             self.numberOfLeaves < 2 ** self.depth,
             "BinaryTree: tree is full"
@@ -86,7 +92,7 @@ library LibIncrementalTree {
     ) internal {
         for (uint256 i = 0; i < 2; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                leaves[i] < BN254_SCALAR_FIELD_MODULUS,
                 "Leaf must be < snark field"
             );
         }
@@ -119,7 +125,7 @@ library LibIncrementalTree {
     ) internal {
         for (uint256 i = 0; i < 8; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                leaves[i] < BN254_SCALAR_FIELD_MODULUS,
                 "Leaf must be < snark field"
             );
         }
@@ -154,7 +160,7 @@ library LibIncrementalTree {
     ) internal {
         for (uint256 i = 0; i < 16; i++) {
             require(
-                leaves[i] < SNARK_SCALAR_FIELD,
+                leaves[i] < BN254_SCALAR_FIELD_MODULUS,
                 "Leaf must be < snark field"
             );
         }

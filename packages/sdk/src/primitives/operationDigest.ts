@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import {
-  SNARK_SCALAR_FIELD,
+  BN254_SCALAR_FIELD_MODULUS,
   PreSignOperation,
   SignedOperation,
   ProvenOperation,
@@ -10,7 +10,7 @@ export function computeOperationDigest(
   operation: PreSignOperation | SignedOperation | ProvenOperation
 ): bigint {
   const operationHash = hashOperation(operation);
-  return BigInt(operationHash) % SNARK_SCALAR_FIELD;
+  return BigInt(operationHash) % BN254_SCALAR_FIELD_MODULUS;
 }
 
 function hashOperation(
