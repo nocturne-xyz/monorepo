@@ -21,19 +21,25 @@ LOG_DIR="$ROOT_DIR/site-dev-logs"
 
 pre_startup() {
     echo "Preparing environment..."
+
     if ! docker info > /dev/null 2>&1; then
-    echo "Docker is not running; please start it then retry. Exiting."
-    exit 1
+        echo "Docker is not running; please start it then retry. Exiting."
+        exit 1
     fi
+
     # Clean up any old or lurking docker containers
     echo "Cleaning up lurking docker containers..."
     docker stop $(docker ps -aq)
     docker rm $(docker ps -aq)
+    echo "Cleaned docker containers ✅"
+
     # Clean up old logs, if they exists
     echo "Cleaning up old logs..."
     rm -rf $LOG_DIR
     rm -rf $ROOT_DIR/logs
+    echo "Cleaned old logs ✅"
 
+    echo "Prepared environment ✅✅✅"
 }
 
 pre_startup
