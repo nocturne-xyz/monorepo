@@ -23,7 +23,7 @@ import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
-import {HandlerBase} from "../helpers/HandlerBase.sol";
+import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../../libs/Types.sol";
 
 struct GenerateOperationArgs {
@@ -50,7 +50,7 @@ struct GeneratedOperationMetadata {
     bool[] isSwap;
 }
 
-contract OperationGenerator is HandlerBase {
+contract OperationGenerator is InvariantUtils {
     uint256 constant ERC20_ID = 0;
     uint256 constant DEFAULT_EXECUTION_GAS_LIMIT = 2_000_000;
     uint256 constant DEFAULT_PER_JOINSPLIT_VERIFY_GAS = 220_000;
