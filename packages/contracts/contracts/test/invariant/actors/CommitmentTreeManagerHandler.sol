@@ -13,10 +13,10 @@ import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.s
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import {Utils} from "../../../libs/Utils.sol";
-import {HandlerBase} from "./HandlerBase.sol";
+import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../../libs/Types.sol";
 
-contract CommitmentTreeManagerHandler is HandlerBase {
+contract CommitmentTreeManagerHandler is InvariantUtils {
     uint256 constant ERC20_ID = 0;
 
     using LibIncrementalTree for IncrementalTree;

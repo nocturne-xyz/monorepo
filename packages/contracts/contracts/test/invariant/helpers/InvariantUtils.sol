@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
-contract HandlerBase is Test {
+contract InvariantUtils is Test {
     uint256 internal rerandomizationCounter = 0;
 
     function _rerandomize(uint256 seed) internal returns (uint256) {

@@ -13,10 +13,10 @@ import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifi
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../../libs/OffchainMerkleTree.sol";
 import {QueueLib} from "../../../libs/Queue.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
-import {HandlerBase} from "./HandlerBase.sol";
+import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../../libs/Types.sol";
 
-contract OffchainMerkleHandler is HandlerBase {
+contract OffchainMerkleHandler is InvariantUtils {
     using LibOffchainMerkleTree for OffchainMerkleTree;
 
     // ______PUBLIC______
