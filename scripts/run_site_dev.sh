@@ -1,16 +1,21 @@
 #!/bin/bash
 
-cleanup() {
-    echo "SIGINT signal caught, cleaning up..."
-    docker stop $(docker ps -aq)
-    docker rm $(docker ps -aq)
-    echo "——————————————————————————————"
-    echo "Done 🧹🧹🧹"
-    exit
-}
+pre_startup_flag=true
+cleanup_flag=true
 
-# Calls cleanup() upon CTRL+C or early exit
-trap cleanup SIGINT SIGTERM EXIT
+for arg in "$@"
+do
+    case $arg in
+        --pre_startup=*)
+        pre_startup_flag="${arg#*=}"
+        shift
+        ;;
+        --cleanup=*)
+        cleanup_flag="${arg#*=}"
+        shift
+        ;;
+    esac
+done
 
 # https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself
 SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )" 
@@ -42,7 +47,25 @@ pre_startup() {
     echo "Prepared environment ✅✅✅"
 }
 
-pre_startup
+cleanup() {
+    echo "SIGINT signal caught, cleaning up..."
+    docker stop $(docker ps -aq)
+    docker rm $(docker ps -aq)
+    echo "——————————————————————————————"
+    echo "Done 🧹🧹🧹"
+    exit
+}
+
+if [ "$pre_startup_flag" = "true" ]; then
+    pre_startup
+else 
+    echo "Pre-startup flag is false, skipping.."
+fi
+
+if [ "$cleanup_flag" = "true" ]; then
+    # Calls cleanup() upon CTRL+C or early exit
+    trap cleanup SIGINT SIGTERM EXIT
+fi
 
 mkdir -p $LOG_DIR
 mkdir -p $ROOT_DIR/logs
