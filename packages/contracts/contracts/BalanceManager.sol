@@ -246,15 +246,17 @@ contract BalanceManager is CommitmentTreeManager {
         uint256 startIndex
     ) private pure returns (uint256) {
         EncodedAsset calldata startAsset = joinSplits[startIndex].encodedAsset;
-        uint256 highestContiguousIndex = startIndex;
-        for (uint256 i = startIndex + 1; i < joinSplits.length; i++) {
-            if (AssetUtils.eq(startAsset, joinSplits[i].encodedAsset)) {
-                highestContiguousIndex = i;
-            } else {
-                break;
-            }
+        uint256 numJoinSplits = joinSplits.length;
+
+        uint256 highestIndex = startIndex;
+        while (
+            highestIndex + 1 < numJoinSplits &&
+            AssetUtils.eq(startAsset, joinSplits[highestIndex + 1].encodedAsset)
+        ) {
+            highestIndex++;
         }
-        return highestContiguousIndex;
+
+        return highestIndex;
     }
 
     /// @notice Get sum of public spends for a contiguous subarray of joinsplits
