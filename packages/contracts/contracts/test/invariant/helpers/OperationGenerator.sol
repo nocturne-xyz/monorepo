@@ -122,11 +122,15 @@ contract OperationGenerator is InvariantUtils {
             totalJoinSplitUnwrapAmount
         );
 
+        // TODO: use > 1 joinsplit token AND public spends
         FormatOperationArgs memory opArgs = FormatOperationArgs({
-            joinSplitToken: args.joinSplitToken,
+            joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                args.joinSplitToken
+            ),
             gasToken: args.gasToken,
             root: args.root,
-            joinSplitPublicSpends: joinSplitPublicSpends,
+            joinSplitsPublicSpends: NocturneUtils
+                ._publicSpendsArrayOfOnePublicSpendArray(joinSplitPublicSpends),
             encodedRefundAssets: encodedRefundAssets,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,

@@ -29,11 +29,17 @@ contract ReentrantCaller {
         return
             NocturneUtils.formatOperation(
                 FormatOperationArgs({
-                    joinSplitToken: _token,
+                    joinSplitTokens: NocturneUtils
+                        ._joinSplitTokensArrayOfOneToken(_token),
                     gasToken: _token,
                     root: _handler.root(),
-                    joinSplitPublicSpends: NocturneUtils
-                        .fillJoinSplitPublicSpends(PER_NOTE_AMOUNT, 6),
+                    joinSplitsPublicSpends: NocturneUtils
+                        ._publicSpendsArrayOfOnePublicSpendArray(
+                            NocturneUtils.fillJoinSplitPublicSpends(
+                                PER_NOTE_AMOUNT,
+                                6
+                            )
+                        ),
                     encodedRefundAssets: new EncodedAsset[](0),
                     gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,

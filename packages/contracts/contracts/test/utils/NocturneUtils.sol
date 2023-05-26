@@ -15,10 +15,10 @@ enum OperationFailureType {
 }
 
 struct FormatOperationArgs {
-    SimpleERC20Token joinSplitToken;
+    SimpleERC20Token[] joinSplitTokens;
+    uint256[][] joinSplitsPublicSpends;
     SimpleERC20Token gasToken;
     uint256 root;
-    uint256[] joinSplitPublicSpends;
     EncodedAsset[] encodedRefundAssets;
     uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
@@ -151,6 +151,7 @@ library NocturneUtils {
     function formatOperation(
         FormatOperationArgs memory args
     ) internal view returns (Operation memory) {
+        uint256 totalNumJoinSplits = _totalNumJoinSplitsForArgs(args);
         OperationFailureType operationFailure = args.operationFailureType;
         if (operationFailure == OperationFailureType.JOINSPLIT_BAD_ROOT) {
             args.root = 0x12345; // fill with garbage root
@@ -158,7 +159,7 @@ library NocturneUtils {
             operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
         ) {
             require(
-                args.joinSplitPublicSpends.length >= 2,
+                totalNumJoinSplits >= 2,
                 "Must specify at least 2 joinsplits for JOINSPLIT_NF_ALREADY_IN_SET failure type"
             );
         }
@@ -187,54 +188,47 @@ library NocturneUtils {
             encryptedValue: uint256(111)
         });
 
-        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
-            AssetType.ERC20,
-            address(args.joinSplitToken),
-            ERC20_ID
-        );
+        JoinSplit[] memory joinSplits = new JoinSplit[](totalNumJoinSplits);
 
-        // Setup joinsplits depending on failure type
-        JoinSplit[] memory joinSplits = new JoinSplit[](
-            args.joinSplitPublicSpends.length
-        );
-        for (uint256 i = 0; i < args.joinSplitPublicSpends.length; i++) {
-            uint256 nullifierA = 0;
-            uint256 nullifierB = 0;
-            if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
-                nullifierA = uint256(2 * 0x1234);
-                nullifierB = uint256(2 * 0x1234);
-            } else if (
-                operationFailure ==
-                OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
-                i + 2 == args.joinSplitPublicSpends.length
+        uint256 currentIndex = 0;
+        for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
+            EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+                AssetType.ERC20,
+                address(args.joinSplitTokens[i]),
+                ERC20_ID
+            );
+            for (
+                uint256 j = 0;
+                j < args.joinSplitsPublicSpends[i].length;
+                j++
             ) {
-                nullifierA = uint256(2 * 0x1234); // Matches last NF B
-                nullifierB = uint256(2 * i + 1);
-            } else if (
-                operationFailure ==
-                OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET &&
-                i + 1 == args.joinSplitPublicSpends.length
-            ) {
-                nullifierA = uint256(2 * i);
-                nullifierB = uint256(2 * 0x1234); // Matches 2nd to last NF A
-            } else {
-                nullifierA = uint256(2 * i);
-                nullifierB = uint256(2 * i + 1);
+                joinSplits[currentIndex] = JoinSplit({
+                    commitmentTreeRoot: root,
+                    nullifierA: uint256(2 * currentIndex),
+                    nullifierB: uint256(2 * currentIndex + 1),
+                    newNoteACommitment: uint256(currentIndex),
+                    newNoteAEncrypted: newNoteAEncrypted,
+                    newNoteBCommitment: uint256(currentIndex),
+                    newNoteBEncrypted: newNoteBEncrypted,
+                    proof: dummyProof(),
+                    encodedAsset: encodedAsset,
+                    publicSpend: args.joinSplitsPublicSpends[i][j],
+                    encSenderCanonAddrC1X: 0,
+                    encSenderCanonAddrC2X: 0
+                });
+                currentIndex++;
             }
-            joinSplits[i] = JoinSplit({
-                commitmentTreeRoot: root,
-                nullifierA: nullifierA,
-                nullifierB: nullifierB,
-                newNoteACommitment: uint256(i),
-                newNoteAEncrypted: newNoteAEncrypted,
-                newNoteBCommitment: uint256(i),
-                newNoteBEncrypted: newNoteBEncrypted,
-                proof: dummyProof(),
-                encodedAsset: encodedAsset,
-                publicSpend: args.joinSplitPublicSpends[i],
-                encSenderCanonAddrC1X: 0,
-                encSenderCanonAddrC2X: 0
-            });
+        }
+
+        operationFailure = args.operationFailureType;
+        if (operationFailure == OperationFailureType.JOINSPLIT_NFS_SAME) {
+            joinSplits[0].nullifierA = uint256(2 * 0x1234);
+            joinSplits[0].nullifierB = uint256(2 * 0x1234);
+        } else if (
+            operationFailure == OperationFailureType.JOINSPLIT_NF_ALREADY_IN_SET
+        ) {
+            joinSplits[1].nullifierA = joinSplits[0].nullifierA; // Matches last joinsplit's NFs
+            joinSplits[1].nullifierA = joinSplits[0].nullifierB;
         }
 
         uint256 chainId = block.chainid;
@@ -286,5 +280,32 @@ library NocturneUtils {
                     GAS_PER_JOINSPLIT_VERIFY,
                 numRefunds: op.joinSplits.length + op.encodedRefundAssets.length
             });
+    }
+
+    function _totalNumJoinSplitsForArgs(
+        FormatOperationArgs memory args
+    ) internal pure returns (uint256) {
+        uint256 totalJoinSplits = 0;
+        for (uint256 i = 0; i < args.joinSplitsPublicSpends.length; i++) {
+            totalJoinSplits += args.joinSplitsPublicSpends[i].length;
+        }
+
+        return totalJoinSplits;
+    }
+
+    function _joinSplitTokensArrayOfOneToken(
+        SimpleERC20Token joinSplitToken
+    ) internal pure returns (SimpleERC20Token[] memory) {
+        SimpleERC20Token[] memory joinSplitTokens = new SimpleERC20Token[](1);
+        joinSplitTokens[0] = joinSplitToken;
+        return joinSplitTokens;
+    }
+
+    function _publicSpendsArrayOfOnePublicSpendArray(
+        uint256[] memory publicSpends
+    ) internal pure returns (uint256[][] memory) {
+        uint256[][] memory publicSpendsArray = new uint256[][](1);
+        publicSpendsArray[0] = publicSpends;
+        return publicSpendsArray;
     }
 }
