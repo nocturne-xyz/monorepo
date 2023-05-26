@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- modify CTM/OffchainMerkle invariant handler to use seed then generate rand struct inputs rather than potentially huge array of structs which slows down test time
 - group processJoinSplit transfers by contiguous subarray to save 10k gas per joinsplit of same asset
 - replace `handleRefundNote` with `handleRefundNotes`, which inserts notes to tree's batch array in one go to save on SSTOREs
 - replace `handleJoinSplit` with `handleJoinSplits`, which inserts NCs to tree's batch array in one go to save on SSTOREs

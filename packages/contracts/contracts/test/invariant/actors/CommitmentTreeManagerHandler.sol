@@ -13,9 +13,10 @@ import {IncrementalTree, LibIncrementalTree} from "../../utils/IncrementalTree.s
 import {EventParsing} from "../../utils/EventParsing.sol";
 import {TreeUtils} from "../../../libs/TreeUtils.sol";
 import {Utils} from "../../../libs/Utils.sol";
+import {HandlerBase} from "./HandlerBase.sol";
 import "../../../libs/Types.sol";
 
-contract CommitmentTreeManagerHandler is Test {
+contract CommitmentTreeManagerHandler is HandlerBase {
     uint256 constant ERC20_ID = 0;
 
     using LibIncrementalTree for IncrementalTree;
@@ -43,7 +44,7 @@ contract CommitmentTreeManagerHandler is Test {
     mapping(bytes32 => uint256) internal _calls;
     uint256 internal _rootCounter = 0;
     uint256 internal _nullifierCounter = 0;
-    uint256 internal seedRerandomizationCounter = 0;
+    uint256 internal reRandomizationCounter = 0;
 
     constructor(
         TestCommitmentTreeManager _commitmentTreeManager,
@@ -87,28 +88,13 @@ contract CommitmentTreeManagerHandler is Test {
     }
 
     function handleJoinSplits(
-        JoinSplit[] memory joinSplits
+        uint256 seed
     ) public trackCall("handleJoinSplits") {
-        uint256 numJoinSplits = joinSplits.length;
-        if (numJoinSplits == 0) {
-            lastCall = "no-op";
-            return;
-        }
+        uint256 numJoinSplits = bound(seed, 1, 10);
 
-        for (uint256 i = 0; i < joinSplits.length; i++) {
-            joinSplits[i].commitmentTreeRoot = commitmentTreeManager.root();
-            joinSplits[i].nullifierA = _nullifierCounter + 2 * i;
-            joinSplits[i].nullifierB = _nullifierCounter + 2 * i + 1;
-            joinSplits[i].newNoteACommitment = bound(
-                joinSplits[i].newNoteACommitment,
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            );
-            joinSplits[i].newNoteBCommitment = bound(
-                joinSplits[i].newNoteBCommitment,
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            );
+        JoinSplit[] memory joinSplits = new JoinSplit[](numJoinSplits);
+        for (uint256 i = 0; i < numJoinSplits; i++) {
+            joinSplits[i] = _generateJoinSplit(seed);
         }
 
         commitmentTreeManager.handleJoinSplits(joinSplits);
@@ -121,7 +107,7 @@ contract CommitmentTreeManagerHandler is Test {
     function handleRefundNotes(
         uint256 seed
     ) public trackCall("handleRefundNotes") {
-        uint256 numRefunds = bound(_reRandomize(seed), 0, 17);
+        uint256 numRefunds = bound(_rerandomize(seed), 0, 17);
 
         if (numRefunds == 0) {
             lastCall = "no-op";
@@ -129,35 +115,32 @@ contract CommitmentTreeManagerHandler is Test {
         }
 
         uint256 maxNumRefunds = bound(
-            _reRandomize(seed),
+            _rerandomize(seed),
             numRefunds,
             numRefunds + 20
         );
 
         EncodedAsset[] memory encodedAssets = new EncodedAsset[](maxNumRefunds);
-        StealthAddress[] memory refundAddrs = new StealthAddress[](
-            maxNumRefunds
-        );
         uint256[] memory values = new uint256[](maxNumRefunds);
 
         StealthAddress memory refundAddr = StealthAddress({
             h1X: bound(
-                _reRandomize(seed),
+                _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             ),
             h1Y: bound(
-                _reRandomize(seed),
+                _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             ),
             h2X: bound(
-                _reRandomize(seed),
+                _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             ),
             h2Y: bound(
-                _reRandomize(seed),
+                _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             )
@@ -166,11 +149,11 @@ contract CommitmentTreeManagerHandler is Test {
         for (uint256 i = 0; i < maxNumRefunds; i++) {
             encodedAssets[i] = AssetUtils.encodeAsset(
                 AssetType.ERC20,
-                address(uint160(bound(_reRandomize(seed), 0, (1 << 160) - 1))),
+                address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
                 ERC20_ID
             );
 
-            values[i] = bound(_reRandomize(seed), 0, (1 << 252) - 1);
+            values[i] = bound(_rerandomize(seed), 0, (1 << 252) - 1);
         }
 
         commitmentTreeManager.handleRefundNotes(
@@ -215,17 +198,22 @@ contract CommitmentTreeManagerHandler is Test {
         ghost_insertNoteCommitmentsLeafCount += ncs.length;
     }
 
-    function _reRandomize(uint256 seed) internal returns (uint256) {
-        uint256 newRandom;
-        unchecked {
-            newRandom = uint256(
-                keccak256(
-                    abi.encodePacked(seed, uint256(seedRerandomizationCounter))
-                )
-            );
-            seedRerandomizationCounter++;
-        }
-
-        return newRandom;
+    function _generateJoinSplit(
+        uint256 seed
+    ) internal returns (JoinSplit memory _joinSplit) {
+        _joinSplit.newNoteACommitment = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        _joinSplit.newNoteBCommitment = bound(
+            _rerandomize(seed),
+            0,
+            Utils.BN254_SCALAR_FIELD_MODULUS - 1
+        );
+        _joinSplit.commitmentTreeRoot = commitmentTreeManager.root();
+        _joinSplit.nullifierA = _nullifierCounter;
+        _joinSplit.nullifierB = _nullifierCounter + 1;
+        _nullifierCounter += 2;
     }
 }
