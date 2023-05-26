@@ -64,7 +64,8 @@ fi
 
 if [ "$cleanup_flag" = "true" ]; then
     # Calls cleanup() upon CTRL+C or early exit
-    trap cleanup SIGINT SIGTERM EXIT
+    echo "Cleanup enabled upon exit..."
+    trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 fi
 
 mkdir -p $LOG_DIR
@@ -72,10 +73,6 @@ mkdir -p $ROOT_DIR/logs
 echo "outputting logs to $LOG_DIR/"
 
 yarn build
-
-# kill all child processes when this script exits
-# trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
-trap 'trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 
 # start the site
 pushd packages/site
