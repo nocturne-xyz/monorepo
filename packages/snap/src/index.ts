@@ -81,6 +81,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     case "nocturne_getRandomizedAddr":
       return JSON.stringify(signer.generateRandomStealthAddress());
     case "nocturne_getAllBalances":
+      console.log("Syncing...");
       await sdk.sync();
       return JSON.stringify(await sdk.getAllAssetBalances());
     case "nocturne_sync":
