@@ -45,8 +45,8 @@ contract TellerHandler is OperationGenerator {
     SimpleERC1155Token public swapErc1155;
 
     bytes32 public lastCall;
-    uint256[] public ghost_totalJoinSplitUnwrappedForToken;
     uint256 public ghost_totalBundlerPayout;
+    uint256[] public ghost_totalJoinSplitUnwrappedForToken;
     uint256[] public ghost_numberOfTimesPrefillTakenForToken;
     uint256[] public ghost_numberOfTimesPrefillRefilledForToken;
 
@@ -84,6 +84,12 @@ contract TellerHandler is OperationGenerator {
 
         // dummy, only for pure fns that only work for calldata
         _testBalanceManager = new TestBalanceManager();
+
+        for (uint256 i = 0; i < joinSplitTokens.length; i++) {
+            ghost_totalJoinSplitUnwrappedForToken.push(0);
+            ghost_numberOfTimesPrefillTakenForToken.push(0);
+            ghost_numberOfTimesPrefillRefilledForToken.push(0);
+        }
     }
 
     // ______EXTERNAL______
@@ -132,9 +138,9 @@ contract TellerHandler is OperationGenerator {
     }
 
     function processBundle(uint256 seed) external {
-        uint256 numJoinSplitTokens = numJoinSplitTokens();
-        bool[] memory prefillExistsForToken = new bool[](numJoinSplitTokens);
-        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+        uint256 _numJoinSplitTokens = numJoinSplitTokens();
+        bool[] memory prefillExistsForToken = new bool[](_numJoinSplitTokens);
+        for (uint256 i = 0; i < _numJoinSplitTokens; i++) {
             prefillExistsForToken[i] =
                 IERC20(joinSplitTokens[i]).balanceOf(address(handler)) > 0;
         }
@@ -148,7 +154,6 @@ contract TellerHandler is OperationGenerator {
                     teller: teller,
                     handler: address(handler),
                     root: handler.root(),
-                    statefulNfGeneration: true,
                     exceedJoinSplitsMarginInTokens: 1,
                     swapper: swapper,
                     joinSplitTokens: joinSplitTokens,
@@ -177,6 +182,7 @@ contract TellerHandler is OperationGenerator {
             ghost_totalBundlerPayout += bundlerPayout;
         }
 
+        console.log("pushing failure reason");
         if (bytes(opResult.failureReason).length > 0) {
             _failureReasons.push(opResult.failureReason);
         }

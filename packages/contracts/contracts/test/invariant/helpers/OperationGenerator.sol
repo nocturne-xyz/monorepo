@@ -31,9 +31,6 @@ struct GenerateOperationArgs {
     Teller teller;
     address handler;
     uint256 root;
-    // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
-    // teller invariant tests hang for no apparent reason
-    bool statefulNfGeneration;
     uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
     address[] joinSplitTokens;
@@ -90,6 +87,8 @@ contract OperationGenerator is InvariantUtils {
         uint256[][] memory joinSplitsPublicSpends = new uint256[][](
             numJoinSplitTokens
         );
+
+        console.log("randomizing joinsplit amounts");
         for (uint256 i = 0; i < numJoinSplitTokens; i++) {
             joinSplitsPublicSpends[i] = _randomizeJoinSplitAmounts(
                 _rerandomize(args.seed),
@@ -105,6 +104,7 @@ contract OperationGenerator is InvariantUtils {
         // approvals in case of a swap
         uint256 numActions = bound(_rerandomize(args.seed), 2, 5);
 
+        console.log("getting gas to reserve");
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             DEFAULT_EXECUTION_GAS_LIMIT,
@@ -120,6 +120,7 @@ contract OperationGenerator is InvariantUtils {
             compensateBundler = true;
         }
 
+        console.log("formatting actions");
         Action[] memory actions = new Action[](numActions);
         (actions, _meta) = _formatActions(
             args,
@@ -134,6 +135,7 @@ contract OperationGenerator is InvariantUtils {
             ERC20_ID
         );
 
+        console.log("getting gas asset refund threshold");
         uint256 gasAssetRefundThreshold = bound(
             _rerandomize(args.seed),
             0,
@@ -156,37 +158,33 @@ contract OperationGenerator is InvariantUtils {
             operationFailureType: OperationFailureType.NONE
         });
 
+        console.log("Formatting op");
         _op = NocturneUtils.formatOperation(opArgs);
 
+        _op = _ensureUniqueNullifiers(_op);
+    }
+
+    function _ensureUniqueNullifiers(
+        Operation memory op
+    ) internal returns (Operation memory) {
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
         // to convert NocturneUtils to be stateful contract
-        for (uint256 i = 0; i < _op.joinSplits.length; i++) {
-            if (args.statefulNfGeneration) {
-                _op.joinSplits[i].nullifierA = nullifierCount;
-                _op.joinSplits[i].nullifierB = nullifierCount + 1;
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+            op.joinSplits[i].nullifierA = nullifierCount;
+            op.joinSplits[i].nullifierB = nullifierCount + 1;
 
-                nullifierCount += 2;
+            nullifierCount += 2;
 
-                console.log("NF A", _op.joinSplits[i].nullifierA);
-                console.log("NF B", _op.joinSplits[i].nullifierB);
-            } else {
-                // Overflow here doesn't matter given all we need are random nfs
-                unchecked {
-                    _op.joinSplits[i].nullifierA =
-                        _rerandomize(args.seed) +
-                        (2 * i);
-                    _op.joinSplits[i].nullifierB =
-                        _rerandomize(args.seed) +
-                        (2 * i) +
-                        1;
-                }
-            }
+            console.log("NF A", op.joinSplits[i].nullifierA);
+            console.log("NF B", op.joinSplits[i].nullifierB);
         }
+
+        return op;
     }
 
     function _formatActions(
         GenerateOperationArgs memory args,
-        uint256[] memory totalJoinSplitAmounts,
+        uint256[] memory runningJoinSplitAmounts,
         uint256 numActions
     )
         internal
@@ -197,7 +195,9 @@ contract OperationGenerator is InvariantUtils {
     {
         _actions = new Action[](numActions);
         _meta.transfers = new TransferRequest[](numActions);
+        _meta.transferTokenNumbers = new uint256[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
+        _meta.swapTokenNumbers = new uint256[](numActions);
         _meta.isTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
 
@@ -215,7 +215,7 @@ contract OperationGenerator is InvariantUtils {
             uint256 transferOrSwapBound;
             unchecked {
                 transferOrSwapBound =
-                    totalJoinSplitAmounts[i] +
+                    runningJoinSplitAmounts[tokenToUseIndex] +
                     args.exceedJoinSplitsMarginInTokens;
             }
             uint256 transferOrSwapAmount = bound(
@@ -232,6 +232,7 @@ contract OperationGenerator is InvariantUtils {
 
             if (isTransfer) {
                 {
+                    console.log("filling tranfers meta");
                     _meta.transfers[i] = TransferRequest({
                         token: token,
                         recipient: transferRecipientAddress,
@@ -240,12 +241,15 @@ contract OperationGenerator is InvariantUtils {
                     _meta.transferTokenNumbers[i] = tokenToUseIndex;
                     _meta.isTransfer[i] = true;
 
+                    console.log("filling transfers action");
                     _actions[i] = NocturneUtils.formatTransferAction(
                         _meta.transfers[i]
                     );
+                    console.log("fillED transfers action");
                 }
             } else {
                 {
+                    console.log("filling swaps meta");
                     _meta.swaps[i + 1] = _createRandomSwapRequest(
                         transferOrSwapAmount,
                         args,
@@ -283,12 +287,14 @@ contract OperationGenerator is InvariantUtils {
 
                     i += 1; // additional +1 to skip past swap action at i+1
                 }
-
-                totalJoinSplitAmounts[tokenToUseIndex] -= Utils.min(
-                    transferOrSwapAmount,
-                    totalJoinSplitAmounts[tokenToUseIndex]
-                ); // avoid underflow
             }
+
+            console.log("subtracting from runningJoinSplitAmounts");
+            runningJoinSplitAmounts[tokenToUseIndex] -= Utils.min(
+                transferOrSwapAmount,
+                runningJoinSplitAmounts[tokenToUseIndex]
+            ); // avoid underflow
+            console.log("subtractED from runningJoinSplitAmounts");
         }
     }
 

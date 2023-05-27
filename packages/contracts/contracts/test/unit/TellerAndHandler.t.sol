@@ -273,9 +273,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -290,7 +290,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -330,9 +330,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory operation = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -347,7 +347,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -465,9 +465,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -482,7 +482,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -536,9 +536,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -553,7 +553,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 3,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -607,9 +607,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -624,7 +624,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 6,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     4 * PER_NOTE_AMOUNT
                 ),
@@ -679,9 +679,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -696,7 +696,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -750,9 +750,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -767,7 +767,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -821,9 +821,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -838,7 +838,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -889,7 +889,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         ReentrantCaller reentrantCaller = new ReentrantCaller(
             teller,
             handler,
-            ERC20s[0]
+            address(ERC20s[0])
         );
 
         // Encode action that calls reentrant contract
@@ -905,9 +905,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -979,9 +979,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -996,7 +996,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -1021,9 +1021,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1084,9 +1084,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1101,7 +1101,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -1126,9 +1126,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1201,9 +1201,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1218,7 +1218,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -1243,9 +1243,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1318,9 +1318,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1335,7 +1335,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
@@ -1402,9 +1402,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1419,7 +1419,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
@@ -1532,9 +1532,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    tokenIn
+                    address(tokenIn)
                 ),
-                gasToken: tokenIn,
+                gasToken: address(tokenIn),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1639,9 +1639,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    tokenIn
+                    address(tokenIn)
                 ),
-                gasToken: tokenIn,
+                gasToken: address(tokenIn),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -1765,9 +1765,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    tokenIn
+                    address(tokenIn)
                 ),
-                gasToken: tokenIn,
+                gasToken: address(tokenIn),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2064,9 +2064,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2081,7 +2081,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 20,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2130,9 +2130,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2147,7 +2147,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2188,9 +2188,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2205,7 +2205,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2229,9 +2229,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2246,7 +2246,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2268,9 +2268,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2285,7 +2285,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2307,9 +2307,9 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: handler.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -2324,7 +2324,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),

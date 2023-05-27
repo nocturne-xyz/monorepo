@@ -127,9 +127,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -172,9 +172,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -226,10 +226,10 @@ contract BalanceManagerTest is Test {
         reserveAndDepositFunds(ALICE, token2, PER_NOTE_AMOUNT * 3);
         reserveAndDepositFunds(ALICE, token3, PER_NOTE_AMOUNT * 3);
 
-        SimpleERC20Token[] memory tokens = new SimpleERC20Token[](3);
-        tokens[0] = token1;
-        tokens[1] = token2;
-        tokens[2] = token3;
+        address[] memory tokens = new address[](3);
+        tokens[0] = address(token1);
+        tokens[1] = address(token2);
+        tokens[2] = address(token3);
 
         uint256[][] memory joinSplitsPublicSpends = new uint256[][](3);
         for (uint256 i = 0; i < 3; i++) {
@@ -244,7 +244,7 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: tokens,
-                gasToken: token1,
+                gasToken: address(token1),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: joinSplitsPublicSpends,
                 encodedRefundAssets: new EncodedAsset[](0),
@@ -297,9 +297,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -349,9 +349,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -424,9 +424,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -504,9 +504,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -553,9 +553,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -593,9 +593,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -634,9 +634,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -675,9 +675,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -715,9 +715,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
+                    address(token)
                 ),
-                gasToken: token,
+                gasToken: address(token),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(
@@ -770,9 +770,9 @@ contract BalanceManagerTest is Test {
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
                 joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    joinSplitToken
+                    address(joinSplitToken)
                 ),
-                gasToken: joinSplitToken,
+                gasToken: address(joinSplitToken),
                 root: balanceManager.root(),
                 joinSplitsPublicSpends: NocturneUtils
                     ._publicSpendsArrayOfOnePublicSpendArray(

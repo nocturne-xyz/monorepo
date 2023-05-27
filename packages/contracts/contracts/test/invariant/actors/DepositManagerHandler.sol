@@ -76,6 +76,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         erc1155 = _erc1155;
         screenerPrivkey = _screenerPrivkey;
         screenerAddress = vm.addr(screenerPrivkey);
+
+        for (uint256 i = 0; i < _erc20s.length; i++) {
+            _instantiateDepositSumSetErc20s.push();
+            _retrieveDepositSumSetErc20s.push();
+            _completeDepositSumSetErc20s.push();
+        }
     }
 
     modifier createActor() {
