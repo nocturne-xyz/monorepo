@@ -206,8 +206,8 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_tellerBalanceConsistent() external {
-        assert_protocol_tellerBalanceConsistent();
+    function invariant_protocol_tellerNonWethErc20BalanceConsistent() external {
+        assert_protocol_tellerNonWethErc20BalanceConsistent();
     }
 
     function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {

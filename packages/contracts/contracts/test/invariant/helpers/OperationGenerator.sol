@@ -34,7 +34,6 @@ struct GenerateOperationArgs {
     uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
     address[] joinSplitTokens;
-    address gasToken;
     SimpleERC20Token swapErc20;
     SimpleERC721Token swapErc721;
     SimpleERC1155Token swapErc1155;

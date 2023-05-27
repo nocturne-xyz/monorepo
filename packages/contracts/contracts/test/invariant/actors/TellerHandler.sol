@@ -138,6 +138,13 @@ contract TellerHandler is OperationGenerator {
     }
 
     function processBundle(uint256 seed) external {
+        // Ensure swap erc20 always filled so we don't have to bother with prefill logic
+        // TODO: remove and allow when we allow teller to transact with swap erc20
+        if (swapErc20.balanceOf(address(handler)) == 0) {
+            swapErc20.reserveTokens(address(this), 1);
+            swapErc20.transfer(address(handler), 1);
+        }
+
         uint256 _numJoinSplitTokens = numJoinSplitTokens();
         bool[] memory prefillExistsForToken = new bool[](_numJoinSplitTokens);
         for (uint256 i = 0; i < _numJoinSplitTokens; i++) {
@@ -157,7 +164,6 @@ contract TellerHandler is OperationGenerator {
                     exceedJoinSplitsMarginInTokens: 1,
                     swapper: swapper,
                     joinSplitTokens: joinSplitTokens,
-                    gasToken: gasToken,
                     swapErc20: swapErc20,
                     swapErc721: swapErc721,
                     swapErc1155: swapErc1155
@@ -203,7 +209,7 @@ contract TellerHandler is OperationGenerator {
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
             ghost_totalJoinSplitUnwrappedForToken[
                 i
-            ] = _totalJoinSplitTokenAmountInOp(op, joinSplitTokens[i]);
+            ] += _totalJoinSplitTokenAmountInOp(op, i);
         }
 
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
@@ -219,6 +225,20 @@ contract TellerHandler is OperationGenerator {
                 ghost_numberOfTimesPrefillRefilledForToken[i] += 1;
             }
         }
+
+        // TODO: remove
+        console.log(
+            "gas token balance of bundler:",
+            IERC20(gasToken).balanceOf(address(bundlerAddress))
+        );
+        console.log(
+            "weth balance of bundler",
+            IERC20(joinSplitTokens[0]).balanceOf(bundlerAddress)
+        );
+        console.log(
+            "expected bundler token balance:",
+            ghost_totalBundlerPayout
+        );
     }
 
     // ______VIEW______
@@ -310,16 +330,17 @@ contract TellerHandler is OperationGenerator {
 
     function _totalJoinSplitTokenAmountInOp(
         Operation memory op,
-        address joinSplitToken
+        uint256 tokenIndex
     ) internal view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
             EncodedAsset memory encodedAsset = op.joinSplits[i].encodedAsset;
             (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-            if (assetAddr == joinSplitToken) {
+            if (assetAddr == joinSplitTokens[tokenIndex]) {
                 total += op.joinSplits[i].publicSpend;
             }
         }
+
         return total;
     }
 }

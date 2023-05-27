@@ -61,7 +61,7 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_tellerBalanceConsistent() internal {
+    function assert_protocol_tellerNonWethErc20BalanceConsistent() internal {
         uint256 tellerBalance = depositErc20.balanceOf(address(teller));
 
         // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
@@ -70,7 +70,6 @@ contract InvariantsBase is Test {
             .ghost_completeDepositSumErc20ForToken(1) +
             tellerHandler.ghost_numberOfTimesPrefillTakenForToken(1) -
             tellerHandler.ghost_totalTransferredOutOfTellerForToken(1) -
-            tellerHandler.ghost_totalBundlerPayout() -
             tellerHandler.ghost_numberOfTimesPrefillRefilledForToken(1);
 
         assertEq(tellerBalance, expectedInTeller);
@@ -294,7 +293,7 @@ contract InvariantsBase is Test {
 
     function assert_operation_bundlerBalanceMatchesTracked() internal {
         assertEq(
-            depositErc20.balanceOf(BUNDLER_ADDRESS),
+            weth.balanceOf(BUNDLER_ADDRESS),
             tellerHandler.ghost_totalBundlerPayout()
         );
     }
@@ -302,8 +301,8 @@ contract InvariantsBase is Test {
     function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken()
         internal
     {
-        uint256 numJoinSplits = tellerHandler.numJoinSplitTokens();
-        for (uint256 i = 0; i < numJoinSplits; i++) {
+        uint256 numJoinSplitTokens = tellerHandler.numJoinSplitTokens();
+        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
             assertLe(
                 tellerHandler.ghost_totalTransferredOutOfTellerForToken(1),
                 tellerHandler.ghost_totalJoinSplitUnwrappedForToken(1) +
