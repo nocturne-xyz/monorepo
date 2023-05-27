@@ -46,9 +46,6 @@ contract InvariantsBase is Test {
     TokenSwapper public swapper;
 
     address[] public depositErc20s;
-
-    // WETH9 public weth;
-    // SimpleERC20Token public depositErc20;
     SimpleERC721Token public depositErc721;
     SimpleERC1155Token public depositErc1155;
     SimpleERC20Token public swapErc20;
@@ -264,8 +261,7 @@ contract InvariantsBase is Test {
     function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken()
         internal
     {
-        uint256 numJoinSplitTokens = tellerHandler.numJoinSplitTokens();
-        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
             assertLe(
                 tellerHandler.ghost_totalTransferredOutOfTellerForToken(1),
                 tellerHandler.ghost_totalJoinSplitUnwrappedForToken(1) +
