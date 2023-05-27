@@ -36,7 +36,7 @@ struct GenerateOperationArgs {
     bool statefulNfGeneration;
     uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
-    SimpleERC20Token joinSplitToken;
+    SimpleERC20Token[] joinSplitTokens;
     SimpleERC20Token gasToken;
     SimpleERC20Token swapErc20;
     SimpleERC721Token swapErc721;
@@ -45,7 +45,9 @@ struct GenerateOperationArgs {
 
 struct GeneratedOperationMetadata {
     TransferRequest[] transfers;
+    uint256[] transferTokenNumbers; // maps transfers ^ to what number token in args.joinSplitTokens
     SwapRequest[] swaps;
+    uint256[] swapTokenNumbers; // maps swaps ^ to what number token in args.joinSplitTokens
     bool[] isTransfer;
     bool[] isSwap;
 }
@@ -71,19 +73,33 @@ contract OperationGenerator is InvariantUtils {
         internal
         returns (Operation memory _op, GeneratedOperationMetadata memory _meta)
     {
-        // Get random totalJoinSplitUnwrapAmount using the bound function
-        uint256 totalJoinSplitUnwrapAmount = bound(
-            args.seed,
-            0,
-            args.joinSplitToken.balanceOf(address(args.teller))
+        uint256 numJoinSplitTokens = args.joinSplitTokens.length;
+        uint256[] memory totalJoinSplitUnwrapAmounts = new uint256[](
+            numJoinSplitTokens
         );
-        uint256 totalJoinSplitForActions = totalJoinSplitUnwrapAmount;
+
+        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+            totalJoinSplitUnwrapAmounts[i] = bound(
+                args.seed,
+                0,
+                args.joinSplitTokens[i].balanceOf(address(args.teller))
+            );
+        }
 
         // Get random args.joinSplitPublicSpends
-        uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
-            _rerandomize(args.seed),
-            totalJoinSplitUnwrapAmount
+        uint256[][] memory joinSplitsPublicSpends = new uint256[][](
+            numJoinSplitTokens
         );
+        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+            joinSplitsPublicSpends[i] = _randomizeJoinSplitAmounts(
+                _rerandomize(args.seed),
+                totalJoinSplitUnwrapAmounts[i]
+            );
+        }
+
+        uint256 totalNumJoinSplits = _totalNumJoinSplitsForJoinSplitsPublicSpends(
+                joinSplitsPublicSpends
+            );
 
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
@@ -92,20 +108,22 @@ contract OperationGenerator is InvariantUtils {
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             DEFAULT_EXECUTION_GAS_LIMIT,
-            joinSplitPublicSpends.length,
+            totalNumJoinSplits,
             DEFAULT_MAX_NUM_REFUNDS
         );
 
         bool compensateBundler = false;
-        if (totalJoinSplitForActions > gasToReserve) {
-            totalJoinSplitForActions = totalJoinSplitForActions - gasToReserve;
+        if (totalJoinSplitUnwrapAmounts[0] > gasToReserve) {
+            totalJoinSplitUnwrapAmounts[0] =
+                totalJoinSplitUnwrapAmounts[0] -
+                gasToReserve;
             compensateBundler = true;
         }
 
         Action[] memory actions = new Action[](numActions);
         (actions, _meta) = _formatActions(
             args,
-            totalJoinSplitForActions,
+            totalJoinSplitUnwrapAmounts,
             numActions
         );
 
@@ -119,18 +137,15 @@ contract OperationGenerator is InvariantUtils {
         uint256 gasAssetRefundThreshold = bound(
             _rerandomize(args.seed),
             0,
-            totalJoinSplitUnwrapAmount
+            totalJoinSplitUnwrapAmounts[0]
         );
 
         // TODO: use > 1 joinsplit token AND public spends
         FormatOperationArgs memory opArgs = FormatOperationArgs({
-            joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                args.joinSplitToken
-            ),
-            gasToken: args.gasToken,
+            joinSplitTokens: args.joinSplitTokens,
+            gasToken: args.joinSplitTokens[0],
             root: args.root,
-            joinSplitsPublicSpends: NocturneUtils
-                ._publicSpendsArrayOfOnePublicSpendArray(joinSplitPublicSpends),
+            joinSplitsPublicSpends: joinSplitsPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
@@ -171,7 +186,7 @@ contract OperationGenerator is InvariantUtils {
 
     function _formatActions(
         GenerateOperationArgs memory args,
-        uint256 totalJoinSplitAmount,
+        uint256[] memory totalJoinSplitAmounts,
         uint256 numActions
     )
         internal
@@ -186,16 +201,21 @@ contract OperationGenerator is InvariantUtils {
         _meta.isTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
 
-        uint256 runningJoinSplitAmount = totalJoinSplitAmount;
-
         // For each action of numActions, switch on transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
+            uint256 tokenToUseIndex = bound(
+                _rerandomize(args.seed),
+                0,
+                args.joinSplitTokens.length - 1
+            );
+            SimpleERC20Token token = args.joinSplitTokens[tokenToUseIndex];
+
             bool isTransfer = bound(args.seed, 0, 1) == 0;
 
             uint256 transferOrSwapBound;
             unchecked {
                 transferOrSwapBound =
-                    runningJoinSplitAmount +
+                    totalJoinSplitAmounts[i] +
                     args.exceedJoinSplitsMarginInTokens;
             }
             uint256 transferOrSwapAmount = bound(
@@ -213,10 +233,11 @@ contract OperationGenerator is InvariantUtils {
             if (isTransfer) {
                 {
                     _meta.transfers[i] = TransferRequest({
-                        token: args.joinSplitToken,
+                        token: token,
                         recipient: transferRecipientAddress,
                         amount: transferOrSwapAmount
                     });
+                    _meta.transferTokenNumbers[i] = tokenToUseIndex;
                     _meta.isTransfer[i] = true;
 
                     _actions[i] = NocturneUtils.formatTransferAction(
@@ -227,13 +248,15 @@ contract OperationGenerator is InvariantUtils {
                 {
                     _meta.swaps[i + 1] = _createRandomSwapRequest(
                         transferOrSwapAmount,
-                        args
+                        args,
+                        token
                     );
+                    _meta.swapTokenNumbers[i] = tokenToUseIndex;
                     _meta.isSwap[i + 1] = true;
 
                     {
                         // Kludge to satisfy stack limit
-                        SimpleERC20Token inToken = args.joinSplitToken;
+                        SimpleERC20Token inToken = token;
                         TokenSwapper swapper = args.swapper;
 
                         Action memory approveAction = Action({
@@ -261,22 +284,34 @@ contract OperationGenerator is InvariantUtils {
                     i += 1; // additional +1 to skip past swap action at i+1
                 }
 
-                runningJoinSplitAmount -= Utils.min(
+                totalJoinSplitAmounts[tokenToUseIndex] -= Utils.min(
                     transferOrSwapAmount,
-                    runningJoinSplitAmount
+                    totalJoinSplitAmounts[tokenToUseIndex]
                 ); // avoid underflow
             }
         }
     }
 
+    function _totalNumJoinSplitsForJoinSplitsPublicSpends(
+        uint256[][] memory joinSplitsPublicSpends
+    ) internal pure returns (uint256) {
+        uint256 totalJoinSplits = 0;
+        for (uint256 i = 0; i < joinSplitsPublicSpends.length; i++) {
+            totalJoinSplits += joinSplitsPublicSpends[i].length;
+        }
+
+        return totalJoinSplits;
+    }
+
     function _createRandomSwapRequest(
         uint256 swapInAmount,
-        GenerateOperationArgs memory args
+        GenerateOperationArgs memory args,
+        SimpleERC20Token token
     ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(args.joinSplitToken),
+            address(token),
             ERC20_ID
         );
 
@@ -312,7 +347,7 @@ contract OperationGenerator is InvariantUtils {
         uint256 seed,
         uint256 totalAmount
     ) internal returns (uint256[] memory) {
-        uint256 numJoinSplits = bound(seed, 1, 5); // at most 5 joinsplits
+        uint256 numJoinSplits = bound(seed, 1, 3); // at most 3 joinsplits per asset
         uint256[] memory joinSplitAmounts = new uint256[](numJoinSplits);
 
         uint256 remainingAmount = totalAmount;

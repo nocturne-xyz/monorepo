@@ -11,7 +11,6 @@ import "../../utils/ForgeUtils.sol";
 import {TestDepositManager} from "../../harnesses/TestDepositManager.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
 import {EventParsing} from "../../utils/EventParsing.sol";
-import {WETH9} from "../../tokens/WETH9.sol";
 import {SimpleERC20Token} from "../../tokens/SimpleERC20Token.sol";
 import {SimpleERC721Token} from "../../tokens/SimpleERC721Token.sol";
 import {SimpleERC1155Token} from "../../tokens/SimpleERC1155Token.sol";
@@ -20,6 +19,7 @@ import {ActorSumSet, LibActorSumSet} from "../helpers/ActorSumSet.sol";
 import {LibDepositRequestArray} from "../helpers/DepositRequestArray.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
+import {ISimpleERC20Token} from "../../tokens/ISimpleToken.sol";
 import "../../../libs/Types.sol";
 
 contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
@@ -41,8 +41,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 public screenerPrivkey;
     address public screenerAddress;
 
-    WETH9 public weth;
-    SimpleERC20Token public erc20;
+    address[] public erc20s;
     SimpleERC721Token public erc721;
     SimpleERC1155Token public erc1155;
 
@@ -57,13 +56,10 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     ActorSumSet internal _gasCompensationSet;
 
-    ActorSumSet internal _instantiateDepositSumSetETH;
-    ActorSumSet internal _retrieveDepositSumSetETH;
-    ActorSumSet internal _completeDepositSumSetETH;
-
-    ActorSumSet internal _instantiateDepositSumSetErc20;
-    ActorSumSet internal _retrieveDepositSumSetErc20;
-    ActorSumSet internal _completeDepositSumSetErc20;
+    // First entry in array is for weth
+    ActorSumSet[] internal _instantiateDepositSumSetErc20s;
+    ActorSumSet[] internal _retrieveDepositSumSetErc20s;
+    ActorSumSet[] internal _completeDepositSumSetErc20s;
 
     DepositRequest[] internal _depositSet;
 
@@ -207,7 +203,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Update sets and sum
         for (uint256 i = 0; i < numDeposits; i++) {
             _depositSet.push(deposits[i]);
-            _instantiateDepositSumSetETH.addToActorSum(
+            _instantiateDepositSumSetErc20s[0].addToActorSum(
                 _currentActor,
                 depositAmounts[i]
             );
@@ -223,6 +219,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 numDepositsSeed,
         uint256 seed
     ) public createActor trackCall("instantiateDepositErc20") {
+        ISimpleERC20Token erc20 = ISimpleERC20Token(erc20s[1]);
         uint256 numDeposits = bound(numDepositsSeed, 1, 10);
 
         (, uint32 globalCapWholeTokens, , , uint8 precision) = depositManager
@@ -282,7 +279,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Update deposit set and sum
         for (uint256 i = 0; i < numDeposits; i++) {
             _depositSet.push(deposits[i]);
-            _instantiateDepositSumSetErc20.addToActorSum(
+            _instantiateDepositSumSetErc20[1].addToActorSum(
                 _currentActor,
                 depositAmounts[i]
             );
@@ -319,12 +316,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 randDepositRequest.encodedAsset.encodedAssetAddr ==
                 encodedWeth.encodedAssetAddr
             ) {
-                _retrieveDepositSumSetETH.addToActorSum(
+                _retrieveDepositSumSetErc20s[0].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
             } else {
-                _retrieveDepositSumSetErc20.addToActorSum(
+                _retrieveDepositSumSetErc20s[1].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
@@ -372,12 +369,12 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                 randDepositRequest.encodedAsset.encodedAssetAddr ==
                 encodedWeth.encodedAssetAddr
             ) {
-                _completeDepositSumSetETH.addToActorSum(
+                _completeDepositSumSetErc20s[0].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
             } else {
-                _completeDepositSumSetErc20.addToActorSum(
+                _completeDepositSumSetErc20s[1].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
@@ -431,64 +428,44 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         return _gasCompensationSet.getSumForActor(actor);
     }
 
-    function ghost_instantiateDepositSumETH() public view returns (uint256) {
-        return _instantiateDepositSumSetETH.getTotalForAll();
-    }
-
-    function ghost_retrieveDepositSumETH() public view returns (uint256) {
-        return _retrieveDepositSumSetETH.getTotalForAll();
-    }
-
-    function ghost_completeDepositSumETH() public view returns (uint256) {
-        return _completeDepositSumSetETH.getTotalForAll();
-    }
-
-    function ghost_instantiateDepositSumETHFor(
-        address actor
+    function ghost_instantiateDepositSumErc20(
+        uint256 tokenIndex
     ) public view returns (uint256) {
-        return _instantiateDepositSumSetETH.getSumForActor(actor);
+        return _instantiateDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
-    function ghost_retrieveDepositSumETHFor(
-        address actor
+    function ghost_retrieveDepositSumErc20(
+        uint256 tokenIndex
     ) public view returns (uint256) {
-        return _retrieveDepositSumSetETH.getSumForActor(actor);
+        return _retrieveDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
-    function ghost_completeDepositSumETHFor(
-        address actor
+    function ghost_completeDepositSumErc20(
+        uint256 tokenIndex
     ) public view returns (uint256) {
-        return _completeDepositSumSetETH.getSumForActor(actor);
-    }
-
-    function ghost_instantiateDepositSumErc20() public view returns (uint256) {
-        return _instantiateDepositSumSetErc20.getTotalForAll();
-    }
-
-    function ghost_retrieveDepositSumErc20() public view returns (uint256) {
-        return _retrieveDepositSumSetErc20.getTotalForAll();
-    }
-
-    function ghost_completeDepositSumErc20() public view returns (uint256) {
-        return _completeDepositSumSetErc20.getTotalForAll();
+        return _completeDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
     function ghost_instantiateDepositSumErc20For(
+        uint256 tokenIndex,
         address actor
     ) public view returns (uint256) {
-        return _instantiateDepositSumSetErc20.getSumForActor(actor);
+        return
+            _instantiateDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
     function ghost_retrieveDepositSumErc20For(
+        uint256 tokenIndex,
         address actor
     ) public view returns (uint256) {
-        return _retrieveDepositSumSetErc20.getSumForActor(actor);
+        return _retrieveDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
     function ghost_completeDepositSumErc20For(
+        uint256 tokenIndex,
         address actor
     ) public view returns (uint256) {
-        return _completeDepositSumSetErc20.getSumForActor(actor);
+        return _completeDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
     // ______PURE______
