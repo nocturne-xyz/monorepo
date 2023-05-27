@@ -45,8 +45,10 @@ contract InvariantsBase is Test {
 
     TokenSwapper public swapper;
 
-    WETH9 public weth;
-    SimpleERC20Token public depositErc20;
+    address[] public depositErc20s;
+
+    // WETH9 public weth;
+    // SimpleERC20Token public depositErc20;
     SimpleERC721Token public depositErc721;
     SimpleERC1155Token public depositErc1155;
     SimpleERC20Token public swapErc20;
@@ -61,172 +63,143 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_tellerNonWethErc20BalanceConsistent() internal {
-        uint256 tellerBalance = depositErc20.balanceOf(address(teller));
+    function assert_protocol_tellerNonWethErc20BalancesConsistent() internal {
+        for (uint256 i = 1; i < depositErc20s.length; i++) {
+            uint256 tellerBalance = IERC20(depositErc20s[i]).balanceOf(
+                address(teller)
+            );
+
+            // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
+            // we need to add the number of times prefills are taken to make up for over subtraction
+            uint256 expectedInTeller = depositManagerHandler
+                .ghost_completeDepositSumErc20ForToken(i) +
+                tellerHandler.ghost_numberOfTimesPrefillTakenForToken(i) -
+                tellerHandler.ghost_totalTransferredOutOfTellerForToken(i) -
+                tellerHandler.ghost_numberOfTimesPrefillRefilledForToken(i);
+
+            assertEq(tellerBalance, expectedInTeller);
+        }
+    }
+
+    function assert_protocol_tellerWethBalanceConsistent() internal {
+        uint256 tellerBalance = IERC20(depositErc20s[0]).balanceOf(
+            address(teller)
+        );
 
         // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
         // we need to add the number of times prefills are taken to make up for over subtraction
         uint256 expectedInTeller = depositManagerHandler
-            .ghost_completeDepositSumErc20ForToken(1) +
-            tellerHandler.ghost_numberOfTimesPrefillTakenForToken(1) -
-            tellerHandler.ghost_totalTransferredOutOfTellerForToken(1) -
-            tellerHandler.ghost_numberOfTimesPrefillRefilledForToken(1);
+            .ghost_completeDepositSumErc20ForToken(0) +
+            tellerHandler.ghost_numberOfTimesPrefillTakenForToken(0) -
+            tellerHandler.ghost_totalTransferredOutOfTellerForToken(0) -
+            tellerHandler.ghost_numberOfTimesPrefillRefilledForToken(0) -
+            tellerHandler.ghost_totalBundlerPayout();
 
         assertEq(tellerBalance, expectedInTeller);
     }
 
     function assert_protocol_handlerErc20BalancesAlwaysZeroOrOne() internal {
-        assertGe(depositErc20.balanceOf(address(handler)), 0);
-        assertLe(depositErc20.balanceOf(address(handler)), 1);
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
+            uint256 handlerBalance = IERC20(depositErc20s[i]).balanceOf(
+                address(handler)
+            );
+            assertGe(handlerBalance, 0);
+            assertLe(handlerBalance, 1);
+        }
 
         assertGe(swapErc20.balanceOf(address(handler)), 0);
         assertLe(swapErc20.balanceOf(address(handler)), 1);
     }
 
-    // _______________DEPOSIT_ETH_______________
-
-    function assert_deposit_outNeverExceedsInETH() internal {
-        assertGe(
-            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(0),
-            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0) +
-                depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
-        );
-    }
-
-    function assert_deposit_depositManagerBalanceEqualsInMinusOutETH()
-        internal
-    {
-        assertEq(
-            weth.balanceOf(address(depositManagerHandler.depositManager())),
-            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(0) -
-                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0) -
-                depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
-        );
-    }
-
-    function assert_deposit_tellerBalanceEqualsCompletedDepositSumETH()
-        internal
-    {
-        assertEq(
-            weth.balanceOf(address(teller)),
-            depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
-        );
-    }
-
-    function assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
-        internal
-    {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
-
-        uint256 sum = 0;
-        for (uint256 i = 0; i < allActors.length; i++) {
-            sum += weth.balanceOf(allActors[i]);
+    function assert_deposit_outNeverExceedsInErc20s() internal {
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
+            assertGe(
+                depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(
+                    i
+                ),
+                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(i) +
+                    depositManagerHandler.ghost_completeDepositSumErc20ForToken(
+                        i
+                    )
+            );
         }
-
-        assertEq(
-            sum,
-            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0)
-        );
     }
 
-    function assert_deposit_actorBalanceAlwaysEqualsRetrievedETH() internal {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
-
-        for (uint256 i = 0; i < allActors.length; i++) {
+    function assert_deposit_depositManagerBalanceEqualsInMinusOutErc20s()
+        internal
+    {
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
             assertEq(
-                weth.balanceOf(allActors[i]),
-                depositManagerHandler
-                    .ghost_retrieveDepositSumErc20ForActorOfToken(
-                        allActors[i],
-                        0
+                IERC20(depositErc20s[i]).balanceOf(
+                    address(depositManagerHandler.depositManager())
+                ),
+                depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(
+                    i
+                ) -
+                    depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(
+                        i
+                    ) -
+                    depositManagerHandler.ghost_completeDepositSumErc20ForToken(
+                        i
                     )
             );
         }
     }
 
-    function assert_deposit_actorBalanceNeverExceedsInstantiatedETH() internal {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
-
-        for (uint256 i = 0; i < allActors.length; i++) {
-            assertLe(
-                weth.balanceOf(allActors[i]),
-                depositManagerHandler
-                    .ghost_instantiateDepositSumErc20ForActorOfToken(
-                        allActors[i],
-                        0
-                    )
-            );
-        }
-    }
-
-    // _______________DEPOSIT_ERC20_______________
-
-    function assert_deposit_outNeverExceedsInErc20() internal {
-        assertGe(
-            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(1),
-            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1) +
-                depositManagerHandler.ghost_completeDepositSumErc20ForToken(1)
-        );
-    }
-
-    function assert_deposit_depositManagerBalanceEqualsInMinusOutErc20()
+    function assert_deposit_allActorsBalanceSumEqualsRetrieveDepositSumErc20s()
         internal
     {
-        assertEq(
-            depositErc20.balanceOf(
-                address(depositManagerHandler.depositManager())
-            ),
-            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(1) -
-                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1) -
-                depositManagerHandler.ghost_completeDepositSumErc20ForToken(1)
-        );
-    }
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
+            address[] memory allActors = depositManagerHandler
+                .ghost_AllActors();
 
-    function assert_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
-        internal
-    {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
+            uint256 sum = 0;
+            for (uint256 j = 0; j < allActors.length; j++) {
+                sum += IERC20(depositErc20s[i]).balanceOf(allActors[j]);
+            }
 
-        uint256 sum = 0;
-        for (uint256 i = 0; i < allActors.length; i++) {
-            sum += depositErc20.balanceOf(allActors[i]);
-        }
-
-        assertEq(
-            sum,
-            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1)
-        );
-    }
-
-    function assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20() internal {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
-
-        for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
-                depositErc20.balanceOf(allActors[i]),
-                depositManagerHandler
-                    .ghost_retrieveDepositSumErc20ForActorOfToken(
-                        allActors[i],
-                        1
-                    )
+                sum,
+                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(i)
             );
         }
     }
 
-    function assert_deposit_actorBalanceNeverExceedsInstantiatedErc20()
+    function assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20s() internal {
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
+            address[] memory allActors = depositManagerHandler
+                .ghost_AllActors();
+
+            for (uint256 j = 0; j < allActors.length; j++) {
+                assertEq(
+                    IERC20(depositErc20s[i]).balanceOf(allActors[j]),
+                    depositManagerHandler
+                        .ghost_retrieveDepositSumErc20ForActorOfToken(
+                            allActors[j],
+                            i
+                        )
+                );
+            }
+        }
+    }
+
+    function assert_deposit_actorBalanceNeverExceedsInstantiatedErc20s()
         internal
     {
-        address[] memory allActors = depositManagerHandler.ghost_AllActors();
+        for (uint256 i = 0; i < depositErc20s.length; i++) {
+            address[] memory allActors = depositManagerHandler
+                .ghost_AllActors();
 
-        for (uint256 i = 0; i < allActors.length; i++) {
-            assertLe(
-                depositErc20.balanceOf(allActors[i]),
-                depositManagerHandler
-                    .ghost_instantiateDepositSumErc20ForActorOfToken(
-                        allActors[i],
-                        1
-                    )
-            );
+            for (uint256 j = 0; j < allActors.length; j++) {
+                assertLe(
+                    IERC20(depositErc20s[i]).balanceOf(allActors[j]),
+                    depositManagerHandler
+                        .ghost_instantiateDepositSumErc20ForActorOfToken(
+                            allActors[j],
+                            i
+                        )
+                );
+            }
         }
     }
 
@@ -246,17 +219,7 @@ contract InvariantsBase is Test {
             uint256 actorBalanceCap = depositManagerHandler
                 .ghost_totalSuppliedGasCompensationForActor(allActors[i]);
 
-            // NOTE: This invariant kept failing even though I checked all actor balances via
-            // logs and only found balance == ghost var but never greater than. I suspect there
-            // is a bug somewhere in foundry that doesn't like assertLe(0, 0) so hardcoding a
-            // statement here.
-            if (actorBalanceCap == actorBalance) {
-                continue;
-            }
-
-            if (actorBalance > actorBalanceCap) {
-                revert("actor balance exceeds expected cap");
-            }
+            assertLe(actorBalance, actorBalanceCap);
         }
     }
 
@@ -293,7 +256,7 @@ contract InvariantsBase is Test {
 
     function assert_operation_bundlerBalanceMatchesTracked() internal {
         assertEq(
-            weth.balanceOf(BUNDLER_ADDRESS),
+            IERC20(depositErc20s[0]).balanceOf(BUNDLER_ADDRESS),
             tellerHandler.ghost_totalBundlerPayout()
         );
     }
