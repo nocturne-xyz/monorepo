@@ -214,33 +214,42 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
-    function testProcessJoinSplitsThreeContiguousJoinSplitSubarraysSuccess()
+    function testProcessJoinSplitsThreeContiguousJoinSplitSubarraysMultiAssetSuccess()
         public
     {
-        SimpleERC20Token token = ERC20s[0];
+        SimpleERC20Token token1 = ERC20s[0];
+        SimpleERC20Token token2 = ERC20s[1];
+        SimpleERC20Token token3 = ERC20s[2];
 
         // Reserves + deposits 150M of token
-        reserveAndDepositFunds(ALICE, token, PER_NOTE_AMOUNT * 3);
+        reserveAndDepositFunds(ALICE, token1, PER_NOTE_AMOUNT * 3);
+        reserveAndDepositFunds(ALICE, token2, PER_NOTE_AMOUNT * 3);
+        reserveAndDepositFunds(ALICE, token3, PER_NOTE_AMOUNT * 3);
+
+        SimpleERC20Token[] memory tokens = new SimpleERC20Token[](3);
+        tokens[0] = token1;
+        tokens[1] = token2;
+        tokens[2] = token3;
+
+        uint256[][] memory joinSplitsPublicSpends = new uint256[][](3);
+        for (uint256 i = 0; i < 3; i++) {
+            joinSplitsPublicSpends[i] = NocturneUtils.fillJoinSplitPublicSpends(
+                PER_NOTE_AMOUNT,
+                3
+            );
+        }
 
         // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
         // calculated fee (see below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
-                    token
-                ),
-                gasToken: token,
+                joinSplitTokens: tokens,
+                gasToken: token1,
                 root: balanceManager.root(),
-                joinSplitsPublicSpends: NocturneUtils
-                    ._publicSpendsArrayOfOnePublicSpendArray(
-                        NocturneUtils.fillJoinSplitPublicSpends(
-                            PER_NOTE_AMOUNT,
-                            3
-                        )
-                    ),
+                joinSplitsPublicSpends: joinSplitsPublicSpends,
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
-                executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
+                executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: new Action[](0),
@@ -257,16 +266,24 @@ contract BalanceManagerTest is Test {
         );
 
         // Balance manager took up 150M - 62.5M
-        assertEq(token.balanceOf(address(balanceManager)), 1); // +1 since prefill
+        assertEq(token1.balanceOf(address(balanceManager)), 1); // +1 since prefill
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
         assertEq(
-            token.balanceOf(address(balanceManager)),
+            token1.balanceOf(address(balanceManager)),
             (3 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
         );
-        assertEq(token.balanceOf(address(teller)), totalFeeReserved);
+        assertEq(
+            token2.balanceOf(address(balanceManager)),
+            (3 * PER_NOTE_AMOUNT) + 1
+        );
+        assertEq(
+            token3.balanceOf(address(balanceManager)),
+            (3 * PER_NOTE_AMOUNT) + 1
+        );
+        assertEq(token1.balanceOf(address(teller)), totalFeeReserved);
     }
 
     function testProcessJoinSplitsReservingFeeTwoFeeNotesSuccess() public {
