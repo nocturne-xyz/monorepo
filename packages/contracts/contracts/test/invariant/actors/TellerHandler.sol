@@ -38,7 +38,6 @@ contract TellerHandler is OperationGenerator {
     address public bundlerAddress;
 
     address[] public joinSplitTokens;
-    address public gasToken;
 
     SimpleERC20Token public swapErc20;
     SimpleERC721Token public swapErc721;
@@ -76,7 +75,6 @@ contract TellerHandler is OperationGenerator {
         handler = _handler;
         swapper = _swapper;
         joinSplitTokens = _joinSplitTokens;
-        gasToken = _joinSplitTokens[1];
         swapErc20 = _swapErc20;
         swapErc721 = _swapErc721;
         swapErc1155 = _swapErc1155;
@@ -100,7 +98,7 @@ contract TellerHandler is OperationGenerator {
         console.log("Successful actions", _numSuccessfulActions);
         console.log(
             "Bundler gas token balance",
-            IERC20(gasToken).balanceOf(bundlerAddress)
+            IERC20(joinSplitTokens[0]).balanceOf(bundlerAddress)
         );
 
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
@@ -130,10 +128,23 @@ contract TellerHandler is OperationGenerator {
         }
         console.log("Metadata:");
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
-            console.log("Transfer amount", _successfulTransfers[i].amount);
+            console.log(
+                "Transfer amount",
+                _successfulTransfers[i].amount,
+                ". Token:",
+                _successfulTransfers[i].token
+            );
         }
         for (uint256 i = 0; i < _successfulSwaps.length; i++) {
-            console.log("Swap in amount", _successfulSwaps[i].assetInAmount);
+            (, address token, ) = AssetUtils.decodeAsset(
+                _successfulSwaps[i].encodedAssetIn
+            );
+            console.log(
+                "Swap in amount",
+                _successfulSwaps[i].assetInAmount,
+                ". Token in:",
+                token
+            );
         }
     }
 
@@ -225,20 +236,6 @@ contract TellerHandler is OperationGenerator {
                 ghost_numberOfTimesPrefillRefilledForToken[i] += 1;
             }
         }
-
-        // TODO: remove
-        console.log(
-            "gas token balance of bundler:",
-            IERC20(gasToken).balanceOf(address(bundlerAddress))
-        );
-        console.log(
-            "weth balance of bundler",
-            IERC20(joinSplitTokens[0]).balanceOf(bundlerAddress)
-        );
-        console.log(
-            "expected bundler token balance:",
-            ghost_totalBundlerPayout
-        );
     }
 
     // ______VIEW______

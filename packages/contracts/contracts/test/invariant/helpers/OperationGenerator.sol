@@ -141,10 +141,9 @@ contract OperationGenerator is InvariantUtils {
             totalJoinSplitUnwrapAmounts[0]
         );
 
-        // TODO: use > 1 joinsplit token AND public spends
         FormatOperationArgs memory opArgs = FormatOperationArgs({
             joinSplitTokens: args.joinSplitTokens,
-            gasToken: args.joinSplitTokens[0],
+            gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
             joinSplitsPublicSpends: joinSplitsPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
@@ -244,7 +243,6 @@ contract OperationGenerator is InvariantUtils {
                     _actions[i] = NocturneUtils.formatTransferAction(
                         _meta.transfers[i]
                     );
-                    console.log("fillED transfers action");
                 }
             } else {
                 {
@@ -293,7 +291,6 @@ contract OperationGenerator is InvariantUtils {
                 transferOrSwapAmount,
                 runningJoinSplitAmounts[tokenToUseIndex]
             ); // avoid underflow
-            console.log("subtractED from runningJoinSplitAmounts");
         }
     }
 
