@@ -24,6 +24,7 @@ import {OperationGenerator, GenerateOperationArgs, GeneratedOperationMetadata} f
 import {TokenIdSet, LibTokenIdSet} from "../helpers/TokenIdSet.sol";
 import {Utils} from "../../../libs/Utils.sol";
 import {AssetUtils} from "../../../libs/AssetUtils.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../../libs/Types.sol";
 
 contract TellerHandler is OperationGenerator {
@@ -36,8 +37,8 @@ contract TellerHandler is OperationGenerator {
 
     address public bundlerAddress;
 
-    SimpleERC20Token[] public joinSplitTokens;
-    SimpleERC20Token public gasToken;
+    address[] public joinSplitTokens;
+    address public gasToken;
 
     SimpleERC20Token public swapErc20;
     SimpleERC721Token public swapErc721;
@@ -64,7 +65,7 @@ contract TellerHandler is OperationGenerator {
         Teller _teller,
         Handler _handler,
         TokenSwapper _swapper,
-        SimpleERC20Token[] memory _joinSplitTokens,
+        address[] memory _joinSplitTokens,
         SimpleERC20Token _swapErc20,
         SimpleERC721Token _swapErc721,
         SimpleERC1155Token _swapErc1155,
@@ -75,7 +76,7 @@ contract TellerHandler is OperationGenerator {
         handler = _handler;
         swapper = _swapper;
         joinSplitTokens = _joinSplitTokens;
-        gasToken = _joinSplitTokens[0];
+        gasToken = _joinSplitTokens[1];
         swapErc20 = _swapErc20;
         swapErc721 = _swapErc721;
         swapErc1155 = _swapErc1155;
@@ -93,7 +94,7 @@ contract TellerHandler is OperationGenerator {
         console.log("Successful actions", _numSuccessfulActions);
         console.log(
             "Bundler gas token balance",
-            gasToken.balanceOf(bundlerAddress)
+            IERC20(gasToken).balanceOf(bundlerAddress)
         );
 
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
@@ -101,7 +102,7 @@ contract TellerHandler is OperationGenerator {
                 "JoinSplit token",
                 i,
                 "balance",
-                joinSplitTokens[i].balanceOf(address(handler))
+                IERC20(joinSplitTokens[i]).balanceOf(address(handler))
             );
         }
 
@@ -131,23 +132,11 @@ contract TellerHandler is OperationGenerator {
     }
 
     function processBundle(uint256 seed) external {
-        // Always ensure prefills exist so we don't deal with that logic in invariants
-        uint256 numJoinSplitTokens = joinSplitTokens.length;
-        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
-            if (joinSplitTokens[i].balanceOf(address(handler)) == 0) {
-                joinSplitTokens[i].reserveTokens(address(this), 1);
-                joinSplitTokens[i].transfer(address(handler), 1);
-            }
-            if (swapErc20.balanceOf(address(handler)) == 0) {
-                swapErc20.reserveTokens(address(this), 1);
-                swapErc20.transfer(address(handler), 1);
-            }
-        }
-
+        uint256 numJoinSplitTokens = numJoinSplitTokens();
         bool[] memory prefillExistsForToken = new bool[](numJoinSplitTokens);
         for (uint256 i = 0; i < numJoinSplitTokens; i++) {
             prefillExistsForToken[i] =
-                joinSplitTokens[i].balanceOf(address(handler)) > 0;
+                IERC20(joinSplitTokens[i]).balanceOf(address(handler)) > 0;
         }
 
         (
@@ -214,12 +203,12 @@ contract TellerHandler is OperationGenerator {
         for (uint256 i = 0; i < joinSplitTokens.length; i++) {
             if (
                 prefillExistsForToken[i] &&
-                joinSplitTokens[i].balanceOf(address(handler)) == 0
+                IERC20(joinSplitTokens[i]).balanceOf(address(handler)) == 0
             ) {
                 ghost_numberOfTimesPrefillTakenForToken[i] += 1;
             } else if (
                 !prefillExistsForToken[i] &&
-                joinSplitTokens[i].balanceOf(address(handler)) > 0
+                IERC20(joinSplitTokens[i]).balanceOf(address(handler)) > 0
             ) {
                 ghost_numberOfTimesPrefillRefilledForToken[i] += 1;
             }
@@ -227,14 +216,18 @@ contract TellerHandler is OperationGenerator {
     }
 
     // ______VIEW______
+    function numJoinSplitTokens() public view returns (uint256) {
+        return joinSplitTokens.length;
+    }
+
     function ghost_totalTransferredOutOfTellerForToken(
-        uint256 i
+        uint256 tokenIndex
     ) public view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < _successfulTransfers.length; i++) {
             if (
                 address(_successfulTransfers[i].token) ==
-                address(joinSplitTokens[i])
+                address(joinSplitTokens[tokenIndex])
             ) {
                 total += _successfulTransfers[i].amount;
             }
@@ -243,7 +236,7 @@ contract TellerHandler is OperationGenerator {
             (, address tokenAddr, ) = AssetUtils.decodeAsset(
                 _successfulSwaps[i].encodedAssetIn
             );
-            if (tokenAddr == address(joinSplitTokens[i])) {
+            if (tokenAddr == address(joinSplitTokens[tokenIndex])) {
                 total += _successfulSwaps[i].assetInAmount;
             }
         }
@@ -311,13 +304,13 @@ contract TellerHandler is OperationGenerator {
 
     function _totalJoinSplitTokenAmountInOp(
         Operation memory op,
-        SimpleERC20Token joinSplitToken
+        address joinSplitToken
     ) internal view returns (uint256) {
         uint256 total = 0;
         for (uint256 i = 0; i < op.joinSplits.length; i++) {
             EncodedAsset memory encodedAsset = op.joinSplits[i].encodedAsset;
             (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
-            if (assetAddr == address(joinSplitToken)) {
+            if (assetAddr == joinSplitToken) {
                 total += op.joinSplits[i].publicSpend;
             }
         }

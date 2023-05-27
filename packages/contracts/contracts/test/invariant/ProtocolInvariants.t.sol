@@ -54,9 +54,14 @@ contract ProtocolInvariants is Test, InvariantsBase {
         depositErc721 = new SimpleERC721Token();
         depositErc1155 = new SimpleERC1155Token();
 
+        // WETH is always first
+        address[] memory erc20s = new address[](2);
+        erc20s[0] = address(weth);
+        erc20s[1] = address(depositErc20);
+
         depositManagerHandler = new DepositManagerHandler(
             depositManager,
-            depositErc20,
+            erc20s,
             depositErc721,
             depositErc1155,
             SCREENER_PRIVKEY
@@ -71,8 +76,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             teller,
             handler,
             swapper,
-            depositErc20,
-            depositErc20,
+            erc20s,
             swapErc20,
             swapErc721,
             swapErc1155,
@@ -95,6 +99,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         // TODO: allow other tokens once we enable transacting with them
+        handler.setSupportedContractAllowlistPermission(address(weth), true);
         handler.setSupportedContractAllowlistPermission(
             address(depositErc20),
             true

@@ -61,17 +61,17 @@ contract InvariantsBase is Test {
 
     // _______________PROTOCOL_WIDE_______________
 
-    function assert_protocol_tellerErc20BalanceConsistent() internal {
+    function assert_protocol_tellerBalanceConsistent() internal {
         uint256 tellerBalance = depositErc20.balanceOf(address(teller));
 
         // Since taking prefills inflates ghost_totalTransferredOutOfTeller,
         // we need to add the number of times prefills are taken to make up for over subtraction
         uint256 expectedInTeller = depositManagerHandler
-            .ghost_completeDepositSumErc20() +
-            tellerHandler.ghost_numberOfTimesPrefillTaken() -
-            tellerHandler.ghost_totalTransferredOutOfTeller() -
+            .ghost_completeDepositSumErc20ForToken(1) +
+            tellerHandler.ghost_numberOfTimesPrefillTakenForToken(1) -
+            tellerHandler.ghost_totalTransferredOutOfTellerForToken(1) -
             tellerHandler.ghost_totalBundlerPayout() -
-            tellerHandler.ghost_numberOfTimesPrefillRefilled();
+            tellerHandler.ghost_numberOfTimesPrefillRefilledForToken(1);
 
         assertEq(tellerBalance, expectedInTeller);
     }
@@ -88,9 +88,9 @@ contract InvariantsBase is Test {
 
     function assert_deposit_outNeverExceedsInETH() internal {
         assertGe(
-            depositManagerHandler.ghost_instantiateDepositSumETH(),
-            depositManagerHandler.ghost_retrieveDepositSumETH() +
-                depositManagerHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(0),
+            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0) +
+                depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
         );
     }
 
@@ -99,9 +99,9 @@ contract InvariantsBase is Test {
     {
         assertEq(
             weth.balanceOf(address(depositManagerHandler.depositManager())),
-            depositManagerHandler.ghost_instantiateDepositSumETH() -
-                depositManagerHandler.ghost_retrieveDepositSumETH() -
-                depositManagerHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(0) -
+                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0) -
+                depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
         );
     }
 
@@ -110,7 +110,7 @@ contract InvariantsBase is Test {
     {
         assertEq(
             weth.balanceOf(address(teller)),
-            depositManagerHandler.ghost_completeDepositSumETH()
+            depositManagerHandler.ghost_completeDepositSumErc20ForToken(0)
         );
     }
 
@@ -124,7 +124,10 @@ contract InvariantsBase is Test {
             sum += weth.balanceOf(allActors[i]);
         }
 
-        assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumETH());
+        assertEq(
+            sum,
+            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(0)
+        );
     }
 
     function assert_deposit_actorBalanceAlwaysEqualsRetrievedETH() internal {
@@ -133,9 +136,11 @@ contract InvariantsBase is Test {
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
                 weth.balanceOf(allActors[i]),
-                depositManagerHandler.ghost_retrieveDepositSumETHFor(
-                    allActors[i]
-                )
+                depositManagerHandler
+                    .ghost_retrieveDepositSumErc20ForActorOfToken(
+                        allActors[i],
+                        0
+                    )
             );
         }
     }
@@ -146,9 +151,11 @@ contract InvariantsBase is Test {
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
                 weth.balanceOf(allActors[i]),
-                depositManagerHandler.ghost_instantiateDepositSumETHFor(
-                    allActors[i]
-                )
+                depositManagerHandler
+                    .ghost_instantiateDepositSumErc20ForActorOfToken(
+                        allActors[i],
+                        0
+                    )
             );
         }
     }
@@ -157,9 +164,9 @@ contract InvariantsBase is Test {
 
     function assert_deposit_outNeverExceedsInErc20() internal {
         assertGe(
-            depositManagerHandler.ghost_instantiateDepositSumErc20(),
-            depositManagerHandler.ghost_retrieveDepositSumErc20() +
-                depositManagerHandler.ghost_completeDepositSumErc20()
+            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(1),
+            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1) +
+                depositManagerHandler.ghost_completeDepositSumErc20ForToken(1)
         );
     }
 
@@ -170,9 +177,9 @@ contract InvariantsBase is Test {
             depositErc20.balanceOf(
                 address(depositManagerHandler.depositManager())
             ),
-            depositManagerHandler.ghost_instantiateDepositSumErc20() -
-                depositManagerHandler.ghost_retrieveDepositSumErc20() -
-                depositManagerHandler.ghost_completeDepositSumErc20()
+            depositManagerHandler.ghost_instantiateDepositSumErc20ForToken(1) -
+                depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1) -
+                depositManagerHandler.ghost_completeDepositSumErc20ForToken(1)
         );
     }
 
@@ -186,7 +193,10 @@ contract InvariantsBase is Test {
             sum += depositErc20.balanceOf(allActors[i]);
         }
 
-        assertEq(sum, depositManagerHandler.ghost_retrieveDepositSumErc20());
+        assertEq(
+            sum,
+            depositManagerHandler.ghost_retrieveDepositSumErc20ForToken(1)
+        );
     }
 
     function assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20() internal {
@@ -195,9 +205,11 @@ contract InvariantsBase is Test {
         for (uint256 i = 0; i < allActors.length; i++) {
             assertEq(
                 depositErc20.balanceOf(allActors[i]),
-                depositManagerHandler.ghost_retrieveDepositSumErc20For(
-                    allActors[i]
-                )
+                depositManagerHandler
+                    .ghost_retrieveDepositSumErc20ForActorOfToken(
+                        allActors[i],
+                        1
+                    )
             );
         }
     }
@@ -210,9 +222,11 @@ contract InvariantsBase is Test {
         for (uint256 i = 0; i < allActors.length; i++) {
             assertLe(
                 depositErc20.balanceOf(allActors[i]),
-                depositManagerHandler.ghost_instantiateDepositSumErc20For(
-                    allActors[i]
-                )
+                depositManagerHandler
+                    .ghost_instantiateDepositSumErc20ForActorOfToken(
+                        allActors[i],
+                        1
+                    )
             );
         }
     }
@@ -231,7 +245,7 @@ contract InvariantsBase is Test {
             uint256 actorBalance = allActors[i].balance;
             console.logUint(actorBalance);
             uint256 actorBalanceCap = depositManagerHandler
-                .ghost_totalSuppliedGasCompensationFor(allActors[i]);
+                .ghost_totalSuppliedGasCompensationForActor(allActors[i]);
 
             // NOTE: This invariant kept failing even though I checked all actor balances via
             // logs and only found balance == ghost var but never greater than. I suspect there
@@ -288,12 +302,12 @@ contract InvariantsBase is Test {
     function assert_operation_joinSplitTokensTransferredOutNeverExceedsUnwrappedByMoreThanNumberOfTimesPrefillTaken()
         internal
     {
-        uint256 numJoinSplits = tellerHandler.joinSplitTokens.length;
+        uint256 numJoinSplits = tellerHandler.numJoinSplitTokens();
         for (uint256 i = 0; i < numJoinSplits; i++) {
             assertLe(
-                tellerHandler.ghost_totalTransferredOutOfTeller(),
-                tellerHandler.ghost_totalJoinSplitUnwrapped() +
-                    tellerHandler.ghost_numberOfTimesPrefillTaken()
+                tellerHandler.ghost_totalTransferredOutOfTellerForToken(1),
+                tellerHandler.ghost_totalJoinSplitUnwrappedForToken(1) +
+                    tellerHandler.ghost_numberOfTimesPrefillTakenForToken(1)
             );
         }
     }

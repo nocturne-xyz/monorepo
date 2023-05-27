@@ -36,8 +36,8 @@ struct GenerateOperationArgs {
     bool statefulNfGeneration;
     uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
-    SimpleERC20Token[] joinSplitTokens;
-    SimpleERC20Token gasToken;
+    address[] joinSplitTokens;
+    address gasToken;
     SimpleERC20Token swapErc20;
     SimpleERC721Token swapErc721;
     SimpleERC1155Token swapErc1155;
@@ -82,7 +82,7 @@ contract OperationGenerator is InvariantUtils {
             totalJoinSplitUnwrapAmounts[i] = bound(
                 args.seed,
                 0,
-                args.joinSplitTokens[i].balanceOf(address(args.teller))
+                IERC20(args.joinSplitTokens[i]).balanceOf(address(args.teller))
             );
         }
 
@@ -208,7 +208,7 @@ contract OperationGenerator is InvariantUtils {
                 0,
                 args.joinSplitTokens.length - 1
             );
-            SimpleERC20Token token = args.joinSplitTokens[tokenToUseIndex];
+            address token = args.joinSplitTokens[tokenToUseIndex];
 
             bool isTransfer = bound(args.seed, 0, 1) == 0;
 
@@ -256,13 +256,13 @@ contract OperationGenerator is InvariantUtils {
 
                     {
                         // Kludge to satisfy stack limit
-                        SimpleERC20Token inToken = token;
+                        address inToken = token;
                         TokenSwapper swapper = args.swapper;
 
                         Action memory approveAction = Action({
                             contractAddress: address(inToken),
                             encodedFunction: abi.encodeWithSelector(
-                                inToken.approve.selector,
+                                IERC20(inToken).approve.selector,
                                 address(swapper),
                                 transferOrSwapAmount
                             )
@@ -306,12 +306,12 @@ contract OperationGenerator is InvariantUtils {
     function _createRandomSwapRequest(
         uint256 swapInAmount,
         GenerateOperationArgs memory args,
-        SimpleERC20Token token
+        address token
     ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(token),
+            token,
             ERC20_ID
         );
 

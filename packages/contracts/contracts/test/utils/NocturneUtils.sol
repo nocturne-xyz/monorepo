@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "../../libs/Types.sol";
 import {AssetUtils} from "../../libs/AssetUtils.sol";
-import {SimpleERC20Token} from "../tokens/SimpleERC20Token.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 enum OperationFailureType {
     NONE,
@@ -15,9 +15,9 @@ enum OperationFailureType {
 }
 
 struct FormatOperationArgs {
-    SimpleERC20Token[] joinSplitTokens;
+    address[] joinSplitTokens;
     uint256[][] joinSplitsPublicSpends;
-    SimpleERC20Token gasToken;
+    address gasToken;
     uint256 root;
     EncodedAsset[] encodedRefundAssets;
     uint256 gasAssetRefundThreshold;
@@ -30,7 +30,7 @@ struct FormatOperationArgs {
 }
 
 struct TransferRequest {
-    SimpleERC20Token token;
+    address token;
     address recipient;
     uint256 amount;
 }
@@ -119,7 +119,7 @@ library NocturneUtils {
     }
 
     function formatSingleTransferActionArray(
-        SimpleERC20Token token,
+        address token,
         address recipient,
         uint256 amount
     ) public pure returns (Action[] memory) {
@@ -141,7 +141,7 @@ library NocturneUtils {
             Action({
                 contractAddress: address(transferRequest.token),
                 encodedFunction: abi.encodeWithSelector(
-                    transferRequest.token.transfer.selector,
+                    IERC20(transferRequest.token).transfer.selector,
                     transferRequest.recipient,
                     transferRequest.amount
                 )
@@ -294,9 +294,9 @@ library NocturneUtils {
     }
 
     function _joinSplitTokensArrayOfOneToken(
-        SimpleERC20Token joinSplitToken
-    ) internal pure returns (SimpleERC20Token[] memory) {
-        SimpleERC20Token[] memory joinSplitTokens = new SimpleERC20Token[](1);
+        address joinSplitToken
+    ) internal pure returns (address[] memory) {
+        address[] memory joinSplitTokens = new address[](1);
         joinSplitTokens[0] = joinSplitToken;
         return joinSplitTokens;
     }

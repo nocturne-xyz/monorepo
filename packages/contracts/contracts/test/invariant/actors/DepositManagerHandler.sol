@@ -65,13 +65,13 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
 
     constructor(
         TestDepositManager _depositManager,
-        SimpleERC20Token _erc20,
+        address[] memory _erc20s,
         SimpleERC721Token _erc721,
         SimpleERC1155Token _erc1155,
         uint256 _screenerPrivkey
     ) {
         depositManager = _depositManager;
-        erc20 = _erc20;
+        erc20s = _erc20s;
         erc721 = _erc721;
         erc1155 = _erc1155;
         screenerPrivkey = _screenerPrivkey;
@@ -125,11 +125,30 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         console.log("completeDepositErc20", _calls["completeDepositErc20"]);
 
         console.log(
-            "instantiateDepositSumErc20",
-            ghost_instantiateDepositSumErc20()
+            "instantiateDepositSumETH",
+            ghost_instantiateDepositSumErc20ForToken(0)
         );
-        console.log("retrieveDepositSumErc20", ghost_retrieveDepositSumErc20());
-        console.log("completeDepositSumErc20", ghost_completeDepositSumErc20());
+        console.log(
+            "retrieveDepositSumETH",
+            ghost_retrieveDepositSumErc20ForToken(0)
+        );
+        console.log(
+            "completeDepositSumETH",
+            ghost_completeDepositSumErc20ForToken(0)
+        );
+
+        console.log(
+            "instantiateDepositSumErc20",
+            ghost_instantiateDepositSumErc20ForToken(1)
+        );
+        console.log(
+            "retrieveDepositSumErc20",
+            ghost_retrieveDepositSumErc20ForToken(1)
+        );
+        console.log(
+            "completeDepositSumErc20",
+            ghost_completeDepositSumErc20ForToken(1)
+        );
 
         console.log("_actorNum", _actorNum);
         console.log("depositSetLength", _depositSet.length);
@@ -179,7 +198,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             // Record deposit req
             deposits[i] = NocturneUtils.formatDepositRequest(
                 _currentActor,
-                address(erc20),
+                address(depositManager._weth()),
                 depositAmounts[i],
                 NocturneUtils.ERC20_ID,
                 depositAddr,
@@ -279,7 +298,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Update deposit set and sum
         for (uint256 i = 0; i < numDeposits; i++) {
             _depositSet.push(deposits[i]);
-            _instantiateDepositSumSetErc20[1].addToActorSum(
+            _instantiateDepositSumSetErc20s[1].addToActorSum(
                 _currentActor,
                 depositAmounts[i]
             );
@@ -398,7 +417,9 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
                         ParseUtils.uintToString(allActors[i].balance),
                         ". Expected balance cap:",
                         ParseUtils.uintToString(
-                            ghost_totalSuppliedGasCompensationFor(allActors[i])
+                            ghost_totalSuppliedGasCompensationForActor(
+                                allActors[i]
+                            )
                         )
                     )
                 )
@@ -422,48 +443,48 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         return _gasCompensationSet.getTotalForAll();
     }
 
-    function ghost_totalSuppliedGasCompensationFor(
+    function ghost_totalSuppliedGasCompensationForActor(
         address actor
     ) public view returns (uint256) {
         return _gasCompensationSet.getSumForActor(actor);
     }
 
-    function ghost_instantiateDepositSumErc20(
+    function ghost_instantiateDepositSumErc20ForToken(
         uint256 tokenIndex
     ) public view returns (uint256) {
         return _instantiateDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
-    function ghost_retrieveDepositSumErc20(
+    function ghost_retrieveDepositSumErc20ForToken(
         uint256 tokenIndex
     ) public view returns (uint256) {
         return _retrieveDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
-    function ghost_completeDepositSumErc20(
+    function ghost_completeDepositSumErc20ForToken(
         uint256 tokenIndex
     ) public view returns (uint256) {
         return _completeDepositSumSetErc20s[tokenIndex].getTotalForAll();
     }
 
-    function ghost_instantiateDepositSumErc20For(
-        uint256 tokenIndex,
-        address actor
+    function ghost_instantiateDepositSumErc20ForActorOfToken(
+        address actor,
+        uint256 tokenIndex
     ) public view returns (uint256) {
         return
             _instantiateDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
-    function ghost_retrieveDepositSumErc20For(
-        uint256 tokenIndex,
-        address actor
+    function ghost_retrieveDepositSumErc20ForActorOfToken(
+        address actor,
+        uint256 tokenIndex
     ) public view returns (uint256) {
         return _retrieveDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
-    function ghost_completeDepositSumErc20For(
-        uint256 tokenIndex,
-        address actor
+    function ghost_completeDepositSumErc20ForActorOfToken(
+        address actor,
+        uint256 tokenIndex
     ) public view returns (uint256) {
         return _completeDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
