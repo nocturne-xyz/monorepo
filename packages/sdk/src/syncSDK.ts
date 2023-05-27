@@ -63,7 +63,7 @@ export async function syncSDK(
     await updateMerkle(
       merkle,
       diff.lastCommittedMerkleIndex,
-      diff.notesAndCommitments,
+      diff.notesAndCommitments.map(({ inner }) => inner),
       nfIndices
     );
   }
@@ -122,7 +122,8 @@ function decryptStateDiff(
     blockNumber,
   }: EncryptedStateDiff
 ): StateDiff {
-  const notesAndCommitments = notes.map((note) => {
+  const notesAndCommitments = notes.map(({ inner, timestampUnixMillis }) => {
+    const note = inner;
     const isOwn = viewer.isOwnAddress(note.owner);
     const isEncrypted = NoteTrait.isEncryptedNote(note);
 
@@ -136,23 +137,40 @@ function decryptStateDiff(
         asset
       );
       const nullifier = viewer.createNullifier(includedNote);
-      return { ...includedNote, nullifier };
+      const res = { ...includedNote, nullifier };
+      return {
+        inner: res,
+        timestampUnixMillis,
+      };
     } else if (isOwn && !isEncrypted) {
       // if it's ours and it's not encrypted, get the nullifier and return it
       const includedNote = note as IncludedNote;
       const nullifier = viewer.createNullifier(includedNote);
-      return { ...includedNote, nullifier };
+      const res = { ...includedNote, nullifier };
+      return {
+        inner: res,
+        timestampUnixMillis,
+      };
     } else if (!isOwn && isEncrypted) {
       // if it's not ours and it's encrypted, return the given commitment
       const encryptedNote = note as IncludedEncryptedNote;
-      return {
+      const nc = {
         noteCommitment: encryptedNote.commitment,
         merkleIndex: encryptedNote.merkleIndex,
+      };
+
+      return {
+        inner: nc,
+        timestampUnixMillis,
       };
     } else {
       // otherwise, it's not ours and it's not encrypted. compute and return the commitment
       const includedNote = note as IncludedNote;
-      return NoteTrait.toIncludedCommitment(includedNote);
+      const nc = NoteTrait.toIncludedCommitment(includedNote);
+      return {
+        inner: nc,
+        timestampUnixMillis,
+      };
     }
   });
 

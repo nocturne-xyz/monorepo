@@ -4,6 +4,7 @@ import {
   EncodedAsset,
   IncludedNote,
   Note,
+  WithTimestamp,
 } from "../../primitives";
 import {
   RefundProcessedEvent,
@@ -30,7 +31,7 @@ export async function fetchNotesFromRefunds(
   contract: Handler,
   from: number,
   to: number
-): Promise<IncludedNote[]> {
+): Promise<WithTimestamp<IncludedNote>[]> {
   const filter = contract.filters.RefundProcessed();
   let events: RefundProcessedEvent[] = await queryEvents(
     contract,
@@ -41,34 +42,45 @@ export async function fetchNotesFromRefunds(
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-  return events.map((event) => {
-    const {
-      refundAddr,
-      nonce,
-      encodedAssetAddr,
-      encodedAssetId,
-      value,
-      merkleIndex,
-    } = event.args;
-    const { h1X, h1Y, h2X, h2Y } = refundAddr;
-    const encodedAsset: EncodedAsset = {
-      encodedAssetAddr: encodedAssetAddr.toBigInt(),
-      encodedAssetId: encodedAssetId.toBigInt(),
-    };
+  return Promise.all(
+    events.map(async (event) => {
+      const {
+        refundAddr,
+        nonce,
+        encodedAssetAddr,
+        encodedAssetId,
+        value,
+        merkleIndex,
+      } = event.args;
 
-    return {
-      owner: {
-        h1X: h1X.toBigInt(),
-        h1Y: h1Y.toBigInt(),
-        h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt(),
-      },
-      nonce: nonce.toBigInt(),
-      asset: AssetTrait.decode(encodedAsset),
-      value: value.toBigInt(),
-      merkleIndex: merkleIndex.toNumber(),
-    };
-  });
+      const { h1X, h1Y, h2X, h2Y } = refundAddr;
+      const encodedAsset: EncodedAsset = {
+        encodedAssetAddr: encodedAssetAddr.toBigInt(),
+        encodedAssetId: encodedAssetId.toBigInt(),
+      };
+
+      const note: IncludedNote = {
+        owner: {
+          h1X: h1X.toBigInt(),
+          h1Y: h1Y.toBigInt(),
+          h2X: h2X.toBigInt(),
+          h2Y: h2Y.toBigInt(),
+        },
+        nonce: nonce.toBigInt(),
+        asset: AssetTrait.decode(encodedAsset),
+        value: value.toBigInt(),
+        merkleIndex: merkleIndex.toNumber(),
+      };
+
+      const block = await event.getBlock();
+      const timestampUnixMillis = block.timestamp * 1000;
+
+      return {
+        inner: note,
+        timestampUnixMillis,
+      };
+    })
+  );
 }
 
 // fetching joinsplits occuring in block range [from, to]
@@ -78,7 +90,7 @@ export async function fetchJoinSplits(
   contract: Handler,
   from: number,
   to: number
-): Promise<JoinSplitEvent[]> {
+): Promise<WithTimestamp<JoinSplitEvent>[]> {
   const filter = contract.filters.JoinSplitProcessed();
   let events: JoinSplitProcessedEvent[] = await queryEvents(
     contract,
@@ -90,82 +102,91 @@ export async function fetchJoinSplits(
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
   // TODO figure out how to do type conversion better
-  const newJoinSplits = events.map((event) => {
-    const {
-      oldNoteANullifier,
-      oldNoteBNullifier,
-      newNoteAIndex,
-      newNoteBIndex,
-      joinSplit,
-    } = event.args;
-    const {
-      commitmentTreeRoot,
-      nullifierA,
-      nullifierB,
-      newNoteACommitment,
-      newNoteAEncrypted,
-      newNoteBCommitment,
-      newNoteBEncrypted,
-      encodedAsset,
-      publicSpend,
-    } = joinSplit;
-    const { encodedAssetAddr, encodedAssetId } = encodedAsset;
-    let { owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteAEncrypted;
-    let { h1X, h1Y, h2X, h2Y } = owner;
-    const newNoteAOwner = {
-      h1X: h1X.toBigInt(),
-      h1Y: h1Y.toBigInt(),
-      h2X: h2X.toBigInt(),
-      h2Y: h2Y.toBigInt(),
-    };
-    const encappedKeyA = encappedKey.toBigInt();
-    const encryptedNonceA = encryptedNonce.toBigInt();
-    const encryptedValueA = encryptedValue.toBigInt();
-    ({ owner, encappedKey, encryptedNonce, encryptedValue } =
-      newNoteBEncrypted);
-    ({ h1X, h1Y, h2X, h2Y } = owner);
-    const newNoteBOwner = {
-      h1X: h1X.toBigInt(),
-      h1Y: h1Y.toBigInt(),
-      h2X: h2X.toBigInt(),
-      h2Y: h2Y.toBigInt(),
-    };
-    const encappedKeyB = encappedKey.toBigInt();
-    const encryptedNonceB = encryptedNonce.toBigInt();
-    const encryptedValueB = encryptedValue.toBigInt();
-    return {
-      oldNoteANullifier: oldNoteANullifier.toBigInt(),
-      oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
-      newNoteAIndex: newNoteAIndex.toNumber(),
-      newNoteBIndex: newNoteBIndex.toNumber(),
-      joinSplit: {
-        commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
-        nullifierA: nullifierA.toBigInt(),
-        nullifierB: nullifierB.toBigInt(),
-        newNoteACommitment: newNoteACommitment.toBigInt(),
-        newNoteAEncrypted: {
-          owner: newNoteAOwner,
-          encappedKey: encappedKeyA,
-          encryptedNonce: encryptedNonceA,
-          encryptedValue: encryptedValueA,
+  return Promise.all(
+    events.map(async (event) => {
+      const {
+        oldNoteANullifier,
+        oldNoteBNullifier,
+        newNoteAIndex,
+        newNoteBIndex,
+        joinSplit,
+      } = event.args;
+      const {
+        commitmentTreeRoot,
+        nullifierA,
+        nullifierB,
+        newNoteACommitment,
+        newNoteAEncrypted,
+        newNoteBCommitment,
+        newNoteBEncrypted,
+        encodedAsset,
+        publicSpend,
+      } = joinSplit;
+      const { encodedAssetAddr, encodedAssetId } = encodedAsset;
+      let { owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteAEncrypted;
+      let { h1X, h1Y, h2X, h2Y } = owner;
+      const newNoteAOwner = {
+        h1X: h1X.toBigInt(),
+        h1Y: h1Y.toBigInt(),
+        h2X: h2X.toBigInt(),
+        h2Y: h2Y.toBigInt(),
+      };
+      const encappedKeyA = encappedKey.toBigInt();
+      const encryptedNonceA = encryptedNonce.toBigInt();
+      const encryptedValueA = encryptedValue.toBigInt();
+      ({ owner, encappedKey, encryptedNonce, encryptedValue } =
+        newNoteBEncrypted);
+      ({ h1X, h1Y, h2X, h2Y } = owner);
+      const newNoteBOwner = {
+        h1X: h1X.toBigInt(),
+        h1Y: h1Y.toBigInt(),
+        h2X: h2X.toBigInt(),
+        h2Y: h2Y.toBigInt(),
+      };
+      const encappedKeyB = encappedKey.toBigInt();
+      const encryptedNonceB = encryptedNonce.toBigInt();
+      const encryptedValueB = encryptedValue.toBigInt();
+      const joinSplitEvent = {
+        oldNoteANullifier: oldNoteANullifier.toBigInt(),
+        oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
+        newNoteAIndex: newNoteAIndex.toNumber(),
+        newNoteBIndex: newNoteBIndex.toNumber(),
+        joinSplit: {
+          commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
+          nullifierA: nullifierA.toBigInt(),
+          nullifierB: nullifierB.toBigInt(),
+          newNoteACommitment: newNoteACommitment.toBigInt(),
+          newNoteAEncrypted: {
+            owner: newNoteAOwner,
+            encappedKey: encappedKeyA,
+            encryptedNonce: encryptedNonceA,
+            encryptedValue: encryptedValueA,
+          },
+          newNoteBCommitment: newNoteBCommitment.toBigInt(),
+          newNoteBEncrypted: {
+            owner: newNoteBOwner,
+            encappedKey: encappedKeyB,
+            encryptedNonce: encryptedNonceB,
+            encryptedValue: encryptedValueB,
+          },
+          encodedAsset: {
+            encodedAssetAddr: encodedAssetAddr.toBigInt(),
+            encodedAssetId: encodedAssetId.toBigInt(),
+          },
+          publicSpend: publicSpend.toBigInt(),
         },
-        newNoteBCommitment: newNoteBCommitment.toBigInt(),
-        newNoteBEncrypted: {
-          owner: newNoteBOwner,
-          encappedKey: encappedKeyB,
-          encryptedNonce: encryptedNonceB,
-          encryptedValue: encryptedValueB,
-        },
-        encodedAsset: {
-          encodedAssetAddr: encodedAssetAddr.toBigInt(),
-          encodedAssetId: encodedAssetId.toBigInt(),
-        },
-        publicSpend: publicSpend.toBigInt(),
-      },
-    };
-  });
-  return newJoinSplits;
+      };
+
+      const block = await event.getBlock();
+      const timestampUnixMillis = block.timestamp * 1000;
+
+      return {
+        inner: joinSplitEvent,
+        timestampUnixMillis,
+      };
+    })
+  );
 }
 
 interface SubtreeUpdateCommit {

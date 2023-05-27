@@ -25,6 +25,7 @@ import {
   min,
   iterChunks,
   getJoinSplitRequestTotalValue,
+  groupByArr,
 } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 
@@ -47,12 +48,16 @@ export async function prepareOperation(
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // prepare joinSplits
-  const joinSplits = (
+  let joinSplits = (
     await Promise.all(
       joinSplitRequests.map((joinSplitRequest) => {
         return prepareJoinSplits(deps, joinSplitRequest);
       })
     )
+  ).flat();
+
+  joinSplits = groupByArr(joinSplits, (joinSplit) =>
+    AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
   ).flat();
 
   // if refundAddr is not set, generate a random one

@@ -102,7 +102,9 @@ contract CommitmentTreeManager is
     ///      the merkle tree root. The caller of this function
     function fillBatchWithZeros() external onlySubtreeBatchFiller {
         uint256 batchLen = _merkle.getBatchLen();
-        require(_merkle.batchLenPlusOne > 0, "!zero fill empty batch");
+        require(batchLen > 0, "!zero fill empty batch");
+
+        _merkle.fillBatchWithZeros();
 
         // instead of actually inserting the zeros, we emit an event saying we inserted zeros
         // and then we call `_accumulate`. This prevents BATCH_SIZE - batchLen + 1 storage writes
@@ -110,8 +112,6 @@ contract CommitmentTreeManager is
         for (uint256 i = 0; i < zeros.length; i++) {
             zeros[i] = TreeUtils.ZERO_VALUE;
         }
-
-        _merkle.fillBatchWithZeros();
         emit InsertNoteCommitments(zeros);
     }
 

@@ -20,6 +20,7 @@ struct FormatOperationArgs {
     uint256 root;
     uint256[] joinSplitPublicSpends;
     EncodedAsset[] encodedRefundAssets;
+    uint256 gasAssetRefundThreshold;
     uint256 executionGasLimit;
     uint256 maxNumRefunds;
     uint256 gasPrice;
@@ -258,6 +259,7 @@ library NocturneUtils {
                 address(args.gasToken),
                 ERC20_ID
             ),
+            gasAssetRefundThreshold: args.gasAssetRefundThreshold,
             executionGasLimit: args.executionGasLimit,
             gasPrice: args.gasPrice,
             maxNumRefunds: args.maxNumRefunds,

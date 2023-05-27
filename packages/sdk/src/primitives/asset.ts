@@ -131,4 +131,9 @@ export class AssetTrait {
       id: ERC20_ID,
     };
   }
+
+  static encodedAssetToString(encodedAsset: EncodedAsset): string {
+    const { encodedAssetAddr, encodedAssetId } = encodedAsset;
+    return `${encodedAssetAddr.toString()}:${encodedAssetId.toString()}`;
+  }
 }

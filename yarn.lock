@@ -3324,9 +3324,9 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/config": 1.0.7-alpha
-    "@nocturne-xyz/contracts": 1.0.24-alpha
+    "@nocturne-xyz/contracts": 1.0.25-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.121-alpha
+    "@nocturne-xyz/sdk": 1.0.123-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3379,7 +3379,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.20.0
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
-    snarkjs: ^0.7.0
+    snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -3408,7 +3408,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.24-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.25-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3468,9 +3468,9 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": 1.0.7-alpha
-    "@nocturne-xyz/contracts": 1.0.24-alpha
+    "@nocturne-xyz/contracts": 1.0.25-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.121-alpha
+    "@nocturne-xyz/sdk": 1.0.123-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3597,7 +3597,7 @@ __metadata:
     find-yarn-workspace-root: ^2.0.0
     mocha: ^10.1.0
     prettier: ^2.8.8
-    snarkjs: ^0.7.0
+    snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.8.4
   languageName: unknown
@@ -3623,7 +3623,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.121-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.123-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3707,7 +3707,7 @@ __metadata:
     react-spinners: ^0.13.8
     reactjs-popup: ^2.0.5
     rimraf: ^3.0.2
-    snarkjs: ^0.7.0
+    snarkjs: ^0.5.0
     styled-components: 5.3.3
     ts-node: ^10.9.1
     typescript: ^4.8.4
@@ -3771,9 +3771,9 @@ __metadata:
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.7-alpha
-    "@nocturne-xyz/contracts": 1.0.24-alpha
+    "@nocturne-xyz/contracts": 1.0.25-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.121-alpha
+    "@nocturne-xyz/sdk": 1.0.123-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -3794,7 +3794,7 @@ __metadata:
     ioredis: ^5.3.1
     mocha: ^10.1.0
     prettier: ^2.8.8
-    snarkjs: ^0.7.0
+    snarkjs: ^0.5.0
     ts-node: ^10.9.1
     typescript: ^4.9.3
     winston: ^3.8.2
@@ -9843,14 +9843,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"circom_runtime@npm:0.1.22":
-  version: 0.1.22
-  resolution: "circom_runtime@npm:0.1.22"
+"circom_runtime@npm:0.1.21":
+  version: 0.1.21
+  resolution: "circom_runtime@npm:0.1.21"
   dependencies:
-    ffjavascript: 0.2.57
+    ffjavascript: 0.2.56
   bin:
     calcwit: calcwit.js
-  checksum: bf7b2e9f74cd7704ebc45ce686d4df49e58ed09114070a98beaab90e5ff7784d1943468ea3315bd4db638e6a76cda24e8b610aa2cd50be56adb4391e20469366
+  checksum: 3071f1e0fba9a5fb41c940454edb911ce09edfd5d0bd12156ec79045a0bf3ff2cc5b35f46e84e42902ef8bb0a4166f428b75d0ceb363c0d485f1a111b27daba1
   languageName: node
   linkType: hard
 
@@ -13064,7 +13064,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
@@ -13848,7 +13848,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ffjavascript@npm:0.2.57, ffjavascript@npm:^0.2.48":
+"ffjavascript@npm:0.2.56":
+  version: 0.2.56
+  resolution: "ffjavascript@npm:0.2.56"
+  dependencies:
+    wasmbuilder: 0.0.16
+    wasmcurves: 0.2.0
+    web-worker: ^1.2.0
+  checksum: d4e02263db4a94d111cdc7c1211ae96769370f5c8c3c338331e0ef99faed7b55e640bedf23fa8a83fc9a77f0e81140ea8f32e392812a00e15ca504221b879a4f
+  languageName: node
+  linkType: hard
+
+"ffjavascript@npm:^0.2.48":
   version: 0.2.57
   resolution: "ffjavascript@npm:0.2.57"
   dependencies:
@@ -13856,17 +13867,6 @@ __metadata:
     wasmcurves: 0.2.0
     web-worker: ^1.2.0
   checksum: 8f3e87b3e2739c607dfc2ef8cb36d92202da57b1323987cca09ade378c584a946b9d784607ee5e2193a2de6200afdc254c19f72f79145aa55d9a8688f83f6708
-  languageName: node
-  linkType: hard
-
-"ffjavascript@npm:0.2.59":
-  version: 0.2.59
-  resolution: "ffjavascript@npm:0.2.59"
-  dependencies:
-    wasmbuilder: 0.0.16
-    wasmcurves: 0.2.1
-    web-worker: ^1.2.0
-  checksum: a2e77936b3b189b4728c625d04c2740ff7e2216970c7ba19ef0d480447ab770d08a01c036dbd906a3f587c297b697318e8cdaaaf2ec5d503003703e72dc82f30
   languageName: node
   linkType: hard
 
@@ -22681,15 +22681,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"r1csfile@npm:0.0.45":
-  version: 0.0.45
-  resolution: "r1csfile@npm:0.0.45"
+"r1csfile@npm:0.0.41":
+  version: 0.0.41
+  resolution: "r1csfile@npm:0.0.41"
   dependencies:
     "@iden3/bigarray": 0.0.2
     "@iden3/binfileutils": 0.0.11
     fastfile: 0.0.20
-    ffjavascript: 0.2.57
-  checksum: ae2d7ab3f2c37640aea2b4f45753d1f2258f5d904a51d7aaff67c32a931c3e90d22d257e8f10752044fa36b3ac31516f60e503f858913a625015b9b05575ba47
+    ffjavascript: 0.2.56
+  checksum: eec689416f66f09db2d6ca66fac1ef6841b088ab29abcde487145ebd2110916c92583e11ac86f0cdcc4e8a3a7c7df9ff5352ad959e8ae385d37c3b51cec5cf4d
   languageName: node
   linkType: hard
 
@@ -24456,23 +24456,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snarkjs@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "snarkjs@npm:0.7.0"
+"snarkjs@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "snarkjs@npm:0.5.0"
   dependencies:
     "@iden3/binfileutils": 0.0.11
     bfj: ^7.0.2
     blake2b-wasm: ^2.4.0
-    circom_runtime: 0.1.22
+    circom_runtime: 0.1.21
     ejs: ^3.1.6
     fastfile: 0.0.20
-    ffjavascript: 0.2.59
+    ffjavascript: 0.2.56
     js-sha3: ^0.8.0
     logplease: ^1.2.15
-    r1csfile: 0.0.45
+    r1csfile: 0.0.41
   bin:
     snarkjs: build/cli.cjs
-  checksum: 8382c765c9b2fb3fac71807cd58352d0f497793b8eb18843a6ca7d7d6d4c8afbb97becd0e02211c51c0561e97646660a4c3edaed8200d1d182845879156f76b6
+  checksum: f0233103548bcd0f75b2ff8998ba02437e5131486d126c4a6a31355cd3558c7ce4311e21d5f24ea9ca198d0556e91e63e2ec6aef8da44014c16b29b6a7086ca2
   languageName: node
   linkType: hard
 
@@ -27018,15 +27018,6 @@ __metadata:
   dependencies:
     wasmbuilder: 0.0.16
   checksum: 0769ca2d0c2f99619436f86dcab16294d94cc0c8a114b0c5e6ed71df49625a6ad35000011fee57471b7647838eeb75f631e74b200996ac2513e8ca0c47e5b8d0
-  languageName: node
-  linkType: hard
-
-"wasmcurves@npm:0.2.1":
-  version: 0.2.1
-  resolution: "wasmcurves@npm:0.2.1"
-  dependencies:
-    wasmbuilder: 0.0.16
-  checksum: 3bfd6c3bf339e5e3980590afecf83d5a06fbb0ec8d4e1612c5d7a8edd90173c05270b45832330964eac281c70b9d04229de430673952c6516c2feb9c42d2ab03
   languageName: node
   linkType: hard
 

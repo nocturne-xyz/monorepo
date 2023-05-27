@@ -61,6 +61,7 @@ export const VALID_RELAY_REQUEST = {
       encodedAssetAddr: "2n",
       encodedAssetId: "3n",
     },
+    gasAssetRefundThreshold: "100n",
     executionGasLimit: "10000000n",
     maxNumRefunds: "2n",
     gasPrice: "10n",

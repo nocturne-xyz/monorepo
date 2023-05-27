@@ -23,6 +23,9 @@ import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 
+// refunds < 200k gas * gasPrice converted to gasAsset not worth refunding
+const DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS = 200_000n;
+
 const DUMMY_REFUND_ADDR: StealthAddress = {
   h1X: 0n,
   h1Y: 0n,
@@ -35,6 +38,11 @@ const DUMMY_GAS_ASSET: Asset = {
   assetAddr: "0x0000000000000000000000000000000000000000",
   id: ERC20_ID,
 };
+
+interface AssetAndTicker {
+  asset: Asset;
+  ticker: string;
+}
 
 // TODO: ask bundler for the batch size and make a more intelligent estimate than this
 const PER_JOINSPLIT_GAS = 580_000n;
@@ -92,6 +100,7 @@ export async function handleGasForOperationRequest(
       ...gasEstimatedOpRequest,
       gasPrice: 0n,
       gasAsset: DUMMY_GAS_ASSET,
+      gasAssetRefundThreshold: 0n,
     };
   } else {
     // Otherwise, we need to add gas compensation to the operation request
@@ -105,18 +114,20 @@ export async function handleGasForOperationRequest(
           PER_JOINSPLIT_GAS +
         (maxNumRefunds + 1n) * PER_REFUND_GAS);
 
-    const { gasAssets, db } = deps;
-
     // attempt to update the joinSplitRequests with gas compensation
     // gasAsset will be `undefined` if the user's too broke to pay for gas
-    const [joinSplitRequests, gasAsset] =
+    const [joinSplitRequests, gasAssetAndTicker] =
       await tryUpdateJoinSplitRequestsForGasEstimate(
-        gasAssets,
-        db,
+        deps.gasAssets,
+        deps.db,
         gasEstimatedOpRequest.joinSplitRequests,
         totalGasEstimateWei,
         deps.tokenConverter
       );
+
+    if (!gasAssetAndTicker) {
+      throw new Error("not enough owned gas tokens pay for op");
+    }
 
     // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
     if (
@@ -125,14 +136,16 @@ export async function handleGasForOperationRequest(
       gasEstimatedOpRequest.maxNumRefunds += 1n;
     }
 
-    if (!gasAsset) {
-      throw new Error("not enough owned gas tokens pay for op");
-    }
+    const gasAssetRefundThreshold = await deps.tokenConverter.weiToTargetErc20(
+      DEFAULT_GAS_ASSET_REFUND_THRESHOLD_GAS * gasPrice,
+      gasAssetAndTicker.ticker
+    );
 
     return {
       ...gasEstimatedOpRequest,
+      gasAssetRefundThreshold,
       joinSplitRequests,
-      gasAsset,
+      gasAsset: gasAssetAndTicker.asset,
     };
   }
 }
@@ -146,7 +159,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   joinSplitRequests: JoinSplitRequest[],
   gasEstimateWei: bigint,
   tokenConverter: EthToTokenConverter
-): Promise<[JoinSplitRequest[], Asset | undefined]> {
+): Promise<[JoinSplitRequest[], AssetAndTicker | undefined]> {
   // group joinSplitRequests by asset address
   const joinSplitRequestsByAsset = groupByMap(
     joinSplitRequests,
@@ -184,7 +197,10 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         matchingRequests[0].unwrapValue += gasEstimateWei;
         joinSplitRequestsByAsset.set(gasAsset.assetAddr, matchingRequests);
 
-        return [Array.from(joinSplitRequestsByAsset.values()).flat(), gasAsset];
+        return [
+          Array.from(joinSplitRequestsByAsset.values()).flat(),
+          { asset: gasAsset, ticker },
+        ];
       }
     }
   }
@@ -203,7 +219,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
         { asset: gasAsset, unwrapValue: estimateInGasAsset },
       ];
 
-      return [modifiedJoinSplitRequests, gasAsset];
+      return [modifiedJoinSplitRequests, { asset: gasAsset, ticker }];
     }
   }
 
@@ -227,6 +243,7 @@ async function estimateGasForOperationRequest(
       maxNumRefunds:
         maxNumRefunds ??
         BigInt(joinSplitRequests.length + refundAssets.length) + 5n,
+      gasAssetRefundThreshold: 0n,
       executionGasLimit: BLOCK_GAS_LIMIT,
       refundAddr: DUMMY_REFUND_ADDR,
       // Use 0 gas price and dummy asset for simulation
@@ -262,6 +279,7 @@ async function estimateGasForOperationRequest(
   }
 
   // if gasPrice is not specified, get it from RPC node
+  // NOTE: gasPrice returned in wei
   gasPrice =
     gasPrice ?? (await handlerContract.provider.getGasPrice()).toBigInt();
 
@@ -347,6 +365,7 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
     encodedRefundAssets: op.encodedRefundAssets,
     actions: op.actions,
     encodedGasAsset: op.encodedGasAsset,
+    gasAssetRefundThreshold: op.gasAssetRefundThreshold,
     executionGasLimit: op.executionGasLimit,
     maxNumRefunds: op.maxNumRefunds,
     gasPrice: op.gasPrice,

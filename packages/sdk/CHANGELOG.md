@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- add method `getCreationTimestampOfNewestNoteInOp` to SDK that allows frontends to display privacy indicators or warnings based on "age" of the notes being spent
+- track creation time (in unix millis) of all notes stored in `NocturneDB`
+- add `op.gasAssetRefundThreshold` functionality (opRequestGas converts 200k gas \* gasPrice into gas asset and fills gasAssetRefundThreshold field)
+- sort joinsplits by encodeAsset to get gas saving in processJoinSplits
 - move rest of tree constants into `treeConstants.ts`
 - change `nextMerkleIndex` to `lastCommittedMerkleIndex` in NocturneDB
 - make `hasEnoughBalanceForOperationRequest` call `getCommittedNotesForAsset` instead of `getNotesForAsset`
