@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `gasAssetRefundThreshold` to operation for req validation
 - make cli manually exit when `ActorHandle` promise resolves
 - make `BundlerServer.start()` return `ActorHandle`
 - change `/relay` request structure to have operation embedded on obj `{ operation: {...}}`

@@ -9,6 +9,7 @@ import {console} from "forge-std/console.sol";
 
 import {TokenSwapper, SwapRequest} from "../../utils/TokenSwapper.sol";
 import {TreeTest, TreeTestLib} from "../../utils/TreeTest.sol";
+import {TestBalanceManager} from "../../harnesses/TestBalanceManager.sol";
 import "../../utils/NocturneUtils.sol";
 import "../../utils/ForgeUtils.sol";
 import {Teller} from "../../../Teller.sol";
@@ -52,6 +53,7 @@ contract TellerHandler is OperationGenerator {
     mapping(bytes32 => uint256) internal _calls;
     uint256 internal _numSuccessfulActions;
     string[] internal _failureReasons;
+    TestBalanceManager internal _testBalanceManager;
 
     TransferRequest[] internal _successfulTransfers;
     SwapRequest[] internal _successfulSwaps;
@@ -79,6 +81,9 @@ contract TellerHandler is OperationGenerator {
         swapErc721 = _swapErc721;
         swapErc1155 = _swapErc1155;
         bundlerAddress = _bundlerAddress;
+
+        // dummy, only for pure fns that only work for calldata
+        _testBalanceManager = new TestBalanceManager();
     }
 
     // ______EXTERNAL______
@@ -249,21 +254,26 @@ contract TellerHandler is OperationGenerator {
     }
 
     // ______UTILS______
-    // Workaround for OperationUtils version only being for op calldata
+    // Workaround for OperationUtils version not including gasAssetRefundThreshold logic
     function _calculateBundlerGasAssetPayout(
         Operation memory op,
         OperationResult memory opResult
-    ) internal pure returns (uint256) {
-        uint256 handleJoinSplitGas = op.joinSplits.length *
-            GAS_PER_JOINSPLIT_HANDLE;
-        uint256 handleRefundGas = opResult.numRefunds * GAS_PER_REFUND_HANDLE;
+    ) internal view returns (uint256) {
+        uint256 payout = _testBalanceManager.calculateBundlerGasAssetPayout(
+            op,
+            opResult
+        );
 
-        return
-            op.gasPrice *
-            (opResult.verificationGas +
-                handleJoinSplitGas +
-                opResult.executionGas +
-                handleRefundGas);
+        uint256 maxGasAssetCost = _testBalanceManager
+            .calculateOpMaxGasAssetCost(
+                op,
+                opResult.verificationGas / op.joinSplits.length
+            );
+        if (maxGasAssetCost - payout < op.gasAssetRefundThreshold) {
+            payout = maxGasAssetCost;
+        }
+
+        return payout;
     }
 
     function _totalJoinSplitTokenAmountInOp(

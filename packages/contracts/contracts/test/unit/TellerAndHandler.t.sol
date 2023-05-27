@@ -280,6 +280,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
@@ -331,6 +332,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
@@ -460,6 +462,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
@@ -525,6 +528,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     3
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
                 gasPrice: 0,
@@ -590,6 +594,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     6
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 6,
                 gasPrice: 0,
@@ -656,6 +661,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -721,6 +727,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -786,6 +793,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -864,6 +872,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -932,6 +941,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -968,6 +978,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -1025,6 +1036,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -1061,6 +1073,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -1130,6 +1143,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -1166,6 +1180,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -1235,6 +1250,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
                 gasPrice: 50,
@@ -1313,6 +1329,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     2
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
                 gasPrice: 50,
@@ -1437,6 +1454,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
@@ -1538,6 +1556,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 4, // 4 refund assets (including joinsplit)
                 gasPrice: 0,
@@ -1658,6 +1677,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     2
                 ),
                 encodedRefundAssets: encodedRefundAssets,
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1, // should be 4 refund assets, 1 too few
                 gasPrice: 50,
@@ -1951,6 +1971,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     3
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 20,
                 gasPrice: 50,
@@ -2011,6 +2032,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: 100, // not enough gas for transfer
                 maxNumRefunds: 1,
                 gasPrice: 50,
@@ -2063,6 +2085,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -2098,6 +2121,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -2131,6 +2155,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
@@ -2164,6 +2189,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
                     1
                 ),
                 encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
