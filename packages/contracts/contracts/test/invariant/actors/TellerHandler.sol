@@ -37,6 +37,7 @@ contract TellerHandler is OperationGenerator {
 
     address public bundlerAddress;
 
+    // First token is always weth (also the gas token)
     address[] public joinSplitTokens;
 
     SimpleERC20Token public swapErc20;

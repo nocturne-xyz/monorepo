@@ -41,6 +41,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
     uint256 public screenerPrivkey;
     address public screenerAddress;
 
+    // First erc20 is always weth
     address[] public erc20s;
     SimpleERC721Token public erc721;
     SimpleERC1155Token public erc1155;
@@ -244,7 +245,9 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 numDepositsSeed,
         uint256 seed
     ) public createActor trackCall("instantiateDepositErc20") {
-        ISimpleERC20Token erc20 = ISimpleERC20Token(erc20s[1]);
+        uint256 erc20Index = bound(seed, 1, erc20s.length - 1);
+
+        ISimpleERC20Token erc20 = ISimpleERC20Token(erc20s[erc20Index]);
         uint256 numDeposits = bound(numDepositsSeed, 1, 10);
 
         (, uint32 globalCapWholeTokens, , , uint8 precision) = depositManager
@@ -256,55 +259,56 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
         StealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
-
         uint256 gasPrice = bound(seed, 0, 10_000 gwei);
         uint256 gasCompPerDeposit = AVG_GAS_PER_COMPLETE * gasPrice;
-        for (uint256 i = 0; i < numDeposits; i++) {
-            // Get random amount
-            uint256 newSeed;
-            unchecked {
-                newSeed = seed + i;
+        {
+            for (uint256 i = 0; i < numDeposits; i++) {
+                // Get random amount
+                uint256 newSeed;
+                unchecked {
+                    newSeed = seed + i;
+                }
+                uint256 amount = bound(
+                    uint256(keccak256(abi.encodePacked(newSeed))),
+                    0,
+                    globalCap
+                );
+                depositAmounts[i] = amount;
+
+                // Record deposit req
+                deposits[i] = NocturneUtils.formatDepositRequest(
+                    _currentActor,
+                    address(erc20),
+                    depositAmounts[i],
+                    NocturneUtils.ERC20_ID,
+                    depositAddr,
+                    depositManager._nonce() + i,
+                    gasCompPerDeposit
+                );
             }
-            uint256 amount = bound(
-                uint256(keccak256(abi.encodePacked(newSeed))),
-                0,
-                globalCap
-            );
-            depositAmounts[i] = amount;
 
-            // Record deposit req
-            deposits[i] = NocturneUtils.formatDepositRequest(
-                _currentActor,
-                address(erc20),
-                depositAmounts[i],
-                NocturneUtils.ERC20_ID,
-                depositAddr,
-                depositManager._nonce() + i,
-                gasCompPerDeposit
-            );
+            // Reserve tokens
+            uint256 totalDepositAmount = _sum(depositAmounts);
+            erc20.reserveTokens(_currentActor, totalDepositAmount);
+
+            // Deal gas compensation
+            vm.deal(_currentActor, gasCompPerDeposit * numDeposits);
+
+            // Approve token
+            vm.startPrank(_currentActor);
+            erc20.approve(address(depositManager), totalDepositAmount);
+
+            depositManager.instantiateErc20MultiDeposit{
+                value: gasCompPerDeposit * numDeposits
+            }(address(erc20), depositAmounts, depositAddr);
+
+            vm.stopPrank();
         }
-
-        // Reserve tokens
-        uint256 totalDepositAmount = _sum(depositAmounts);
-        erc20.reserveTokens(_currentActor, totalDepositAmount);
-
-        // Deal gas compensation
-        vm.deal(_currentActor, gasCompPerDeposit * numDeposits);
-
-        // Approve token
-        vm.startPrank(_currentActor);
-        erc20.approve(address(depositManager), totalDepositAmount);
-
-        depositManager.instantiateErc20MultiDeposit{
-            value: gasCompPerDeposit * numDeposits
-        }(address(erc20), depositAmounts, depositAddr);
-
-        vm.stopPrank();
 
         // Update deposit set and sum
         for (uint256 i = 0; i < numDeposits; i++) {
             _depositSet.push(deposits[i]);
-            _instantiateDepositSumSetErc20s[1].addToActorSum(
+            _instantiateDepositSumSetErc20s[erc20Index].addToActorSum(
                 _currentActor,
                 depositAmounts[i]
             );
@@ -332,21 +336,20 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Retrieve deposit
         vm.prank(randDepositRequest.spender);
         try depositManager.retrieveDeposit(randDepositRequest) {
-            EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(depositManager._weth()),
-                ERC20_ID
+            (, address assetAddr, ) = AssetUtils.decodeAsset(
+                randDepositRequest.encodedAsset
             );
-            if (
-                randDepositRequest.encodedAsset.encodedAssetAddr ==
-                encodedWeth.encodedAssetAddr
-            ) {
+            if (assetAddr == erc20s[0]) {
+                // weth
                 _retrieveDepositSumSetErc20s[0].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
             } else {
-                _retrieveDepositSumSetErc20s[1].addToActorSum(
+                // non-weth
+                uint256 erc20Index = _findingErc20Index(assetAddr);
+
+                _retrieveDepositSumSetErc20s[erc20Index].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
@@ -385,21 +388,18 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         vm.txGasPrice(gasPrice);
         vm.prank(screenerAddress);
         try depositManager.completeErc20Deposit(randDepositRequest, signature) {
-            EncodedAsset memory encodedWeth = AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(depositManager._weth()),
-                ERC20_ID
+            (, address assetAddr, ) = AssetUtils.decodeAsset(
+                randDepositRequest.encodedAsset
             );
-            if (
-                randDepositRequest.encodedAsset.encodedAssetAddr ==
-                encodedWeth.encodedAssetAddr
-            ) {
+            if (assetAddr == erc20s[0]) {
                 _completeDepositSumSetErc20s[0].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
             } else {
-                _completeDepositSumSetErc20s[1].addToActorSum(
+                uint256 erc20Index = _findingErc20Index(assetAddr);
+
+                _completeDepositSumSetErc20s[erc20Index].addToActorSum(
                     randDepositRequest.spender,
                     randDepositRequest.value
                 );
@@ -493,6 +493,15 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         uint256 tokenIndex
     ) public view returns (uint256) {
         return _completeDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
+    }
+
+    function _findingErc20Index(address erc20) internal view returns (uint256) {
+        for (uint256 i = 0; i < erc20s.length; i++) {
+            if (erc20s[i] == erc20) {
+                return i;
+            }
+        }
+        revert("ERC20 not found");
     }
 
     // ______PURE______
