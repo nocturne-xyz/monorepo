@@ -3,10 +3,15 @@ import {
   AssetTrait,
   IncludedEncryptedNote,
   IncludedNote,
+  WithTimestamp,
 } from "../../primitives";
 import { BATCH_SIZE } from "../../primitives/treeConstants";
 import { maxArray } from "../../utils";
-import { makeSubgraphQuery, totalEntityIndexFromBlockNumber } from "./utils";
+import {
+  blockNumberFromTotalEntityIndex,
+  makeSubgraphQuery,
+  totalEntityIndexFromBlockNumber,
+} from "./utils";
 
 interface NoteResponse {
   ownerH1X: string;
@@ -21,7 +26,6 @@ interface NoteResponse {
 
 interface EncryptedNoteResponse {
   id: string;
-  idx: string;
   ownerH1X: string;
   ownerH1Y: string;
   ownerH2X: string;
@@ -36,6 +40,7 @@ interface EncryptedNoteResponse {
 
 interface EncodedOrEncryptedNoteResponse {
   merkleIndex: string;
+  idx: string;
   note: NoteResponse | null;
   encryptedNote: EncryptedNoteResponse | null;
 }
@@ -87,7 +92,7 @@ export async function fetchNotes(
   endpoint: string,
   fromBlock: number,
   toBlock: number
-): Promise<(IncludedNote | IncludedEncryptedNote)[]> {
+): Promise<WithTimestamp<IncludedNote | IncludedEncryptedNote>[]> {
   const query = makeSubgraphQuery<FetchNotesVars, FetchNotesResponse>(
     endpoint,
     notesQuery,
@@ -99,14 +104,23 @@ export async function fetchNotes(
 
   const res = await query({ fromIdx, toIdx });
   return res.data.encodedOrEncryptedNotes.map(
-    ({ merkleIndex, note, encryptedNote }) => {
+    ({ merkleIndex, note, encryptedNote, idx }) => {
+      const timestampUnixMillis = Number(
+        blockNumberFromTotalEntityIndex(BigInt(idx))
+      );
       if (note) {
-        return includedNoteFromNoteResponse(note, parseInt(merkleIndex));
+        return {
+          inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
+          timestampUnixMillis,
+        };
       } else if (encryptedNote) {
-        return encryptedNoteFromEncryptedNoteResponse(
-          encryptedNote,
-          parseInt(merkleIndex)
-        );
+        return {
+          inner: encryptedNoteFromEncryptedNoteResponse(
+            encryptedNote,
+            parseInt(merkleIndex)
+          ),
+          timestampUnixMillis,
+        };
       } else {
         throw new Error("res must contain either note or encryptedNote");
       }

@@ -74,7 +74,8 @@ describe("SDKSubgraphSyncAdapter", async () => {
         endBlock: firstRangeEndBlockExpected,
       });
       for await (const { notes, blockNumber } of diffs.iter) {
-        notes.forEach((note) => {
+        notes.forEach(({ inner }) => {
+          const note = inner;
           expect(NoteTrait.isEncryptedNote(note)).to.be.false;
           const commitment = NoteTrait.toCommitment(note as IncludedNote);
 
@@ -113,7 +114,8 @@ describe("SDKSubgraphSyncAdapter", async () => {
         endBlock: secondRangeEndBlockExpected,
       });
       for await (const { notes, blockNumber } of diffs.iter) {
-        notes.forEach((note) => {
+        notes.forEach(({ inner }) => {
+          const note = inner;
           expect(NoteTrait.isEncryptedNote(note)).to.be.false;
           const commitment = NoteTrait.toCommitment(note as IncludedNote);
 

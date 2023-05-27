@@ -11,6 +11,7 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   AssetTrait,
+  WithTimestamp,
 } from "../src";
 import { ponzi, shitcoin, stablescam } from "./utils";
 import { NocturneSigner } from "../dist";
@@ -205,7 +206,7 @@ describe("NocturneDB", async () => {
 
   it("stores a batch of notes with a single asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     const map = await db.getAllNotes();
     const assetKey = NocturneDB.formatAssetKey(shitcoin);
@@ -217,7 +218,7 @@ describe("NocturneDB", async () => {
 
   it("stores a batch of notes with multiple assets", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     const map = await db.getAllNotes();
 
@@ -235,7 +236,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies one note", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     const noteToNullify = notes[0];
     const nfToApply = noteToNullify.nullifier;
@@ -252,7 +253,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies multiple notes", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     // remove the first 10 notes
     const notesToNullify = notes.slice(10);
@@ -274,7 +275,7 @@ describe("NocturneDB", async () => {
 
   it("nullifies all notes for a given asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     // nullify all of the ponzi notes
     const ponziNotes = notes.filter(
@@ -311,7 +312,7 @@ describe("NocturneDB", async () => {
       (n) => AssetTrait.hash(n.asset) === AssetTrait.hash(stablescam)
     );
 
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     // nullify a some each asset's notes
     const shitcoinNotesToNullify = shitcoinNotes.filter((_, i) => i % 3 === 0);
@@ -362,7 +363,7 @@ describe("NocturneDB", async () => {
 
   it("gets all notes for a given asset", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
-    await db.storeNotes(notes);
+    await db.storeNotes(withDummyTimestamps(notes));
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
       const assetHash = AssetTrait.hash(asset);
@@ -377,3 +378,7 @@ describe("NocturneDB", async () => {
     }
   });
 });
+
+function withDummyTimestamps<T>(arr: T[]): WithTimestamp<T>[] {
+  return arr.map((t) => ({ inner: t, timestampUnixMillis: 0 }));
+}

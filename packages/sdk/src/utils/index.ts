@@ -1,4 +1,9 @@
-export { sortNotesByValue, getJoinSplitRequestTotalValue, sleep } from "./misc";
+export {
+  sortNotesByValue,
+  getJoinSplitRequestTotalValue,
+  sleep,
+  merklePathToIndex,
+} from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {
   zip,

@@ -138,3 +138,8 @@ export enum DepositRequestStatus {
   AwaitingFulfillment = "AwaitingFulfillment",
   Completed = "Completed",
 }
+
+export interface WithTimestamp<T> {
+  timestampUnixMillis: number;
+  inner: T;
+}
