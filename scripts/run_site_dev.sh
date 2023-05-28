@@ -1,17 +1,12 @@
 #!/bin/bash
 
 pre_startup_flag=true
-cleanup_flag=true
 
 for arg in "$@"
 do
     case $arg in
         --pre_startup=*)
         pre_startup_flag="${arg#*=}"
-        shift
-        ;;
-        --cleanup=*)
-        cleanup_flag="${arg#*=}"
         shift
         ;;
     esac
@@ -62,11 +57,8 @@ else
     echo "Pre-startup flag is false, skipping.."
 fi
 
-if [ "$cleanup_flag" = "true" ]; then
-    # Calls cleanup() upon CTRL+C or early exit
-    echo "Cleanup enabled upon exit..."
-    trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
-fi
+# Calls cleanup() upon CTRL+C or early exit
+trap 'cleanup; trap - SIGTERM && kill 0' SIGINT SIGTERM EXIT
 
 mkdir -p $LOG_DIR
 mkdir -p $ROOT_DIR/logs
