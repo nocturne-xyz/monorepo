@@ -15,10 +15,10 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
-import { getJoinSplitRequestTotalValue } from "./utils";
+import { getJoinSplitRequestTotalValue, maxArray } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
+import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
 
 export class NocturneWalletSDK {
   protected config: NocturneConfig;
@@ -27,6 +27,7 @@ export class NocturneWalletSDK {
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
+  protected bundlerEndpoint: string;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
@@ -38,7 +39,8 @@ export class NocturneWalletSDK {
     merkleProver: SparseMerkleProver,
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
-    tokenConverter: EthToTokenConverter
+    tokenConverter: EthToTokenConverter,
+    bundlerEndopint: string
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -63,6 +65,7 @@ export class NocturneWalletSDK {
     this.db = db;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
+    this.bundlerEndpoint = bundlerEndopint;
   }
 
   async sync(): Promise<void> {
@@ -143,6 +146,34 @@ export class NocturneWalletSDK {
   async getCreationTimestampOfNewestNoteInOp(
     op: PreSignOperation | SignedOperation
   ): Promise<number> {
-    return await getCreationTimestampOfNewestNoteInOp(this.db, op);
+    // get the max merkle index of any note in any joinsplit in the op
+    const maxMerkleIndex = maxArray(
+      getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex }) => merkleIndex)
+    );
+
+    // get the corresponding timestamp
+    const timestamp = await this.db.getTimestampForMerkleIndex(
+      Number(maxMerkleIndex)
+    );
+
+    if (timestamp === undefined) {
+      throw new Error(
+        `timestamp not found for newest note with merkle index ${maxMerkleIndex}`
+      );
+    }
+
+    return timestamp;
+  }
+
+  async optimisticallyApplyOpNullifiers(
+    op: PreSignOperation | SignedOperation
+  ): Promise<void> {
+    // make records
+    // for each, apply to DB.
+  }
+
+  async updateOptimiticNullifiers(): Promise<void> {
+    // get all `OptimisticNFRecord`s from db
+    // for each, check timestamp and bundler and filter out expired / invalidated ones
   }
 }

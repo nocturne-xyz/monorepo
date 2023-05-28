@@ -7,7 +7,7 @@ import {
   Note,
   WithTimestamp,
 } from "./primitives";
-import { numberToStringPadded } from "./utils";
+import { numberToStringPadded, zip } from "./utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./store";
 import { StateDiff } from "./sync";
@@ -16,6 +16,7 @@ const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const MERKLE_INDEX_TIMESTAMP_PREFIX = "MERKLE_INDEX_TIMESTAMP";
+const OPTIMISTIC_NF_RECORD_PREFIX = "OPTIMISTIC_NF_RECORD";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
@@ -24,6 +25,11 @@ const MAX_MERKLE_INDEX_DIGITS = 10;
 
 export type AssetKey = string;
 type AllNotes = Map<AssetKey, IncludedNote[]>;
+
+export interface OptimisticNFRecord {
+  nullifier: bigint;
+  expirationDate: number;
+}
 
 export class NocturneDB {
   // store the following mappings:
@@ -61,6 +67,17 @@ export class NocturneDB {
     )}`;
   }
 
+  static formatOptimisticNFRecordKey(merkleIndex: number): string {
+    return `${OPTIMISTIC_NF_RECORD_PREFIX}-${numberToStringPadded(
+      merkleIndex,
+      MAX_MERKLE_INDEX_DIGITS
+    )}`;
+  }
+
+  static parseOptimisticNFRecordKey(key: string): number {
+    return parseInt(key.split("-")[1]);
+  }
+
   static parseIndexKey(key: string): number {
     return parseInt(key.split("-")[1]);
   }
@@ -72,6 +89,51 @@ export class NocturneDB {
       assetAddr,
       id: BigInt(id),
     };
+  }
+
+  async getOptimisticNFRecord(
+    merkleIndex: number
+  ): Promise<OptimisticNFRecord | undefined> {
+    const key = NocturneDB.formatOptimisticNFRecordKey(merkleIndex);
+    const value = await this.kv.getString(key);
+
+    if (value === undefined) {
+      return undefined;
+    }
+
+    return JSON.parse(value);
+  }
+
+  async getAllOptimisticNFRecords(): Promise<Map<number, OptimisticNFRecord>> {
+    const map = new Map<number, OptimisticNFRecord>();
+    const kvs = await this.kv.iterPrefix(OPTIMISTIC_NF_RECORD_PREFIX);
+    for await (const [key, value] of kvs) {
+      const merkleIndex = NocturneDB.parseOptimisticNFRecordKey(key);
+      const record = JSON.parse(value);
+      map.set(merkleIndex, record);
+    }
+
+    return map;
+  }
+
+  async storeOptimisticNFRecords(
+    merkleIndices: number[],
+    records: OptimisticNFRecord[]
+  ): Promise<void> {
+    const kvs = zip(merkleIndices, records).map(([merkleIndex, record]) =>
+      NocturneDB.makeOptimsiticNFRecordKV(merkleIndex, record)
+    );
+    await this.kv.putMany(kvs);
+  }
+
+  async removeOptimisticNFRecord(merkleIndex: number): Promise<void> {
+    const key = NocturneDB.formatOptimisticNFRecordKey(merkleIndex);
+    await this.kv.remove(key);
+  }
+
+  async removeOptimisticNFRecords(merkleIndices: number[]): Promise<void> {
+    const keys = merkleIndices.map(NocturneDB.formatOptimisticNFRecordKey);
+    await this.kv.removeMany(keys);
   }
 
   async storeNotes(
@@ -129,6 +191,9 @@ export class NocturneDB {
     // write the new commitment KV pairs and the new asset => merkleIndex[] KV pairs to the KV store
     await this.kv.putMany(assetKVs);
 
+    // remove any optimistic nf records for the nullified notes
+    await this.removeOptimisticNFRecords(indices);
+
     return indices;
   }
 
@@ -166,7 +231,13 @@ export class NocturneDB {
   async getCommittedNotesForAsset(asset: Asset): Promise<IncludedNote[]> {
     const notes = await this.getNotesForAsset(asset);
     const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
-    return notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex);
+    return Promise.all(
+      notes
+        .filter((note) => note.merkleIndex <= lastCommittedMerkleIndex)
+        .filter(
+          async (note) => !(await this.getOptimisticNFRecord(note.merkleIndex))
+        )
+    );
   }
 
   /// return the next block number the DB has not yet been synced to
@@ -275,12 +346,22 @@ export class NocturneDB {
   async getAllCommittedNotes(): Promise<AllNotes> {
     const allNotes = await this.getAllNotes();
     const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
-    return new Map(
-      Array.from(allNotes.entries()).map(([assetKey, notes]) => [
-        assetKey,
-        notes.filter((note) => note.merkleIndex <= lastCommittedMerkleIndex),
-      ])
+    const entries: [AssetKey, IncludedNote[]][] = await Promise.all(
+      Array.from(allNotes.entries()).map(async ([assetKey, notes]) => {
+        const committedNotes = await Promise.all(
+          notes
+            .filter((note) => note.merkleIndex <= lastCommittedMerkleIndex)
+            .filter(
+              async (note) =>
+                !(await this.getOptimisticNFRecord(note.merkleIndex))
+            )
+        );
+
+        return [assetKey, committedNotes];
+      })
     );
+
+    return new Map(entries);
   }
 
   private static makeNoteKV<N extends Note>(merkleIndex: number, note: N): KV {
@@ -296,6 +377,15 @@ export class NocturneDB {
 
   private static makeTimestampKV(merkleIndex: number, timestamp: number): KV {
     return [NocturneDB.formatTimestampKey(merkleIndex), timestamp.toString()];
+  }
+
+  private static makeOptimsiticNFRecordKV(
+    merkleIndex: number,
+    record: OptimisticNFRecord
+  ): KV {
+    const key = NocturneDB.formatOptimisticNFRecordKey(merkleIndex);
+    const value = JSON.stringify(record);
+    return [key, value];
   }
 
   private async getUpdatedAssetKVsWithNotesAdded<N extends IncludedNote>(
