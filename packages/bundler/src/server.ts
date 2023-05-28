@@ -9,7 +9,11 @@ import { Queue } from "bullmq";
 import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
-import { makeGetOperationStatusHandler, makeRelayHandler } from "./routes";
+import {
+  makeCheckNFHandler,
+  makeGetOperationStatusHandler,
+  makeRelayHandler,
+} from "./routes";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerServer {
@@ -65,6 +69,17 @@ export class BundlerServer {
         logger: this.logger.child({
           route: "/operations/:id",
           function: "getOperationStatusHandler",
+        }),
+      })
+    );
+
+    router.get(
+      "/nullifiers/:nullifier",
+      makeCheckNFHandler({
+        nullifierDB: this.nullifierDB,
+        logger: this.logger.child({
+          route: "/nullifiers/:nullifier",
+          function: "getNullifierStatusHandler",
         }),
       })
     );
