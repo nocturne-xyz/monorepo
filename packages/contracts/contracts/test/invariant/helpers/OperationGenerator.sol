@@ -31,13 +31,9 @@ struct GenerateOperationArgs {
     Teller teller;
     address handler;
     uint256 root;
-    // NOTE: this is dumb workaround for foundry being buggy. If this is set to true for both, the
-    // teller invariant tests hang for no apparent reason
-    bool statefulNfGeneration;
     uint8 exceedJoinSplitsMarginInTokens;
     TokenSwapper swapper;
-    SimpleERC20Token joinSplitToken;
-    SimpleERC20Token gasToken;
+    address[] joinSplitTokens;
     SimpleERC20Token swapErc20;
     SimpleERC721Token swapErc721;
     SimpleERC1155Token swapErc1155;
@@ -45,7 +41,9 @@ struct GenerateOperationArgs {
 
 struct GeneratedOperationMetadata {
     TransferRequest[] transfers;
+    uint256[] transferTokenNumbers; // maps transfers[] to what token index in args.joinSplitTokens
     SwapRequest[] swaps;
+    uint256[] swapTokenNumbers; // maps swaps[] to what token index in args.joinSplitTokens
     bool[] isTransfer;
     bool[] isSwap;
 }
@@ -71,41 +69,61 @@ contract OperationGenerator is InvariantUtils {
         internal
         returns (Operation memory _op, GeneratedOperationMetadata memory _meta)
     {
-        // Get random totalJoinSplitUnwrapAmount using the bound function
-        uint256 totalJoinSplitUnwrapAmount = bound(
-            args.seed,
-            0,
-            args.joinSplitToken.balanceOf(address(args.teller))
+        uint256 numJoinSplitTokens = args.joinSplitTokens.length;
+        uint256[] memory totalJoinSplitUnwrapAmounts = new uint256[](
+            numJoinSplitTokens
         );
-        uint256 totalJoinSplitForActions = totalJoinSplitUnwrapAmount;
+
+        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+            totalJoinSplitUnwrapAmounts[i] = bound(
+                args.seed,
+                0,
+                IERC20(args.joinSplitTokens[i]).balanceOf(address(args.teller))
+            );
+        }
 
         // Get random args.joinSplitPublicSpends
-        uint256[] memory joinSplitPublicSpends = _randomizeJoinSplitAmounts(
-            _rerandomize(args.seed),
-            totalJoinSplitUnwrapAmount
+        uint256[][] memory joinSplitsPublicSpends = new uint256[][](
+            numJoinSplitTokens
         );
+
+        console.log("randomizing joinsplit amounts");
+        for (uint256 i = 0; i < numJoinSplitTokens; i++) {
+            joinSplitsPublicSpends[i] = _randomizeJoinSplitAmounts(
+                _rerandomize(args.seed),
+                totalJoinSplitUnwrapAmounts[i]
+            );
+        }
+
+        uint256 totalNumJoinSplits = _totalNumJoinSplitsForJoinSplitsPublicSpends(
+                joinSplitsPublicSpends
+            );
 
         // Get random numActions using the bound function, at least 2 to make space for token
         // approvals in case of a swap
         uint256 numActions = bound(_rerandomize(args.seed), 2, 5);
 
+        console.log("getting gas to reserve");
         uint256 gasToReserve = _opMaxGasAssetCost(
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS,
             DEFAULT_EXECUTION_GAS_LIMIT,
-            joinSplitPublicSpends.length,
+            totalNumJoinSplits,
             DEFAULT_MAX_NUM_REFUNDS
         );
 
         bool compensateBundler = false;
-        if (totalJoinSplitForActions > gasToReserve) {
-            totalJoinSplitForActions = totalJoinSplitForActions - gasToReserve;
+        if (totalJoinSplitUnwrapAmounts[0] > gasToReserve) {
+            totalJoinSplitUnwrapAmounts[0] =
+                totalJoinSplitUnwrapAmounts[0] -
+                gasToReserve;
             compensateBundler = true;
         }
 
+        console.log("formatting actions");
         Action[] memory actions = new Action[](numActions);
         (actions, _meta) = _formatActions(
             args,
-            totalJoinSplitForActions,
+            totalJoinSplitUnwrapAmounts,
             numActions
         );
 
@@ -116,17 +134,18 @@ contract OperationGenerator is InvariantUtils {
             ERC20_ID
         );
 
+        console.log("getting gas asset refund threshold");
         uint256 gasAssetRefundThreshold = bound(
             _rerandomize(args.seed),
             0,
-            totalJoinSplitUnwrapAmount
+            totalJoinSplitUnwrapAmounts[0]
         );
 
         FormatOperationArgs memory opArgs = FormatOperationArgs({
-            joinSplitToken: args.joinSplitToken,
-            gasToken: args.gasToken,
+            joinSplitTokens: args.joinSplitTokens,
+            gasToken: args.joinSplitTokens[0], // weth is used as gas token
             root: args.root,
-            joinSplitPublicSpends: joinSplitPublicSpends,
+            joinSplitsPublicSpends: joinSplitsPublicSpends,
             encodedRefundAssets: encodedRefundAssets,
             gasAssetRefundThreshold: gasAssetRefundThreshold,
             executionGasLimit: DEFAULT_EXECUTION_GAS_LIMIT,
@@ -137,37 +156,33 @@ contract OperationGenerator is InvariantUtils {
             operationFailureType: OperationFailureType.NONE
         });
 
+        console.log("Formatting op");
         _op = NocturneUtils.formatOperation(opArgs);
 
+        _op = _ensureUniqueNullifiers(_op);
+    }
+
+    function _ensureUniqueNullifiers(
+        Operation memory op
+    ) internal returns (Operation memory) {
         // Make sure nfs do not conflict. Doing here because doing in NocturneUtils would force us
         // to convert NocturneUtils to be stateful contract
-        for (uint256 i = 0; i < _op.joinSplits.length; i++) {
-            if (args.statefulNfGeneration) {
-                _op.joinSplits[i].nullifierA = nullifierCount;
-                _op.joinSplits[i].nullifierB = nullifierCount + 1;
+        for (uint256 i = 0; i < op.joinSplits.length; i++) {
+            op.joinSplits[i].nullifierA = nullifierCount;
+            op.joinSplits[i].nullifierB = nullifierCount + 1;
 
-                nullifierCount += 2;
+            nullifierCount += 2;
 
-                console.log("NF A", _op.joinSplits[i].nullifierA);
-                console.log("NF B", _op.joinSplits[i].nullifierB);
-            } else {
-                // Overflow here doesn't matter given all we need are random nfs
-                unchecked {
-                    _op.joinSplits[i].nullifierA =
-                        _rerandomize(args.seed) +
-                        (2 * i);
-                    _op.joinSplits[i].nullifierB =
-                        _rerandomize(args.seed) +
-                        (2 * i) +
-                        1;
-                }
-            }
+            console.log("NF A", op.joinSplits[i].nullifierA);
+            console.log("NF B", op.joinSplits[i].nullifierB);
         }
+
+        return op;
     }
 
     function _formatActions(
         GenerateOperationArgs memory args,
-        uint256 totalJoinSplitAmount,
+        uint256[] memory runningJoinSplitAmounts,
         uint256 numActions
     )
         internal
@@ -178,20 +193,27 @@ contract OperationGenerator is InvariantUtils {
     {
         _actions = new Action[](numActions);
         _meta.transfers = new TransferRequest[](numActions);
+        _meta.transferTokenNumbers = new uint256[](numActions);
         _meta.swaps = new SwapRequest[](numActions);
+        _meta.swapTokenNumbers = new uint256[](numActions);
         _meta.isTransfer = new bool[](numActions);
         _meta.isSwap = new bool[](numActions);
 
-        uint256 runningJoinSplitAmount = totalJoinSplitAmount;
-
         // For each action of numActions, switch on transfer vs swap
         for (uint256 i = 0; i < numActions; i++) {
+            uint256 tokenToUseIndex = bound(
+                _rerandomize(args.seed),
+                0,
+                args.joinSplitTokens.length - 1
+            );
+            address token = args.joinSplitTokens[tokenToUseIndex];
+
             bool isTransfer = bound(args.seed, 0, 1) == 0;
 
             uint256 transferOrSwapBound;
             unchecked {
                 transferOrSwapBound =
-                    runningJoinSplitAmount +
+                    runningJoinSplitAmounts[tokenToUseIndex] +
                     args.exceedJoinSplitsMarginInTokens;
             }
             uint256 transferOrSwapAmount = bound(
@@ -208,34 +230,40 @@ contract OperationGenerator is InvariantUtils {
 
             if (isTransfer) {
                 {
+                    console.log("filling tranfers meta");
                     _meta.transfers[i] = TransferRequest({
-                        token: args.joinSplitToken,
+                        token: token,
                         recipient: transferRecipientAddress,
                         amount: transferOrSwapAmount
                     });
+                    _meta.transferTokenNumbers[i] = tokenToUseIndex;
                     _meta.isTransfer[i] = true;
 
+                    console.log("filling transfers action");
                     _actions[i] = NocturneUtils.formatTransferAction(
                         _meta.transfers[i]
                     );
                 }
             } else {
                 {
+                    console.log("filling swaps meta");
                     _meta.swaps[i + 1] = _createRandomSwapRequest(
                         transferOrSwapAmount,
-                        args
+                        args,
+                        token
                     );
+                    _meta.swapTokenNumbers[i] = tokenToUseIndex;
                     _meta.isSwap[i + 1] = true;
 
                     {
                         // Kludge to satisfy stack limit
-                        SimpleERC20Token inToken = args.joinSplitToken;
+                        address inToken = token;
                         TokenSwapper swapper = args.swapper;
 
                         Action memory approveAction = Action({
                             contractAddress: address(inToken),
                             encodedFunction: abi.encodeWithSelector(
-                                inToken.approve.selector,
+                                IERC20(inToken).approve.selector,
                                 address(swapper),
                                 transferOrSwapAmount
                             )
@@ -256,23 +284,36 @@ contract OperationGenerator is InvariantUtils {
 
                     i += 1; // additional +1 to skip past swap action at i+1
                 }
-
-                runningJoinSplitAmount -= Utils.min(
-                    transferOrSwapAmount,
-                    runningJoinSplitAmount
-                ); // avoid underflow
             }
+
+            console.log("subtracting from runningJoinSplitAmounts");
+            runningJoinSplitAmounts[tokenToUseIndex] -= Utils.min(
+                transferOrSwapAmount,
+                runningJoinSplitAmounts[tokenToUseIndex]
+            ); // avoid underflow
         }
+    }
+
+    function _totalNumJoinSplitsForJoinSplitsPublicSpends(
+        uint256[][] memory joinSplitsPublicSpends
+    ) internal pure returns (uint256) {
+        uint256 totalJoinSplits = 0;
+        for (uint256 i = 0; i < joinSplitsPublicSpends.length; i++) {
+            totalJoinSplits += joinSplitsPublicSpends[i].length;
+        }
+
+        return totalJoinSplits;
     }
 
     function _createRandomSwapRequest(
         uint256 swapInAmount,
-        GenerateOperationArgs memory args
+        GenerateOperationArgs memory args,
+        address token
     ) internal returns (SwapRequest memory) {
         // Set encodedAssetIn as joinSplitToken
         EncodedAsset memory encodedAssetIn = AssetUtils.encodeAsset(
             AssetType.ERC20,
-            address(args.joinSplitToken),
+            token,
             ERC20_ID
         );
 
@@ -308,7 +349,7 @@ contract OperationGenerator is InvariantUtils {
         uint256 seed,
         uint256 totalAmount
     ) internal returns (uint256[] memory) {
-        uint256 numJoinSplits = bound(seed, 1, 5); // at most 5 joinsplits
+        uint256 numJoinSplits = bound(seed, 1, 3); // at most 3 joinsplits per asset
         uint256[] memory joinSplitAmounts = new uint256[](numJoinSplits);
 
         uint256 remainingAmount = totalAmount;

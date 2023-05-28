@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- fix bug where invariant tests were not completing weth deposits, weth is now deposited and transacted with in ops
+- unify deposit/joinsplit tokens in invariant tests such that erc20s and weth are no longer separate cases
+- add `BalanceManager` test case that tests multiple contiguous subarrays for joinsplits (wasn't tested in BalanceManager gas opt PR 1)
+- enable operations with more than one joinsplit token in unit and invariant tests
 - BalanceManager checks if reserved - payout < threshold, if so it just gives it all to bundler so there's no refund
 - add op.gasAssetRefundThreshold to operation
 - move `HandlerBase` into helpers so OperationGenerator can also use

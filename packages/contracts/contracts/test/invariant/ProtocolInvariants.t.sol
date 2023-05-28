@@ -31,7 +31,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         handler = new Handler();
         depositManager = new TestDepositManager();
 
-        weth = new WETH9();
+        WETH9 weth = new WETH9();
 
         TestJoinSplitVerifier joinSplitVerifier = new TestJoinSplitVerifier();
         TestSubtreeUpdateVerifier subtreeUpdateVerifier = new TestSubtreeUpdateVerifier();
@@ -50,13 +50,17 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
         depositManager.setScreenerPermission(SCREENER_ADDRESS, true);
 
-        depositErc20 = new SimpleERC20Token();
+        SimpleERC20Token depositErc20 = new SimpleERC20Token();
         depositErc721 = new SimpleERC721Token();
         depositErc1155 = new SimpleERC1155Token();
 
+        // WETH is always first
+        depositErc20s.push(address(weth));
+        depositErc20s.push(address(depositErc20));
+
         depositManagerHandler = new DepositManagerHandler(
             depositManager,
-            depositErc20,
+            depositErc20s,
             depositErc721,
             depositErc1155,
             SCREENER_PRIVKEY
@@ -71,8 +75,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
             teller,
             handler,
             swapper,
-            depositErc20,
-            depositErc20,
+            depositErc20s,
             swapErc20,
             swapErc721,
             swapErc1155,
@@ -95,6 +98,7 @@ contract ProtocolInvariants is Test, InvariantsBase {
         );
 
         // TODO: allow other tokens once we enable transacting with them
+        handler.setSupportedContractAllowlistPermission(address(weth), true);
         handler.setSupportedContractAllowlistPermission(
             address(depositErc20),
             true
@@ -201,8 +205,14 @@ contract ProtocolInvariants is Test, InvariantsBase {
     /*****************************
      * Protocol-Wide
      *****************************/
-    function invariant_protocol_tellerBalanceConsistent() external {
-        assert_protocol_tellerBalanceConsistent();
+    function invariant_protocol_tellerNonWethErc20BalancesConsistent()
+        external
+    {
+        assert_protocol_tellerNonWethErc20BalancesConsistent();
+    }
+
+    function invariant_protocol_tellerWethBalanceConsistent() external {
+        assert_protocol_tellerWethBalanceConsistent();
     }
 
     function invariant_protocol_handlerErc20BalancesAlwaysZeroOrOne() external {
@@ -210,63 +220,34 @@ contract ProtocolInvariants is Test, InvariantsBase {
     }
 
     /*****************************
-     * Deposits ETH
+     * Deposits
      *****************************/
-    function invariant_deposit_outNeverExceedsInETH() external {
-        assert_deposit_outNeverExceedsInETH();
+    function invariant_deposit_outNeverExceedsInErc20s() external {
+        assert_deposit_outNeverExceedsInErc20s();
     }
 
-    function invariant_deposit_depositManagerBalanceEqualsInMinusOutETH()
+    function invariant_deposit_depositManagerBalanceEqualsInMinusOutErc20s()
         external
     {
-        assert_deposit_depositManagerBalanceEqualsInMinusOutETH();
+        assert_deposit_depositManagerBalanceEqualsInMinusOutErc20s();
     }
 
-    function invariant_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH()
+    function invariant_deposit_allActorsBalanceSumEqualsRetrieveDepositSumErc20s()
         external
     {
-        assert_deposit_allActorsBalanceSumETHEqualsRetrieveDepositSumETH();
+        assert_deposit_allActorsBalanceSumEqualsRetrieveDepositSumErc20s();
     }
 
-    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedETH() external {
-        assert_deposit_actorBalanceAlwaysEqualsRetrievedETH();
-    }
-
-    function invariant_deposit_actorBalanceNeverExceedsInstantiatedETH()
+    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedErc20s()
         external
     {
-        assert_deposit_actorBalanceNeverExceedsInstantiatedETH();
+        assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20s();
     }
 
-    /*****************************
-     * Deposits ERC20
-     *****************************/
-    function invariant_deposit_outNeverExceedsInErc20() external {
-        assert_deposit_outNeverExceedsInErc20();
-    }
-
-    function invariant_deposit_depositManagerBalanceEqualsInMinusOutErc20()
+    function invariant_deposit_actorBalanceNeverExceedsInstantiatedErc20s()
         external
     {
-        assert_deposit_depositManagerBalanceEqualsInMinusOutErc20();
-    }
-
-    function invariant_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20()
-        external
-    {
-        assert_deposit_allActorsBalanceSumErc20EqualsRetrieveDepositSumErc20();
-    }
-
-    function invariant_deposit_actorBalanceAlwaysEqualsRetrievedErc20()
-        external
-    {
-        assert_deposit_actorBalanceAlwaysEqualsRetrievedErc20();
-    }
-
-    function invariant_deposit_actorBalanceNeverExceedsInstantiatedErc20()
-        external
-    {
-        assert_deposit_actorBalanceNeverExceedsInstantiatedErc20();
+        assert_deposit_actorBalanceNeverExceedsInstantiatedErc20s();
     }
 
     function invariant_deposit_screenerBalanceInBounds() external {
