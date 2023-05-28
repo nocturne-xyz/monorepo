@@ -167,6 +167,19 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         for (uint256 i = 0; i < 8; i++) {
             assertEq(merkle.batch[i], TreeUtils.sha256Note(encodedNotes[i]));
         }
+
+        merkle.insertNotes(encodedNotes);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(uint256(merkle.getBatchLen()), 0);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 1);
+        for (uint256 i = 8; i < 16; i++) {
+            assertEq(
+                merkle.batch[i],
+                TreeUtils.sha256Note(encodedNotes[i - 8])
+            );
+        }
     }
 
     function testFillBatchWithZeros() public {
