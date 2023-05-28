@@ -25,7 +25,7 @@
     "@nocturne-xyz/sdk": "workspace:^",
     "bigint-conversion": "^2.3.0",
     "bigint-json-serialization": "^1.0.1",
-    "snarkjs": "^0.5.0"
+    "snarkjs": "^0.7.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",
