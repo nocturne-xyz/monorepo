@@ -339,21 +339,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 randDepositRequest.encodedAsset
             );
-            if (assetAddr == erc20s[0]) {
-                // weth
-                _retrieveDepositSumSetErc20s[0].addToActorSum(
-                    randDepositRequest.spender,
-                    randDepositRequest.value
-                );
-            } else {
-                // non-weth
-                uint256 erc20Index = _findingErc20Index(assetAddr);
-
-                _retrieveDepositSumSetErc20s[erc20Index].addToActorSum(
-                    randDepositRequest.spender,
-                    randDepositRequest.value
-                );
-            }
+            uint256 erc20Index = _findErc20Index(assetAddr);
+            _retrieveDepositSumSetErc20s[erc20Index].addToActorSum(
+                randDepositRequest.spender,
+                randDepositRequest.value
+            );
         } catch {
             _reverts["retrieveDepositErc20"] += 1;
         }
@@ -391,19 +381,11 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
             (, address assetAddr, ) = AssetUtils.decodeAsset(
                 randDepositRequest.encodedAsset
             );
-            if (assetAddr == erc20s[0]) {
-                _completeDepositSumSetErc20s[0].addToActorSum(
-                    randDepositRequest.spender,
-                    randDepositRequest.value
-                );
-            } else {
-                uint256 erc20Index = _findingErc20Index(assetAddr);
-
-                _completeDepositSumSetErc20s[erc20Index].addToActorSum(
-                    randDepositRequest.spender,
-                    randDepositRequest.value
-                );
-            }
+            uint256 erc20Index = _findErc20Index(assetAddr);
+            _completeDepositSumSetErc20s[erc20Index].addToActorSum(
+                randDepositRequest.spender,
+                randDepositRequest.value
+            );
         } catch {
             _reverts["completeDepositErc20"] += 1;
         }
@@ -495,7 +477,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         return _completeDepositSumSetErc20s[tokenIndex].getSumForActor(actor);
     }
 
-    function _findingErc20Index(address erc20) internal view returns (uint256) {
+    function _findErc20Index(address erc20) internal view returns (uint256) {
         for (uint256 i = 0; i < erc20s.length; i++) {
             if (erc20s[i] == erc20) {
                 return i;

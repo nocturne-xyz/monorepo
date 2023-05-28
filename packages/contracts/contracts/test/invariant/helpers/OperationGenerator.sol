@@ -41,9 +41,9 @@ struct GenerateOperationArgs {
 
 struct GeneratedOperationMetadata {
     TransferRequest[] transfers;
-    uint256[] transferTokenNumbers; // maps transfers ^ to what number token in args.joinSplitTokens
+    uint256[] transferTokenNumbers; // maps transfers[] to what token index in args.joinSplitTokens
     SwapRequest[] swaps;
-    uint256[] swapTokenNumbers; // maps swaps ^ to what number token in args.joinSplitTokens
+    uint256[] swapTokenNumbers; // maps swaps[] to what token index in args.joinSplitTokens
     bool[] isTransfer;
     bool[] isSwap;
 }
