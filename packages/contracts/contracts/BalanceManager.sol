@@ -45,6 +45,9 @@ contract BalanceManager is CommitmentTreeManager {
     ///      joinSplits, check root and nullifier validity, and attempt to reserve as much gas asset
     ///      as possible until we have gotten as the reserve amount we originally calculated. If we
     ///      have not reserved enough gas asset after looping through all joinSplits, we revert.
+    /// @dev We attempt to group asset transfers to handler by contiguous subarrays of joinsplits
+    ///      for same asset. User can group however they like but contiguous group saves them gas
+    ///      by reducing number of teller.requestAsset calls.
     /// @param op Operation to process joinSplits for
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof, calculated by
     ///                              teller during (batch) proof verification
@@ -52,43 +55,54 @@ contract BalanceManager is CommitmentTreeManager {
         Operation calldata op,
         uint256 perJoinSplitVerifyGas
     ) internal {
-        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
-        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
-
         // process nullifiers and insert new noteCommitments for each joinSplit
         // will throw an error if nullifiers are invalid or tree root invalid
         _handleJoinSplits(op.joinSplits);
 
-        uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            // Default to requesting all publicSpend from teller
-            uint256 valueToTransfer = op.joinSplits[i].publicSpend;
+        // Get gas asset and amount to reserve
+        EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
+        uint256 gasAssetToReserve = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
-            // If we still need to reserve more gas and the current
-            // `joinSplit` is spending the gasAsset, then reserve what we can
-            // from this `joinSplit`
+        // Loop through joinSplits and gather assets, reserving gas asset as needed
+        uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            EncodedAsset calldata encodedAsset = op
+                .joinSplits[subarrayStartIndex]
+                .encodedAsset;
+
+            // Get largest possible subarray for current asset and sum of publicSpend
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+            uint256 valueToGatherForSubarray = _sumJoinSplitPublicSpendsInclusive(
+                    op.joinSplits,
+                    subarrayStartIndex,
+                    subarrayEndIndex
+                );
+
             if (
                 gasAssetToReserve > 0 &&
-                AssetUtils.eq(encodedGasAsset, op.joinSplits[i].encodedAsset)
+                AssetUtils.eq(encodedGasAsset, encodedAsset)
             ) {
-                // We will reserve as much as we can, upto the public spend
-                // amount or the maximum amount to be reserved
-                uint256 gasPaymentThisJoinSplit = Utils.min(
-                    op.joinSplits[i].publicSpend,
+                uint256 reserveValue = Utils.min(
+                    valueToGatherForSubarray,
                     gasAssetToReserve
                 );
-                // Deduct gas payment from value to transfer to teller
-                valueToTransfer -= gasPaymentThisJoinSplit;
-                // Deduct gas payment from the amount to be reserved
-                gasAssetToReserve -= gasPaymentThisJoinSplit;
+
+                valueToGatherForSubarray -= reserveValue;
+                gasAssetToReserve -= reserveValue;
             }
 
+            subarrayStartIndex = subarrayEndIndex + 1;
+
             // If value to transfer is 0, skip the transfer
-            if (valueToTransfer > 0) {
-                _teller.requestAsset(
-                    op.joinSplits[i].encodedAsset,
-                    valueToTransfer
-                );
+            if (valueToGatherForSubarray > 0) {
+                _teller.requestAsset(encodedAsset, valueToGatherForSubarray);
             }
         }
 
@@ -98,6 +112,10 @@ contract BalanceManager is CommitmentTreeManager {
     /// @notice Gather reserved gas assets and pay bundler calculated amount.
     /// @dev Bundler can be paid less than reserved amount. Reserved amount is refunded to user's
     /// stealth address in this case.
+    /// @dev If the amount of gas asset remaining after bundler payout is less than the operation's
+    ///      gasAssetRefundThreshold, we just give the remaining amount to bundler. This is because
+    ///      the cost of handling refund for dust note and later proving ownership of the dust note
+    ///      will outweigh the actual value of the note.
     /// @param op Operation, which contains info on how much gas was reserved
     /// @param opResult OperationResult, which contains info on how much gas was actually spent
     /// @param perJoinSplitVerifyGas Gas cost of verifying a single joinSplit proof
@@ -109,16 +127,20 @@ contract BalanceManager is CommitmentTreeManager {
         address bundler
     ) internal {
         EncodedAsset calldata encodedGasAsset = op.encodedGasAsset;
-        uint256 gasAssetAmount = op.maxGasAssetCost(perJoinSplitVerifyGas);
+        uint256 gasAssetReserved = op.maxGasAssetCost(perJoinSplitVerifyGas);
 
-        if (gasAssetAmount > 0) {
-            // Request reserved gasAssetAmount from teller.
+        if (gasAssetReserved > 0) {
+            // Request reserved gasAssetReserved from teller.
             /// @dev This is safe because _processJoinSplitsReservingFee is
-            /// guaranteed to have reserved gasAssetAmount since it didn't throw.
-            _teller.requestAsset(encodedGasAsset, gasAssetAmount);
+            /// guaranteed to have reserved gasAssetReserved since it didn't throw.
+            _teller.requestAsset(encodedGasAsset, gasAssetReserved);
 
             uint256 bundlerPayout = OperationUtils
                 .calculateBundlerGasAssetPayout(op, opResult);
+            if (gasAssetReserved - bundlerPayout < op.gasAssetRefundThreshold) {
+                bundlerPayout = gasAssetReserved; // Give all to bundler if under threshold
+            }
+
             AssetUtils.transferAssetTo(encodedGasAsset, bundler, bundlerPayout);
         }
     }
@@ -220,5 +242,44 @@ contract BalanceManager is CommitmentTreeManager {
         }
 
         return 0;
+    }
+
+    /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType
+    /// @dev Used so we can take sum(subarray) make single call teller.requestAsset(asset, sum)
+    ///      instead of calling teller.requestAsset multiple times for the same asset
+    /// @param joinSplits op.joinSplits
+    /// @param startIndex Index to start searching from
+    function _getHighestContiguousJoinSplitIndex(
+        JoinSplit[] calldata joinSplits,
+        uint256 startIndex
+    ) private pure returns (uint256) {
+        EncodedAsset calldata startAsset = joinSplits[startIndex].encodedAsset;
+        uint256 numJoinSplits = joinSplits.length;
+
+        uint256 highestIndex = startIndex;
+        while (
+            highestIndex + 1 < numJoinSplits &&
+            AssetUtils.eq(startAsset, joinSplits[highestIndex + 1].encodedAsset)
+        ) {
+            highestIndex++;
+        }
+
+        return highestIndex;
+    }
+
+    /// @notice Get sum of public spends for a contiguous subarray of joinsplits
+    /// @param joinSplits op joinSplits
+    /// @param startIndex Index to start summing from
+    /// @param endIndex Index to end summing at (inclusive)
+    function _sumJoinSplitPublicSpendsInclusive(
+        JoinSplit[] calldata joinSplits,
+        uint256 startIndex,
+        uint256 endIndex
+    ) private pure returns (uint256) {
+        uint256 sum = 0;
+        for (uint256 i = startIndex; i <= endIndex; i++) {
+            sum += joinSplits[i].publicSpend;
+        }
+        return sum;
     }
 }

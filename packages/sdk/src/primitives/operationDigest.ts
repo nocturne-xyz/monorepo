@@ -96,6 +96,7 @@ function hashOperation(
       "uint256",
       "uint256",
       "uint256",
+      "uint256",
       "bool",
     ],
     [
@@ -104,6 +105,7 @@ function hashOperation(
       refundAssetsPayload,
       actionsPayload,
       gasAssetPayload,
+      op.gasAssetRefundThreshold,
       op.executionGasLimit,
       op.maxNumRefunds,
       op.gasPrice,

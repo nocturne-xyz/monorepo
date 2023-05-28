@@ -5,6 +5,7 @@ import {
   NoteTrait,
   IncludedNoteWithNullifier,
   Note,
+  WithTimestamp,
 } from "./primitives";
 import { numberToStringPadded } from "./utils";
 import * as JSON from "bigint-json-serialization";
@@ -14,6 +15,7 @@ import { StateDiff } from "./sync";
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
 const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
+const MERKLE_INDEX_TIMESTAMP_PREFIX = "MERKLE_INDEX_TIMESTAMP";
 const NEXT_BLOCK_KEY = "NEXT_BLOCK";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
@@ -28,6 +30,7 @@ export class NocturneDB {
   //  merkleIndexKey => Note
   //  assetKey => merkleIndex[]
   //  nullifierKey => merkleIndex
+  //  merkleIndexTimestampKey => timestamp
   public kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -51,6 +54,13 @@ export class NocturneDB {
     return `${NOTES_BY_NULLIFIER_PREFIX}-${nullifier.toString()}`;
   }
 
+  static formatTimestampKey(merkleIndex: number): string {
+    return `${MERKLE_INDEX_TIMESTAMP_PREFIX}-${numberToStringPadded(
+      merkleIndex,
+      MAX_MERKLE_INDEX_DIGITS
+    )}`;
+  }
+
   static parseIndexKey(key: string): number {
     return parseInt(key.split("-")[1]);
   }
@@ -64,7 +74,12 @@ export class NocturneDB {
     };
   }
 
-  async storeNotes(notes: IncludedNoteWithNullifier[]): Promise<void> {
+  async storeNotes(
+    notesWithTimestamps: WithTimestamp<IncludedNoteWithNullifier>[]
+  ): Promise<void> {
+    const notes = notesWithTimestamps.map(
+      ({ timestampUnixMillis, inner }) => inner
+    );
     // make note KVs
     const noteKVs: KV[] = notes.map((note) =>
       NocturneDB.makeNoteKV(note.merkleIndex, note)
@@ -78,8 +93,18 @@ export class NocturneDB {
     // get the updated asset => merkleIndex[] KV pairs
     const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
+    const timestampKVs = notesWithTimestamps.map(
+      ({ inner, timestampUnixMillis }) =>
+        NocturneDB.makeTimestampKV(inner.merkleIndex, timestampUnixMillis)
+    );
+
     // write them all into the KV store
-    await this.kv.putMany([...noteKVs, ...nullifierKVs, ...assetKVs]);
+    await this.kv.putMany([
+      ...noteKVs,
+      ...nullifierKVs,
+      ...assetKVs,
+      ...timestampKVs,
+    ]);
   }
 
   // returns the merkle indices of the notes that were nullified
@@ -115,8 +140,21 @@ export class NocturneDB {
    */
   async getNotesForAsset(asset: Asset): Promise<IncludedNote[]> {
     const indices = await this.getMerkleIndicesForAsset(asset);
-
     return await this.getNotesByMerkleIndices(indices);
+  }
+
+  /**
+   * Get timestamp at which an owned note with merkleIndex `merkleIndex` was inserted into the tree (not necessarily committed)
+   *
+   * @param merkleIndex the merkleIndex to get the timestamp for
+   * @returns timestamp the timestamp in unix millis at which the merkleIndex was inserted into the tree,
+   *          or undefined if the corresponding note is nullified or not owned
+   */
+  async getTimestampForMerkleIndex(
+    merkleIndex: number
+  ): Promise<number | undefined> {
+    const timestampKey = NocturneDB.formatTimestampKey(merkleIndex);
+    return await this.kv.getNumber(timestampKey);
   }
 
   /**
@@ -167,8 +205,8 @@ export class NocturneDB {
     // NOTE: order matters here - some `notesAndCommitments` may be nullified in the same state diff
     await this.storeNotes(
       notesAndCommitments.filter(
-        (noteOrCommitment) => !NoteTrait.isCommitment(noteOrCommitment)
-      ) as IncludedNoteWithNullifier[]
+        ({ inner }) => !NoteTrait.isCommitment(inner)
+      ) as WithTimestamp<IncludedNoteWithNullifier>[]
     );
     const nfIndices = await this.nullifyNotes(nullifiers);
     await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
@@ -250,6 +288,10 @@ export class NocturneDB {
 
   private static makeNullifierKV(merkleIndex: number, nullifier: bigint): KV {
     return [NocturneDB.formatNullifierKey(nullifier), merkleIndex.toString()];
+  }
+
+  private static makeTimestampKV(merkleIndex: number, timestamp: number): KV {
+    return [NocturneDB.formatTimestampKey(merkleIndex), timestamp.toString()];
   }
 
   private async getUpdatedAssetKVsWithNotesAdded<N extends IncludedNote>(

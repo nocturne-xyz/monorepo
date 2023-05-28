@@ -88,6 +88,7 @@ interface BaseOperation {
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
   encodedGasAsset: EncodedAsset;
+  gasAssetRefundThreshold: bigint;
   executionGasLimit: bigint;
   maxNumRefunds: bigint;
   gasPrice: bigint;
@@ -136,4 +137,9 @@ export enum DepositRequestStatus {
   PassedFirstScreen = "PassedFirstScreen",
   AwaitingFulfillment = "AwaitingFulfillment",
   Completed = "Completed",
+}
+
+export interface WithTimestamp<T> {
+  timestampUnixMillis: number;
+  inner: T;
 }

@@ -13,9 +13,10 @@ import {TestSubtreeUpdateVerifier} from "../../harnesses/TestSubtreeUpdateVerifi
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../../libs/OffchainMerkleTree.sol";
 import {QueueLib} from "../../../libs/Queue.sol";
 import {ParseUtils} from "../../utils/ParseUtils.sol";
+import {InvariantUtils} from "../helpers/InvariantUtils.sol";
 import "../../../libs/Types.sol";
 
-contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
+contract OffchainMerkleHandler is InvariantUtils {
     using LibOffchainMerkleTree for OffchainMerkleTree;
 
     // ______PUBLIC______
@@ -62,9 +63,14 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
         console.log("no-op", _calls["no-op"]);
     }
 
-    function insertNotes(
-        EncodedNote[] memory notes
-    ) public trackCall("insertNotes") {
+    function insertNotes(uint256 seed) public trackCall("insertNotes") {
+        uint256 numNotes = bound(seed, 1, 50);
+
+        EncodedNote[] memory notes = new EncodedNote[](numNotes);
+        for (uint256 i = 0; i < numNotes; i++) {
+            notes[i] = _generateEncodedNote(seed);
+        }
+
         merkle.insertNotes(notes);
     }
 
@@ -107,5 +113,16 @@ contract OffchainMerkleHandler is CommonBase, StdCheats, StdUtils {
 
     function accumulatorQueueLength() public view returns (uint256) {
         return QueueLib.length(merkle.accumulatorQueue);
+    }
+
+    function _generateEncodedNote(
+        uint256 seed
+    ) internal returns (EncodedNote memory _encodedNote) {
+        _encodedNote.ownerH1 = _rerandomize(seed);
+        _encodedNote.ownerH2 = _rerandomize(seed);
+        _encodedNote.nonce = _rerandomize(seed);
+        _encodedNote.encodedAssetAddr = _rerandomize(seed);
+        _encodedNote.encodedAssetId = _rerandomize(seed);
+        _encodedNote.value = _rerandomize(seed);
     }
 }

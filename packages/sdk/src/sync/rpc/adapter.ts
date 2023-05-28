@@ -4,6 +4,7 @@ import {
   BinaryPoseidonTree,
   IncludedEncryptedNote,
   Nullifier,
+  WithTimestamp,
 } from "../../primitives";
 import { min } from "../../utils";
 import { ClosableAsyncIterator } from "../closableAsyncIterator";
@@ -80,13 +81,17 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           ]);
 
         // extract notes and nullifiers
-        const nullifiers =
-          extractNullifiersFromJoinSplitEvents(joinSplitEvents);
+        const joinSplitEventsWithoutTimestamps = joinSplitEvents.map(
+          ({ inner }) => inner
+        );
+        const nullifiers = extractNullifiersFromJoinSplitEvents(
+          joinSplitEventsWithoutTimestamps
+        );
         const encryptedNotes =
           extractEncryptedNotesFromJoinSplitEvents(joinSplitEvents);
         const notes = [...includedNotes, ...encryptedNotes];
 
-        notes.sort((a, b) => a.merkleIndex - b.merkleIndex);
+        notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
 
         // get the latest subtree commit
         if (subtreeUpdateCommits.length > 0) {
@@ -132,34 +137,37 @@ function extractNullifiersFromJoinSplitEvents(
 }
 
 function extractEncryptedNotesFromJoinSplitEvents(
-  joinSplitEvents: JoinSplitEvent[]
-): IncludedEncryptedNote[] {
-  const encryptedNotes: IncludedEncryptedNote[] = [];
-  for (const e of joinSplitEvents) {
-    const { newNoteAIndex, newNoteBIndex } = e;
+  joinSplitEvents: WithTimestamp<JoinSplitEvent>[]
+): WithTimestamp<IncludedEncryptedNote>[] {
+  return joinSplitEvents.flatMap(({ inner, timestampUnixMillis }) => {
+    const { newNoteAIndex, newNoteBIndex } = inner;
     const {
       newNoteAEncrypted,
       newNoteBEncrypted,
       newNoteACommitment,
       newNoteBCommitment,
       encodedAsset,
-    } = e.joinSplit;
+    } = inner.joinSplit;
 
     const asset = AssetTrait.decode(encodedAsset);
 
-    encryptedNotes.push({
+    const noteA = {
       ...newNoteAEncrypted,
       asset,
       commitment: newNoteACommitment,
       merkleIndex: newNoteAIndex,
-    });
+    };
 
-    encryptedNotes.push({
+    const noteB = {
       ...newNoteBEncrypted,
       asset,
       commitment: newNoteBCommitment,
       merkleIndex: newNoteBIndex,
-    });
-  }
-  return encryptedNotes;
+    };
+
+    return [
+      { inner: noteA, timestampUnixMillis },
+      { inner: noteB, timestampUnixMillis },
+    ];
+  });
 }

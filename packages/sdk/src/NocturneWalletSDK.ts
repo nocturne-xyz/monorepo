@@ -18,6 +18,7 @@ import { syncSDK } from "./syncSDK";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
+import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
 
 export class NocturneWalletSDK {
   protected config: NocturneConfig;
@@ -137,5 +138,11 @@ export class NocturneWalletSDK {
     }
 
     return true;
+  }
+
+  async getCreationTimestampOfNewestNoteInOp(
+    op: PreSignOperation | SignedOperation
+  ): Promise<number> {
+    return await getCreationTimestampOfNewestNoteInOp(this.db, op);
   }
 }

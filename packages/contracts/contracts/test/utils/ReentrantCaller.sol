@@ -35,6 +35,7 @@ contract ReentrantCaller {
                     joinSplitPublicSpends: NocturneUtils
                         .fillJoinSplitPublicSpends(PER_NOTE_AMOUNT, 6),
                     encodedRefundAssets: new EncodedAsset[](0),
+                    gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,
                     maxNumRefunds: 1,
                     gasPrice: 50,

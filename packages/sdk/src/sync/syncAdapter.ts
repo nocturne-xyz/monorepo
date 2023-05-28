@@ -4,6 +4,7 @@ import {
   Nullifier,
   IncludedNoteCommitment,
   IncludedNoteWithNullifier,
+  WithTimestamp,
 } from "../primitives";
 import { ClosableAsyncIterator } from "./closableAsyncIterator";
 
@@ -22,13 +23,15 @@ export interface EncryptedStateDiff extends BaseStateDiff {
   // new notes / encrypted notes corresponding to *non-empty* leaves
   // i.e. dummy leaves inserted by `fillBatchWithZeros` are left out
   // these must be sorted in ascending order by `merkleIndex`
-  notes: (IncludedNote | IncludedEncryptedNote)[];
+  notes: WithTimestamp<IncludedNote | IncludedEncryptedNote>[];
 }
 
 export interface StateDiff extends BaseStateDiff {
   // new notes / note commitments corresponding to *non-empty* leaves
   // these must be sorted in ascending order by `merkleIndex`
-  notesAndCommitments: (IncludedNoteWithNullifier | IncludedNoteCommitment)[];
+  notesAndCommitments: WithTimestamp<
+    IncludedNoteWithNullifier | IncludedNoteCommitment
+  >[];
 }
 
 export interface IterSyncOpts {

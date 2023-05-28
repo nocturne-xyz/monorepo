@@ -93,6 +93,7 @@ library OperationUtils {
         );
         payload = abi.encodePacked(
             payload,
+            op.gasAssetRefundThreshold,
             op.executionGasLimit,
             op.maxNumRefunds,
             op.gasPrice,
