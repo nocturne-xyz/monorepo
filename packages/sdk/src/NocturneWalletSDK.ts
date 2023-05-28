@@ -15,10 +15,16 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
-import { getJoinSplitRequestTotalValue, maxArray } from "./utils";
+import { getJoinSplitRequestTotalValue, maxArray, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
+import {
+  bundlerHasNullifier,
+  getMerkleIndicesAndNfsFromOp,
+} from "./utils/misc";
+
+// 10 minutes
+const OPTIMISTIC_NF_TTL: number = 10 * 60 * 1000;
 
 export class NocturneWalletSDK {
   protected config: NocturneConfig;
@@ -168,12 +174,42 @@ export class NocturneWalletSDK {
   async optimisticallyApplyOpNullifiers(
     op: PreSignOperation | SignedOperation
   ): Promise<void> {
-    // make records
-    // for each, apply to DB.
+    const [merkleIndices, records] = unzip(
+      getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex, nullifier }) => {
+        return [
+          Number(merkleIndex),
+          {
+            nullifier,
+            expirationDate: Date.now() + OPTIMISTIC_NF_TTL,
+          },
+        ];
+      })
+    );
+
+    await this.db.storeOptimisticNFRecords(merkleIndices, records);
   }
 
   async updateOptimiticNullifiers(): Promise<void> {
     // get all `OptimisticNFRecord`s from db
-    // for each, check timestamp and bundler and filter out expired / invalidated ones
+    const optimisticNFRecords = await this.db.getAllOptimisticNFRecords();
+
+    // get all of merkle indices of records we want to remove
+    const merkleIndicesToRemove = new Set<number>();
+    for (const [merkleIndex, record] of optimisticNFRecords.entries()) {
+      // if it's expired, remove it
+      if (Date.now() > record.expirationDate) {
+        merkleIndicesToRemove.add(merkleIndex);
+        continue;
+      }
+
+      // if bundler doesn't have the nullifier in its DB, remove it
+      if (
+        !(await bundlerHasNullifier(this.bundlerEndpoint, record.nullifier))
+      ) {
+        merkleIndicesToRemove.add(merkleIndex);
+      }
+    }
+
+    await this.db.removeOptimisticNFRecords(Array.from(merkleIndicesToRemove));
   }
 }

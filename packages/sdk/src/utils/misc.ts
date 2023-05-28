@@ -81,3 +81,25 @@ export function getMerkleIndicesAndNfsFromOp(
     ];
   });
 }
+
+export async function bundlerHasNullifier(
+  bundlerEndpoint: string,
+  nullifier: bigint
+): Promise<boolean> {
+  const res = await fetch(
+    `${bundlerEndpoint}/nullifier/${nullifier.toString()}`,
+    {
+      method: "GET",
+    }
+  );
+
+  let exists;
+  try {
+    const resJson = await res.json();
+    exists = resJson.exists;
+  } catch (err) {
+    throw new Error(`failed to parse bundler response: ${err}`);
+  }
+
+  return exists;
+}
