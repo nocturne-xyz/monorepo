@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/sdk",
-  "version": "1.0.123-alpha",
+  "version": "1.0.125-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -52,6 +52,6 @@
     "typescript": "^4.8.4"
   },
   "engines": {
-    "node": "18.12.1"
+    "node": ">=18"
   }
 }

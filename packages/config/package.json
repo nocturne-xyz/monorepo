@@ -1,6 +1,6 @@
 {
   "name": "@nocturne-xyz/config",
-  "version": "1.0.7-alpha",
+  "version": "1.0.9-alpha",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -38,6 +38,6 @@
     "typescript": "^4.8.4"
   },
   "engines": {
-    "node": "18.12.1"
+    "node": ">=18"
   }
 }
