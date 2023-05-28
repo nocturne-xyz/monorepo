@@ -116,6 +116,25 @@ describe("gatherNotes", () => {
     expect(sortedNotes[1].value).to.equal(10n);
     expect(sortedNotes[2].value).to.equal(15n);
   });
+
+  it("ignores notes with optimistic NF records", async () => {
+    const [nocturneDB] = await setup(
+      [30n, 15n, 10n, 10n],
+      range(4).map((_) => stablescam)
+    );
+
+    // add optimistic NF records for the 30 token note at merkleIndex 0
+    await nocturneDB.storeOptimisticNFRecords(
+      [0],
+      [{ nullifier: 420n, expirationDate: Date.now() + 1_000_000 }]
+    );
+
+    // gather notes to spend 30 tokens total
+    // we should not get the 30 token note, since it has an optimistic NF record
+    // instead, we should get the other three notes
+    const notes = await gatherNotes(nocturneDB, 30n, stablescam);
+    expect(notes).to.have.lengthOf(3);
+  });
 });
 
 describe("prepareOperation", async () => {

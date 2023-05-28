@@ -15,13 +15,12 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
-import { getJoinSplitRequestTotalValue, maxArray, unzip } from "./utils";
+import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
-import {
-  bundlerHasNullifier,
-  getMerkleIndicesAndNfsFromOp,
-} from "./utils/misc";
+import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
+import { NullifierChecker } from "./NullifierChecker";
+import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
 
 // 10 minutes
 const OPTIMISTIC_NF_TTL: number = 10 * 60 * 1000;
@@ -33,7 +32,7 @@ export class NocturneWalletSDK {
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
-  protected bundlerEndpoint: string;
+  protected nullifierChecker: NullifierChecker;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
@@ -46,7 +45,7 @@ export class NocturneWalletSDK {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    bundlerEndopint: string
+    nulliferChecker: NullifierChecker
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -71,7 +70,7 @@ export class NocturneWalletSDK {
     this.db = db;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
-    this.bundlerEndpoint = bundlerEndopint;
+    this.nullifierChecker = nulliferChecker;
   }
 
   async sync(): Promise<void> {
@@ -138,26 +137,10 @@ export class NocturneWalletSDK {
   async getCreationTimestampOfNewestNoteInOp(
     op: PreSignOperation | SignedOperation
   ): Promise<number> {
-    // get the max merkle index of any note in any joinsplit in the op
-    const maxMerkleIndex = maxArray(
-      getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex }) => merkleIndex)
-    );
-
-    // get the corresponding timestamp
-    const timestamp = await this.db.getTimestampForMerkleIndex(
-      Number(maxMerkleIndex)
-    );
-
-    if (timestamp === undefined) {
-      throw new Error(
-        `timestamp not found for newest note with merkle index ${maxMerkleIndex}`
-      );
-    }
-
-    return timestamp;
+    return await getCreationTimestampOfNewestNoteInOp(this.db, op);
   }
 
-  async optimisticallyApplyOpNullifiers(
+  async applyOptimisticNullifiersForOp(
     op: PreSignOperation | SignedOperation
   ): Promise<void> {
     const [merkleIndices, records] = unzip(
@@ -188,9 +171,10 @@ export class NocturneWalletSDK {
         continue;
       }
 
-      // if bundler doesn't have the nullifier in its DB, remove it
+      // if bundler doesn't have the nullifier in its DB, remove its
+      // OptimisticNFRecord
       if (
-        !(await bundlerHasNullifier(this.bundlerEndpoint, record.nullifier))
+        !(await this.nullifierChecker.nullifierIsInFlight(record.nullifier))
       ) {
         merkleIndicesToRemove.add(merkleIndex);
       }

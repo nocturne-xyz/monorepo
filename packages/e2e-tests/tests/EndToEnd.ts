@@ -24,7 +24,12 @@ import {
   proveOperation,
   OperationStatus,
 } from "@nocturne-xyz/sdk";
-import { submitAndProcessOperation } from "../src/utils";
+import {
+  GAS_FAUCET_DEFAULT_AMOUNT,
+  GAS_PRICE,
+  ONE_DAY_SECONDS,
+  submitAndProcessOperation,
+} from "../src/utils";
 import {
   depositFundsMultiToken,
   depositFundsSingleToken,
@@ -40,14 +45,7 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
-// 10^9 (e.g. 10 gwei if this was eth)
-const GAS_PRICE = 10n * 10n ** 9n;
-// 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = 10_000_000n * GAS_PRICE; // 100M gwei
-
 const PLUTOCRACY_AMOUNT = 3n;
-
-const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;

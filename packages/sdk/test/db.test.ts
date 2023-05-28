@@ -12,6 +12,7 @@ import {
   IncludedNoteWithNullifier,
   AssetTrait,
   WithTimestamp,
+  unzip,
 } from "../src";
 import { ponzi, shitcoin, stablescam } from "./utils";
 import { NocturneSigner } from "../dist";
@@ -208,7 +209,10 @@ describe("NocturneDB", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin);
     await db.storeNotes(withDummyTimestamps(notes));
 
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
     const assetKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(assetKey)!;
     const shitcoinNotesExpected = notes.map(toIncludedNote);
@@ -220,7 +224,10 @@ describe("NocturneDB", async () => {
     const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
     await db.storeNotes(withDummyTimestamps(notes));
 
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
 
     for (const asset of [shitcoin, ponzi, stablescam]) {
       const assetKey = NocturneDB.formatAssetKey(asset);
@@ -242,7 +249,10 @@ describe("NocturneDB", async () => {
     const nfToApply = noteToNullify.nullifier;
 
     await db.nullifyNotes([nfToApply]);
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(shitcoinKey);
@@ -260,7 +270,10 @@ describe("NocturneDB", async () => {
     const nfsToApply = notesToNullify.map((n) => n.nullifier);
 
     await db.nullifyNotes(nfsToApply);
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotes = map.get(shitcoinKey);
@@ -284,7 +297,10 @@ describe("NocturneDB", async () => {
     const ponziNfs = ponziNotes.map((n) => n.nullifier);
 
     await db.nullifyNotes(ponziNfs);
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
 
     const ponziKey = NocturneDB.formatAssetKey(ponzi);
     const ponziNotesGot = map.get(ponziKey);
@@ -328,7 +344,10 @@ describe("NocturneDB", async () => {
     ];
 
     await db.nullifyNotes(nfsToApply);
-    const map = await db.getAllNotes();
+    const map = await db.getAllNotes({
+      includeUncommitted: true,
+      ignoreOptimisticNFs: true,
+    });
 
     const shitcoinKey = NocturneDB.formatAssetKey(shitcoin);
     const shitcoinNotesGot = map.get(shitcoinKey);
@@ -370,12 +389,63 @@ describe("NocturneDB", async () => {
       const notesExpected = notes
         .filter((n) => AssetTrait.hash(n.asset) === assetHash)
         .map(toIncludedNote);
-      const notesGot = await db.getNotesForAsset(asset);
+      const notesGot = await db.getNotesForAsset(asset, {
+        includeUncommitted: true,
+        ignoreOptimisticNFs: true,
+      });
 
       expect(notesGot).to.not.be.undefined;
       expect(notesGot!.length).to.eql(notesExpected.length);
       expect(notesGot!).to.have.deep.members(notesExpected);
     }
+  });
+
+  it("only returns committed notes when getting all notes without { includeUncommitted: true }", async () => {
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    await db.storeNotes(withDummyTimestamps(notes));
+
+    const allCommittedNotes = await db.getAllNotes();
+    expect(allCommittedNotes.size).to.eql(0);
+  });
+
+  it("only returns committed notes when getting notes for a given asset without { includeUncommitted: true }", async () => {
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin, ponzi, stablescam);
+    await db.storeNotes(withDummyTimestamps(notes));
+
+    for (const asset of [shitcoin, ponzi, stablescam]) {
+      const notesGot = await db.getNotesForAsset(asset);
+
+      expect(notesGot).to.not.be.undefined;
+      expect(notesGot!.length).to.eql(0);
+    }
+  });
+
+  it("applies optimistic nullifiers", async () => {
+    // insert 20 notes
+    const [notes, _] = dummyNotesAndNfs(20, shitcoin);
+    await db.storeNotes(withDummyTimestamps(notes));
+
+    // optimistically nullify 10 of them
+    const [merkleIndices, records] = unzip(
+      notes.slice(10).map((note) => {
+        const merkleIndex = note.merkleIndex;
+        const record = {
+          nullifier: note.nullifier,
+          expirationDate: 1234567890,
+        };
+
+        return [merkleIndex, record];
+      })
+    );
+    await db.storeOptimisticNFRecords(merkleIndices, records);
+
+    // expect there to be only 10 notes total
+    const allNotes = await db.getAllNotes({ includeUncommitted: true });
+    expect(allNotes.size).to.eql(1);
+
+    const entry = allNotes.get(NocturneDB.formatAssetKey(shitcoin));
+    expect(entry).to.not.be.undefined;
+    expect(entry!.length).to.eql(10);
   });
 });
 

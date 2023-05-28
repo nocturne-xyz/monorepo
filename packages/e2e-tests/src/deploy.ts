@@ -30,6 +30,7 @@ import {
   AssetType,
   MockEthToTokenConverter,
   RPCSDKSyncAdapter,
+  BundlerNullifierChecker,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -51,6 +52,7 @@ import { KEYS_TO_WALLETS } from "./keys";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import { SimpleERC721Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC721Token";
 import { SimpleERC1155Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC1155Token";
+import { BUNDLER_ENDPOINT } from "./utils";
 
 // eslint-disable-next-line
 const ROOT_DIR = findWorkspaceRoot()!;
@@ -511,7 +513,8 @@ export async function setupTestClient(
     provider,
     nocturneDBAlice,
     merkleProverAlice,
-    syncAdapter
+    syncAdapter,
+    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
   );
 
   console.log("Create NocturneWalletSDKBob");
@@ -524,7 +527,8 @@ export async function setupTestClient(
     provider,
     nocturneDBBob,
     merkleProverBob,
-    syncAdapter
+    syncAdapter,
+    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
   );
 
   const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);

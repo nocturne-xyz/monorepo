@@ -213,7 +213,8 @@ export class NocturneDB {
     asset: Asset,
     opts?: GetNotesOpts
   ): Promise<IncludedNote[]> {
-    let notes = await this.getNotesForAsset(asset);
+    const indices = await this.getMerkleIndicesForAsset(asset);
+    let notes = await this.getNotesByMerkleIndices(indices);
 
     if (!opts?.includeUncommitted) {
       const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
@@ -261,7 +262,7 @@ export class NocturneDB {
 
   // index of the last note (dummy or not) to be committed
   async lastCommittedMerkleIndex(): Promise<number> {
-    return (await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY)) ?? 0;
+    return (await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY)) ?? -1;
   }
 
   // update `lastCommittedMerkleIndex()`
@@ -330,12 +331,13 @@ export class NocturneDB {
       }
 
       if (!opts?.ignoreOptimisticNFs) {
-        notes = await Promise.all(
-          notes.filter(
+        const hasOptimisticNF = await Promise.all(
+          notes.map(
             async (note) =>
               !(await this.getOptimisticNFRecord(note.merkleIndex))
           )
         );
+        notes = notes.filter((_, i) => hasOptimisticNF[i]);
       }
 
       const notesForAsset = allNotes.get(assetKey) ?? [];
