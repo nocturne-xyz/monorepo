@@ -180,7 +180,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     // if we are, check if the user has enough of it to cover gas
     // TODO: is it possible to have empty array here?
     if (matchingRequests && matchingRequests.length > 0) {
-      const totalOwnedGasAsset = await db.getCommittedBalanceForAsset(gasAsset);
+      const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
       const totalAmountInMatchingRequests = matchingRequests.reduce(
         (acc, request) => {
           return acc + getJoinSplitRequestTotalValue(request);
@@ -211,7 +211,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   for (const [ticker, gasAsset] of gasAssets.entries()) {
     // if user has enough gas token, create a new joinsplit request to include the gas, add it
     // to the list, and we're done
-    const totalOwnedGasAsset = await db.getCommittedBalanceForAsset(gasAsset);
+    const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
     const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
     if (totalOwnedGasAsset >= estimateInGasAsset) {
       const modifiedJoinSplitRequests = [
