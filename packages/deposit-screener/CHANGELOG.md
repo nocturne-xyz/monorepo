@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix wrong service name in bundler server run cmd
 - server start returns `ActorHandle` and awaits promise to avoid early exit
 - bump sdk with joinsplit sorting and note timestamp changes
 - move deposit hash calculation into sdk, fix imports
