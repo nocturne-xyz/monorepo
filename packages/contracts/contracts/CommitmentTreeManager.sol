@@ -224,36 +224,39 @@ contract CommitmentTreeManager is
         StealthAddress calldata refundAddr,
         uint256 numRefunds
     ) internal {
+        uint256 numEncodedAssets = encodedAssets.length;
         require(
-            numRefunds <= encodedAssets.length && numRefunds <= values.length,
+            numEncodedAssets == values.length && numRefunds <= numEncodedAssets,
             "len mismatch"
         );
 
-        EncodedNote[] memory notes = new EncodedNote[](numRefunds);
-        uint128 offset = _merkle.getTotalCount();
-        for (uint256 i = 0; i < numRefunds; i++) {
-            EncodedAsset memory encodedAsset = encodedAssets[i];
-            uint256 value = values[i];
+        if (numRefunds > 0) {
+            EncodedNote[] memory notes = new EncodedNote[](numRefunds);
+            uint128 offset = _merkle.getTotalCount();
+            for (uint256 i = 0; i < numRefunds; i++) {
+                EncodedAsset memory encodedAsset = encodedAssets[i];
+                uint256 value = values[i];
 
-            notes[i] = EncodedNote({
-                ownerH1: refundAddr.h1X,
-                ownerH2: refundAddr.h2X,
-                nonce: offset + i,
-                encodedAssetAddr: encodedAsset.encodedAssetAddr,
-                encodedAssetId: encodedAsset.encodedAssetId,
-                value: value
-            });
+                notes[i] = EncodedNote({
+                    ownerH1: refundAddr.h1X,
+                    ownerH2: refundAddr.h2X,
+                    nonce: offset + i,
+                    encodedAssetAddr: encodedAsset.encodedAssetAddr,
+                    encodedAssetId: encodedAsset.encodedAssetId,
+                    value: value
+                });
 
-            emit RefundProcessed(
-                refundAddr,
-                offset + i,
-                encodedAsset.encodedAssetAddr,
-                encodedAsset.encodedAssetId,
-                value,
-                offset + uint128(i)
-            );
+                emit RefundProcessed(
+                    refundAddr,
+                    offset + i,
+                    encodedAsset.encodedAssetAddr,
+                    encodedAsset.encodedAssetId,
+                    value,
+                    offset + uint128(i)
+                );
+            }
+
+            _insertNotes(notes);
         }
-
-        _insertNotes(notes);
     }
 }
