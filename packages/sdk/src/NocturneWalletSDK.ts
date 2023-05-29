@@ -158,7 +158,7 @@ export class NocturneWalletSDK {
     await this.db.storeOptimisticNFRecords(merkleIndices, records);
   }
 
-  async updateOptimiticNullifiers(): Promise<void> {
+  async updateOptimisticNullifiers(): Promise<void> {
     // get all `OptimisticNFRecord`s from db
     const optimisticNFRecords = await this.db.getAllOptimisticNFRecords();
 
