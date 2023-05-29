@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- apply op's nullifiers to SDK's optimsitic nullifiers at the end of `nocturne_signOperation`
+- update SDK's optimistic nullifiers after each sync
 - call `loadNocturneConfigBuiltin("localhost")` instead of copying config from `config` package into snap
 - throw error when `snap_dialog` returns a falsy value (unlike `snap_confirm`, `snap_dialog` doesn't do this for you);
 - snap slurps up real config - not dummy config - using JSON module

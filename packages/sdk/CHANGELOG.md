@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- optimsitically track nullifiers
+  - store `merkleIndex -> OptimisticNFRecord` mappings in `NocturneDB`
+  - refactor "getNotes" methods to take `GetNotesOpts`, which allows caller whether or not they want to include uncommitted notes and/or ignore optimistic NFs
+  - add methods `applyOptimisticNullifiersForOp` and `updateOptimisticNullifiers` to `NocturneWalletSDK`, which the wallet can call to update the NF cache when it sees fit.
+  - add `NullifierChecker` interface
 - subgraph sync checks if `res.data` undefined
 - add ElGamal encryption for canonical addresses and use in joinsplit PI generation code
 - use `CompressedStealthAddress` in `EncryptedNote` and refund addr
