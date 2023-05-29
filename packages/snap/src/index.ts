@@ -6,6 +6,7 @@ import {
   NocturneDB,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
+  BundlerNullifierChecker,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -17,6 +18,7 @@ import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
 
 const RPC_URL = "http://127.0.0.1:8545/";
+const BUNDLER_URL = "http://127.0.0.1:3000";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
 
 const config = loadNocturneConfigBuiltin("localhost");
@@ -73,7 +75,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     merkleProver,
     nocturneDB,
     syncAdapter,
-    new MockEthToTokenConverter()
+    new MockEthToTokenConverter(),
+    new BundlerNullifierChecker(BUNDLER_URL)
   );
 
   console.log("Switching on method: ", request.method);
@@ -88,6 +91,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       try {
         // set `skipMerkle` to true because we're not using the merkle tree during this RPC call
         await sdk.sync();
+        await sdk.updateOptimisticNullifiers();
         console.log(
           "Synced. state is now: ",
           //@ts-ignore
@@ -102,6 +106,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       console.log("Request params: ", request.params);
 
       await sdk.sync();
+      await sdk.updateOptimisticNullifiers();
 
       console.log("done syncing");
 
@@ -150,6 +155,8 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           "PreProofOperationInputsAndProofInputs: ",
           JSON.stringify(signedOp)
         );
+
+        await sdk.applyOptimisticNullifiersForOp(signedOp);
         return JSON.stringify(signedOp);
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);

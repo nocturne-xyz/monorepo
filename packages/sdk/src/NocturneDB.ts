@@ -224,11 +224,12 @@ export class NocturneDB {
     }
 
     if (!opts?.ignoreOptimisticNFs) {
-      notes = await Promise.all(
-        notes.filter(
+      const hasOptimisticNF = await Promise.all(
+        notes.map(
           async (note) => !(await this.getOptimisticNFRecord(note.merkleIndex))
         )
       );
+      notes = notes.filter((_, i) => hasOptimisticNF[i]);
     }
 
     return notes;

@@ -306,7 +306,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset
+        erc20Asset,
+        { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
@@ -329,7 +330,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneWalletSDKBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -415,13 +418,15 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc721Asset
+        erc721Asset,
+        { includeUncommitted: true }
       )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
       const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc1155Asset
+        erc1155Asset,
+        { includeUncommitted: true }
       )!;
       expect(erc1155NotesAlice.length).to.equal(1);
     };

@@ -208,7 +208,11 @@ export async function setupTestDeployment(
     actorConfig.configs.subgraph = subgraphConfig;
 
     stopSubgraph = await startSubgraph(subgraphConfig);
+<<<<<<< HEAD
     await sleep(8_000); // wait for subgraph to start up (TODO: better way to do this?)
+=======
+    await sleep(10_000); // wait for subgraph to start up (TODO: better way to do this?)
+>>>>>>> b88a754e (fix e2e tests)
   }
 
   // deploy everything else
@@ -301,7 +305,7 @@ export async function setupTestDeployment(
       }
     }
     // wait for subgraph / subtree updater
-    await sleep(7_000);
+    await sleep(10_000);
   };
 
   return {
@@ -513,8 +517,7 @@ export async function setupTestClient(
     provider,
     nocturneDBAlice,
     merkleProverAlice,
-    syncAdapter,
-    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
+    syncAdapter
   );
 
   console.log("Create NocturneWalletSDKBob");
@@ -527,8 +530,7 @@ export async function setupTestClient(
     provider,
     nocturneDBBob,
     merkleProverBob,
-    syncAdapter,
-    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
+    syncAdapter
   );
 
   const joinSplitProver = new WasmJoinSplitProver(WASM_PATH, ZKEY_PATH, VKEY);
@@ -559,6 +561,7 @@ function setupNocturneWalletSDK(
     merkleProver,
     nocturneDB,
     syncAdapter,
-    new MockEthToTokenConverter()
+    new MockEthToTokenConverter(),
+    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
   );
 }

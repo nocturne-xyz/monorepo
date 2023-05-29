@@ -421,13 +421,13 @@ describe("NocturneDB", async () => {
   });
 
   it("applies optimistic nullifiers", async () => {
-    // insert 20 notes
-    const [notes, _] = dummyNotesAndNfs(20, shitcoin);
+    // insert 10 notes
+    const [notes, _] = dummyNotesAndNfs(10, shitcoin);
     await db.storeNotes(withDummyTimestamps(notes));
 
-    // optimistically nullify 10 of them
+    // optimistically nullify 5 of them
     const [merkleIndices, records] = unzip(
-      notes.slice(10).map((note) => {
+      notes.slice(5).map((note) => {
         const merkleIndex = note.merkleIndex;
         const record = {
           nullifier: note.nullifier,
@@ -439,13 +439,45 @@ describe("NocturneDB", async () => {
     );
     await db.storeOptimisticNFRecords(merkleIndices, records);
 
-    // expect there to be only 10 notes total
+    // expect to get 5 notes total from `getAllNotes`
     const allNotes = await db.getAllNotes({ includeUncommitted: true });
     expect(allNotes.size).to.eql(1);
 
     const entry = allNotes.get(NocturneDB.formatAssetKey(shitcoin));
     expect(entry).to.not.be.undefined;
-    expect(entry!.length).to.eql(10);
+    expect(entry!.length).to.eql(5);
+  });
+
+  it("gets all optimistic nullifiers", async () => {
+    // insert 10 notes
+    const [notes, _] = dummyNotesAndNfs(10, shitcoin);
+    await db.storeNotes(withDummyTimestamps(notes));
+
+    // optimistically nullify 5 of them
+    const [merkleIndices, records] = unzip(
+      notes.slice(5).map((note) => {
+        const merkleIndex = note.merkleIndex;
+        const record = {
+          nullifier: note.nullifier,
+          expirationDate: 1234567890,
+        };
+
+        return [merkleIndex, record];
+      })
+    );
+    await db.storeOptimisticNFRecords(merkleIndices, records);
+
+    // get all optimistic nullifiers
+    const optimisticNFs = await db.getAllOptimisticNFRecords();
+
+    // expect to have 5 entries - one for each merkle index 5..=9
+    expect(optimisticNFs.size).to.eql(5);
+
+    expect(optimisticNFs.get(5)).to.not.be.undefined;
+    expect(optimisticNFs.get(6)).to.not.be.undefined;
+    expect(optimisticNFs.get(7)).to.not.be.undefined;
+    expect(optimisticNFs.get(8)).to.not.be.undefined;
+    expect(optimisticNFs.get(9)).to.not.be.undefined;
   });
 });
 

@@ -106,7 +106,7 @@ export class NocturneWalletSDK {
     return signOperation(this.signer, preSignOperation);
   }
 
-  async getAllAssetBalances(opts: GetNotesOpts): Promise<AssetWithBalance[]> {
+  async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
     const notes = await this.db.getAllNotes(opts);
     return Array.from(notes.entries()).map(([assetString, notes]) => {
       const asset = NocturneDB.parseAssetKey(assetString);
