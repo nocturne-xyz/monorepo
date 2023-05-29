@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug where empty insertion events are emitted when we have 0 refunds
 - add more offchain merkle unit tests
 - fix bug where invariant tests were not completing weth deposits, weth is now deposited and transacted with in ops
 - unify deposit/joinsplit tokens in invariant tests such that erc20s and weth are no longer separate cases
