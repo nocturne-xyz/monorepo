@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- bump sdk with joinsplit sorting and note timestamp changes
 - move deposit hash calculation into sdk, fix imports
 - make cli manually exit when `ActorHandle` promise resolves
 - move req/res types into sdk so it can be shared with fe-sdk
