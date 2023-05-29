@@ -18,7 +18,7 @@ const runServer = new Command("server")
   .option(
     "--log-dir <string>",
     "directory to write logs to",
-    "./logs/bundler-server"
+    "./logs/deposit-screener"
   )
   .option(
     "--stdout-log-level <string>",
@@ -35,7 +35,13 @@ const runServer = new Command("server")
       ])
     );
 
-    const logger = makeLogger(logDir, "bundler", "server", stdoutLogLevel);
+    console.log("making logger");
+    const logger = makeLogger(
+      logDir,
+      "deposit-screener",
+      "server",
+      stdoutLogLevel
+    );
     const server = new DepositScreenerServer(
       logger,
       getRedis(),
