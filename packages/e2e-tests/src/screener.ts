@@ -138,5 +138,6 @@ function startDepositScreenerServer(
     supportedAssetRateLimits
   );
 
-  return server.start(3001);
+  const { teardown } = server.start(3001);
+  return teardown;
 }

@@ -15,6 +15,7 @@ import { Address } from "@nocturne-xyz/sdk";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { ScreeningApi } from "./screening";
+import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerServer {
   logger: Logger;
@@ -51,7 +52,7 @@ export class DepositScreenerServer {
     this.supportedAssetRateLimits = supportedAssetRateLimits;
   }
 
-  start(port: number): () => Promise<void> {
+  start(port: number): ActorHandle {
     const router = express.Router();
 
     router.get(
@@ -98,12 +99,31 @@ export class DepositScreenerServer {
       this.logger.info(`listening at ${os.hostname()}:${port}`);
     });
 
-    return () =>
-      new Promise((resolve) => {
+    const promise = new Promise<void>((resolve, reject) => {
+      server.on("close", () => {
+        this.logger.info("server closed");
+        resolve();
+      });
+
+      server.on("error", (err) => {
+        this.logger.error("server error", err);
+        reject();
+      });
+
+      // TODO: any other stuff we should listen to here?
+    });
+
+    const teardown = () =>
+      new Promise<void>((resolve) => {
         server.close(() => {
           this.logger.info("closed");
           resolve();
         });
       });
+
+    return {
+      promise,
+      teardown,
+    };
   }
 }

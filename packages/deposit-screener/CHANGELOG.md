@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- server start returns `ActorHandle` and awaits promise to avoid early exit
 - bump sdk with joinsplit sorting and note timestamp changes
 - move deposit hash calculation into sdk, fix imports
 - make cli manually exit when `ActorHandle` promise resolves

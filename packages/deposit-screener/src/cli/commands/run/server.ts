@@ -45,7 +45,8 @@ const runServer = new Command("server")
       supportedAssetRateLimits
     );
 
-    server.start(port);
+    const { promise } = server.start(port);
+    await promise;
   });
 
 export default runServer;
