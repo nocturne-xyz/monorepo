@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {ParseUtils} from "../utils/ParseUtils.sol";
 import {TreeUtils} from "../../libs/TreeUtils.sol";
 import {TreeTest, TreeTestLib} from "../utils/TreeTest.sol";
+import {QueueLib} from "../../libs/Queue.sol";
 import {LibOffchainMerkleTree, OffchainMerkleTree} from "../../libs/OffchainMerkleTree.sol";
 import {IHasherT3, IHasherT5, IHasherT6} from "../interfaces/IHasher.sol";
 import {ISubtreeUpdateVerifier} from "../../interfaces/ISubtreeUpdateVerifier.sol";
@@ -17,6 +18,7 @@ import "../../libs/Types.sol";
 contract TestOffchainMerkleTree is PoseidonDeployer {
     using TreeTestLib for TreeTest;
     using LibOffchainMerkleTree for OffchainMerkleTree;
+    using QueueLib for QueueLib.Queue;
 
     OffchainMerkleTree merkle;
     ISubtreeUpdateVerifier subtreeUpdateVerifier;
@@ -112,18 +114,32 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
     }
 
     function testInsertMultipleCommitments() public {
-        uint256[] memory batch = new uint256[](16);
-        uint256[] memory ncs = new uint256[](16);
-        for (uint256 i = 0; i < 16; i++) {
+        uint256[] memory batch = new uint256[](8);
+        uint256[] memory ncs = new uint256[](8);
+        for (uint256 i = 0; i < 8; i++) {
             ncs[i] = i;
             batch[i] = ncs[i];
         }
 
         merkle.insertNoteCommitments(ncs);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 8);
+        assertEq(uint256(merkle.getBatchLen()), 8);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 0);
+        for (uint256 i = 0; i < 8; i++) {
+            assertEq(merkle.batch[i], ncs[i]);
+        }
 
+        merkle.insertNoteCommitments(ncs);
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(uint256(merkle.getBatchLen()), 0);
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 1);
+        for (uint256 i = 0; i < 8; i++) {
+            assertEq(merkle.batch[i + 8], ncs[i]);
+        }
 
         // apply subtree update
         uint256[][3] memory path = treeTest.computeInitialPaths(batch);
@@ -133,6 +149,65 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         assertEq(merkle.getCount(), 16);
         assertEq(merkle.getTotalCount(), 16);
         assertEq(merkle.getRoot(), newRoot);
+    }
+
+    function testInsertMultipleNotes() public {
+        EncodedNote[] memory encodedNotes = new EncodedNote[](8);
+        for (uint256 i = 0; i < 8; i++) {
+            encodedNotes[i] = dummyNote();
+            encodedNotes[i].nonce += 1;
+        }
+
+        merkle.insertNotes(encodedNotes);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 8);
+        assertEq(uint256(merkle.getBatchLen()), 8);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 0);
+        for (uint256 i = 0; i < 8; i++) {
+            assertEq(merkle.batch[i], TreeUtils.sha256Note(encodedNotes[i]));
+        }
+
+        merkle.insertNotes(encodedNotes);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(uint256(merkle.getBatchLen()), 0);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 1);
+        for (uint256 i = 8; i < 16; i++) {
+            assertEq(
+                merkle.batch[i],
+                TreeUtils.sha256Note(encodedNotes[i - 8])
+            );
+        }
+    }
+
+    function testFillBatchWithZeros() public {
+        uint256[] memory ncs = new uint256[](8);
+        for (uint256 i = 0; i < 8; i++) {
+            ncs[i] = i;
+        }
+
+        merkle.insertNoteCommitments(ncs);
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 8);
+        assertEq(uint256(merkle.getBatchLen()), 8);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 0);
+
+        merkle.fillBatchWithZeros();
+        assertEq(uint256(merkle.getCount()), 0);
+        assertEq(uint256(merkle.getTotalCount()), 16);
+        assertEq(uint256(merkle.getBatchLen()), 0);
+        assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
+        assertEq(merkle.accumulatorQueue.length(), 1);
+        for (uint256 i = 0; i < 16; i++) {
+            if (i < 8) {
+                assertEq(merkle.batch[i], ncs[i]);
+            } else {
+                assertEq(merkle.batch[i], TreeUtils.ZERO_VALUE);
+            }
+        }
     }
 
     function testCalculatePublicInputs() public {
