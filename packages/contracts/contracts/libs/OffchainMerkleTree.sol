@@ -54,24 +54,21 @@ library LibOffchainMerkleTree {
         }
     }
 
-    function insertNotes(
+    function insertNote(
         OffchainMerkleTree storage self,
-        EncodedNote[] memory notes
+        EncodedNote memory note
     ) internal {
-        uint256 numNotes = notes.length;
-        uint256[] memory noteHashes = new uint256[](numNotes);
-        for (uint256 i = 0; i < numNotes; i++) {
-            noteHashes[i] = TreeUtils.sha256Note(notes[i]);
-        }
-
-        _insertUpdates(self, noteHashes);
+        uint256 noteHash = TreeUtils.sha256Note(note);
+        _insertUpdate(self, noteHash);
     }
 
     function insertNoteCommitments(
         OffchainMerkleTree storage self,
         uint256[] memory ncs
     ) internal {
-        _insertUpdates(self, ncs);
+        for (uint256 i = 0; i < ncs.length; i++) {
+            _insertUpdate(self, ncs[i]);
+        }
     }
 
     function applySubtreeUpdate(
@@ -158,9 +155,9 @@ library LibOffchainMerkleTree {
     }
 
     function _computeAccumulatorHash(
-        OffchainMerkleTree storage self,
-        uint256 batchLen
+        OffchainMerkleTree storage self
     ) internal view returns (uint256) {
+        uint256 batchLen = getBatchLen(self);
         uint256[] memory batch = new uint256[](TreeUtils.BATCH_SIZE);
         for (uint256 i = 0; i < batchLen; i++) {
             batch[i] = self.batch[i];
@@ -173,36 +170,26 @@ library LibOffchainMerkleTree {
     }
 
     function fillBatchWithZeros(OffchainMerkleTree storage self) internal {
-        _accumulate(self, uint256(getBatchLen(self)));
+        _accumulate(self);
         _setBatchLen(self, 0);
     }
 
-    function _accumulate(
-        OffchainMerkleTree storage self,
-        uint256 batchLen
-    ) internal {
-        uint256 accumulatorHash = _computeAccumulatorHash(self, batchLen);
+    function _accumulate(OffchainMerkleTree storage self) internal {
+        uint256 accumulatorHash = _computeAccumulatorHash(self);
         self.accumulatorQueue.enqueue(accumulatorHash);
+        _setBatchLen(self, 0);
     }
 
-    function _insertUpdates(
+    function _insertUpdate(
         OffchainMerkleTree storage self,
-        uint256[] memory updates
+        uint256 update
     ) internal {
-        uint256 batchLen = uint256(getBatchLen(self));
-        uint256 updatesLength = updates.length;
-        uint256 updateIdx = 0;
-        while (updateIdx < updatesLength) {
-            self.batch[batchLen] = updates[updateIdx];
-            batchLen++;
-            updateIdx++;
+        uint128 batchLen = getBatchLen(self);
+        self.batch[batchLen] = update;
+        _setBatchLen(self, batchLen + 1);
 
-            if (batchLen == TreeUtils.BATCH_SIZE) {
-                _accumulate(self, batchLen);
-                batchLen = 0;
-            }
+        if (batchLen + 1 == TreeUtils.BATCH_SIZE) {
+            _accumulate(self);
         }
-
-        _setBatchLen(self, uint128(batchLen));
     }
 }

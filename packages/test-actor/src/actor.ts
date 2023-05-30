@@ -20,7 +20,7 @@ import { Erc20Config } from "@nocturne-xyz/config";
 import { ethers } from "ethers";
 import { DepositInstantiatedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 
-const FIVE_MINUTES_AS_MILLIS = 5 * 60 * 1000;
+const ONE_MINUTE_AS_MILLIS = 60 * 1000;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 const ONE_ETH_IN_WEI = 10n ** 18n;
 
@@ -72,7 +72,7 @@ export class TestActor {
       }
 
       if (actionTaken) {
-        await sleep(FIVE_MINUTES_AS_MILLIS);
+        await sleep(ONE_MINUTE_AS_MILLIS);
       }
     }
   }
@@ -238,6 +238,6 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  return Math.random() < 0.5;
-  // return true;
+  // return Math.random() < 0.5;
+  return true;
 }

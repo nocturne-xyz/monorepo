@@ -16,21 +16,20 @@ contract TestCommitmentTreeManager is CommitmentTreeManager {
         _handleJoinSplits(joinSplits);
     }
 
-    function handleRefundNotes(
-        EncodedAsset[] memory encodedAssets,
-        uint256[] memory values,
+    function handleRefundNote(
+        EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr,
-        uint256 numRefunds
+        uint256 value
     ) external {
-        _handleRefundNotes(encodedAssets, values, refundAddr, numRefunds);
-    }
-
-    function insertNotes(EncodedNote[] memory notes) external {
-        _insertNotes(notes);
+        _handleRefundNote(encodedAsset, refundAddr, value);
     }
 
     function insertNoteCommitments(uint256[] memory ncs) external {
         _insertNoteCommitments(ncs);
+    }
+
+    function insertNote(EncodedNote memory note) external {
+        _insertNote(note);
     }
 
     function currentBatchLen() external view returns (uint256) {

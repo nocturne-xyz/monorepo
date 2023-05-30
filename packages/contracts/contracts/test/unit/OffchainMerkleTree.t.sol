@@ -86,11 +86,10 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
     function testInsertSingleNote() public {
         uint256[] memory batch = new uint256[](2);
         // insert 1 note and 1 commitment
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = dummyNote();
-        batch[0] = treeTest.computeNoteCommitment(notes[0]);
+        EncodedNote memory note = dummyNote();
+        batch[0] = treeTest.computeNoteCommitment(note);
 
-        merkle.insertNotes(notes);
+        merkle.insertNote(note);
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 1);
         assertEq(merkle.getRoot(), TreeUtils.EMPTY_TREE_ROOT);
@@ -158,7 +157,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
             encodedNotes[i].nonce += 1;
         }
 
-        merkle.insertNotes(encodedNotes);
+        for (uint256 i = 0; i < 8; i++) {
+            merkle.insertNote(encodedNotes[i]);
+        }
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 8);
         assertEq(uint256(merkle.getBatchLen()), 8);
@@ -168,7 +169,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
             assertEq(merkle.batch[i], TreeUtils.sha256Note(encodedNotes[i]));
         }
 
-        merkle.insertNotes(encodedNotes);
+        for (uint256 i = 0; i < 8; i++) {
+            merkle.insertNote(encodedNotes[i]);
+        }
         assertEq(uint256(merkle.getCount()), 0);
         assertEq(uint256(merkle.getTotalCount()), 16);
         assertEq(uint256(merkle.getBatchLen()), 0);
@@ -213,19 +216,13 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
     function testCalculatePublicInputs() public {
         // Insert 1 note
         EncodedNote memory note = dummyNote();
-        EncodedNote[] memory notes = new EncodedNote[](1);
-        notes[0] = note;
-
+        merkle.insertNote(note);
         uint256 nc = treeTest.computeNoteCommitment(note);
-        merkle.insertNotes(notes);
 
         // Insert 4 note
-
-        notes = new EncodedNote[](4);
         for (uint256 i = 0; i < 4; i++) {
-            notes[i] = note;
+            merkle.insertNote(note);
         }
-        merkle.insertNotes(notes);
 
         // Insert 9 ncs
         uint256[] memory ncs = new uint256[](9);
@@ -235,11 +232,9 @@ contract TestOffchainMerkleTree is PoseidonDeployer {
         merkle.insertNoteCommitments(ncs);
 
         // Insert 2 note
-        notes = new EncodedNote[](2);
         for (uint256 i = 0; i < 2; i++) {
-            notes[i] = note;
+            merkle.insertNote(note);
         }
-        merkle.insertNotes(notes);
 
         uint256[] memory batch = new uint256[](16);
         for (uint256 i = 0; i < 16; i++) {

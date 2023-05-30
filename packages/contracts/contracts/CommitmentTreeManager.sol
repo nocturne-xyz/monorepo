@@ -61,7 +61,7 @@ contract CommitmentTreeManager is
     );
 
     /// @notice Event emitted when a new batch of notes is inserted into the tree
-    event InsertNotes(EncodedNote[] notes);
+    event InsertNote(EncodedNote note);
 
     /// @notice Event emitted when a new batch of note commitments is inserted into the tree
     event InsertNoteCommitments(uint256[] commitments);
@@ -148,10 +148,10 @@ contract CommitmentTreeManager is
     }
 
     /// @notice Inserts a batch of notes into commitment tree
-    /// @param notes batch of notes to insert
-    function _insertNotes(EncodedNote[] memory notes) internal {
-        _merkle.insertNotes(notes);
-        emit InsertNotes(notes);
+    /// @param note batch of notes to insert
+    function _insertNote(EncodedNote memory note) internal {
+        _merkle.insertNote(note);
+        emit InsertNote(note);
     }
 
     /// @notice Inserts several note commitments into the tree
@@ -213,50 +213,34 @@ contract CommitmentTreeManager is
         _insertNoteCommitments(newNoteCommitments);
     }
 
-    /// @notice Inserts a batch of refund notes into the commitment tree
-    /// @param encodedAssets Encoded assets for each refund note
-    /// @param values Values for each refund note
-    /// @param refundAddr Stealth addresses for each refund note
-    /// @param numRefunds Number of refund notes to insert
-    function _handleRefundNotes(
-        EncodedAsset[] memory encodedAssets,
-        uint256[] memory values,
+    /// @notice Inserts a single refund note into the commitment tree
+    /// @param encodedAsset Encoded asset refund note is being created for
+    /// @param refundAddr Stealth address refund note is created to
+    /// @param value Value of refund note for given asset
+    function _handleRefundNote(
+        EncodedAsset memory encodedAsset,
         StealthAddress calldata refundAddr,
-        uint256 numRefunds
+        uint256 value
     ) internal {
-        uint256 numEncodedAssets = encodedAssets.length;
-        require(
-            numEncodedAssets == values.length && numRefunds <= numEncodedAssets,
-            "len mismatch"
+        uint128 index = _merkle.getTotalCount();
+        EncodedNote memory note = EncodedNote({
+            ownerH1: refundAddr.h1X,
+            ownerH2: refundAddr.h2X,
+            nonce: index,
+            encodedAssetAddr: encodedAsset.encodedAssetAddr,
+            encodedAssetId: encodedAsset.encodedAssetId,
+            value: value
+        });
+
+        _insertNote(note);
+
+        emit RefundProcessed(
+            refundAddr,
+            index,
+            encodedAsset.encodedAssetAddr,
+            encodedAsset.encodedAssetId,
+            value,
+            index
         );
-
-        if (numRefunds > 0) {
-            EncodedNote[] memory notes = new EncodedNote[](numRefunds);
-            uint128 offset = _merkle.getTotalCount();
-            for (uint256 i = 0; i < numRefunds; i++) {
-                EncodedAsset memory encodedAsset = encodedAssets[i];
-                uint256 value = values[i];
-
-                notes[i] = EncodedNote({
-                    ownerH1: refundAddr.h1X,
-                    ownerH2: refundAddr.h2X,
-                    nonce: offset + i,
-                    encodedAssetAddr: encodedAsset.encodedAssetAddr,
-                    encodedAssetId: encodedAsset.encodedAssetId,
-                    value: value
-                });
-
-                emit RefundProcessed(
-                    refundAddr,
-                    offset + i,
-                    encodedAsset.encodedAssetAddr,
-                    encodedAsset.encodedAssetId,
-                    value,
-                    offset + uint128(i)
-                );
-            }
-
-            _insertNotes(notes);
-        }
     }
 }
