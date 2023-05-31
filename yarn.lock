@@ -3324,9 +3324,9 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/config": 1.0.11-alpha
-    "@nocturne-xyz/contracts": 1.0.25-alpha
+    "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.127-alpha
+    "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3408,16 +3408,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@npm:1.0.25-alpha":
-  version: 1.0.25-alpha
-  resolution: "@nocturne-xyz/contracts@npm:1.0.25-alpha"
-  dependencies:
-    "@openzeppelin/contracts": 4.8.2
-    "@openzeppelin/contracts-upgradeable": 4.8.2
-  checksum: 32f8a58278e0444049a1b73070a9bd4b247d5f2ce829fec84a52411d1220cdba4b1f2802bbbaaf6dda101b83d5fac65cb7c082a3d155dbd219b2241391552b42
-  languageName: node
-  linkType: hard
-
 "@nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
@@ -3478,9 +3468,9 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": 1.0.11-alpha
-    "@nocturne-xyz/contracts": 1.0.25-alpha
+    "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.127-alpha
+    "@nocturne-xyz/sdk": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3633,7 +3623,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.127-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
