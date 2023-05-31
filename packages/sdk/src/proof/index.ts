@@ -12,6 +12,7 @@ export {
   JoinSplitPublicSignals,
   joinSplitPublicSignalsFromArray,
   joinSplitPublicSignalsToArray,
+  encodeHodgePodgePI,
 } from "./joinsplit";
 export {
   SubtreeUpdateProofWithPublicSignals,

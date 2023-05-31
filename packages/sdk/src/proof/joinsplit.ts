@@ -1,3 +1,4 @@
+import { EncryptedCanonAddress } from "../crypto/address";
 import { EncodedNote } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 
@@ -24,7 +25,7 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // encSenderCanonAddrC1X
     bigint, // encSenderCanonAddrC2X
     bigint, // operationDigest
-    bigint, // encodedAssetAddr
+    bigint, // hodgePodge
     bigint // encodedAssetId
   ];
 }
@@ -37,10 +38,10 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  encodedAssetAddr: bigint;
+  hodgePodge: bigint;
   encodedAssetId: bigint;
-  encSenderCanonAddrC1X: bigint;
-  encSenderCanonAddrC2X: bigint;
+  encSenderCanonAddrC1Y: bigint;
+  encSenderCanonAddrC2Y: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -57,6 +58,7 @@ export interface JoinSplitInputs {
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
   encRandomness: bigint;
+  hodgePodge: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -69,10 +71,10 @@ export function joinSplitPublicSignalsFromArray(
     publicSpend: publicSignals[3],
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
-    encSenderCanonAddrC1X: publicSignals[6],
-    encSenderCanonAddrC2X: publicSignals[7],
+    encSenderCanonAddrC1Y: publicSignals[6],
+    encSenderCanonAddrC2Y: publicSignals[7],
     opDigest: publicSignals[8],
-    encodedAssetAddr: publicSignals[9],
+    hodgePodge: publicSignals[9],
     encodedAssetId: publicSignals[10],
   };
 }
@@ -99,10 +101,23 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.publicSpend,
     publicSignals.nullifierA,
     publicSignals.nullifierB,
-    publicSignals.encSenderCanonAddrC1X,
-    publicSignals.encSenderCanonAddrC2X,
+    publicSignals.encSenderCanonAddrC1Y,
+    publicSignals.encSenderCanonAddrC2Y,
     publicSignals.opDigest,
-    publicSignals.encodedAssetAddr,
+    publicSignals.hodgePodge,
     publicSignals.encodedAssetId,
   ];
+}
+
+const SIGN_BIT_MASK = 1n << 254n;
+
+// encodedAssetAddr with the sign bits of the encrypted sender canon address placed at bits 248 and 249 (counting from LSB to MSB starting at 0)
+export function encodeHodgePodgePI(
+  encodedAssetAddr: bigint,
+  encSenderCanonAddr: EncryptedCanonAddress
+): bigint {
+  const signBit0Mask = encSenderCanonAddr.c1 & SIGN_BIT_MASK;
+  const signBit1Mask = encSenderCanonAddr.c2 & SIGN_BIT_MASK;
+
+  return encodedAssetAddr | (signBit0Mask >> 6n) | (signBit1Mask >> 5n);
 }
