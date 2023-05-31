@@ -189,10 +189,10 @@ library LibOffchainMerkleTree {
         self.batch[batchLen] = update;
 
         uint256 newBatchLen = batchLen + 1;
+        _setBatchLen(self, uint128(newBatchLen));
+
         if (newBatchLen == TreeUtils.BATCH_SIZE) {
             _accumulateAndResetBatchLen(self);
-        } else {
-            _setBatchLen(self, uint128(newBatchLen));
         }
     }
 }
