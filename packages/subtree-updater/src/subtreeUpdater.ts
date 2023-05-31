@@ -263,7 +263,6 @@ export class SubtreeUpdater {
         throttleMs: queryThrottleMs,
       })
       .tap((_) => {
-        console.log(`got insertion at merkleIndex ${merkleIndex}`);
         logger.debug(`got insertion at merkleIndex ${merkleIndex}`);
         merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
@@ -297,9 +296,6 @@ export class SubtreeUpdater {
           `got batch with leftmost index ${subtreeLeftmostPathIndex}`,
           { batch }
         );
-        console.log(
-          `got batch with leftmost index ${subtreeLeftmostPathIndex}`
-        );
 
         const leaves = batch.map((noteOrCommitment) =>
           NoteTrait.isCommitment(noteOrCommitment)
@@ -307,7 +303,7 @@ export class SubtreeUpdater {
             : NoteTrait.toCommitment(noteOrCommitment as Note)
         );
 
-        console.log(
+        logger.info(
           `inserting batch into merkle tree. startIndex: ${subtreeLeftmostPathIndex}, leaves: ${leaves}}`
         );
         this.tree.insertBatch(
