@@ -168,8 +168,20 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            _handleRefundForAsset(op.joinSplits[i].encodedAsset, op.refundAddr);
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
+
+        ) {
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
+            );
+            _handleRefundForAsset(
+                op.joinSplits[subarrayStartIndex].encodedAsset,
+                op.refundAddr
+            );
+            subarrayStartIndex = subarrayEndIndex + 1;
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
