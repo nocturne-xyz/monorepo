@@ -11,4 +11,4 @@ export {
   ViewingKey,
 } from "./keys";
 export { randomBigInt, randomFr } from "./utils";
-export { compressPoint, decompressPoint } from "./pointEncoding";
+export { compressPoint, decompressPoint } from "./pointCompression";

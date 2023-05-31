@@ -10,7 +10,7 @@ import {
   CompressedPoint,
   compressPoint,
   decompressPoint,
-} from "./pointEncoding";
+} from "./pointCompression";
 
 export interface StealthAddress {
   h1X: bigint;
@@ -22,6 +22,11 @@ export interface StealthAddress {
 export interface CompressedStealthAddress {
   h1: CompressedPoint;
   h2: CompressedPoint;
+}
+
+export interface EncryptedCanonAddress {
+  c1: CompressedPoint;
+  c2: CompressedPoint;
 }
 
 export type CanonAddress = AffinePoint<bigint>;
