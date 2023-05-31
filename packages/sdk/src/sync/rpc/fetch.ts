@@ -1,7 +1,7 @@
 import {
   AssetTrait,
-  BaseJoinSplit,
   EncodedAsset,
+  EncryptedNote,
   IncludedNote,
   Note,
   WithTimestamp,
@@ -19,7 +19,12 @@ export interface JoinSplitEvent {
   oldNoteBNullifier: bigint;
   newNoteAIndex: number;
   newNoteBIndex: number;
-  joinSplit: BaseJoinSplit;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  encodedAsset: EncodedAsset;
+  publicSpend: bigint;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
 }
 
 // fetching refunded notes occuring in block range [from, to]
@@ -107,19 +112,13 @@ export async function fetchJoinSplits(
         oldNoteBNullifier,
         newNoteAIndex,
         newNoteBIndex,
-        joinSplit,
-      } = event.args;
-      const {
-        commitmentTreeRoot,
-        nullifierA,
-        nullifierB,
         newNoteACommitment,
         newNoteAEncrypted,
         newNoteBCommitment,
         newNoteBEncrypted,
         encodedAsset,
         publicSpend,
-      } = joinSplit;
+      } = event.args;
       const { encodedAssetAddr, encodedAssetId } = encodedAsset;
       let { owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteAEncrypted;
@@ -150,29 +149,24 @@ export async function fetchJoinSplits(
         oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
         newNoteAIndex: newNoteAIndex.toNumber(),
         newNoteBIndex: newNoteBIndex.toNumber(),
-        joinSplit: {
-          commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
-          nullifierA: nullifierA.toBigInt(),
-          nullifierB: nullifierB.toBigInt(),
-          newNoteACommitment: newNoteACommitment.toBigInt(),
-          newNoteAEncrypted: {
-            owner: newNoteAOwner,
-            encappedKey: encappedKeyA,
-            encryptedNonce: encryptedNonceA,
-            encryptedValue: encryptedValueA,
-          },
-          newNoteBCommitment: newNoteBCommitment.toBigInt(),
-          newNoteBEncrypted: {
-            owner: newNoteBOwner,
-            encappedKey: encappedKeyB,
-            encryptedNonce: encryptedNonceB,
-            encryptedValue: encryptedValueB,
-          },
-          encodedAsset: {
-            encodedAssetAddr: encodedAssetAddr.toBigInt(),
-            encodedAssetId: encodedAssetId.toBigInt(),
-          },
-          publicSpend: publicSpend.toBigInt(),
+        newNoteACommitment: newNoteACommitment.toBigInt(),
+        newNoteBCommitment: newNoteBCommitment.toBigInt(),
+        encodedAsset: {
+          encodedAssetAddr: encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAssetId.toBigInt(),
+        },
+        publicSpend: publicSpend.toBigInt(),
+        newNoteAEncrypted: {
+          owner: newNoteAOwner,
+          encappedKey: encappedKeyA,
+          encryptedNonce: encryptedNonceA,
+          encryptedValue: encryptedValueA,
+        },
+        newNoteBEncrypted: {
+          owner: newNoteBOwner,
+          encappedKey: encappedKeyB,
+          encryptedNonce: encryptedNonceB,
+          encryptedValue: encryptedValueB,
         },
       };
 
@@ -259,8 +253,8 @@ export async function fetchInsertions(
 
   let insertions: OrderedInsertion[] = [];
   for (const event of noteCommitmentEvents) {
-    const newNcA = event.args.joinSplit.newNoteACommitment.toBigInt();
-    const newNcB = event.args.joinSplit.newNoteBCommitment.toBigInt();
+    const newNcA = event.args.newNoteACommitment.toBigInt();
+    const newNcB = event.args.newNoteBCommitment.toBigInt();
 
     const orderedNoteCommitments = [newNcA, newNcB].map((nc) => ({
       insertion: nc,

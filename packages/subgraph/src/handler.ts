@@ -20,7 +20,6 @@ import {
 
 export function handleJoinSplit(event: JoinSplitProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const joinSplit = event.params.joinSplit;
 
   // first old note's nullifier
   let idx = getTotalEntityIndex(totalLogIndex, 0);
@@ -41,7 +40,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   let id = toPadded32BArray(idx);
 
   const encryptedNoteA = new EncryptedNote(id);
-  const newNoteAEncrypted = joinSplit.newNoteAEncrypted;
+  const newNoteAEncrypted = event.params.newNoteAEncrypted;
   encryptedNoteA.idx = idx;
   encryptedNoteA.ownerH1X = newNoteAEncrypted.owner.h1X;
   encryptedNoteA.ownerH1Y = newNoteAEncrypted.owner.h1Y;
@@ -52,9 +51,9 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   encryptedNoteA.encryptedNonce = newNoteAEncrypted.encryptedNonce;
   encryptedNoteA.encryptedValue = newNoteAEncrypted.encryptedValue;
 
-  encryptedNoteA.encodedAssetAddr = joinSplit.encodedAsset.encodedAssetAddr;
-  encryptedNoteA.encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
-  encryptedNoteA.commitment = joinSplit.newNoteACommitment;
+  encryptedNoteA.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
+  encryptedNoteA.encodedAssetId = event.params.encodedAsset.encodedAssetId;
+  encryptedNoteA.commitment = event.params.newNoteACommitment;
 
   encryptedNoteA.save();
 
@@ -70,7 +69,7 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   id = toPadded32BArray(idx);
   const encryptedNoteB = new EncryptedNote(id);
 
-  const newNoteBEncrypted = joinSplit.newNoteBEncrypted;
+  const newNoteBEncrypted = event.params.newNoteBEncrypted;
   encryptedNoteB.idx = idx;
   encryptedNoteB.ownerH1X = newNoteBEncrypted.owner.h1X;
   encryptedNoteB.ownerH1Y = newNoteBEncrypted.owner.h1Y;
@@ -81,9 +80,9 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   encryptedNoteB.encryptedNonce = newNoteBEncrypted.encryptedNonce;
   encryptedNoteB.encryptedValue = newNoteBEncrypted.encryptedValue;
 
-  encryptedNoteB.encodedAssetAddr = joinSplit.encodedAsset.encodedAssetAddr;
-  encryptedNoteB.encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
-  encryptedNoteB.commitment = joinSplit.newNoteBCommitment;
+  encryptedNoteB.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
+  encryptedNoteB.encodedAssetId = event.params.encodedAsset.encodedAssetId;
+  encryptedNoteB.commitment = event.params.newNoteBCommitment;
 
   encryptedNoteB.save();
 

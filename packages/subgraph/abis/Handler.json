@@ -59,171 +59,151 @@
         "type": "uint128"
       },
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newNoteACommitment",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newNoteBCommitment",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "encSenderCanonAddrC1X",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "encSenderCanonAddrC2X",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "uint256",
-            "name": "commitmentTreeRoot",
+            "name": "encodedAssetAddr",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "nullifierA",
+            "name": "encodedAssetId",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nullifierB",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "newNoteACommitment",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "newNoteBCommitment",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encSenderCanonAddrC1X",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encSenderCanonAddrC2X",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256[8]",
-            "name": "proof",
-            "type": "uint256[8]"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetAddr",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encodedAssetId",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncodedAsset",
-            "name": "encodedAsset",
-            "type": "tuple"
-          },
-          {
-            "internalType": "uint256",
-            "name": "publicSpend",
-            "type": "uint256"
-          },
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "h1X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h1Y",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2Y",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct StealthAddress",
-                "name": "owner",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encappedKey",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encryptedNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encryptedValue",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncryptedNote",
-            "name": "newNoteAEncrypted",
-            "type": "tuple"
-          },
-          {
-            "components": [
-              {
-                "components": [
-                  {
-                    "internalType": "uint256",
-                    "name": "h1X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h1Y",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2X",
-                    "type": "uint256"
-                  },
-                  {
-                    "internalType": "uint256",
-                    "name": "h2Y",
-                    "type": "uint256"
-                  }
-                ],
-                "internalType": "struct StealthAddress",
-                "name": "owner",
-                "type": "tuple"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encappedKey",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encryptedNonce",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "encryptedValue",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct EncryptedNote",
-            "name": "newNoteBEncrypted",
-            "type": "tuple"
           }
         ],
         "indexed": false,
-        "internalType": "struct JoinSplit",
-        "name": "joinSplit",
+        "internalType": "struct EncodedAsset",
+        "name": "encodedAsset",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "publicSpend",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "h1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h1Y",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2Y",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct StealthAddress",
+            "name": "owner",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encappedKey",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encryptedNonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encryptedValue",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EncryptedNote",
+        "name": "newNoteAEncrypted",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "uint256",
+                "name": "h1X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h1Y",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2X",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "h2Y",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct StealthAddress",
+            "name": "owner",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encappedKey",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encryptedNonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "encryptedValue",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct EncryptedNote",
+        "name": "newNoteBEncrypted",
         "type": "tuple"
       }
     ],
