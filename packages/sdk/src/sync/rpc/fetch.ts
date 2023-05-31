@@ -10,8 +10,6 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
   SubtreeUpdateEvent,
-  InsertNoteCommitmentsEvent,
-  InsertNotesEvent,
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
@@ -237,15 +235,15 @@ export async function fetchInsertions(
   to: number
 ): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
-  const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = queryEvents(
+  const ncEventsProm: Promise<JoinSplitProcessedEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNoteCommitments(),
+    contract.filters.JoinSplitProcessed(),
     from,
     to
   );
-  const noteEventsProm: Promise<InsertNotesEvent[]> = queryEvents(
+  const noteEventsProm: Promise<RefundProcessedEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNotes(),
+    contract.filters.RefundProcessed(),
     from,
     to
   );
@@ -261,8 +259,10 @@ export async function fetchInsertions(
 
   let insertions: OrderedInsertion[] = [];
   for (const event of noteCommitmentEvents) {
-    const ncs = event.args.commitments.map((l) => l.toBigInt());
-    const orderedNoteCommitments = ncs.map((nc) => ({
+    const newNcA = event.args.joinSplit.newNoteACommitment.toBigInt();
+    const newNcB = event.args.joinSplit.newNoteBCommitment.toBigInt();
+
+    const orderedNoteCommitments = [newNcA, newNcB].map((nc) => ({
       insertion: nc,
       blockNumber: event.blockNumber,
       txIdx: event.transactionIndex,
@@ -272,36 +272,34 @@ export async function fetchInsertions(
   }
 
   for (const event of notesEvents) {
-    const notes = event.args.notes;
-    for (const noteValues of notes) {
-      const owner = {
-        h1X: noteValues.ownerH1.toBigInt(),
-        h2X: noteValues.ownerH2.toBigInt(),
-        h1Y: 0n,
-        h2Y: 0n,
-      };
+    const noteValues = event.args;
+    const owner = {
+      h1X: noteValues.refundAddr.h1X.toBigInt(),
+      h2X: noteValues.refundAddr.h2X.toBigInt(),
+      h1Y: 0n, // TODO: we don't need to log entire stealth address, just X coords
+      h2Y: 0n,
+    };
 
-      const encoddAsset: EncodedAsset = {
-        encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-        encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-      };
+    const encoddAsset: EncodedAsset = {
+      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
+      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
+    };
 
-      const asset = AssetTrait.decode(encoddAsset);
+    const asset = AssetTrait.decode(encoddAsset);
 
-      const note: Note = {
-        owner,
-        nonce: noteValues.nonce.toBigInt(),
-        asset,
-        value: noteValues.value.toBigInt(),
-      };
+    const note: Note = {
+      owner,
+      nonce: noteValues.nonce.toBigInt(),
+      asset,
+      value: noteValues.value.toBigInt(),
+    };
 
-      insertions.push({
-        insertion: note,
-        blockNumber: event.blockNumber,
-        txIdx: event.transactionIndex,
-        logIdx: event.logIndex,
-      });
-    }
+    insertions.push({
+      insertion: note,
+      blockNumber: event.blockNumber,
+      txIdx: event.transactionIndex,
+      logIdx: event.logIndex,
+    });
   }
 
   insertions = insertions.sort(

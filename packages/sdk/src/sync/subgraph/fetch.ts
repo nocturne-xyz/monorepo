@@ -13,7 +13,7 @@ import {
   totalEntityIndexFromBlockNumber,
 } from "./utils";
 
-interface NoteResponse {
+export interface NoteResponse {
   ownerH1X: string;
   ownerH1Y: string;
   ownerH2X: string;
@@ -24,7 +24,7 @@ interface NoteResponse {
   value: string;
 }
 
-interface EncryptedNoteResponse {
+export interface EncryptedNoteResponse {
   id: string;
   ownerH1X: string;
   ownerH1Y: string;
@@ -38,7 +38,7 @@ interface EncryptedNoteResponse {
   commitment: string;
 }
 
-interface EncodedOrEncryptedNoteResponse {
+export interface EncodedOrEncryptedNoteResponse {
   merkleIndex: string;
   idx: string;
   note: NoteResponse | null;
@@ -58,7 +58,7 @@ interface FetchNotesVars {
 
 const notesQuery = `\
 query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
-  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
+  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}, orderBy: idx) {
     idx
     merkleIndex
     note {
@@ -128,7 +128,7 @@ export async function fetchNotes(
   );
 }
 
-function includedNoteFromNoteResponse(
+export function includedNoteFromNoteResponse(
   noteResponse: NoteResponse,
   merkleIndex: number
 ): IncludedNote {
@@ -160,7 +160,7 @@ function includedNoteFromNoteResponse(
   };
 }
 
-function encryptedNoteFromEncryptedNoteResponse(
+export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {

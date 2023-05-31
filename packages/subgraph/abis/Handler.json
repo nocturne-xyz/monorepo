@@ -4,70 +4,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "startIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "numZeros",
+        "type": "uint256"
+      }
+    ],
+    "name": "FilledBatchWithZeros",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint8",
         "name": "version",
         "type": "uint8"
       }
     ],
     "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256[]",
-        "name": "commitments",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "InsertNoteCommitments",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "ownerH1",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ownerH2",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nonce",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetAddr",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "encodedAssetId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct EncodedNote[]",
-        "name": "notes",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "InsertNotes",
     "type": "event"
   },
   {
@@ -870,6 +831,11 @@
           },
           {
             "internalType": "uint256",
+            "name": "gasAssetRefundThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "executionGasLimit",
             "type": "uint256"
           },
@@ -1244,6 +1210,11 @@
             "internalType": "struct EncodedAsset",
             "name": "encodedGasAsset",
             "type": "tuple"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gasAssetRefundThreshold",
+            "type": "uint256"
           },
           {
             "internalType": "uint256",

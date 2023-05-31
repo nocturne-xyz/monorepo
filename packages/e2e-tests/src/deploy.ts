@@ -20,7 +20,7 @@ import {
   NocturneDB,
   SparseMerkleProver,
   JoinSplitProver,
-  RPCSDKSyncAdapter,
+  // RPCSDKSyncAdapter,
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
   Address,
@@ -206,7 +206,7 @@ export async function setupTestDeployment(
     actorConfig.configs.subgraph = subgraphConfig;
 
     stopSubgraph = await startSubgraph(subgraphConfig);
-    await sleep(5_000); // wait for subgraph to start up (TODO: better way to do this?)
+    await sleep(8_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else
@@ -288,6 +288,7 @@ export async function setupTestDeployment(
       subtreeUpdaterEoa
     );
     try {
+      console.log("filling batch with zeros...");
       const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
     } catch (err: any) {
@@ -491,14 +492,14 @@ export async function setupTestClient(
   provider: ethers.providers.Provider,
   opts?: SetupNocturneOpts
 ): Promise<ClientSetup> {
-  const { handlerProxy } = config.contracts;
+  // const { handlerProxy } = config.contracts;
 
   let syncAdapter: SDKSyncAdapter;
-  if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
-    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
-  } else {
-    syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
-  }
+  // if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
+  syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
+  // } else {
+  //   syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
+  // }
 
   console.log("Create NocturneWalletSDKAlice");
   const aliceKV = new InMemoryKVStore();

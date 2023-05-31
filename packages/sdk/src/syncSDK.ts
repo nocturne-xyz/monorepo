@@ -100,6 +100,7 @@ async function updateMerkle(
   }
 
   // commit up to latest subtree commit
+  console.log("committing up to index", latestCommittedMerkleIndex);
   merkle.commitUpToIndex(latestCommittedMerkleIndex);
 
   console.log("merkle root:", merkle.getRoot());

@@ -60,11 +60,8 @@ contract CommitmentTreeManager is
         JoinSplit joinSplit
     );
 
-    /// @notice Event emitted when a new batch of notes is inserted into the tree
-    event InsertNote(EncodedNote note);
-
-    /// @notice Event emitted when a new batch of note commitments is inserted into the tree
-    event InsertNoteCommitments(uint256[] commitments);
+    /// @notice Event emitted when a subtree batch is filled with zeros
+    event FilledBatchWithZeros(uint256 startIndex, uint256 numZeros);
 
     /// @notice Event emitted when a subtree (and subsequently the main tree's root) are updated
     event SubtreeUpdate(uint256 newRoot, uint256 subtreeBatchOffset);
@@ -108,11 +105,13 @@ contract CommitmentTreeManager is
 
         // instead of actually inserting the zeros, we emit an event saying we inserted zeros
         // and then we call `_accumulate`. This prevents BATCH_SIZE - batchLen + 1 storage writes
-        uint256[] memory zeros = new uint256[](TreeUtils.BATCH_SIZE - batchLen);
+        uint256 numZeros = TreeUtils.BATCH_SIZE - batchLen;
+        uint256[] memory zeros = new uint256[](numZeros);
         for (uint256 i = 0; i < zeros.length; i++) {
             zeros[i] = TreeUtils.ZERO_VALUE;
         }
-        emit InsertNoteCommitments(zeros);
+
+        emit FilledBatchWithZeros(batchLen, numZeros);
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof
@@ -151,14 +150,12 @@ contract CommitmentTreeManager is
     /// @param note batch of notes to insert
     function _insertNote(EncodedNote memory note) internal {
         _merkle.insertNote(note);
-        emit InsertNote(note);
     }
 
     /// @notice Inserts several note commitments into the tree
     /// @param ncs Note commitments to insert
     function _insertNoteCommitments(uint256[] memory ncs) internal {
         _merkle.insertNoteCommitments(ncs);
-        emit InsertNoteCommitments(ncs);
     }
 
     /// @notice Process several joinsplits, assuming that their proofs have already been verified
