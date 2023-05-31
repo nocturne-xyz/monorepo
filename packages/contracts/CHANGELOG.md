@@ -4,6 +4,7 @@
 
 - `OperationProcessed` event removes two indexed params (more of this to come soon)
 - small gas optimization where we use contiguous subarray index to avoid checking balances for joinsplits of same asset in `BalanceManager`
+- remove insertion events from CTM
 - remove batch refunds to save on code size and 3k of gas in 1 refund case
   - all insert "notes" plural becomes insert "note" singular (in CTM and OffchainMerkle)
   - refunds are inserted one-by-one (BalanceManager)

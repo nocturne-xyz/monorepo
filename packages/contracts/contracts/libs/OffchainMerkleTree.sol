@@ -170,10 +170,12 @@ library LibOffchainMerkleTree {
     }
 
     function fillBatchWithZeros(OffchainMerkleTree storage self) internal {
-        _accumulate(self);
+        _accumulateAndResetBatchLen(self);
     }
 
-    function _accumulate(OffchainMerkleTree storage self) internal {
+    function _accumulateAndResetBatchLen(
+        OffchainMerkleTree storage self
+    ) internal {
         uint256 accumulatorHash = _computeAccumulatorHash(self);
         self.accumulatorQueue.enqueue(accumulatorHash);
         _setBatchLen(self, 0);
@@ -185,10 +187,12 @@ library LibOffchainMerkleTree {
     ) internal {
         uint128 batchLen = getBatchLen(self);
         self.batch[batchLen] = update;
-        _setBatchLen(self, batchLen + 1);
 
-        if (batchLen + 1 == TreeUtils.BATCH_SIZE) {
-            _accumulate(self);
+        uint256 newBatchLen = batchLen + 1;
+        if (newBatchLen == TreeUtils.BATCH_SIZE) {
+            _accumulateAndResetBatchLen(self);
+        } else {
+            _setBatchLen(self, uint128(newBatchLen));
         }
     }
 }
