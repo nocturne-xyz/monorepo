@@ -1,9 +1,14 @@
-import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
+import {
+  CanonAddress,
+  EncryptedCanonAddress,
+  StealthAddress,
+  StealthAddressTrait,
+} from "./address";
 import { Note, Asset } from "../primitives";
 import { EncryptedNote } from "../primitives/types";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { randomFr } from "./utils";
-import { decompressPoint, compressPoint } from "./pointEncoding";
+import { decompressPoint, compressPoint } from "./pointCompression";
 
 const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;
@@ -83,4 +88,35 @@ export function decryptNote(
     asset,
     value,
   };
+}
+
+// ElGamal encryption using receiver's canonical address as the public key (vk the private key)
+export function encryptCanonAddr(
+  plaintext: CanonAddress,
+  pubkey: CanonAddress,
+  nonce: bigint
+): EncryptedCanonAddress {
+  const s = BabyJubJub.scalarMul(pubkey, nonce);
+  const c1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, nonce);
+  const c2 = BabyJubJub.add(plaintext, s);
+
+  return {
+    c1: compressPoint(c1),
+    c2: compressPoint(c2),
+  };
+}
+
+export function decryptCanonAddr(
+  ciphertext: EncryptedCanonAddress,
+  vk: bigint
+): CanonAddress {
+  const c1 = decompressPoint(ciphertext.c1);
+  const c2 = decompressPoint(ciphertext.c2);
+
+  if (!c1 || !c2) {
+    throw new Error("Invalid ciphertext");
+  }
+
+  const sInv = BabyJubJub.scalarMul(c1, Fr.neg(vk));
+  return BabyJubJub.add(c2, sInv);
 }
