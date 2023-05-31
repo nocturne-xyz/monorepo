@@ -57,7 +57,14 @@ contract CommitmentTreeManager is
         uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
-        JoinSplit joinSplit
+        uint256 newNoteACommitment,
+        uint256 newNoteBCommitment,
+        uint256 encSenderCanonAddrC1X,
+        uint256 encSenderCanonAddrC2X,
+        EncodedAsset encodedAsset,
+        uint256 publicSpend,
+        EncryptedNote newNoteAEncrypted,
+        EncryptedNote newNoteBEncrypted
     );
 
     /// @notice Event emitted when a subtree batch is filled with zeros
@@ -198,7 +205,14 @@ contract CommitmentTreeManager is
                 joinSplit.nullifierB,
                 newNoteIndexA,
                 newNoteIndexB,
-                joinSplit
+                joinSplit.newNoteACommitment,
+                joinSplit.newNoteBCommitment,
+                joinSplit.encSenderCanonAddrC1X,
+                joinSplit.encSenderCanonAddrC2X,
+                joinSplit.encodedAsset,
+                joinSplit.publicSpend,
+                joinSplit.newNoteAEncrypted,
+                joinSplit.newNoteBEncrypted
             );
         }
 
