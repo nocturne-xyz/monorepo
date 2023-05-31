@@ -102,15 +102,9 @@ contract CommitmentTreeManager is
         require(batchLen > 0, "!zero fill empty batch");
 
         uint256 startIndex = _merkle.getCount();
-        _merkle.fillBatchWithZeros();
-
-        // instead of actually inserting the zeros, we emit an event saying we inserted zeros
-        // and then we call `_accumulate`. This prevents BATCH_SIZE - batchLen + 1 storage writes
         uint256 numZeros = TreeUtils.BATCH_SIZE - batchLen;
-        uint256[] memory zeros = new uint256[](numZeros);
-        for (uint256 i = 0; i < zeros.length; i++) {
-            zeros[i] = TreeUtils.ZERO_VALUE;
-        }
+
+        _merkle.fillBatchWithZeros();
 
         emit FilledBatchWithZeros(startIndex, numZeros);
     }
@@ -147,8 +141,8 @@ contract CommitmentTreeManager is
         return _merkle.getTotalCount();
     }
 
-    /// @notice Inserts a batch of notes into commitment tree
-    /// @param note batch of notes to insert
+    /// @notice Inserts note into commitment tree
+    /// @param note note to insert
     function _insertNote(EncodedNote memory note) internal {
         _merkle.insertNote(note);
     }

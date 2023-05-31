@@ -20,7 +20,6 @@ import {
   NocturneDB,
   SparseMerkleProver,
   JoinSplitProver,
-  // RPCSDKSyncAdapter,
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
   Address,

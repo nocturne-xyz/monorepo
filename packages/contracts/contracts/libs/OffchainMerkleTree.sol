@@ -171,7 +171,6 @@ library LibOffchainMerkleTree {
 
     function fillBatchWithZeros(OffchainMerkleTree storage self) internal {
         _accumulate(self);
-        _setBatchLen(self, 0);
     }
 
     function _accumulate(OffchainMerkleTree storage self) internal {

@@ -238,6 +238,5 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  // return Math.random() < 0.5;
-  return true;
+  return Math.random() < 0.5;
 }
