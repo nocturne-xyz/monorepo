@@ -108,6 +108,8 @@ function writeVerifierContract(vkeyPath: string, contractName: string) {
   fs.writeFileSync(`${CONTRACTS_DIR}/${contractName}.sol`, solidityContract);
 }
 
+// invoke with `yarn ts-node <this_script> <vkey_path> <contract_name>`
+// e.g. `yarn ts-node "$ROOT_SCRIPT_DIR/genSolidityVerifier.ts" "$OUTPUT_DIR/vkey.json" JoinSplitVerifier`
 const vkeyPath = process.argv[2];
 const contractName = process.argv[3];
 writeVerifierContract(vkeyPath, contractName);
