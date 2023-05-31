@@ -101,6 +101,7 @@ contract CommitmentTreeManager is
         uint256 batchLen = _merkle.getBatchLen();
         require(batchLen > 0, "!zero fill empty batch");
 
+        uint256 startIndex = _merkle.getCount();
         _merkle.fillBatchWithZeros();
 
         // instead of actually inserting the zeros, we emit an event saying we inserted zeros
@@ -111,7 +112,7 @@ contract CommitmentTreeManager is
             zeros[i] = TreeUtils.ZERO_VALUE;
         }
 
-        emit FilledBatchWithZeros(batchLen, numZeros);
+        emit FilledBatchWithZeros(startIndex, numZeros);
     }
 
     /// @notice Attempts to update the tree's root given a subtree update proof

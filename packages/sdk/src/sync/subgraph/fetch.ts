@@ -58,7 +58,7 @@ interface FetchNotesVars {
 
 const notesQuery = `\
 query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
-  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}, orderBy: idx) {
+  encodedOrEncryptedNotes(where: { idx_gte: $fromIdx, idx_lt: $toIdx}) {
     idx
     merkleIndex
     note {

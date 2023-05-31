@@ -30,6 +30,7 @@ import {
   AssetTrait,
   AssetType,
   MockEthToTokenConverter,
+  RPCSDKSyncAdapter,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -492,14 +493,14 @@ export async function setupTestClient(
   provider: ethers.providers.Provider,
   opts?: SetupNocturneOpts
 ): Promise<ClientSetup> {
-  // const { handlerProxy } = config.contracts;
+  const { handlerProxy } = config.contracts;
 
   let syncAdapter: SDKSyncAdapter;
-  // if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
-  syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
-  // } else {
-  //   syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
-  // }
+  if (opts?.syncAdapter && opts.syncAdapter === SyncAdapterOption.SUBGRAPH) {
+    syncAdapter = new SubgraphSDKSyncAdapter(SUBGRAPH_URL);
+  } else {
+    syncAdapter = new RPCSDKSyncAdapter(provider, handlerProxy.proxy);
+  }
 
   console.log("Create NocturneWalletSDKAlice");
   const aliceKV = new InMemoryKVStore();

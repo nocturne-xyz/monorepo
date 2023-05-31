@@ -82,14 +82,6 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           }
         }
 
-        for (const note of notes) {
-          if (NoteTrait.isEncryptedNote(note)) {
-            yield (note as IncludedEncryptedNote).commitment;
-          } else {
-            yield note as IncludedNote;
-          }
-        }
-
         from = to + 1;
 
         if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
