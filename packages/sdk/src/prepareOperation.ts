@@ -289,6 +289,7 @@ async function makeJoinSplit(
   }
 
   return {
+    receiver,
     encodedAsset,
     publicSpend,
 

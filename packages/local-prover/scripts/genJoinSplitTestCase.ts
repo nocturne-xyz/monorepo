@@ -11,7 +11,11 @@ import {
   EncodedNote,
   StealthAddressTrait,
   randomFr,
+  encodeHodgePodgePI,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
+
+const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
@@ -77,7 +81,7 @@ const oldNoteBCommitment = poseidonBN([
 console.log("old note commitment B: ", oldNoteBCommitment);
 
 // Generate valid merkle proofs
-const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
+const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
 tree.insert(oldNoteACommitment);
 tree.insert(oldNoteBCommitment);
 
@@ -141,6 +145,12 @@ const operationDigest = BigInt(12345);
 const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
+const encRandomness = randomFr();
+const encSenderCanonAddr = nocturneSigner.encryptCanonAddrToReceiver(
+  nocturneSigner.canonicalAddress(),
+  encRandomness
+);
+
 const joinsplitInputs: JoinSplitInputs = {
   vk,
   vkNonce: nocturneSigner.vkNonce,
@@ -154,7 +164,8 @@ const joinsplitInputs: JoinSplitInputs = {
   newNoteB,
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
-  encRandomness: randomFr(),
+  encRandomness,
+  hodgePodge: encodeHodgePodgePI(oldNoteA.encodedAssetAddr, encSenderCanonAddr),
 };
 console.log(joinsplitInputs);
 

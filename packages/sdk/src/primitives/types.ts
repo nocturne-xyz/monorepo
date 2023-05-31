@@ -1,7 +1,8 @@
-import { StealthAddress } from "../crypto";
+import { CanonAddress, StealthAddress } from "../crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { Asset, EncodedAsset } from "./asset";
+import { EncryptedCanonAddress } from "../crypto/address";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -64,6 +65,7 @@ export interface BaseJoinSplit {
 }
 
 export interface PreSignJoinSplit extends BaseJoinSplit {
+  receiver: CanonAddress;
   oldNoteA: IncludedNote;
   oldNoteB: IncludedNote;
   newNoteA: Note;
@@ -75,12 +77,12 @@ export interface PreSignJoinSplit extends BaseJoinSplit {
 export interface PreProofJoinSplit extends BaseJoinSplit {
   opDigest: bigint;
   proofInputs: JoinSplitInputs;
+  encSenderCanonAddr: EncryptedCanonAddress;
 }
 
 export interface ProvenJoinSplit extends BaseJoinSplit {
   proof: SolidityProof;
-  encSenderCanonAddrC1X: bigint;
-  encSenderCanonAddrC2X: bigint;
+  encSenderCanonAddr: EncryptedCanonAddress;
 }
 
 interface BaseOperation {

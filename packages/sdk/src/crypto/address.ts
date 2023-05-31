@@ -54,23 +54,15 @@ export class StealthAddressTrait {
     };
   }
 
-  // TODO: remove
-  static fromCompressedPoints(
-    H1Comprsesed: CompressedPoint,
-    H2Compressed: CompressedPoint
-  ): StealthAddress {
-    const H1 = decompressPoint(H1Comprsesed);
-    const H2 = decompressPoint(H2Compressed);
+  static decompress(address: CompressedStealthAddress): StealthAddress {
+    const h1 = decompressPoint(address.h1);
+    const h2 = decompressPoint(address.h2);
 
-    if (!H1 || !H2) {
+    if (!h1 || !h2) {
       throw new Error("Invalid stealth address");
     }
 
-    return StealthAddressTrait.fromPoints({ h1: H1, h2: H2 });
-  }
-
-  static decompress(address: CompressedStealthAddress): StealthAddress {
-    return StealthAddressTrait.fromCompressedPoints(address.h1, address.h2);
+    return StealthAddressTrait.fromPoints({ h1, h2 });
   }
 
   static compress(address: StealthAddress): CompressedStealthAddress {
@@ -123,8 +115,8 @@ export class StealthAddressTrait {
   }
 
   static hash(address: StealthAddress): bigint {
-    const { h1X, h2X } = address;
-    return BigInt(poseidonBN([h1X, h2X]));
+    const { h1X, h1Y, h2X, h2Y } = address;
+    return BigInt(poseidonBN([h1X, h1Y, h2X, h2Y]));
   }
 
   static randomize(address: StealthAddress): StealthAddress {
