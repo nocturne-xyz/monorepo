@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add new solidity verifier template script
 - update empty subtree root
 - remove joinsplit compliance circuit (saved elsewhere, don't want dead code in repo though)
 - make commitment tree quaternary:
