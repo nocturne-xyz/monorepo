@@ -22,10 +22,9 @@ dataSources:
         - name: Handler
           file: ./abis/Handler.json
       eventHandlers:
-        - event: JoinSplitProcessed(indexed uint256,indexed
-            uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256)))
+        - event: JoinSplitProcessed(indexed uint256,indexed uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256),uint256,uint256,uint256),((uint256,uint256),uint256,uint256,uint256)))
           handler: handleJoinSplit
-        - event: RefundProcessed((uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint128)
+        - event: RefundProcessed((uint256,uint256),uint256,uint256,uint256,uint256,uint128)
           handler: handleRefund
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
@@ -50,6 +49,6 @@ dataSources:
           file: ./abis/DepositManager.json
       eventHandlers:
         - event: DepositInstantiated(indexed
-            address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)
+            address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
           handler: handleDepositInstantiated
       file: ./src/depositManager.ts

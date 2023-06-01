@@ -63,20 +63,12 @@ export class DepositCompletedEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class DepositCompletedDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -133,20 +125,12 @@ export class DepositInstantiatedEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class DepositInstantiatedDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -203,20 +187,12 @@ export class DepositRetrievedEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class DepositRetrievedDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -323,20 +299,12 @@ export class DepositManager___computeDigestInputReqEncodedAssetStruct extends et
 }
 
 export class DepositManager___computeDigestInputReqDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -472,7 +440,7 @@ export class DepositManager extends ethereum.SmartContract {
   _computeDigest(req: DepositManager___computeDigestInputReqStruct): Bytes {
     let result = super.call(
       "_computeDigest",
-      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
+      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)):(bytes32)",
       [ethereum.Value.fromTuple(req)]
     );
 
@@ -484,7 +452,7 @@ export class DepositManager extends ethereum.SmartContract {
   ): ethereum.CallResult<Bytes> {
     let result = super.tryCall(
       "_computeDigest",
-      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)):(bytes32)",
+      "_computeDigest((address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)):(bytes32)",
       [ethereum.Value.fromTuple(req)]
     );
     if (result.reverted) {
@@ -713,20 +681,12 @@ export class CompleteErc20DepositCallReqEncodedAssetStruct extends ethereum.Tupl
 }
 
 export class CompleteErc20DepositCallReqDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -809,20 +769,12 @@ export class InstantiateETHMultiDepositCall__Outputs {
 }
 
 export class InstantiateETHMultiDepositCallDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -867,20 +819,12 @@ export class InstantiateErc20MultiDepositCall__Outputs {
 }
 
 export class InstantiateErc20MultiDepositCallDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 
@@ -983,20 +927,12 @@ export class RetrieveDepositCallReqEncodedAssetStruct extends ethereum.Tuple {
 }
 
 export class RetrieveDepositCallReqDepositAddrStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
+  get h1(): BigInt {
     return this[0].toBigInt();
   }
 
-  get h1Y(): BigInt {
+  get h2(): BigInt {
     return this[1].toBigInt();
-  }
-
-  get h2X(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get h2Y(): BigInt {
-    return this[3].toBigInt();
   }
 }
 

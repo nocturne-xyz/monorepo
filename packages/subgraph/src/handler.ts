@@ -43,10 +43,8 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   const encryptedNoteA = new EncryptedNote(id);
   const newNoteAEncrypted = joinSplit.newNoteAEncrypted;
   encryptedNoteA.idx = idx;
-  encryptedNoteA.ownerH1X = newNoteAEncrypted.owner.h1X;
-  encryptedNoteA.ownerH1Y = newNoteAEncrypted.owner.h1Y;
-  encryptedNoteA.ownerH2X = newNoteAEncrypted.owner.h2X;
-  encryptedNoteA.ownerH2Y = newNoteAEncrypted.owner.h2Y;
+  encryptedNoteA.ownerH1 = newNoteAEncrypted.owner.h1;
+  encryptedNoteA.ownerH2 = newNoteAEncrypted.owner.h2;
 
   encryptedNoteA.encappedKey = newNoteAEncrypted.encappedKey;
   encryptedNoteA.encryptedNonce = newNoteAEncrypted.encryptedNonce;
@@ -72,10 +70,8 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
 
   const newNoteBEncrypted = joinSplit.newNoteBEncrypted;
   encryptedNoteB.idx = idx;
-  encryptedNoteB.ownerH1X = newNoteBEncrypted.owner.h1X;
-  encryptedNoteB.ownerH1Y = newNoteBEncrypted.owner.h1Y;
-  encryptedNoteB.ownerH2X = newNoteBEncrypted.owner.h2X;
-  encryptedNoteB.ownerH2Y = newNoteBEncrypted.owner.h2Y;
+  encryptedNoteB.ownerH1 = newNoteBEncrypted.owner.h1;
+  encryptedNoteB.ownerH2 = newNoteBEncrypted.owner.h2;
 
   encryptedNoteB.encappedKey = newNoteBEncrypted.encappedKey;
   encryptedNoteB.encryptedNonce = newNoteBEncrypted.encryptedNonce;
@@ -105,10 +101,8 @@ export function handleRefund(event: RefundProcessed): void {
   const refundAddr = event.params.refundAddr;
 
   encodedNote.idx = idx;
-  encodedNote.ownerH1X = refundAddr.h1X;
-  encodedNote.ownerH1Y = refundAddr.h1Y;
-  encodedNote.ownerH2X = refundAddr.h2X;
-  encodedNote.ownerH2Y = refundAddr.h2Y;
+  encodedNote.ownerH1 = refundAddr.h1;
+  encodedNote.ownerH2 = refundAddr.h2;
   encodedNote.nonce = event.params.nonce;
   encodedNote.encodedAssetAddr = event.params.encodedAssetAddr;
   encodedNote.encodedAssetId = event.params.encodedAssetId;

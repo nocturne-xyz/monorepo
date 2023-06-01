@@ -98,40 +98,22 @@ export class DepositEvent extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get depositAddrH1X(): BigInt {
-    let value = this.get("depositAddrH1X");
+  get depositAddrH1(): BigInt {
+    let value = this.get("depositAddrH1");
     return value!.toBigInt();
   }
 
-  set depositAddrH1X(value: BigInt) {
-    this.set("depositAddrH1X", Value.fromBigInt(value));
+  set depositAddrH1(value: BigInt) {
+    this.set("depositAddrH1", Value.fromBigInt(value));
   }
 
-  get depositAddrH1Y(): BigInt {
-    let value = this.get("depositAddrH1Y");
+  get depositAddrH2(): BigInt {
+    let value = this.get("depositAddrH2");
     return value!.toBigInt();
   }
 
-  set depositAddrH1Y(value: BigInt) {
-    this.set("depositAddrH1Y", Value.fromBigInt(value));
-  }
-
-  get depositAddrH2X(): BigInt {
-    let value = this.get("depositAddrH2X");
-    return value!.toBigInt();
-  }
-
-  set depositAddrH2X(value: BigInt) {
-    this.set("depositAddrH2X", Value.fromBigInt(value));
-  }
-
-  get depositAddrH2Y(): BigInt {
-    let value = this.get("depositAddrH2Y");
-    return value!.toBigInt();
-  }
-
-  set depositAddrH2Y(value: BigInt) {
-    this.set("depositAddrH2Y", Value.fromBigInt(value));
+  set depositAddrH2(value: BigInt) {
+    this.set("depositAddrH2", Value.fromBigInt(value));
   }
 
   get nonce(): BigInt {
@@ -284,40 +266,22 @@ export class EncodedNote extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get ownerH1X(): BigInt {
-    let value = this.get("ownerH1X");
+  get ownerH1(): BigInt {
+    let value = this.get("ownerH1");
     return value!.toBigInt();
   }
 
-  set ownerH1X(value: BigInt) {
-    this.set("ownerH1X", Value.fromBigInt(value));
+  set ownerH1(value: BigInt) {
+    this.set("ownerH1", Value.fromBigInt(value));
   }
 
-  get ownerH1Y(): BigInt {
-    let value = this.get("ownerH1Y");
+  get ownerH2(): BigInt {
+    let value = this.get("ownerH2");
     return value!.toBigInt();
   }
 
-  set ownerH1Y(value: BigInt) {
-    this.set("ownerH1Y", Value.fromBigInt(value));
-  }
-
-  get ownerH2X(): BigInt {
-    let value = this.get("ownerH2X");
-    return value!.toBigInt();
-  }
-
-  set ownerH2X(value: BigInt) {
-    this.set("ownerH2X", Value.fromBigInt(value));
-  }
-
-  get ownerH2Y(): BigInt {
-    let value = this.get("ownerH2Y");
-    return value!.toBigInt();
-  }
-
-  set ownerH2Y(value: BigInt) {
-    this.set("ownerH2Y", Value.fromBigInt(value));
+  set ownerH2(value: BigInt) {
+    this.set("ownerH2", Value.fromBigInt(value));
   }
 
   get nonce(): BigInt {
@@ -399,40 +363,22 @@ export class EncryptedNote extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get ownerH1X(): BigInt {
-    let value = this.get("ownerH1X");
+  get ownerH1(): BigInt {
+    let value = this.get("ownerH1");
     return value!.toBigInt();
   }
 
-  set ownerH1X(value: BigInt) {
-    this.set("ownerH1X", Value.fromBigInt(value));
+  set ownerH1(value: BigInt) {
+    this.set("ownerH1", Value.fromBigInt(value));
   }
 
-  get ownerH1Y(): BigInt {
-    let value = this.get("ownerH1Y");
+  get ownerH2(): BigInt {
+    let value = this.get("ownerH2");
     return value!.toBigInt();
   }
 
-  set ownerH1Y(value: BigInt) {
-    this.set("ownerH1Y", Value.fromBigInt(value));
-  }
-
-  get ownerH2X(): BigInt {
-    let value = this.get("ownerH2X");
-    return value!.toBigInt();
-  }
-
-  set ownerH2X(value: BigInt) {
-    this.set("ownerH2X", Value.fromBigInt(value));
-  }
-
-  get ownerH2Y(): BigInt {
-    let value = this.get("ownerH2Y");
-    return value!.toBigInt();
-  }
-
-  set ownerH2Y(value: BigInt) {
-    this.set("ownerH2Y", Value.fromBigInt(value));
+  set ownerH2(value: BigInt) {
+    this.set("ownerH2", Value.fromBigInt(value));
   }
 
   get encappedKey(): BigInt {
