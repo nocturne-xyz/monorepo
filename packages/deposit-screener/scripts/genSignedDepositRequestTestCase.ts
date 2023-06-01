@@ -8,9 +8,7 @@ import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
 import {
   EIP712Domain,
-  hashDepositRequestCustom,
   signDepositRequest,
-  signDepositRequestCustom,
 } from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
@@ -69,19 +67,12 @@ function toObject(obj: any) {
     gasCompensation: 50n,
   };
 
-  const customHash = hashDepositRequestCustom(depositRequest);
-  console.log("custom hash", customHash);
-
-  const customSignature = await signDepositRequestCustom(
+  const signature = await signDepositRequest(
     signer,
     domain,
     depositRequest
   );
-  console.log("custom sig", customSignature);
-
   const hash = hashDepositRequest(depositRequest);
-
-  const signature = await signDepositRequest(signer, domain, depositRequest);
 
   console.log("sig", signature);
 

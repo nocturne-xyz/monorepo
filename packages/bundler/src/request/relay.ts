@@ -13,12 +13,10 @@ const solidityProofType = {
 };
 const stealthAddressType = {
   type: "object",
-  required: ["h1X", "h1Y", "h2X", "h2Y"],
+  required: ["h1", "h2"],
   properties: {
-    h1X: bigintType,
-    h1Y: bigintType,
-    h2X: bigintType,
-    h2Y: bigintType,
+    h1: bigintType,
+    h2: bigintType,
   },
   additionalProperties: false,
 };
@@ -74,8 +72,8 @@ const joinSplitType = {
     "publicSpend",
     "newNoteAEncrypted",
     "newNoteBEncrypted",
-    "encSenderCanonAddrC1X",
-    "encSenderCanonAddrC2X",
+    "encSenderCanonAddrC1",
+    "encSenderCanonAddrC2",
   ],
   properties: {
     proof: solidityProofType,
@@ -88,8 +86,8 @@ const joinSplitType = {
     publicSpend: bigintType,
     newNoteAEncrypted: encryptedNoteType,
     newNoteBEncrypted: encryptedNoteType,
-    encSenderCanonAddrC1X: bigintType,
-    encSenderCanonAddrC2X: bigintType,
+    encSenderCanonAddrC1: bigintType,
+    encSenderCanonAddrC2: bigintType,
   },
   additionalProperties: false,
 };
