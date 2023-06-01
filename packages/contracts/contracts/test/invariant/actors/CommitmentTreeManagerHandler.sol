@@ -113,7 +113,7 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
             ERC20_ID
         );
 
-        ComprssedStealthAddress memory refundAddr = CompressedStealthAddress({
+        CompressedStealthAddress memory refundAddr = CompressedStealthAddress({
             h1: bound(
                 _rerandomize(seed),
                 0,

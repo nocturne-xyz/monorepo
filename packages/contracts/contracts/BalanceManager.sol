@@ -209,7 +209,7 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param refundAddr Stealth address to refund to
     function _handleRefundForAsset(
         EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr
+        CompressedStealthAddress calldata refundAddr
     ) internal {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 

@@ -12,10 +12,8 @@ type DepositEvent @entity(immutable: true) {
   encodedAssetAddr: BigInt!
   encodedAssetId: BigInt!
   value: BigInt!
-  depositAddrH1X: BigInt!
-  depositAddrH1Y: BigInt!
-  depositAddrH2X: BigInt!
-  depositAddrH2Y: BigInt!
+  depositAddrH1: BigInt!
+  depositAddrH2: BigInt!
   nonce: BigInt!
   gasCompensation: BigInt!
 }
@@ -31,10 +29,8 @@ type EncodedOrEncryptedNote @entity(immutable: true) {
 type EncodedNote @entity(immutable: true) {
   id: Bytes!
   idx: BigInt!
-  ownerH1X: BigInt!
-  ownerH1Y: BigInt!
-  ownerH2X: BigInt!
-  ownerH2Y: BigInt!
+  ownerH1: BigInt!
+  ownerH2: BigInt!
   nonce: BigInt!
   encodedAssetAddr: BigInt!
   encodedAssetId: BigInt!
@@ -44,10 +40,8 @@ type EncodedNote @entity(immutable: true) {
 type EncryptedNote @entity(immutable: true) {
   id: Bytes!
   idx: BigInt!
-  ownerH1X: BigInt!
-  ownerH1Y: BigInt!
-  ownerH2X: BigInt!
-  ownerH2Y: BigInt!
+  ownerH1: BigInt!
+  ownerH2: BigInt!
   encappedKey: BigInt!
   encryptedNonce: BigInt!
   encryptedValue: BigInt!
