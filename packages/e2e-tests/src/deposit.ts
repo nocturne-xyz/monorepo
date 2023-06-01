@@ -8,6 +8,7 @@ import {
   AssetTrait,
   zip,
   hashDepositRequest,
+  StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
@@ -122,10 +123,12 @@ async function makeDeposit(
 
   console.log(`instantiating deposit for ${value} of token ${token.address}`);
 
+  const depositAddr = StealthAddressTrait.compress(stealthAddress);
+
   const nonce = await depositManager._nonce();
   const instantiateDepositTx = await depositManager
     .connect(eoa)
-    .instantiateErc20MultiDeposit(token.address, [value], stealthAddress);
+    .instantiateErc20MultiDeposit(token.address, [value], depositAddr);
 
   return [
     instantiateDepositTx,
@@ -133,7 +136,7 @@ async function makeDeposit(
       spender: eoa.address,
       nonce: nonce.toBigInt(),
       encodedAsset: AssetTrait.encode(asset),
-      depositAddr: stealthAddress,
+      depositAddr,
       value,
       gasCompensation: 0n,
     },
