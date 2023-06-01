@@ -216,8 +216,8 @@ contract CommitmentTreeManager is
     ) internal {
         uint128 index = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
-            ownerH1: refundAddr.h1X,
-            ownerH2: refundAddr.h2X,
+            ownerH1: refundAddr.h1,
+            ownerH2: refundAddr.h2,
             nonce: index,
             encodedAssetAddr: encodedAsset.encodedAssetAddr,
             encodedAssetId: encodedAsset.encodedAssetId,

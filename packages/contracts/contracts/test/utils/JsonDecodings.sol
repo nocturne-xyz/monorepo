@@ -182,20 +182,14 @@ contract JsonDecodings is Test {
     function extractDepositAddr(
         string memory json
     ) public returns (StealthAddress memory) {
-        uint256 h1X = ParseUtils.parseInt(
-            json.readString(".depositRequest.depositAddr.h1X")
+        uint256 h1 = ParseUtils.parseInt(
+            json.readString(".depositRequest.depositAddr.h1")
         );
-        uint256 h1Y = ParseUtils.parseInt(
-            json.readString(".depositRequest.depositAddr.h1Y")
-        );
-        uint256 h2X = ParseUtils.parseInt(
-            json.readString(".depositRequest.depositAddr.h2X")
-        );
-        uint256 h2Y = ParseUtils.parseInt(
-            json.readString(".depositRequest.depositAddr.h2Y")
+        uint256 h2 = ParseUtils.parseInt(
+            json.readString(".depositRequest.depositAddr.h2")
         );
 
-        return StealthAddress({h1X: h1X, h1Y: h1Y, h2X: h2X, h2Y: h2Y});
+        return StealthAddress({h1: h1, h2: h2});
     }
 
     // NOTE: we encode to rsv because foundry cannot parse 132 char byte string

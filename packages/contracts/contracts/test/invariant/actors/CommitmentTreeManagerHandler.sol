@@ -114,22 +114,12 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         );
 
         StealthAddress memory refundAddr = StealthAddress({
-            h1X: bound(
+            h1: bound(
                 _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             ),
-            h1Y: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            ),
-            h2X: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            ),
-            h2Y: bound(
+            h2: bound(
                 _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1

@@ -18,10 +18,8 @@ struct EncodedAsset {
 }
 
 struct StealthAddress {
-    uint256 h1X;
-    uint256 h1Y;
-    uint256 h2X;
-    uint256 h2Y;
+    uint256 h1;
+    uint256 h2;
 }
 
 struct EncryptedNote {
@@ -37,8 +35,8 @@ struct JoinSplit {
     uint256 nullifierB;
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
-    uint256 encSenderCanonAddrC1X;
-    uint256 encSenderCanonAddrC2X;
+    uint256 encSenderCanonAddrC1;
+    uint256 encSenderCanonAddrC2;
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;
