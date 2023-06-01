@@ -1,4 +1,4 @@
-import { StealthAddress } from "../../crypto";
+import { StealthAddressTrait } from "../../crypto";
 import {
   AssetTrait,
   IncludedEncryptedNote,
@@ -13,10 +13,8 @@ import {
 } from "./utils";
 
 export interface NoteResponse {
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
+  ownerH1: string;
+  ownerH2: string;
   nonce: string;
   encodedAssetAddr: string;
   encodedAssetId: string;
@@ -25,10 +23,8 @@ export interface NoteResponse {
 
 export interface EncryptedNoteResponse {
   id: string;
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
+  ownerH1: string;
+  ownerH2: string;
   encappedKey: string;
   encryptedNonce: string;
   encryptedValue: string;
@@ -61,20 +57,16 @@ query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
     idx
     merkleIndex
     note {
-      ownerH1X
-      ownerH1Y
-      ownerH2X
-      ownerH2Y
+      ownerH1
+      ownerH2
       nonce
       encodedAssetAddr
       encodedAssetId
       value
     }
     encryptedNote {
-      ownerH1X
-      ownerH1Y
-      ownerH2X
-      ownerH2Y
+      ownerH1
+      ownerH2
       encappedKey
       encryptedNonce
       encryptedValue
@@ -131,16 +123,9 @@ export function includedNoteFromNoteResponse(
   noteResponse: NoteResponse,
   merkleIndex: number
 ): IncludedNote {
-  const h1X = BigInt(noteResponse.ownerH1X);
-  const h1Y = BigInt(noteResponse.ownerH1Y);
-  const h2X = BigInt(noteResponse.ownerH2X);
-  const h2Y = BigInt(noteResponse.ownerH2Y);
-  const owner: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  const h1 = BigInt(noteResponse.ownerH1);
+  const h2 = BigInt(noteResponse.ownerH2);
+  const owner = StealthAddressTrait.decompress({ h1, h2 });
 
   const encodedAssetAddr = BigInt(noteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(noteResponse.encodedAssetId);
@@ -163,16 +148,9 @@ export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {
-  const h1X = BigInt(encryptedNoteResponse.ownerH1X);
-  const h1Y = BigInt(encryptedNoteResponse.ownerH1Y);
-  const h2X = BigInt(encryptedNoteResponse.ownerH2X);
-  const h2Y = BigInt(encryptedNoteResponse.ownerH2Y);
-  const owner: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  const h1 = BigInt(encryptedNoteResponse.ownerH1);
+  const h2 = BigInt(encryptedNoteResponse.ownerH2);
+  const owner = StealthAddressTrait.decompress({ h1, h2 });
 
   const encodedAssetAddr = BigInt(encryptedNoteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(encryptedNoteResponse.encodedAssetId);
