@@ -30,7 +30,7 @@ library EventParsing {
                     encodedAssetId: encodedAssetId
                 }),
                 value: value,
-                depositAddr: StealthAddress({h1: h1, h2: h2}),
+                depositAddr: CompressedStealthAddress({h1: h1, h2: h2}),
                 nonce: nonce,
                 gasCompensation: gasCompensation
             });
@@ -40,14 +40,14 @@ library EventParsing {
         Vm.Log memory entry
     ) public pure returns (EncodedNote memory) {
         (
-            StealthAddress memory refundAddr,
+            CompressedStealthAddress memory refundAddr,
             uint256 nonce,
             uint256 encodedAssetAddr,
             uint256 encodedAssetId,
             uint256 value
         ) = abi.decode(
                 entry.data,
-                ((StealthAddress), uint256, uint256, uint256, uint256)
+                ((CompressedStealthAddress), uint256, uint256, uint256, uint256)
             );
 
         return

@@ -2,7 +2,11 @@ import "mocha";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { expect } from "chai";
-import { NocturneSigner, generateRandomSpendingKey } from "../src/crypto";
+import {
+  NocturneSigner,
+  StealthAddressTrait,
+  generateRandomSpendingKey,
+} from "../src/crypto";
 import { range } from "../src/utils";
 import { OperationRequestBuilder } from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
@@ -251,7 +255,7 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
-    expect(op.refundAddr).to.eql(refundAddr);
+    expect(op.refundAddr).to.eql(StealthAddressTrait.compress(refundAddr));
     expect(op.executionGasLimit).to.equal(20n);
     expect(op.gasPrice).to.equal(0n);
 
@@ -365,7 +369,7 @@ describe("prepareOperation", async () => {
     expect(op).to.not.be.null;
     expect(op).to.not.be.undefined;
 
-    expect(op.refundAddr).to.eql(refundAddr);
+    expect(op.refundAddr).to.eql(StealthAddressTrait.compress(refundAddr));
     expect(op.encodedRefundAssets.length).to.equal(4);
     expect(op.encodedRefundAssets[0]).to.eql(encodedShitcoin);
     expect(op.encodedRefundAssets[1]).to.eql(encodedPonzi);

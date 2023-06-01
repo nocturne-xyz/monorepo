@@ -71,7 +71,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event RefundProcessed(
-        StealthAddress refundAddr,
+        CompressedStealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -138,7 +138,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token,
         uint256 value,
         uint256 id,
-        StealthAddress memory depositAddr
+        CompressedStealthAddress memory depositAddr
     ) public {
         // Transfer to deposit source first
         vm.prank(spender);
@@ -174,7 +174,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Deposit funds to teller
         for (uint256 i = 0; i < depositIterations; i++) {
-            StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
+            CompressedStealthAddress memory addr = NocturneUtils
+                .defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
             emit RefundProcessed(
                 addr,

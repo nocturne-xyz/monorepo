@@ -43,7 +43,7 @@ contract CommitmentTreeManager is
     /// @dev Refund means any outstanding assets left in the handler during execution
     ///      or a new deposit
     event RefundProcessed(
-        StealthAddress refundAddr,
+        CompressedStealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -211,7 +211,7 @@ contract CommitmentTreeManager is
     /// @param value Value of refund note for given asset
     function _handleRefundNote(
         EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr,
+        CompressedStealthAddress calldata refundAddr,
         uint256 value
     ) internal {
         uint128 index = _merkle.getTotalCount();

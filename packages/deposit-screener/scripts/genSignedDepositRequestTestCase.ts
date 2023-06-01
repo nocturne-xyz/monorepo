@@ -57,10 +57,8 @@ function toObject(obj: any) {
     encodedAsset,
     value: 1000n,
     depositAddr: {
-      h1X: 1n,
-      h1Y: 2n,
-      h2X: 3n,
-      h2Y: 5n,
+      h1: 1n,
+      h2: 2n,
     },
     nonce: 0n,
     gasCompensation: 50n,

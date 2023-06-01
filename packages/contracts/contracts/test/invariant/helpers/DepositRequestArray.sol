@@ -25,7 +25,7 @@ library LibDepositRequestArray {
                     encodedAssetId: 0
                 }),
                 value: 0,
-                depositAddr: StealthAddress({h1: 0, h2: 0}),
+                depositAddr: CompressedStealthAddress({h1: 0, h2: 0}),
                 nonce: 0,
                 gasCompensation: 0
             });

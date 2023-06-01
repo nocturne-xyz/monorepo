@@ -95,7 +95,7 @@ contract JsonDecodings is Test {
             );
 
         EncodedAsset memory encodedAsset = extractEncodedAsset(json);
-        StealthAddress memory depositAddr = extractDepositAddr(json);
+        CompressedStealthAddress memory depositAddr = extractDepositAddr(json);
         bytes memory signature = extractSignature(json);
 
         return
@@ -181,7 +181,7 @@ contract JsonDecodings is Test {
 
     function extractDepositAddr(
         string memory json
-    ) public returns (StealthAddress memory) {
+    ) public returns (CompressedStealthAddress memory) {
         uint256 h1 = ParseUtils.parseInt(
             json.readString(".depositRequest.depositAddr.h1")
         );
@@ -189,7 +189,7 @@ contract JsonDecodings is Test {
             json.readString(".depositRequest.depositAddr.h2")
         );
 
-        return StealthAddress({h1: h1, h2: h2});
+        return CompressedStealthAddress({h1: h1, h2: h2});
     }
 
     // NOTE: we encode to rsv because foundry cannot parse 132 char byte string
