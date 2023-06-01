@@ -61,8 +61,9 @@ export async function prepareOperation(
   ).flat();
 
   // if refundAddr is not set, generate a random one
-  const refundAddr =
-    opRequest.refundAddr ?? deps.viewer.generateRandomStealthAddress();
+  const refundAddr = StealthAddressTrait.compress(
+    opRequest.refundAddr ?? deps.viewer.generateRandomStealthAddress()
+  );
 
   // construct op.
   const op: PreSignOperation = {

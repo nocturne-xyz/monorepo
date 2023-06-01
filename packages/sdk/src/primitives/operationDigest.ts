@@ -51,8 +51,8 @@ function hashOperation(
   }
 
   const refundAddrPayload = ethers.utils.solidityPack(
-    ["uint256", "uint256", "uint256", "uint256"],
-    [op.refundAddr.h1X, op.refundAddr.h1Y, op.refundAddr.h2X, op.refundAddr.h2Y]
+    ["uint256", "uint256"],
+    [op.refundAddr.h1, op.refundAddr.h2]
   );
 
   let refundAssetsPayload = [] as any;

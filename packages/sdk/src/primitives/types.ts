@@ -1,8 +1,12 @@
-import { CanonAddress, StealthAddress } from "../crypto";
+import {
+  CanonAddress,
+  StealthAddress,
+  CompressedStealthAddress,
+  EncryptedCanonAddress,
+} from "../crypto";
 import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { Asset, EncodedAsset } from "./asset";
-import { EncryptedCanonAddress } from "../crypto/address";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -26,7 +30,7 @@ export interface Deposit {
   asset: Address;
   value: bigint;
   id: bigint;
-  depositAddr: StealthAddress;
+  depositAddr: CompressedStealthAddress;
 }
 
 export interface OperationResult {
@@ -86,7 +90,7 @@ export interface ProvenJoinSplit extends BaseJoinSplit {
 }
 
 interface BaseOperation {
-  refundAddr: StealthAddress;
+  refundAddr: CompressedStealthAddress;
   encodedRefundAssets: EncodedAsset[];
   actions: Action[];
   encodedGasAsset: EncodedAsset;
@@ -117,7 +121,7 @@ export interface DepositRequest {
   spender: string;
   encodedAsset: EncodedAsset;
   value: bigint;
-  depositAddr: StealthAddress;
+  depositAddr: CompressedStealthAddress;
   nonce: bigint;
   gasCompensation: bigint;
 }

@@ -12,7 +12,7 @@ contract EventParsingTest is Test {
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
-        StealthAddress depositAddr,
+        CompressedStealthAddress depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     );

@@ -42,9 +42,9 @@ library NocturneUtils {
     function defaultStealthAddress()
         internal
         pure
-        returns (StealthAddress memory)
+        returns (CompressedStealthAddress memory)
     {
-        return StealthAddress({h1: 1938477, h2: 1032988});
+        return CompressedStealthAddress({h1: 1938477, h2: 1032988});
     }
 
     function dummyProof() internal pure returns (uint256[8] memory _values) {
@@ -69,7 +69,7 @@ library NocturneUtils {
         address asset,
         uint256 value,
         uint256 id,
-        StealthAddress memory depositAddr,
+        CompressedStealthAddress memory depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     ) internal pure returns (DepositRequest memory) {
@@ -95,7 +95,7 @@ library NocturneUtils {
         address asset,
         uint256 value,
         uint256 id,
-        StealthAddress memory depositAddr
+        CompressedStealthAddress memory depositAddr
     ) internal pure returns (Deposit memory) {
         EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
             AssetType.ERC20,
@@ -160,13 +160,19 @@ library NocturneUtils {
 
         uint256 root = args.root;
         EncryptedNote memory newNoteAEncrypted = EncryptedNote({
-            owner: StealthAddress({h1: uint256(123), h2: uint256(123)}),
+            owner: CompressedStealthAddress({
+                h1: uint256(123),
+                h2: uint256(123)
+            }),
             encappedKey: uint256(111),
             encryptedNonce: uint256(111),
             encryptedValue: uint256(111)
         });
         EncryptedNote memory newNoteBEncrypted = EncryptedNote({
-            owner: StealthAddress({h1: uint256(123), h2: uint256(123)}),
+            owner: CompressedStealthAddress({
+                h1: uint256(123),
+                h2: uint256(123)
+            }),
             encappedKey: uint256(111),
             encryptedNonce: uint256(111),
             encryptedValue: uint256(111)

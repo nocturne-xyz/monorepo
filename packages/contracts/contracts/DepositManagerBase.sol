@@ -16,7 +16,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
         keccak256(
             bytes(
                 // solhint-disable-next-line max-line-length
-                "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)StealthAddress(uint256 h1,uint256 h2)"
+                "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,CompressedStealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)CompressedStealthAddress(uint256 h1,uint256 h2)"
             )
         );
 
@@ -29,7 +29,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     bytes32 public constant STEALTH_ADDRESS_TYPEHASH =
         keccak256(
             // solhint-disable-next-line max-line-length
-            "StealthAddress(uint256 h1,uint256 h2)"
+            "CompressedStealthAddress(uint256 h1,uint256 h2)"
         );
 
     /// @notice Internal initializer
@@ -102,7 +102,7 @@ abstract contract DepositManagerBase is EIP712Upgradeable {
     /// @notice Hashes stealth address
     /// @param stealthAddress Stealth address
     function _hashStealthAddress(
-        StealthAddress memory stealthAddress
+        CompressedStealthAddress memory stealthAddress
     ) internal pure returns (bytes32) {
         return
             keccak256(
