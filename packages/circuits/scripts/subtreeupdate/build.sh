@@ -1,6 +1,7 @@
 #!/bin/bash
 CIRCUIT_NAME=subtreeupdate
 SCRIPT_DIR=$(dirname "$0")
+ROOT_SCRIPT_DIR="$SCRIPT_DIR/../"
 ROOT_DIR="$SCRIPT_DIR/../../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
 PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_23.ptau"
