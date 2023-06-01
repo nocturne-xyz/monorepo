@@ -14,6 +14,7 @@ import {
   randomBigInt,
   OperationRequestBuilder,
   computeOperationDigest,
+  StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
 import * as JSON from "bigint-json-serialization";
 import { Erc20Config } from "@nocturne-xyz/config";
@@ -138,7 +139,9 @@ export class TestActor {
       await this.depositManager.instantiateErc20MultiDeposit(
         erc20Token.address,
         [randomValue],
-        this.sdk.signer.generateRandomStealthAddress()
+        StealthAddressTrait.compress(
+          this.sdk.signer.generateRandomStealthAddress()
+        )
       );
     const receipt = await instantiateDepositTx.wait(1);
 

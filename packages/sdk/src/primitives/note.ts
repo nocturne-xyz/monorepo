@@ -90,8 +90,9 @@ export class NoteTrait {
 
   static sha256<N extends Note>(note: N): number[] {
     const noteInput = NoteTrait.encode(note);
-    const ownerH1 = bigintToBEPadded(noteInput.owner.h1X, 32);
-    const ownerH2 = bigintToBEPadded(noteInput.owner.h2X, 32);
+    const { h1, h2 } = StealthAddressTrait.compress(noteInput.owner);
+    const ownerH1 = bigintToBEPadded(h1, 32);
+    const ownerH2 = bigintToBEPadded(h2, 32);
     const nonce = bigintToBEPadded(noteInput.nonce, 32);
     const asset = bigintToBEPadded(noteInput.encodedAssetAddr, 32);
     const id = bigintToBEPadded(noteInput.encodedAssetId, 32);
