@@ -94,21 +94,20 @@ export class SubtreeUpdater {
     );
 
     const queuer = async () => {
-      let latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex();
       for await (const job of proofJobs.iter) {
-        // only fetch latest subtree index if we need to
-        if (job.subtreeIndex > latestSubtreeIndex) {
-          latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex();
-        }
+        const latestSubtreeIndex = await this.adapter.fetchLatestSubtreeIndex(); // update latest subtree index
 
-        // queue up a proof job if it hasn't already been committed on-chain
-        if (job.subtreeIndex > latestSubtreeIndex) {
+        // If this is the first proof ever, enqueue
+        if (!latestSubtreeIndex) {
           await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
-        }
+        } else if (job.subtreeIndex > latestSubtreeIndex) {
+          // If job is for new subtree, enqueue
+          await this.proofQueue.add(PROOF_JOB_TAG, JSON.stringify(job));
 
-        // mark leftmost leaf of subtree as ready for prune now that job has been queued
-        this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
-        this.tree.prune();
+          // mark leftmost leaf of subtree as ready for prune now that job has been queued
+          this.tree.markForPruning(job.subtreeIndex * BATCH_SIZE);
+          this.tree.prune();
+        }
       }
     };
 
@@ -301,6 +300,10 @@ export class SubtreeUpdater {
           NoteTrait.isCommitment(noteOrCommitment)
             ? (noteOrCommitment as bigint)
             : NoteTrait.toCommitment(noteOrCommitment as Note)
+        );
+
+        logger.info(
+          `inserting batch into merkle tree. startIndex: ${subtreeLeftmostPathIndex}, leaves: ${leaves}}`
         );
         this.tree.insertBatch(
           subtreeLeftmostPathIndex,

@@ -1,7 +1,6 @@
 import {
   Address,
   AssetTrait,
-  BinaryPoseidonTree,
   IncludedEncryptedNote,
   Nullifier,
   WithTimestamp,
@@ -14,7 +13,11 @@ import {
   SDKSyncAdapter,
 } from "../syncAdapter";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
-import { maxArray, sleep } from "../../utils";
+import {
+  maxArray,
+  sleep,
+  batchOffsetToLatestMerkleIndexInBatch,
+} from "../../utils";
 import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
@@ -51,7 +54,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
     const handlerContract = this.handlerContract;
     const generator = async function* () {
-      let nextMerkleIndex = (await handlerContract.count()).toNumber();
+      const merkleCount = (await handlerContract.count()).toNumber();
+      let lastCommittedMerkleIndex =
+        merkleCount !== 0 ? merkleCount - 1 : undefined;
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
@@ -95,17 +100,17 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // get the latest subtree commit
         if (subtreeUpdateCommits.length > 0) {
-          nextMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(
-              (c) => c.subtreeBatchOffset + BinaryPoseidonTree.BATCH_SIZE - 1
-            )
+          lastCommittedMerkleIndex = maxArray(
+            subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
+              return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
+            })
           );
         }
 
         const diff: EncryptedStateDiff = {
           notes,
           nullifiers,
-          lastCommittedMerkleIndex: nextMerkleIndex - 1,
+          lastCommittedMerkleIndex,
           blockNumber: to,
         };
         yield diff;

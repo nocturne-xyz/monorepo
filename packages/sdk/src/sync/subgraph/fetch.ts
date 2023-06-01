@@ -5,15 +5,14 @@ import {
   IncludedNote,
   WithTimestamp,
 } from "../../primitives";
-import { BATCH_SIZE } from "../../primitives/treeConstants";
-import { maxArray } from "../../utils";
+import { maxArray, batchOffsetToLatestMerkleIndexInBatch } from "../../utils";
 import {
   blockNumberFromTotalEntityIndex,
   makeSubgraphQuery,
   totalEntityIndexFromBlockNumber,
 } from "./utils";
 
-interface NoteResponse {
+export interface NoteResponse {
   ownerH1X: string;
   ownerH1Y: string;
   ownerH2X: string;
@@ -24,7 +23,7 @@ interface NoteResponse {
   value: string;
 }
 
-interface EncryptedNoteResponse {
+export interface EncryptedNoteResponse {
   id: string;
   ownerH1X: string;
   ownerH1Y: string;
@@ -38,7 +37,7 @@ interface EncryptedNoteResponse {
   commitment: string;
 }
 
-interface EncodedOrEncryptedNoteResponse {
+export interface EncodedOrEncryptedNoteResponse {
   merkleIndex: string;
   idx: string;
   note: NoteResponse | null;
@@ -128,7 +127,7 @@ export async function fetchNotes(
   );
 }
 
-function includedNoteFromNoteResponse(
+export function includedNoteFromNoteResponse(
   noteResponse: NoteResponse,
   merkleIndex: number
 ): IncludedNote {
@@ -160,7 +159,7 @@ function includedNoteFromNoteResponse(
   };
 }
 
-function encryptedNoteFromEncryptedNoteResponse(
+export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {
@@ -223,21 +222,25 @@ const subtreeCommitQuery = `
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
   toBlock: number
-): Promise<number> {
+): Promise<number | undefined> {
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
   >(endpoint, subtreeCommitQuery, "last committed merkle index");
   const res = await query({ toBlock });
-  if (!res.data || res.data.subtreeCommits.length === 0) {
-    return -1;
+  if (!res.data) {
+    throw new Error("subgraph query returned empty data");
+  }
+
+  if (res.data.subtreeCommits.length === 0) {
+    return undefined;
   } else {
     const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
       parseInt(commit.subtreeBatchOffset)
     );
     const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
 
-    return maxSubtreeBatchOffset + BATCH_SIZE - 1;
+    return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
   }
 }
 

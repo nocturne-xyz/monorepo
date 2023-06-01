@@ -57,21 +57,15 @@ contract OffchainMerkleHandler is InvariantUtils {
         console.log("-------------------");
         console.log("OffchainMerkleHandler call summary:");
         console.log("-------------------");
-        console.log("insertNote", _calls["insertNotes"]);
+        console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
         console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
         console.log("no-op", _calls["no-op"]);
     }
 
-    function insertNotes(uint256 seed) public trackCall("insertNotes") {
-        uint256 numNotes = bound(seed, 1, 50);
-
-        EncodedNote[] memory notes = new EncodedNote[](numNotes);
-        for (uint256 i = 0; i < numNotes; i++) {
-            notes[i] = _generateEncodedNote(seed);
-        }
-
-        merkle.insertNotes(notes);
+    function insertNote(uint256 seed) public trackCall("insertNote") {
+        EncodedNote memory note = _generateEncodedNote(seed);
+        merkle.insertNote(note);
     }
 
     function insertNoteCommitments(

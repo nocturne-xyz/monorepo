@@ -10,6 +10,28 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class FilledBatchWithZeros extends ethereum.Event {
+  get params(): FilledBatchWithZeros__Params {
+    return new FilledBatchWithZeros__Params(this);
+  }
+}
+
+export class FilledBatchWithZeros__Params {
+  _event: FilledBatchWithZeros;
+
+  constructor(event: FilledBatchWithZeros) {
+    this._event = event;
+  }
+
+  get startIndex(): BigInt {
+    return this._event.parameters[0].value.toBigInt();
+  }
+
+  get numZeros(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
 export class Initialized extends ethereum.Event {
   get params(): Initialized__Params {
     return new Initialized__Params(this);
@@ -25,70 +47,6 @@ export class Initialized__Params {
 
   get version(): i32 {
     return this._event.parameters[0].value.toI32();
-  }
-}
-
-export class InsertNoteCommitments extends ethereum.Event {
-  get params(): InsertNoteCommitments__Params {
-    return new InsertNoteCommitments__Params(this);
-  }
-}
-
-export class InsertNoteCommitments__Params {
-  _event: InsertNoteCommitments;
-
-  constructor(event: InsertNoteCommitments) {
-    this._event = event;
-  }
-
-  get commitments(): Array<BigInt> {
-    return this._event.parameters[0].value.toBigIntArray();
-  }
-}
-
-export class InsertNotes extends ethereum.Event {
-  get params(): InsertNotes__Params {
-    return new InsertNotes__Params(this);
-  }
-}
-
-export class InsertNotes__Params {
-  _event: InsertNotes;
-
-  constructor(event: InsertNotes) {
-    this._event = event;
-  }
-
-  get notes(): Array<InsertNotesNotesStruct> {
-    return this._event.parameters[0].value.toTupleArray<
-      InsertNotesNotesStruct
-    >();
-  }
-}
-
-export class InsertNotesNotesStruct extends ethereum.Tuple {
-  get ownerH1(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get ownerH2(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get nonce(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get encodedAssetAddr(): BigInt {
-    return this[3].toBigInt();
-  }
-
-  get encodedAssetId(): BigInt {
-    return this[4].toBigInt();
-  }
-
-  get value(): BigInt {
-    return this[5].toBigInt();
   }
 }
 
@@ -533,28 +491,32 @@ export class Handler__executeActionsInputOpStruct extends ethereum.Tuple {
     );
   }
 
-  get executionGasLimit(): BigInt {
+  get gasAssetRefundThreshold(): BigInt {
     return this[5].toBigInt();
   }
 
-  get maxNumRefunds(): BigInt {
+  get executionGasLimit(): BigInt {
     return this[6].toBigInt();
   }
 
-  get gasPrice(): BigInt {
+  get maxNumRefunds(): BigInt {
     return this[7].toBigInt();
   }
 
-  get chainId(): BigInt {
+  get gasPrice(): BigInt {
     return this[8].toBigInt();
   }
 
-  get deadline(): BigInt {
+  get chainId(): BigInt {
     return this[9].toBigInt();
   }
 
+  get deadline(): BigInt {
+    return this[10].toBigInt();
+  }
+
   get atomicActions(): boolean {
-    return this[10].toBoolean();
+    return this[11].toBoolean();
   }
 }
 
@@ -813,28 +775,32 @@ export class Handler__handleOperationInputOpStruct extends ethereum.Tuple {
     );
   }
 
-  get executionGasLimit(): BigInt {
+  get gasAssetRefundThreshold(): BigInt {
     return this[5].toBigInt();
   }
 
-  get maxNumRefunds(): BigInt {
+  get executionGasLimit(): BigInt {
     return this[6].toBigInt();
   }
 
-  get gasPrice(): BigInt {
+  get maxNumRefunds(): BigInt {
     return this[7].toBigInt();
   }
 
-  get chainId(): BigInt {
+  get gasPrice(): BigInt {
     return this[8].toBigInt();
   }
 
-  get deadline(): BigInt {
+  get chainId(): BigInt {
     return this[9].toBigInt();
   }
 
+  get deadline(): BigInt {
+    return this[10].toBigInt();
+  }
+
   get atomicActions(): boolean {
-    return this[10].toBoolean();
+    return this[11].toBoolean();
   }
 }
 
@@ -1250,7 +1216,7 @@ export class Handler extends ethereum.SmartContract {
   ): Handler__executeActionsResult {
     let result = super.call(
       "executeActions",
-      "executeActions(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,bool)):(bool[],bytes[])",
+      "executeActions(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,bool)):(bool[],bytes[])",
       [ethereum.Value.fromTuple(op)]
     );
 
@@ -1265,7 +1231,7 @@ export class Handler extends ethereum.SmartContract {
   ): ethereum.CallResult<Handler__executeActionsResult> {
     let result = super.tryCall(
       "executeActions",
-      "executeActions(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,bool)):(bool[],bytes[])",
+      "executeActions(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,bool)):(bool[],bytes[])",
       [ethereum.Value.fromTuple(op)]
     );
     if (result.reverted) {
@@ -1287,7 +1253,7 @@ export class Handler extends ethereum.SmartContract {
   ): Handler__handleOperationResultOpResultStruct {
     let result = super.call(
       "handleOperation",
-      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,bool),uint256,address):((bool,bool,string,bool[],bytes[],uint256,uint256,uint256))",
+      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,bool),uint256,address):((bool,bool,string,bool[],bytes[],uint256,uint256,uint256))",
       [
         ethereum.Value.fromTuple(op),
         ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
@@ -1307,7 +1273,7 @@ export class Handler extends ethereum.SmartContract {
   ): ethereum.CallResult<Handler__handleOperationResultOpResultStruct> {
     let result = super.tryCall(
       "handleOperation",
-      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,bool),uint256,address):((bool,bool,string,bool[],bytes[],uint256,uint256,uint256))",
+      "handleOperation(((uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256))[],(uint256,uint256,uint256,uint256),(uint256,uint256)[],(address,bytes)[],(uint256,uint256),uint256,uint256,uint256,uint256,uint256,uint256,bool),uint256,address):((bool,bool,string,bool[],bytes[],uint256,uint256,uint256))",
       [
         ethereum.Value.fromTuple(op),
         ethereum.Value.fromUnsignedBigInt(perJoinSplitVerifyGas),
@@ -1670,28 +1636,32 @@ export class ExecuteActionsCallOpStruct extends ethereum.Tuple {
     );
   }
 
-  get executionGasLimit(): BigInt {
+  get gasAssetRefundThreshold(): BigInt {
     return this[5].toBigInt();
   }
 
-  get maxNumRefunds(): BigInt {
+  get executionGasLimit(): BigInt {
     return this[6].toBigInt();
   }
 
-  get gasPrice(): BigInt {
+  get maxNumRefunds(): BigInt {
     return this[7].toBigInt();
   }
 
-  get chainId(): BigInt {
+  get gasPrice(): BigInt {
     return this[8].toBigInt();
   }
 
-  get deadline(): BigInt {
+  get chainId(): BigInt {
     return this[9].toBigInt();
   }
 
+  get deadline(): BigInt {
+    return this[10].toBigInt();
+  }
+
   get atomicActions(): boolean {
-    return this[10].toBoolean();
+    return this[11].toBoolean();
   }
 }
 
@@ -2066,28 +2036,32 @@ export class HandleOperationCallOpStruct extends ethereum.Tuple {
     );
   }
 
-  get executionGasLimit(): BigInt {
+  get gasAssetRefundThreshold(): BigInt {
     return this[5].toBigInt();
   }
 
-  get maxNumRefunds(): BigInt {
+  get executionGasLimit(): BigInt {
     return this[6].toBigInt();
   }
 
-  get gasPrice(): BigInt {
+  get maxNumRefunds(): BigInt {
     return this[7].toBigInt();
   }
 
-  get chainId(): BigInt {
+  get gasPrice(): BigInt {
     return this[8].toBigInt();
   }
 
-  get deadline(): BigInt {
+  get chainId(): BigInt {
     return this[9].toBigInt();
   }
 
+  get deadline(): BigInt {
+    return this[10].toBigInt();
+  }
+
   get atomicActions(): boolean {
-    return this[10].toBoolean();
+    return this[11].toBoolean();
   }
 }
 

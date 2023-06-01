@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- export subgraph sync fetch methods so subtree-updater can use for its own adapter
+- fix off-by one bug in RPC sync adapter last committed merkle index
+- RPC syncing uses joinsplits and refunds instead of insert note events
+- add `emptyNote` method to `NoteTrait` in anticipation of 0 nullifier gas optimization (not nullifying empty note slots)
 - add method `getCreationTimestampOfNewestNoteInOp` to SDK that allows frontends to display privacy indicators or warnings based on "age" of the notes being spent
 - track creation time (in unix millis) of all notes stored in `NocturneDB`
 - add `op.gasAssetRefundThreshold` functionality (opRequestGas converts 200k gas \* gasPrice into gas asset and fills gasAssetRefundThreshold field)

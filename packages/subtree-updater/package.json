@@ -27,9 +27,9 @@
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",
     "@nocturne-xyz/config": "1.0.11-alpha",
-    "@nocturne-xyz/contracts": "1.0.27-alpha",
+    "@nocturne-xyz/contracts": "1.0.28-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.4",
-    "@nocturne-xyz/sdk": "1.0.127-alpha",
+    "@nocturne-xyz/sdk": "1.0.129-alpha",
     "async-mutex": "^0.4.0",
     "bigint-json-serialization": "^1.0.1",
     "bullmq": "^3.10.1",

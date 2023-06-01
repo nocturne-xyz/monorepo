@@ -18,8 +18,6 @@ dataSources:
         - EncodedNote
         - EncryptedNote
         - SubtreeCommit
-        - TreeInsertion
-        - CompressedEncodedNote
       abis:
         - name: Handler
           file: ./abis/Handler.json
@@ -31,10 +29,8 @@ dataSources:
           handler: handleRefund
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
-        - event: InsertNotes((uint256,uint256,uint256,uint256,uint256,uint256)[])
-          handler: handleInsertNotes
-        - event: InsertNoteCommitments(uint256[])
-          handler: handleInsertNoteCommitments
+        - event: FilledBatchWithZeros(uint256,uint256)
+          handler: handleFilledBatchWithZeros
       file: ./src/handler.ts
   - kind: ethereum
     name: DepositManager

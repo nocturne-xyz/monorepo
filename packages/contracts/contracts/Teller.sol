@@ -54,8 +54,8 @@ contract Teller is
     /// @notice Event emitted when an operation is processed/executed (one per operation)
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opProcessed,
-        bool indexed assetsUnwrapped,
+        bool opProcessed,
+        bool assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults

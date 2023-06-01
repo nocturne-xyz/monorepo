@@ -1,7 +1,5 @@
-import { Bytes } from "@graphprotocol/graph-ts";
 import {
-  InsertNoteCommitments,
-  InsertNotes,
+  FilledBatchWithZeros,
   JoinSplitProcessed,
   RefundProcessed,
   SubtreeUpdate,
@@ -12,8 +10,7 @@ import {
   EncryptedNote,
   SubtreeCommit,
   Nullifier,
-  CompressedEncodedNote,
-  TreeInsertion,
+  FilledBatchWithZerosEvent,
 } from "../generated/schema";
 import {
   getTotalLogIndex,
@@ -137,43 +134,15 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   commit.save();
 }
 
-export function handleInsertNotes(event: InsertNotes): void {
+export function handleFilledBatchWithZeros(event: FilledBatchWithZeros): void {
   const totalLogIndex = getTotalLogIndex(event);
+
   const idx = getTotalEntityIndex(totalLogIndex, 0);
   const id = toPadded32BArray(idx);
-  const insertion = new TreeInsertion(id);
+  const commit = new FilledBatchWithZerosEvent(id);
 
-  const notes = new Array<Bytes>(event.params.notes.length);
-  for (let i = 0; i < event.params.notes.length; i++) {
-    const note = event.params.notes[i];
-    const idx = getTotalEntityIndex(totalLogIndex, i + 1);
-    const id = toPadded32BArray(idx);
-    const compressedNote = new CompressedEncodedNote(id);
-    compressedNote.ownerH1 = note.ownerH1;
-    compressedNote.ownerH2 = note.ownerH2;
-    compressedNote.nonce = note.nonce;
-    compressedNote.encodedAssetAddr = note.encodedAssetAddr;
-    compressedNote.encodedAssetId = note.encodedAssetId;
-    compressedNote.value = note.value;
-    compressedNote.save();
-
-    notes[i] = id;
-  }
-
-  insertion.notes = notes;
-  insertion.idx = idx;
-  insertion.save();
-}
-
-export function handleInsertNoteCommitments(
-  event: InsertNoteCommitments
-): void {
-  const totalLogIndex = getTotalLogIndex(event);
-  const idx = getTotalEntityIndex(totalLogIndex, 0);
-  const id = toPadded32BArray(idx);
-
-  const insertion = new TreeInsertion(id);
-  insertion.idx = idx;
-  insertion.noteCommitments = event.params.commitments;
-  insertion.save();
+  commit.startIndex = event.params.startIndex;
+  commit.numZeros = event.params.numZeros;
+  commit.idx = idx;
+  commit.save();
 }

@@ -48,6 +48,23 @@ export class NoteTrait {
     );
   }
 
+  static emptyNoteCommitment(): bigint {
+    return BigInt(
+      poseidonBN([
+        StealthAddressTrait.hash({
+          h1X: 0n,
+          h1Y: 0n,
+          h2X: 0n,
+          h2Y: 0n,
+        }),
+        0n,
+        0n,
+        0n,
+        0n,
+      ])
+    );
+  }
+
   static toIncludedCommitment<N extends IncludedNote>(
     includedNote: N
   ): IncludedNoteCommitment {
