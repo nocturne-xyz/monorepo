@@ -1,4 +1,9 @@
-import { EncodedAsset, StealthAddress, SubgraphUtils } from "@nocturne-xyz/sdk";
+import {
+  EncodedAsset,
+  StealthAddress,
+  StealthAddressTrait,
+  SubgraphUtils,
+} from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
 
 const { makeSubgraphQuery, totalLogIndexFromBlockNumber } = SubgraphUtils;
@@ -11,10 +16,8 @@ export interface DepositEventResponse {
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
-  depositAddrH1X: string;
-  depositAddrH1Y: string;
-  depositAddrH2X: string;
-  depositAddrH2Y: string;
+  depositAddrH1: string;
+  depositAddrH2: string;
   nonce: string;
   gasCompensation: string;
 }
@@ -39,10 +42,8 @@ const depositEventsQuery = `\
       encodedAssetAddr
       encodedAssetId
       value
-      depositAddrH1X
-      depositAddrH1Y
-      depositAddrH2X
-      depositAddrH2Y
+      depositAddrH1
+      depositAddrH2
       nonce
       gasCompensation
     }
@@ -73,16 +74,9 @@ function depositEventFromDepositEventResponse(
   const type = depositEventResponse.type;
   const spender = depositEventResponse.spender;
 
-  const h1X = BigInt(depositEventResponse.depositAddrH1X);
-  const h1Y = BigInt(depositEventResponse.depositAddrH1Y);
-  const h2X = BigInt(depositEventResponse.depositAddrH2X);
-  const h2Y = BigInt(depositEventResponse.depositAddrH2Y);
-  const depositAddr: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  const h1 = BigInt(depositEventResponse.depositAddrH1);
+  const h2 = BigInt(depositEventResponse.depositAddrH2);
+  const depositAddr = StealthAddressTrait.decompress({ h1, h2 });
 
   const encodedAssetAddr = BigInt(depositEventResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(depositEventResponse.encodedAssetId);
