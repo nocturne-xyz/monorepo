@@ -5,8 +5,7 @@ import {
   IncludedNote,
   WithTimestamp,
 } from "../../primitives";
-import { maxArray } from "../../utils";
-import { batchOffsetToLatestMerkleIndexInBatch } from "../../utils/treeIndex";
+import { maxArray, batchOffsetToLatestMerkleIndexInBatch } from "../../utils";
 import {
   blockNumberFromTotalEntityIndex,
   makeSubgraphQuery,

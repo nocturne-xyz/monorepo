@@ -25,4 +25,5 @@ export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
 export {
   merkleIndexToBatchOffset,
   merkleIndexToSubtreeIndex,
+  batchOffsetToLatestMerkleIndexInBatch,
 } from "./treeIndex";

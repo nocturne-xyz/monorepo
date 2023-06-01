@@ -13,7 +13,11 @@ import {
   SDKSyncAdapter,
 } from "../syncAdapter";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
-import { maxArray, sleep } from "../../utils";
+import {
+  maxArray,
+  sleep,
+  batchOffsetToLatestMerkleIndexInBatch,
+} from "../../utils";
 import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
@@ -21,7 +25,6 @@ import {
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
-import { batchOffsetToLatestMerkleIndexInBatch } from "../../utils/treeIndex";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -51,7 +54,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
     const handlerContract = this.handlerContract;
     const generator = async function* () {
-      let latestMerkleIndex = (await handlerContract.count()).toNumber();
+      const merkleCount = (await handlerContract.count()).toNumber();
+      let lastCommittedMerkleIndex =
+        merkleCount != 0 ? merkleCount - 1 : undefined;
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
@@ -95,7 +100,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // get the latest subtree commit
         if (subtreeUpdateCommits.length > 0) {
-          latestMerkleIndex = maxArray(
+          lastCommittedMerkleIndex = maxArray(
             subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
               return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
             })
@@ -105,7 +110,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         const diff: EncryptedStateDiff = {
           notes,
           nullifiers,
-          lastCommittedMerkleIndex: latestMerkleIndex,
+          lastCommittedMerkleIndex,
           blockNumber: to,
         };
         yield diff;
