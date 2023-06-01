@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- modify joinsplit indexing after removing fields from joinsplit event
 - export subgraph sync fetch methods so subtree-updater can use for its own adapter
 - fix off-by one bug in RPC sync adapter last committed merkle index
 - RPC syncing uses joinsplits and refunds instead of insert note events

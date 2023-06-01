@@ -3386,7 +3386,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/config@1.0.11-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
+"@nocturne-xyz/config@1.0.11-alpha, @nocturne-xyz/config@^1.0.11-alpha, @nocturne-xyz/config@workspace:^, @nocturne-xyz/config@workspace:packages/config":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/config@workspace:packages/config"
   dependencies:
@@ -3408,6 +3408,16 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/contracts@npm:^1.0.28-alpha":
+  version: 1.0.28-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.28-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.8.2
+    "@openzeppelin/contracts-upgradeable": 4.8.2
+  checksum: 7baf0d422870e7cb188df9e18f3d4b51402465e929c2efc9903acb62061d6d8bac1e6af654c3c0d67610ad025d2bc3fe7efcb1b103ab41046cad6779bf99cd18
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
@@ -3624,7 +3634,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.129-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@npm:1.0.129-alpha":
+  version: 1.0.129-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.129-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.11-alpha
+    "@nocturne-xyz/contracts": ^1.0.28-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: e498e6999ac2f779d121326b52442e9c624a80e29cd76ec2d5dd81e34e78af1e5a3c8118c91aa8bcbc19ca0411157b568ee7e1129431d6383f2ea7b451e0ba2f
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:

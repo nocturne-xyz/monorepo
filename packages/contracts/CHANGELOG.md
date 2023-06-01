@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- remove proof and root from joinsplit events
 - `OperationProcessed` event removes two indexed params (more of this to come soon)
 - small gas optimization where we use contiguous subarray index to avoid checking balances for joinsplits of same asset in `BalanceManager`
 - remove insertion events from CTM
