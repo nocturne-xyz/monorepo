@@ -7,7 +7,7 @@ import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
 import { randomFr } from "./utils";
 import {
-  CompressedPoint,
+  // CompressedPoint,
   compressPoint,
   decompressPoint,
 } from "./pointCompression";
@@ -20,13 +20,13 @@ export interface StealthAddress {
 }
 
 export interface CompressedStealthAddress {
-  h1: CompressedPoint;
-  h2: CompressedPoint;
+  h1: bigint;
+  h2: bigint;
 }
 
 export interface EncryptedCanonAddress {
-  c1: CompressedPoint;
-  c2: CompressedPoint;
+  c1: bigint;
+  c2: bigint;
 }
 
 export type CanonAddress = AffinePoint<bigint>;

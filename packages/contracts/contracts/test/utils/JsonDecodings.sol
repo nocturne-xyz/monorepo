@@ -213,6 +213,10 @@ contract JsonDecodings is Test {
         uint8 v = uint8(json.readUint(".signature.v"));
         bytes memory sig = ParseUtils.rsvToSignatureBytes(r, s, v);
 
+        console.log("r: ", r);
+        console.log("s: ", s);
+        console.log("v: ", v);
+
         console.logBytes(sig);
         return sig;
     }

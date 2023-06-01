@@ -19,3 +19,7 @@ export const DEPOSIT_REQUEST_TYPES = {
     { name: "h2", type: "uint256" },
   ],
 };
+
+/*
+DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,CompressedStealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)CompressedStealthAddress(uint256 h1,uint256 h2)
+*/

@@ -40,11 +40,30 @@ contract DepositManagerBaseTest is Test, JsonDecodings {
             keccak256(bytes(fixture.contractVersion))
         );
 
+        console.log("chainid:::", block.chainid);
+
         address recovered = ITestDepositManagerBase(fixture.contractAddress)
             .recoverDepositRequestSigner(
                 fixture.depositRequest,
                 fixture.signature
             );
+
+        bytes32 domainSeparator = ITestDepositManagerBase(
+            fixture.contractAddress
+        ).domainSeparatorV4();
+        console.log("domain separator:");
+        console.logBytes32(domainSeparator);
+
+        bytes32 digest = ITestDepositManagerBase(fixture.contractAddress)
+            .computeDigest(fixture.depositRequest);
+        console.log("digest:");
+        console.logBytes32(digest);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(0x1, digest);
+
+        console.logBytes32(r);
+        console.logBytes32(s);
+        console.log("v", v);
 
         assertEq(recovered, fixture.screenerAddress);
     }
