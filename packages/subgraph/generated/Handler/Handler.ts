@@ -87,21 +87,12 @@ export class JoinSplitProcessed__Params {
     return this._event.parameters[5].value.toBigInt();
   }
 
-<<<<<<< HEAD
-  get encSenderCanonAddrC1X(): BigInt {
+  get encSenderCanonAddrC1(): BigInt {
     return this._event.parameters[6].value.toBigInt();
   }
 
-  get encSenderCanonAddrC2X(): BigInt {
-    return this._event.parameters[7].value.toBigInt();
-=======
-  get encSenderCanonAddrC1(): BigInt {
-    return this[5].toBigInt();
-  }
-
   get encSenderCanonAddrC2(): BigInt {
-    return this[6].toBigInt();
->>>>>>> abc82f68 (update subgraph with compressed addrs)
+    return this._event.parameters[7].value.toBigInt();
   }
 
   get encodedAsset(): JoinSplitProcessedEncodedAssetStruct {
@@ -157,13 +148,8 @@ export class JoinSplitProcessedNewNoteAEncryptedStruct extends ethereum.Tuple {
   }
 }
 
-<<<<<<< HEAD
 export class JoinSplitProcessedNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-=======
-export class JoinSplitProcessedJoinSplitNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
   get h1(): BigInt {
->>>>>>> abc82f68 (update subgraph with compressed addrs)
     return this[0].toBigInt();
   }
 
@@ -192,13 +178,8 @@ export class JoinSplitProcessedNewNoteBEncryptedStruct extends ethereum.Tuple {
   }
 }
 
-<<<<<<< HEAD
 export class JoinSplitProcessedNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
-  get h1X(): BigInt {
-=======
-export class JoinSplitProcessedJoinSplitNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
   get h1(): BigInt {
->>>>>>> abc82f68 (update subgraph with compressed addrs)
     return this[0].toBigInt();
   }
 
