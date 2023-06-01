@@ -3324,9 +3324,9 @@ __metadata:
   resolution: "@nocturne-xyz/bundler@workspace:packages/bundler"
   dependencies:
     "@nocturne-xyz/config": 1.0.11-alpha
-    "@nocturne-xyz/contracts": 1.0.28-alpha
+    "@nocturne-xyz/contracts": 1.0.29-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.129-alpha
+    "@nocturne-xyz/sdk": 1.0.130-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3409,7 +3409,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.28-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/contracts@1.0.29-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3469,9 +3469,9 @@ __metadata:
   resolution: "@nocturne-xyz/deposit-screener@workspace:packages/deposit-screener"
   dependencies:
     "@nocturne-xyz/config": 1.0.11-alpha
-    "@nocturne-xyz/contracts": 1.0.28-alpha
+    "@nocturne-xyz/contracts": 1.0.29-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.129-alpha
+    "@nocturne-xyz/sdk": 1.0.130-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3624,7 +3624,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.129-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.130-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3772,9 +3772,9 @@ __metadata:
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.11-alpha
-    "@nocturne-xyz/contracts": 1.0.28-alpha
+    "@nocturne-xyz/contracts": 1.0.29-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.129-alpha
+    "@nocturne-xyz/sdk": 1.0.130-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2

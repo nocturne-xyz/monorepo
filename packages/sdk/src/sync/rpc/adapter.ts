@@ -145,14 +145,15 @@ function extractEncryptedNotesFromJoinSplitEvents(
   joinSplitEvents: WithTimestamp<JoinSplitEvent>[]
 ): WithTimestamp<IncludedEncryptedNote>[] {
   return joinSplitEvents.flatMap(({ inner, timestampUnixMillis }) => {
-    const { newNoteAIndex, newNoteBIndex } = inner;
     const {
+      newNoteAIndex,
+      newNoteBIndex,
       newNoteAEncrypted,
       newNoteBEncrypted,
       newNoteACommitment,
       newNoteBCommitment,
       encodedAsset,
-    } = inner.joinSplit;
+    } = inner;
 
     const asset = AssetTrait.decode(encodedAsset);
 

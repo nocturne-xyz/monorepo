@@ -79,70 +79,46 @@ export class JoinSplitProcessed__Params {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get joinSplit(): JoinSplitProcessedJoinSplitStruct {
-    return changetype<JoinSplitProcessedJoinSplitStruct>(
-      this._event.parameters[4].value.toTuple()
-    );
-  }
-}
-
-export class JoinSplitProcessedJoinSplitStruct extends ethereum.Tuple {
-  get commitmentTreeRoot(): BigInt {
-    return this[0].toBigInt();
-  }
-
-  get nullifierA(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get nullifierB(): BigInt {
-    return this[2].toBigInt();
-  }
-
   get newNoteACommitment(): BigInt {
-    return this[3].toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get newNoteBCommitment(): BigInt {
-    return this[4].toBigInt();
+    return this._event.parameters[5].value.toBigInt();
   }
 
   get encSenderCanonAddrC1X(): BigInt {
-    return this[5].toBigInt();
+    return this._event.parameters[6].value.toBigInt();
   }
 
   get encSenderCanonAddrC2X(): BigInt {
-    return this[6].toBigInt();
+    return this._event.parameters[7].value.toBigInt();
   }
 
-  get proof(): Array<BigInt> {
-    return this[7].toBigIntArray();
-  }
-
-  get encodedAsset(): JoinSplitProcessedJoinSplitEncodedAssetStruct {
-    return changetype<JoinSplitProcessedJoinSplitEncodedAssetStruct>(
-      this[8].toTuple()
+  get encodedAsset(): JoinSplitProcessedEncodedAssetStruct {
+    return changetype<JoinSplitProcessedEncodedAssetStruct>(
+      this._event.parameters[8].value.toTuple()
     );
   }
 
   get publicSpend(): BigInt {
-    return this[9].toBigInt();
+    return this._event.parameters[9].value.toBigInt();
   }
 
-  get newNoteAEncrypted(): JoinSplitProcessedJoinSplitNewNoteAEncryptedStruct {
-    return changetype<JoinSplitProcessedJoinSplitNewNoteAEncryptedStruct>(
-      this[10].toTuple()
+  get newNoteAEncrypted(): JoinSplitProcessedNewNoteAEncryptedStruct {
+    return changetype<JoinSplitProcessedNewNoteAEncryptedStruct>(
+      this._event.parameters[10].value.toTuple()
     );
   }
 
-  get newNoteBEncrypted(): JoinSplitProcessedJoinSplitNewNoteBEncryptedStruct {
-    return changetype<JoinSplitProcessedJoinSplitNewNoteBEncryptedStruct>(
-      this[11].toTuple()
+  get newNoteBEncrypted(): JoinSplitProcessedNewNoteBEncryptedStruct {
+    return changetype<JoinSplitProcessedNewNoteBEncryptedStruct>(
+      this._event.parameters[11].value.toTuple()
     );
   }
 }
 
-export class JoinSplitProcessedJoinSplitEncodedAssetStruct extends ethereum.Tuple {
+export class JoinSplitProcessedEncodedAssetStruct extends ethereum.Tuple {
   get encodedAssetAddr(): BigInt {
     return this[0].toBigInt();
   }
@@ -152,9 +128,9 @@ export class JoinSplitProcessedJoinSplitEncodedAssetStruct extends ethereum.Tupl
   }
 }
 
-export class JoinSplitProcessedJoinSplitNewNoteAEncryptedStruct extends ethereum.Tuple {
-  get owner(): JoinSplitProcessedJoinSplitNewNoteAEncryptedOwnerStruct {
-    return changetype<JoinSplitProcessedJoinSplitNewNoteAEncryptedOwnerStruct>(
+export class JoinSplitProcessedNewNoteAEncryptedStruct extends ethereum.Tuple {
+  get owner(): JoinSplitProcessedNewNoteAEncryptedOwnerStruct {
+    return changetype<JoinSplitProcessedNewNoteAEncryptedOwnerStruct>(
       this[0].toTuple()
     );
   }
@@ -172,7 +148,7 @@ export class JoinSplitProcessedJoinSplitNewNoteAEncryptedStruct extends ethereum
   }
 }
 
-export class JoinSplitProcessedJoinSplitNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
+export class JoinSplitProcessedNewNoteAEncryptedOwnerStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
@@ -190,9 +166,9 @@ export class JoinSplitProcessedJoinSplitNewNoteAEncryptedOwnerStruct extends eth
   }
 }
 
-export class JoinSplitProcessedJoinSplitNewNoteBEncryptedStruct extends ethereum.Tuple {
-  get owner(): JoinSplitProcessedJoinSplitNewNoteBEncryptedOwnerStruct {
-    return changetype<JoinSplitProcessedJoinSplitNewNoteBEncryptedOwnerStruct>(
+export class JoinSplitProcessedNewNoteBEncryptedStruct extends ethereum.Tuple {
+  get owner(): JoinSplitProcessedNewNoteBEncryptedOwnerStruct {
+    return changetype<JoinSplitProcessedNewNoteBEncryptedOwnerStruct>(
       this[0].toTuple()
     );
   }
@@ -210,7 +186,7 @@ export class JoinSplitProcessedJoinSplitNewNoteBEncryptedStruct extends ethereum
   }
 }
 
-export class JoinSplitProcessedJoinSplitNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
+export class JoinSplitProcessedNewNoteBEncryptedOwnerStruct extends ethereum.Tuple {
   get h1X(): BigInt {
     return this[0].toBigInt();
   }
