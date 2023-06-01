@@ -5,8 +5,8 @@ import {
   IncludedNote,
   WithTimestamp,
 } from "../../primitives";
-import { BATCH_SIZE } from "../../primitives/treeConstants";
 import { maxArray } from "../../utils";
+import { batchOffsetToLatestMerkleIndexInBatch } from "../../utils/treeIndex";
 import {
   blockNumberFromTotalEntityIndex,
   makeSubgraphQuery,
@@ -223,21 +223,25 @@ const subtreeCommitQuery = `
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
   toBlock: number
-): Promise<number> {
+): Promise<number | undefined> {
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
   >(endpoint, subtreeCommitQuery, "last committed merkle index");
   const res = await query({ toBlock });
-  if (!res.data || res.data.subtreeCommits.length === 0) {
-    return -1;
+  if (!res.data) {
+    throw new Error("subgraph query returned empty data");
+  }
+
+  if (res.data.subtreeCommits.length === 0) {
+    return undefined;
   } else {
     const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
       parseInt(commit.subtreeBatchOffset)
     );
     const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
 
-    return maxSubtreeBatchOffset + BATCH_SIZE - 1;
+    return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
   }
 }
 

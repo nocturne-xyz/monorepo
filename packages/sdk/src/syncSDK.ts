@@ -60,12 +60,15 @@ export async function syncSDK(
     console.log("applied state diff for block", diff.blockNumber);
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
-    await updateMerkle(
-      merkle,
-      diff.lastCommittedMerkleIndex,
-      diff.notesAndCommitments.map(({ inner }) => inner),
-      nfIndices
-    );
+
+    if (diff.lastCommittedMerkleIndex) {
+      await updateMerkle(
+        merkle,
+        diff.lastCommittedMerkleIndex,
+        diff.notesAndCommitments.map(({ inner }) => inner),
+        nfIndices
+      );
+    }
   }
 }
 

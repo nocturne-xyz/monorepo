@@ -1,7 +1,6 @@
 import {
   Address,
   AssetTrait,
-  BinaryPoseidonTree,
   IncludedEncryptedNote,
   Nullifier,
   WithTimestamp,
@@ -22,6 +21,7 @@ import {
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
+import { batchOffsetToLatestMerkleIndexInBatch } from "../../utils/treeIndex";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -51,7 +51,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
     const handlerContract = this.handlerContract;
     const generator = async function* () {
-      let nextMerkleIndex = (await handlerContract.count()).toNumber();
+      let latestMerkleIndex = (await handlerContract.count()).toNumber();
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
@@ -95,17 +95,17 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // get the latest subtree commit
         if (subtreeUpdateCommits.length > 0) {
-          nextMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(
-              (c) => c.subtreeBatchOffset + BinaryPoseidonTree.BATCH_SIZE - 1
-            )
+          latestMerkleIndex = maxArray(
+            subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
+              return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
+            })
           );
         }
 
         const diff: EncryptedStateDiff = {
           notes,
           nullifiers,
-          lastCommittedMerkleIndex: nextMerkleIndex,
+          lastCommittedMerkleIndex: latestMerkleIndex,
           blockNumber: to,
         };
         yield diff;

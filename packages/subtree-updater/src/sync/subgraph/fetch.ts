@@ -1,7 +1,7 @@
 import {
   SubgraphUtils,
-  TreeConstants,
   fetchLastCommittedMerkleIndex,
+  merkleIndexToSubtreeIndex,
 } from "@nocturne-xyz/sdk";
 import { makeSubgraphQuery } from "@nocturne-xyz/sdk/dist/src/sync/subgraph/utils";
 
@@ -66,11 +66,13 @@ export async function fetchFilledBatchWithZerosEvents(
 
 export async function fetchLatestSubtreeIndex(
   endpoint: string
-): Promise<number> {
+): Promise<number | undefined> {
   const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
   const lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
     endpoint,
     latestIndexedBlock
   );
-  return lastCommittedMerkleIndex - TreeConstants.BATCH_SIZE + 1;
+  return lastCommittedMerkleIndex
+    ? merkleIndexToSubtreeIndex(lastCommittedMerkleIndex)
+    : undefined;
 }

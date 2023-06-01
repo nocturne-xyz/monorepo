@@ -7,5 +7,5 @@ export interface SubtreeUpdaterSyncAdapter {
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<Note | bigint>;
 
-  fetchLatestSubtreeIndex(): Promise<number>;
+  fetchLatestSubtreeIndex(): Promise<number | undefined>;
 }

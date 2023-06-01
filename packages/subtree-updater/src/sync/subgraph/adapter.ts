@@ -95,7 +95,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     });
   }
 
-  async fetchLatestSubtreeIndex(): Promise<number> {
+  async fetchLatestSubtreeIndex(): Promise<number | undefined> {
     return fetchLatestSubtreeIndex(this.graphqlEndpoint);
   }
 }

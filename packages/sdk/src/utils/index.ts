@@ -22,3 +22,7 @@ export {
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";
 export { queryEvents, parseEventsFromContractReceipt } from "./ethers";
+export {
+  merkleIndexToBatchOffset,
+  merkleIndexToSubtreeIndex,
+} from "./treeIndex";

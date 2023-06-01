@@ -101,7 +101,7 @@ contract CommitmentTreeManager is
         uint256 batchLen = _merkle.getBatchLen();
         require(batchLen > 0, "!zero fill empty batch");
 
-        uint256 startIndex = _merkle.getCount();
+        uint256 startIndex = _merkle.getTotalCount();
         uint256 numZeros = TreeUtils.BATCH_SIZE - batchLen;
 
         _merkle.fillBatchWithZeros();
