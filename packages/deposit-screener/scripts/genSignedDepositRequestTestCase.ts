@@ -24,6 +24,10 @@ const SIGNED_DEPOSIT_REQ_FIXTURE_PATH = path.join(
 
 const writeToFixture = process.argv[2] == "--writeFixture";
 
+
+
+console.log("DEPOSIT_REQUEST_TYPEHASH:", DEPOSIT_REQUEST_TYPEHASH);
+
 function toObject(obj: any) {
   return JSON.parse(
     JSON.stringify(obj, (key, value) =>

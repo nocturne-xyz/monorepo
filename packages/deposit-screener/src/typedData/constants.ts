@@ -6,7 +6,7 @@ export const DEPOSIT_REQUEST_TYPES = {
     { name: "spender", type: "address" },
     { name: "encodedAsset", type: "EncodedAsset" },
     { name: "value", type: "uint256" },
-    { name: "depositAddr", type: "StealthAddress" },
+    { name: "depositAddr", type: "CompressedStealthAddress" },
     { name: "nonce", type: "uint256" },
     { name: "gasCompensation", type: "uint256" },
   ],
