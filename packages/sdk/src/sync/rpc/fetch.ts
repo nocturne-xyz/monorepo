@@ -13,6 +13,7 @@ import {
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
+import { StealthAddressTrait } from "../../crypto";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -56,19 +57,19 @@ export async function fetchNotesFromRefunds(
         merkleIndex,
       } = event.args;
 
-      const { h1X, h1Y, h2X, h2Y } = refundAddr;
+      const { h1, h2 } = refundAddr;
       const encodedAsset: EncodedAsset = {
         encodedAssetAddr: encodedAssetAddr.toBigInt(),
         encodedAssetId: encodedAssetId.toBigInt(),
       };
 
+      const owner = StealthAddressTrait.decompress({
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
+      });
+
       const note: IncludedNote = {
-        owner: {
-          h1X: h1X.toBigInt(),
-          h1Y: h1Y.toBigInt(),
-          h2X: h2X.toBigInt(),
-          h2Y: h2Y.toBigInt(),
-        },
+        owner,
         nonce: nonce.toBigInt(),
         asset: AssetTrait.decode(encodedAsset),
         value: value.toBigInt(),
@@ -122,25 +123,21 @@ export async function fetchJoinSplits(
       const { encodedAssetAddr, encodedAssetId } = encodedAsset;
       let { owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteAEncrypted;
-      let { h1X, h1Y, h2X, h2Y } = owner;
-      const newNoteAOwner = {
-        h1X: h1X.toBigInt(),
-        h1Y: h1Y.toBigInt(),
-        h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt(),
-      };
+      let { h1, h2 } = owner;
+      const newNoteAOwner = StealthAddressTrait.decompress({
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
+      });
       const encappedKeyA = encappedKey.toBigInt();
       const encryptedNonceA = encryptedNonce.toBigInt();
       const encryptedValueA = encryptedValue.toBigInt();
       ({ owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteBEncrypted);
-      ({ h1X, h1Y, h2X, h2Y } = owner);
-      const newNoteBOwner = {
-        h1X: h1X.toBigInt(),
-        h1Y: h1Y.toBigInt(),
-        h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt(),
-      };
+      ({ h1, h2 } = owner);
+      const newNoteBOwner = StealthAddressTrait.decompress({
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
+      });
       const encappedKeyB = encappedKey.toBigInt();
       const encryptedNonceB = encryptedNonce.toBigInt();
       const encryptedValueB = encryptedValue.toBigInt();
@@ -267,12 +264,9 @@ export async function fetchInsertions(
 
   for (const event of notesEvents) {
     const noteValues = event.args;
-    const owner = {
-      h1X: noteValues.refundAddr.h1X.toBigInt(),
-      h2X: noteValues.refundAddr.h2X.toBigInt(),
-      h1Y: 0n, // TODO: we don't need to log entire stealth address, just X coords
-      h2Y: 0n,
-    };
+    const h1 = noteValues.refundAddr.h1.toBigInt();
+    const h2 = noteValues.refundAddr.h2.toBigInt();
+    const owner = StealthAddressTrait.decompress({ h1, h2 });
 
     const encoddAsset: EncodedAsset = {
       encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
