@@ -67,7 +67,12 @@ function toObject(obj: any) {
   const hash = hashDepositRequest(depositRequest);
 
   const signature = await signDepositRequest(signer, domain, depositRequest);
+
+  console.log("sig", signature);
+  
   const { r, s, v } = ethers.utils.splitSignature(signature);
+
+  console.log('rsv', [r, s, v]);
 
   const expectedSignerAddress = await signer.getAddress();
   const recoveredAddress = ethers.utils.verifyTypedData(
