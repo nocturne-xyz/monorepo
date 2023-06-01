@@ -15,6 +15,9 @@ import {
   DepositStatusResponse,
   DepositQuoteResponse,
   RelayRequest,
+  StealthAddressTrait,
+  encodeHodgePodgePI,
+  decomposeCompressedPoint,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
@@ -110,7 +113,7 @@ export class NocturneFrontendSDK {
       );
     }
 
-    const depositAddr = await this.getRandomizedAddr();
+    const depositAddr = StealthAddressTrait.compress(await this.getRandomizedAddr());
     return this.depositManagerContract.instantiateETHMultiDeposit(
       values,
       depositAddr,
@@ -153,7 +156,7 @@ export class NocturneFrontendSDK {
       totalValue
     );
 
-    const depositAddr = await this.getRandomizedAddr();
+    const depositAddr = StealthAddressTrait.compress(await this.getRandomizedAddr());
     return this.depositManagerContract.instantiateErc20MultiDeposit(
       erc20Address,
       values,
@@ -229,6 +232,14 @@ export class NocturneFrontendSDK {
 
     const proofsWithPublicInputs: JoinSplitProofWithPublicSignals[] =
       operation.joinSplits.map((joinSplit) => {
+        const c1 = joinSplit.encSenderCanonAddrC1;
+        const c2 = joinSplit.encSenderCanonAddrC2;
+        const encSenderCanonAddr = { c1, c2 };
+        const hodgePodge = encodeHodgePodgePI(joinSplit.encodedAsset.encodedAssetAddr, encSenderCanonAddr);
+
+        const [, encSenderCanonAddrC1Y] = decomposeCompressedPoint(c1);
+        const [, encSenderCanonAddrC2Y] = decomposeCompressedPoint(c1);
+        
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
           newNoteBCommitment: joinSplit.newNoteBCommitment,
@@ -237,10 +248,10 @@ export class NocturneFrontendSDK {
           nullifierA: joinSplit.nullifierA,
           nullifierB: joinSplit.nullifierB,
           opDigest,
-          encodedAssetAddr: joinSplit.encodedAsset.encodedAssetAddr,
+          hodgePodge,
           encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
-          encSenderCanonAddrC1X: joinSplit.encSenderCanonAddrC1X,
-          encSenderCanonAddrC2X: joinSplit.encSenderCanonAddrC2X,
+          encSenderCanonAddrC1Y,
+          encSenderCanonAddrC2Y,
         });
 
         const proof = unpackFromSolidityProof(joinSplit.proof);

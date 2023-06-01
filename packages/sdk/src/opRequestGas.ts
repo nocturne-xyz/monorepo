@@ -359,7 +359,8 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
-      encSenderCanonAddr: { c1: 0n, c2: 0n },
+      encSenderCanonAddrC1: 0n,
+      encSenderCanonAddrC2: 0n,
     };
   });
   return {

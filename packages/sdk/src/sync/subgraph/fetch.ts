@@ -150,7 +150,7 @@ export function encryptedNoteFromEncryptedNoteResponse(
 ): IncludedEncryptedNote {
   const h1 = BigInt(encryptedNoteResponse.ownerH1);
   const h2 = BigInt(encryptedNoteResponse.ownerH2);
-  const owner = StealthAddressTrait.decompress({ h1, h2 });
+  const owner = { h1, h2 };
 
   const encodedAssetAddr = BigInt(encryptedNoteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(encryptedNoteResponse.encodedAssetId);

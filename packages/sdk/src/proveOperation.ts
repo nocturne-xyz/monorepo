@@ -106,7 +106,8 @@ async function proveJoinSplit(
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
-    encSenderCanonAddr,
+    encSenderCanonAddrC1: encSenderCanonAddr.c1,
+    encSenderCanonAddrC2: encSenderCanonAddr.c2,
     ...baseJoinSplit,
   };
 }

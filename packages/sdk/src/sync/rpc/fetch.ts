@@ -124,20 +124,20 @@ export async function fetchJoinSplits(
       let { owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteAEncrypted;
       let { h1, h2 } = owner;
-      const newNoteAOwner = StealthAddressTrait.decompress({
+      const newNoteAOwner = {
         h1: h1.toBigInt(),
         h2: h2.toBigInt(),
-      });
+      };
       const encappedKeyA = encappedKey.toBigInt();
       const encryptedNonceA = encryptedNonce.toBigInt();
       const encryptedValueA = encryptedValue.toBigInt();
       ({ owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteBEncrypted);
       ({ h1, h2 } = owner);
-      const newNoteBOwner = StealthAddressTrait.decompress({
+      const newNoteBOwner = {
         h1: h1.toBigInt(),
         h2: h2.toBigInt(),
-      });
+      };
       const encappedKeyB = encappedKey.toBigInt();
       const encryptedNonceB = encryptedNonce.toBigInt();
       const encryptedValueB = encryptedValue.toBigInt();

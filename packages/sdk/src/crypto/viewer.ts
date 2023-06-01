@@ -84,7 +84,9 @@ export class NocturneViewer {
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-    if (!this.isOwnAddress(encryptedNote.owner)) {
+    if (
+      !this.isOwnAddress(StealthAddressTrait.decompress(encryptedNote.owner))
+    ) {
       throw Error("cannot decrypt a note that is not owned by signer");
     }
 

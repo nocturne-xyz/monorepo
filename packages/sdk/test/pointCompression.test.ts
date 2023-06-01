@@ -1,9 +1,18 @@
 import "mocha";
 import { expect } from "chai";
 import { AffinePoint, BabyJubJub } from "@nocturne-xyz/circuit-utils";
-import { compressPoint, decompressPoint, randomFr, range } from "../src";
+import {
+  compressPoint,
+  decompressPoint,
+  decomposeCompressedPoint,
+  randomFr,
+  range,
+} from "../src";
+
+const F = BabyJubJub.BaseField;
 
 const SIGN_MASK = 1n << 255n;
+const P_MINUS_1_OVER_2 = F.div(F.sub(F.Modulus, F.One), F.Two);
 
 describe("point compression and decompression", () => {
   it("compressing and decompressing a point gives the same point", () => {
@@ -82,6 +91,18 @@ describe("point compression and decompression", () => {
 
       expect(decompressed).to.be.undefined;
     }
+  });
+
+  it("decomposeCompressedPoint() works", () => {
+    range(10).forEach(() => {
+      const point = randomPoint();
+      const c = compressPoint(point);
+
+      const [sign, y] = decomposeCompressedPoint(c);
+
+      expect(sign).to.equal(point.x > P_MINUS_1_OVER_2);
+      expect(y).to.equal(point.y);
+    });
   });
 });
 

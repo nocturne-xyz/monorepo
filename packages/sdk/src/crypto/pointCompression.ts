@@ -16,7 +16,9 @@ export function compressPoint({ x, y }: AffinePoint<bigint>): bigint {
   }
 }
 
-export function decompressPoint(c: bigint): AffinePoint<bigint> | undefined {
+export function decompressPoint(
+  c: CompressedPoint
+): AffinePoint<bigint> | undefined {
   if (c > MAX_COMPRESSED_VALUE) return undefined;
 
   // unpack sign bit and Y coordinate
@@ -45,4 +47,11 @@ export function decompressPoint(c: bigint): AffinePoint<bigint> | undefined {
   }
 
   return { x, y };
+}
+
+// returns [sign, y]
+export function decomposeCompressedPoint(
+  c: CompressedPoint
+): [boolean, bigint] {
+  return [(c & SIGN_MASK) !== 0n, c & (SIGN_MASK - 1n)];
 }

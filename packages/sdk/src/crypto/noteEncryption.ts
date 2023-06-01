@@ -37,7 +37,9 @@ export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
   );
 
   return {
-    owner: StealthAddressTrait.randomize(note.owner),
+    owner: StealthAddressTrait.compress(
+      StealthAddressTrait.randomize(note.owner)
+    ),
     encappedKey: compressPoint(BabyJubJub.scalarMul(receiver, r)),
     encryptedNonce,
     encryptedValue,
