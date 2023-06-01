@@ -56,7 +56,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     const generator = async function* () {
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
-        merkleCount != 0 ? merkleCount - 1 : undefined;
+        merkleCount !== 0 ? merkleCount - 1 : undefined;
       let from = startBlock;
       while (!closed && (!endBlock || from < endBlock)) {
         let to = from + chunkSize;
