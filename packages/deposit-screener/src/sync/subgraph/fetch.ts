@@ -1,7 +1,6 @@
 import {
   EncodedAsset,
-  StealthAddress,
-  StealthAddressTrait,
+  CompressedStealthAddress,
   SubgraphUtils,
 } from "@nocturne-xyz/sdk";
 import { DepositEvent, DepositEventType } from "../../types";
@@ -76,7 +75,7 @@ function depositEventFromDepositEventResponse(
 
   const h1 = BigInt(depositEventResponse.depositAddrH1);
   const h2 = BigInt(depositEventResponse.depositAddrH2);
-  const depositAddr = StealthAddressTrait.decompress({ h1, h2 });
+  const depositAddr: CompressedStealthAddress = { h1, h2 };
 
   const encodedAssetAddr = BigInt(depositEventResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(depositEventResponse.encodedAssetId);

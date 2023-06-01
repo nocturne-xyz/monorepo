@@ -6,7 +6,7 @@ import { CompressedStealthAddress } from "../crypto";
 const DEPOSIT_REQUEST_TYPEHASH = ethers.utils.solidityKeccak256(
   ["string"],
   [
-    "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,StealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)CompressedStealthAddress(uint256 h1,uint256 h2)",
+    "DepositRequest(address spender,EncodedAsset encodedAsset,uint256 value,CompressedStealthAddress depositAddr,uint256 nonce,uint256 gasCompensation)EncodedAsset(uint256 encodedAssetAddr,uint256 encodedAssetId)CompressedStealthAddress(uint256 h1,uint256 h2)",
   ]
 );
 
