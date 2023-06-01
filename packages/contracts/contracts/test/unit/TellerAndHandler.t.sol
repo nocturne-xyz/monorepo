@@ -192,8 +192,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             }
 
             EncodedNote memory note = EncodedNote(
-                addr.h1X,
-                addr.h2X,
+                addr.h1,
+                addr.h2,
                 i,
                 uint256(uint160(address(token))),
                 ERC20_ID,
