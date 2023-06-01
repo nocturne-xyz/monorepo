@@ -128,13 +128,6 @@ contract JsonDecodings is Test {
         address screenerAddress = json.readAddress(".screenerAddress");
         bytes32 depositRequestHash = json.readBytes32(".depositRequestHash");
 
-        console.log("contractAddress: ", contractAddress);
-        console.log("contractName: ", contractName);
-        console.log("contractVersion: ", contractVersion);
-        console.log("chainId: ", chainId);
-        console.log("screenerAddress: ", screenerAddress);
-        console.logBytes32(depositRequestHash);
-
         return
             SimpleDepositRequestFixtureTypes({
                 contractAddress: contractAddress,
@@ -159,11 +152,6 @@ contract JsonDecodings is Test {
         uint256 gasCompensation = ParseUtils.parseInt(
             json.readString(".depositRequest.gasCompensation")
         );
-
-        console.log("spender: ", spender);
-        console.log("value: ", value);
-        console.log("nonce: ", nonce);
-        console.log("gasCompensation: ", gasCompensation);
 
         return
             SimpleSignedDepositRequestTypes({
@@ -212,8 +200,6 @@ contract JsonDecodings is Test {
         uint256 s = json.readUint(".signature.s");
         uint8 v = uint8(json.readUint(".signature.v"));
         bytes memory sig = ParseUtils.rsvToSignatureBytes(r, s, v);
-
-        console.logBytes(sig);
         return sig;
     }
 

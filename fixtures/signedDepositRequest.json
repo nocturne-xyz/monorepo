@@ -6,15 +6,9 @@
   "screenerAddress": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
   "depositRequest": {
     "spender": "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf",
-    "encodedAsset": {
-      "encodedAssetAddr": "291",
-      "encodedAssetId": "0"
-    },
+    "encodedAsset": { "encodedAssetAddr": "291", "encodedAssetId": "0" },
     "value": "1000",
-    "depositAddr": {
-      "h1": "1",
-      "h2": "2"
-    },
+    "depositAddr": { "h1": "1", "h2": "2" },
     "nonce": "0",
     "gasCompensation": "50"
   },
