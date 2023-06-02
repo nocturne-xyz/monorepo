@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- use custom implementation of EIP712 signer instead of ethers
 - make EIP712 typehash / signature to use new compressed address encoding
 - fix wrong service name in bundler server run cmd
 - server start returns `ActorHandle` and awaits promise to avoid early exit

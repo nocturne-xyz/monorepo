@@ -23,8 +23,8 @@ template JoinSplit(levels) {
     signal input c;
     signal input z;
 
-    // encodedAssetAddr, but with the sign bits placed at bits 248 and 249 (when zero-indexed in little-endian order)
-    signal input hodgePodge;
+    // encodedAssetAddr, but with the sign bits of encSenderCanonAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
+    signal input encodedAssetAddrWithSignBits;
     signal input encodedAssetId;
 
     // Old note A
@@ -109,17 +109,17 @@ template JoinSplit(levels) {
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
 
-    // get encodedAssetAddr and sign bits out of hodgePodge
+    // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
     // don't need Num2Bits_strict here because it's only 253 bits
-    signal hodgePodgeBits[253] <==  Num2Bits(253)(hodgePodge);
-    signal c1Sign <== hodgePodgeBits[248];
-    signal c2Sign <== hodgePodgeBits[249];
+    signal encodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBits);
+    signal c1Sign <== encodedAssetAddrWithSignBitsBits[248];
+    signal c2Sign <== encodedAssetAddrWithSignBitsBits[249];
 
     // instead of doing another bit decomp, subtract 2^248 * c1Sign + 2^249 * c2Sign
-    // from hodgePodge
+    // from encodedAssetAddrWithSignBits
     signal c1SignTimes2ToThe161 <== (1 << 248) * c1Sign;
     signal encodedAssetAddrSubend <== (1 << 249) * c2Sign + c1SignTimes2ToThe161;
-    signal encodedAssetAddr <== hodgePodge - encodedAssetAddrSubend;
+    signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
 
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
@@ -234,7 +234,7 @@ template JoinSplit(levels) {
 
     // compress the two points of the ciphertext.
     // connect the y cordinates to the output signals
-    // and assert that the sign bits match what was given in `hodgePodge`
+    // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBits`
     component compressors[2];
     compressors[0] = CompressPoint();
     compressors[0].in <== c1;
@@ -247,4 +247,4 @@ template JoinSplit(levels) {
     c2Sign === compressors[1].sign;
 }
 
-component main { public [hodgePodge, encodedAssetId, operationDigest] } = JoinSplit(16);
+component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest] } = JoinSplit(16);

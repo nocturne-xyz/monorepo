@@ -16,7 +16,7 @@ import {
   DepositQuoteResponse,
   RelayRequest,
   StealthAddressTrait,
-  encodeHodgePodgePI,
+  encodeEncodedAssetAddrWithSignBitsPI,
   decomposeCompressedPoint,
 } from "@nocturne-xyz/sdk";
 import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
@@ -235,7 +235,7 @@ export class NocturneFrontendSDK {
         const c1 = joinSplit.encSenderCanonAddrC1;
         const c2 = joinSplit.encSenderCanonAddrC2;
         const encSenderCanonAddr = { c1, c2 };
-        const hodgePodge = encodeHodgePodgePI(joinSplit.encodedAsset.encodedAssetAddr, encSenderCanonAddr);
+        const encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(joinSplit.encodedAsset.encodedAssetAddr, encSenderCanonAddr);
 
         const [, encSenderCanonAddrC1Y] = decomposeCompressedPoint(c1);
         const [, encSenderCanonAddrC2Y] = decomposeCompressedPoint(c1);
@@ -248,7 +248,7 @@ export class NocturneFrontendSDK {
           nullifierA: joinSplit.nullifierA,
           nullifierB: joinSplit.nullifierB,
           opDigest,
-          hodgePodge,
+          encodedAssetAddrWithSignBits,
           encodedAssetId: joinSplit.encodedAsset.encodedAssetId,
           encSenderCanonAddrC1Y,
           encSenderCanonAddrC2Y,

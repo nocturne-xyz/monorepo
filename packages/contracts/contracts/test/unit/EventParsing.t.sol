@@ -38,8 +38,6 @@ contract EventParsingTest is Test {
         assertEq(req.encodedAsset.encodedAssetId, 2);
         assertEq(req.value, 3);
         assertEq(req.depositAddr.h1, NocturneUtils.defaultStealthAddress().h1);
-        assertEq(req.depositAddr.h1, NocturneUtils.defaultStealthAddress().h1);
-        assertEq(req.depositAddr.h2, NocturneUtils.defaultStealthAddress().h2);
         assertEq(req.depositAddr.h2, NocturneUtils.defaultStealthAddress().h2);
         assertEq(req.nonce, 4);
         assertEq(req.gasCompensation, 5);

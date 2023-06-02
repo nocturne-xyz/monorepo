@@ -25,7 +25,7 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // encSenderCanonAddrC1X
     bigint, // encSenderCanonAddrC2X
     bigint, // operationDigest
-    bigint, // hodgePodge
+    bigint, // encodedAssetAddrWithSignBits
     bigint // encodedAssetId
   ];
 }
@@ -38,7 +38,7 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  hodgePodge: bigint;
+  encodedAssetAddrWithSignBits: bigint;
   encodedAssetId: bigint;
   encSenderCanonAddrC1Y: bigint;
   encSenderCanonAddrC2Y: bigint;
@@ -58,7 +58,7 @@ export interface JoinSplitInputs {
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
   encRandomness: bigint;
-  hodgePodge: bigint;
+  encodedAssetAddrWithSignBits: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -74,7 +74,7 @@ export function joinSplitPublicSignalsFromArray(
     encSenderCanonAddrC1Y: publicSignals[6],
     encSenderCanonAddrC2Y: publicSignals[7],
     opDigest: publicSignals[8],
-    hodgePodge: publicSignals[9],
+    encodedAssetAddrWithSignBits: publicSignals[9],
     encodedAssetId: publicSignals[10],
   };
 }
@@ -104,7 +104,7 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.encSenderCanonAddrC1Y,
     publicSignals.encSenderCanonAddrC2Y,
     publicSignals.opDigest,
-    publicSignals.hodgePodge,
+    publicSignals.encodedAssetAddrWithSignBits,
     publicSignals.encodedAssetId,
   ];
 }
@@ -112,7 +112,7 @@ export function joinSplitPublicSignalsToArray(
 const SIGN_BIT_MASK = 1n << 254n;
 
 // encodedAssetAddr with the sign bits of the encrypted sender canon address placed at bits 248 and 249 (counting from LSB to MSB starting at 0)
-export function encodeHodgePodgePI(
+export function encodeEncodedAssetAddrWithSignBitsPI(
   encodedAssetAddr: bigint,
   encSenderCanonAddr: EncryptedCanonAddress
 ): bigint {

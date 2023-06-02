@@ -9,7 +9,7 @@ import {
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
 import { randomFr } from "./crypto";
-import { encodeHodgePodgePI } from "./proof/joinsplit";
+import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
 
 export function signOperation(
   signer: NocturneSigner,
@@ -98,7 +98,7 @@ function makePreProofJoinSplit(
     newNoteA: encodedNewNoteA,
     newNoteB: encodedNewNoteB,
     encRandomness,
-    hodgePodge: encodeHodgePodgePI(
+    encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
       encodedNewNoteA.encodedAssetAddr,
       encSenderCanonAddr
     ),

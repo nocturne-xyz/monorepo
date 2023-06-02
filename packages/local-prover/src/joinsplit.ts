@@ -36,7 +36,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       newNoteA,
       newNoteB,
       encRandomness,
-      hodgePodge,
+      encodedAssetAddrWithSignBits,
     } = inputs;
 
     const signals = {
@@ -77,7 +77,7 @@ export class WasmJoinSplitProver implements JoinSplitProver {
       newNoteBValue: newNoteB.value,
 
       encRandomness,
-      hodgePodge,
+      encodedAssetAddrWithSignBits,
     };
 
     const proof = await snarkjs.groth16.fullProve(

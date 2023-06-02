@@ -11,7 +11,7 @@ import {
   EncodedNote,
   StealthAddressTrait,
   randomFr,
-  encodeHodgePodgePI,
+  encodeEncodedAssetAddrWithSignBitsPI,
   TreeConstants,
 } from "@nocturne-xyz/sdk";
 
@@ -165,7 +165,10 @@ const joinsplitInputs: JoinSplitInputs = {
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
   encRandomness,
-  hodgePodge: encodeHodgePodgePI(oldNoteA.encodedAssetAddr, encSenderCanonAddr),
+  encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
+    oldNoteA.encodedAssetAddr,
+    encSenderCanonAddr
+  ),
 };
 console.log(joinsplitInputs);
 

@@ -49,11 +49,19 @@ library OperationUtils {
                         op.joinSplits[j].encSenderCanonAddrC2
                     );
 
-                uint256 hodgePodge = encodeHodgePodgePI(
-                    op.joinSplits[j].encodedAsset.encodedAssetAddr,
-                    encSenderC1SignBit,
-                    encSenderC2SignBit
+                // range-check y-coordinate
+                require(
+                    encSenderC1YCoordinate < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                        encSenderC2YCoordinate <
+                        Utils.BN254_SCALAR_FIELD_MODULUS,
+                    "OperationUtils: invalid y-coordinate"
                 );
+
+                uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
+                        op.joinSplits[j].encodedAsset.encodedAssetAddr,
+                        encSenderC1SignBit,
+                        encSenderC2SignBit
+                    );
 
                 proofs[index] = op.joinSplits[j].proof;
                 allPis[index] = new uint256[](11);
@@ -66,7 +74,7 @@ library OperationUtils {
                 allPis[index][6] = encSenderC1YCoordinate;
                 allPis[index][7] = encSenderC2YCoordinate;
                 allPis[index][8] = digests[i];
-                allPis[index][9] = hodgePodge;
+                allPis[index][9] = encodedAssetAddrWithSignBits;
                 allPis[index][10] = op
                     .joinSplits[j]
                     .encodedAsset
@@ -88,7 +96,7 @@ library OperationUtils {
         return (sign, y);
     }
 
-    function encodeHodgePodgePI(
+    function encodeEncodedAssetAddrWithSignBitsPI(
         uint256 encodedAssetAddr,
         uint256 c1SignBit,
         uint256 c2SignBit
