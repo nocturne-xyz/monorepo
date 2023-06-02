@@ -39,7 +39,7 @@ import { RPC_URL } from "../config/contracts";
 import { SCREENER_ENDPOINT } from "../config/bundler";
 
 const ERC20_ID = 0n;
-const TOKEN_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
+const TOKEN_ADDRESS = "0xB0D4afd8879eD9F52b28595d31B441D079B2Ca07";
 const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 const Container = styled.div`
