@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- add ElGamal encryption for canonical addresses and use in joinsplit PI generation code
+- use `CompressedStealthAddress` in `EncryptedNote` and refund addr
+- update joinsplit input types and encoding 
+- change note commmitment / hash functions to avoid potential collision using new compressed encoding
+- add `CompressedStealthAddress` and methods for compressing / decompressing points and stealth addresses
 - modify joinsplit indexing after removing fields from joinsplit event
 - export subgraph sync fetch methods so subtree-updater can use for its own adapter
 - fix off-by one bug in RPC sync adapter last committed merkle index
