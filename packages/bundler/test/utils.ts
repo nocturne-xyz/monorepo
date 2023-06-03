@@ -15,10 +15,8 @@ export const VALID_RELAY_REQUEST = {
         publicSpend: "0n",
         newNoteAEncrypted: {
           owner: {
-            h1X: "0n",
-            h1Y: "0n",
-            h2X: "0n",
-            h2Y: "0n",
+            h1: "0n",
+            h2: "0n",
           },
           encappedKey: "0n",
           encryptedNonce: "0n",
@@ -26,24 +24,20 @@ export const VALID_RELAY_REQUEST = {
         },
         newNoteBEncrypted: {
           owner: {
-            h1X: "0n",
-            h1Y: "0n",
-            h2X: "0n",
-            h2Y: "0n",
+            h1: "0n",
+            h2: "0n",
           },
           encappedKey: "0n",
           encryptedNonce: "0n",
           encryptedValue: "0n",
         },
-        encSenderCanonAddrC1X: "0n",
-        encSenderCanonAddrC2X: "0n",
+        encSenderCanonAddrC1: "0n",
+        encSenderCanonAddrC2: "0n",
       },
     ],
     refundAddr: {
-      h1X: "0n",
-      h1Y: "0n",
-      h2X: "0n",
-      h2Y: "0n",
+      h1: "0n",
+      h2: "0n",
     },
     encodedRefundAssets: [
       {

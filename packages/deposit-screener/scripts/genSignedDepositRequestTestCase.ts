@@ -6,7 +6,10 @@ import {
 } from "@nocturne-xyz/sdk";
 import { ERC20_ID } from "@nocturne-xyz/sdk/dist/src/primitives/asset";
 import { ethers, Wallet } from "ethers";
-import { EIP712Domain, signDepositRequest } from "../src";
+import {
+  EIP712Domain,
+  signDepositRequest,
+} from "../src";
 import findWorkspaceRoot from "find-yarn-workspace-root";
 import * as path from "path";
 import * as fs from "fs";
@@ -57,19 +60,25 @@ function toObject(obj: any) {
     encodedAsset,
     value: 1000n,
     depositAddr: {
-      h1X: 1n,
-      h1Y: 2n,
-      h2X: 3n,
-      h2Y: 5n,
+      h1: 1n,
+      h2: 2n,
     },
     nonce: 0n,
     gasCompensation: 50n,
   };
 
+  const signature = await signDepositRequest(
+    signer,
+    domain,
+    depositRequest
+  );
   const hash = hashDepositRequest(depositRequest);
 
-  const signature = await signDepositRequest(signer, domain, depositRequest);
+  console.log("sig", signature);
+
   const { r, s, v } = ethers.utils.splitSignature(signature);
+
+  console.log("rsv", [r, s, v]);
 
   const expectedSignerAddress = await signer.getAddress();
   const recoveredAddress = ethers.utils.verifyTypedData(

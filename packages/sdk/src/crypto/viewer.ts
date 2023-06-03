@@ -1,11 +1,20 @@
-import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
+import {
+  CanonAddress,
+  EncryptedCanonAddress,
+  StealthAddress,
+  StealthAddressTrait,
+} from "./address";
 import { ViewingKey } from "./keys";
 import randomBytes from "randombytes";
 import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { IncludedNote, Note, NoteTrait } from "../primitives/note";
 import { EncryptedNote } from "../primitives/types";
 import { Asset } from "../primitives/asset";
-import { decryptNote } from "./noteEncryption";
+import {
+  decryptCanonAddr,
+  decryptNote,
+  encryptCanonAddr,
+} from "./noteEncryption";
 
 const Fr = BabyJubJub.ScalarField;
 
@@ -75,7 +84,9 @@ export class NocturneViewer {
     merkleIndex: number,
     asset: Asset
   ): IncludedNote {
-    if (!this.isOwnAddress(encryptedNote.owner)) {
+    if (
+      !this.isOwnAddress(StealthAddressTrait.decompress(encryptedNote.owner))
+    ) {
       throw Error("cannot decrypt a note that is not owned by signer");
     }
 
@@ -90,5 +101,16 @@ export class NocturneViewer {
       ...note,
       merkleIndex,
     };
+  }
+
+  encryptCanonAddrToReceiver(
+    receiver: CanonAddress,
+    nonce: bigint
+  ): EncryptedCanonAddress {
+    return encryptCanonAddr(this.canonicalAddress(), receiver, nonce);
+  }
+
+  decryptCanonAddr(encryptedCanonAddr: EncryptedCanonAddress): CanonAddress {
+    return decryptCanonAddr(encryptedCanonAddr, this.vk);
   }
 }

@@ -184,7 +184,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Bound deposit amounts, save deposit reqs
         uint256[] memory depositAmounts = new uint256[](numDeposits);
         DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
-        StealthAddress memory depositAddr = NocturneUtils
+        CompressedStealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
 
         uint256 gasPrice = bound(seed, 0, 10_000 gwei); // historical high is 700 gwei
@@ -257,7 +257,7 @@ contract DepositManagerHandler is CommonBase, StdCheats, StdUtils {
         // Bound deposit amounts, reserve tokens, save deposit reqs
         uint256[] memory depositAmounts = new uint256[](numDeposits);
         DepositRequest[] memory deposits = new DepositRequest[](numDeposits);
-        StealthAddress memory depositAddr = NocturneUtils
+        CompressedStealthAddress memory depositAddr = NocturneUtils
             .defaultStealthAddress();
         uint256 gasPrice = bound(seed, 0, 10_000 gwei);
         uint256 gasCompPerDeposit = AVG_GAS_PER_COMPLETE * gasPrice;

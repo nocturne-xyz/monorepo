@@ -6,6 +6,8 @@ import "../libs/Types.sol";
 
 // Helpers for extracting data / formatting operations
 library OperationUtils {
+    uint256 constant COMPRESSED_POINT_SIGN_MASK = 1 << 254;
+
     function extractJoinSplitProofsAndPis(
         Operation[] calldata ops,
         uint256[] memory digests
@@ -33,6 +35,34 @@ library OperationUtils {
             Operation memory op = ops[i];
             uint256 numJoinSplitsForOp = op.joinSplits.length;
             for (uint256 j = 0; j < numJoinSplitsForOp; j++) {
+                (
+                    uint256 encSenderC1SignBit,
+                    uint256 encSenderC1YCoordinate
+                ) = decomposeCompressedPoint(
+                        op.joinSplits[j].encSenderCanonAddrC1
+                    );
+
+                (
+                    uint256 encSenderC2SignBit,
+                    uint256 encSenderC2YCoordinate
+                ) = decomposeCompressedPoint(
+                        op.joinSplits[j].encSenderCanonAddrC2
+                    );
+
+                // range-check y-coordinate
+                require(
+                    encSenderC1YCoordinate < Utils.BN254_SCALAR_FIELD_MODULUS &&
+                        encSenderC2YCoordinate <
+                        Utils.BN254_SCALAR_FIELD_MODULUS,
+                    "OperationUtils: invalid y-coordinate"
+                );
+
+                uint256 encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(
+                        op.joinSplits[j].encodedAsset.encodedAssetAddr,
+                        encSenderC1SignBit,
+                        encSenderC2SignBit
+                    );
+
                 proofs[index] = op.joinSplits[j].proof;
                 allPis[index] = new uint256[](11);
                 allPis[index][0] = op.joinSplits[j].newNoteACommitment;
@@ -41,13 +71,10 @@ library OperationUtils {
                 allPis[index][3] = op.joinSplits[j].publicSpend;
                 allPis[index][4] = op.joinSplits[j].nullifierA;
                 allPis[index][5] = op.joinSplits[j].nullifierB;
-                allPis[index][6] = op.joinSplits[j].encSenderCanonAddrC1X;
-                allPis[index][7] = op.joinSplits[j].encSenderCanonAddrC2X;
+                allPis[index][6] = encSenderC1YCoordinate;
+                allPis[index][7] = encSenderC2YCoordinate;
                 allPis[index][8] = digests[i];
-                allPis[index][9] = op
-                    .joinSplits[j]
-                    .encodedAsset
-                    .encodedAssetAddr;
+                allPis[index][9] = encodedAssetAddrWithSignBits;
                 allPis[index][10] = op
                     .joinSplits[j]
                     .encodedAsset
@@ -57,6 +84,24 @@ library OperationUtils {
         }
 
         return (proofs, allPis);
+    }
+
+    // takes a compressed point and extracts the sign bit and y coordinate
+    // returns (sign, y)
+    function decomposeCompressedPoint(
+        uint256 compressedPoint
+    ) internal pure returns (uint256 sign, uint256 y) {
+        sign = (compressedPoint & COMPRESSED_POINT_SIGN_MASK) >> 254;
+        y = compressedPoint & (COMPRESSED_POINT_SIGN_MASK - 1);
+        return (sign, y);
+    }
+
+    function encodeEncodedAssetAddrWithSignBitsPI(
+        uint256 encodedAssetAddr,
+        uint256 c1SignBit,
+        uint256 c2SignBit
+    ) internal pure returns (uint256) {
+        return encodedAssetAddr | (c1SignBit << 248) | (c2SignBit << 249);
     }
 
     function computeOperationDigests(
@@ -78,12 +123,7 @@ library OperationUtils {
         // Split payload packing due to stack size limit
         bytes memory payload = abi.encodePacked(
             _createJoinSplitsPayload(op.joinSplits),
-            abi.encodePacked(
-                op.refundAddr.h1X,
-                op.refundAddr.h1Y,
-                op.refundAddr.h2X,
-                op.refundAddr.h2Y
-            ),
+            abi.encodePacked(op.refundAddr.h1, op.refundAddr.h2),
             _createRefundAssetsPayload(op.encodedRefundAssets),
             _createActionsPayload(op.actions),
             abi.encodePacked(

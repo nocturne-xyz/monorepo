@@ -73,13 +73,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "encSenderCanonAddrC1X",
+        "name": "encSenderCanonAddrC1",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "encSenderCanonAddrC2X",
+        "name": "encSenderCanonAddrC2",
         "type": "uint256"
       },
       {
@@ -112,26 +112,16 @@
             "components": [
               {
                 "internalType": "uint256",
-                "name": "h1X",
+                "name": "h1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
+                "name": "h2",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct StealthAddress",
+            "internalType": "struct CompressedStealthAddress",
             "name": "owner",
             "type": "tuple"
           },
@@ -162,26 +152,16 @@
             "components": [
               {
                 "internalType": "uint256",
-                "name": "h1X",
+                "name": "h1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
+                "name": "h2",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct StealthAddress",
+            "internalType": "struct CompressedStealthAddress",
             "name": "owner",
             "type": "tuple"
           },
@@ -249,27 +229,17 @@
         "components": [
           {
             "internalType": "uint256",
-            "name": "h1X",
+            "name": "h1",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "h1Y",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "h2X",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "h2Y",
+            "name": "h2",
             "type": "uint256"
           }
         ],
         "indexed": false,
-        "internalType": "struct StealthAddress",
+        "internalType": "struct CompressedStealthAddress",
         "name": "refundAddr",
         "type": "tuple"
       },
@@ -593,12 +563,12 @@
               },
               {
                 "internalType": "uint256",
-                "name": "encSenderCanonAddrC1X",
+                "name": "encSenderCanonAddrC1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "encSenderCanonAddrC2X",
+                "name": "encSenderCanonAddrC2",
                 "type": "uint256"
               },
               {
@@ -634,26 +604,16 @@
                     "components": [
                       {
                         "internalType": "uint256",
-                        "name": "h1X",
+                        "name": "h1",
                         "type": "uint256"
                       },
                       {
                         "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
+                        "name": "h2",
                         "type": "uint256"
                       }
                     ],
-                    "internalType": "struct StealthAddress",
+                    "internalType": "struct CompressedStealthAddress",
                     "name": "owner",
                     "type": "tuple"
                   },
@@ -683,26 +643,16 @@
                     "components": [
                       {
                         "internalType": "uint256",
-                        "name": "h1X",
+                        "name": "h1",
                         "type": "uint256"
                       },
                       {
                         "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
+                        "name": "h2",
                         "type": "uint256"
                       }
                     ],
-                    "internalType": "struct StealthAddress",
+                    "internalType": "struct CompressedStealthAddress",
                     "name": "owner",
                     "type": "tuple"
                   },
@@ -735,26 +685,16 @@
             "components": [
               {
                 "internalType": "uint256",
-                "name": "h1X",
+                "name": "h1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
+                "name": "h2",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct StealthAddress",
+            "internalType": "struct CompressedStealthAddress",
             "name": "refundAddr",
             "type": "tuple"
           },
@@ -908,26 +848,16 @@
             "components": [
               {
                 "internalType": "uint256",
-                "name": "h1X",
+                "name": "h1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
+                "name": "h2",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct StealthAddress",
+            "internalType": "struct CompressedStealthAddress",
             "name": "depositAddr",
             "type": "tuple"
           }
@@ -975,12 +905,12 @@
               },
               {
                 "internalType": "uint256",
-                "name": "encSenderCanonAddrC1X",
+                "name": "encSenderCanonAddrC1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "encSenderCanonAddrC2X",
+                "name": "encSenderCanonAddrC2",
                 "type": "uint256"
               },
               {
@@ -1016,26 +946,16 @@
                     "components": [
                       {
                         "internalType": "uint256",
-                        "name": "h1X",
+                        "name": "h1",
                         "type": "uint256"
                       },
                       {
                         "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
+                        "name": "h2",
                         "type": "uint256"
                       }
                     ],
-                    "internalType": "struct StealthAddress",
+                    "internalType": "struct CompressedStealthAddress",
                     "name": "owner",
                     "type": "tuple"
                   },
@@ -1065,26 +985,16 @@
                     "components": [
                       {
                         "internalType": "uint256",
-                        "name": "h1X",
+                        "name": "h1",
                         "type": "uint256"
                       },
                       {
                         "internalType": "uint256",
-                        "name": "h1Y",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2X",
-                        "type": "uint256"
-                      },
-                      {
-                        "internalType": "uint256",
-                        "name": "h2Y",
+                        "name": "h2",
                         "type": "uint256"
                       }
                     ],
-                    "internalType": "struct StealthAddress",
+                    "internalType": "struct CompressedStealthAddress",
                     "name": "owner",
                     "type": "tuple"
                   },
@@ -1117,26 +1027,16 @@
             "components": [
               {
                 "internalType": "uint256",
-                "name": "h1X",
+                "name": "h1",
                 "type": "uint256"
               },
               {
                 "internalType": "uint256",
-                "name": "h1Y",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2X",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "h2Y",
+                "name": "h2",
                 "type": "uint256"
               }
             ],
-            "internalType": "struct StealthAddress",
+            "internalType": "struct CompressedStealthAddress",
             "name": "refundAddr",
             "type": "tuple"
           },

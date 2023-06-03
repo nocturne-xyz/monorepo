@@ -111,7 +111,7 @@ const TEST_CANONICAL_NOCTURNE_ADDRS: CanonAddress[] = [
       );
       const tx = await depositManager
         .connect(deployerEoa)
-        .instantiateErc20MultiDeposit(token.address, [amount], addr);
+        .instantiateErc20MultiDeposit(token.address, [amount], StealthAddressTrait.compress(addr));
       await tx.wait(1);
     }
   }

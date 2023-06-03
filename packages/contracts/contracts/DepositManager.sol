@@ -80,7 +80,7 @@ contract DepositManager is
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
-        StealthAddress depositAddr,
+        CompressedStealthAddress depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     );
@@ -90,7 +90,7 @@ contract DepositManager is
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
-        StealthAddress depositAddr,
+        CompressedStealthAddress depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     );
@@ -100,7 +100,7 @@ contract DepositManager is
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
-        StealthAddress depositAddr,
+        CompressedStealthAddress depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     );
@@ -245,7 +245,7 @@ contract DepositManager is
     function instantiateErc20MultiDeposit(
         address token,
         uint256[] calldata values,
-        StealthAddress calldata depositAddr
+        CompressedStealthAddress calldata depositAddr
     ) external payable nonReentrant enforceErc20DepositSize(token, values) {
         uint256 numValues = values.length;
         require(msg.value % numValues == 0, "!gas comp split");
@@ -297,7 +297,7 @@ contract DepositManager is
     /// @param depositAddr Stealth address to deposit to
     function instantiateETHMultiDeposit(
         uint256[] calldata values,
-        StealthAddress calldata depositAddr
+        CompressedStealthAddress calldata depositAddr
     )
         external
         payable

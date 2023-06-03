@@ -26,9 +26,10 @@ template SubtreeUpdate4(r) {
     signal input bitmap[4**s];
 
     // notes to be inserted
-    // ! NOTE: This assumes ristretto compression for addresses has been implemented
-    signal input ownerH1s[4**s];
-    signal input ownerH2s[4**s];
+    signal input ownerH1Xs[4**s];
+    signal input ownerH1Ys[4**s];
+    signal input ownerH2Xs[4**s];
+    signal input ownerH2Ys[4**s];
     signal input nonces[4**s];
     signal input encodedAssetAddrs[4**s];
     signal input encodedAssetIds[4**s];
@@ -46,8 +47,10 @@ template SubtreeUpdate4(r) {
     for (var i = 0; i < 4**s; i++) {
         inner.leaves[i] <== leaves[i];
         inner.bitmap[i] <== bitmap[i];
-        inner.ownerH1s[i] <== ownerH1s[i];
-        inner.ownerH2s[i] <== ownerH2s[i];
+        inner.ownerH1Xs[i] <== ownerH1Xs[i];
+        inner.ownerH1Ys[i] <== ownerH1Ys[i];
+        inner.ownerH2Xs[i] <== ownerH2Xs[i];
+        inner.ownerH2Ys[i] <== ownerH2Ys[i];
         inner.nonces[i] <== nonces[i];
         inner.encodedAssetAddrs[i] <== encodedAssetAddrs[i];
         inner.encodedAssetIds[i] <== encodedAssetIds[i];
@@ -63,8 +66,10 @@ template SubtreeUpdate4(r) {
 // computes both poseidon and sha256 hash of a "concrete" note as defined in notion
 template NoteCommitmentHash() {
     // ! NOTE: This assumes ristretto compression for addresses has been implemented
-    signal input ownerH1;
-    signal input ownerH2;
+    signal input ownerH1X;
+    signal input ownerH1Y;
+    signal input ownerH2X;
+    signal input ownerH2Y;
     signal input nonce;
     signal input encodedAssetAddr;
     signal input encodedAssetId;
@@ -74,17 +79,29 @@ template NoteCommitmentHash() {
     signal output sha256HashBits[256];
     signal output noteCommitment;
 
+    // compress owner address points
+    component compressorH1 = CompressPoint();
+    compressorH1.in[0] <== ownerH1X;
+    compressorH1.in[1] <== ownerH1Y;
+    signal h1Sign <== compressorH1.sign;
+    signal h1CompressedY <== compressorH1.y;
+
+    component compressorH2 = CompressPoint();
+    compressorH2.in[0] <== ownerH2X;
+    compressorH2.in[1] <== ownerH2Y;
+    signal h2Sign <== compressorH2.sign;
+    signal h2CompressedY <== compressorH2.y;
+
     // compute sha256 hash
     component sha256Hasher = Sha256(256 * 6);
     component elemBits[6];
 
-    signal ownerHash;
-
+    // pack bits into sha256 input
     elemBits[0] = Num2BitsBE_strict();
-    elemBits[0].in <== ownerH1;
+    elemBits[0].in <== h1CompressedY;
 
     elemBits[1] = Num2BitsBE_strict();
-    elemBits[1].in <== ownerH2;
+    elemBits[1].in <== h2CompressedY;
 
     elemBits[2] = Num2BitsBE_strict();
     elemBits[2].in <== nonce;
@@ -98,32 +115,40 @@ template NoteCommitmentHash() {
     elemBits[5] = Num2BitsBE_strict();
     elemBits[5].in <== value;
 
-    for (var i = 0; i < 6; i++) {
+    // pack bits for H1 into hasher
+    sha256Hasher.in[0] <== 0;
+    sha256Hasher.in[1] <== h1Sign;
+    for (var j = 0; j < 254; j++) {
+        sha256Hasher.in[2 + j] <== elemBits[0].out[j];
+    }
+
+    // pack bits for H2 into hasher
+    sha256Hasher.in[256] <== 0;
+    sha256Hasher.in[256 + 1] <== h2Sign;
+    for (var j = 0; j < 254; j++) {
+        sha256Hasher.in[256 + 2 + j] <== elemBits[1].out[j];
+    }
+
+    // pack bits for rest of the fields into hasher
+    for (var i = 2; i < 6; i++) {
+        sha256Hasher.in[i*256] <== 0;
+        sha256Hasher.in[i*256 + 1] <== 0;
         for (var j = 0; j < 254; j++) {
           sha256Hasher.in[i*256 + 2 + j] <== elemBits[i].out[j];
         }
-        sha256Hasher.in[i*256] <== 0;
-        sha256Hasher.in[i*256 + 1] <== 0;
     }
 
     for (var i = 0; i < 256; i++) {
         sha256HashBits[i] <== sha256Hasher.out[i];
     }
 
-    // hash owner
-    component hasher = Poseidon(2);
-    hasher.inputs[0] <== ownerH1;
-    hasher.inputs[1] <== ownerH2;
-    ownerHash <== hasher.out;
-
-    component noteCommit = NoteCommit();
-    noteCommit.ownerHash <== ownerHash;
-    noteCommit.nonce <== nonce;
-    noteCommit.encodedAssetAddr <== encodedAssetAddr;
-    noteCommit.encodedAssetId <== encodedAssetId;
-    noteCommit.value <== value;
-
-    noteCommitment <== noteCommit.out;
+    noteCommitment <== NoteCommit()(
+        Poseidon(4)([ownerH1X, ownerH1Y, ownerH2X, ownerH2Y]),
+        nonce,
+        encodedAssetAddr,
+        encodedAssetId,
+        value
+    );
 }
 
 // Update a quaternary subtree of depth s, where overall tree is of depth r + s
@@ -154,8 +179,10 @@ template SubtreeUpdate(r, s) {
     signal input emptySubtreeRoot;
 
     // notes to be inserted
-    signal input ownerH1s[4**s];
-    signal input ownerH2s[4**s];
+    signal input ownerH1Xs[4**s];
+    signal input ownerH1Ys[4**s];
+    signal input ownerH2Xs[4**s];
+    signal input ownerH2Ys[4**s];
     signal input nonces[4**s];
     signal input encodedAssetAddrs[4**s];
     signal input encodedAssetIds[4**s];
@@ -174,8 +201,10 @@ template SubtreeUpdate(r, s) {
     component leafBits[4**s];
     for (var i = 0; i < 4**s; i++) {
         noteHashers[i] = parallel NoteCommitmentHash();
-        noteHashers[i].ownerH1 <== ownerH1s[i];
-        noteHashers[i].ownerH2 <== ownerH2s[i];
+        noteHashers[i].ownerH1X <== ownerH1Xs[i];
+        noteHashers[i].ownerH1Y <== ownerH1Ys[i];
+        noteHashers[i].ownerH2X <== ownerH2Xs[i];
+        noteHashers[i].ownerH2Y <== ownerH2Ys[i];
         noteHashers[i].nonce <== nonces[i];
         noteHashers[i].encodedAssetAddr <== encodedAssetAddrs[i];
         noteHashers[i].encodedAssetId <== encodedAssetIds[i];

@@ -43,7 +43,7 @@ contract CommitmentTreeManager is
     /// @dev Refund means any outstanding assets left in the handler during execution
     ///      or a new deposit
     event RefundProcessed(
-        StealthAddress refundAddr,
+        CompressedStealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -59,8 +59,8 @@ contract CommitmentTreeManager is
         uint128 newNoteBIndex,
         uint256 newNoteACommitment,
         uint256 newNoteBCommitment,
-        uint256 encSenderCanonAddrC1X,
-        uint256 encSenderCanonAddrC2X,
+        uint256 encSenderCanonAddrC1,
+        uint256 encSenderCanonAddrC2,
         EncodedAsset encodedAsset,
         uint256 publicSpend,
         EncryptedNote newNoteAEncrypted,
@@ -207,8 +207,8 @@ contract CommitmentTreeManager is
                 newNoteIndexB,
                 joinSplit.newNoteACommitment,
                 joinSplit.newNoteBCommitment,
-                joinSplit.encSenderCanonAddrC1X,
-                joinSplit.encSenderCanonAddrC2X,
+                joinSplit.encSenderCanonAddrC1,
+                joinSplit.encSenderCanonAddrC2,
                 joinSplit.encodedAsset,
                 joinSplit.publicSpend,
                 joinSplit.newNoteAEncrypted,
@@ -225,13 +225,13 @@ contract CommitmentTreeManager is
     /// @param value Value of refund note for given asset
     function _handleRefundNote(
         EncodedAsset memory encodedAsset,
-        StealthAddress calldata refundAddr,
+        CompressedStealthAddress calldata refundAddr,
         uint256 value
     ) internal {
         uint128 index = _merkle.getTotalCount();
         EncodedNote memory note = EncodedNote({
-            ownerH1: refundAddr.h1X,
-            ownerH2: refundAddr.h2X,
+            ownerH1: refundAddr.h1,
+            ownerH2: refundAddr.h2,
             nonce: index,
             encodedAssetAddr: encodedAsset.encodedAssetAddr,
             encodedAssetId: encodedAsset.encodedAssetId,

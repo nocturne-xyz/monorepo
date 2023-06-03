@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- use new compressed encoding to compute note hashes in subtree update logic
+- replace `StealthAddress` with `CompressedStealthAddress`, which is composed of two points in 255-bit compressed encoding
 - remove proof and root from joinsplit events
 - `OperationProcessed` event removes two indexed params (more of this to come soon)
 - small gas optimization where we use contiguous subarray index to avoid checking balances for joinsplits of same asset in `BalanceManager`
