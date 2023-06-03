@@ -29,12 +29,8 @@
     },
     "joinSplitVerifierAddress": "0xeFd922737095A88d17d1651E61eB5F0d58665DcF",
     "subtreeUpdateVerifierAddress": "0x6d290e8203dB0479D3F7afA7aC4A1224E95ed210",
-    "screeners": [
-      "0x44cD09776A1c3b803A5Fe30660528a61d36653B4"
-    ],
-    "depositSources": [
-      "0x760F975F3134D3B776f18f3432c8E99E8922a69f"
-    ]
+    "screeners": ["0x44cD09776A1c3b803A5Fe30660528a61d36653B4"],
+    "depositSources": ["0x760F975F3134D3B776f18f3432c8E99E8922a69f"]
   },
   "erc20s": [
     [
@@ -68,17 +64,8 @@
     ]
   ],
   "protocolAllowlist": [
-    [
-      "TEST-TOKEN",
-      "0xcdc49851041160d977F1aE2a339b42f28898A7fA"
-    ],
-    [
-      "weth",
-      "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"
-    ],
-    [
-      "dai",
-      "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6"
-    ]
+    ["TEST-TOKEN", "0xcdc49851041160d977F1aE2a339b42f28898A7fA"],
+    ["weth", "0x7b79995e5f793a07bc00c21412e50ecae098e7f9"],
+    ["dai", "0x3e622317f8c93f7328350cf0b56d9ed4c620c5d6"]
   ]
 }

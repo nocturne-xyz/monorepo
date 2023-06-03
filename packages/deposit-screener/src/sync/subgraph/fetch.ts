@@ -64,6 +64,11 @@ export async function fetchDepositEvents(
   const toIdx = totalLogIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
   const res = await query({ fromIdx, toIdx, type });
+
+  if (!res.data || res.data.depositEvents.length === 0) {
+    return [];
+  }
+
   return res.data.depositEvents.map(depositEventFromDepositEventResponse);
 }
 

@@ -235,17 +235,19 @@ export class DepositScreenerScreener {
           depositRequestHash: depositHash,
         });
 
+        childLogger.info("processing deposit request");
         const assetAddr = AssetTrait.decode(
           depositRequest.encodedAsset
         ).assetAddr;
+
         if (!this.supportedAssets.has(assetAddr)) {
+          childLogger.warn(`unsupported asset ${assetAddr}`);
           throw new Error(
             `received deposit request for unsupported asset ${assetAddr} in arbiter. This should have been caught by screener`
           );
         }
 
-        childLogger.info("processing deposit request");
-
+        childLogger.debug(`checking if deposit request still outstanding`);
         const inSet =
           await this.depositManagerContract._outstandingDepositHashes(
             depositHash
@@ -255,6 +257,9 @@ export class DepositScreenerScreener {
           return; // Already retrieved or completed
         }
 
+        childLogger.debug(
+          `checking if deposit request passed second screening`
+        );
         const valid = await this.screeningApi.isSafeDepositRequest(
           depositRequest.spender,
           AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
@@ -268,7 +273,6 @@ export class DepositScreenerScreener {
         childLogger.info(
           `deposit request passed screening. pushing to fulfillment queue`
         );
-
         const depositRequestJson = JSON.stringify(depositRequest);
         const jobData: DepositRequestJobData = {
           depositRequestJson,
