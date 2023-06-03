@@ -18,8 +18,13 @@ import { panel, text, heading } from "@metamask/snaps-ui";
 
 const RPC_URL = "http://127.0.0.1:8545/";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
-
 const config = loadNocturneConfigBuiltin("localhost");
+
+// const RPC_URL =
+//   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
+// const SUBGRAPH_API_URL =
+//   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.5-alpha/gn";
+// const config = loadNocturneConfigBuiltin("sepolia");
 
 const Fr = BabyJubJub.ScalarField;
 

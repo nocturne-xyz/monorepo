@@ -3,14 +3,14 @@ import { ethers } from "ethers";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
 import ERC1155 from "./abis/ERC1155.json";
+import "dotenv/config";
 
 export interface TokenDetails {
   decimals: number;
   symbol: string;
 }
 
-export const SNAP_ID =
-  process.env.REACT_APP_SNAP_ORIGIN ?? `local:http://localhost:8080`;
+export const SNAP_ID = "npm:@nocturne-xyz/snap";
 
 export async function getWindowSigner(): Promise<ethers.Signer> {
   const provider = new ethers.providers.Web3Provider(window.ethereum as any);
