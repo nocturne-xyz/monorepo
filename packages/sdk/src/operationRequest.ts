@@ -1,6 +1,9 @@
 import { Asset, Address, Action } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
+import { ethers } from "ethers";
+
+const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -174,6 +177,19 @@ export class OperationRequestBuilder {
     return this;
   }
 
+  // builds `OperationRequest` with default chain info using the given provider
+  // to get the chainid and deadline.
+  async buildWithDefaultChainInfo(
+    provider: ethers.providers.Provider
+  ): Promise<OperationRequest> {
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const deadline = BigInt(
+      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
+    );
+
+    return this.chainId(chainId).deadline(deadline).build();
+  }
+
   // builds the `OperationRequest`.
   // unwraps become `joinSplitRequest`s.
   // all `confidentialPayment`s and joinSplits for the same asset are consolidated
@@ -181,6 +197,13 @@ export class OperationRequestBuilder {
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
   build(): OperationRequest {
+    if (this.op.chainId == 0n) {
+      throw new Error("Missing chain id");
+    }
+    if (this.op.deadline == 0n) {
+      throw new Error("Missing deadline");
+    }
+
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset
@@ -233,6 +256,11 @@ export class OperationRequestBuilder {
     }
 
     this.op.joinSplitRequests = joinSplitRequests;
+
+    if (this.op.joinSplitRequests.length == 0) {
+      throw new Error("No joinSplits or payments specified");
+    }
+
     return this.op;
   }
 }

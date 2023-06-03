@@ -34,8 +34,6 @@ const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
 const VKEY_PATH = "/joinSplitVkey.json";
 
-const ONE_DAY_SECONDS = 24 * 60 * 60;
-
 export type BundlerOperationID = string;
 
 export interface Endpoints {
@@ -193,19 +191,12 @@ export class NocturneFrontendSDK {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const chainId = BigInt((await provider.getNetwork()).chainId);
-    const deadline = BigInt(
-      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
-    );
-
-    const operationRequest = new OperationRequestBuilder()
+    const operationRequest = await new OperationRequestBuilder()
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
       .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
-      .chainId(chainId)
-      .deadline(deadline)
-      .build();
+      .buildWithDefaultChainInfo(provider);
 
     const provenOperation = await this.signAndProveOperation(operationRequest);
     return this.submitProvenOperation(provenOperation);
