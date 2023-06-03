@@ -15,6 +15,8 @@ import {
   DepositStatusResponse,
   DepositQuoteResponse,
   RelayRequest,
+  OperationRequestBuilder,
+  AssetTrait,
   StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   decomposeCompressedPoint,
@@ -31,6 +33,8 @@ import { ContractTransaction } from "ethers";
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
 const VKEY_PATH = "/joinSplitVkey.json";
+
+const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 export type BundlerOperationID = string;
 
@@ -162,6 +166,49 @@ export class NocturneFrontendSDK {
       values,
       depositAddr
     );
+  }
+
+  async transferErc20(
+    erc20Address: Address,
+    amount: bigint,
+    toAddress: Address
+  ): Promise<BundlerOperationID> {
+    const signer = await getWindowSigner();
+    const provider = signer.provider;
+
+    if (!provider) {
+      throw new Error("Signer is not connected");
+    }
+
+    const erc20Contract = getTokenContract(
+      AssetType.ERC20,
+      erc20Address,
+      provider
+    );
+
+    const encodedFunction = erc20Contract.interface.encodeFunctionData(
+      "transfer",
+      [toAddress, amount]
+    );
+
+    const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
+
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    const deadline = BigInt(
+      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
+    );
+
+    const operationRequest = new OperationRequestBuilder()
+      .unwrap(encodedErc20, amount)
+      .action(erc20Address, encodedFunction)
+      .maxNumRefunds(1n)
+      .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .chainId(chainId)
+      .deadline(deadline)
+      .build();
+
+    const provenOperation = await this.signAndProveOperation(operationRequest);
+    return this.submitProvenOperation(provenOperation);
   }
 
   /**

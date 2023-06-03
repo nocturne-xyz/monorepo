@@ -207,22 +207,15 @@ const Index = () => {
   };
 
   const handleGenAndSubmitProof = async () => {
-    const provenOperation = await handleGenProof();
-    if (provenOperation === null) {
-      console.error("failed to generate proven operation");
-      return;
-    }
+    const amount = formatTokenAmountEvmRepr(2.5, 18);
+    const receipient = "0x67f8F9A5d4290325506b119980660624dc7d3bA9";
 
-    nocturneFrontendSDK!
-      .submitProvenOperation(provenOperation)
-      .then((opID: BundlerOperationID) => {
-        setInFlightOperationID(opID);
-      })
-      .catch((err: any) => {
-        console.error(err);
-        setInFlightOperationID(undefined);
-      });
-
+    const opId = await nocturneFrontendSDK!.transferErc20(
+      TOKEN_ADDRESS,
+      amount,
+      receipient
+    );
+    setInFlightOperationID(opId);
     openTxModal();
   };
 
