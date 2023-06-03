@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- lock snaps-cli to finalized version `0.32.2` (https://github.com/MetaMask/snaps/discussions/1411)
 - apply op's nullifiers to SDK's optimsitic nullifiers at the end of `nocturne_signOperation`
 - update SDK's optimistic nullifiers after each sync
 - call `loadNocturneConfigBuiltin("localhost")` instead of copying config from `config` package into snap
