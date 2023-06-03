@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `transferErc20` method and call instead of building request in test site index.ts
 - make endpoint passing struct based to avoid future mixups
 - fix DepositForm bugs post adding ETH
 - fix `submitProvenOperation` function to use new relay schema
