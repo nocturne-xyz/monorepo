@@ -43,6 +43,8 @@ describe("signOperation", () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .build();
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(

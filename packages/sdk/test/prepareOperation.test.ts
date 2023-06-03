@@ -162,6 +162,8 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .build();
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
@@ -214,6 +216,8 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_00n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .build();
 
     const gasCompAccountedOperationRequest = await handleGasForOperationRequest(
@@ -263,6 +267,8 @@ describe("prepareOperation", async () => {
         executionGasLimit: 20n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .maxNumRefunds(1n)
       .build();
 
@@ -318,6 +324,8 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .maxNumRefunds(1n)
       .build();
 
@@ -378,6 +386,8 @@ describe("prepareOperation", async () => {
         executionGasLimit: 1_000_000n,
         gasPrice: 0n,
       })
+      .chainId(1n)
+      .deadline(1n)
       .build();
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
