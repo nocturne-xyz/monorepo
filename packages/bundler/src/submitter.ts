@@ -175,7 +175,7 @@ export class BundlerSubmitter {
 
         const nullifierTx = this.nullifierDB.getRemoveNullifierTransactions(op);
 
-        return [statusTx, nullifierTx];
+        return [statusTx, ...nullifierTx];
       });
 
       await this.redis.multi(redisTxs).exec((maybeErr) => {
