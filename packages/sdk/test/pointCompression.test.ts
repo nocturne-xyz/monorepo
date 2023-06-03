@@ -94,7 +94,7 @@ describe("point compression and decompression", () => {
   });
 
   it("decomposeCompressedPoint() works", () => {
-    range(10).forEach(() => {
+    range(30).forEach(() => {
       const point = randomPoint();
       const c = compressPoint(point);
 

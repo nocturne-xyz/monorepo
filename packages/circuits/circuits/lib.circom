@@ -41,7 +41,7 @@ template DeriveNullifier() {
 }
 
 // checks that a stealth address belongs to a given vk
-template vkIntegrity() {
+template VKIntegrity() {
     // X and Y coordinates of both
     // components of the stealth address
     signal input H1X;
@@ -116,7 +116,7 @@ template SigVerify() {
     cp === sig[0];
 }
 
-template canonAddr() {
+template CanonAddr() {
     // little-endian bit representation of viewing key
     // we check elsewhere that this viewing key was derived correctly
     // here we assume it was, in which case it fits in 251 bits
@@ -194,8 +194,6 @@ template CompressPoint() {
     signal input in[2];
     signal output y;
     signal output sign;
-
-    var i;
 
     y <== in[1];
 

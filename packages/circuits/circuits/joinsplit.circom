@@ -89,7 +89,7 @@ template JoinSplit(levels) {
     gtFrOrderMinusOne.in[253] <== 0;
     0 === gtFrOrderMinusOne.out;
 
-    signal senderCanonAddr[2] <== canonAddr()(viewKeyBits);
+    signal senderCanonAddr[2] <== CanonAddr()(viewKeyBits);
 
     // new note A's owner is sender's canonical address
     signal newNoteAOwnerH1X <== BASE8[0];
@@ -117,8 +117,8 @@ template JoinSplit(levels) {
 
     // instead of doing another bit decomp, subtract 2^248 * c1Sign + 2^249 * c2Sign
     // from encodedAssetAddrWithSignBits
-    signal c1SignTimes2ToThe161 <== (1 << 248) * c1Sign;
-    signal encodedAssetAddrSubend <== (1 << 249) * c2Sign + c1SignTimes2ToThe161;
+    signal c1SignTimes2ToThe248 <== (1 << 248) * c1Sign;
+    signal encodedAssetAddrSubend <== (1 << 249) * c2Sign + c1SignTimes2ToThe248;
     signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
 
     // oldNoteACommitment
@@ -177,8 +177,8 @@ template JoinSplit(levels) {
     publicSpend <== valInput - valOutput;
 
     // check that old note owner addresses correspond to user's viewing key 
-    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
-    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
+    VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
+    VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
 
     // derive spending public key
     signal derivedViewKey <== Poseidon(3)([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);
@@ -213,13 +213,14 @@ template JoinSplit(levels) {
     // receiver's public key is receiverCanonAddr
 
     // s := receiverCanonAddr x randomness
+    signal nonceBits[251] <== Num2Bits(251)(encRandomness);
     signal sharedSecret[2] <== EscalarMulAny(251)(
-      Num2Bits(251)(encRandomness),
+      nonceBits,
       receiverCanonAddr
     );
     // c1 := basepoint x randomness
     signal c1[2] <== EscalarMulFix(251, BASE8)(
-      Num2Bits(251)(encRandomness)
+      nonceBits
     );
 
     // c2 := senderCanonAddr + s

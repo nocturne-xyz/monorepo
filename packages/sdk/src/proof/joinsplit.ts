@@ -1,3 +1,4 @@
+import { decomposeCompressedPoint } from "../crypto";
 import { EncryptedCanonAddress } from "../crypto/address";
 import { EncodedNote } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
@@ -109,15 +110,12 @@ export function joinSplitPublicSignalsToArray(
   ];
 }
 
-const SIGN_BIT_MASK = 1n << 254n;
-
 // encodedAssetAddr with the sign bits of the encrypted sender canon address placed at bits 248 and 249 (counting from LSB to MSB starting at 0)
 export function encodeEncodedAssetAddrWithSignBitsPI(
   encodedAssetAddr: bigint,
   encSenderCanonAddr: EncryptedCanonAddress
 ): bigint {
-  const signBit0Mask = encSenderCanonAddr.c1 & SIGN_BIT_MASK;
-  const signBit1Mask = encSenderCanonAddr.c2 & SIGN_BIT_MASK;
-
-  return encodedAssetAddr | (signBit0Mask >> 6n) | (signBit1Mask >> 5n);
+  const [sign1] = decomposeCompressedPoint(encSenderCanonAddr.c1);
+  const [sign2] = decomposeCompressedPoint(encSenderCanonAddr.c2);
+  return encodedAssetAddr | (BigInt(sign1) << 248n) | (BigInt(sign2) << 249n);
 }
