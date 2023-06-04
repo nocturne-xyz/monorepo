@@ -50,13 +50,19 @@ export async function prepareOperation(
   // prepare joinSplits
   console.log("joinSplitRequests: ", joinSplitRequests);
 
-  let joinSplits = (
-    await Promise.all(
-      joinSplitRequests.map(async (joinSplitRequest) => {
-        return prepareJoinSplits(deps, joinSplitRequest);
-      })
-    )
-  ).flat();
+  let joinSplits: PreSignJoinSplit[] = [];
+  for (const joinSplitRequest of joinSplitRequests) {
+    const newJoinSplits = await prepareJoinSplits(
+      deps,
+      joinSplitRequest,
+      new Set(
+        joinSplits
+          .map((js) => [js.oldNoteA.merkleIndex, js.oldNoteA.merkleIndex])
+          .flat()
+      )
+    );
+    joinSplits.push(...newJoinSplits);
+  }
 
   console.log("joinSplits: ", joinSplits);
 
@@ -86,14 +92,15 @@ export async function prepareOperation(
 
 async function prepareJoinSplits(
   { db, viewer, merkle }: PrepareOperationDeps,
-  joinSplitRequest: JoinSplitRequest
+  joinSplitRequest: JoinSplitRequest,
+  alreadyUsedNoteMerkleIndices: Set<number> = new Set()
 ): Promise<PreSignJoinSplit[]> {
   const notes = await gatherNotes(
     db,
     getJoinSplitRequestTotalValue(joinSplitRequest),
-    joinSplitRequest.asset
+    joinSplitRequest.asset,
+    alreadyUsedNoteMerkleIndices
   );
-  console.log("gathered notes:", notes);
 
   const unwrapAmount = joinSplitRequest.unwrapValue;
   const paymentAmount = joinSplitRequest.payment?.value ?? 0n;
@@ -119,10 +126,13 @@ async function prepareJoinSplits(
 async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
-  asset: Asset
+  asset: Asset,
+  noteMerkleIndicesToIgnore: Set<number> = new Set()
 ): Promise<IncludedNote[]> {
   // check that the user has enough notes to cover the request
-  const notes = await db.getNotesForAsset(asset);
+  const notes = (await db.getNotesForAsset(asset)).filter(
+    (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)
+  );
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
     throw new Error(
