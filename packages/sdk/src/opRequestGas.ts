@@ -314,7 +314,10 @@ async function simulateOperation(
   const bundler = handlerContract.address;
 
   const tellerAddress = await handlerContract._teller();
+
   const result = await handlerContract.callStatic.handleOperation(
+    // TODO: fix after contract changes
+    //@ts-ignore
     provenOp,
     verificationGasForOp,
     bundler,
@@ -356,8 +359,8 @@ function fakeProvenOperation(op: Operation): ProvenOperation {
       newNoteAEncrypted: joinSplit.newNoteAEncrypted,
       newNoteBEncrypted: joinSplit.newNoteBEncrypted,
       proof: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as SolidityProof,
-      encSenderCanonAddrC1X: 0n,
-      encSenderCanonAddrC2X: 0n,
+      encSenderCanonAddrC1: 0n,
+      encSenderCanonAddrC2: 0n,
     };
   });
   return {

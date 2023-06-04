@@ -86,7 +86,8 @@ contract BalanceManagerTest is Test {
     ) internal {
         token.reserveTokens(recipient, amount);
 
-        StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
+        CompressedStealthAddress memory addr = NocturneUtils
+            .defaultStealthAddress();
         Deposit memory deposit = NocturneUtils.formatDeposit(
             recipient,
             address(token),
@@ -102,7 +103,7 @@ contract BalanceManagerTest is Test {
         teller.depositFunds(deposit);
     }
 
-    function testMakeDeposit() public {
+    function testMakeDepositSuccess() public {
         SimpleERC20Token token = ERC20s[0];
         uint256 depositAmount = 10;
 
@@ -117,7 +118,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), depositAmount);
     }
 
-    function testProcessJoinSplitsGasPriceZero() public {
+    function testProcessJoinSplitsGasPriceZeroSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
@@ -126,13 +127,18 @@ contract BalanceManagerTest is Test {
         // Unwrap 100M of token (alice has sufficient balance)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -156,7 +162,7 @@ contract BalanceManagerTest is Test {
         );
     }
 
-    function testProcessJoinSplitsReservingFeeSingleFeeNote() public {
+    function testProcessJoinSplitsReservingFeeSingleFeeNoteSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
@@ -166,13 +172,18 @@ contract BalanceManagerTest is Test {
         // fee below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 gasAssetRefundThreshold: 0,
@@ -204,7 +215,79 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
-    function testProcessJoinSplitsReservingFeeTwoFeeNotes() public {
+    function testProcessJoinSplitsThreeContiguousJoinSplitSubarraysMultiAssetSuccess()
+        public
+    {
+        SimpleERC20Token token1 = ERC20s[0];
+        SimpleERC20Token token2 = ERC20s[1];
+        SimpleERC20Token token3 = ERC20s[2];
+
+        // Reserves + deposits 150M of token
+        reserveAndDepositFunds(ALICE, token1, PER_NOTE_AMOUNT * 3);
+        reserveAndDepositFunds(ALICE, token2, PER_NOTE_AMOUNT * 3);
+        reserveAndDepositFunds(ALICE, token3, PER_NOTE_AMOUNT * 3);
+
+        address[] memory tokens = new address[](3);
+        tokens[0] = address(token1);
+        tokens[1] = address(token2);
+        tokens[2] = address(token3);
+
+        uint256[][] memory joinSplitsPublicSpends = new uint256[][](3);
+        for (uint256 i = 0; i < 3; i++) {
+            joinSplitsPublicSpends[i] = NocturneUtils.fillJoinSplitPublicSpends(
+                PER_NOTE_AMOUNT,
+                3
+            );
+        }
+
+        // Unwrap 150M and setting gas price to 50. 2 joinsplits needed for
+        // calculated fee (see below)
+        Operation memory op = NocturneUtils.formatOperation(
+            FormatOperationArgs({
+                joinSplitTokens: tokens,
+                gasToken: address(token1),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: joinSplitsPublicSpends,
+                encodedRefundAssets: new EncodedAsset[](0),
+                gasAssetRefundThreshold: 0,
+                executionGasLimit: DEFAULT_GAS_LIMIT,
+                maxNumRefunds: 1,
+                gasPrice: 50,
+                actions: new Action[](0),
+                atomicActions: false,
+                operationFailureType: OperationFailureType.NONE
+            })
+        );
+
+        // gasPrice * (executionGas + joinSplitGas + refundGas)
+        // 50 * (500k + (3 * 170k) + (3 * 80k)) = 62.5M
+        uint256 totalFeeReserved = balanceManager.calculateOpMaxGasAssetCost(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
+
+        // Balance manager took up 150M - 62.5M
+        assertEq(token1.balanceOf(address(balanceManager)), 1); // +1 since prefill
+        balanceManager.processJoinSplitsReservingFee(
+            op,
+            DEFAULT_PER_JOINSPLIT_VERIFY_GAS
+        );
+        assertEq(
+            token1.balanceOf(address(balanceManager)),
+            (3 * PER_NOTE_AMOUNT) - totalFeeReserved + 1
+        );
+        assertEq(
+            token2.balanceOf(address(balanceManager)),
+            (3 * PER_NOTE_AMOUNT) + 1
+        );
+        assertEq(
+            token3.balanceOf(address(balanceManager)),
+            (3 * PER_NOTE_AMOUNT) + 1
+        );
+        assertEq(token1.balanceOf(address(teller)), totalFeeReserved);
+    }
+
+    function testProcessJoinSplitsReservingFeeTwoFeeNotesSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 150M of token
@@ -214,13 +297,18 @@ contract BalanceManagerTest is Test {
         // calculated fee (see below)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    3
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            3
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
@@ -252,7 +340,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), totalFeeReserved);
     }
 
-    function testGatherReservedGasAssetAndPayBundler() public {
+    function testGatherReservedGasAssetAndPayBundlerSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
@@ -261,13 +349,18 @@ contract BalanceManagerTest is Test {
         // Unwrap 100M and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -320,7 +413,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(BUNDLER), onlyBundlerFee);
     }
 
-    function testGatherReservedGasAssetAndPayBundlerBelowRefundThreshold()
+    function testGatherReservedGasAssetAndPayBundlerBelowRefundThresholdSuccess()
         public
     {
         SimpleERC20Token token = ERC20s[0];
@@ -331,13 +424,18 @@ contract BalanceManagerTest is Test {
         // Unwrap 100M and set gas price to 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 // threshold = sum(publicSpend) means it will always pay bundler whole amount
                 gasAssetRefundThreshold: 2 * PER_NOTE_AMOUNT,
@@ -396,7 +494,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(BUNDLER), totalFeeReserved);
     }
 
-    function testProcessJoinSplitsFailureNotEnoughForFee() public {
+    function testProcessJoinSplitsNotEnoughForFeeFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposit only 50M tokens (we will see gas comp is 62.5M)
@@ -406,13 +504,18 @@ contract BalanceManagerTest is Test {
         // price of 50
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT / 3,
-                    3
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT / 3,
+                            3
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
@@ -441,7 +544,7 @@ contract BalanceManagerTest is Test {
         );
     }
 
-    function testProcessJoinSplitsFailureNotEnoughFundsForUnwrap() public {
+    function testProcessJoinSplitsNotEnoughFundsForUnwrapFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Only reserves + deposits 50M of token
@@ -450,13 +553,18 @@ contract BalanceManagerTest is Test {
         // Attempts to unwrap 100M of token (we only deposited 50M)
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -476,7 +584,7 @@ contract BalanceManagerTest is Test {
         );
     }
 
-    function testProcessJoinSplitsFailureBadRoot() public {
+    function testProcessJoinSplitsBadRootFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
@@ -485,13 +593,18 @@ contract BalanceManagerTest is Test {
         // Operation with bad merkle root fails joinsplit processing
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -511,7 +624,7 @@ contract BalanceManagerTest is Test {
         );
     }
 
-    function testProcessJoinSplitsFailureAlreadyUsedNullifier() public {
+    function testProcessJoinSplitsAlreadyUsedNullifierFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
@@ -521,13 +634,18 @@ contract BalanceManagerTest is Test {
         // 2nd joinsplit
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -541,14 +659,14 @@ contract BalanceManagerTest is Test {
         );
 
         // Expect revert for processing joinsplits
-        vm.expectRevert("Nullifier B already used");
+        vm.expectRevert("Nullifier A already used");
         balanceManager.processJoinSplitsReservingFee(
             op,
             DEFAULT_PER_JOINSPLIT_VERIFY_GAS
         );
     }
 
-    function testProcessJoinSplitsFailureMatchingNullifiers() public {
+    function testProcessJoinSplitsMatchingNullifiersFailure() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 50M of token
@@ -557,13 +675,18 @@ contract BalanceManagerTest is Test {
         // Create operation with one of the joinsplits has matching NFs A and B
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -583,7 +706,7 @@ contract BalanceManagerTest is Test {
         );
     }
 
-    function testHandleRefundsJoinSplitsSingleAsset() public {
+    function testHandleRefundsJoinSplitsSingleAssetSuccess() public {
         SimpleERC20Token token = ERC20s[0];
 
         // Reserves + deposits 100M of token
@@ -592,13 +715,18 @@ contract BalanceManagerTest is Test {
         // Unwrap 100M of token
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -627,7 +755,7 @@ contract BalanceManagerTest is Test {
         assertEq(token.balanceOf(address(teller)), (2 * PER_NOTE_AMOUNT));
     }
 
-    function testHandleRefundsRefundAssetsSingleAsset() public {
+    function testHandleRefundsRefundAssetsSingleAssetSuccess() public {
         SimpleERC20Token joinSplitToken = ERC20s[0];
         SimpleERC20Token refundToken = ERC20s[1];
 
@@ -642,13 +770,18 @@ contract BalanceManagerTest is Test {
         // Dummy operation, we're only interested in refundAssets
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: joinSplitToken,
-                gasToken: joinSplitToken,
-                root: balanceManager.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(joinSplitToken)
                 ),
+                gasToken: address(joinSplitToken),
+                root: balanceManager.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: refundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,

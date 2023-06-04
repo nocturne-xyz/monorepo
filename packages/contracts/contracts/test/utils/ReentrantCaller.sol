@@ -9,7 +9,7 @@ import "../../libs/Types.sol";
 contract ReentrantCaller {
     Teller _teller;
     Handler _handler;
-    SimpleERC20Token _token;
+    address _token;
 
     uint256 public constant PER_NOTE_AMOUNT = 50_000_000;
     uint256 public constant DEFAULT_GAS_LIMIT = 500_000;
@@ -19,7 +19,7 @@ contract ReentrantCaller {
         _;
     }
 
-    constructor(Teller teller, Handler handler, SimpleERC20Token token) {
+    constructor(Teller teller, Handler handler, address token) {
         _teller = teller;
         _handler = handler;
         _token = token;
@@ -29,11 +29,17 @@ contract ReentrantCaller {
         return
             NocturneUtils.formatOperation(
                 FormatOperationArgs({
-                    joinSplitToken: _token,
+                    joinSplitTokens: NocturneUtils
+                        ._joinSplitTokensArrayOfOneToken(_token),
                     gasToken: _token,
                     root: _handler.root(),
-                    joinSplitPublicSpends: NocturneUtils
-                        .fillJoinSplitPublicSpends(PER_NOTE_AMOUNT, 6),
+                    joinSplitsPublicSpends: NocturneUtils
+                        ._publicSpendsArrayOfOnePublicSpendArray(
+                            NocturneUtils.fillJoinSplitPublicSpends(
+                                PER_NOTE_AMOUNT,
+                                6
+                            )
+                        ),
                     encodedRefundAssets: new EncodedAsset[](0),
                     gasAssetRefundThreshold: 0,
                     executionGasLimit: DEFAULT_GAS_LIMIT,

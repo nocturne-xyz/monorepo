@@ -11,7 +11,11 @@ import {
   EncodedNote,
   StealthAddressTrait,
   randomFr,
+  encodeEncodedAssetAddrWithSignBitsPI,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
+
+const { ZERO_VALUE, ARITY, DEPTH } = TreeConstants;
 
 const ROOT_DIR = findWorkspaceRoot()!;
 const ARTIFACTS_DIR = path.join(ROOT_DIR, "circuit-artifacts");
@@ -33,8 +37,8 @@ const sk = BigInt(
 // Instantiate nocturne keypair and addr
 const nocturneSigner = new NocturneSigner(sk);
 const vk = nocturneSigner.vk;
-const stealthAddrA = nocturneSigner.generateRandomStealthAddress();
-const stealthAddrB = nocturneSigner.generateRandomStealthAddress();
+const stealthAddrA = nocturneSigner.canonicalStealthAddress();
+const stealthAddrB = nocturneSigner.canonicalStealthAddress();
 const spendPk = nocturneSigner.spendPk;
 
 // Two old notes: 100 + 50 = 150
@@ -77,15 +81,15 @@ const oldNoteBCommitment = poseidonBN([
 console.log("old note commitment B: ", oldNoteBCommitment);
 
 // Generate valid merkle proofs
-const tree = new IncrementalMerkleTree(poseidonBN, 16, 0n, 4);
+const tree = new IncrementalMerkleTree(poseidonBN, DEPTH, ZERO_VALUE, ARITY);
 tree.insert(oldNoteACommitment);
 tree.insert(oldNoteBCommitment);
 
 const merkleProofA = tree.createProof(0);
 const merkleProofB = tree.createProof(1);
 
-console.log("merkleProofA", merkleProofA);
-console.log("merkleProofB", merkleProofB);
+// console.log("merkleProofA", merkleProofA);
+// console.log("merkleProofB", merkleProofB);
 
 console.log("merkle root A: ", merkleProofA.root);
 console.log("merkle root B: ", merkleProofB.root);
@@ -101,7 +105,7 @@ const merkleProofBInput: MerkleProofInput = {
 
 // New notes where 75 + 75 = 150
 const newNoteA: EncodedNote = {
-  owner: stealthAddrB,
+  owner: stealthAddrA,
   nonce: 3n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -110,7 +114,7 @@ const newNoteA: EncodedNote = {
 console.log("new note A: ", newNoteA);
 
 const newNoteB: EncodedNote = {
-  owner: stealthAddrA,
+  owner: stealthAddrB,
   nonce: 4n,
   encodedAssetAddr: 10n,
   encodedAssetId: 5n,
@@ -141,6 +145,14 @@ const operationDigest = BigInt(12345);
 const opSig = nocturneSigner.sign(operationDigest);
 console.log(opSig);
 
+const encRandomness = randomFr();
+const encSenderCanonAddr = nocturneSigner.encryptCanonAddrToReceiver(
+  nocturneSigner.canonicalAddress(),
+  encRandomness
+);
+
+console.log("encSenderCanonAddr", encSenderCanonAddr);
+
 const joinsplitInputs: JoinSplitInputs = {
   vk,
   vkNonce: nocturneSigner.vkNonce,
@@ -154,7 +166,11 @@ const joinsplitInputs: JoinSplitInputs = {
   newNoteB,
   merkleProofA: merkleProofAInput,
   merkleProofB: merkleProofBInput,
-  encRandomness: randomFr(),
+  encRandomness,
+  encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
+    oldNoteA.encodedAssetAddr,
+    encSenderCanonAddr
+  ),
 };
 console.log(joinsplitInputs);
 

@@ -1,35 +1,30 @@
-import { StealthAddress } from "../../crypto";
+import { StealthAddressTrait } from "../../crypto";
 import {
   AssetTrait,
   IncludedEncryptedNote,
   IncludedNote,
   WithTimestamp,
 } from "../../primitives";
-import { BATCH_SIZE } from "../../primitives/treeConstants";
-import { maxArray } from "../../utils";
+import { maxArray, batchOffsetToLatestMerkleIndexInBatch } from "../../utils";
 import {
   blockNumberFromTotalEntityIndex,
   makeSubgraphQuery,
   totalEntityIndexFromBlockNumber,
 } from "./utils";
 
-interface NoteResponse {
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
+export interface NoteResponse {
+  ownerH1: string;
+  ownerH2: string;
   nonce: string;
   encodedAssetAddr: string;
   encodedAssetId: string;
   value: string;
 }
 
-interface EncryptedNoteResponse {
+export interface EncryptedNoteResponse {
   id: string;
-  ownerH1X: string;
-  ownerH1Y: string;
-  ownerH2X: string;
-  ownerH2Y: string;
+  ownerH1: string;
+  ownerH2: string;
   encappedKey: string;
   encryptedNonce: string;
   encryptedValue: string;
@@ -38,7 +33,7 @@ interface EncryptedNoteResponse {
   commitment: string;
 }
 
-interface EncodedOrEncryptedNoteResponse {
+export interface EncodedOrEncryptedNoteResponse {
   merkleIndex: string;
   idx: string;
   note: NoteResponse | null;
@@ -62,20 +57,16 @@ query fetchNotes($fromIdx: Bytes!, $toIdx: Bytes!) {
     idx
     merkleIndex
     note {
-      ownerH1X
-      ownerH1Y
-      ownerH2X
-      ownerH2Y
+      ownerH1
+      ownerH2
       nonce
       encodedAssetAddr
       encodedAssetId
       value
     }
     encryptedNote {
-      ownerH1X
-      ownerH1Y
-      ownerH2X
-      ownerH2Y
+      ownerH1
+      ownerH2
       encappedKey
       encryptedNonce
       encryptedValue
@@ -128,20 +119,13 @@ export async function fetchNotes(
   );
 }
 
-function includedNoteFromNoteResponse(
+export function includedNoteFromNoteResponse(
   noteResponse: NoteResponse,
   merkleIndex: number
 ): IncludedNote {
-  const h1X = BigInt(noteResponse.ownerH1X);
-  const h1Y = BigInt(noteResponse.ownerH1Y);
-  const h2X = BigInt(noteResponse.ownerH2X);
-  const h2Y = BigInt(noteResponse.ownerH2Y);
-  const owner: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  const h1 = BigInt(noteResponse.ownerH1);
+  const h2 = BigInt(noteResponse.ownerH2);
+  const owner = StealthAddressTrait.decompress({ h1, h2 });
 
   const encodedAssetAddr = BigInt(noteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(noteResponse.encodedAssetId);
@@ -160,20 +144,13 @@ function includedNoteFromNoteResponse(
   };
 }
 
-function encryptedNoteFromEncryptedNoteResponse(
+export function encryptedNoteFromEncryptedNoteResponse(
   encryptedNoteResponse: EncryptedNoteResponse,
   merkleIndex: number
 ): IncludedEncryptedNote {
-  const h1X = BigInt(encryptedNoteResponse.ownerH1X);
-  const h1Y = BigInt(encryptedNoteResponse.ownerH1Y);
-  const h2X = BigInt(encryptedNoteResponse.ownerH2X);
-  const h2Y = BigInt(encryptedNoteResponse.ownerH2Y);
-  const owner: StealthAddress = {
-    h1X,
-    h1Y,
-    h2X,
-    h2Y,
-  };
+  const h1 = BigInt(encryptedNoteResponse.ownerH1);
+  const h2 = BigInt(encryptedNoteResponse.ownerH2);
+  const owner = { h1, h2 };
 
   const encodedAssetAddr = BigInt(encryptedNoteResponse.encodedAssetAddr);
   const encodedAssetId = BigInt(encryptedNoteResponse.encodedAssetId);
@@ -223,21 +200,25 @@ const subtreeCommitQuery = `
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
   toBlock: number
-): Promise<number> {
+): Promise<number | undefined> {
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
   >(endpoint, subtreeCommitQuery, "last committed merkle index");
   const res = await query({ toBlock });
-  if (!res.data || res.data.subtreeCommits.length === 0) {
-    return -1;
+  if (!res.data) {
+    throw new Error("subgraph query returned empty data");
+  }
+
+  if (res.data.subtreeCommits.length === 0) {
+    return undefined;
   } else {
     const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
       parseInt(commit.subtreeBatchOffset)
     );
     const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
 
-    return maxSubtreeBatchOffset + BATCH_SIZE - 1;
+    return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
   }
 }
 

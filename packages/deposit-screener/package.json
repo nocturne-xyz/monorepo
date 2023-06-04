@@ -25,10 +25,10 @@
     "test:unit": ""
   },
   "dependencies": {
-    "@nocturne-xyz/config": "1.0.7-alpha",
-    "@nocturne-xyz/contracts": "1.0.25-alpha",
+    "@nocturne-xyz/config": "1.0.11-alpha",
+    "@nocturne-xyz/contracts": "1.0.32-alpha",
     "@nocturne-xyz/offchain-utils": "0.1.4",
-    "@nocturne-xyz/sdk": "1.0.123-alpha",
+    "@nocturne-xyz/sdk": "1.0.136-alpha",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/morgan": "^1.9.4",

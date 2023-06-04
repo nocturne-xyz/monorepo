@@ -2,6 +2,9 @@ pragma circom 2.1.0;
 
 include "include/poseidon.circom";
 include "include/escalarmulany.circom";
+include "include/aliascheck.circom";
+include "include/compconstant.circom";
+include "include/bitify.circom";
 
 // Note structure
 // owner, nonce, encodedAsset, encodedAssetId, value
@@ -38,7 +41,7 @@ template DeriveNullifier() {
 }
 
 // checks that a stealth address belongs to a given vk
-template vkIntegrity() {
+template VKIntegrity() {
     // X and Y coordinates of both
     // components of the stealth address
     signal input H1X;
@@ -113,7 +116,7 @@ template SigVerify() {
     cp === sig[0];
 }
 
-template canonAddr() {
+template CanonAddr() {
     // little-endian bit representation of viewing key
     // we check elsewhere that this viewing key was derived correctly
     // here we assume it was, in which case it fits in 251 bits
@@ -182,4 +185,21 @@ template SliceLastK(n, k) {
     for (var i = n - k; i < n; i++) {
         slice[i - (n - k)] <== arr[i];
     }
+}
+
+
+// same as `Point2Bits_strict` (https://github.com/iden3/circomlib/blob/cff5ab6288b55ef23602221694a6a38a0239dcc0/circuits/pointbits.circom#L136),
+// but returns the result as y cordinate and x coordinate's sign bit in two field elements instead of as a bit array
+template CompressPoint() {
+    signal input in[2];
+    signal output y;
+    signal output sign;
+
+    y <== in[1];
+
+    // bit-decompose x coordinate
+    signal xBits[254] <== Num2Bits_strict()(in[0]);
+
+    // get the "sign" bit by comparing x to (p-1)/2. If it's bigger, then we call it "negative"
+    sign <== CompConstant(10944121435919637611123202872628637544274182200208017171849102093287904247808)(xBits);
 }

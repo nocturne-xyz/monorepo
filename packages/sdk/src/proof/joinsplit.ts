@@ -1,3 +1,5 @@
+import { decomposeCompressedPoint } from "../crypto";
+import { EncryptedCanonAddress } from "../crypto/address";
 import { EncodedNote } from "../primitives";
 import { BaseProof, MerkleProofInput } from "./types";
 
@@ -24,7 +26,7 @@ export interface JoinSplitProofWithPublicSignals {
     bigint, // encSenderCanonAddrC1X
     bigint, // encSenderCanonAddrC2X
     bigint, // operationDigest
-    bigint, // encodedAssetAddr
+    bigint, // encodedAssetAddrWithSignBits
     bigint // encodedAssetId
   ];
 }
@@ -37,10 +39,10 @@ export interface JoinSplitPublicSignals {
   nullifierA: bigint;
   nullifierB: bigint;
   opDigest: bigint;
-  encodedAssetAddr: bigint;
+  encodedAssetAddrWithSignBits: bigint;
   encodedAssetId: bigint;
-  encSenderCanonAddrC1X: bigint;
-  encSenderCanonAddrC2X: bigint;
+  encSenderCanonAddrC1Y: bigint;
+  encSenderCanonAddrC2Y: bigint;
 }
 
 export interface JoinSplitInputs {
@@ -57,6 +59,7 @@ export interface JoinSplitInputs {
   newNoteA: EncodedNote;
   newNoteB: EncodedNote;
   encRandomness: bigint;
+  encodedAssetAddrWithSignBits: bigint;
 }
 
 export function joinSplitPublicSignalsFromArray(
@@ -69,10 +72,10 @@ export function joinSplitPublicSignalsFromArray(
     publicSpend: publicSignals[3],
     nullifierA: publicSignals[4],
     nullifierB: publicSignals[5],
-    encSenderCanonAddrC1X: publicSignals[6],
-    encSenderCanonAddrC2X: publicSignals[7],
+    encSenderCanonAddrC1Y: publicSignals[6],
+    encSenderCanonAddrC2Y: publicSignals[7],
     opDigest: publicSignals[8],
-    encodedAssetAddr: publicSignals[9],
+    encodedAssetAddrWithSignBits: publicSignals[9],
     encodedAssetId: publicSignals[10],
   };
 }
@@ -99,10 +102,20 @@ export function joinSplitPublicSignalsToArray(
     publicSignals.publicSpend,
     publicSignals.nullifierA,
     publicSignals.nullifierB,
-    publicSignals.encSenderCanonAddrC1X,
-    publicSignals.encSenderCanonAddrC2X,
+    publicSignals.encSenderCanonAddrC1Y,
+    publicSignals.encSenderCanonAddrC2Y,
     publicSignals.opDigest,
-    publicSignals.encodedAssetAddr,
+    publicSignals.encodedAssetAddrWithSignBits,
     publicSignals.encodedAssetId,
   ];
+}
+
+// encodedAssetAddr with the sign bits of the encrypted sender canon address placed at bits 248 and 249 (counting from LSB to MSB starting at 0)
+export function encodeEncodedAssetAddrWithSignBitsPI(
+  encodedAssetAddr: bigint,
+  encSenderCanonAddr: EncryptedCanonAddress
+): bigint {
+  const [sign1] = decomposeCompressedPoint(encSenderCanonAddr.c1);
+  const [sign2] = decomposeCompressedPoint(encSenderCanonAddr.c2);
+  return encodedAssetAddr | (BigInt(sign1) << 248n) | (BigInt(sign2) << 249n);
 }

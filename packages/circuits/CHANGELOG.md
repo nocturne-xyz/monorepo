@@ -2,6 +2,15 @@
 
 ### Unreleased
 
+- use compressed encodings of note owners to compute accumulator hashes
+- add other two coordinates of note owners to subtreeupdate circuit for computing NCs
+- compress encSenderCanonAddr in joinsplit circuit:
+  - rename `encSenderCanonAddrC1X` and `encSenderCanonAddrC2X` to `encSenderCanonAddrC1Y` and `encSenderCanonAddrC2Y` respectively
+  - encode the sign bits of each into bits 248 and 249 of the `encodedAssetAddr` PI
+  - rename the `encodedAssetAddr` PI `encodedAssetAddrWithSignBits` because it now has such a confused mix of random shit packed into it that there's no good name for it
+- add `PointCompressor`, which takes a babyjubjub point and produces the new Y-coordinate + X sign compressed encoding
+- hash all four coordinates of stealth address when computing note commitments
+- add new solidity verifier template script
 - update empty subtree root
 - remove joinsplit compliance circuit (saved elsewhere, don't want dead code in repo though)
 - make commitment tree quaternary:

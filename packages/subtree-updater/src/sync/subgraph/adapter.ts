@@ -5,13 +5,17 @@ import {
   min,
   sleep,
   Note,
+  fetchNotes,
+  IncludedNote,
+  IncludedEncryptedNote,
+  NoteTrait,
+  TreeConstants,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import {
-  fetchInsertionBatches,
-  fetchLatestCommittedSubtreeIndex,
+  fetchFilledBatchWithZerosEvents,
+  fetchLatestSubtreeIndex,
 } from "./fetch";
-
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 const MAX_CHUNK_SIZE = 100_000;
@@ -51,15 +55,30 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           continue;
         }
 
-        const batches: (Note[] | bigint[])[] = await fetchInsertionBatches(
-          endpoint,
-          from,
-          to
+        console.log(`fetching insertions from ${from} to ${to}...`);
+
+        const [notesWithTimestamps, filledBatchWithZerosEvents] =
+          await Promise.all([
+            fetchNotes(endpoint, from, to),
+            fetchFilledBatchWithZerosEvents(endpoint, from, to),
+          ]);
+        const notes = notesWithTimestamps.map(({ inner }) => inner);
+
+        const combined = [...notes, ...filledBatchWithZerosEvents].sort(
+          (a, b) => a.merkleIndex - b.merkleIndex
         );
 
-        for (const batch of batches) {
-          for (const insertion of batch) {
-            yield insertion;
+        console.log("yielding sorted insertions:", combined);
+
+        for (const insertion of combined) {
+          if ("numZeros" in insertion) {
+            for (let i = 0; i < insertion.numZeros; i++) {
+              yield TreeConstants.ZERO_VALUE;
+            }
+          } else if (NoteTrait.isEncryptedNote(insertion)) {
+            yield (insertion as IncludedEncryptedNote).commitment;
+          } else {
+            yield insertion as IncludedNote;
           }
         }
 
@@ -76,10 +95,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     });
   }
 
-  async fetchLatestSubtreeIndex(): Promise<number> {
-    const latestIndexedBlock = await fetchLatestCommittedSubtreeIndex(
-      this.graphqlEndpoint
-    );
-    return latestIndexedBlock;
+  async fetchLatestSubtreeIndex(): Promise<number | undefined> {
+    return fetchLatestSubtreeIndex(this.graphqlEndpoint);
   }
 }

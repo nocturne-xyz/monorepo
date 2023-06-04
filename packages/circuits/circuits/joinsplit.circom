@@ -23,8 +23,8 @@ template JoinSplit(levels) {
     signal input c;
     signal input z;
 
-    // Shared note values
-    signal input encodedAssetAddr;
+    // encodedAssetAddr, but with the sign bits of encSenderCanonAddr placed at bits 248 and 249 (when zero-indexed in little-endian order)
+    signal input encodedAssetAddrWithSignBits;
     signal input encodedAssetId;
 
     // Old note A
@@ -69,8 +69,8 @@ template JoinSplit(levels) {
     signal output publicSpend;
     signal output nullifierA;
     signal output nullifierB;
-    signal output encSenderCanonAddrC1X;
-    signal output encSenderCanonAddrC2X;
+    signal output encSenderCanonAddrC1CompressedY;
+    signal output encSenderCanonAddrC2CompressedY;
 
     var BASE8[2] = [
         5299619240641551281634865583518297030282874472190772894086521144482721001553,
@@ -89,11 +89,11 @@ template JoinSplit(levels) {
     gtFrOrderMinusOne.in[253] <== 0;
     0 === gtFrOrderMinusOne.out;
 
-    signal senderCanonAddr[2] <== canonAddr()(viewKeyBits);
+    signal senderCanonAddr[2] <== CanonAddr()(viewKeyBits);
 
     // new note A's owner is sender's canonical address
     signal newNoteAOwnerH1X <== BASE8[0];
-    signal newNoteuAOwnerH1Y <== BASE8[1];
+    signal newNoteAOwnerH1Y <== BASE8[1];
     signal newNoteAOwnerH2X <== senderCanonAddr[0];
     signal newNoteAOwnerH2Y <== senderCanonAddr[1];
 
@@ -109,9 +109,21 @@ template JoinSplit(levels) {
     BabyCheck()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y);
     BabyCheck()(oldNoteBOwnerH2X, oldNoteBOwnerH2Y);
 
+    // get encodedAssetAddr and sign bits out of encodedAssetAddrWithSignBits
+    // don't need Num2Bits_strict here because it's only 253 bits
+    signal encodedAssetAddrWithSignBitsBits[253] <==  Num2Bits(253)(encodedAssetAddrWithSignBits);
+    signal c1Sign <== encodedAssetAddrWithSignBitsBits[248];
+    signal c2Sign <== encodedAssetAddrWithSignBitsBits[249];
+
+    // instead of doing another bit decomp, subtract 2^248 * c1Sign + 2^249 * c2Sign
+    // from encodedAssetAddrWithSignBits
+    signal c1SignTimes2ToThe248 <== (1 << 248) * c1Sign;
+    signal encodedAssetAddrSubend <== (1 << 249) * c2Sign + c1SignTimes2ToThe248;
+    signal encodedAssetAddr <== encodedAssetAddrWithSignBits - encodedAssetAddrSubend;
+
     // oldNoteACommitment
     signal oldNoteACommitment <== NoteCommit()(
-      Poseidon(2)([oldNoteAOwnerH1X, oldNoteAOwnerH2X]),
+      Poseidon(4)([oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y]),
       oldNoteANonce,
       encodedAssetAddr,
       encodedAssetId,
@@ -120,7 +132,7 @@ template JoinSplit(levels) {
 
     // oldNoteBCommitment
     signal oldNoteBCommitment <== NoteCommit()(
-      Poseidon(2)([oldNoteBOwnerH1X, oldNoteBOwnerH2X]),
+      Poseidon(4)([oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y]),
       oldNoteBNonce,
       encodedAssetAddr,
       encodedAssetId,
@@ -165,8 +177,8 @@ template JoinSplit(levels) {
     publicSpend <== valInput - valOutput;
 
     // check that old note owner addresses correspond to user's viewing key 
-    vkIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
-    vkIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
+    VKIntegrity()(oldNoteAOwnerH1X, oldNoteAOwnerH1Y, oldNoteAOwnerH2X, oldNoteAOwnerH2Y, viewKeyBits);
+    VKIntegrity()(oldNoteBOwnerH1X, oldNoteBOwnerH1Y, oldNoteBOwnerH2X, oldNoteBOwnerH2Y, viewKeyBits);
 
     // derive spending public key
     signal derivedViewKey <== Poseidon(3)([spendPubKey[0], spendPubKey[1], userViewKeyNonce]);
@@ -181,7 +193,7 @@ template JoinSplit(levels) {
 
     // newNoteACommitment
     newNoteACommitment <== NoteCommit()(
-      Poseidon(2)([newNoteAOwnerH1X, newNoteAOwnerH2X]),
+      Poseidon(4)([newNoteAOwnerH1X, newNoteAOwnerH1Y, newNoteAOwnerH2X, newNoteAOwnerH2Y]),
       newNoteANonce,
       encodedAssetAddr,
       encodedAssetId,
@@ -190,7 +202,7 @@ template JoinSplit(levels) {
 
     // newNoteBCommitment
     newNoteBCommitment <== NoteCommit()(
-      Poseidon(2)([newNoteBOwnerH1X, newNoteBOwnerH2X]),
+      Poseidon(4)([newNoteBOwnerH1X, newNoteBOwnerH1Y, newNoteBOwnerH2X, newNoteBOwnerH2Y]),
       newNoteBNonce,
       encodedAssetAddr,
       encodedAssetId,
@@ -201,15 +213,15 @@ template JoinSplit(levels) {
     // receiver's public key is receiverCanonAddr
 
     // s := receiverCanonAddr x randomness
+    signal nonceBits[251] <== Num2Bits(251)(encRandomness);
     signal sharedSecret[2] <== EscalarMulAny(251)(
-      Num2Bits(251)(encRandomness),
+      nonceBits,
       receiverCanonAddr
     );
     // c1 := basepoint x randomness
     signal c1[2] <== EscalarMulFix(251, BASE8)(
-      Num2Bits(251)(encRandomness)
+      nonceBits
     );
-    encSenderCanonAddrC1X <== c1[0];
 
     // c2 := senderCanonAddr + s
     component adder = BabyAdd();
@@ -217,7 +229,23 @@ template JoinSplit(levels) {
     adder.y1 <== senderCanonAddr[1];
     adder.x2 <== sharedSecret[0];
     adder.y2 <== sharedSecret[1];
-    encSenderCanonAddrC2X <== adder.xout;
+    signal c2[2];
+    c2[0] <== adder.xout;
+    c2[1] <== adder.yout;
+
+    // compress the two points of the ciphertext.
+    // connect the y cordinates to the output signals
+    // and assert that the sign bits match what was given in `encodedAssetAddrWithSignBits`
+    component compressors[2];
+    compressors[0] = CompressPoint();
+    compressors[0].in <== c1;
+    encSenderCanonAddrC1CompressedY <== compressors[0].y;
+    c1Sign === compressors[0].sign;
+
+    compressors[1] = CompressPoint();
+    compressors[1].in <== c2;
+    encSenderCanonAddrC2CompressedY <== compressors[1].y;
+    c2Sign === compressors[1].sign;
 }
 
-component main { public [encodedAssetAddr, encodedAssetId, operationDigest] } = JoinSplit(16);
+component main { public [encodedAssetAddrWithSignBits, encodedAssetId, operationDigest] } = JoinSplit(16);

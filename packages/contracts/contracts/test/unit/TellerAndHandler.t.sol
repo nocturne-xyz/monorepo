@@ -71,7 +71,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
     event SubtreeBatchFillerPermissionSet(address filler, bool permission);
 
     event RefundProcessed(
-        StealthAddress refundAddr,
+        CompressedStealthAddress refundAddr,
         uint256 nonce,
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
@@ -138,7 +138,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         SimpleERC20Token token,
         uint256 value,
         uint256 id,
-        StealthAddress memory depositAddr
+        CompressedStealthAddress memory depositAddr
     ) public {
         // Transfer to deposit source first
         vm.prank(spender);
@@ -174,7 +174,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         // Deposit funds to teller
         for (uint256 i = 0; i < depositIterations; i++) {
-            StealthAddress memory addr = NocturneUtils.defaultStealthAddress();
+            CompressedStealthAddress memory addr = NocturneUtils
+                .defaultStealthAddress();
             vm.expectEmit(true, true, true, true);
             emit RefundProcessed(
                 addr,
@@ -192,8 +193,8 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
             }
 
             EncodedNote memory note = EncodedNote(
-                addr.h1X,
-                addr.h2X,
+                addr.h1,
+                addr.h2,
                 i,
                 uint256(uint160(address(token))),
                 ERC20_ID,
@@ -272,20 +273,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -324,20 +330,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Create dummy operation
         Operation memory operation = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -454,20 +465,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 1,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT / 2
                 ),
@@ -520,20 +536,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    3
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            3
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 3,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -586,20 +607,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    6
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            6
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 6,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     4 * PER_NOTE_AMOUNT
                 ),
@@ -653,20 +679,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -719,20 +750,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -752,7 +788,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         vmExpectOperationProcessed(
             ExpectOperationProcessedArgs({
-                maybeFailureReason: "Nullifier B already used",
+                maybeFailureReason: "Nullifier A already used",
                 assetsUnwrapped: false
             })
         );
@@ -763,7 +799,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         assertEq(opResults.length, uint256(1));
         assertEq(opResults[0].opProcessed, false);
         assertEq(opResults[0].assetsUnwrapped, false);
-        assertEq(opResults[0].failureReason, "Nullifier B already used");
+        assertEq(opResults[0].failureReason, "Nullifier A already used");
 
         // No tokens are lost from teller because handleJoinSplit revert stops
         // bundler comp. Bundler expected to handle proof-related checks.
@@ -785,20 +821,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -849,7 +890,7 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         ReentrantCaller reentrantCaller = new ReentrantCaller(
             teller,
             handler,
-            ERC20s[0]
+            address(ERC20s[0])
         );
 
         // Encode action that calls reentrant contract
@@ -864,13 +905,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -933,20 +979,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -970,13 +1021,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1028,20 +1084,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Create internal op that is used when teller calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -1065,13 +1126,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1135,20 +1201,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Create internal op that is used when handler calls itself
         Operation memory internalOp = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -1172,13 +1243,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1242,20 +1318,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
@@ -1321,20 +1402,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 2,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     3 * PER_NOTE_AMOUNT
                 ), // Transfer amount exceeds withdrawn
@@ -1446,13 +1532,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: tokenIn,
-                gasToken: tokenIn,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(tokenIn)
                 ),
+                gasToken: address(tokenIn),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: encodedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1548,13 +1639,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: tokenIn,
-                gasToken: tokenIn,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(tokenIn)
                 ),
+                gasToken: address(tokenIn),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: encodedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1669,13 +1765,18 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: tokenIn,
-                gasToken: tokenIn,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    2
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(tokenIn)
                 ),
+                gasToken: address(tokenIn),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            2
+                        )
+                    ),
                 encodedRefundAssets: encodedRefundAssets,
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
@@ -1963,20 +2064,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT / 3,
-                    3
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT / 3,
+                            3
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT, // 500k
                 maxNumRefunds: 20,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2024,20 +2130,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         Bundle memory bundle = Bundle({operations: new Operation[](1)});
         bundle.operations[0] = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: 100, // not enough gas for transfer
                 maxNumRefunds: 1,
                 gasPrice: 50,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2077,20 +2188,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2113,20 +2229,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Format op with BAD_CHAIN_ID failure type
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2147,20 +2268,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
         // Format op with EXPIRED_DEADLINE failure type
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),
@@ -2181,20 +2307,25 @@ contract TellerAndHandlerTest is Test, ForgeUtils, PoseidonDeployer {
 
         Operation memory op = NocturneUtils.formatOperation(
             FormatOperationArgs({
-                joinSplitToken: token,
-                gasToken: token,
-                root: handler.root(),
-                joinSplitPublicSpends: NocturneUtils.fillJoinSplitPublicSpends(
-                    PER_NOTE_AMOUNT,
-                    1
+                joinSplitTokens: NocturneUtils._joinSplitTokensArrayOfOneToken(
+                    address(token)
                 ),
+                gasToken: address(token),
+                root: handler.root(),
+                joinSplitsPublicSpends: NocturneUtils
+                    ._publicSpendsArrayOfOnePublicSpendArray(
+                        NocturneUtils.fillJoinSplitPublicSpends(
+                            PER_NOTE_AMOUNT,
+                            1
+                        )
+                    ),
                 encodedRefundAssets: new EncodedAsset[](0),
                 gasAssetRefundThreshold: 0,
                 executionGasLimit: DEFAULT_GAS_LIMIT,
                 maxNumRefunds: 1,
                 gasPrice: 0,
                 actions: NocturneUtils.formatSingleTransferActionArray(
-                    token,
+                    address(token),
                     BOB,
                     PER_NOTE_AMOUNT
                 ),

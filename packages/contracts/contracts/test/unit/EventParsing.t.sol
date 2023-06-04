@@ -12,7 +12,7 @@ contract EventParsingTest is Test {
         address indexed spender,
         EncodedAsset encodedAsset,
         uint256 value,
-        StealthAddress depositAddr,
+        CompressedStealthAddress depositAddr,
         uint256 nonce,
         uint256 gasCompensation
     );
@@ -37,22 +37,8 @@ contract EventParsingTest is Test {
         assertEq(req.encodedAsset.encodedAssetAddr, 1);
         assertEq(req.encodedAsset.encodedAssetId, 2);
         assertEq(req.value, 3);
-        assertEq(
-            req.depositAddr.h1X,
-            NocturneUtils.defaultStealthAddress().h1X
-        );
-        assertEq(
-            req.depositAddr.h1Y,
-            NocturneUtils.defaultStealthAddress().h1Y
-        );
-        assertEq(
-            req.depositAddr.h2X,
-            NocturneUtils.defaultStealthAddress().h2X
-        );
-        assertEq(
-            req.depositAddr.h2Y,
-            NocturneUtils.defaultStealthAddress().h2Y
-        );
+        assertEq(req.depositAddr.h1, NocturneUtils.defaultStealthAddress().h1);
+        assertEq(req.depositAddr.h2, NocturneUtils.defaultStealthAddress().h2);
         assertEq(req.nonce, 4);
         assertEq(req.gasCompensation, 5);
     }

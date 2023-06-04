@@ -13,25 +13,13 @@ library EventParsing {
             uint256 encodedAssetAddr,
             uint256 encodedAssetId,
             uint256 value,
-            uint256 h1X,
-            uint256 h1Y,
-            uint256 h2X,
-            uint256 h2Y,
+            uint256 h1,
+            uint256 h2,
             uint256 nonce,
             uint256 gasCompensation
         ) = abi.decode(
                 entry.data,
-                (
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256,
-                    uint256
-                )
+                (uint256, uint256, uint256, uint256, uint256, uint256, uint256)
             );
 
         return
@@ -42,12 +30,7 @@ library EventParsing {
                     encodedAssetId: encodedAssetId
                 }),
                 value: value,
-                depositAddr: StealthAddress({
-                    h1X: h1X,
-                    h1Y: h1Y,
-                    h2X: h2X,
-                    h2Y: h2Y
-                }),
+                depositAddr: CompressedStealthAddress({h1: h1, h2: h2}),
                 nonce: nonce,
                 gasCompensation: gasCompensation
             });
@@ -57,20 +40,20 @@ library EventParsing {
         Vm.Log memory entry
     ) public pure returns (EncodedNote memory) {
         (
-            StealthAddress memory refundAddr,
+            CompressedStealthAddress memory refundAddr,
             uint256 nonce,
             uint256 encodedAssetAddr,
             uint256 encodedAssetId,
             uint256 value
         ) = abi.decode(
                 entry.data,
-                ((StealthAddress), uint256, uint256, uint256, uint256)
+                ((CompressedStealthAddress), uint256, uint256, uint256, uint256)
             );
 
         return
             EncodedNote({
-                ownerH1: refundAddr.h1X,
-                ownerH2: refundAddr.h2X,
+                ownerH1: refundAddr.h1,
+                ownerH2: refundAddr.h2,
                 nonce: nonce,
                 encodedAssetAddr: encodedAssetAddr,
                 encodedAssetId: encodedAssetId,

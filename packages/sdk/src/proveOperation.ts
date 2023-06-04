@@ -1,3 +1,4 @@
+import { decompressPoint } from "./crypto";
 import {
   PreProofJoinSplit,
   SignedOperation,
@@ -52,9 +53,13 @@ async function proveJoinSplit(
   prover: JoinSplitProver,
   signedJoinSplit: PreProofJoinSplit
 ): Promise<ProvenJoinSplit> {
-  const { opDigest, proofInputs, ...baseJoinSplit } = signedJoinSplit;
+  const { opDigest, proofInputs, encSenderCanonAddr, ...baseJoinSplit } =
+    signedJoinSplit;
   console.log("proofInputs: ", proofInputs);
   const proof = await prover.proveJoinSplit(proofInputs);
+
+  const decompressedC1 = decompressPoint(encSenderCanonAddr.c1);
+  const decompressedC2 = decompressPoint(encSenderCanonAddr.c2);
 
   // Check that snarkjs output is consistent with our precomputed joinsplit values
   const publicSignals = joinSplitPublicSignalsFromArray(proof.publicSignals);
@@ -68,11 +73,13 @@ async function proveJoinSplit(
     baseJoinSplit.publicSpend !== BigInt(publicSignals.publicSpend) ||
     baseJoinSplit.nullifierA !== BigInt(publicSignals.nullifierA) ||
     baseJoinSplit.nullifierB !== BigInt(publicSignals.nullifierB) ||
-    baseJoinSplit.encodedAsset.encodedAssetAddr !==
-      BigInt(publicSignals.encodedAssetAddr) ||
     baseJoinSplit.encodedAsset.encodedAssetId !==
       BigInt(publicSignals.encodedAssetId) ||
-    opDigest !== BigInt(publicSignals.opDigest)
+    opDigest !== BigInt(publicSignals.opDigest) ||
+    decompressedC1 === undefined ||
+    decompressedC2 === undefined ||
+    decompressedC1.y !== BigInt(publicSignals.encSenderCanonAddrC1Y) ||
+    decompressedC2.y !== BigInt(publicSignals.encSenderCanonAddrC2Y)
   ) {
     console.error("from proof, got", publicSignals);
     console.error("from sdk, got", {
@@ -84,6 +91,8 @@ async function proveJoinSplit(
       nullifierB: baseJoinSplit.nullifierB,
       encodedAssetAddr: baseJoinSplit.encodedAsset.encodedAssetAddr,
       encodedAssetId: baseJoinSplit.encodedAsset.encodedAssetId,
+      decompressedC1Y: decompressedC1?.y,
+      decompressedC2Y: decompressedC2?.y,
       opDigest,
     });
 
@@ -97,8 +106,8 @@ async function proveJoinSplit(
   const solidityProof = packToSolidityProof(proof.proof);
   return {
     proof: solidityProof,
+    encSenderCanonAddrC1: encSenderCanonAddr.c1,
+    encSenderCanonAddrC2: encSenderCanonAddr.c2,
     ...baseJoinSplit,
-    encSenderCanonAddrC1X: BigInt(publicSignals.encSenderCanonAddrC1X),
-    encSenderCanonAddrC2X: BigInt(publicSignals.encSenderCanonAddrC2X),
   };
 }

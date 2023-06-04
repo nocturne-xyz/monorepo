@@ -12,6 +12,7 @@ export {
   JoinSplitPublicSignals,
   joinSplitPublicSignalsFromArray,
   joinSplitPublicSignalsToArray,
+  encodeEncodedAssetAddrWithSignBitsPI,
 } from "./joinsplit";
 export {
   SubtreeUpdateProofWithPublicSignals,

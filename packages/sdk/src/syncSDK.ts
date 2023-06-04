@@ -1,4 +1,9 @@
-import { NocturneViewer } from "./crypto";
+import {
+  CompressedStealthAddress,
+  NocturneViewer,
+  StealthAddress,
+  StealthAddressTrait,
+} from "./crypto";
 import { NocturneDB } from "./NocturneDB";
 import {
   ClosableAsyncIterator,
@@ -60,12 +65,15 @@ export async function syncSDK(
     console.log("applied state diff for block", diff.blockNumber);
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
-    await updateMerkle(
-      merkle,
-      diff.lastCommittedMerkleIndex,
-      diff.notesAndCommitments.map(({ inner }) => inner),
-      nfIndices
-    );
+
+    if (diff.lastCommittedMerkleIndex) {
+      await updateMerkle(
+        merkle,
+        diff.lastCommittedMerkleIndex,
+        diff.notesAndCommitments.map(({ inner }) => inner),
+        nfIndices
+      );
+    }
   }
 }
 
@@ -100,6 +108,7 @@ async function updateMerkle(
   }
 
   // commit up to latest subtree commit
+  console.log("committing up to index", latestCommittedMerkleIndex);
   merkle.commitUpToIndex(latestCommittedMerkleIndex);
 
   console.log("merkle root:", merkle.getRoot());
@@ -124,8 +133,11 @@ function decryptStateDiff(
 ): StateDiff {
   const notesAndCommitments = notes.map(({ inner, timestampUnixMillis }) => {
     const note = inner;
-    const isOwn = viewer.isOwnAddress(note.owner);
     const isEncrypted = NoteTrait.isEncryptedNote(note);
+    const owner = isEncrypted
+      ? StealthAddressTrait.decompress(note.owner as CompressedStealthAddress)
+      : (note.owner as StealthAddress);
+    const isOwn = viewer.isOwnAddress(owner);
 
     if (isOwn && isEncrypted) {
       // if it's ours and its encrypted, decrypt it, get the nullifier, and return it

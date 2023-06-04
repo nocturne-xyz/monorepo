@@ -1,7 +1,7 @@
 import {
   AssetTrait,
-  BaseJoinSplit,
   EncodedAsset,
+  EncryptedNote,
   IncludedNote,
   Note,
   WithTimestamp,
@@ -10,18 +10,22 @@ import {
   RefundProcessedEvent,
   JoinSplitProcessedEvent,
   SubtreeUpdateEvent,
-  InsertNoteCommitmentsEvent,
-  InsertNotesEvent,
 } from "@nocturne-xyz/contracts/dist/src/Handler";
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
+import { StealthAddressTrait } from "../../crypto";
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
   oldNoteBNullifier: bigint;
   newNoteAIndex: number;
   newNoteBIndex: number;
-  joinSplit: BaseJoinSplit;
+  newNoteACommitment: bigint;
+  newNoteBCommitment: bigint;
+  encodedAsset: EncodedAsset;
+  publicSpend: bigint;
+  newNoteAEncrypted: EncryptedNote;
+  newNoteBEncrypted: EncryptedNote;
 }
 
 // fetching refunded notes occuring in block range [from, to]
@@ -53,19 +57,19 @@ export async function fetchNotesFromRefunds(
         merkleIndex,
       } = event.args;
 
-      const { h1X, h1Y, h2X, h2Y } = refundAddr;
+      const { h1, h2 } = refundAddr;
       const encodedAsset: EncodedAsset = {
         encodedAssetAddr: encodedAssetAddr.toBigInt(),
         encodedAssetId: encodedAssetId.toBigInt(),
       };
 
+      const owner = StealthAddressTrait.decompress({
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
+      });
+
       const note: IncludedNote = {
-        owner: {
-          h1X: h1X.toBigInt(),
-          h1Y: h1Y.toBigInt(),
-          h2X: h2X.toBigInt(),
-          h2Y: h2Y.toBigInt(),
-        },
+        owner,
         nonce: nonce.toBigInt(),
         asset: AssetTrait.decode(encodedAsset),
         value: value.toBigInt(),
@@ -109,40 +113,30 @@ export async function fetchJoinSplits(
         oldNoteBNullifier,
         newNoteAIndex,
         newNoteBIndex,
-        joinSplit,
-      } = event.args;
-      const {
-        commitmentTreeRoot,
-        nullifierA,
-        nullifierB,
         newNoteACommitment,
         newNoteAEncrypted,
         newNoteBCommitment,
         newNoteBEncrypted,
         encodedAsset,
         publicSpend,
-      } = joinSplit;
+      } = event.args;
       const { encodedAssetAddr, encodedAssetId } = encodedAsset;
       let { owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteAEncrypted;
-      let { h1X, h1Y, h2X, h2Y } = owner;
+      let { h1, h2 } = owner;
       const newNoteAOwner = {
-        h1X: h1X.toBigInt(),
-        h1Y: h1Y.toBigInt(),
-        h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt(),
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
       };
       const encappedKeyA = encappedKey.toBigInt();
       const encryptedNonceA = encryptedNonce.toBigInt();
       const encryptedValueA = encryptedValue.toBigInt();
       ({ owner, encappedKey, encryptedNonce, encryptedValue } =
         newNoteBEncrypted);
-      ({ h1X, h1Y, h2X, h2Y } = owner);
+      ({ h1, h2 } = owner);
       const newNoteBOwner = {
-        h1X: h1X.toBigInt(),
-        h1Y: h1Y.toBigInt(),
-        h2X: h2X.toBigInt(),
-        h2Y: h2Y.toBigInt(),
+        h1: h1.toBigInt(),
+        h2: h2.toBigInt(),
       };
       const encappedKeyB = encappedKey.toBigInt();
       const encryptedNonceB = encryptedNonce.toBigInt();
@@ -152,29 +146,24 @@ export async function fetchJoinSplits(
         oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
         newNoteAIndex: newNoteAIndex.toNumber(),
         newNoteBIndex: newNoteBIndex.toNumber(),
-        joinSplit: {
-          commitmentTreeRoot: commitmentTreeRoot.toBigInt(),
-          nullifierA: nullifierA.toBigInt(),
-          nullifierB: nullifierB.toBigInt(),
-          newNoteACommitment: newNoteACommitment.toBigInt(),
-          newNoteAEncrypted: {
-            owner: newNoteAOwner,
-            encappedKey: encappedKeyA,
-            encryptedNonce: encryptedNonceA,
-            encryptedValue: encryptedValueA,
-          },
-          newNoteBCommitment: newNoteBCommitment.toBigInt(),
-          newNoteBEncrypted: {
-            owner: newNoteBOwner,
-            encappedKey: encappedKeyB,
-            encryptedNonce: encryptedNonceB,
-            encryptedValue: encryptedValueB,
-          },
-          encodedAsset: {
-            encodedAssetAddr: encodedAssetAddr.toBigInt(),
-            encodedAssetId: encodedAssetId.toBigInt(),
-          },
-          publicSpend: publicSpend.toBigInt(),
+        newNoteACommitment: newNoteACommitment.toBigInt(),
+        newNoteBCommitment: newNoteBCommitment.toBigInt(),
+        encodedAsset: {
+          encodedAssetAddr: encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAssetId.toBigInt(),
+        },
+        publicSpend: publicSpend.toBigInt(),
+        newNoteAEncrypted: {
+          owner: newNoteAOwner,
+          encappedKey: encappedKeyA,
+          encryptedNonce: encryptedNonceA,
+          encryptedValue: encryptedValueA,
+        },
+        newNoteBEncrypted: {
+          owner: newNoteBOwner,
+          encappedKey: encappedKeyB,
+          encryptedNonce: encryptedNonceB,
+          encryptedValue: encryptedValueB,
         },
       };
 
@@ -237,15 +226,15 @@ export async function fetchInsertions(
   to: number
 ): Promise<(Note | bigint)[]> {
   // fetch both kind of insertion events (note commitments and full notes)
-  const ncEventsProm: Promise<InsertNoteCommitmentsEvent[]> = queryEvents(
+  const ncEventsProm: Promise<JoinSplitProcessedEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNoteCommitments(),
+    contract.filters.JoinSplitProcessed(),
     from,
     to
   );
-  const noteEventsProm: Promise<InsertNotesEvent[]> = queryEvents(
+  const noteEventsProm: Promise<RefundProcessedEvent[]> = queryEvents(
     contract,
-    contract.filters.InsertNotes(),
+    contract.filters.RefundProcessed(),
     from,
     to
   );
@@ -261,8 +250,10 @@ export async function fetchInsertions(
 
   let insertions: OrderedInsertion[] = [];
   for (const event of noteCommitmentEvents) {
-    const ncs = event.args.commitments.map((l) => l.toBigInt());
-    const orderedNoteCommitments = ncs.map((nc) => ({
+    const newNcA = event.args.newNoteACommitment.toBigInt();
+    const newNcB = event.args.newNoteBCommitment.toBigInt();
+
+    const orderedNoteCommitments = [newNcA, newNcB].map((nc) => ({
       insertion: nc,
       blockNumber: event.blockNumber,
       txIdx: event.transactionIndex,
@@ -272,36 +263,31 @@ export async function fetchInsertions(
   }
 
   for (const event of notesEvents) {
-    const notes = event.args.notes;
-    for (const noteValues of notes) {
-      const owner = {
-        h1X: noteValues.ownerH1.toBigInt(),
-        h2X: noteValues.ownerH2.toBigInt(),
-        h1Y: 0n,
-        h2Y: 0n,
-      };
+    const noteValues = event.args;
+    const h1 = noteValues.refundAddr.h1.toBigInt();
+    const h2 = noteValues.refundAddr.h2.toBigInt();
+    const owner = StealthAddressTrait.decompress({ h1, h2 });
 
-      const encoddAsset: EncodedAsset = {
-        encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-        encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-      };
+    const encoddAsset: EncodedAsset = {
+      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
+      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
+    };
 
-      const asset = AssetTrait.decode(encoddAsset);
+    const asset = AssetTrait.decode(encoddAsset);
 
-      const note: Note = {
-        owner,
-        nonce: noteValues.nonce.toBigInt(),
-        asset,
-        value: noteValues.value.toBigInt(),
-      };
+    const note: Note = {
+      owner,
+      nonce: noteValues.nonce.toBigInt(),
+      asset,
+      value: noteValues.value.toBigInt(),
+    };
 
-      insertions.push({
-        insertion: note,
-        blockNumber: event.blockNumber,
-        txIdx: event.transactionIndex,
-        logIdx: event.logIndex,
-      });
-    }
+    insertions.push({
+      insertion: note,
+      blockNumber: event.blockNumber,
+      txIdx: event.transactionIndex,
+      logIdx: event.logIndex,
+    });
   }
 
   insertions = insertions.sort(

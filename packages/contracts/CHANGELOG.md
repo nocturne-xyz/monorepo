@@ -2,6 +2,21 @@
 
 ### Unreleased
 
+- use new compressed encoding to compute note hashes in subtree update logic
+- replace `StealthAddress` with `CompressedStealthAddress`, which is composed of two points in 255-bit compressed encoding
+- remove proof and root from joinsplit events
+- `OperationProcessed` event removes two indexed params (more of this to come soon)
+- small gas optimization where we use contiguous subarray index to avoid checking balances for joinsplits of same asset in `BalanceManager`
+- remove insertion events from CTM
+- remove batch refunds to save on code size and 3k of gas in 1 refund case
+  - all insert "notes" plural becomes insert "note" singular (in CTM and OffchainMerkle)
+  - refunds are inserted one-by-one (BalanceManager)
+- fix bug where empty insertion events are emitted when we have 0 refunds
+- add more offchain merkle unit tests
+- fix bug where invariant tests were not completing weth deposits, weth is now deposited and transacted with in ops
+- unify deposit/joinsplit tokens in invariant tests such that erc20s and weth are no longer separate cases
+- add `BalanceManager` test case that tests multiple contiguous subarrays for joinsplits (wasn't tested in BalanceManager gas opt PR 1)
+- enable operations with more than one joinsplit token in unit and invariant tests
 - BalanceManager checks if reserved - payout < threshold, if so it just gives it all to bundler so there's no refund
 - add op.gasAssetRefundThreshold to operation
 - move `HandlerBase` into helpers so OperationGenerator can also use

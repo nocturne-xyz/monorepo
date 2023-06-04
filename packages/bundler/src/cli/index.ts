@@ -20,7 +20,7 @@ export default async function main(): Promise<void> {
 // ! even if there's a bug somewhere that results in a hanging promise
 main()
   .then(() => {
-    console.log(`deposit-screener-cli ran to completion`);
+    console.log(`bundler-cli ran to completion`);
     process.exit(0);
   })
   .catch((e) => {

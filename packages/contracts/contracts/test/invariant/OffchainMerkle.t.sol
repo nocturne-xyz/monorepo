@@ -13,6 +13,7 @@ contract OffchainMerkleInvariants is Test {
 
     function setUp() public virtual {
         offchainMerkleHandler = new OffchainMerkleHandler();
+        targetContract(address(offchainMerkleHandler));
     }
 
     function invariant_callSummary() public view {

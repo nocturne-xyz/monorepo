@@ -6,13 +6,27 @@ import {
 import { assertOrErr } from "../utils";
 import * as JSON from "bigint-json-serialization";
 import { randomFr } from "./utils";
-import { decodePoint } from "./noteEncryption";
+import {
+  CompressedPoint,
+  compressPoint,
+  decompressPoint,
+} from "./pointCompression";
 
 export interface StealthAddress {
   h1X: bigint;
   h1Y: bigint;
   h2X: bigint;
   h2Y: bigint;
+}
+
+export interface CompressedStealthAddress {
+  h1: CompressedPoint;
+  h2: CompressedPoint;
+}
+
+export interface EncryptedCanonAddress {
+  c1: CompressedPoint;
+  c2: CompressedPoint;
 }
 
 export type CanonAddress = AffinePoint<bigint>;
@@ -40,11 +54,26 @@ export class StealthAddressTrait {
     };
   }
 
-  static fromCompressedPoints(H1X: bigint, H2X: bigint): StealthAddress {
-    const H1 = decodePoint(H1X);
-    const H2 = decodePoint(H2X);
+  static decompress(address: CompressedStealthAddress): StealthAddress {
+    const h1 = decompressPoint(address.h1);
+    const h2 = decompressPoint(address.h2);
 
-    return StealthAddressTrait.fromPoints({ h1: H1, h2: H2 });
+    if (!h1 || !h2) {
+      throw new Error("Invalid stealth address");
+    }
+
+    return StealthAddressTrait.fromPoints({ h1, h2 });
+  }
+
+  static compress(address: StealthAddress): CompressedStealthAddress {
+    const points = StealthAddressTrait.toPoints(address);
+    const h1 = compressPoint(points.h1);
+    const h2 = compressPoint(points.h2);
+
+    return {
+      h1,
+      h2,
+    };
   }
 
   static toString(address: StealthAddress): string {
@@ -86,8 +115,8 @@ export class StealthAddressTrait {
   }
 
   static hash(address: StealthAddress): bigint {
-    const { h1X, h2X } = address;
-    return BigInt(poseidonBN([h1X, h2X]));
+    const { h1X, h1Y, h2X, h2Y } = address;
+    return BigInt(poseidonBN([h1X, h1Y, h2X, h2Y]));
   }
 
   static randomize(address: StealthAddress): StealthAddress {

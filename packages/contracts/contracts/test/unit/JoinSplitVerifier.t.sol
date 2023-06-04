@@ -82,5 +82,6 @@ contract TestJoinSplitVerifier is Test, JsonDecodings {
     function testBatchVerify() public {
         batchVerifyFixture(BASIC_FIXTURE_PATH, 8);
         batchVerifyFixture(BASIC_FIXTURE_PATH, 16);
+        batchVerifyFixture(BASIC_FIXTURE_PATH, 32);
     }
 }

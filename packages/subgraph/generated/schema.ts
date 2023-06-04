@@ -98,40 +98,22 @@ export class DepositEvent extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get depositAddrH1X(): BigInt {
-    let value = this.get("depositAddrH1X");
+  get depositAddrH1(): BigInt {
+    let value = this.get("depositAddrH1");
     return value!.toBigInt();
   }
 
-  set depositAddrH1X(value: BigInt) {
-    this.set("depositAddrH1X", Value.fromBigInt(value));
+  set depositAddrH1(value: BigInt) {
+    this.set("depositAddrH1", Value.fromBigInt(value));
   }
 
-  get depositAddrH1Y(): BigInt {
-    let value = this.get("depositAddrH1Y");
+  get depositAddrH2(): BigInt {
+    let value = this.get("depositAddrH2");
     return value!.toBigInt();
   }
 
-  set depositAddrH1Y(value: BigInt) {
-    this.set("depositAddrH1Y", Value.fromBigInt(value));
-  }
-
-  get depositAddrH2X(): BigInt {
-    let value = this.get("depositAddrH2X");
-    return value!.toBigInt();
-  }
-
-  set depositAddrH2X(value: BigInt) {
-    this.set("depositAddrH2X", Value.fromBigInt(value));
-  }
-
-  get depositAddrH2Y(): BigInt {
-    let value = this.get("depositAddrH2Y");
-    return value!.toBigInt();
-  }
-
-  set depositAddrH2Y(value: BigInt) {
-    this.set("depositAddrH2Y", Value.fromBigInt(value));
+  set depositAddrH2(value: BigInt) {
+    this.set("depositAddrH2", Value.fromBigInt(value));
   }
 
   get nonce(): BigInt {
@@ -284,40 +266,22 @@ export class EncodedNote extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get ownerH1X(): BigInt {
-    let value = this.get("ownerH1X");
+  get ownerH1(): BigInt {
+    let value = this.get("ownerH1");
     return value!.toBigInt();
   }
 
-  set ownerH1X(value: BigInt) {
-    this.set("ownerH1X", Value.fromBigInt(value));
+  set ownerH1(value: BigInt) {
+    this.set("ownerH1", Value.fromBigInt(value));
   }
 
-  get ownerH1Y(): BigInt {
-    let value = this.get("ownerH1Y");
+  get ownerH2(): BigInt {
+    let value = this.get("ownerH2");
     return value!.toBigInt();
   }
 
-  set ownerH1Y(value: BigInt) {
-    this.set("ownerH1Y", Value.fromBigInt(value));
-  }
-
-  get ownerH2X(): BigInt {
-    let value = this.get("ownerH2X");
-    return value!.toBigInt();
-  }
-
-  set ownerH2X(value: BigInt) {
-    this.set("ownerH2X", Value.fromBigInt(value));
-  }
-
-  get ownerH2Y(): BigInt {
-    let value = this.get("ownerH2Y");
-    return value!.toBigInt();
-  }
-
-  set ownerH2Y(value: BigInt) {
-    this.set("ownerH2Y", Value.fromBigInt(value));
+  set ownerH2(value: BigInt) {
+    this.set("ownerH2", Value.fromBigInt(value));
   }
 
   get nonce(): BigInt {
@@ -399,40 +363,22 @@ export class EncryptedNote extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get ownerH1X(): BigInt {
-    let value = this.get("ownerH1X");
+  get ownerH1(): BigInt {
+    let value = this.get("ownerH1");
     return value!.toBigInt();
   }
 
-  set ownerH1X(value: BigInt) {
-    this.set("ownerH1X", Value.fromBigInt(value));
+  set ownerH1(value: BigInt) {
+    this.set("ownerH1", Value.fromBigInt(value));
   }
 
-  get ownerH1Y(): BigInt {
-    let value = this.get("ownerH1Y");
+  get ownerH2(): BigInt {
+    let value = this.get("ownerH2");
     return value!.toBigInt();
   }
 
-  set ownerH1Y(value: BigInt) {
-    this.set("ownerH1Y", Value.fromBigInt(value));
-  }
-
-  get ownerH2X(): BigInt {
-    let value = this.get("ownerH2X");
-    return value!.toBigInt();
-  }
-
-  set ownerH2X(value: BigInt) {
-    this.set("ownerH2X", Value.fromBigInt(value));
-  }
-
-  get ownerH2Y(): BigInt {
-    let value = this.get("ownerH2Y");
-    return value!.toBigInt();
-  }
-
-  set ownerH2Y(value: BigInt) {
-    this.set("ownerH2Y", Value.fromBigInt(value));
+  set ownerH2(value: BigInt) {
+    this.set("ownerH2", Value.fromBigInt(value));
   }
 
   get encappedKey(): BigInt {
@@ -603,7 +549,7 @@ export class SubtreeCommit extends Entity {
   }
 }
 
-export class TreeInsertion extends Entity {
+export class FilledBatchWithZerosEvent extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -611,19 +557,22 @@ export class TreeInsertion extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save TreeInsertion entity without an ID");
+    assert(
+      id != null,
+      "Cannot save FilledBatchWithZerosEvent entity without an ID"
+    );
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type TreeInsertion must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type FilledBatchWithZerosEvent must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("TreeInsertion", id.toBytes().toHexString(), this);
+      store.set("FilledBatchWithZerosEvent", id.toBytes().toHexString(), this);
     }
   }
 
-  static load(id: Bytes): TreeInsertion | null {
-    return changetype<TreeInsertion | null>(
-      store.get("TreeInsertion", id.toHexString())
+  static load(id: Bytes): FilledBatchWithZerosEvent | null {
+    return changetype<FilledBatchWithZerosEvent | null>(
+      store.get("FilledBatchWithZerosEvent", id.toHexString())
     );
   }
 
@@ -645,128 +594,21 @@ export class TreeInsertion extends Entity {
     this.set("idx", Value.fromBigInt(value));
   }
 
-  get notes(): Array<Bytes> | null {
-    let value = this.get("notes");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBytesArray();
-    }
-  }
-
-  set notes(value: Array<Bytes> | null) {
-    if (!value) {
-      this.unset("notes");
-    } else {
-      this.set("notes", Value.fromBytesArray(<Array<Bytes>>value));
-    }
-  }
-
-  get noteCommitments(): Array<BigInt> | null {
-    let value = this.get("noteCommitments");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toBigIntArray();
-    }
-  }
-
-  set noteCommitments(value: Array<BigInt> | null) {
-    if (!value) {
-      this.unset("noteCommitments");
-    } else {
-      this.set("noteCommitments", Value.fromBigIntArray(<Array<BigInt>>value));
-    }
-  }
-}
-
-export class CompressedEncodedNote extends Entity {
-  constructor(id: Bytes) {
-    super();
-    this.set("id", Value.fromBytes(id));
-  }
-
-  save(): void {
-    let id = this.get("id");
-    assert(
-      id != null,
-      "Cannot save CompressedEncodedNote entity without an ID"
-    );
-    if (id) {
-      assert(
-        id.kind == ValueKind.BYTES,
-        `Entities of type CompressedEncodedNote must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("CompressedEncodedNote", id.toBytes().toHexString(), this);
-    }
-  }
-
-  static load(id: Bytes): CompressedEncodedNote | null {
-    return changetype<CompressedEncodedNote | null>(
-      store.get("CompressedEncodedNote", id.toHexString())
-    );
-  }
-
-  get id(): Bytes {
-    let value = this.get("id");
-    return value!.toBytes();
-  }
-
-  set id(value: Bytes) {
-    this.set("id", Value.fromBytes(value));
-  }
-
-  get ownerH1(): BigInt {
-    let value = this.get("ownerH1");
+  get startIndex(): BigInt {
+    let value = this.get("startIndex");
     return value!.toBigInt();
   }
 
-  set ownerH1(value: BigInt) {
-    this.set("ownerH1", Value.fromBigInt(value));
+  set startIndex(value: BigInt) {
+    this.set("startIndex", Value.fromBigInt(value));
   }
 
-  get ownerH2(): BigInt {
-    let value = this.get("ownerH2");
+  get numZeros(): BigInt {
+    let value = this.get("numZeros");
     return value!.toBigInt();
   }
 
-  set ownerH2(value: BigInt) {
-    this.set("ownerH2", Value.fromBigInt(value));
-  }
-
-  get nonce(): BigInt {
-    let value = this.get("nonce");
-    return value!.toBigInt();
-  }
-
-  set nonce(value: BigInt) {
-    this.set("nonce", Value.fromBigInt(value));
-  }
-
-  get encodedAssetAddr(): BigInt {
-    let value = this.get("encodedAssetAddr");
-    return value!.toBigInt();
-  }
-
-  set encodedAssetAddr(value: BigInt) {
-    this.set("encodedAssetAddr", Value.fromBigInt(value));
-  }
-
-  get encodedAssetId(): BigInt {
-    let value = this.get("encodedAssetId");
-    return value!.toBigInt();
-  }
-
-  set encodedAssetId(value: BigInt) {
-    this.set("encodedAssetId", Value.fromBigInt(value));
-  }
-
-  get value(): BigInt {
-    let value = this.get("value");
-    return value!.toBigInt();
-  }
-
-  set value(value: BigInt) {
-    this.set("value", Value.fromBigInt(value));
+  set numZeros(value: BigInt) {
+    this.set("numZeros", Value.fromBigInt(value));
   }
 }

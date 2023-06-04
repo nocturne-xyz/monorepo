@@ -93,19 +93,14 @@ contract Handler is
     function handleDeposit(
         Deposit calldata deposit
     ) external override whenNotPaused onlyTeller {
-        (, address assetAddr, ) = AssetUtils.decodeAsset(deposit.encodedAsset);
+        EncodedAsset memory encodedAsset = deposit.encodedAsset;
+        (, address assetAddr, ) = AssetUtils.decodeAsset(encodedAsset);
         require(
             _supportedContractAllowlist[assetAddr],
             "!supported deposit asset"
         );
 
-        EncodedAsset[] memory encodedAssets = new EncodedAsset[](1);
-        uint256[] memory values = new uint256[](1);
-
-        encodedAssets[0] = deposit.encodedAsset;
-        values[0] = deposit.value;
-
-        _handleRefundNotes(encodedAssets, values, deposit.depositAddr, 1);
+        _handleRefundNote(encodedAsset, deposit.depositAddr, deposit.value);
     }
 
     /// @notice Handles an operation after proofs have been verified by the Teller. Checks

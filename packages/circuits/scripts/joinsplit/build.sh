@@ -78,10 +78,6 @@ echo "DONE ($((end-start))s)"
 
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`
-npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR/JoinSplitVerifier.sol""
+yarn ts-node "$ROOT_SCRIPT_DIR/genSolidityVerifier.ts" "$OUTPUT_DIR/vkey.json" JoinSplitVerifier
 end=`date +%s`
 echo "DONE ($((end-start))s)"
-
-cp "$OUTPUT_DIR/JoinSplitVerifier.sol" "$CONTRACTS_DIR/JoinSplitVerifier.sol"
-
-"$ROOT_SCRIPT_DIR/gen_solidity_verifier.sh" "$CONTRACTS_DIR/JoinSplitVerifier.sol"
