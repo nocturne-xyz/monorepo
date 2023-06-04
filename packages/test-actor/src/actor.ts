@@ -86,7 +86,10 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const value = randomBigIntBounded(randomAsset.balance);
+      const value = randomBigintInRange(
+        randomAsset.balance / 3n,
+        randomAsset.balance / 2n
+      );
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
@@ -162,6 +165,10 @@ export class TestActor {
     }
     const [asset, value] = maybeErc20AndValue;
 
+    console.log(
+      `Attempting operation with asset ${asset.assetAddr} and value ${value}`
+    );
+
     let opRequest: OperationRequest;
     if (true) {
       opRequest = await this.erc20TransferOpRequest(asset, value);
@@ -183,7 +190,7 @@ export class TestActor {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(proven),
+      body: JSON.stringify({ operation: proven }),
     });
 
     const resJSON = await res.json();
@@ -241,5 +248,6 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  return Math.random() < 0.5;
+  // return Math.random() < 0.5;
+  return false;
 }

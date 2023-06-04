@@ -175,7 +175,7 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
   // iterate through each gas asset
   for (const [ticker, gasAsset] of gasAssets.entries()) {
     // for each, check if we're already unwrapping that asset in at least one joinsplit request
-    const matchingRequests = joinSplitRequestsByAsset.get(gasAsset.assetAddr);
+    const matchingRequests = joinSplitRequestsByAsset.get(gasAsset.assetAddr); // TODO: casing
 
     // if we are, check if the user has enough of it to cover gas
     // TODO: is it possible to have empty array here?

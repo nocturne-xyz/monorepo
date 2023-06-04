@@ -48,13 +48,17 @@ export async function prepareOperation(
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // prepare joinSplits
+  console.log("joinSplitRequests: ", joinSplitRequests);
+
   let joinSplits = (
     await Promise.all(
-      joinSplitRequests.map((joinSplitRequest) => {
+      joinSplitRequests.map(async (joinSplitRequest) => {
         return prepareJoinSplits(deps, joinSplitRequest);
       })
     )
   ).flat();
+
+  console.log("joinSplits: ", joinSplits);
 
   joinSplits = groupByArr(joinSplits, (joinSplit) =>
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
@@ -89,6 +93,7 @@ async function prepareJoinSplits(
     getJoinSplitRequestTotalValue(joinSplitRequest),
     joinSplitRequest.asset
   );
+  console.log("gathered notes:", notes);
 
   const unwrapAmount = joinSplitRequest.unwrapValue;
   const paymentAmount = joinSplitRequest.payment?.value ?? 0n;
@@ -98,7 +103,7 @@ async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
-  return await getJoinSplitsFromNotes(
+  const joinsplits = await getJoinSplitsFromNotes(
     viewer,
     merkle,
     notes,
@@ -106,6 +111,9 @@ async function prepareJoinSplits(
     amountToReturn,
     receiver
   );
+  console.log("joinsplits from gathered notes: ", joinsplits);
+
+  return joinsplits;
 }
 
 async function gatherNotes(
@@ -160,8 +168,12 @@ async function gatherNotes(
     const note = sortedNotes[subseqIndex];
     notesToUse.push(note);
     remainingAmount -= note.value;
+
+    // Skip to next note
+    subseqIndex--;
   }
 
+  console.log("notes to use: ", notesToUse);
   return notesToUse;
 }
 

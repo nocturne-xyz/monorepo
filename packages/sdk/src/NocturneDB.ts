@@ -11,6 +11,7 @@ import { numberToStringPadded, zip } from "./utils";
 import * as JSON from "bigint-json-serialization";
 import { KV, KVStore } from "./store";
 import { StateDiff } from "./sync";
+import { ethers } from "ethers";
 
 const NOTES_BY_INDEX_PREFIX = "NOTES_BY_INDEX";
 const NOTES_BY_ASSET_PREFIX = "NOTES_BY_ASSET";
@@ -62,7 +63,7 @@ export class NocturneDB {
   static formatAssetKey(asset: Asset): string {
     return `${NOTES_BY_ASSET_PREFIX}-${
       asset.assetType
-    }-${asset.assetAddr.toUpperCase()}-${asset.id.toString()}`;
+    }-${ethers.utils.getAddress(asset.assetAddr)}-${asset.id.toString()}`;
   }
 
   static formatNullifierKey(nullifier: bigint): string {
