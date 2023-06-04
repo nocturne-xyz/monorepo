@@ -3,14 +3,18 @@ import { ethers } from "ethers";
 import ERC20 from "./abis/ERC20.json";
 import ERC721 from "./abis/ERC721.json";
 import ERC1155 from "./abis/ERC1155.json";
-import "dotenv/config";
 
 export interface TokenDetails {
   decimals: number;
   symbol: string;
 }
 
-export const SNAP_ID = "npm:@nocturne-xyz/snap";
+// todo, when the time comes to document for open source:
+// NEXT_PUBLIC_SNAP_ORIGIN should be set if user wants to override
+// Also find an extensible solution, so it works for all app types, not just next.
+
+export const SNAP_ID =
+  process.env.NEXT_PUBLIC_SNAP_ORIGIN ?? "local:http://localhost:8080";
 
 export async function getWindowSigner(): Promise<ethers.Signer> {
   const provider = new ethers.providers.Web3Provider(window.ethereum as any);
