@@ -7,7 +7,7 @@ import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
 import { OperationRequest } from "./operationRequest";
-import { NocturneDB } from "./NocturneDB";
+import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
 import { signOperation } from "./signOperation";
@@ -15,10 +15,15 @@ import { loadNocturneConfig, NocturneConfig } from "@nocturne-xyz/config";
 import { Asset, AssetTrait } from "./primitives/asset";
 import { SDKSyncAdapter } from "./sync";
 import { syncSDK } from "./syncSDK";
-import { getJoinSplitRequestTotalValue } from "./utils";
+import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
+import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
+import { NullifierChecker } from "./NullifierChecker";
 import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
+
+// 10 minutes
+const OPTIMISTIC_NF_TTL: number = 10 * 60 * 1000;
 
 export class NocturneWalletSDK {
   protected config: NocturneConfig;
@@ -27,6 +32,7 @@ export class NocturneWalletSDK {
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
+  protected nullifierChecker: NullifierChecker;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
@@ -38,7 +44,8 @@ export class NocturneWalletSDK {
     merkleProver: SparseMerkleProver,
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
-    tokenConverter: EthToTokenConverter
+    tokenConverter: EthToTokenConverter,
+    nulliferChecker: NullifierChecker
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -63,6 +70,7 @@ export class NocturneWalletSDK {
     this.db = db;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
+    this.nullifierChecker = nulliferChecker;
   }
 
   async sync(): Promise<void> {
@@ -98,20 +106,8 @@ export class NocturneWalletSDK {
     return signOperation(this.signer, preSignOperation);
   }
 
-  async getAllAssetBalances(): Promise<AssetWithBalance[]> {
-    const notes = await this.db.getAllNotes();
-    return Array.from(notes.entries()).map(([assetString, notes]) => {
-      const asset = NocturneDB.parseAssetKey(assetString);
-      const balance = notes.reduce((a, b) => a + b.value, 0n);
-      return {
-        asset,
-        balance,
-      };
-    });
-  }
-
-  async getAllCommittedAssetBalances(): Promise<AssetWithBalance[]> {
-    const notes = await this.db.getAllCommittedNotes();
+  async getAllAssetBalances(opts?: GetNotesOpts): Promise<AssetWithBalance[]> {
+    const notes = await this.db.getAllNotes(opts);
     return Array.from(notes.entries()).map(([assetString, notes]) => {
       const asset = NocturneDB.parseAssetKey(assetString);
       const balance = notes.reduce((a, b) => a + b.value, 0n);
@@ -128,9 +124,7 @@ export class NocturneWalletSDK {
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
       const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
       // check that the user has enough committed notes to cover the request
-      const notes = await this.db.getCommittedNotesForAsset(
-        joinSplitRequest.asset
-      );
+      const notes = await this.db.getNotesForAsset(joinSplitRequest.asset);
       const balance = notes.reduce((acc, note) => acc + note.value, 0n);
       if (balance < requestedAmount) {
         return false;
@@ -144,5 +138,48 @@ export class NocturneWalletSDK {
     op: PreSignOperation | SignedOperation
   ): Promise<number> {
     return await getCreationTimestampOfNewestNoteInOp(this.db, op);
+  }
+
+  async applyOptimisticNullifiersForOp(
+    op: PreSignOperation | SignedOperation
+  ): Promise<void> {
+    const [merkleIndices, records] = unzip(
+      getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex, nullifier }) => {
+        return [
+          Number(merkleIndex),
+          {
+            nullifier,
+            expirationDate: Date.now() + OPTIMISTIC_NF_TTL,
+          },
+        ];
+      })
+    );
+
+    await this.db.storeOptimisticNFRecords(merkleIndices, records);
+  }
+
+  async updateOptimisticNullifiers(): Promise<void> {
+    // get all `OptimisticNFRecord`s from db
+    const optimisticNFRecords = await this.db.getAllOptimisticNFRecords();
+
+    // get all of merkle indices of records we want to remove
+    const merkleIndicesToRemove = new Set<number>();
+    for (const [merkleIndex, record] of optimisticNFRecords.entries()) {
+      // if it's expired, remove it
+      if (Date.now() > record.expirationDate) {
+        merkleIndicesToRemove.add(merkleIndex);
+        continue;
+      }
+
+      // if bundler doesn't have the nullifier in its DB, remove its
+      // OptimisticNFRecord
+      if (
+        !(await this.nullifierChecker.nullifierIsInFlight(record.nullifier))
+      ) {
+        merkleIndicesToRemove.add(merkleIndex);
+      }
+    }
+
+    await this.db.removeOptimisticNFRecords(Array.from(merkleIndicesToRemove));
   }
 }

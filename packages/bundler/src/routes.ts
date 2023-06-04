@@ -148,6 +148,38 @@ export function makeGetOperationStatusHandler({
   };
 }
 
+export interface HandleCheckNFDeps {
+  nullifierDB: NullifierDB;
+  logger: Logger;
+}
+
+export function makeCheckNFHandler({
+  nullifierDB,
+  logger,
+}: HandleCheckNFDeps): RequestHandler {
+  return async (req: Request, res: Response) => {
+    const childLogger = logger.child({ nf: req.params.nf });
+    const nf = BigInt(req.params.nf);
+
+    let exists = false;
+    try {
+      exists = await nullifierDB.hasNullifierConflict(nf);
+    } catch (err) {
+      logger.error("failed to check if nullifier exists", err);
+      res.status(500).json({ error: "internal server error" });
+    }
+
+    if (exists) {
+      childLogger.debug("nullifier exists");
+    } else {
+      childLogger.debug("nullifier does not exist");
+    }
+
+    const response = { exists };
+    res.json(response);
+  };
+}
+
 async function postJob(
   queue: Queue<ProvenOperationJobData>,
   statusDB: StatusDB,

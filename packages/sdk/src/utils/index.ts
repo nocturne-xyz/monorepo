@@ -3,6 +3,7 @@ export {
   getJoinSplitRequestTotalValue,
   sleep,
   merklePathToIndex,
+  getMerkleIndicesAndNfsFromOp,
 } from "./misc";
 export { bigInt256ToFieldElems, bigintToBEPadded } from "./bits";
 export {

@@ -12,6 +12,7 @@ import {
   OperationRequest,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
+  BundlerNullifierChecker,
 } from "@nocturne-xyz/sdk";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
@@ -96,7 +97,8 @@ export const run = new Command("run")
       merkleProver,
       db,
       syncAdapter,
-      new MockEthToTokenConverter()
+      new MockEthToTokenConverter(),
+      new BundlerNullifierChecker(bundlerEndpoint)
     );
 
     const vkeyStr = fs.readFileSync(vkeyPath).toString();

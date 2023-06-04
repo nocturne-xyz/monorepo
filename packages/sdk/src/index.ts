@@ -6,6 +6,7 @@ export * from "./crypto";
 export * from "./store";
 export * from "./sync";
 export * from "./request";
+export * from "./NullifierChecker";
 
 export {
   OperationRequest,

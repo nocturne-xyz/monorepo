@@ -28,6 +28,15 @@ const VKEY_PATH = `${ARTIFACTS_DIR}/subtreeupdate/subtreeupdate_cpp/vkey.json`;
 
 const MOCK_SUBTREE_UPDATER_DELAY = 2100;
 
+export const ONE_DAY_SECONDS = 60n * 60n * 24n;
+
+// 10^9 (e.g. 10 gwei if this was eth)
+export const GAS_PRICE = 10n * 10n ** 9n;
+// 10^9 gas
+export const GAS_FAUCET_DEFAULT_AMOUNT = 10_000_000n * GAS_PRICE; // 100M gwei
+
+export const BUNDLER_ENDPOINT = `http://localhost:3000`;
+
 export type TeardownFn = () => Promise<void>;
 export type ResetFn = () => Promise<void>;
 
@@ -89,7 +98,7 @@ export async function submitAndProcessOperation(
   console.log("submitting operation");
   let res: any;
   try {
-    res = await fetch(`http://localhost:3000/relay`, {
+    res = await fetch(`${BUNDLER_ENDPOINT}/relay`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -115,7 +124,7 @@ export async function submitAndProcessOperation(
   let count = 0;
   while (count < 10) {
     try {
-      res = await fetch(`http://localhost:3000/operations/${operationDigest}`, {
+      res = await fetch(`${BUNDLER_ENDPOINT}/operations/${operationDigest}`, {
         method: "GET",
       });
       const statusRes = await res.json();

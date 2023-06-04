@@ -24,7 +24,12 @@ import {
   proveOperation,
   OperationStatus,
 } from "@nocturne-xyz/sdk";
-import { submitAndProcessOperation } from "../src/utils";
+import {
+  GAS_FAUCET_DEFAULT_AMOUNT,
+  GAS_PRICE,
+  ONE_DAY_SECONDS,
+  submitAndProcessOperation,
+} from "../src/utils";
 import {
   depositFundsMultiToken,
   depositFundsSingleToken,
@@ -40,14 +45,7 @@ const ALICE_UNWRAP_VAL = 120n * 1_000_000n;
 const ALICE_TO_BOB_PUB_VAL = 100n * 1_000_000n;
 const ALICE_TO_BOB_PRIV_VAL = 30n * 1_000_000n;
 
-// 10^9 (e.g. 10 gwei if this was eth)
-const GAS_PRICE = 10n * 10n ** 9n;
-// 10^9 gas
-const GAS_FAUCET_DEFAULT_AMOUNT = 10_000_000n * GAS_PRICE; // 100M gwei
-
 const PLUTOCRACY_AMOUNT = 3n;
-
-const ONE_DAY_SECONDS = 60n * 60n * 24n;
 
 describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", async () => {
   let teardown: () => Promise<void>;
@@ -308,7 +306,8 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       console.log("alice: Sync SDK post-operation");
       await nocturneWalletSDKAlice.sync();
       const updatedNotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc20Asset
+        erc20Asset,
+        { includeUncommitted: true }
       )!;
       const nonZeroNotesAlice = updatedNotesAlice.filter((n) => n.value > 0n);
       // alice should have two nonzero notes total
@@ -331,7 +330,9 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       console.log("bob: Sync SDK post-operation");
       await nocturneWalletSDKBob.sync();
-      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset)!;
+      const updatedNotesBob = await nocturneDBBob.getNotesForAsset(erc20Asset, {
+        includeUncommitted: true,
+      })!;
       const nonZeroNotesBob = updatedNotesBob.filter((n) => n.value > 0n);
       // bob should have one nonzero note total
       expect(nonZeroNotesBob.length).to.equal(1);
@@ -417,13 +418,15 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
 
       // Alice should have a note for minted ERC721 token
       const erc721NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc721Asset
+        erc721Asset,
+        { includeUncommitted: true }
       )!;
       expect(erc721NotesAlice.length).to.equal(1);
 
       // Alice should have a note for minted ERC1155 token
       const erc1155NotesAlice = await nocturneDBAlice.getNotesForAsset(
-        erc1155Asset
+        erc1155Asset,
+        { includeUncommitted: true }
       )!;
       expect(erc1155NotesAlice.length).to.equal(1);
     };
