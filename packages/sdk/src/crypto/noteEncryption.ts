@@ -1,13 +1,14 @@
-import { CanonAddress, StealthAddress, StealthAddressTrait } from "./address";
-import { Note, Asset } from "../primitives";
-import { assertOrErr } from "../utils";
-import { EncryptedNote } from "../primitives/types";
 import {
-  AffinePoint,
-  BabyJubJub,
-  poseidonBN,
-} from "@nocturne-xyz/circuit-utils";
+  CanonAddress,
+  EncryptedCanonAddress,
+  StealthAddress,
+  StealthAddressTrait,
+} from "./address";
+import { Note, Asset } from "../primitives";
+import { EncryptedNote } from "../primitives/types";
+import { BabyJubJub, poseidonBN } from "@nocturne-xyz/circuit-utils";
 import { randomFr } from "./utils";
+import { decompressPoint, compressPoint } from "./pointCompression";
 
 const F = BabyJubJub.BaseField;
 const Fr = BabyJubJub.ScalarField;
@@ -27,17 +28,19 @@ export function encryptNote(receiver: CanonAddress, note: Note): EncryptedNote {
   const R = BabyJubJub.scalarMul(BabyJubJub.BasePoint, r);
 
   const encryptedNonce = F.add(
-    poseidonBN([encodePoint(R)]),
+    poseidonBN([compressPoint(R)]),
     F.reduce(note.nonce)
   );
   const encryptedValue = F.add(
-    poseidonBN([F.reduce(encodePoint(R) + F.One)]),
+    poseidonBN([F.reduce(compressPoint(R) + F.One)]),
     F.reduce(note.value)
   );
 
   return {
-    owner: StealthAddressTrait.randomize(note.owner),
-    encappedKey: encodePoint(BabyJubJub.scalarMul(receiver, r)),
+    owner: StealthAddressTrait.compress(
+      StealthAddressTrait.randomize(note.owner)
+    ),
+    encappedKey: compressPoint(BabyJubJub.scalarMul(receiver, r)),
     encryptedNonce,
     encryptedValue,
   };
@@ -65,16 +68,20 @@ export function decryptNote(
     vkInv += BabyJubJub.PrimeSubgroupOrder;
   }
 
-  const eR = decodePoint(encryptedNote.encappedKey);
+  const eR = decompressPoint(encryptedNote.encappedKey);
+  if (!eR) {
+    throw new Error("Invalid encapped key");
+  }
+
   const R = BabyJubJub.scalarMul(eR, vkInv);
   const nonce = F.sub(
     F.reduce(encryptedNote.encryptedNonce),
-    F.reduce(poseidonBN([encodePoint(R)]))
+    F.reduce(poseidonBN([compressPoint(R)]))
   );
 
   const value = F.sub(
     F.reduce(encryptedNote.encryptedValue),
-    F.reduce(poseidonBN([F.reduce(encodePoint(R) + 1n)]))
+    F.reduce(poseidonBN([F.reduce(compressPoint(R) + 1n)]))
   );
 
   return {
@@ -85,24 +92,33 @@ export function decryptNote(
   };
 }
 
-// Encode a Baby Jubjub point to the base field
-export function encodePoint(point: AffinePoint<bigint>): bigint {
-  return point.x;
+// ElGamal encryption using receiver's canonical address as the public key (vk the private key)
+export function encryptCanonAddr(
+  plaintext: CanonAddress,
+  pubkey: CanonAddress,
+  nonce: bigint
+): EncryptedCanonAddress {
+  const s = BabyJubJub.scalarMul(pubkey, nonce);
+  const c1 = BabyJubJub.scalarMul(BabyJubJub.BasePoint, nonce);
+  const c2 = BabyJubJub.add(plaintext, s);
+
+  return {
+    c1: compressPoint(c1),
+    c2: compressPoint(c2),
+  };
 }
 
-// Decode a Baby Jubjub point (on prime order subgroup) from a base field element
-export function decodePoint(x: bigint): AffinePoint<bigint> {
-  const x2 = F.mul(F.reduce(x), F.reduce(x));
-  const ax2 = F.mul(BabyJubJub.A, x2);
-  const dx2 = F.mul(BabyJubJub.D, x2);
-  const y2 = F.div(F.sub(ax2, F.One), F.sub(dx2, F.One));
-  const y = F.sqrt(y2);
-  assertOrErr(y !== undefined, "invalid point encoding");
+export function decryptCanonAddr(
+  ciphertext: EncryptedCanonAddress,
+  vk: bigint
+): CanonAddress {
+  const c1 = decompressPoint(ciphertext.c1);
+  const c2 = decompressPoint(ciphertext.c2);
 
-  let point: AffinePoint<bigint> = { x, y: y! };
-  if (!BabyJubJub.isInSubgroup(point)) {
-    point = BabyJubJub.neg(point);
+  if (!c1 || !c2) {
+    throw new Error("Invalid ciphertext");
   }
 
-  return point;
+  const sInv = BabyJubJub.scalarMul(c1, Fr.neg(vk));
+  return BabyJubJub.add(c2, sInv);
 }

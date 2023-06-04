@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- use custom implementation of EIP712 signer instead of ethers
+- make EIP712 typehash / signature to use new compressed address encoding
+- fix wrong service name in bundler server run cmd
+- server start returns `ActorHandle` and awaits promise to avoid early exit
+- bump sdk with joinsplit sorting and note timestamp changes
 - move deposit hash calculation into sdk, fix imports
 - make cli manually exit when `ActorHandle` promise resolves
 - move req/res types into sdk so it can be shared with fe-sdk

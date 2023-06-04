@@ -13,7 +13,7 @@ interface BaseStateDiff {
   nullifiers: Nullifier[];
 
   // `merkleIndex` of the last leaf to be committed to the commitment tree
-  lastCommittedMerkleIndex: number;
+  lastCommittedMerkleIndex: number | undefined;
 
   // last block of the range this StateDiff represents
   blockNumber: number;

@@ -20,7 +20,6 @@ import {
   NocturneDB,
   SparseMerkleProver,
   JoinSplitProver,
-  RPCSDKSyncAdapter,
   SDKSyncAdapter,
   SubgraphSDKSyncAdapter,
   Address,
@@ -30,6 +29,7 @@ import {
   AssetTrait,
   AssetType,
   MockEthToTokenConverter,
+  RPCSDKSyncAdapter,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -206,7 +206,7 @@ export async function setupTestDeployment(
     actorConfig.configs.subgraph = subgraphConfig;
 
     stopSubgraph = await startSubgraph(subgraphConfig);
-    await sleep(5_000); // wait for subgraph to start up (TODO: better way to do this?)
+    await sleep(8_000); // wait for subgraph to start up (TODO: better way to do this?)
   }
 
   // deploy everything else
@@ -288,6 +288,7 @@ export async function setupTestDeployment(
       subtreeUpdaterEoa
     );
     try {
+      console.log("filling batch with zeros...");
       const tx = await handler.fillBatchWithZeros();
       await tx.wait(1);
     } catch (err: any) {

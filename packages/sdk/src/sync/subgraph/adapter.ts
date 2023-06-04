@@ -74,7 +74,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           blockNumber: to,
         };
 
-        console.log("yieding state diff:", stateDiff);
+        console.log("yielding state diff:", stateDiff);
 
         yield stateDiff;
 

@@ -168,54 +168,37 @@ contract BalanceManager is CommitmentTreeManager {
     /// @param op Operation to handle refunds for
     function _handleAllRefunds(Operation calldata op) internal {
         uint256 numJoinSplits = op.joinSplits.length;
+        for (
+            uint256 subarrayStartIndex = 0;
+            subarrayStartIndex < numJoinSplits;
 
-        EncodedAsset[] memory refundAssets = new EncodedAsset[](
-            op.maxNumRefunds
-        );
-        uint256[] memory values = new uint256[](op.maxNumRefunds);
-        uint256 refundIdx = 0;
-
-        for (uint256 i = 0; i < numJoinSplits; i++) {
-            uint256 value = _refundTellerAndReturnAmount(
-                op.joinSplits[i].encodedAsset
+        ) {
+            uint256 subarrayEndIndex = _getHighestContiguousJoinSplitIndex(
+                op.joinSplits,
+                subarrayStartIndex
             );
-            if (value > 0) {
-                refundAssets[refundIdx] = op.joinSplits[i].encodedAsset;
-                values[refundIdx] = value;
-                refundIdx++;
-            }
+            _handleRefundForAsset(
+                op.joinSplits[subarrayStartIndex].encodedAsset,
+                op.refundAddr
+            );
+            subarrayStartIndex = subarrayEndIndex + 1;
         }
 
         uint256 numRefundAssets = op.encodedRefundAssets.length;
         for (uint256 i = 0; i < numRefundAssets; i++) {
-            uint256 value = _refundTellerAndReturnAmount(
-                op.encodedRefundAssets[i]
-            );
-            if (value > 0) {
-                refundAssets[refundIdx] = op.encodedRefundAssets[i];
-                values[refundIdx] = value;
-                refundIdx++;
-            }
+            _handleRefundForAsset(op.encodedRefundAssets[i], op.refundAddr);
         }
 
         uint256 numReceived = _receivedAssets.length;
         for (uint256 i = 0; i < numReceived; i++) {
-            uint256 value = _refundTellerAndReturnAmount(_receivedAssets[i]);
-            if (value > 0) {
-                refundAssets[refundIdx] = _receivedAssets[i];
-                values[refundIdx] = value;
-                refundIdx++;
-            }
+            _handleRefundForAsset(_receivedAssets[i], op.refundAddr);
         }
-
-        _handleRefundNotes(refundAssets, values, op.refundAddr, refundIdx);
-
         delete _receivedAssets;
     }
 
-    /// @notice Refund the teller for the given asset and return the amount refunded
+    /// @notice Handle a refund for a single asset
     /// @dev Checks if asset has outstanding balance in the Handler. If so, transfers the asset
-    ///      back to the Teller and retruns the value of the new note to create
+    ///      back to the Teller and inserts a new note commitment into the commitment tree.
     /// @dev To prevent clearing the handler's token balances to 0 each time for erc20s, we attempt
     ///      to withold 1 token from the refund each time if the handler's current balance is 0.
     ///      This saves gas for future users because it avoids writing to a zeroed out storage slot
@@ -223,9 +206,11 @@ contract BalanceManager is CommitmentTreeManager {
     ///      user. The goal is to keep the handler's balance non-zero as often as possible to save
     ///      on user gas.
     /// @param encodedAsset Encoded asset to check for refund
-    function _refundTellerAndReturnAmount(
-        EncodedAsset memory encodedAsset
-    ) internal returns (uint256) {
+    /// @param refundAddr Stealth address to refund to
+    function _handleRefundForAsset(
+        EncodedAsset memory encodedAsset,
+        CompressedStealthAddress calldata refundAddr
+    ) internal {
         uint256 currentBalance = AssetUtils.balanceOfAsset(encodedAsset);
 
         (AssetType assetType, , ) = AssetUtils.decodeAsset(encodedAsset);
@@ -238,10 +223,8 @@ contract BalanceManager is CommitmentTreeManager {
                 address(_teller),
                 difference
             );
-            return difference;
+            _handleRefundNote(encodedAsset, refundAddr, difference);
         }
-
-        return 0;
     }
 
     /// @notice Get highest index for contiguous subarray of joinsplits of same encodedAssetType

@@ -22,8 +22,10 @@ export interface SubtreeUpdateInputs {
   siblings: bigint[][];
   leaves: bigint[];
   bitmap: bigint[];
-  ownerH1s: bigint[];
-  ownerH2s: bigint[];
+  ownerH1Xs: bigint[];
+  ownerH1Ys: bigint[];
+  ownerH2Xs: bigint[];
+  ownerH2Ys: bigint[];
   nonces: bigint[];
   encodedAssetAddrs: bigint[];
   encodedAssetIds: bigint[];
@@ -53,8 +55,10 @@ export function subtreeUpdateInputsFromBatch(
     throw new Error(`\`batch.length\` != ${TreeConstants.BATCH_SIZE}`);
   }
 
-  const ownerH1s: bigint[] = [];
-  const ownerH2s: bigint[] = [];
+  const ownerH1Xs: bigint[] = [];
+  const ownerH1Ys: bigint[] = [];
+  const ownerH2Xs: bigint[] = [];
+  const ownerH2Ys: bigint[] = [];
   const nonces: bigint[] = [];
   const encodedAssetAddrs: bigint[] = [];
   const encodedAssetIds: bigint[] = [];
@@ -72,8 +76,10 @@ export function subtreeUpdateInputsFromBatch(
       leaves.push(nc);
       bitmap.push(0n);
 
-      ownerH1s.push(0n);
-      ownerH2s.push(0n);
+      ownerH1Xs.push(0n);
+      ownerH1Ys.push(0n);
+      ownerH2Xs.push(0n);
+      ownerH2Ys.push(0n);
       nonces.push(0n);
       encodedAssetAddrs.push(0n);
       encodedAssetIds.push(0n);
@@ -83,8 +89,10 @@ export function subtreeUpdateInputsFromBatch(
       accumulatorPreimage.push(...NoteTrait.sha256(note));
       leaves.push(NoteTrait.toCommitment(note));
       bitmap.push(1n);
-      ownerH1s.push(note.owner.h1X);
-      ownerH2s.push(note.owner.h2X);
+      ownerH1Xs.push(note.owner.h1X);
+      ownerH1Ys.push(note.owner.h1Y);
+      ownerH2Xs.push(note.owner.h2X);
+      ownerH2Ys.push(note.owner.h2Y);
       const { encodedAssetAddr, encodedAssetId } = AssetTrait.encode(
         note.asset
       );
@@ -119,8 +127,10 @@ export function subtreeUpdateInputsFromBatch(
     accumulatorHash,
 
     siblings,
-    ownerH1s,
-    ownerH2s,
+    ownerH1Xs,
+    ownerH1Ys,
+    ownerH2Xs,
+    ownerH2Ys,
     nonces,
     encodedAssetAddrs,
     encodedAssetIds,

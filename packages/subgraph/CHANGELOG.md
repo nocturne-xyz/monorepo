@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add `FilledBatchWithZeros` event
+- remove insertion events
 - update to use new plural `InsertNotes` event
 - fix typo in `handleJoinSplit`
 - rename `subtreeIndex` in tree insertion entities to `subtreeBatchOffset`

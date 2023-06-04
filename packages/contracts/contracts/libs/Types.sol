@@ -17,15 +17,13 @@ struct EncodedAsset {
     uint256 encodedAssetId;
 }
 
-struct StealthAddress {
-    uint256 h1X;
-    uint256 h1Y;
-    uint256 h2X;
-    uint256 h2Y;
+struct CompressedStealthAddress {
+    uint256 h1;
+    uint256 h2;
 }
 
 struct EncryptedNote {
-    StealthAddress owner;
+    CompressedStealthAddress owner;
     uint256 encappedKey;
     uint256 encryptedNonce;
     uint256 encryptedValue;
@@ -37,8 +35,8 @@ struct JoinSplit {
     uint256 nullifierB;
     uint256 newNoteACommitment;
     uint256 newNoteBCommitment;
-    uint256 encSenderCanonAddrC1X;
-    uint256 encSenderCanonAddrC2X;
+    uint256 encSenderCanonAddrC1;
+    uint256 encSenderCanonAddrC2;
     uint256[8] proof;
     EncodedAsset encodedAsset;
     uint256 publicSpend;
@@ -59,7 +57,7 @@ struct DepositRequest {
     address spender;
     EncodedAsset encodedAsset;
     uint256 value;
-    StealthAddress depositAddr;
+    CompressedStealthAddress depositAddr;
     uint256 nonce;
     uint256 gasCompensation;
 }
@@ -68,7 +66,7 @@ struct Deposit {
     address spender;
     EncodedAsset encodedAsset;
     uint256 value;
-    StealthAddress depositAddr;
+    CompressedStealthAddress depositAddr;
 }
 
 struct Action {
@@ -78,7 +76,7 @@ struct Action {
 
 struct Operation {
     JoinSplit[] joinSplits;
-    StealthAddress refundAddr;
+    CompressedStealthAddress refundAddr;
     EncodedAsset[] encodedRefundAssets;
     Action[] actions;
     EncodedAsset encodedGasAsset;

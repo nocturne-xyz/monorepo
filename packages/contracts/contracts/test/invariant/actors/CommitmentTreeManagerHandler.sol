@@ -68,9 +68,9 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         console.log("-------------------");
         console.log("applySubtreeUpdate", _calls["applySubtreeUpdate"]);
         console.log("handleJoinSplits", _calls["handleJoinSplits"]);
-        console.log("handleRefundNotes", _calls["handleRefundNotes"]);
+        console.log("handleRefundNote", _calls["handleRefundNote"]);
         console.log("fillBatchWithZeros", _calls["fillBatchWithZeros"]);
-        console.log("insertNotes", _calls["insertNotes"]);
+        console.log("insertNote", _calls["insertNote"]);
         console.log("insertNoteCommitments", _calls["insertNoteCommitments"]);
         console.log("no-op", _calls["no-op"]);
     }
@@ -104,66 +104,31 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         ghost_joinSplitLeafCount += 2 * numJoinSplits; // call could not have completed without adding 2 * numJoinSplit leaves
     }
 
-    function handleRefundNotes(
+    function handleRefundNote(
         uint256 seed
-    ) public trackCall("handleRefundNotes") {
-        uint256 numRefunds = bound(_rerandomize(seed), 0, 17);
-
-        if (numRefunds == 0) {
-            lastCall = "no-op";
-            return;
-        }
-
-        uint256 maxNumRefunds = bound(
-            _rerandomize(seed),
-            numRefunds,
-            numRefunds + 20
+    ) public trackCall("handleRefundNote") {
+        EncodedAsset memory encodedAsset = AssetUtils.encodeAsset(
+            AssetType.ERC20,
+            address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
+            ERC20_ID
         );
 
-        EncodedAsset[] memory encodedAssets = new EncodedAsset[](maxNumRefunds);
-        uint256[] memory values = new uint256[](maxNumRefunds);
-
-        StealthAddress memory refundAddr = StealthAddress({
-            h1X: bound(
+        CompressedStealthAddress memory refundAddr = CompressedStealthAddress({
+            h1: bound(
                 _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             ),
-            h1Y: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            ),
-            h2X: bound(
-                _rerandomize(seed),
-                0,
-                Utils.BN254_SCALAR_FIELD_MODULUS - 1
-            ),
-            h2Y: bound(
+            h2: bound(
                 _rerandomize(seed),
                 0,
                 Utils.BN254_SCALAR_FIELD_MODULUS - 1
             )
         });
 
-        for (uint256 i = 0; i < maxNumRefunds; i++) {
-            encodedAssets[i] = AssetUtils.encodeAsset(
-                AssetType.ERC20,
-                address(uint160(bound(_rerandomize(seed), 0, (1 << 160) - 1))),
-                ERC20_ID
-            );
-
-            values[i] = bound(_rerandomize(seed), 0, (1 << 252) - 1);
-        }
-
-        commitmentTreeManager.handleRefundNotes(
-            encodedAssets,
-            values,
-            refundAddr,
-            numRefunds
-        );
-        ghost_refundNotesLeafCount += numRefunds;
-        handleRefundNotesLength = numRefunds;
+        commitmentTreeManager.handleRefundNote(encodedAsset, refundAddr, seed);
+        ghost_refundNotesLeafCount += 1;
+        handleRefundNotesLength = 1;
     }
 
     function fillBatchWithZeros() public trackCall("fillBatchWithZeros") {
@@ -178,12 +143,12 @@ contract CommitmentTreeManagerHandler is InvariantUtils {
         }
     }
 
-    function insertNotes(
-        EncodedNote[] memory notes
-    ) public trackCall("insertNotes") {
-        commitmentTreeManager.insertNotes(notes);
-        ghost_insertNoteLeafCount += notes.length;
-        insertNotesLength = notes.length;
+    function insertNote(
+        EncodedNote memory note
+    ) public trackCall("insertNote") {
+        commitmentTreeManager.insertNote(note);
+        ghost_insertNoteLeafCount += 1;
+        insertNotesLength = 1;
     }
 
     function insertNoteCommitments(

@@ -15,8 +15,8 @@ struct ExpectOperationProcessedArgs {
 contract ForgeUtils is Test {
     event OperationProcessed(
         uint256 indexed operationDigest,
-        bool indexed opProcessed,
-        bool indexed assetsUnwrapped,
+        bool opProcessed,
+        bool assetsUnwrapped,
         string failureReason,
         bool[] callSuccesses,
         bytes[] callResults

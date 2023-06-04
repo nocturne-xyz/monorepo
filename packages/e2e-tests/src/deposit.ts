@@ -8,6 +8,7 @@ import {
   AssetTrait,
   zip,
   hashDepositRequest,
+  StealthAddressTrait,
 } from "@nocturne-xyz/sdk";
 import { ethers, ContractTransaction } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
@@ -45,13 +46,17 @@ export async function depositFundsMultiToken(
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
   let ctr = 0;
-  while (ctr < 20) {
-    for (const depositRequest of depositRequests) {
-      const depositHash = hashDepositRequest(depositRequest);
+  const hashes = new Set(depositRequests.map(hashDepositRequest));
+  await sleep(5_000);
+  while (ctr < 10 && hashes.size > 0) {
+    for (const depositHash of hashes) {
       const status = await queryDepositStatus(depositHash);
       console.log(status);
+      if (status && status.status === "Completed") {
+        hashes.delete(depositHash);
+      }
     }
-    await sleep(1_000);
+    await sleep(5_000);
     ctr++;
   }
 
@@ -89,13 +94,17 @@ export async function depositFundsSingleToken(
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
   let ctr = 0;
-  while (ctr < 20) {
-    for (const depositRequest of depositRequests) {
-      const depositHash = hashDepositRequest(depositRequest);
+  const hashes = new Set(depositRequests.map(hashDepositRequest));
+  await sleep(5_000);
+  while (ctr < 10 && hashes.size > 0) {
+    for (const depositHash of hashes) {
       const status = await queryDepositStatus(depositHash);
       console.log(status);
+      if (status && status.status === "Completed") {
+        hashes.delete(depositHash);
+      }
     }
-    await sleep(1_000);
+    await sleep(5_000);
     ctr++;
   }
 
@@ -122,10 +131,12 @@ async function makeDeposit(
 
   console.log(`instantiating deposit for ${value} of token ${token.address}`);
 
+  const depositAddr = StealthAddressTrait.compress(stealthAddress);
+
   const nonce = await depositManager._nonce();
   const instantiateDepositTx = await depositManager
     .connect(eoa)
-    .instantiateErc20MultiDeposit(token.address, [value], stealthAddress);
+    .instantiateErc20MultiDeposit(token.address, [value], depositAddr);
 
   return [
     instantiateDepositTx,
@@ -133,7 +144,7 @@ async function makeDeposit(
       spender: eoa.address,
       nonce: nonce.toBigInt(),
       encodedAsset: AssetTrait.encode(asset),
-      depositAddr: stealthAddress,
+      depositAddr,
       value,
       gasCompensation: 0n,
     },

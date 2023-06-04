@@ -1,6 +1,7 @@
 #!/bin/bash
 CIRCUIT_NAME=subtreeupdate
 SCRIPT_DIR=$(dirname "$0")
+ROOT_SCRIPT_DIR="$SCRIPT_DIR/../"
 ROOT_DIR="$SCRIPT_DIR/../../../../"
 CIRCUIT_ARTIFACTS_DIR="$ROOT_DIR/circuit-artifacts"
 PHASE1_PATH="$SCRIPT_DIR/../../data/powersOfTau28_hez_final_23.ptau"
@@ -77,12 +78,9 @@ echo "DONE ($((end-start))s)"
 # end=`date +%s`
 # echo "DONE ($((end-start))s)"
 
+
 echo "****EXPORTING SOLIDITY SMART CONTRACT****"
 start=`date +%s`
-npx snarkjs zkey export solidityverifier "$OUTPUT_DIR"/"$CIRCUIT_NAME".zkey ""$OUTPUT_DIR/SubtreeUpdateVerifier.sol""
+yarn ts-node "$ROOT_SCRIPT_DIR/genSolidityVerifier.ts" "$OUTPUT_DIR/vkey.json" SubtreeUpdateVerifier 
 end=`date +%s`
 echo "DONE ($((end-start))s)"
-
-\cp "$OUTPUT_DIR/SubtreeUpdateVerifier.sol" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"
-
-"$SCRIPT_DIR/../gen_solidity_verifier.sh" "$CONTRACTS_DIR/SubtreeUpdateVerifier.sol"

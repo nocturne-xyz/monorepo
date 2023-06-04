@@ -10,6 +10,12 @@ interface ITestDepositManagerBase {
         DepositRequest calldata req,
         bytes calldata signature
     ) external view returns (address);
+
+    function computeDigest(
+        DepositRequest calldata req
+    ) external view returns (bytes32);
+
+    function domainSeparatorV4() external view returns (bytes32);
 }
 
 contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
@@ -25,6 +31,16 @@ contract TestDepositManagerBase is ITestDepositManagerBase, DepositManagerBase {
         bytes calldata signature
     ) external view override returns (address) {
         return _recoverDepositRequestSigner(req, signature);
+    }
+
+    function computeDigest(
+        DepositRequest calldata req
+    ) external view override returns (bytes32) {
+        return _computeDigest(req);
+    }
+
+    function domainSeparatorV4() external view returns (bytes32) {
+        return _domainSeparatorV4();
     }
 
     function hashDepositRequest(

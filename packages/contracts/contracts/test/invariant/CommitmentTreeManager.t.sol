@@ -33,9 +33,9 @@ contract CommitmentTreeManagerInvariants is Test {
         bytes4[] memory selectors = new bytes4[](6);
         selectors[0] = commitmentTreeManagerHandler.applySubtreeUpdate.selector;
         selectors[1] = commitmentTreeManagerHandler.handleJoinSplits.selector;
-        selectors[2] = commitmentTreeManagerHandler.handleRefundNotes.selector;
+        selectors[2] = commitmentTreeManagerHandler.handleRefundNote.selector;
         selectors[3] = commitmentTreeManagerHandler.fillBatchWithZeros.selector;
-        selectors[4] = commitmentTreeManagerHandler.insertNotes.selector;
+        selectors[4] = commitmentTreeManagerHandler.insertNote.selector;
         selectors[5] = commitmentTreeManagerHandler
             .insertNoteCommitments
             .selector;
@@ -107,7 +107,7 @@ contract CommitmentTreeManagerInvariants is Test {
                     .totalCount()
             );
         } else if (
-            commitmentTreeManagerHandler.lastCall() == "handleRefundNotes"
+            commitmentTreeManagerHandler.lastCall() == "handleRefundNote"
         ) {
             assertEq(
                 commitmentTreeManagerHandler.preCallTotalCount() +
@@ -128,7 +128,7 @@ contract CommitmentTreeManagerInvariants is Test {
                     .commitmentTreeManager()
                     .totalCount()
             );
-        } else if (commitmentTreeManagerHandler.lastCall() == "insertNotes") {
+        } else if (commitmentTreeManagerHandler.lastCall() == "insertNote") {
             assertEq(
                 commitmentTreeManagerHandler.preCallTotalCount() +
                     commitmentTreeManagerHandler.insertNotesLength(),

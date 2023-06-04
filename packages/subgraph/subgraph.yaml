@@ -18,23 +18,19 @@ dataSources:
         - EncodedNote
         - EncryptedNote
         - SubtreeCommit
-        - TreeInsertion
-        - CompressedEncodedNote
       abis:
         - name: Handler
           file: ./abis/Handler.json
       eventHandlers:
         - event: JoinSplitProcessed(indexed uint256,indexed
-            uint256,uint128,uint128,(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256[8],(uint256,uint256),uint256,((uint256,uint256,uint256,uint256),uint256,uint256,uint256),((uint256,uint256,uint256,uint256),uint256,uint256,uint256)))
+            uint256,uint128,uint128,uint256,uint256,uint256,uint256,(uint256,uint256),uint256,((uint256,uint256),uint256,uint256,uint256),((uint256,uint256),uint256,uint256,uint256))
           handler: handleJoinSplit
-        - event: RefundProcessed((uint256,uint256,uint256,uint256),uint256,uint256,uint256,uint256,uint128)
+        - event: RefundProcessed((uint256,uint256),uint256,uint256,uint256,uint256,uint128)
           handler: handleRefund
         - event: SubtreeUpdate(uint256,uint256)
           handler: handleSubtreeUpdate
-        - event: InsertNotes((uint256,uint256,uint256,uint256,uint256,uint256)[])
-          handler: handleInsertNotes
-        - event: InsertNoteCommitments(uint256[])
-          handler: handleInsertNoteCommitments
+        - event: FilledBatchWithZeros(uint256,uint256)
+          handler: handleFilledBatchWithZeros
       file: ./src/handler.ts
   - kind: ethereum
     name: DepositManager
@@ -54,6 +50,6 @@ dataSources:
           file: ./abis/DepositManager.json
       eventHandlers:
         - event: DepositInstantiated(indexed
-            address,(uint256,uint256),uint256,(uint256,uint256,uint256,uint256),uint256,uint256)
+            address,(uint256,uint256),uint256,(uint256,uint256),uint256,uint256)
           handler: handleDepositInstantiated
       file: ./src/depositManager.ts

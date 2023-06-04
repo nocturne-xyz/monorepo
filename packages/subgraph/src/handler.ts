@@ -1,7 +1,5 @@
-import { Bytes } from "@graphprotocol/graph-ts";
 import {
-  InsertNoteCommitments,
-  InsertNotes,
+  FilledBatchWithZeros,
   JoinSplitProcessed,
   RefundProcessed,
   SubtreeUpdate,
@@ -12,8 +10,7 @@ import {
   EncryptedNote,
   SubtreeCommit,
   Nullifier,
-  CompressedEncodedNote,
-  TreeInsertion,
+  FilledBatchWithZerosEvent,
 } from "../generated/schema";
 import {
   getTotalLogIndex,
@@ -23,7 +20,6 @@ import {
 
 export function handleJoinSplit(event: JoinSplitProcessed): void {
   const totalLogIndex = getTotalLogIndex(event);
-  const joinSplit = event.params.joinSplit;
 
   // first old note's nullifier
   let idx = getTotalEntityIndex(totalLogIndex, 0);
@@ -44,20 +40,18 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   let id = toPadded32BArray(idx);
 
   const encryptedNoteA = new EncryptedNote(id);
-  const newNoteAEncrypted = joinSplit.newNoteAEncrypted;
+  const newNoteAEncrypted = event.params.newNoteAEncrypted;
   encryptedNoteA.idx = idx;
-  encryptedNoteA.ownerH1X = newNoteAEncrypted.owner.h1X;
-  encryptedNoteA.ownerH1Y = newNoteAEncrypted.owner.h1Y;
-  encryptedNoteA.ownerH2X = newNoteAEncrypted.owner.h2X;
-  encryptedNoteA.ownerH2Y = newNoteAEncrypted.owner.h2Y;
+  encryptedNoteA.ownerH1 = newNoteAEncrypted.owner.h1;
+  encryptedNoteA.ownerH2 = newNoteAEncrypted.owner.h2;
 
   encryptedNoteA.encappedKey = newNoteAEncrypted.encappedKey;
   encryptedNoteA.encryptedNonce = newNoteAEncrypted.encryptedNonce;
   encryptedNoteA.encryptedValue = newNoteAEncrypted.encryptedValue;
 
-  encryptedNoteA.encodedAssetAddr = joinSplit.encodedAsset.encodedAssetAddr;
-  encryptedNoteA.encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
-  encryptedNoteA.commitment = joinSplit.newNoteACommitment;
+  encryptedNoteA.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
+  encryptedNoteA.encodedAssetId = event.params.encodedAsset.encodedAssetId;
+  encryptedNoteA.commitment = event.params.newNoteACommitment;
 
   encryptedNoteA.save();
 
@@ -73,20 +67,18 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   id = toPadded32BArray(idx);
   const encryptedNoteB = new EncryptedNote(id);
 
-  const newNoteBEncrypted = joinSplit.newNoteBEncrypted;
+  const newNoteBEncrypted = event.params.newNoteBEncrypted;
   encryptedNoteB.idx = idx;
-  encryptedNoteB.ownerH1X = newNoteBEncrypted.owner.h1X;
-  encryptedNoteB.ownerH1Y = newNoteBEncrypted.owner.h1Y;
-  encryptedNoteB.ownerH2X = newNoteBEncrypted.owner.h2X;
-  encryptedNoteB.ownerH2Y = newNoteBEncrypted.owner.h2Y;
+  encryptedNoteB.ownerH1 = newNoteBEncrypted.owner.h1;
+  encryptedNoteB.ownerH2 = newNoteBEncrypted.owner.h2;
 
   encryptedNoteB.encappedKey = newNoteBEncrypted.encappedKey;
   encryptedNoteB.encryptedNonce = newNoteBEncrypted.encryptedNonce;
   encryptedNoteB.encryptedValue = newNoteBEncrypted.encryptedValue;
 
-  encryptedNoteB.encodedAssetAddr = joinSplit.encodedAsset.encodedAssetAddr;
-  encryptedNoteB.encodedAssetId = joinSplit.encodedAsset.encodedAssetId;
-  encryptedNoteB.commitment = joinSplit.newNoteBCommitment;
+  encryptedNoteB.encodedAssetAddr = event.params.encodedAsset.encodedAssetAddr;
+  encryptedNoteB.encodedAssetId = event.params.encodedAsset.encodedAssetId;
+  encryptedNoteB.commitment = event.params.newNoteBCommitment;
 
   encryptedNoteB.save();
 
@@ -108,10 +100,8 @@ export function handleRefund(event: RefundProcessed): void {
   const refundAddr = event.params.refundAddr;
 
   encodedNote.idx = idx;
-  encodedNote.ownerH1X = refundAddr.h1X;
-  encodedNote.ownerH1Y = refundAddr.h1Y;
-  encodedNote.ownerH2X = refundAddr.h2X;
-  encodedNote.ownerH2Y = refundAddr.h2Y;
+  encodedNote.ownerH1 = refundAddr.h1;
+  encodedNote.ownerH2 = refundAddr.h2;
   encodedNote.nonce = event.params.nonce;
   encodedNote.encodedAssetAddr = event.params.encodedAssetAddr;
   encodedNote.encodedAssetId = event.params.encodedAssetId;
@@ -137,43 +127,15 @@ export function handleSubtreeUpdate(event: SubtreeUpdate): void {
   commit.save();
 }
 
-export function handleInsertNotes(event: InsertNotes): void {
+export function handleFilledBatchWithZeros(event: FilledBatchWithZeros): void {
   const totalLogIndex = getTotalLogIndex(event);
+
   const idx = getTotalEntityIndex(totalLogIndex, 0);
   const id = toPadded32BArray(idx);
-  const insertion = new TreeInsertion(id);
+  const commit = new FilledBatchWithZerosEvent(id);
 
-  const notes = new Array<Bytes>(event.params.notes.length);
-  for (let i = 0; i < event.params.notes.length; i++) {
-    const note = event.params.notes[i];
-    const idx = getTotalEntityIndex(totalLogIndex, i + 1);
-    const id = toPadded32BArray(idx);
-    const compressedNote = new CompressedEncodedNote(id);
-    compressedNote.ownerH1 = note.ownerH1;
-    compressedNote.ownerH2 = note.ownerH2;
-    compressedNote.nonce = note.nonce;
-    compressedNote.encodedAssetAddr = note.encodedAssetAddr;
-    compressedNote.encodedAssetId = note.encodedAssetId;
-    compressedNote.value = note.value;
-    compressedNote.save();
-
-    notes[i] = id;
-  }
-
-  insertion.notes = notes;
-  insertion.idx = idx;
-  insertion.save();
-}
-
-export function handleInsertNoteCommitments(
-  event: InsertNoteCommitments
-): void {
-  const totalLogIndex = getTotalLogIndex(event);
-  const idx = getTotalEntityIndex(totalLogIndex, 0);
-  const id = toPadded32BArray(idx);
-
-  const insertion = new TreeInsertion(id);
-  insertion.idx = idx;
-  insertion.noteCommitments = event.params.commitments;
-  insertion.save();
+  commit.startIndex = event.params.startIndex;
+  commit.numZeros = event.params.numZeros;
+  commit.idx = idx;
+  commit.save();
 }

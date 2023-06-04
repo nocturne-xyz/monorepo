@@ -9,6 +9,7 @@ import {
 import { JoinSplitInputs } from "./proof";
 import { NocturneSignature, NocturneSigner } from "./crypto";
 import { randomFr } from "./crypto";
+import { encodeEncodedAssetAddrWithSignBitsPI } from "./proof/joinsplit";
 
 export function signOperation(
   signer: NocturneSigner,
@@ -64,12 +65,24 @@ function makePreProofJoinSplit(
     oldNoteB,
     newNoteA,
     newNoteB,
+    receiver,
     ...baseJoinSplit
   } = preProofJoinSplit;
 
   const { c, z } = opSig;
 
   const { x, y } = signer.spendPk;
+
+  const encRandomness = randomFr();
+  const encSenderCanonAddr = signer.encryptCanonAddrToReceiver(
+    receiver,
+    encRandomness
+  );
+
+  const encodedOldNoteA = NoteTrait.encode(oldNoteA);
+  const encodedOldNoteB = NoteTrait.encode(oldNoteB);
+  const encodedNewNoteA = NoteTrait.encode(newNoteA);
+  const encodedNewNoteB = NoteTrait.encode(newNoteB);
 
   const proofInputs: JoinSplitInputs = {
     vk: signer.vk,
@@ -80,15 +93,21 @@ function makePreProofJoinSplit(
     merkleProofA,
     merkleProofB,
     operationDigest: opDigest,
-    oldNoteA: NoteTrait.encode(oldNoteA),
-    oldNoteB: NoteTrait.encode(oldNoteB),
-    newNoteA: NoteTrait.encode(newNoteA),
-    newNoteB: NoteTrait.encode(newNoteB),
-    encRandomness: randomFr(),
+    oldNoteA: encodedOldNoteA,
+    oldNoteB: encodedOldNoteB,
+    newNoteA: encodedNewNoteA,
+    newNoteB: encodedNewNoteB,
+    encRandomness,
+    encodedAssetAddrWithSignBits: encodeEncodedAssetAddrWithSignBitsPI(
+      encodedNewNoteA.encodedAssetAddr,
+      encSenderCanonAddr
+    ),
   };
+
   return {
     opDigest,
     proofInputs,
+    encSenderCanonAddr,
     ...baseJoinSplit,
   };
 }

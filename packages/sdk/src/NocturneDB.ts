@@ -209,7 +209,11 @@ export class NocturneDB {
       ) as WithTimestamp<IncludedNoteWithNullifier>[]
     );
     const nfIndices = await this.nullifyNotes(nullifiers);
-    await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
+
+    if (lastCommittedMerkleIndex) {
+      await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
+    }
+
     await this.setNextBlock(blockNumber + 1);
 
     return nfIndices;
