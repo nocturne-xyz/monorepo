@@ -20,8 +20,16 @@ import {
   StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   decomposeCompressedPoint,
+  fetchDepositEvents,
+  DepositEventType,
+  DepositEvent,
 } from "@nocturne-xyz/sdk";
-import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
+import {
+  SNAP_ID,
+  SUBGRAPH_URL,
+  getTokenContract,
+  getWindowSigner,
+} from "./utils";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import * as JSON from "bigint-json-serialization";
 import {
@@ -243,7 +251,7 @@ export class NocturneFrontendSDK {
     const spender = await signer.getAddress();
 
     const res = await fetch(`http://${this.screenerEndpoint}/quote`, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -377,6 +385,18 @@ export class NocturneFrontendSDK {
     });
   }
 
+  /**
+   * Query subgraph for all spender's deposits
+   * TODO refactor fetchDepositEvents to be extensible, grab deposits by spender + all, not just Instantiated
+   */
+  async fetchAllDeposits(): Promise<DepositEvent[]> {
+    return await fetchDepositEvents(
+      SUBGRAPH_URL,
+      DepositEventType.Instantiated,
+      0,
+      100
+    ); // todo make idx optional
+  }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.

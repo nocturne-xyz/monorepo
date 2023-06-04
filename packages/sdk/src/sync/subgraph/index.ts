@@ -9,3 +9,10 @@ export {
   encryptedNoteFromEncryptedNoteResponse,
 } from "./fetch";
 export * as SubgraphUtils from "./utils";
+
+export {
+  DepositEventType,
+  DepositEvent,
+  DepositEventResponse,
+  fetchDepositEvents,
+} from "./deposits/fetch";

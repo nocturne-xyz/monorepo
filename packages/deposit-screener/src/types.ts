@@ -1,16 +1,6 @@
-import { Address, DepositRequest } from "@nocturne-xyz/sdk";
+import { Address } from "@nocturne-xyz/sdk";
 
 export const ONE_HOUR_IN_MS = 60 * 60 * 1000;
-
-export enum DepositEventType {
-  Instantiated = "Instantiated",
-  Retrieved = "Retrieved",
-  Processed = "Processed",
-}
-
-export interface DepositEvent extends DepositRequest {
-  type: DepositEventType;
-}
 
 export const SUBMISSION_QUEUE = "DepositSubmissionQueue";
 export const SUBMISSION_JOB_TAG = "DEPOSIT_SUBMISSION";

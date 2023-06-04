@@ -4,10 +4,11 @@ import {
   IterSyncOpts,
   min,
   sleep,
+  fetchDepositEvents,
+  DepositEventType,
 } from "@nocturne-xyz/sdk";
-import { DepositEventType } from "../../types";
+
 import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
-import { fetchDepositEvents } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 

@@ -66,7 +66,7 @@ export class DepositScreenerServer {
       })
     );
 
-    router.get(
+    router.post(
       "/quote",
       makeQuoteHandler({
         logger: this.logger,
