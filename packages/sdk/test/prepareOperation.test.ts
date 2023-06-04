@@ -460,6 +460,56 @@ describe("prepareOperation", async () => {
     expect(AssetTrait.decode(op.joinSplits[2].encodedAsset)).to.eql(ponzi);
     expect(AssetTrait.decode(op.joinSplits[3].encodedAsset)).to.eql(ponzi);
   });
+
+  it("handles multiple joinSplit requests for the same asset", async () => {
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+      [1000n, 2000n, 1000n, 2000n],
+      [shitcoin, shitcoin, shitcoin, shitcoin]
+    );
+    const deps = {
+      handlerContract,
+      merkle: merkleProver,
+      viewer: signer,
+      gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
+      db: nocturneDB,
+    };
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .unwrap(shitcoin, 1000n)
+      .maxNumRefunds(1n)
+      .gas({
+        executionGasLimit: 1_000_000n,
+        gasPrice: 0n,
+      })
+      .build();
+
+    // Add two more joinsplit requests for the same that adds up to total unwrap amount = 4000
+    opRequest.joinSplitRequests.push(opRequest.joinSplitRequests[0]);
+
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
+    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+
+    expect(op.joinSplits.length).to.equal(2);
+    expect(op.joinSplits[0].publicSpend).to.eql(1000n);
+    expect(op.joinSplits[1].publicSpend).to.eql(1000n);
+
+    console.log("op joinsplits:", op.joinSplits);
+
+    // Ensure every note is only used once
+    let merkleIndexSet = new Set<number>();
+    op.joinSplits.forEach((js) => {
+      // Ignoring merkle index B because we know those will be 0s since dummy notes (since no request > value of single js)
+      expect(merkleIndexSet.has(js.oldNoteA.merkleIndex)).to.be.false;
+      merkleIndexSet.add(js.oldNoteA.merkleIndex);
+    });
+  });
 });
 
 // TODO unit test for prepareJoinSplits that actually inspects the PreProofJoinSplits coming out

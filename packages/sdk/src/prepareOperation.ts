@@ -49,16 +49,18 @@ export async function prepareOperation(
 
   // prepare joinSplits
   let joinSplits: PreSignJoinSplit[] = [];
+  let usedMerkleIndices = new Set<number>();
   for (const joinSplitRequest of joinSplitRequests) {
     const newJoinSplits = await prepareJoinSplits(
       deps,
       joinSplitRequest,
-      new Set(
-        joinSplits
-          .map((js) => [js.oldNoteA.merkleIndex, js.oldNoteA.merkleIndex])
-          .flat()
-      )
+      usedMerkleIndices
     );
+
+    newJoinSplits.forEach((js) => {
+      usedMerkleIndices.add(js.oldNoteA.merkleIndex);
+      usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+    });
     joinSplits.push(...newJoinSplits);
   }
 
