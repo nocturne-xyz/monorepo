@@ -176,7 +176,7 @@ export class NocturneFrontendSDK {
    * @param amount Asset amount
    * @param recipientAddress Recipient address
    */
-  async transferErc20(
+  async anonTransferErc20(
     erc20Address: Address,
     amount: bigint,
     recipientAddress: Address
@@ -201,12 +201,12 @@ export class NocturneFrontendSDK {
 
     const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
 
-    const operationRequest = await new OperationRequestBuilder()
+    const operationRequest = new OperationRequestBuilder()
       .unwrap(encodedErc20, amount)
       .action(erc20Address, encodedFunction)
       .maxNumRefunds(1n)
       .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
-      .buildWithDefaultChainInfo(provider);
+      .build();
 
     const provenOperation = await this.signAndProveOperation(operationRequest);
     return this.submitProvenOperation(provenOperation);

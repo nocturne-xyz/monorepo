@@ -210,7 +210,7 @@ const Index = () => {
     const amount = formatTokenAmountEvmRepr(2.5, 18);
     const receipient = "0x67f8F9A5d4290325506b119980660624dc7d3bA9";
 
-    const opId = await nocturneFrontendSDK!.transferErc20(
+    const opId = await nocturneFrontendSDK!.anonTransferErc20(
       TOKEN_ADDRESS,
       amount,
       receipient
