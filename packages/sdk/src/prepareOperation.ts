@@ -48,8 +48,6 @@ export async function prepareOperation(
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // prepare joinSplits
-  console.log("joinSplitRequests: ", joinSplitRequests);
-
   let joinSplits: PreSignJoinSplit[] = [];
   for (const joinSplitRequest of joinSplitRequests) {
     const newJoinSplits = await prepareJoinSplits(
@@ -64,11 +62,9 @@ export async function prepareOperation(
     joinSplits.push(...newJoinSplits);
   }
 
-  console.log("joinSplits: ", joinSplits);
-
   joinSplits = groupByArr(joinSplits, (joinSplit) =>
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
-  ).flat();
+  ).flat(); // TODO: unit test to ensure contiguous sorting
 
   // if refundAddr is not set, generate a random one
   const refundAddr = StealthAddressTrait.compress(

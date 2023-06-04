@@ -8,7 +8,7 @@ import {
   generateRandomSpendingKey,
 } from "../src/crypto";
 import { range } from "../src/utils";
-import { OperationRequestBuilder } from "../src";
+import { AssetTrait, OperationRequestBuilder } from "../src";
 import { prepareOperation, __private } from "../src/prepareOperation";
 import { sortNotesByValue } from "../src/utils";
 import {
@@ -24,6 +24,7 @@ import {
   encodedPlutocracy,
   getDummyHex,
   testGasAssets,
+  DUMMY_CONTRACT_ADDR,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { MockEthToTokenConverter } from "../src/conversion";
@@ -154,7 +155,7 @@ describe("prepareOperation", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -179,7 +180,7 @@ describe("prepareOperation", async () => {
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(0),
     });
 
@@ -207,7 +208,7 @@ describe("prepareOperation", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -233,7 +234,7 @@ describe("prepareOperation", async () => {
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(0),
     });
 
@@ -258,7 +259,7 @@ describe("prepareOperation", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -289,7 +290,7 @@ describe("prepareOperation", async () => {
 
     expect(op.actions.length).to.equal(1);
     expect(op.actions[0]).to.eql({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(0),
     });
 
@@ -367,8 +368,8 @@ describe("prepareOperation", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
-      .action("0x1234", getDummyHex(1))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
       .unwrap(ponzi, 69n)
       .unwrap(stablescam, 420n)
@@ -407,17 +408,57 @@ describe("prepareOperation", async () => {
 
     expect(op.actions.length).to.equal(2);
     expect(op.actions[0]).to.eql({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(0),
     });
     expect(op.actions[1]).to.eql({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(1),
     });
 
     // expect to have 5 joinsplits bc we have 5 different assets
     // and for each asset, there is at most 1 payment
     expect(op.joinSplits.length).to.equal(5);
+  });
+
+  it("sorts joinsplits contiguously by asset", async () => {
+    const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
+      [1000n, 1000n, 1000n, 1000n, 1000n, 1000n, 1000n, 1000n],
+      [shitcoin, ponzi, shitcoin, shitcoin, shitcoin, ponzi, ponzi, ponzi]
+    );
+    const deps = {
+      handlerContract,
+      merkle: merkleProver,
+      viewer: signer,
+      gasAssets: testGasAssets,
+      tokenConverter: new MockEthToTokenConverter(),
+      db: nocturneDB,
+    };
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .unwrap(shitcoin, 4000n)
+      .unwrap(ponzi, 4000n)
+      .maxNumRefunds(3n)
+      .gas({
+        executionGasLimit: 1_000_000n,
+        gasPrice: 0n,
+      })
+      .build();
+
+    const gasCompAccountedOpRequest = await handleGasForOperationRequest(
+      deps,
+      opRequest
+    );
+    const op = await prepareOperation(deps, gasCompAccountedOpRequest);
+
+    expect(op.joinSplits.length).to.equal(4);
+    expect(AssetTrait.decode(op.joinSplits[0].encodedAsset)).to.eql(shitcoin);
+    expect(AssetTrait.decode(op.joinSplits[1].encodedAsset)).to.eql(shitcoin);
+    expect(AssetTrait.decode(op.joinSplits[2].encodedAsset)).to.eql(ponzi);
+    expect(AssetTrait.decode(op.joinSplits[3].encodedAsset)).to.eql(ponzi);
   });
 });
 
