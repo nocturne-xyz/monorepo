@@ -1,42 +1,41 @@
 import {
+  DepositManager,
+  DepositManager__factory,
+} from "@nocturne-xyz/contracts";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import {
+  Address,
+  AssetTrait,
+  AssetType,
+  AssetWithBalance,
+  DepositEvent,
+  DepositQuoteResponse,
+  DepositStatusResponse,
+  JoinSplitProofWithPublicSignals,
   OperationRequest,
+  OperationRequestBuilder,
   ProvenOperation,
+  RelayRequest,
   SignedOperation,
   StealthAddress,
-  AssetWithBalance,
-  AssetType,
-  Address,
-  JoinSplitProofWithPublicSignals,
-  unpackFromSolidityProof,
-  joinSplitPublicSignalsToArray,
+  StealthAddressTrait,
   VerifyingKey,
   computeOperationDigest,
-  proveOperation,
-  DepositStatusResponse,
-  DepositQuoteResponse,
-  RelayRequest,
-  OperationRequestBuilder,
-  AssetTrait,
-  StealthAddressTrait,
-  encodeEncodedAssetAddrWithSignBitsPI,
   decomposeCompressedPoint,
+  encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
-  DepositEventType,
-  DepositEvent,
+  joinSplitPublicSignalsToArray,
+  proveOperation,
+  unpackFromSolidityProof,
 } from "@nocturne-xyz/sdk";
+import * as JSON from "bigint-json-serialization";
+import { ContractTransaction } from "ethers";
 import {
   SNAP_ID,
   SUBGRAPH_URL,
   getTokenContract,
   getWindowSigner,
 } from "./utils";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
-import * as JSON from "bigint-json-serialization";
-import {
-  DepositManager,
-  DepositManager__factory,
-} from "@nocturne-xyz/contracts";
-import { ContractTransaction } from "ethers";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -387,15 +386,11 @@ export class NocturneFrontendSDK {
 
   /**
    * Query subgraph for all spender's deposits
-   * TODO refactor fetchDepositEvents to be extensible, grab deposits by spender + all, not just Instantiated
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
-    return await fetchDepositEvents(
-      SUBGRAPH_URL,
-      DepositEventType.Instantiated,
-      0,
-      100
-    ); // todo make idx optional
+    return await fetchDepositEvents(SUBGRAPH_URL, {
+      spender: await (await getWindowSigner()).getAddress(),
+    });
   }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.

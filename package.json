@@ -31,5 +31,8 @@
   },
   "volta": {
     "node": "18.12.1"
+  },
+  "dependencies": {
+    "@nocturne-xyz/sdk": "1.0.140-alpha"
   }
 }

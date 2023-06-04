@@ -28,9 +28,10 @@ export interface DepositEventResponse {
 }
 
 interface FetchDepositEventsVars {
-  fromIdx: string;
-  toIdx: string;
-  type: DepositEventType;
+  fromIdx?: string;
+  toIdx?: string;
+  type?: DepositEventType;
+  spender?: string;
 }
 
 interface FetchDepositEventsResponse {
@@ -39,37 +40,78 @@ interface FetchDepositEventsResponse {
   };
 }
 
-const depositEventsQuery = `\
-  query fetchDepositEvents($fromIdx: Bytes!, $toIdx: Bytes!, $type: String!) {
-    depositEvents(where: { idx_gte: $fromIdx, idx_lt: $toIdx, type: $type }) {
-      type
-      spender
-      encodedAssetAddr
-      encodedAssetId
-      value
-      depositAddrH1
-      depositAddrH2
-      nonce
-      gasCompensation
-    }
-  }`;
+function formDepositEventsRawQuery(
+  type?: string,
+  fromBlock?: number,
+  toBlock?: number,
+  spender?: string
+) {
+  let params = [];
+  let conditions = [];
+
+  if (type) {
+    params.push(`$type: String!`);
+    conditions.push(`type: $type`);
+  }
+  if (fromBlock) {
+    params.push(`$fromIdx: Bytes!`);
+    conditions.push(`idx_gte: $fromIdx`);
+  }
+  if (toBlock) {
+    params.push(`$toIdx: Bytes!`);
+    conditions.push(`idx_lt: $toIdx`);
+  }
+  if (spender) {
+    params.push(`$spender: Bytes!`);
+    conditions.push(`spender: $spender`);
+  }
+
+  const exists = [type, fromBlock, toBlock, spender].some((x) => x);
+  const paramsString = exists ? `(${params.join(", ")})` : "";
+  const whereClause = exists ? `(where: { ${conditions.join(", ")} })` : "";
+  return `\
+    query fetchDepositEvents${paramsString} {
+      depositEvents${whereClause} {
+        type
+        spender
+        encodedAssetAddr
+        encodedAssetId
+        value
+        depositAddrH1
+        depositAddrH2
+        nonce
+        gasCompensation
+      }
+    }`;
+}
 
 // the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchDepositEvents(
   endpoint: string,
-  type: DepositEventType,
-  fromBlock: number,
-  toBlock: number
+  options: {
+    type?: DepositEventType;
+    fromBlock?: number;
+    toBlock?: number;
+    spender?: string;
+  }
 ): Promise<DepositEvent[]> {
+  const { type, fromBlock, toBlock, spender } = options;
   const query = makeSubgraphQuery<
     FetchDepositEventsVars,
     FetchDepositEventsResponse
-  >(endpoint, depositEventsQuery, "depositEvents");
+  >(
+    endpoint,
+    formDepositEventsRawQuery(type, fromBlock, toBlock, spender),
+    "depositEvents"
+  );
+  const fromIdx = fromBlock
+    ? totalLogIndexFromBlockNumber(BigInt(fromBlock)).toString()
+    : undefined;
+  const toIdx = toBlock
+    ? totalLogIndexFromBlockNumber(BigInt(toBlock + 1)).toString()
+    : undefined;
 
-  const fromIdx = totalLogIndexFromBlockNumber(BigInt(fromBlock)).toString();
-  const toIdx = totalLogIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
-
-  const res = await query({ fromIdx, toIdx, type });
+  const res = await query({ fromIdx, toIdx, type, spender });
 
   if (!res.data || res.data.depositEvents.length === 0) {
     return [];

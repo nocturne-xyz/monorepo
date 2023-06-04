@@ -3485,7 +3485,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/circuit-utils@npm:^0.1.12":
+"@nocturne-xyz/circuit-utils@npm:^0.1.12, @nocturne-xyz/circuit-utils@npm:latest":
   version: 0.1.12
   resolution: "@nocturne-xyz/circuit-utils@npm:0.1.12"
   checksum: 57ac8a50cbb1f840abe2a69080ff71119c0e80737445ec6569c82b8ca51452d316037fd402c913dd011219fed585aecc74c868d3001f9b059f05eccb73244aa6
@@ -3542,6 +3542,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nocturne-xyz/config@npm:latest":
+  version: 1.0.12-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.12-alpha"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+  checksum: 6841d54b8adc7e8a81558d22f99d2db0774da0683021f7d1cd9ebfc17ec9cfd65328a7f2927248dbe18a72e5a9014bd2a5e2d7abb1bf0d1ed09170bea4151e91
+  languageName: node
+  linkType: hard
+
 "@nocturne-xyz/contracts@1.0.32-alpha, @nocturne-xyz/contracts@^1.0.32-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
@@ -3572,6 +3582,16 @@ __metadata:
     typescript: ^4.5.5
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/contracts@npm:latest":
+  version: 1.0.32-alpha
+  resolution: "@nocturne-xyz/contracts@npm:1.0.32-alpha"
+  dependencies:
+    "@openzeppelin/contracts": 4.8.2
+    "@openzeppelin/contracts-upgradeable": 4.8.2
+  checksum: 84f6c57f6aa454133b4df044bef0c6a7f69b66513281af80945c010270bfe5e49b971464165f383ac52e7de80aa9c009cefb9d4493a85309c13f04e7ee5a9ee5
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/deploy@workspace:^, @nocturne-xyz/deploy@workspace:packages/deploy":
   version: 0.0.0-use.local
@@ -3604,7 +3624,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.138-alpha
+    "@nocturne-xyz/sdk": latest
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3691,7 +3711,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/contracts": "workspace:^"
     "@nocturne-xyz/local-prover": "workspace:^"
-    "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/sdk": 1.0.141-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
@@ -3757,13 +3777,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.138-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.141-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
-    "@nocturne-xyz/circuit-utils": ^0.1.12
-    "@nocturne-xyz/config": "workspace:^"
-    "@nocturne-xyz/contracts": "workspace:^"
+    "@nocturne-xyz/circuit-utils": latest
+    "@nocturne-xyz/config": latest
+    "@nocturne-xyz/contracts": latest
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3810,6 +3830,25 @@ __metadata:
     randombytes: ^2.1.0
     sorted-btree: ^1.8.1
   checksum: 3d3f9a0a5af997e21ecad60c917e49aebfcd4bb6ddb47a12846cab08a3d09bf1b08d8ae9efe7a7dbcffd8e1e93b4e98e8d5d48b56d3c8a15603543f31892f9f3
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/sdk@npm:1.0.140-alpha, @nocturne-xyz/sdk@npm:latest":
+  version: 1.0.140-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.140-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": latest
+    "@nocturne-xyz/config": latest
+    "@nocturne-xyz/contracts": latest
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 70414cbe3dc967f45e00329997a9f2cc022c579e6f2de23e1156ea66f38eb26592f5571e2e1f4558fcc60ab73df470f6b9aeac8df83319b4e62eb38943a295e3
   languageName: node
   linkType: hard
 
@@ -20107,6 +20146,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "monorepo@workspace:."
   dependencies:
+    "@nocturne-xyz/sdk": 1.0.140-alpha
     lefthook: ^1.3.8
     turbo: 1.6.3
   languageName: unknown
