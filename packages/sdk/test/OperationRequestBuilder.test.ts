@@ -14,6 +14,7 @@ import {
   monkey,
   plutocracy,
   getDummyHex,
+  DUMMY_CONTRACT_ADDR,
 } from "./utils";
 
 describe("OperationRequestBuilder", () => {
@@ -267,6 +268,45 @@ describe("OperationRequestBuilder", () => {
     opRequest.joinSplitRequests.sort((a, b) =>
       a.asset.assetAddr.localeCompare(b.asset.assetAddr)
     );
+
+    expect(opRequest).to.eql(expected);
+  });
+
+  it("combines requests of same asset when no conf payments", () => {
+    const sk = generateRandomSpendingKey();
+    const signer = new NocturneSigner(sk);
+    const refundAddr = signer.generateRandomStealthAddress();
+
+    const actions = range(2).map((i) => ({
+      contractAddress: DUMMY_CONTRACT_ADDR,
+      encodedFunction: getDummyHex(i),
+    }));
+    const expected: OperationRequest = {
+      joinSplitRequests: [
+        {
+          asset: shitcoin,
+          unwrapValue: 400n,
+        },
+      ],
+      refundAssets: [],
+      refundAddr: refundAddr,
+      actions,
+      chainId: 1n,
+      deadline: 2n,
+    };
+
+    const builder = new OperationRequestBuilder();
+    const opRequest = builder
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
+      .unwrap(shitcoin, 100n)
+      .unwrap(shitcoin, 100n)
+      .unwrap(shitcoin, 100n)
+      .unwrap(shitcoin, 100n)
+      .refundAddr(refundAddr)
+      .chainId(1n)
+      .deadline(2n)
+      .build();
 
     expect(opRequest).to.eql(expected);
   });
