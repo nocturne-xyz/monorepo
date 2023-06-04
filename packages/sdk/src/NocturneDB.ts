@@ -31,6 +31,10 @@ export interface OptimisticNFRecord {
   expirationDate: number;
 }
 
+// options for methods that get notes from the DB
+// if includeUncommitted is defined and true, then the method include notes that are not yet committed to the commitment tree
+// if ignoreOptimisticNFs is defined and true, then the method will include notes that have been used by the SDK, but may not have been nullified on-chain yet
+// if both are undefined, then the method will only return notes that have been committed to the commitment tree and have not been used by the SDK yet
 export interface GetNotesOpts {
   includeUncommitted?: boolean;
   ignoreOptimisticNFs?: boolean;
@@ -79,7 +83,7 @@ export class NocturneDB {
     )}`;
   }
 
-  static parseOptimisticNFRecordKey(key: string): number {
+  static parseMerkleIndexFromOptimisticNFRecordKey(key: string): number {
     return parseInt(key.split("-")[1]);
   }
 
@@ -113,7 +117,8 @@ export class NocturneDB {
     const map = new Map<number, OptimisticNFRecord>();
     const kvs = await this.kv.iterPrefix(OPTIMISTIC_NF_RECORD_PREFIX);
     for await (const [key, value] of kvs) {
-      const merkleIndex = NocturneDB.parseOptimisticNFRecordKey(key);
+      const merkleIndex =
+        NocturneDB.parseMerkleIndexFromOptimisticNFRecordKey(key);
       const record = JSON.parse(value);
       map.set(merkleIndex, record);
     }
@@ -126,7 +131,7 @@ export class NocturneDB {
     records: OptimisticNFRecord[]
   ): Promise<void> {
     const kvs = zip(merkleIndices, records).map(([merkleIndex, record]) =>
-      NocturneDB.makeOptimsiticNFRecordKV(merkleIndex, record)
+      NocturneDB.makeOptimisticNFRecordKV(merkleIndex, record)
     );
     await this.kv.putMany(kvs);
   }
@@ -206,7 +211,7 @@ export class NocturneDB {
    * Get all *committed* notes for an asset
    *
    * @param asset the asset to get notes for
-   * @param opts optional options
+   * @param opts optional options. See `GetNotesOpts` for more details.
    * @returns notes an array of notes for the asset. The array has no guaranteed order.
    */
   async getNotesForAsset(
@@ -214,10 +219,20 @@ export class NocturneDB {
     opts?: GetNotesOpts
   ): Promise<IncludedNote[]> {
     const indices = await this.getMerkleIndicesForAsset(asset);
-    let notes = await this.getNotesByMerkleIndices(indices);
+    const notes = await this.getNotesByMerkleIndices(indices);
+    return this.filterNotesByOpts(notes, opts);
+  }
 
+  private async filterNotesByOpts(
+    notes: IncludedNote[],
+    opts?: GetNotesOpts
+  ): Promise<IncludedNote[]> {
     if (!opts?.includeUncommitted) {
       const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
+      if (lastCommittedMerkleIndex === undefined) {
+        return [];
+      }
+
       notes = notes.filter(
         (note) => note.merkleIndex <= lastCommittedMerkleIndex
       );
@@ -262,8 +277,8 @@ export class NocturneDB {
   }
 
   // index of the last note (dummy or not) to be committed
-  async lastCommittedMerkleIndex(): Promise<number> {
-    return (await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY)) ?? -1;
+  async lastCommittedMerkleIndex(): Promise<number | undefined> {
+    return await this.kv.getNumber(LAST_COMMITTED_MERKLE_INDEX_KEY);
   }
 
   // update `lastCommittedMerkleIndex()`
@@ -303,6 +318,7 @@ export class NocturneDB {
    * Get total value of all notes for a given asset
    *
    * @param asset the asset to get balance for
+   * @param opts optional options. See `GetNotesOpts` for more details.
    * @returns total value of all notes for the asset summed up
    */
   async getBalanceForAsset(asset: Asset, opts?: GetNotesOpts): Promise<bigint> {
@@ -313,33 +329,18 @@ export class NocturneDB {
   /**
    * Get all notes in the KV store
    *
+   * @param opts optional options. See `GetNotesOpts` for more details.
    * @returns allNotes a map of all notes in the KV store. keys are the `NoteAssetKey` for an asset,
    *          and values are an array of `IncludedNote`s for that asset. The array has no guaranteed order.
    */
   async getAllNotes(opts?: GetNotesOpts): Promise<AllNotes> {
     const allNotes = new Map<AssetKey, IncludedNote[]>();
 
-    const lastCommittedMerkleIndex = await this.lastCommittedMerkleIndex();
     const iterPrefix = await this.kv.iterPrefix(NOTES_BY_ASSET_PREFIX);
     for await (const [assetKey, stringifiedIndices] of iterPrefix) {
       const indices: number[] = JSON.parse(stringifiedIndices);
       let notes = await this.getNotesByMerkleIndices(indices);
-
-      if (!opts?.includeUncommitted) {
-        notes = notes.filter(
-          (note) => note.merkleIndex <= lastCommittedMerkleIndex
-        );
-      }
-
-      if (!opts?.ignoreOptimisticNFs) {
-        const hasOptimisticNF = await Promise.all(
-          notes.map(
-            async (note) =>
-              !(await this.getOptimisticNFRecord(note.merkleIndex))
-          )
-        );
-        notes = notes.filter((_, i) => hasOptimisticNF[i]);
-      }
+      notes = await this.filterNotesByOpts(notes, opts);
 
       const notesForAsset = allNotes.get(assetKey) ?? [];
       notesForAsset.push(...notes);
@@ -367,7 +368,7 @@ export class NocturneDB {
     return [NocturneDB.formatTimestampKey(merkleIndex), timestamp.toString()];
   }
 
-  private static makeOptimsiticNFRecordKV(
+  private static makeOptimisticNFRecordKV(
     merkleIndex: number,
     record: OptimisticNFRecord
   ): KV {

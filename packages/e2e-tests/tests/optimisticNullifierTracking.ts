@@ -70,13 +70,7 @@ describe("Optimistic nullifier tracking", () => {
   });
 
   afterEach(async () => {
-    try {
-      await teardown();
-    } catch (_err) {
-      // HACK ignore errors on shutdown
-      // TODO fix subtree updater empty insertion bug
-      return;
-    }
+    await teardown();
   });
 
   it("removes optimsitic nullifiers after op succeeds", async () => {
@@ -143,5 +137,6 @@ describe("Optimistic nullifier tracking", () => {
     // DB should have no optimistic NF records
     const recordsAfter = await db.getAllOptimisticNFRecords();
     expect(recordsAfter.size).to.equal(0);
+    expect(balances[0].balance).to.equal(200n);
   });
 });
