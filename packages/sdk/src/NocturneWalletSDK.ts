@@ -103,6 +103,7 @@ export class NocturneWalletSDK {
       deps,
       opRequest
     );
+    console.log("gasAccountedOpRequest:", gasAccountedOpRequest);
     return await prepareOperation(deps, gasAccountedOpRequest);
   }
 

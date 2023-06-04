@@ -17,7 +17,7 @@ import {
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
-import { groupByMap } from "./utils/functional";
+import { groupByMap, partition } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
@@ -129,6 +129,11 @@ export async function handleGasForOperationRequest(
       throw new Error("not enough owned gas tokens pay for op");
     }
 
+    console.log(
+      "joinSplitRequests after gas compensation: ",
+      joinSplitRequests
+    );
+
     // if we've added a new joinSplitRequest to pay for gas, we need to increase maxNumRefunds to reflect that change
     if (
       joinSplitRequests.length > gasEstimatedOpRequest.joinSplitRequests.length
@@ -166,54 +171,82 @@ async function tryUpdateJoinSplitRequestsForGasEstimate(
     (request) => request.asset.assetAddr
   );
 
+  console.log("joinSplitRequestsByAsset: ", joinSplitRequestsByAsset);
+
   const gasEstimatesInGasAssets = await tokenConverter.gasEstimatesInGasAssets(
     gasEstimateWei,
     Array.from(gasAssets.keys())
   );
 
-  // attempt to modify an existing joinsplit request to include additional gas comp
-  // iterate through each gas asset
-  for (const [ticker, gasAsset] of gasAssets.entries()) {
-    // for each, check if we're already unwrapping that asset in at least one joinsplit request
-    const matchingRequests = joinSplitRequestsByAsset.get(gasAsset.assetAddr); // TODO: casing
+  const [matchingGasAssets, nonMatchingGasAssets] = partition(
+    Array.from(gasAssets.entries()),
+    ([_, gasAsset]) => joinSplitRequestsByAsset.has(gasAsset.assetAddr)
+  );
 
-    // if we are, check if the user has enough of it to cover gas
-    // TODO: is it possible to have empty array here?
-    if (matchingRequests && matchingRequests.length > 0) {
-      const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
-      const totalAmountInMatchingRequests = matchingRequests.reduce(
-        (acc, request) => {
-          return acc + getJoinSplitRequestTotalValue(request);
-        },
-        0n
+  // attempt to find matching gas asset with enough balance
+  for (const [ticker, gasAsset] of matchingGasAssets) {
+    console.log(
+      `trying to use matching asset ${ticker} / ${gasAsset.assetAddr} to pay for gas`
+    );
+
+    const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
+    const matchingJoinSplitRequests = joinSplitRequestsByAsset.get(
+      gasAsset.assetAddr
+    )!;
+
+    const totalAmountInMatchingRequests = matchingJoinSplitRequests.reduce(
+      (acc, request) => {
+        return acc + getJoinSplitRequestTotalValue(request);
+      },
+      0n
+    );
+
+    console.log("totalOwnedGasAsset: ", totalOwnedGasAsset);
+    console.log(
+      "totalAmountInMatchingRequests: ",
+      totalAmountInMatchingRequests
+    );
+    console.log("gasEstimatesInGasAssets mapping: ", gasEstimatesInGasAssets);
+
+    // if they have enough for request + gas, modify one of the requests to include the gas, and
+    // we're done
+    const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
+    if (
+      totalOwnedGasAsset >=
+      estimateInGasAsset + totalAmountInMatchingRequests
+    ) {
+      console.log(
+        `user has enough gas asset to pay for gas. ticker: ${ticker}. asset: ${gasAsset.assetAddr}`
+      );
+      matchingJoinSplitRequests[0].unwrapValue += gasEstimateWei;
+      joinSplitRequestsByAsset.set(
+        gasAsset.assetAddr,
+        matchingJoinSplitRequests
       );
 
-      // if they do, modify one of the requests to include the gas, and we're done
-      const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
-      if (
-        totalOwnedGasAsset >=
-        estimateInGasAsset + totalAmountInMatchingRequests
-      ) {
-        matchingRequests[0].unwrapValue += gasEstimateWei;
-        joinSplitRequestsByAsset.set(gasAsset.assetAddr, matchingRequests);
-
-        return [
-          Array.from(joinSplitRequestsByAsset.values()).flat(),
-          { asset: gasAsset, ticker },
-        ];
-      }
+      return [
+        Array.from(joinSplitRequestsByAsset.values()).flat(),
+        { asset: gasAsset, ticker },
+      ];
     }
   }
+
+  console.log(
+    `user did not have enough existing joinsplit asset to pay for gas`
+  );
 
   // if we couldn't find an existing joinsplit with a supported gas asset,
   // attempt to make a new joinsplit request to include the gas comp
   // iterate through each gas asset
-  for (const [ticker, gasAsset] of gasAssets.entries()) {
+  for (const [ticker, gasAsset] of nonMatchingGasAssets) {
     // if user has enough gas token, create a new joinsplit request to include the gas, add it
     // to the list, and we're done
     const totalOwnedGasAsset = await db.getBalanceForAsset(gasAsset);
     const estimateInGasAsset = gasEstimatesInGasAssets.get(ticker)!;
     if (totalOwnedGasAsset >= estimateInGasAsset) {
+      console.log(
+        `user has enough gas asset of OTHER token. ticker: ${ticker}. asset: ${gasAsset.assetAddr}`
+      );
       const modifiedJoinSplitRequests = [
         ...joinSplitRequests,
         { asset: gasAsset, unwrapValue: estimateInGasAsset },
