@@ -7,7 +7,6 @@
   "main": "index.js",
   "scripts": {
     "build": "",
-    "build:testnet": "npm run build",
     "clean": "rm -rf .turbo cache artifacts db",
     "graph-node": "docker-compose -f ../../graph-node/docker/docker-compose.yml up",
     "hardhat-deposit": "npx ts-node ./scripts/deployAndDeposit.ts",

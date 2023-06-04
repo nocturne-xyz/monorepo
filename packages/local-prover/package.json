@@ -10,7 +10,6 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:testnet": "npm run build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "gen-test-cases": "yarn gen-test-cases:joinsplit && yarn gen-test-cases:subtreeupdate",

@@ -4,7 +4,6 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "yarn codegen && graph build",
-    "build:testnet": "npm run build",
     "deploy-hosted-service": "graph deploy --node https://api.thegraph.com/deploy/ nocturne",
     "create-local": "graph create --node http://localhost:8020/ nocturne",
     "remove-local": "graph remove --node http://localhost:8020/ nocturne",

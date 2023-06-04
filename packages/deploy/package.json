@@ -10,7 +10,6 @@
   ],
   "scripts": {
     "build": "yarn clean; tsc --build",
-    "build:testnet": "npm run build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "deploy": "npx ts-node scripts/deploy.ts",

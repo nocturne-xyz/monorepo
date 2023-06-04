@@ -13,7 +13,6 @@
   ],
   "scripts": {
     "build": "tsc --build",
-    "build:testnet": "npm run build",
     "build:docker": "./build_docker.sh",
     "build:mock:docker": "./build_mock_docker.sh",
     "check": "tsc --noEmit",
