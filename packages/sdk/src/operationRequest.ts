@@ -177,19 +177,6 @@ export class OperationRequestBuilder {
     return this;
   }
 
-  // builds `OperationRequest` with default chain info using the given provider
-  // to get the chainid and deadline.
-  async buildWithDefaultChainInfo(
-    provider: ethers.providers.Provider
-  ): Promise<OperationRequest> {
-    const chainId = BigInt((await provider.getNetwork()).chainId);
-    const deadline = BigInt(
-      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
-    );
-
-    return this.chainId(chainId).deadline(deadline).build();
-  }
-
   // builds the `OperationRequest`.
   // unwraps become `joinSplitRequest`s.
   // all `confidentialPayment`s and joinSplits for the same asset are consolidated
@@ -197,13 +184,6 @@ export class OperationRequestBuilder {
   // In the output, unwraps, actions, and refunds are guaranteed
   // to appear in the order their corresponding methods were invoked
   build(): OperationRequest {
-    if (this.op.chainId == 0n) {
-      throw new Error("Missing chain id");
-    }
-    if (this.op.deadline == 0n) {
-      throw new Error("Missing deadline");
-    }
-
     const joinSplitRequests = [];
 
     // consolidate joinSplits and payments for each asset
@@ -263,4 +243,23 @@ export class OperationRequestBuilder {
 
     return this.op;
   }
+}
+
+export async function ensureOpRequestChainInfo(
+  opRequest: OperationRequest,
+  provider: ethers.providers.Provider
+): Promise<OperationRequest> {
+  if (opRequest.chainId === 0n) {
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    opRequest.chainId = chainId;
+  }
+
+  if (opRequest.deadline === 0n) {
+    const deadline = BigInt(
+      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
+    );
+    opRequest.deadline = deadline;
+  }
+
+  return opRequest;
 }

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- ensure chain id and deadline are populated in wallet sdk
 - add build with chain defaults method to `OperationRequestBuilder`
 - optimsitically track nullifiers
   - store `merkleIndex -> OptimisticNFRecord` mappings in `NocturneDB`
