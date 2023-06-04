@@ -9,6 +9,7 @@
   "scripts": {
     "bootstrap": "yarn clean && yarn build",
     "build": "yarn build:deps && yarn build:foundry && yarn build:hardhat",
+    "build:testnet": "npm run build",
     "build:deps": "./install_deps.sh",
     "build:foundry": "FOUNDRY_PROFILE=contracts forge build --sizes",
     "build:hardhat": "yarn compile && hardhat prepare-package && tsc --build && yarn copy-definitions",

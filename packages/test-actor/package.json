@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "tsc --build",
+    "build:testnet": "npm run build",
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",

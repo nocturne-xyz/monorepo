@@ -5,6 +5,7 @@
   ],
   "scripts": {
     "build": "yarn turbo run --no-daemon build",
+    "build:testnet": "yarn turbo run --no-daemon build:testnet",
     "build:nocache": "yarn turbo run --no-daemon build --force",
     "circuits:build": "yarn workspaces foreach run build-all-circuits --include @nocturne-xyz/circuits",
     "clean": "yarn workspaces foreach run clean && rm -rf ./node_modules/.cache/turbo",

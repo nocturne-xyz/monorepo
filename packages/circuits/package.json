@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --build",
+    "build:testnet": "npm run build",
     "build-all-circuits": "scripts/build_all.sh",
     "build:deps": "../../scripts/install_base_deps.sh && ./scripts/install_deps.sh",
     "build:joinsplit": "scripts/joinsplit/build.sh",

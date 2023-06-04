@@ -12,6 +12,7 @@
   "scripts": {
     "build": "mm-snap build",
     "build:clean": "yarn clean && yarn build",
+    "build:testnet": "npm run build",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
     "cp-config": "cp ../config/configs/localhost.json ./src/config.json",

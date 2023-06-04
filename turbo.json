@@ -6,6 +6,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "build:testnet": {
+      "dependsOn": ["^build:testnet"],
+      "outputs": ["dist/**"]
+    },
     "@nocturne-xyz/contracts#build": {},
     "@nocturne-xyz/config#build": {
       "dependsOn": ["@nocturne-xyz/contracts#build"]
