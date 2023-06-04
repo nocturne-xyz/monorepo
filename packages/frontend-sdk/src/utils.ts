@@ -10,11 +10,10 @@ export interface TokenDetails {
 }
 
 // todo, when the time comes to document for open source:
-// NEXT_PUBLIC_SNAP_ORIGIN should be set if user wants to override
+// NEXT_PUBLIC_SNAP_ORIGIN should be set if user wants to override (like "local:http://localhost:8080")
 // Also find an extensible solution, so it works for all app types, not just next.
-
 export const SNAP_ID =
-  process.env.NEXT_PUBLIC_SNAP_ORIGIN ?? "local:http://localhost:8080";
+  process.env.NEXT_PUBLIC_SNAP_ORIGIN ?? "npm:@nocturne-xyz/snap";
 
 export async function getWindowSigner(): Promise<ethers.Signer> {
   const provider = new ethers.providers.Web3Provider(window.ethereum as any);
