@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix bug with marking op reverted and NFs unused (redis txs misformatted)
 - bump sdk with joinsplit sorting and note timestamp changes
 - add `gasAssetRefundThreshold` to operation for req validation
 - make cli manually exit when `ActorHandle` promise resolves

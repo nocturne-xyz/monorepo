@@ -15,6 +15,8 @@ import {
   DepositStatusResponse,
   DepositQuoteResponse,
   RelayRequest,
+  OperationRequestBuilder,
+  AssetTrait,
   StealthAddressTrait,
   encodeEncodedAssetAddrWithSignBitsPI,
   decomposeCompressedPoint,
@@ -113,7 +115,9 @@ export class NocturneFrontendSDK {
       );
     }
 
-    const depositAddr = StealthAddressTrait.compress(await this.getRandomizedAddr());
+    const depositAddr = StealthAddressTrait.compress(
+      await this.getRandomizedAddr()
+    );
     return this.depositManagerContract.instantiateETHMultiDeposit(
       values,
       depositAddr,
@@ -156,12 +160,56 @@ export class NocturneFrontendSDK {
       totalValue
     );
 
-    const depositAddr = StealthAddressTrait.compress(await this.getRandomizedAddr());
+    const depositAddr = StealthAddressTrait.compress(
+      await this.getRandomizedAddr()
+    );
     return this.depositManagerContract.instantiateErc20MultiDeposit(
       erc20Address,
       values,
       depositAddr
     );
+  }
+
+  /**
+   * Format and submit a `ProvenOperation` to transfer funds out of Nocturne to a specified recipient address.
+   * @param erc20Address Asset address
+   * @param amount Asset amount
+   * @param recipientAddress Recipient address
+   */
+  async anonTransferErc20(
+    erc20Address: Address,
+    amount: bigint,
+    recipientAddress: Address
+  ): Promise<BundlerOperationID> {
+    const signer = await getWindowSigner();
+    const provider = signer.provider;
+
+    if (!provider) {
+      throw new Error("Signer is not connected");
+    }
+
+    const erc20Contract = getTokenContract(
+      AssetType.ERC20,
+      erc20Address,
+      provider
+    );
+
+    const encodedFunction = erc20Contract.interface.encodeFunctionData(
+      "transfer",
+      [recipientAddress, amount]
+    );
+
+    const encodedErc20 = AssetTrait.erc20AddressToAsset(erc20Address);
+
+    const operationRequest = new OperationRequestBuilder()
+      .unwrap(encodedErc20, amount)
+      .action(erc20Address, encodedFunction)
+      .maxNumRefunds(1n)
+      .gas({ executionGasLimit: 500_000n, gasPrice: 0n })
+      .build();
+
+    const provenOperation = await this.signAndProveOperation(operationRequest);
+    return this.submitProvenOperation(provenOperation);
   }
 
   /**
@@ -235,11 +283,15 @@ export class NocturneFrontendSDK {
         const c1 = joinSplit.encSenderCanonAddrC1;
         const c2 = joinSplit.encSenderCanonAddrC2;
         const encSenderCanonAddr = { c1, c2 };
-        const encodedAssetAddrWithSignBits = encodeEncodedAssetAddrWithSignBitsPI(joinSplit.encodedAsset.encodedAssetAddr, encSenderCanonAddr);
+        const encodedAssetAddrWithSignBits =
+          encodeEncodedAssetAddrWithSignBitsPI(
+            joinSplit.encodedAsset.encodedAssetAddr,
+            encSenderCanonAddr
+          );
 
         const [, encSenderCanonAddrC1Y] = decomposeCompressedPoint(c1);
         const [, encSenderCanonAddrC2Y] = decomposeCompressedPoint(c1);
-        
+
         const publicSignals = joinSplitPublicSignalsToArray({
           newNoteACommitment: joinSplit.newNoteACommitment,
           newNoteBCommitment: joinSplit.newNoteBCommitment,

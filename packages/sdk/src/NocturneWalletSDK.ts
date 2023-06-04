@@ -6,7 +6,7 @@ import {
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
 import { prepareOperation } from "./prepareOperation";
-import { OperationRequest } from "./operationRequest";
+import { OperationRequest, ensureOpRequestChainInfo } from "./operationRequest";
 import { GetNotesOpts, NocturneDB } from "./NocturneDB";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 import { ethers } from "ethers";
@@ -26,6 +26,7 @@ import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInO
 const OPTIMISTIC_NF_TTL: number = 10 * 60 * 1000;
 
 export class NocturneWalletSDK {
+  protected provider: ethers.providers.Provider;
   protected config: NocturneConfig;
   protected handlerContract: Handler;
   protected merkleProver: SparseMerkleProver;
@@ -52,6 +53,8 @@ export class NocturneWalletSDK {
     } else {
       this.config = configOrNetworkName;
     }
+
+    this.provider = provider;
 
     this.gasAssets = new Map(
       Array.from(this.config.erc20s.entries())
@@ -86,6 +89,8 @@ export class NocturneWalletSDK {
   async prepareOperation(
     opRequest: OperationRequest
   ): Promise<PreSignOperation> {
+    opRequest = await ensureOpRequestChainInfo(opRequest, this.provider);
+
     const deps = {
       db: this.db,
       gasAssets: this.gasAssets,
@@ -94,7 +99,6 @@ export class NocturneWalletSDK {
       merkle: this.merkleProver,
       viewer: this.signer,
     };
-
     const gasAccountedOpRequest = await handleGasForOperationRequest(
       deps,
       opRequest

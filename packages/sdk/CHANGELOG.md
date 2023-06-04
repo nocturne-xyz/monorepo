@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- ensure chain id and deadline are populated in wallet sdk
+- add build with chain defaults method to `OperationRequestBuilder`
 - optimsitically track nullifiers
   - store `merkleIndex -> OptimisticNFRecord` mappings in `NocturneDB`
   - refactor "getNotes" methods to take `GetNotesOpts`, which allows caller whether or not they want to include uncommitted notes and/or ignore optimistic NFs

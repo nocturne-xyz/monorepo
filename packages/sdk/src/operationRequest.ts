@@ -1,6 +1,9 @@
 import { Asset, Address, Action } from "./primitives";
 import { CanonAddress, StealthAddress } from "./crypto";
 import { groupByArr } from "./utils";
+import { ethers } from "ethers";
+
+const ONE_DAY_SECONDS = 24 * 60 * 60;
 
 // A joinsplit request is an unwrapRequest plus an optional payment
 export interface JoinSplitRequest {
@@ -233,6 +236,30 @@ export class OperationRequestBuilder {
     }
 
     this.op.joinSplitRequests = joinSplitRequests;
+
+    if (this.op.joinSplitRequests.length == 0) {
+      throw new Error("No joinSplits or payments specified");
+    }
+
     return this.op;
   }
+}
+
+export async function ensureOpRequestChainInfo(
+  opRequest: OperationRequest,
+  provider: ethers.providers.Provider
+): Promise<OperationRequest> {
+  if (opRequest.chainId === 0n) {
+    const chainId = BigInt((await provider.getNetwork()).chainId);
+    opRequest.chainId = chainId;
+  }
+
+  if (opRequest.deadline === 0n) {
+    const deadline = BigInt(
+      (await provider.getBlock("latest")).timestamp + ONE_DAY_SECONDS
+    );
+    opRequest.deadline = deadline;
+  }
+
+  return opRequest;
 }
