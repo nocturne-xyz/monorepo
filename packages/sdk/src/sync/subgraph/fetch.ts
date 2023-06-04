@@ -94,6 +94,11 @@ export async function fetchNotes(
   const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
   const res = await query({ fromIdx, toIdx });
+
+  if (!res.data || res.data.encodedOrEncryptedNotes.length === 0) {
+    return [];
+  }
+
   return res.data.encodedOrEncryptedNotes.map(
     ({ merkleIndex, note, encryptedNote, idx }) => {
       const timestampUnixMillis = Number(
@@ -206,20 +211,17 @@ export async function fetchLastCommittedMerkleIndex(
     FetchSubtreeCommitsResponse
   >(endpoint, subtreeCommitQuery, "last committed merkle index");
   const res = await query({ toBlock });
-  if (!res.data) {
-    throw new Error("subgraph query returned empty data");
-  }
 
-  if (res.data.subtreeCommits.length === 0) {
+  if (!res.data || res.data.subtreeCommits.length === 0) {
     return undefined;
-  } else {
-    const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
-      parseInt(commit.subtreeBatchOffset)
-    );
-    const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
-
-    return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
   }
+
+  const subtreeBatchOffsets = res.data.subtreeCommits.map((commit) =>
+    parseInt(commit.subtreeBatchOffset)
+  );
+  const maxSubtreeBatchOffset = maxArray(subtreeBatchOffsets);
+
+  return batchOffsetToLatestMerkleIndexInBatch(maxSubtreeBatchOffset);
 }
 
 interface FetchNullifiersResponse {
@@ -262,5 +264,10 @@ export async function fetchNullifiers(
   const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
 
   const res = await query({ fromIdx, toIdx });
+
+  if (!res.data || res.data.nullifiers.length === 0) {
+    return [];
+  }
+
   return res.data.nullifiers.map(({ nullifier }) => BigInt(nullifier));
 }

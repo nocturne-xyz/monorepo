@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- subgraph sync checks if `res.data` undefined
 - change sync adapter to use joinsplits, refunds, and fill batch with zero events to yield insertions
 - bump sdk with joinsplit sorting and note timestamp changes
 - import `BATCH_SIZE` from `TreeConstants`

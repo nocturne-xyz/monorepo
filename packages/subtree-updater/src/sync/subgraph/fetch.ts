@@ -52,8 +52,8 @@ export async function fetchFilledBatchWithZerosEvents(
 
   const res = await query({ fromIdx, toIdx });
 
-  if (!res.data) {
-    throw new Error("subgraph query returned empty data");
+  if (!res.data || res.data.filledBatchWithZerosEvents.length === 0) {
+    return [];
   }
 
   return res.data.filledBatchWithZerosEvents.map(
