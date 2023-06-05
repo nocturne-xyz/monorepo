@@ -25,6 +25,12 @@ const ONE_MINUTE_AS_MILLIS = 60 * 1000;
 const ONE_DAY_SECONDS = 60n * 60n * 24n;
 const ONE_ETH_IN_WEI = 10n ** 18n;
 
+export class TestActorOpts {
+  intervalSeconds?: number;
+  onlyDeposits?: boolean;
+  onlyOperations?: boolean;
+}
+
 export class TestActor {
   txSigner: ethers.Wallet;
   teller: Teller;
@@ -32,9 +38,7 @@ export class TestActor {
   sdk: NocturneWalletSDK;
   prover: JoinSplitProver;
   bundlerEndpoint: string;
-
   erc20s: Map<string, Erc20Config>;
-  opRequests: OperationRequest[];
 
   constructor(
     txSigner: ethers.Wallet,
@@ -43,8 +47,7 @@ export class TestActor {
     sdk: NocturneWalletSDK,
     prover: JoinSplitProver,
     bundlerEndpoint: string,
-    erc20s: Map<string, Erc20Config>,
-    opRequests: OperationRequest[]
+    erc20s: Map<string, Erc20Config>
   ) {
     this.txSigner = txSigner;
     this.teller = teller;
@@ -54,26 +57,38 @@ export class TestActor {
     this.bundlerEndpoint = bundlerEndpoint;
 
     this.erc20s = erc20s;
-    this.opRequests = opRequests;
   }
 
-  async run(): Promise<void> {
+  async run(opts?: TestActorOpts): Promise<void> {
+    const intervalMs = opts?.intervalSeconds
+      ? opts.intervalSeconds * 1000
+      : ONE_MINUTE_AS_MILLIS;
+
     while (true) {
       await this.sdk.sync();
       const balances = await this.sdk.getAllAssetBalances();
       console.log("balances: ", balances);
 
       let actionTaken = false;
-      if (flipCoin()) {
-        console.log("switched on deposit");
+      if (opts?.onlyDeposits) {
+        console.log("depositing");
         actionTaken = await this.deposit();
-      } else {
-        console.log("switched on operation");
+      } else if (opts?.onlyOperations) {
+        console.log("performing operation");
         actionTaken = await this.randomOperation();
+      } else {
+        if (flipCoin()) {
+          console.log("switched on deposit");
+          actionTaken = await this.deposit();
+        } else {
+          console.log("switched on operation");
+          actionTaken = await this.randomOperation();
+        }
       }
 
       if (actionTaken) {
-        await sleep(ONE_MINUTE_AS_MILLIS);
+        console.log(`sleeping for ${intervalMs / 1000} seconds`);
+        await sleep(intervalMs);
       }
     }
   }
@@ -86,15 +101,12 @@ export class TestActor {
 
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
-      const value = randomBigintInRange(
-        randomAsset.balance / 2n,
-        randomAsset.balance
-      );
+      const value = randomBigIntBounded(randomAsset.balance / 5n);
       return [randomAsset.asset, value];
     } else {
       for (const asset of assetsWithBalance) {
         if (asset.balance > 0) {
-          const value = randomBigIntBounded(randomAsset.balance);
+          const value = randomBigIntBounded(randomAsset.balance / 5n);
           return [asset.asset, value];
         }
       }
@@ -179,6 +191,7 @@ export class TestActor {
     // prepare, sign, and prove
     const preSign = await this.sdk.prepareOperation(opRequest);
     const signed = this.sdk.signOperation(preSign);
+    await this.sdk.applyOptimisticNullifiersForOp(signed);
 
     console.log(`proving operation: ${computeOperationDigest(signed)}`);
     const proven = await proveOperation(this.prover, signed);
