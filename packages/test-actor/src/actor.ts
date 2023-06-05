@@ -87,8 +87,8 @@ export class TestActor {
     // If random chosen doesn't have any funds, find the first one with funds
     if (randomAsset.balance > 0) {
       const value = randomBigintInRange(
-        randomAsset.balance / 3n,
-        randomAsset.balance / 2n
+        randomAsset.balance / 2n,
+        randomAsset.balance
       );
       return [randomAsset.asset, value];
     } else {
@@ -248,6 +248,5 @@ function randomElem<T>(arr: T[]): T {
 }
 
 function flipCoin(): boolean {
-  // return Math.random() < 0.5;
-  return false;
+  return Math.random() < 0.5;
 }

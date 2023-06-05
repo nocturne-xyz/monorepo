@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- add unit tests to ensure no note re-usage and that op request builder consolidates js requests
+- make creating joinsplits for js requests sequential instead of `Promise.all` + keep running list of used note merkle indices (to avoid reusing notes in same op and therefore NF conflicts)
+- fix off by one error in gatherNotes which allowed us to accidentally reuse same note
+- ensure checksum addressed used when storing items in DB
 - ensure chain id and deadline are populated in wallet sdk
 - add build with chain defaults method to `OperationRequestBuilder`
 - optimsitically track nullifiers

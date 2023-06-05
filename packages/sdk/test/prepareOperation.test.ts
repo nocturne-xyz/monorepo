@@ -487,7 +487,7 @@ describe("prepareOperation", async () => {
       })
       .build();
 
-    // Add two more joinsplit requests for the same that adds up to total unwrap amount = 4000
+    // Add one more joinsplit request for the same that adds up to total unwrap amount = 2000
     opRequest.joinSplitRequests.push(opRequest.joinSplitRequests[0]);
 
     const gasCompAccountedOpRequest = await handleGasForOperationRequest(
@@ -499,8 +499,6 @@ describe("prepareOperation", async () => {
     expect(op.joinSplits.length).to.equal(2);
     expect(op.joinSplits[0].publicSpend).to.eql(1000n);
     expect(op.joinSplits[1].publicSpend).to.eql(1000n);
-
-    console.log("op joinsplits:", op.joinSplits);
 
     // Ensure every note is only used once
     let merkleIndexSet = new Set<number>();

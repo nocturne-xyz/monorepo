@@ -66,7 +66,7 @@ export async function prepareOperation(
 
   joinSplits = groupByArr(joinSplits, (joinSplit) =>
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
-  ).flat(); // TODO: unit test to ensure contiguous sorting
+  ).flat();
 
   // if refundAddr is not set, generate a random one
   const refundAddr = StealthAddressTrait.compress(
@@ -108,7 +108,7 @@ async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
-  const joinsplits = await getJoinSplitsFromNotes(
+  return getJoinSplitsFromNotes(
     viewer,
     merkle,
     notes,
@@ -116,9 +116,6 @@ async function prepareJoinSplits(
     amountToReturn,
     receiver
   );
-  console.log("joinsplits from gathered notes: ", joinsplits);
-
-  return joinsplits;
 }
 
 async function gatherNotes(

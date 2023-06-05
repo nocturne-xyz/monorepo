@@ -285,7 +285,11 @@ describe("OperationRequestBuilder", () => {
       joinSplitRequests: [
         {
           asset: shitcoin,
-          unwrapValue: 400n,
+          unwrapValue: 300n,
+        },
+        {
+          asset: ponzi,
+          unwrapValue: 300n,
         },
       ],
       refundAssets: [],
@@ -300,9 +304,11 @@ describe("OperationRequestBuilder", () => {
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 100n)
+      .unwrap(ponzi, 100n)
       .unwrap(shitcoin, 100n)
+      .unwrap(ponzi, 100n)
       .unwrap(shitcoin, 100n)
-      .unwrap(shitcoin, 100n)
+      .unwrap(ponzi, 100n)
       .refundAddr(refundAddr)
       .chainId(1n)
       .deadline(2n)
