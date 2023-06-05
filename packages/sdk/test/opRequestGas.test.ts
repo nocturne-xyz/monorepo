@@ -9,6 +9,7 @@ import {
   getDummyHex,
   testGasAssets,
   stablescam,
+  DUMMY_CONTRACT_ADDR,
 } from "./utils";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { ERC20_ID } from "../src/primitives/asset";
@@ -40,7 +41,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -77,7 +78,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -121,7 +122,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 1_000_000n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
@@ -174,7 +175,7 @@ describe("handleGasForOperationRequest", async () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 100_000n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)

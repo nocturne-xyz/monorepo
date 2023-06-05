@@ -78,7 +78,7 @@ export class OperationRequestBuilder {
     encodedFunction: string
   ): OperationRequestBuilder {
     const action: Action = {
-      contractAddress: contractAddress.toLowerCase(),
+      contractAddress: ethers.utils.getAddress(contractAddress),
       encodedFunction,
     };
 

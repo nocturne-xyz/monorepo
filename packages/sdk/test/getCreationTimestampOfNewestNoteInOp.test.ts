@@ -1,5 +1,11 @@
 import "mocha";
-import { getDummyHex, setup, shitcoin, testGasAssets } from "./utils";
+import {
+  DUMMY_CONTRACT_ADDR,
+  getDummyHex,
+  setup,
+  shitcoin,
+  testGasAssets,
+} from "./utils";
 import { MockEthToTokenConverter, OperationRequestBuilder } from "../src";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { prepareOperation } from "../src/prepareOperation";
@@ -28,7 +34,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     };
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 130n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)

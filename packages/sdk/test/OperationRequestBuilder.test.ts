@@ -29,7 +29,7 @@ describe("OperationRequestBuilder", () => {
       refundAssets: [shitcoin],
       actions: [
         {
-          contractAddress: "0x1234",
+          contractAddress: DUMMY_CONTRACT_ADDR,
           encodedFunction: getDummyHex(0),
         },
       ],
@@ -39,7 +39,7 @@ describe("OperationRequestBuilder", () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .chainId(1n)
@@ -68,7 +68,7 @@ describe("OperationRequestBuilder", () => {
       refundAssets: [shitcoin],
       actions: [
         {
-          contractAddress: "0x1234",
+          contractAddress: DUMMY_CONTRACT_ADDR,
           encodedFunction: getDummyHex(0),
         },
       ],
@@ -78,7 +78,7 @@ describe("OperationRequestBuilder", () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .confidentialPayment(shitcoin, 1n, receiver)
@@ -104,7 +104,7 @@ describe("OperationRequestBuilder", () => {
       refundAssets: [shitcoin],
       actions: [
         {
-          contractAddress: "0x1234",
+          contractAddress: DUMMY_CONTRACT_ADDR,
           encodedFunction: getDummyHex(0),
         },
       ],
@@ -118,7 +118,7 @@ describe("OperationRequestBuilder", () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .refundAddr(refundAddr)
@@ -195,7 +195,7 @@ describe("OperationRequestBuilder", () => {
       .map((signer) => signer.canonicalAddress());
 
     const actions = range(2).map((i) => ({
-      contractAddress: "0x1234",
+      contractAddress: DUMMY_CONTRACT_ADDR,
       encodedFunction: getDummyHex(i),
     }));
     const expected: OperationRequest = {
@@ -242,8 +242,8 @@ describe("OperationRequestBuilder", () => {
 
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
-      .action("0x1234", getDummyHex(1))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(1))
       .unwrap(shitcoin, 3n)
       .unwrap(ponzi, 69n)
       .unwrap(stablescam, 420n)
