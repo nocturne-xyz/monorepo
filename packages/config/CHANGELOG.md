@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- ensure all loaded addrs are checksum addresses by adding parsing util fn
 - redeploy sepolia post gas-optimization PRs
 - add `request` module which contains req/res types for bundler/screener servers
 - update sepolia config

@@ -48,13 +48,21 @@ export async function prepareOperation(
   const encodedGasAsset = AssetTrait.encode(opRequest.gasAsset);
 
   // prepare joinSplits
-  let joinSplits = (
-    await Promise.all(
-      joinSplitRequests.map((joinSplitRequest) => {
-        return prepareJoinSplits(deps, joinSplitRequest);
-      })
-    )
-  ).flat();
+  let joinSplits: PreSignJoinSplit[] = [];
+  let usedMerkleIndices = new Set<number>();
+  for (const joinSplitRequest of joinSplitRequests) {
+    const newJoinSplits = await prepareJoinSplits(
+      deps,
+      joinSplitRequest,
+      usedMerkleIndices
+    );
+
+    newJoinSplits.forEach((js) => {
+      usedMerkleIndices.add(js.oldNoteA.merkleIndex);
+      usedMerkleIndices.add(js.oldNoteB.merkleIndex);
+    });
+    joinSplits.push(...newJoinSplits);
+  }
 
   joinSplits = groupByArr(joinSplits, (joinSplit) =>
     AssetTrait.encodedAssetToString(joinSplit.encodedAsset)
@@ -82,12 +90,14 @@ export async function prepareOperation(
 
 async function prepareJoinSplits(
   { db, viewer, merkle }: PrepareOperationDeps,
-  joinSplitRequest: JoinSplitRequest
+  joinSplitRequest: JoinSplitRequest,
+  alreadyUsedNoteMerkleIndices: Set<number> = new Set()
 ): Promise<PreSignJoinSplit[]> {
   const notes = await gatherNotes(
     db,
     getJoinSplitRequestTotalValue(joinSplitRequest),
-    joinSplitRequest.asset
+    joinSplitRequest.asset,
+    alreadyUsedNoteMerkleIndices
   );
 
   const unwrapAmount = joinSplitRequest.unwrapValue;
@@ -98,7 +108,7 @@ async function prepareJoinSplits(
 
   const receiver = joinSplitRequest.payment?.receiver;
 
-  return await getJoinSplitsFromNotes(
+  return getJoinSplitsFromNotes(
     viewer,
     merkle,
     notes,
@@ -111,10 +121,13 @@ async function prepareJoinSplits(
 async function gatherNotes(
   db: NocturneDB,
   requestedAmount: bigint,
-  asset: Asset
+  asset: Asset,
+  noteMerkleIndicesToIgnore: Set<number> = new Set()
 ): Promise<IncludedNote[]> {
   // check that the user has enough notes to cover the request
-  const notes = await db.getNotesForAsset(asset);
+  const notes = (await db.getNotesForAsset(asset)).filter(
+    (n) => !noteMerkleIndicesToIgnore.has(n.merkleIndex)
+  );
   const balance = notes.reduce((acc, note) => acc + note.value, 0n);
   if (balance < requestedAmount) {
     throw new Error(
@@ -160,8 +173,12 @@ async function gatherNotes(
     const note = sortedNotes[subseqIndex];
     notesToUse.push(note);
     remainingAmount -= note.value;
+
+    // Skip to next note
+    subseqIndex--;
   }
 
+  console.log("notes to use: ", notesToUse);
   return notesToUse;
 }
 

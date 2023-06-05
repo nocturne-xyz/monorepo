@@ -4,6 +4,7 @@ import * as localhost from "../configs/localhost.json";
 import * as exampleNetwork from "../configs/example-network.json";
 import * as fs from "fs";
 import * as JSON from "bigint-json-serialization";
+import { ensureChecksumAddresses } from "./utils";
 
 export interface Erc20Config {
   address: Address;
@@ -38,6 +39,8 @@ export class NocturneConfig {
     obj: T
   ): NocturneConfig {
     obj = JSON.parse(JSON.stringify(obj));
+    obj = ensureChecksumAddresses(obj);
+
     return new NocturneConfig(
       obj.contracts,
       new Map(obj.erc20s),

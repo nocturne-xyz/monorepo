@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "big-integer": "^1.6.42",
-    "bigint-json-serialization": "^1.0.1"
+    "bigint-json-serialization": "^1.0.1",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.1",

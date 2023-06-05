@@ -5,7 +5,13 @@ import {
   NocturneSignature,
   generateRandomSpendingKey,
 } from "../src/crypto";
-import { shitcoin, setup, getDummyHex, testGasAssets } from "./utils";
+import {
+  shitcoin,
+  setup,
+  getDummyHex,
+  testGasAssets,
+  DUMMY_CONTRACT_ADDR,
+} from "./utils";
 import { OperationRequestBuilder } from "../src";
 import { prepareOperation } from "../src/prepareOperation";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
@@ -34,7 +40,7 @@ describe("signOperation", () => {
     // make operation request and prepare it
     const builder = new OperationRequestBuilder();
     const opRequest = builder
-      .action("0x1234", getDummyHex(0))
+      .action(DUMMY_CONTRACT_ADDR, getDummyHex(0))
       .unwrap(shitcoin, 3n)
       .refundAsset(shitcoin)
       .maxNumRefunds(1n)
