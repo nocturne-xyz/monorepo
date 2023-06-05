@@ -8,7 +8,7 @@ const runBatcher = new Command("batcher")
   .option("--batch-size <number>", "batch size")
   .option(
     "--max-latency <number>",
-    "max latency bundler will wait until creating a bundle"
+    "max latency bundler will wait until creating a bundle in seconds"
   )
   .option(
     "--log-dir <string>",
