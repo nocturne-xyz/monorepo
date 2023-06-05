@@ -18,6 +18,10 @@ const runProcess = new Command("processor")
     "deposit manager contract address"
   )
   .option(
+    "--dummy-screening-delay <number>",
+    "dummy screening delay in seconds"
+  )
+  .option(
     "--log-dir <string>",
     "directory to write logs to",
     "./logs/deposit-screener-processor"
@@ -32,7 +36,13 @@ const runProcess = new Command("processor")
     "min log importance to log to stdout. if not given, logs will not be emitted to stdout"
   )
   .action(async (options) => {
-    const { configNameOrPath, logDir, throttleMs, stdoutLogLevel } = options;
+    const {
+      configNameOrPath,
+      dummyScreeningDelay,
+      logDir,
+      throttleMs,
+      stdoutLogLevel,
+    } = options;
     const config = loadNocturneConfig(configNameOrPath);
     console.log("config", config);
 
@@ -79,7 +89,7 @@ const runProcess = new Command("processor")
       logger,
       // TODO: use real screening api and delay calculator
       new DummyScreeningApi(),
-      new DummyScreenerDelayCalculator(),
+      new DummyScreenerDelayCalculator(dummyScreeningDelay),
       supportedAssets,
       config.contracts.startBlock
     );
