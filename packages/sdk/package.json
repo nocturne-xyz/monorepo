@@ -18,9 +18,9 @@
     "test:unit": "mocha --require ts-node/register test/** --timeout 45000 --exit"
   },
   "dependencies": {
-    "@nocturne-xyz/circuit-utils": "latest",
-    "@nocturne-xyz/config": "latest",
-    "@nocturne-xyz/contracts": "latest",
+    "@nocturne-xyz/circuit-utils": "^0.1.12",
+    "@nocturne-xyz/config": "workspace:^",
+    "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",

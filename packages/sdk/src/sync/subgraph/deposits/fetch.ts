@@ -85,17 +85,16 @@ function formDepositEventsRawQuery(
     }`;
 }
 
-// the range is inclusive - i.e. [fromBlock, toBlock]
 export async function fetchDepositEvents(
   endpoint: string,
-  options: {
+  filter: {
     type?: DepositEventType;
-    fromBlock?: number;
+    fromBlock?: number; // the range is inclusive — i.e. [fromBlock, toBlock]
     toBlock?: number;
     spender?: string;
-  }
+  } = {}
 ): Promise<DepositEvent[]> {
-  const { type, fromBlock, toBlock, spender } = options;
+  const { type, fromBlock, toBlock, spender } = filter;
   const query = makeSubgraphQuery<
     FetchDepositEventsVars,
     FetchDepositEventsResponse

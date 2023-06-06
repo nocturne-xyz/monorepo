@@ -1,23 +1,24 @@
 import { DepositManager } from "@nocturne-xyz/contracts";
 import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20Token";
 import {
-  AssetType,
-  StealthAddress,
-  Note,
-  DepositRequest,
   AssetTrait,
-  zip,
-  hashDepositRequest,
+  AssetType,
+  DepositRequest,
+  Note,
+  StealthAddress,
   StealthAddressTrait,
+  hashDepositRequest,
+  zip,
 } from "@nocturne-xyz/sdk";
-import { ethers, ContractTransaction } from "ethers";
+import { ContractTransaction, ethers } from "ethers";
 import { queryDepositStatus, sleep } from "./utils";
 
 export async function depositFundsMultiToken(
   depositManager: DepositManager,
   tokensWithAmounts: [SimpleERC20Token, bigint[]][],
   eoa: ethers.Wallet,
-  stealthAddress: StealthAddress
+  stealthAddress: StealthAddress,
+  shouldQueryDepositStatus = true
 ): Promise<[DepositRequest, Note][]> {
   const txs: ContractTransaction[] = [];
   const depositRequests: DepositRequest[] = [];
@@ -45,19 +46,22 @@ export async function depositFundsMultiToken(
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
-  let ctr = 0;
-  const hashes = new Set(depositRequests.map(hashDepositRequest));
-  await sleep(5_000);
-  while (ctr < 10 && hashes.size > 0) {
-    for (const depositHash of hashes) {
-      const status = await queryDepositStatus(depositHash);
-      console.log(status);
-      if (status && status.status === "Completed") {
-        hashes.delete(depositHash);
-      }
-    }
+  if (shouldQueryDepositStatus) {
+    let ctr = 0;
+    const hashes = new Set(depositRequests.map(hashDepositRequest));
     await sleep(5_000);
-    ctr++;
+
+    while (ctr < 10 && hashes.size > 0) {
+      for (const depositHash of hashes) {
+        const status = await queryDepositStatus(depositHash);
+        console.log(status);
+        if (status && status.status === "Completed") {
+          hashes.delete(depositHash);
+        }
+      }
+      await sleep(5_000);
+      ctr++;
+    }
   }
 
   return zip(depositRequests, notes);
@@ -68,7 +72,8 @@ export async function depositFundsSingleToken(
   token: SimpleERC20Token,
   eoa: ethers.Wallet,
   stealthAddress: StealthAddress,
-  amounts: bigint[]
+  amounts: bigint[],
+  shouldQueryDepositStatus = true
 ): Promise<[DepositRequest, Note][]> {
   const total = amounts.reduce((sum, a) => sum + a);
 
@@ -93,19 +98,21 @@ export async function depositFundsSingleToken(
 
   await Promise.all(txs.map((tx) => tx.wait(1)));
 
-  let ctr = 0;
-  const hashes = new Set(depositRequests.map(hashDepositRequest));
-  await sleep(5_000);
-  while (ctr < 10 && hashes.size > 0) {
-    for (const depositHash of hashes) {
-      const status = await queryDepositStatus(depositHash);
-      console.log(status);
-      if (status && status.status === "Completed") {
-        hashes.delete(depositHash);
-      }
-    }
+  if (shouldQueryDepositStatus) {
+    let ctr = 0;
+    const hashes = new Set(depositRequests.map(hashDepositRequest));
     await sleep(5_000);
-    ctr++;
+    while (ctr < 10 && hashes.size > 0) {
+      for (const depositHash of hashes) {
+        const status = await queryDepositStatus(depositHash);
+        console.log(status);
+        if (status && status.status === "Completed") {
+          hashes.delete(depositHash);
+        }
+      }
+      await sleep(5_000);
+      ctr++;
+    }
   }
 
   return zip(depositRequests, notes);
