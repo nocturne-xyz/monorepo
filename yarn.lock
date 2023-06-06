@@ -3448,7 +3448,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.4
+    "@nocturne-xyz/offchain-utils": 0.1.5
     "@nocturne-xyz/sdk": 1.0.137-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3594,7 +3594,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.4
+    "@nocturne-xyz/offchain-utils": 0.1.5
     "@nocturne-xyz/sdk": 1.0.137-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3728,7 +3728,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/offchain-utils@0.1.4, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+"@nocturne-xyz/offchain-utils@0.1.5, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
@@ -3747,6 +3747,19 @@ __metadata:
     winston-transport: ^4.5.0
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/offchain-utils@npm:0.1.4":
+  version: 0.1.4
+  resolution: "@nocturne-xyz/offchain-utils@npm:0.1.4"
+  dependencies:
+    ajv: ^8.12.0
+    bigint-json-serialization: ^1.0.1
+    winston: ^3.8.2
+    winston-humanize-formatter: ^0.1.4
+    winston-transport: ^4.5.0
+  checksum: 3a48214acb6e25142c601e6d474f8fddf40f6e00ca2088532402e4afb768d95c91187ebc5cd10c4b3e92361a5301aac5695a375d73085de0dd262bb509116238
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/sdk@1.0.137-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
@@ -13222,7 +13235,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 

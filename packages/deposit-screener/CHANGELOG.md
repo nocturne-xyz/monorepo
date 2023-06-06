@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add health check to server
 - add dummy screening delay option to processor CLI
 - subgraph sync checks if `res.data` undefined
 - use custom implementation of EIP712 signer instead of ethers

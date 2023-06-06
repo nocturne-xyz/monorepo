@@ -6,3 +6,9 @@ export interface ActorHandle {
   // function to teardown the service
   teardown: () => Promise<void>;
 }
+
+export interface HealthCheckResponse {
+  uptime: number;
+  message: string;
+  timestamp: number;
+}
