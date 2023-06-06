@@ -1,16 +1,16 @@
-import { min, sleep } from "../../utils";
-import { ClosableAsyncIterator } from "../closableAsyncIterator";
+import { min, sleep } from "../../../utils";
+import { ClosableAsyncIterator } from "../../closableAsyncIterator";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
   SDKSyncAdapter,
-} from "../syncAdapter";
+} from "../../syncAdapter";
 import {
   fetchLastCommittedMerkleIndex,
   fetchNotes,
   fetchNullifiers,
 } from "./fetch";
-import { fetchLatestIndexedBlock } from "./utils";
+import { fetchLatestIndexedBlock } from "../utils";
 
 const MAX_CHUNK_SIZE = 10000;
 

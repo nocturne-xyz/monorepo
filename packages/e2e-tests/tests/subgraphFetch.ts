@@ -9,7 +9,11 @@ import {
   sleep,
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
-import { setupTestClient, setupTestDeployment } from "../src/deploy";
+import {
+  SUBGRAPH_URL,
+  setupTestClient,
+  setupTestDeployment,
+} from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import { GAS_FAUCET_DEFAULT_AMOUNT } from "../src/utils";
 import { expect } from "chai";
@@ -23,7 +27,6 @@ describe("Fetching Deposit Events", function () {
   let nocturneWalletSDKBob: NocturneWalletSDK;
   let aliceEoa: ethers.Wallet;
   let bobEoa: ethers.Wallet;
-  let subgraphUrl: string;
   let gasTokenAsset: Asset;
 
   beforeEach(async () => {
@@ -33,8 +36,7 @@ describe("Fetching Deposit Events", function () {
       },
     });
 
-    ({ teardown, provider, aliceEoa, bobEoa, subgraphUrl, depositManager } =
-      testDeployment);
+    ({ teardown, provider, aliceEoa, bobEoa, depositManager } = testDeployment);
     ({ gasToken, gasTokenAsset } = testDeployment.tokens);
     ({ nocturneWalletSDKAlice, nocturneWalletSDKBob } = await setupTestClient(
       testDeployment.config,
@@ -76,7 +78,7 @@ describe("Fetching Deposit Events", function () {
     await sleep(2_000);
 
     // Both deposits should be returned—no filter specified
-    const result = await fetchDepositEvents(subgraphUrl);
+    const result = await fetchDepositEvents(SUBGRAPH_URL);
     console.log("fetchDepositEvents", result);
 
     expect(result.length).to.eql(3);
@@ -91,7 +93,7 @@ describe("Fetching Deposit Events", function () {
     );
 
     // Filter by spender—Only Alice's deposit should be returned
-    const aliceQueryResult = await fetchDepositEvents(subgraphUrl, {
+    const aliceQueryResult = await fetchDepositEvents(SUBGRAPH_URL, {
       spender: aliceEoa.address,
     });
 

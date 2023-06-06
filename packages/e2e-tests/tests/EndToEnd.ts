@@ -1,10 +1,6 @@
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
-import {
-  setupTestDeployment,
-  setupTestClient,
-  SUBGRAPH_URL,
-} from "../src/deploy";
+import { setupTestDeployment, setupTestClient } from "../src/deploy";
 import { ethers } from "ethers";
 import {
   DepositManager,
@@ -27,7 +23,6 @@ import {
   JoinSplitProver,
   proveOperation,
   OperationStatus,
-  fetchDepositEvents,
 } from "@nocturne-xyz/sdk";
 import {
   GAS_FAUCET_DEFAULT_AMOUNT,
@@ -254,9 +249,6 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
     await fillSubtreeBatch();
-
-    const result = await fetchDepositEvents(SUBGRAPH_URL);
-    console.log("fetchDepositEvents", result);
 
     console.log("encode transfer erc20 action");
     const encodedFunction =

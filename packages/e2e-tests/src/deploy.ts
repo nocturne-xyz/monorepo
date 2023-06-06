@@ -118,7 +118,6 @@ export interface TestDeployment {
   subtreeUpdaterEoa: ethers.Wallet;
   screenerEoa: ethers.Wallet;
   actorConfig: TestActorsConfig;
-  subgraphUrl: string;
   fillSubtreeBatch: () => Promise<void>;
   teardown: () => Promise<void>;
 }
@@ -321,7 +320,6 @@ export async function setupTestDeployment(
     subtreeUpdaterEoa,
     screenerEoa,
     fillSubtreeBatch,
-    subgraphUrl: DEFAULT_DEPOSIT_SCREENER_CONFIG.subgraphUrl,
   };
 }
 

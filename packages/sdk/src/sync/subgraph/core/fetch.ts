@@ -1,16 +1,19 @@
-import { StealthAddressTrait } from "../../crypto";
+import { StealthAddressTrait } from "../../../crypto";
 import {
   AssetTrait,
   IncludedEncryptedNote,
   IncludedNote,
   WithTimestamp,
-} from "../../primitives";
-import { maxArray, batchOffsetToLatestMerkleIndexInBatch } from "../../utils";
+} from "../../../primitives";
+import {
+  maxArray,
+  batchOffsetToLatestMerkleIndexInBatch,
+} from "../../../utils";
 import {
   blockNumberFromTotalEntityIndex,
   makeSubgraphQuery,
   totalEntityIndexFromBlockNumber,
-} from "./utils";
+} from "../utils";
 
 export interface NoteResponse {
   ownerH1: string;
