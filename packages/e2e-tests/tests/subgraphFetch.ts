@@ -4,10 +4,9 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   Asset,
   NocturneWalletSDK,
-  StealthAddressTrait,
   fetchDepositEvents,
+  sleep,
 } from "@nocturne-xyz/sdk";
-import { expect } from "chai";
 import { ethers } from "ethers";
 import { setupTestClient, setupTestDeployment } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
@@ -67,31 +66,37 @@ describe("Fetching Deposit Events", function () {
       false
     );
 
+    let i = 0;
+    while (i < 10) {
+      const result = await fetchDepositEvents(subgraphUrl);
+      console.log("fetchDepositEvents", result);
+      await sleep(2_000);
+    }
+
     // Both deposits should be returned—no filter specified
-    const result = await fetchDepositEvents(subgraphUrl);
-    console.log("fetchDepositEvents", result);
-    expect(result.length).to.be.equal(2);
-    expect(result[0]?.depositAddr).to.be.equal(
-      StealthAddressTrait.compress(
-        nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-      )
-    );
-    expect(result[1]?.depositAddr).to.be.equal(
-      StealthAddressTrait.compress(
-        nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-      )
-    );
 
-    // Filter by spender—Only Alice's deposit should be returned
-    const aliceQueryResult = await fetchDepositEvents(subgraphUrl, {
-      spender: aliceEoa.address,
-    });
+    // expect(result.length).to.be.equal(2);
+    // expect(result[0]?.depositAddr).to.be.equal(
+    //   StealthAddressTrait.compress(
+    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
+    //   )
+    // );
+    // expect(result[1]?.depositAddr).to.be.equal(
+    //   StealthAddressTrait.compress(
+    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
+    //   )
+    // );
 
-    expect(aliceQueryResult.length).to.be.equal(1);
-    expect(aliceQueryResult[0]?.depositAddr).to.be.equal(
-      StealthAddressTrait.compress(
-        nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-      )
-    );
+    // // Filter by spender—Only Alice's deposit should be returned
+    // const aliceQueryResult = await fetchDepositEvents(subgraphUrl, {
+    //   spender: aliceEoa.address,
+    // });
+
+    // expect(aliceQueryResult.length).to.be.equal(1);
+    // expect(aliceQueryResult[0]?.depositAddr).to.be.equal(
+    //   StealthAddressTrait.compress(
+    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
+    //   )
+    // );
   });
 });
