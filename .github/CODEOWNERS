@@ -19,6 +19,8 @@ packages/site @luketchang @Sladuca
 
 packages/bundler @luketchang @Sladuca
 packages/subtree-updater @Sladuca
+packages/deposit-screener @Sladuca @luketchang
+packages/test-actor @Sladuca @luketchang
 
 # Other Packages
 
