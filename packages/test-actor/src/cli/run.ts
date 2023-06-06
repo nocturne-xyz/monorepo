@@ -9,7 +9,6 @@ import {
   NocturneDB,
   NocturneSigner,
   NocturneWalletSDK,
-  OperationRequest,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
   BundlerNullifierChecker,
@@ -19,7 +18,6 @@ import { Command } from "commander";
 import { ethers } from "ethers";
 import { TestActor } from "../actor";
 import * as fs from "fs";
-import * as BigintJSON from "bigint-json-serialization";
 
 export const run = new Command("run")
   .summary("run test actor")
@@ -36,13 +34,19 @@ export const run = new Command("run")
   )
   .requiredOption("--zkey-path <string>", "path to joinsplit zkey")
   .requiredOption("--vkey-path <string>", "path to joinsplit vkey")
-  .option(
-    "--op-requests-path <string>",
-    "path to a JSON file containing the set of op requests the actor will perform"
-  )
+  .option("--interval <number>", "interval between deposits/ops in seconds")
+  .option("--only-deposits", "only perform deposits")
+  .option("--only-operations", "only perform operations")
   .action(async (options) => {
-    const { configNameOrPath, wasmPath, zkeyPath, vkeyPath, opRequestsPath } =
-      options;
+    const {
+      configNameOrPath,
+      wasmPath,
+      zkeyPath,
+      vkeyPath,
+      interval,
+      onlyDeposits,
+      onlyOperations,
+    } = options;
 
     const config = loadNocturneConfig(configNameOrPath);
 
@@ -105,12 +109,6 @@ export const run = new Command("run")
     const vkey = JSON.parse(vkeyStr);
     const prover = new WasmJoinSplitProver(wasmPath, zkeyPath, vkey);
 
-    let opRequests: OperationRequest[] = [];
-    if (opRequestsPath) {
-      const opRequestsStr = fs.readFileSync(opRequestsPath).toString();
-      opRequests = BigintJSON.parse(opRequestsStr) as OperationRequest[];
-    }
-
     const testTokens = new Map(
       Array.from(config.erc20s.entries()).filter(([key]) =>
         key.toLowerCase().includes("test")
@@ -124,9 +122,16 @@ export const run = new Command("run")
       sdk,
       prover,
       bundlerEndpoint,
-      testTokens,
-      opRequests
+      testTokens
     );
 
-    await actor.run();
+    if (onlyDeposits && onlyOperations) {
+      throw new Error("cannot specify both only-deposits and only-operations");
+    }
+
+    await actor.run({
+      intervalSeconds: interval,
+      onlyDeposits,
+      onlyOperations,
+    });
   });
