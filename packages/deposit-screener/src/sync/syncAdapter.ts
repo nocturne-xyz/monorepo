@@ -1,5 +1,9 @@
-import { ClosableAsyncIterator, IterSyncOpts } from "@nocturne-xyz/sdk";
-import { DepositEvent, DepositEventType } from "../types";
+import {
+  ClosableAsyncIterator,
+  IterSyncOpts,
+  DepositEventType,
+  DepositEvent,
+} from "@nocturne-xyz/sdk";
 
 export interface DepositEventsBatch {
   blockNumber: number;

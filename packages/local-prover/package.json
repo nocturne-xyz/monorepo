@@ -18,7 +18,8 @@
     "lint": "eslint --fix src --ext .ts",
     "prettier:check": "prettier --check ./src ./scripts",
     "prettier:write": "prettier --write ./src ./scripts",
-    "test:unit": ""
+    "test:unit": "",
+    "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
     "@nocturne-xyz/circuit-utils": "^0.1.12",

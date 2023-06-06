@@ -4,10 +4,11 @@ import {
   IterSyncOpts,
   min,
   sleep,
+  fetchDepositEvents,
+  DepositEventType,
 } from "@nocturne-xyz/sdk";
-import { DepositEventType } from "../../types";
+
 import { DepositEventsBatch, ScreenerSyncAdapter } from "../syncAdapter";
-import { fetchDepositEvents } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -54,12 +55,11 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
         }
 
         console.log(`fetching deposit events from ${from} to ${to}...`);
-        const depositEvents = await fetchDepositEvents(
-          endpoint,
+        const depositEvents = await fetchDepositEvents(endpoint, {
           type,
-          from,
-          to
-        );
+          fromBlock: from,
+          toBlock: to,
+        });
         console.log("yielding deposit events:", depositEvents);
 
         yield {

@@ -1,34 +1,41 @@
 import {
-  OperationRequest,
-  ProvenOperation,
-  SignedOperation,
-  StealthAddress,
-  AssetWithBalance,
-  AssetType,
-  Address,
-  JoinSplitProofWithPublicSignals,
-  unpackFromSolidityProof,
-  joinSplitPublicSignalsToArray,
-  VerifyingKey,
-  computeOperationDigest,
-  proveOperation,
-  DepositStatusResponse,
-  DepositQuoteResponse,
-  RelayRequest,
-  OperationRequestBuilder,
-  AssetTrait,
-  StealthAddressTrait,
-  encodeEncodedAssetAddrWithSignBitsPI,
-  decomposeCompressedPoint,
-} from "@nocturne-xyz/sdk";
-import { SNAP_ID, getTokenContract, getWindowSigner } from "./utils";
-import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
-import * as JSON from "bigint-json-serialization";
-import {
   DepositManager,
   DepositManager__factory,
 } from "@nocturne-xyz/contracts";
+import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
+import {
+  Address,
+  AssetTrait,
+  AssetType,
+  AssetWithBalance,
+  DepositEvent,
+  DepositQuoteResponse,
+  DepositStatusResponse,
+  JoinSplitProofWithPublicSignals,
+  OperationRequest,
+  OperationRequestBuilder,
+  ProvenOperation,
+  RelayRequest,
+  SignedOperation,
+  StealthAddress,
+  StealthAddressTrait,
+  VerifyingKey,
+  computeOperationDigest,
+  decomposeCompressedPoint,
+  encodeEncodedAssetAddrWithSignBitsPI,
+  fetchDepositEvents,
+  joinSplitPublicSignalsToArray,
+  proveOperation,
+  unpackFromSolidityProof,
+} from "@nocturne-xyz/sdk";
+import * as JSON from "bigint-json-serialization";
 import { ContractTransaction } from "ethers";
+import {
+  SNAP_ID,
+  SUBGRAPH_URL,
+  getTokenContract,
+  getWindowSigner,
+} from "./utils";
 
 const WASM_PATH = "/joinsplit.wasm";
 const ZKEY_PATH = "/joinsplit.zkey";
@@ -243,7 +250,7 @@ export class NocturneFrontendSDK {
     const spender = await signer.getAddress();
 
     const res = await fetch(`http://${this.screenerEndpoint}/quote`, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -377,6 +384,14 @@ export class NocturneFrontendSDK {
     });
   }
 
+  /**
+   * Query subgraph for all spender's deposits
+   */
+  async fetchAllDeposits(): Promise<DepositEvent[]> {
+    return await fetchDepositEvents(SUBGRAPH_URL, {
+      spender: await (await getWindowSigner()).getAddress(),
+    });
+  }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.
    * This includes all joinsplit tx inputs.

@@ -1,4 +1,4 @@
-export { SubgraphSDKSyncAdapter } from "./adapter";
+export { SubgraphSDKSyncAdapter } from "./core/adapter";
 export {
   EncodedOrEncryptedNoteResponse,
   EncryptedNoteResponse,
@@ -7,5 +7,12 @@ export {
   fetchLastCommittedMerkleIndex,
   includedNoteFromNoteResponse,
   encryptedNoteFromEncryptedNoteResponse,
-} from "./fetch";
+} from "./core";
 export * as SubgraphUtils from "./utils";
+
+export {
+  DepositEventType,
+  DepositEvent,
+  DepositEventResponse,
+  fetchDepositEvents,
+} from "./deposits";

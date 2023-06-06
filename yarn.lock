@@ -3449,7 +3449,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.5
-    "@nocturne-xyz/sdk": 1.0.137-alpha
+    "@nocturne-xyz/sdk": 1.0.143-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/commander": ^2.12.2
@@ -3595,7 +3595,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.5
-    "@nocturne-xyz/sdk": 1.0.137-alpha
+    "@nocturne-xyz/sdk": 1.0.143-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/chai-as-promised": ^7.1.5
@@ -3761,7 +3761,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nocturne-xyz/sdk@1.0.137-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.143-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3820,6 +3820,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.33.0
     "@typescript-eslint/parser": ^5.20.0
     bigint-json-serialization: ^1.0.1
+    cross-env: ^7.0.3
     eslint: ^7.32.0
     eslint-config-prettier: ^8.8.0
     eslint-plugin-import: ^2.26.0
@@ -3911,7 +3912,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.4
-    "@nocturne-xyz/sdk": 1.0.137-alpha
+    "@nocturne-xyz/sdk": 1.0.143-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
     "@types/commander": ^2.12.2
@@ -10850,6 +10851,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cross-env@npm:^7.0.3":
+  version: 7.0.3
+  resolution: "cross-env@npm:7.0.3"
+  dependencies:
+    cross-spawn: ^7.0.1
+  bin:
+    cross-env: src/bin/cross-env.js
+    cross-env-shell: src/bin/cross-env-shell.js
+  checksum: 26f2f3ea2ab32617f57effb70d329c2070d2f5630adc800985d8b30b56e8bf7f5f439dd3a0358b79cee6f930afc23cf8e23515f17ccfb30092c6b62c6b630a79
+  languageName: node
+  linkType: hard
+
 "cross-fetch@npm:^2.1.0, cross-fetch@npm:^2.1.1":
   version: 2.2.6
   resolution: "cross-fetch@npm:2.2.6"
@@ -10882,7 +10895,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-spawn@npm:^7.0.0, cross-spawn@npm:^7.0.2, cross-spawn@npm:^7.0.3":
+"cross-spawn@npm:^7.0.0, cross-spawn@npm:^7.0.1, cross-spawn@npm:^7.0.2, cross-spawn@npm:^7.0.3":
   version: 7.0.3
   resolution: "cross-spawn@npm:7.0.3"
   dependencies:
@@ -13235,7 +13248,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
+  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
   languageName: node
   linkType: hard
 
