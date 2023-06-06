@@ -13,7 +13,8 @@
     "check": "tsc --noEmit",
     "clean": "rm -rf .turbo dist",
     "lint": "eslint --fix src --ext .ts",
-    "test:unit": ""
+    "test:unit": "",
+    "publish": "yarn build; yarn npm publish --access public"
   },
   "dependencies": {
     "@nocturne-xyz/contracts": "workspace:^",
