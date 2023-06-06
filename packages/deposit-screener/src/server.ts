@@ -15,7 +15,7 @@ import { Address } from "@nocturne-xyz/sdk";
 import { makeDepositStatusHandler, makeQuoteHandler } from "./routes";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import { ScreeningApi } from "./screening";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
 
 export class DepositScreenerServer {
   logger: Logger;
@@ -77,6 +77,16 @@ export class DepositScreenerServer {
         rateLimits: this.supportedAssetRateLimits,
       })
     );
+
+    // health check
+    router.get("/", async (_req, res, _next) => {
+      const healthCheck: HealthCheckResponse = {
+        uptime: process.uptime(),
+        message: "OK",
+        timestamp: Date.now(),
+      };
+      res.send(healthCheck);
+    });
 
     const app = express();
 

@@ -14,7 +14,7 @@ import {
   makeGetOperationStatusHandler,
   makeRelayHandler,
 } from "./routes";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, HealthCheckResponse } from "@nocturne-xyz/offchain-utils";
 
 export class BundlerServer {
   redis: IORedis;
@@ -83,6 +83,16 @@ export class BundlerServer {
         }),
       })
     );
+
+    // health check
+    router.get("/", async (_req, res, _next) => {
+      const healthCheck: HealthCheckResponse = {
+        uptime: process.uptime(),
+        message: "OK",
+        timestamp: Date.now(),
+      };
+      res.send(healthCheck);
+    });
 
     const app = express();
 
