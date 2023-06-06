@@ -4,6 +4,7 @@ import { SimpleERC20Token } from "@nocturne-xyz/contracts/dist/src/SimpleERC20To
 import {
   Asset,
   NocturneWalletSDK,
+  StealthAddressTrait,
   fetchDepositEvents,
   sleep,
 } from "@nocturne-xyz/sdk";
@@ -11,6 +12,7 @@ import { ethers } from "ethers";
 import { setupTestClient, setupTestDeployment } from "../src/deploy";
 import { depositFundsSingleToken } from "../src/deposit";
 import { GAS_FAUCET_DEFAULT_AMOUNT } from "../src/utils";
+import { expect } from "chai";
 
 describe("Fetching Deposit Events", function () {
   let teardown: () => Promise<void>;
@@ -48,12 +50,17 @@ describe("Fetching Deposit Events", function () {
   });
 
   it("Should fetch all deposit events, with no query conditional params specified", async () => {
+    const aliceStealthAddr =
+      nocturneWalletSDKAlice.signer.canonicalStealthAddress();
+    const bobStealthAddr =
+      nocturneWalletSDKBob.signer.canonicalStealthAddress();
+
     await depositFundsSingleToken(
       depositManager,
       gasToken,
       aliceEoa,
-      nocturneWalletSDKAlice.signer.canonicalStealthAddress(),
-      [GAS_FAUCET_DEFAULT_AMOUNT],
+      aliceStealthAddr,
+      [GAS_FAUCET_DEFAULT_AMOUNT, GAS_FAUCET_DEFAULT_AMOUNT],
       false
     );
 
@@ -61,42 +68,39 @@ describe("Fetching Deposit Events", function () {
       depositManager,
       gasToken,
       bobEoa,
-      nocturneWalletSDKBob.signer.canonicalStealthAddress(),
+      bobStealthAddr,
       [GAS_FAUCET_DEFAULT_AMOUNT],
       false
     );
 
-    let i = 0;
-    while (i < 10) {
-      const result = await fetchDepositEvents(subgraphUrl);
-      console.log("fetchDepositEvents", result);
-      await sleep(2_000);
-    }
+    await sleep(2_000);
 
     // Both deposits should be returned—no filter specified
+    const result = await fetchDepositEvents(subgraphUrl);
+    console.log("fetchDepositEvents", result);
 
-    // expect(result.length).to.be.equal(2);
-    // expect(result[0]?.depositAddr).to.be.equal(
-    //   StealthAddressTrait.compress(
-    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-    //   )
-    // );
-    // expect(result[1]?.depositAddr).to.be.equal(
-    //   StealthAddressTrait.compress(
-    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-    //   )
-    // );
+    expect(result.length).to.eql(3);
+    expect(result[0]?.depositAddr).to.eql(
+      StealthAddressTrait.compress(aliceStealthAddr)
+    );
+    expect(result[1]?.depositAddr).to.eql(
+      StealthAddressTrait.compress(aliceStealthAddr)
+    );
+    expect(result[2]?.depositAddr).to.eql(
+      StealthAddressTrait.compress(bobStealthAddr)
+    );
 
-    // // Filter by spender—Only Alice's deposit should be returned
-    // const aliceQueryResult = await fetchDepositEvents(subgraphUrl, {
-    //   spender: aliceEoa.address,
-    // });
+    // Filter by spender—Only Alice's deposit should be returned
+    const aliceQueryResult = await fetchDepositEvents(subgraphUrl, {
+      spender: aliceEoa.address,
+    });
 
-    // expect(aliceQueryResult.length).to.be.equal(1);
-    // expect(aliceQueryResult[0]?.depositAddr).to.be.equal(
-    //   StealthAddressTrait.compress(
-    //     nocturneWalletSDKAlice.signer.canonicalStealthAddress()
-    //   )
-    // );
+    expect(aliceQueryResult.length).to.eql(2);
+    expect(aliceQueryResult[0]?.depositAddr).to.eql(
+      StealthAddressTrait.compress(aliceStealthAddr)
+    );
+    expect(result[1]?.depositAddr).to.eql(
+      StealthAddressTrait.compress(aliceStealthAddr)
+    );
   });
 });
