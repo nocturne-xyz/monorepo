@@ -46,8 +46,8 @@ function formDepositEventsRawQuery(
   toBlock?: number,
   spender?: string
 ) {
-  let params = [];
-  let conditions = [];
+  const params = [];
+  const conditions = [];
 
   if (type) {
     params.push(`$type: String!`);
