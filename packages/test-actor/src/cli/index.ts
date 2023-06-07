@@ -14,4 +14,12 @@ export default async function main(): Promise<void> {
   await program.parseAsync(process.argv);
 }
 
-main().catch((e) => console.log(`test actor exited with error: ${e}`));
+main()
+  .then(() => {
+    console.log(`test-actor-cli ran to completion`);
+    process.exit(0);
+  })
+  .catch((e) => {
+    console.log(`test-actor-cli exited with error: ${e}`);
+    process.exit(1);
+  });
