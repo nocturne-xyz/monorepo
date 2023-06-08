@@ -28,9 +28,9 @@ import {
 import IORedis from "ioredis";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import * as JSON from "bigint-json-serialization";
-import { formatMetricLabel, secsToMillis } from "./utils";
+import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, formatMetricLabel } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "screener";

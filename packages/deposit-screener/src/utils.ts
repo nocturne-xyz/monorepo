@@ -13,11 +13,3 @@ export function divideDecimalPreserving(
 ): number {
   return Number((a * 10n ** BigInt(precision)) / b) / 10 ** precision;
 }
-
-export function formatMetricLabel(
-  actor: string,
-  component: string,
-  label: string
-): string {
-  return `nocturne.${actor}.${component}.${label}`;
-}

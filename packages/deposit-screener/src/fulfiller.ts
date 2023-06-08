@@ -32,9 +32,9 @@ import {
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import { ActorHandle, formatMetricLabel } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
-import { formatMetricLabel, millisToSeconds } from "./utils";
+import { millisToSeconds } from "./utils";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const COMPONENT_NAME = "fulfiller";

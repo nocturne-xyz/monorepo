@@ -1,12 +1,13 @@
 #! /usr/bin/env node
 
-require("../instrumentation");
 import { program } from "commander";
 import run from "./commands/run";
 import * as dotenv from "dotenv";
+import { setupDefaultInstrumentation } from "@nocturne-xyz/offchain-utils";
 
 export default async function main(): Promise<void> {
   dotenv.config();
+  setupDefaultInstrumentation("deposit-screener");
 
   program
     .name("screener-cli")
