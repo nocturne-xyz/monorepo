@@ -15,7 +15,11 @@ import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
-import { DepositRequestJobData, getFulfillmentQueueName } from "./types";
+import {
+  ACTOR_NAME,
+  DepositRequestJobData,
+  getFulfillmentQueueName,
+} from "./types";
 import {
   DepositManager,
   DepositManager__factory,
@@ -30,11 +34,14 @@ import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+import { formatMetricLabel, millisToSeconds } from "./utils";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+const COMPONENT_NAME = "fulfiller";
 
 interface DepositScreenerFulfillerMetrics {
   requeueDelayHistogram: ot.Histogram;
+  fulfilledDepositsCounter: ot.Counter;
 }
 
 export class DepositScreenerFulfiller {
@@ -71,14 +78,28 @@ export class DepositScreenerFulfiller {
 
     this.supportedAssets = supportedAssets;
 
-    const meter = ot.metrics.getMeter("deposit-screener-processor-screener");
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
     this.metrics = {
       requeueDelayHistogram: meter.createHistogram(
-        "fullfiller_requeue_delay.histogram",
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "fullfiller_requeue_delay.histogram"
+        ),
         {
           description:
             "Delay between when a deposit is requeued due to hitting global rate limit",
           unit: "seconds",
+        }
+      ),
+      fulfilledDepositsCounter: meter.createCounter(
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "fulfilled_deposits.counter"
+        ),
+        {
+          description: "Fulfilled deposits, attributed by asset",
         }
       ),
     };
@@ -135,7 +156,9 @@ export class DepositScreenerFulfiller {
                 childLogger.debug(`delaying`);
                 await worker.rateLimit(queueDelay);
 
-                this.metrics.requeueDelayHistogram.record(queueDelay / 1000);
+                this.metrics.requeueDelayHistogram.record(
+                  millisToSeconds(queueDelay)
+                );
 
                 throw Worker.RateLimitError();
               }
@@ -147,6 +170,10 @@ export class DepositScreenerFulfiller {
               ).catch((e) => {
                 childLogger.error(e);
                 throw new Error(e);
+              });
+
+              this.metrics.fulfilledDepositsCounter.add(1, {
+                assetAddress: address,
               });
 
               const block = await this.txSigner.provider.getBlock(

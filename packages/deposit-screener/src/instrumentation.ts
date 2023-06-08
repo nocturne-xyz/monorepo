@@ -14,17 +14,10 @@ const resource = Resource.default().merge(
   })
 );
 
-const collectorOptions = {
-  headers: {}, // an optional object containing custom headers to be sent with each request
-  concurrencyLimit: 1, // an optional limit on pending requests
-};
-const metricExporter = new OTLPMetricExporter(collectorOptions);
-
+const metricExporter = new OTLPMetricExporter();
 const metricReader = new PeriodicExportingMetricReader({
   exporter: metricExporter,
-
-  // Default is 60000ms (60 seconds). Set to 3 seconds for demonstrative purposes only.
-  exportIntervalMillis: 3000,
+  exportIntervalMillis: 30_000,
 });
 
 const myServiceMeterProvider = new MeterProvider({
@@ -32,8 +25,6 @@ const myServiceMeterProvider = new MeterProvider({
 });
 
 myServiceMeterProvider.addMetricReader(metricReader);
-
-// Set this MeterProvider to be global to the app being instrumented.
 opentelemetry.metrics.setGlobalMeterProvider(myServiceMeterProvider);
 
-console.log("Instrumentation file has been executed");
+console.log("Instrumentation file executed");

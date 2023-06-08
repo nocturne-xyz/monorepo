@@ -23,14 +23,17 @@ import {
   DELAYED_DEPOSIT_JOB_TAG,
   getFulfillmentJobTag,
   getFulfillmentQueueName,
+  ACTOR_NAME,
 } from "./types";
 import IORedis from "ioredis";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import * as JSON from "bigint-json-serialization";
-import { secsToMillis } from "./utils";
+import { formatMetricLabel, secsToMillis } from "./utils";
 import { Logger } from "winston";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
+
+const COMPONENT_NAME = "screener";
 
 interface DepositScreenerScreenerMetrics {
   depositInstantiatedEventsCounter: ot.Counter;
@@ -85,22 +88,40 @@ export class DepositScreenerScreener {
 
     this.supportedAssets = supportedAssets;
 
-    const meter = ot.metrics.getMeter("deposit-screener-processor-screener");
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
     this.metrics = {
       depositInstantiatedEventsCounter: meter.createCounter(
-        "deposit_instantiated_events.counter",
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "deposit_instantiated_events.counter"
+        ),
         { description: "counter for deposit instantiated events read" }
       ),
       depositsPassedFirstScreenCounter: meter.createCounter(
-        "deposits_passed_first_screen.counter",
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "deposits_passed_first_screen.counter"
+        ),
         { description: "counter for number of deposits that passed 1st screen" }
       ),
       depositsPassedSecondScreenCounter: meter.createCounter(
-        "deposits_passed_second_screen.counter",
-        { description: "counter for number of deposits that passed 2nd screen" }
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "deposits_passed_second_screen.counter"
+        ),
+        {
+          description: "counter for number of deposits that passed 2nd screen",
+        }
       ),
       screeningDelayHistogram: meter.createHistogram(
-        "screening_delay.histogram",
+        formatMetricLabel(
+          ACTOR_NAME,
+          COMPONENT_NAME,
+          "screening_delay.histogram"
+        ),
         {
           description: "histogram for screening delay in seconds",
           unit: "seconds",
@@ -206,7 +227,11 @@ export class DepositScreenerScreener {
             depositRequest,
             DepositRequestStatus.PassedFirstScreen
           );
-          this.metrics.depositsPassedFirstScreenCounter.add(1);
+          this.metrics.depositsPassedFirstScreenCounter.add(1, {
+            spender: depositRequest.spender,
+            assetAddress: AssetTrait.decode(depositRequest.encodedAsset)
+              .assetAddr,
+          });
         } else {
           childLogger.warn(
             `deposit failed first screening stage with reason ${reason}`
@@ -252,7 +277,10 @@ export class DepositScreenerScreener {
       },
     });
 
-    this.metrics.screeningDelayHistogram.record(delaySeconds);
+    this.metrics.screeningDelayHistogram.record(delaySeconds, {
+      spender: depositRequest.spender,
+      assetAddress: AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+    });
   }
 
   startArbiter(logger: Logger): Worker<DepositRequestJobData, any, string> {
