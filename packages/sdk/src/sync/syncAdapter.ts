@@ -6,7 +6,7 @@ import {
   IncludedNoteWithNullifier,
   WithTimestamp,
 } from "../primitives";
-import { ClosableAsyncIterator } from "./closableAsyncIterator";
+import { Source } from "wonka";
 
 interface BaseStateDiff {
   // new nullifiers in arbitrary order
@@ -15,8 +15,8 @@ interface BaseStateDiff {
   // `merkleIndex` of the last leaf to be committed to the commitment tree
   lastCommittedMerkleIndex: number | undefined;
 
-  // last block of the range this StateDiff represents
-  blockNumber: number;
+  // last merkleIndex of the range this StateDiff represents
+  merkleIndex: number;
 }
 
 export interface EncryptedStateDiff extends BaseStateDiff {
@@ -35,7 +35,7 @@ export interface StateDiff extends BaseStateDiff {
 }
 
 export interface IterSyncOpts {
-  endBlock?: number;
+  endMerkleIndex?: number;
   maxChunkSize?: number;
   // throttle the iterator to it will yield at most once every `throttleMs` milliseconds
   throttleMs?: number;
@@ -51,7 +51,7 @@ export interface SDKSyncAdapter {
   // blocks worth of updates into a single stateDiff. Implementations may pull in smaller
   // chunks.
   iterStateDiffs(
-    startBlock: number,
+    startMerkleIndex: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<EncryptedStateDiff>;
+  ): Source<EncryptedStateDiff>;
 }

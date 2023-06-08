@@ -6,7 +6,6 @@ import {
   WithTimestamp,
 } from "../../primitives";
 import { min } from "../../utils";
-import { ClosableAsyncIterator } from "../closableAsyncIterator";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -22,9 +21,11 @@ import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
   fetchSubtreeUpdateCommits,
+  getBlockContainingEventWithMerkleIndex,
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
+import { Source, fromAsyncIterable } from "wonka";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -43,30 +44,39 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   }
 
   iterStateDiffs(
-    startBlock: number,
+    startMerkleIndex: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<EncryptedStateDiff> {
+  ): Source<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
       : RPC_MAX_CHUNK_SIZE;
-    const endBlock = opts?.endBlock;
-    let closed = false;
-
+    const endMerkleIndex = opts?.endMerkleIndex;
     const handlerContract = this.handlerContract;
     const generator = async function* () {
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
-      let from = startBlock;
-      while (!closed && (!endBlock || from < endBlock)) {
-        let to = from + chunkSize;
-        if (endBlock) {
-          to = min(to, endBlock);
-        }
 
-        // if `to` > current block number, want to only fetch up to current block number
+      // first phase - get the number of the block during which a note with merkleIndex == startMerkleIndex was created
+      // if it DNE, throw an error saying that startMerkleIndex > highest merkle index of any note
+      let from = 0;
+      const startBlock = await getBlockContainingEventWithMerkleIndex(
+        handlerContract,
+        startMerkleIndex
+      );
+      if (startBlock) {
+        from = startBlock;
+      } else {
+        throw new Error(
+          `startMerkleIndex ${startMerkleIndex} is greater than the highest merkle index of any note`
+        );
+      }
+
+      let currMerkleIndex = startMerkleIndex;
+      while (!endMerkleIndex || currMerkleIndex < endMerkleIndex) {
+        // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
-        to = min(to, currentBlock);
+        const to = min(from + chunkSize, currentBlock);
 
         // if `from` > `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
@@ -77,7 +87,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           continue;
         }
 
-        // fetch event data from chain
+        // get all events JoinSplit, Refund, and SubtreeUpdate events in the range [`from`, `to`]
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
           await Promise.all([
             fetchNotesFromRefunds(handlerContract, from, to),
@@ -98,7 +108,21 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
 
-        // get the latest subtree commit
+        // filter out all notes that dont fall in the range [`currMerkleIndex`, `endMerkleIndex`]
+        const filteredNotes = notes.filter(
+          ({ inner: { merkleIndex } }) =>
+            merkleIndex >= currMerkleIndex &&
+            endMerkleIndex &&
+            merkleIndex <= endMerkleIndex
+        );
+
+        // if there are remaining events after filtering, get the latest merkleIndex among all new notes and set `currMerkleIndex` to that
+        if (filteredNotes.length > 0) {
+          currMerkleIndex =
+            filteredNotes[filteredNotes.length - 1].inner.merkleIndex;
+        }
+
+        // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
         if (subtreeUpdateCommits.length > 0) {
           lastCommittedMerkleIndex = maxArray(
             subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
@@ -107,26 +131,26 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           );
         }
 
+        // construct a state diff and yield it
         const diff: EncryptedStateDiff = {
           notes,
           nullifiers,
           lastCommittedMerkleIndex,
-          blockNumber: to,
+          merkleIndex: currMerkleIndex,
         };
         yield diff;
 
-        // the next state diff starts at the first block in the next range, `to + 1`
+        // proceed to next block `from` to `to` + 1
         from = to + 1;
 
+        // apply throttle if specified
         if (opts?.throttleMs && currentBlock - from > chunkSize) {
           await sleep(opts.throttleMs);
         }
       }
     };
 
-    return new ClosableAsyncIterator(generator(), async () => {
-      closed = true;
-    });
+    return fromAsyncIterable(generator());
   }
 }
 
