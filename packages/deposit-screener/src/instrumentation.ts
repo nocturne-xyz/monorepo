@@ -15,7 +15,6 @@ const resource = Resource.default().merge(
 );
 
 const collectorOptions = {
-  url: "http://datadog-agent:4318/v1/metrics", // url is optional and can be omitted - default is http://localhost:4318/v1/metrics
   headers: {}, // an optional object containing custom headers to be sent with each request
   concurrencyLimit: 1, // an optional limit on pending requests
 };

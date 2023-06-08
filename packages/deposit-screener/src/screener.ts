@@ -32,10 +32,11 @@ import { Logger } from "winston";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 
-interface DepositScreenerMetrics {
+interface DepositScreenerScreenerMetrics {
   depositInstantiatedEventsCounter: ot.Counter;
   depositsPassedFirstScreenCounter: ot.Counter;
   depositsPassedSecondScreenCounter: ot.Counter;
+  screeningDelayHistogram: ot.Histogram;
 }
 
 export class DepositScreenerScreener {
@@ -49,7 +50,7 @@ export class DepositScreenerScreener {
   logger: Logger;
   startBlock: number;
   supportedAssets: Set<Address>;
-  metrics: DepositScreenerMetrics;
+  metrics: DepositScreenerScreenerMetrics;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -97,6 +98,13 @@ export class DepositScreenerScreener {
       depositsPassedSecondScreenCounter: meter.createCounter(
         "deposits_passed_second_screen.counter",
         { description: "counter for number of deposits that passed 2nd screen" }
+      ),
+      screeningDelayHistogram: meter.createHistogram(
+        "screening_delay.histogram",
+        {
+          description: "histogram for screening delay in seconds",
+          unit: "seconds",
+        }
       ),
     };
   }
@@ -243,6 +251,8 @@ export class DepositScreenerScreener {
         delay: 1000,
       },
     });
+
+    this.metrics.screeningDelayHistogram.record(delaySeconds);
   }
 
   startArbiter(logger: Logger): Worker<DepositRequestJobData, any, string> {

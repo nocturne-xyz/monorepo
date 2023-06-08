@@ -29,8 +29,13 @@ import {
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
+interface DepositScreenerFulfillerMetrics {
+  requeueDelayHistogram: ot.Histogram;
+}
 
 export class DepositScreenerFulfiller {
   logger: Logger;
@@ -41,6 +46,7 @@ export class DepositScreenerFulfiller {
   txSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
+  metrics: DepositScreenerFulfillerMetrics;
 
   constructor(
     logger: Logger,
@@ -64,6 +70,18 @@ export class DepositScreenerFulfiller {
     );
 
     this.supportedAssets = supportedAssets;
+
+    const meter = ot.metrics.getMeter("deposit-screener-processor-screener");
+    this.metrics = {
+      requeueDelayHistogram: meter.createHistogram(
+        "fullfiller_requeue_delay.histogram",
+        {
+          description:
+            "Delay between when a deposit is requeued due to hitting global rate limit",
+          unit: "seconds",
+        }
+      ),
+    };
   }
 
   async start(): Promise<ActorHandle> {
@@ -116,6 +134,8 @@ export class DepositScreenerFulfiller {
 
                 childLogger.debug(`delaying`);
                 await worker.rateLimit(queueDelay);
+
+                this.metrics.requeueDelayHistogram.record(queueDelay / 1000);
 
                 throw Worker.RateLimitError();
               }
