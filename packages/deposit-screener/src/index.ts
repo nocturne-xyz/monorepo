@@ -1,3 +1,5 @@
+require("./instrumentation");
+
 export * from "./typedData";
 export * from "./screening";
 export * from "./types";

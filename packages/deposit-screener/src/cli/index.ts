@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 
+require("../instrumentation");
 import { program } from "commander";
 import run from "./commands/run";
 import * as dotenv from "dotenv";

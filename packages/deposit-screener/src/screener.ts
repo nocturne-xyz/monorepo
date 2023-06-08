@@ -30,6 +30,13 @@ import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
 import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+
+interface DepositScreenerMetrics {
+  depositInstantiatedEventsCounter: ot.Counter;
+  depositsPassedFirstScreenCounter: ot.Counter;
+  depositsPassedSecondScreenCounter: ot.Counter;
+}
 
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
@@ -42,6 +49,7 @@ export class DepositScreenerScreener {
   logger: Logger;
   startBlock: number;
   supportedAssets: Set<Address>;
+  metrics: DepositScreenerMetrics;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -75,6 +83,22 @@ export class DepositScreenerScreener {
     this.delayCalculator = screenerDelayCalculator;
 
     this.supportedAssets = supportedAssets;
+
+    const meter = ot.metrics.getMeter("deposit-screener-processor-screener");
+    this.metrics = {
+      depositInstantiatedEventsCounter: meter.createCounter(
+        "deposit_instantiated_events.counter",
+        { description: "counter for deposit instantiated events read" }
+      ),
+      depositsPassedFirstScreenCounter: meter.createCounter(
+        "deposits_passed_first_screen.counter",
+        { description: "counter for number of deposits that passed 1st screen" }
+      ),
+      depositsPassedSecondScreenCounter: meter.createCounter(
+        "deposits_passed_second_screen.counter",
+        { description: "counter for number of deposits that passed 2nd screen" }
+      ),
+    };
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
@@ -141,6 +165,8 @@ export class DepositScreenerScreener {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
+        this.metrics.depositInstantiatedEventsCounter.add(1);
+
         logger.info(`received deposit event, storing in DB`, event);
         const depositRequest: DepositRequest = {
           ...event,
@@ -172,6 +198,7 @@ export class DepositScreenerScreener {
             depositRequest,
             DepositRequestStatus.PassedFirstScreen
           );
+          this.metrics.depositsPassedFirstScreenCounter.add(1);
         } else {
           childLogger.warn(
             `deposit failed first screening stage with reason ${reason}`
@@ -291,6 +318,8 @@ export class DepositScreenerScreener {
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment
         );
+
+        this.metrics.depositsPassedSecondScreenCounter.add(1);
       },
       { connection: this.redis, autorun: true }
     );
