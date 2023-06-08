@@ -11,6 +11,8 @@ import {
   subtreeUpdateInputsFromBatch,
   range,
   TreeConstants,
+  IncludedNote,
+  IncludedNoteCommitment,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -256,13 +258,14 @@ export class SubtreeUpdater {
   ): ClosableAsyncIterator<ProofJobData> {
     logger.info(`subtree updater iterator starting`);
 
-    let merkleIndex = 0;
     return this.adapter
       .iterInsertions(this.startBlock, {
         throttleMs: queryThrottleMs,
       })
-      .tap((_) => {
-        logger.debug(`got insertion at merkleIndex ${merkleIndex}`);
+      .tap(({ merkleIndex, ...insertion }) => {
+        logger.debug(`got insertion at merkleIndex ${merkleIndex}`, {
+          insertion,
+        });
         merkleIndex += 1;
         if (this.fillBatchLatency === undefined) {
           return;
@@ -288,33 +291,38 @@ export class SubtreeUpdater {
         }
       })
       .batches(BATCH_SIZE, true)
-      .map((batch: (Note | bigint)[]) => {
-        const subtreeLeftmostPathIndex = this.tree.count();
+      .map((insertions: (IncludedNote | IncludedNoteCommitment)[]) => {
+        const subtreeBatchOffset = insertions[0].merkleIndex;
         const oldRoot = this.tree.getRoot();
-        logger.debug(
-          `got batch with leftmost index ${subtreeLeftmostPathIndex}`,
-          { batch }
+        logger.debug(`got batch with leftmost index ${subtreeBatchOffset}`, {
+          insertions,
+        });
+
+        const batch: (Note | bigint)[] = insertions.map((noteOrCommitment) =>
+          NoteTrait.isCommitment(noteOrCommitment)
+            ? (noteOrCommitment as IncludedNoteCommitment).noteCommitment
+            : NoteTrait.toNote(noteOrCommitment as IncludedNote)
         );
 
         const leaves = batch.map((noteOrCommitment) =>
-          NoteTrait.isCommitment(noteOrCommitment)
-            ? (noteOrCommitment as bigint)
+          typeof noteOrCommitment === "bigint"
+            ? noteOrCommitment
             : NoteTrait.toCommitment(noteOrCommitment as Note)
         );
 
         logger.info(
-          `inserting batch into merkle tree. startIndex: ${subtreeLeftmostPathIndex}, leaves: ${leaves}}`
+          `inserting batch into merkle tree. startIndex: ${subtreeBatchOffset}, leaves: ${leaves}}`
         );
         this.tree.insertBatch(
-          subtreeLeftmostPathIndex,
+          subtreeBatchOffset,
           leaves,
           SUBTREE_INCLUDE_ARRAY
         );
 
-        const merkleProof = this.tree.getProof(subtreeLeftmostPathIndex);
+        const merkleProof = this.tree.getProof(subtreeBatchOffset);
         const proofInputs = subtreeUpdateInputsFromBatch(batch, merkleProof);
         const newRoot = this.tree.getRoot();
-        const subtreeIndex = subtreeLeftmostPathIndex / BATCH_SIZE;
+        const subtreeIndex = subtreeBatchOffset / BATCH_SIZE;
 
         logger.info(`created proof inputs for subtree index ${subtreeIndex}`, {
           subtreeIndex,
