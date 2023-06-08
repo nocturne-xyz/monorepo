@@ -23,7 +23,6 @@
     "@nocturne-xyz/config": "workspace:^",
     "@nocturne-xyz/contracts": "workspace:^",
     "@types/randombytes": "^2.0.0",
-    "@urql/core": "^4.0.10",
     "@zk-kit/incremental-merkle-tree": "^1.0.0",
     "big-integer": "^1.6.42",
     "bigint-json-serialization": "^1.0.1",

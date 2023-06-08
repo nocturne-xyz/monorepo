@@ -2,6 +2,7 @@ import {
   Address,
   AssetTrait,
   IncludedEncryptedNote,
+  IncludedNote,
   Nullifier,
   WithTimestamp,
 } from "../../primitives";
@@ -21,11 +22,16 @@ import {
   fetchJoinSplits,
   fetchNotesFromRefunds,
   fetchSubtreeUpdateCommits,
-  getBlockContainingEventWithMerkleIndex,
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
 import { Source, fromAsyncIterable } from "wonka";
+import {
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../totalEntityIndex";
+import { pluck } from "../../utils/functional";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -44,36 +50,29 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   }
 
   iterStateDiffs(
-    startMerkleIndex: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): Source<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
       : RPC_MAX_CHUNK_SIZE;
-    const endMerkleIndex = opts?.endMerkleIndex;
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
     const generator = async function* () {
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
 
-      // first phase - get the number of the block during which a note with merkleIndex == startMerkleIndex was created
-      // if it DNE, throw an error saying that startMerkleIndex > highest merkle index of any note
-      let from = 0;
-      const startBlock = await getBlockContainingEventWithMerkleIndex(
-        handlerContract,
-        startMerkleIndex
+      let from = Number(
+        TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
       );
-      if (startBlock) {
-        from = startBlock;
-      } else {
-        throw new Error(
-          `startMerkleIndex ${startMerkleIndex} is greater than the highest merkle index of any note`
-        );
-      }
-
-      let currMerkleIndex = startMerkleIndex;
-      while (!endMerkleIndex || currMerkleIndex < endMerkleIndex) {
+      let currTotalEntityIndex =
+        startTotalEntityIndex !== 0n ? startTotalEntityIndex : undefined;
+      while (
+        !endTotalEntityIndex ||
+        !currTotalEntityIndex ||
+        currTotalEntityIndex < endTotalEntityIndex
+      ) {
         // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
         const to = min(from + chunkSize, currentBlock);
@@ -96,36 +95,55 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
           ]);
 
         // extract notes and nullifiers
-        const joinSplitEventsWithoutTimestamps = joinSplitEvents.map(
-          ({ inner }) => inner
-        );
-        const nullifiers = extractNullifiersFromJoinSplitEvents(
-          joinSplitEventsWithoutTimestamps
-        );
+        const nullifiers =
+          extractNullifiersFromJoinSplitEvents(joinSplitEvents);
         const encryptedNotes =
           extractEncryptedNotesFromJoinSplitEvents(joinSplitEvents);
-        const notes = [...includedNotes, ...encryptedNotes];
+        const notes: WithTotalEntityIndex<
+          WithTimestamp<IncludedNote | IncludedEncryptedNote>
+        >[] = [...includedNotes, ...encryptedNotes];
 
-        notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
-
-        // filter out all notes that dont fall in the range [`currMerkleIndex`, `endMerkleIndex`]
-        const filteredNotes = notes.filter(
-          ({ inner: { merkleIndex } }) =>
-            merkleIndex >= currMerkleIndex &&
-            endMerkleIndex &&
-            merkleIndex <= endMerkleIndex
+        notes.sort(
+          (a, b) => a.inner.inner.merkleIndex - b.inner.inner.merkleIndex
         );
 
-        // if there are remaining events after filtering, get the latest merkleIndex among all new notes and set `currMerkleIndex` to that
-        if (filteredNotes.length > 0) {
-          currMerkleIndex =
-            filteredNotes[filteredNotes.length - 1].inner.merkleIndex;
+        // filter out all notes that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
+        const filteredNotes = notes.filter(
+          ({ totalEntityIndex }) =>
+            currTotalEntityIndex &&
+            totalEntityIndex >= currTotalEntityIndex &&
+            endTotalEntityIndex &&
+            totalEntityIndex <= endTotalEntityIndex
+        );
+
+        // filter out all nullifiers that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
+        const filteredNullifiers = nullifiers.filter(
+          ({ totalEntityIndex }) =>
+            currTotalEntityIndex &&
+            totalEntityIndex >= currTotalEntityIndex &&
+            endTotalEntityIndex &&
+            totalEntityIndex <= endTotalEntityIndex
+        );
+
+        const totalEntityIndices = pluck(
+          [...filteredNotes, ...filteredNullifiers, ...subtreeUpdateCommits],
+          "totalEntityIndex"
+        );
+
+        // if there are remaining events after filtering, get the latest merkleIndex among all new notes and set `currMerkleIndex` to that plus one
+        if (totalEntityIndices.length > 0) {
+          currTotalEntityIndex =
+            filteredNotes[filteredNotes.length - 1].totalEntityIndex;
+        } else {
+          // otherwise, the diff is empty, - sleep and continue
+          await sleep(5_000);
+          continue;
         }
 
         // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
         if (subtreeUpdateCommits.length > 0) {
           lastCommittedMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(({ subtreeBatchOffset }) => {
+            subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
               return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
             })
           );
@@ -133,10 +151,10 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // construct a state diff and yield it
         const diff: EncryptedStateDiff = {
-          notes,
-          nullifiers,
+          notes: pluck(filteredNotes, "inner"),
+          nullifiers: pluck(filteredNullifiers, "inner"),
+          totalEntityIndex: currTotalEntityIndex,
           lastCommittedMerkleIndex,
-          merkleIndex: currMerkleIndex,
         };
         yield diff;
 
@@ -155,49 +173,71 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 }
 
 function extractNullifiersFromJoinSplitEvents(
-  joinSplitEvents: JoinSplitEvent[]
-): Nullifier[] {
-  const nullifiers: Nullifier[] = [];
-  for (const e of joinSplitEvents) {
-    const { oldNoteANullifier, oldNoteBNullifier } = e;
-    nullifiers.push(oldNoteANullifier, oldNoteBNullifier);
-  }
-  return nullifiers;
+  joinSplitEvents: WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>[]
+): WithTotalEntityIndex<Nullifier>[] {
+  return joinSplitEvents.flatMap(
+    ({
+      inner: {
+        inner: { oldNoteANullifier, oldNoteBNullifier },
+      },
+      totalEntityIndex,
+    }) => {
+      return [
+        {
+          totalEntityIndex,
+          inner: oldNoteANullifier,
+        },
+        {
+          totalEntityIndex: totalEntityIndex + 1n,
+          inner: oldNoteBNullifier,
+        },
+      ];
+    }
+  );
 }
 
 function extractEncryptedNotesFromJoinSplitEvents(
-  joinSplitEvents: WithTimestamp<JoinSplitEvent>[]
-): WithTimestamp<IncludedEncryptedNote>[] {
-  return joinSplitEvents.flatMap(({ inner, timestampUnixMillis }) => {
+  joinSplitEvents: WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>[]
+): WithTotalEntityIndex<WithTimestamp<IncludedEncryptedNote>>[] {
+  return joinSplitEvents.flatMap(({ inner, totalEntityIndex }) => {
     const {
-      newNoteAIndex,
-      newNoteBIndex,
-      newNoteAEncrypted,
-      newNoteBEncrypted,
-      newNoteACommitment,
-      newNoteBCommitment,
-      encodedAsset,
+      timestampUnixMillis,
+      inner: {
+        newNoteAIndex,
+        newNoteBIndex,
+        newNoteAEncrypted,
+        newNoteBEncrypted,
+        newNoteACommitment,
+        newNoteBCommitment,
+        encodedAsset,
+      },
     } = inner;
 
     const asset = AssetTrait.decode(encodedAsset);
 
     const noteA = {
-      ...newNoteAEncrypted,
-      asset,
-      commitment: newNoteACommitment,
-      merkleIndex: newNoteAIndex,
+      timestampUnixMillis,
+      inner: {
+        ...newNoteAEncrypted,
+        asset,
+        commitment: newNoteACommitment,
+        merkleIndex: newNoteAIndex,
+      },
     };
 
     const noteB = {
-      ...newNoteBEncrypted,
-      asset,
-      commitment: newNoteBCommitment,
-      merkleIndex: newNoteBIndex,
+      timestampUnixMillis,
+      inner: {
+        ...newNoteBEncrypted,
+        asset,
+        commitment: newNoteBCommitment,
+        merkleIndex: newNoteBIndex,
+      },
     };
 
     return [
-      { inner: noteA, timestampUnixMillis },
-      { inner: noteB, timestampUnixMillis },
+      { inner: noteA, totalEntityIndex: totalEntityIndex + 2n },
+      { inner: noteB, totalEntityIndex: totalEntityIndex + 3n },
     ];
   });
 }

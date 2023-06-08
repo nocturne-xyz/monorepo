@@ -48,15 +48,15 @@ contract CommitmentTreeManager is
         uint256 encodedAssetAddr,
         uint256 encodedAssetId,
         uint256 value,
-        uint128 indexed merkleIndex
+        uint128 merkleIndex
     );
 
     /// @notice Event emitted when a joinsplit is processed
     event JoinSplitProcessed(
         uint256 oldNoteANullifier,
         uint256 oldNoteBNullifier,
-        uint128 indexed newNoteAIndex,
-        uint128 indexed newNoteBIndex,
+        uint128 newNoteAIndex,
+        uint128 newNoteBIndex,
         uint256 newNoteACommitment,
         uint256 newNoteBCommitment,
         uint256 encSenderCanonAddrC1,

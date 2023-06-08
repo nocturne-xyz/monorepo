@@ -15,7 +15,7 @@ import {
 import {
   getTotalLogIndex,
   getTotalEntityIndex,
-  toPaddedHexString
+  toPaddedHexString,
 } from "./utils";
 
 export function handleJoinSplit(event: JoinSplitProcessed): void {

@@ -60,21 +60,3 @@ export const makeSubgraphQuery =
       throw err;
     }
   };
-
-export function totalLogIndexFromBlockNumber(blockNumber: bigint): bigint {
-  return blockNumber << 64n;
-}
-
-export function totalEntityIndexFromBlockNumber(blockNumber: bigint): bigint {
-  return blockNumber << 96n;
-}
-
-export function blockNumberFromTotalEntityIndex(
-  totalEntityIndex: bigint
-): bigint {
-  return totalEntityIndex >> 96n;
-}
-
-export function bigintToPadded32BHex(n: bigint): string {
-  return `0x${n.toString(16).padStart(64, "0")}`;
-}

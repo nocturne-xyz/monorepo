@@ -3,7 +3,6 @@ import {
   EncodedAsset,
   EncryptedNote,
   IncludedNote,
-  Note,
   WithTimestamp,
 } from "../../primitives";
 import {
@@ -14,6 +13,15 @@ import {
 import { Handler } from "@nocturne-xyz/contracts";
 import { queryEvents } from "../../utils";
 import { StealthAddressTrait } from "../../crypto";
+import {
+  TotalEntityIndexTrait,
+  WithTotalEntityIndex,
+} from "../totalEntityIndex";
+
+export interface SubtreeUpdateCommit {
+  newRoot: bigint;
+  subtreeBatchOffset: number;
+}
 
 export interface JoinSplitEvent {
   oldNoteANullifier: bigint;
@@ -35,7 +43,7 @@ export async function fetchNotesFromRefunds(
   contract: Handler,
   from: number,
   to: number
-): Promise<WithTimestamp<IncludedNote>[]> {
+): Promise<WithTotalEntityIndex<WithTimestamp<IncludedNote>>[]> {
   const filter = contract.filters.RefundProcessed();
   let events: RefundProcessedEvent[] = await queryEvents(
     contract,
@@ -46,17 +54,7 @@ export async function fetchNotesFromRefunds(
 
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
-  return Promise.all(
-    events.map(async (event) => {
-      const block = await event.getBlock();
-      const timestampUnixMillis = block.timestamp * 1000;
-
-      return {
-        inner: refundNoteFromEvent(event),
-        timestampUnixMillis,
-      };
-    })
-  );
+  return Promise.all(events.map(async (event) => refundNoteFromEvent(event)));
 }
 
 // fetching joinsplits occuring in block range [from, to]
@@ -66,7 +64,7 @@ export async function fetchJoinSplits(
   contract: Handler,
   from: number,
   to: number
-): Promise<WithTimestamp<JoinSplitEvent>[]> {
+): Promise<WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>[]> {
   const filter = contract.filters.JoinSplitProcessed();
   let events: JoinSplitProcessedEvent[] = await queryEvents(
     contract,
@@ -78,76 +76,7 @@ export async function fetchJoinSplits(
   events = events.sort((a, b) => a.blockNumber - b.blockNumber);
 
   // TODO figure out how to do type conversion better
-  return Promise.all(
-    events.map(async (event) => {
-      const block = await event.getBlock();
-      const timestampUnixMillis = block.timestamp * 1000;
-
-      return {
-        inner: joinSplitEventFromRaw(event),
-        timestampUnixMillis,
-      };
-    })
-  );
-}
-
-export async function getBlockContainingEventWithMerkleIndex(
-  contract: Handler,
-  merkleIndex: number
-): Promise<number | undefined> {
-  // try to find a refund event with the given merkleIndex
-  {
-    const filter = contract.filters.RefundProcessed(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      merkleIndex
-    );
-    const events = await contract.queryFilter(filter);
-    // if it exists, return the block number
-    if (events.length > 0) {
-      return events[0].blockNumber;
-    }
-  }
-
-  // try to find a joinsplit event with the given merkleIndex as newNoteAIndex
-  {
-    const filter = contract.filters.JoinSplitProcessed(
-      undefined,
-      undefined,
-      merkleIndex
-    );
-    const events = await contract.queryFilter(filter);
-    // if it exists, return the block number
-    if (events.length > 0) {
-      return events[0].blockNumber;
-    }
-  }
-
-  // try to find a joinsplit event with the given merkleIndex as newNoteBIndex
-  {
-    const filter = contract.filters.JoinSplitProcessed(
-      undefined,
-      undefined,
-      undefined,
-      merkleIndex
-    );
-    const events = await contract.queryFilter(filter);
-    // if it exists, return the block number
-    if (events.length > 0) {
-      return events[0].blockNumber;
-    }
-  }
-
-  // if we didn't find any, then no note with the given merkleIndex exists
-  return undefined;
-}
-
-interface SubtreeUpdateCommit {
-  newRoot: bigint;
-  subtreeBatchOffset: number;
+  return Promise.all(events.map(async (event) => joinSplitEventFromRaw(event)));
 }
 
 // fetches subtree commits in block range [from, to]
@@ -157,7 +86,7 @@ export async function fetchSubtreeUpdateCommits(
   contract: Handler,
   from: number,
   to: number
-): Promise<SubtreeUpdateCommit[]> {
+): Promise<WithTotalEntityIndex<SubtreeUpdateCommit>[]> {
   const subtreeUpdateEventsFilter = contract.filters.SubtreeUpdate();
   let events: SubtreeUpdateEvent[] = await queryEvents(
     contract,
@@ -173,99 +102,18 @@ export async function fetchSubtreeUpdateCommits(
       a.logIndex - b.logIndex
   );
 
-  return events.map(({ args: { newRoot, subtreeBatchOffset } }) => ({
-    newRoot: newRoot.toBigInt(),
-    subtreeBatchOffset: subtreeBatchOffset.toNumber(),
+  return events.map((event) => ({
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
+    inner: {
+      newRoot: event.args.newRoot.toBigInt(),
+      subtreeBatchOffset: event.args.subtreeBatchOffset.toNumber(),
+    },
   }));
 }
 
-interface OrderedInsertion {
-  insertion: bigint | Note;
-  blockNumber: number;
-  txIdx: number;
-  logIdx: number;
-}
-
-// returns SubtreeUpdateCommit events sorted in the order in which they appeared on-chain
-export async function fetchInsertions(
-  contract: Handler,
-  from: number,
-  to: number
-): Promise<(Note | bigint)[]> {
-  // fetch both kind of insertion events (note commitments and full notes)
-  const ncEventsProm: Promise<JoinSplitProcessedEvent[]> = queryEvents(
-    contract,
-    contract.filters.JoinSplitProcessed(),
-    from,
-    to
-  );
-  const noteEventsProm: Promise<RefundProcessedEvent[]> = queryEvents(
-    contract,
-    contract.filters.RefundProcessed(),
-    from,
-    to
-  );
-
-  const [noteCommitmentEvents, notesEvents] = await Promise.all([
-    ncEventsProm,
-    noteEventsProm,
-  ]);
-
-  // extract leaves from each (note commitments are the leaves, full notes have to be hashed)
-  // combine them into a single list
-  // and sort them in the order in which they appeared on-chain
-
-  let insertions: OrderedInsertion[] = [];
-  for (const event of noteCommitmentEvents) {
-    const newNcA = event.args.newNoteACommitment.toBigInt();
-    const newNcB = event.args.newNoteBCommitment.toBigInt();
-
-    const orderedNoteCommitments = [newNcA, newNcB].map((nc) => ({
-      insertion: nc,
-      blockNumber: event.blockNumber,
-      txIdx: event.transactionIndex,
-      logIdx: event.logIndex,
-    }));
-    insertions.push(...orderedNoteCommitments);
-  }
-
-  for (const event of notesEvents) {
-    const noteValues = event.args;
-    const h1 = noteValues.refundAddr.h1.toBigInt();
-    const h2 = noteValues.refundAddr.h2.toBigInt();
-    const owner = StealthAddressTrait.decompress({ h1, h2 });
-
-    const encoddAsset: EncodedAsset = {
-      encodedAssetAddr: noteValues.encodedAssetAddr.toBigInt(),
-      encodedAssetId: noteValues.encodedAssetId.toBigInt(),
-    };
-
-    const asset = AssetTrait.decode(encoddAsset);
-
-    const note: Note = {
-      owner,
-      nonce: noteValues.nonce.toBigInt(),
-      asset,
-      value: noteValues.value.toBigInt(),
-    };
-
-    insertions.push({
-      insertion: note,
-      blockNumber: event.blockNumber,
-      txIdx: event.transactionIndex,
-      logIdx: event.logIndex,
-    });
-  }
-
-  insertions = insertions.sort(
-    (a, b) =>
-      a.blockNumber - b.blockNumber || a.txIdx - b.txIdx || a.logIdx - b.logIdx
-  );
-
-  return insertions.map(({ insertion }) => insertion);
-}
-
-function joinSplitEventFromRaw(raw: JoinSplitProcessedEvent): JoinSplitEvent {
+async function joinSplitEventFromRaw(
+  raw: JoinSplitProcessedEvent
+): Promise<WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>> {
   const {
     oldNoteANullifier,
     oldNoteBNullifier,
@@ -298,34 +146,46 @@ function joinSplitEventFromRaw(raw: JoinSplitProcessedEvent): JoinSplitEvent {
   const encappedKeyB = encappedKey.toBigInt();
   const encryptedNonceB = encryptedNonce.toBigInt();
   const encryptedValueB = encryptedValue.toBigInt();
+
+  const block = await raw.getBlock();
+  const timestampUnixMillis = block.timestamp * 1000;
+
   return {
-    oldNoteANullifier: oldNoteANullifier.toBigInt(),
-    oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
-    newNoteAIndex: newNoteAIndex.toNumber(),
-    newNoteBIndex: newNoteBIndex.toNumber(),
-    newNoteACommitment: newNoteACommitment.toBigInt(),
-    newNoteBCommitment: newNoteBCommitment.toBigInt(),
-    encodedAsset: {
-      encodedAssetAddr: encodedAssetAddr.toBigInt(),
-      encodedAssetId: encodedAssetId.toBigInt(),
-    },
-    publicSpend: publicSpend.toBigInt(),
-    newNoteAEncrypted: {
-      owner: newNoteAOwner,
-      encappedKey: encappedKeyA,
-      encryptedNonce: encryptedNonceA,
-      encryptedValue: encryptedValueA,
-    },
-    newNoteBEncrypted: {
-      owner: newNoteBOwner,
-      encappedKey: encappedKeyB,
-      encryptedNonce: encryptedNonceB,
-      encryptedValue: encryptedValueB,
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(raw),
+    inner: {
+      timestampUnixMillis,
+      inner: {
+        oldNoteANullifier: oldNoteANullifier.toBigInt(),
+        oldNoteBNullifier: oldNoteBNullifier.toBigInt(),
+        newNoteAIndex: newNoteAIndex.toNumber(),
+        newNoteBIndex: newNoteBIndex.toNumber(),
+        newNoteACommitment: newNoteACommitment.toBigInt(),
+        newNoteBCommitment: newNoteBCommitment.toBigInt(),
+        encodedAsset: {
+          encodedAssetAddr: encodedAssetAddr.toBigInt(),
+          encodedAssetId: encodedAssetId.toBigInt(),
+        },
+        publicSpend: publicSpend.toBigInt(),
+        newNoteAEncrypted: {
+          owner: newNoteAOwner,
+          encappedKey: encappedKeyA,
+          encryptedNonce: encryptedNonceA,
+          encryptedValue: encryptedValueA,
+        },
+        newNoteBEncrypted: {
+          owner: newNoteBOwner,
+          encappedKey: encappedKeyB,
+          encryptedNonce: encryptedNonceB,
+          encryptedValue: encryptedValueB,
+        },
+      },
     },
   };
 }
 
-function refundNoteFromEvent(event: RefundProcessedEvent): IncludedNote {
+async function refundNoteFromEvent(
+  event: RefundProcessedEvent
+): Promise<WithTotalEntityIndex<WithTimestamp<IncludedNote>>> {
   const {
     refundAddr,
     nonce,
@@ -346,11 +206,20 @@ function refundNoteFromEvent(event: RefundProcessedEvent): IncludedNote {
     h2: h2.toBigInt(),
   });
 
+  const block = await event.getBlock();
+  const timestampUnixMillis = block.timestamp * 1000;
+
   return {
-    owner,
-    nonce: nonce.toBigInt(),
-    asset: AssetTrait.decode(encodedAsset),
-    value: value.toBigInt(),
-    merkleIndex: merkleIndex.toNumber(),
+    totalEntityIndex: TotalEntityIndexTrait.fromTypedEvent(event),
+    inner: {
+      timestampUnixMillis,
+      inner: {
+        owner,
+        nonce: nonce.toBigInt(),
+        asset: AssetTrait.decode(encodedAsset),
+        value: value.toBigInt(),
+        merkleIndex: merkleIndex.toNumber(),
+      },
+    },
   };
 }
