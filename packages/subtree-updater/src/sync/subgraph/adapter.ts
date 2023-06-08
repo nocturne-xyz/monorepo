@@ -18,7 +18,7 @@ import {
 } from "./fetch";
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-const MAX_CHUNK_SIZE = 100;
+const MAX_CHUNK_SIZE = 50;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
