@@ -23,13 +23,11 @@ export function getTotalEntityIndex(
   return totalLogIndex.leftShift(32).bitOr(BigInt.fromI32(entityIndex as i32));
 }
 
-// converts a bigint to a left-zero-padded 32-byte array, in big-endian order
-export function toPadded32BArray(id: BigInt): Bytes {
+// converts a bigint to a left-zero-padded 32-byte array, in big-endian order, as a hex string
+export function toPaddedHexString(id: BigInt): string {
   const without0x = id.toHexString().slice(2);
 
   // pad the resulting ID out to 64 nibbles, or 256 bits
   // this leaves 160 bits for `blockNumber`, which is plenty
-  const padded = without0x.padStart(64, "0");
-
-  return Bytes.fromHexString("0x" + padded);
+  return "0x" + without0x.padStart(64, "0");
 }
