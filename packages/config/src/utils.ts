@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 export function ensureChecksumAddresses(obj: any): any {
   const newObj: any = Array.isArray(obj) ? [] : {};
 
-  for (let key in obj) {
+  for (const key in obj) {
     if (typeof obj[key] === "object" && obj[key] !== null) {
       newObj[key] = ensureChecksumAddresses(obj[key]);
     } else {

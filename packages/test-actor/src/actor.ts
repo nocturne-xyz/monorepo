@@ -95,6 +95,10 @@ export class TestActor {
 
   private async getRandomErc20AndValue(): Promise<[Asset, bigint] | undefined> {
     const assetsWithBalance = await this.sdk.getAllAssetBalances();
+    if (assetsWithBalance.length === 0) {
+      console.log("no asset balances");
+      return undefined;
+    }
 
     // Try for random asset
     const randomAsset = randomElem(assetsWithBalance);
@@ -240,6 +244,9 @@ export class TestActor {
         BigInt((await this.txSigner.provider.getBlock("latest")).timestamp) +
           ONE_DAY_SECONDS
       )
+      .gasPrice(
+        ((await this.txSigner.provider.getGasPrice()).toBigInt() * 12n) / 10n
+      )
       .build();
   }
 }
@@ -257,6 +264,10 @@ function randomBigintInRange(min: bigint, max: bigint) {
 }
 
 function randomElem<T>(arr: T[]): T {
+  if (arr.length === 0) {
+    throw new Error("cannot get random element from empty array");
+  }
+
   return arr[randomInt(arr.length)];
 }
 
