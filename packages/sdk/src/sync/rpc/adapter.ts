@@ -4,9 +4,8 @@ import {
   IncludedEncryptedNote,
   IncludedNote,
   Nullifier,
-  WithTimestamp,
 } from "../../primitives";
-import { min } from "../../utils";
+import { pluck, min } from "../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -31,7 +30,6 @@ import {
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
 } from "../totalEntityIndex";
-import { pluck } from "../../utils/functional";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -100,12 +98,10 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         const encryptedNotes =
           extractEncryptedNotesFromJoinSplitEvents(joinSplitEvents);
         const notes: WithTotalEntityIndex<
-          WithTimestamp<IncludedNote | IncludedEncryptedNote>
+          IncludedNote | IncludedEncryptedNote
         >[] = [...includedNotes, ...encryptedNotes];
 
-        notes.sort(
-          (a, b) => a.inner.inner.merkleIndex - b.inner.inner.merkleIndex
-        );
+        notes.sort((a, b) => a.inner.merkleIndex - b.inner.merkleIndex);
 
         // filter out all notes that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
         const filteredNotes = notes.filter(
@@ -173,15 +169,10 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 }
 
 function extractNullifiersFromJoinSplitEvents(
-  joinSplitEvents: WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>[]
+  joinSplitEvents: WithTotalEntityIndex<JoinSplitEvent>[]
 ): WithTotalEntityIndex<Nullifier>[] {
   return joinSplitEvents.flatMap(
-    ({
-      inner: {
-        inner: { oldNoteANullifier, oldNoteBNullifier },
-      },
-      totalEntityIndex,
-    }) => {
+    ({ inner: { oldNoteANullifier, oldNoteBNullifier }, totalEntityIndex }) => {
       return [
         {
           totalEntityIndex,
@@ -197,26 +188,23 @@ function extractNullifiersFromJoinSplitEvents(
 }
 
 function extractEncryptedNotesFromJoinSplitEvents(
-  joinSplitEvents: WithTotalEntityIndex<WithTimestamp<JoinSplitEvent>>[]
-): WithTotalEntityIndex<WithTimestamp<IncludedEncryptedNote>>[] {
+  joinSplitEvents: WithTotalEntityIndex<JoinSplitEvent>[]
+): WithTotalEntityIndex<IncludedEncryptedNote>[] {
   return joinSplitEvents.flatMap(({ inner, totalEntityIndex }) => {
     const {
-      timestampUnixMillis,
-      inner: {
-        newNoteAIndex,
-        newNoteBIndex,
-        newNoteAEncrypted,
-        newNoteBEncrypted,
-        newNoteACommitment,
-        newNoteBCommitment,
-        encodedAsset,
-      },
+      newNoteAIndex,
+      newNoteBIndex,
+      newNoteAEncrypted,
+      newNoteBEncrypted,
+      newNoteACommitment,
+      newNoteBCommitment,
+      encodedAsset,
     } = inner;
 
     const asset = AssetTrait.decode(encodedAsset);
 
     const noteA = {
-      timestampUnixMillis,
+      totalEntityIndex: totalEntityIndex + 2n,
       inner: {
         ...newNoteAEncrypted,
         asset,
@@ -226,7 +214,7 @@ function extractEncryptedNotesFromJoinSplitEvents(
     };
 
     const noteB = {
-      timestampUnixMillis,
+      totalEntityIndex: totalEntityIndex + 3n,
       inner: {
         ...newNoteBEncrypted,
         asset,
@@ -235,9 +223,6 @@ function extractEncryptedNotesFromJoinSplitEvents(
       },
     };
 
-    return [
-      { inner: noteA, totalEntityIndex: totalEntityIndex + 2n },
-      { inner: noteB, totalEntityIndex: totalEntityIndex + 3n },
-    ];
+    return [noteA, noteB];
   });
 }

@@ -9,8 +9,8 @@ import {
   zip,
   NocturneSigner,
   SparseMerkleProver,
-  WithTimestamp,
   IncludedNoteWithNullifier,
+  WithTotalEntityIndex,
 } from "../src";
 import { Handler, Handler__factory } from "@nocturne-xyz/contracts";
 
@@ -76,7 +76,7 @@ export function getDummyHex(bump: number): string {
 
 export interface TestSetupOpts {
   lastCommittedMerkleIndex?: number;
-  timestamps?: number[];
+  totalEntityIndices?: bigint[];
 }
 
 export async function setup(
@@ -103,21 +103,21 @@ export async function setup(
     NoteTrait.toIncludedNoteWithNullifier(n, nf)
   );
 
-  let withTimestamps: WithTimestamp<IncludedNoteWithNullifier>[];
-  if (opts?.timestamps) {
-    let timestamps = opts?.timestamps;
-    withTimestamps = notesWithNullfiers.map((n, i) => ({
+  let withTotalEntityIndices: WithTotalEntityIndex<IncludedNoteWithNullifier>[];
+  if (opts?.totalEntityIndices) {
+    let totalEntityIndices = opts?.totalEntityIndices;
+    withTotalEntityIndices = notesWithNullfiers.map((n, i) => ({
       inner: n,
-      timestampUnixMillis: timestamps[i],
+      totalEntityIndex: totalEntityIndices[i],
     }));
   } else {
-    withTimestamps = notesWithNullfiers.map((n) => ({
+    withTotalEntityIndices = notesWithNullfiers.map((n) => ({
       inner: n,
-      timestampUnixMillis: 0,
+      totalEntityIndex: 0n,
     }));
   }
 
-  await nocturneDB.storeNotes(withTimestamps);
+  await nocturneDB.storeNotes(withTotalEntityIndices);
   await nocturneDB.setLastCommittedMerkleIndex(
     opts?.lastCommittedMerkleIndex ?? notes.length - 1
   );

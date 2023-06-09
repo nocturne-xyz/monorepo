@@ -7,6 +7,7 @@ import { JoinSplitInputs, MerkleProofInput, SolidityProof } from "../proof";
 import { IncludedNote, Note } from "./note";
 import { Asset, EncodedAsset } from "./asset";
 import { CompressedPoint } from "../crypto/pointCompression";
+import { Wrapper } from "../utils/functional";
 
 export const BN254_SCALAR_FIELD_MODULUS =
   21888242871839275222246405745257275088548364400416034343698204186575808495617n;
@@ -147,8 +148,8 @@ export enum DepositRequestStatus {
 }
 
 export interface WithTimestamp<T> {
-  timestampUnixMillis: number;
   inner: T;
+  timestampUnixMillis: number;
 }
 
 export interface OptimisticNFRecord {

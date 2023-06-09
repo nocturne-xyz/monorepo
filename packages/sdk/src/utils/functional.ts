@@ -154,3 +154,7 @@ export function pluck<T extends Record<string, any>, K extends keyof T>(
 ): T[K][] {
   return arr.map((item) => item[key]);
 }
+
+export function dedup<T>(arr: T[]): T[] {
+  return Array.from(new Set(arr));
+}

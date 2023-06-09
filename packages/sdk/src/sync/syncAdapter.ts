@@ -4,7 +4,6 @@ import {
   Nullifier,
   IncludedNoteCommitment,
   IncludedNoteWithNullifier,
-  WithTimestamp,
 } from "../primitives";
 import { Source } from "wonka";
 import { TotalEntityIndex } from "./totalEntityIndex";
@@ -24,13 +23,13 @@ export interface EncryptedStateDiff extends BaseStateDiff {
   // new notes / encrypted notes corresponding to *non-empty* leaves
   // i.e. dummy leaves inserted by `fillBatchWithZeros` are left out
   // these must be sorted in ascending order by `merkleIndex`
-  notes: WithTimestamp<IncludedNote | IncludedEncryptedNote>[];
+  notes: WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[];
 }
 
 export interface StateDiff extends BaseStateDiff {
   // new notes / note commitments corresponding to *non-empty* leaves
   // these must be sorted in ascending order by `merkleIndex`
-  notesAndCommitments: WithTimestamp<
+  notesAndCommitments: WithTotalEntityIndex<
     IncludedNoteWithNullifier | IncludedNoteCommitment
   >[];
 }

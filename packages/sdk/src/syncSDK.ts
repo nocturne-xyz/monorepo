@@ -5,12 +5,7 @@ import {
   StealthAddressTrait,
 } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import {
-  ClosableAsyncIterator,
-  EncryptedStateDiff,
-  StateDiff,
-  SDKSyncAdapter,
-} from "./sync";
+import { EncryptedStateDiff, StateDiff, SDKSyncAdapter } from "./sync";
 import { ethers } from "ethers";
 import {
   IncludedEncryptedNote,

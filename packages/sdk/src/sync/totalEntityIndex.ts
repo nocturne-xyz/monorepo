@@ -24,8 +24,8 @@ export interface TotalEntityIndexComponents {
 }
 
 export interface WithTotalEntityIndex<T> {
-  totalEntityIndex: TotalEntityIndex;
   inner: T;
+  totalEntityIndex: TotalEntityIndex;
 }
 
 export class TotalEntityIndexTrait {

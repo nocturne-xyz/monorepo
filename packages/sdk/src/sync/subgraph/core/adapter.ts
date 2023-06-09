@@ -1,5 +1,4 @@
-import { min, sleep } from "../../../utils";
-import { ClosableAsyncIterator } from "../../closableAsyncIterator";
+import { pluck, maxArray, sleep } from "../../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -10,9 +9,8 @@ import {
   fetchNotes,
   fetchNullifiers,
 } from "./fetch";
-import { fetchLatestIndexedBlock } from "../utils";
-
-const MAX_CHUNK_SIZE = 10000;
+import { TotalEntityIndex } from "../../totalEntityIndex";
+import { Source, fromAsyncIterable } from "wonka";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -22,72 +20,57 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   }
 
   iterStateDiffs(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<EncryptedStateDiff> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
-      : MAX_CHUNK_SIZE;
-
-    const endBlock = opts?.endBlock;
-    let closed = false;
+  ): Source<EncryptedStateDiff> {
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
+    const closed = false;
 
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startBlock;
-      while (!closed && (!endBlock || from < endBlock)) {
-        let to = from + chunkSize;
-        console.log(`from: ${from}`);
-        console.log(`to: ${to}`);
-        console.log(`endBlock: ${endBlock}`);
+      let from = startTotalEntityIndex;
+      let lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+        endpoint,
+        from
+      );
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
+        console.log(`fetching state diff from total entity index ${from}...`);
 
-        // Only fetch up to end block
-        if (endBlock) {
-          to = min(to, endBlock);
-        }
+        // fetch first 100 notes and nfs on or after `from`
+        const [notes, nullifiers] = await Promise.all([
+          fetchNotes(endpoint, from),
+          fetchNullifiers(endpoint, from),
+        ]);
 
-        // Only fetch up to the latest indexed block
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        console.log(`latestIndexedBlock: ${latestIndexedBlock}`);
-        to = min(to, latestIndexedBlock);
-
-        // Exceeded tip, sleep
-        if (from > latestIndexedBlock) {
+        // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
+        if (notes.length + nullifiers.length > 0) {
+          from = maxArray(pluck([...notes, ...nullifiers], "totalEntityIndex"));
+          lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
+            endpoint,
+            from
+          );
+        } else {
+          // otherwise, sleep for a bit and try again
           await sleep(5_000);
           continue;
         }
 
-        console.log(`fetching state diff from ${from} to ${to}...`);
-
-        const [notes, nullifiers, lastCommittedMerkleIndex] = await Promise.all(
-          [
-            fetchNotes(endpoint, from, to),
-            fetchNullifiers(endpoint, from, to),
-            fetchLastCommittedMerkleIndex(endpoint, to),
-          ]
-        );
-
         const stateDiff: EncryptedStateDiff = {
           notes,
-          nullifiers,
+          nullifiers: pluck(nullifiers, "inner"),
           lastCommittedMerkleIndex,
-          blockNumber: to,
+          totalEntityIndex: from,
         };
 
         console.log("yielding state diff:", stateDiff);
 
         yield stateDiff;
 
-        from = to + 1;
-
-        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
-          await sleep(opts.throttleMs);
-        }
+        // prevent fetching same events again
+        from += 1n;
       }
     };
 
-    return new ClosableAsyncIterator(generator(), async () => {
-      closed = true;
-    });
+    return fromAsyncIterable(generator());
   }
 }
