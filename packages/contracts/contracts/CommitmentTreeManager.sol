@@ -53,8 +53,8 @@ contract CommitmentTreeManager is
 
     /// @notice Event emitted when a joinsplit is processed
     event JoinSplitProcessed(
-        uint256 oldNoteANullifier,
-        uint256 oldNoteBNullifier,
+        uint256 indexed oldNoteANullifier,
+        uint256 indexed oldNoteBNullifier,
         uint128 newNoteAIndex,
         uint128 newNoteBIndex,
         uint256 newNoteACommitment,
