@@ -32,7 +32,11 @@ import {
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { ActorHandle, formatMetricLabel } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 import { millisToSeconds } from "./utils";
 
@@ -79,28 +83,26 @@ export class DepositScreenerFulfiller {
     this.supportedAssets = supportedAssets;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
     this.metrics = {
-      requeueDelayHistogram: meter.createHistogram(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "fullfiller_requeue_delay.histogram"
-        ),
-        {
-          description:
-            "Delay between when a deposit is requeued due to hitting global rate limit",
-          unit: "seconds",
-        }
+      requeueDelayHistogram: createHistogram(
+        "fullfiller_requeue_delay.histogram",
+        "Delay between when a deposit is requeued due to hitting global rate limit",
+        "seconds"
       ),
-      fulfilledDepositsCounter: meter.createCounter(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "fulfilled_deposits.counter"
-        ),
-        {
-          description: "Fulfilled deposits, attributed by asset",
-        }
+      fulfilledDepositsCounter: createCounter(
+        "fulfilled_deposits.counter",
+        "Fulfilled deposits, attributed by asset"
       ),
     };
   }

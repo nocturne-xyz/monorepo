@@ -1,4 +1,4 @@
-import opentelemetry from "@opentelemetry/api";
+import * as ot from "@opentelemetry/api";
 import {
   MeterProvider,
   PeriodicExportingMetricReader,
@@ -29,8 +29,34 @@ export function setupDefaultInstrumentation(
   });
 
   myServiceMeterProvider.addMetricReader(metricReader);
-  opentelemetry.metrics.setGlobalMeterProvider(myServiceMeterProvider);
+  ot.metrics.setGlobalMeterProvider(myServiceMeterProvider);
   console.log("Instrumentation setup complete");
+}
+
+export function makeCreateCounterFn(
+  meter: ot.Meter,
+  actor: string,
+  component: string
+): (label: string, description: string, unit?: string) => ot.Counter {
+  return (label: string, description: string, unit?: string) => {
+    return meter.createCounter(formatMetricLabel(actor, component, label), {
+      description,
+      unit,
+    });
+  };
+}
+
+export function makeCreateHistogramFn(
+  meter: ot.Meter,
+  actor: string,
+  component: string
+): (label: string, description: string, unit?: string) => ot.Histogram {
+  return (label: string, description: string, unit?: string) => {
+    return meter.createHistogram(formatMetricLabel(actor, component, label), {
+      description,
+      unit,
+    });
+  };
 }
 
 export function formatMetricLabel(

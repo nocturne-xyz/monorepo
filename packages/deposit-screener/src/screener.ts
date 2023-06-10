@@ -30,7 +30,11 @@ import { ScreenerDelayCalculator } from "./screenerDelay";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { ActorHandle, formatMetricLabel } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "screener";
@@ -89,43 +93,34 @@ export class DepositScreenerScreener {
     this.supportedAssets = supportedAssets;
 
     const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
     this.metrics = {
-      depositInstantiatedEventsCounter: meter.createCounter(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "deposit_instantiated_events.counter"
-        ),
-        { description: "counter for deposit instantiated events read" }
+      depositInstantiatedEventsCounter: createCounter(
+        "deposit_instantiated_events.counter",
+        "counter for deposit instantiated events read"
       ),
-      depositsPassedFirstScreenCounter: meter.createCounter(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "deposits_passed_first_screen.counter"
-        ),
-        { description: "counter for number of deposits that passed 1st screen" }
+      depositsPassedFirstScreenCounter: createCounter(
+        "deposits_passed_first_screen.counter",
+        "counter for number of deposits that passed 1st screen"
       ),
-      depositsPassedSecondScreenCounter: meter.createCounter(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "deposits_passed_second_screen.counter"
-        ),
-        {
-          description: "counter for number of deposits that passed 2nd screen",
-        }
+      depositsPassedSecondScreenCounter: createCounter(
+        "deposits_passed_second_screen.counter",
+        "counter for number of deposits that passed 2nd screen"
       ),
-      screeningDelayHistogram: meter.createHistogram(
-        formatMetricLabel(
-          ACTOR_NAME,
-          COMPONENT_NAME,
-          "screening_delay.histogram"
-        ),
-        {
-          description: "histogram for screening delay in seconds",
-          unit: "seconds",
-        }
+      screeningDelayHistogram: createHistogram(
+        "screening_delay.histogram",
+        "histogram for screening delay in seconds",
+        "seconds"
       ),
     };
   }
