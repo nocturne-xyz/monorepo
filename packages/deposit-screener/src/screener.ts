@@ -251,10 +251,6 @@ export class DepositScreenerScreener {
             DepositRequestStatus.PassedFirstScreen
           );
 
-          const attributes = {
-            spender: depositRequest.spender,
-            assetAddr: assetAddr,
-          };
           this.metrics.depositsPassedFirstScreenCounter.add(1, attributes);
           this.metrics.depositsPassedFirstScreenValueCounter.add(
             Number(depositRequest.value),

@@ -3448,7 +3448,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.6
+    "@nocturne-xyz/offchain-utils": 0.1.7
     "@nocturne-xyz/sdk": 1.0.143-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
@@ -3594,7 +3594,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.6
+    "@nocturne-xyz/offchain-utils": 0.1.7
     "@nocturne-xyz/sdk": 1.0.143-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
@@ -3734,7 +3734,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/offchain-utils@0.1.6, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
+"@nocturne-xyz/offchain-utils@0.1.7, @nocturne-xyz/offchain-utils@workspace:^, @nocturne-xyz/offchain-utils@workspace:packages/offchain-utils":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/offchain-utils@workspace:packages/offchain-utils"
   dependencies:
@@ -3910,7 +3910,7 @@ __metadata:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/config": 1.0.12-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
-    "@nocturne-xyz/offchain-utils": 0.1.6
+    "@nocturne-xyz/offchain-utils": 0.1.7
     "@nocturne-xyz/sdk": 1.0.143-alpha
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.4
