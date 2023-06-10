@@ -5,7 +5,7 @@ import {
   StealthAddressTrait,
 } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import { EncryptedStateDiff, StateDiff, SDKSyncAdapter } from "./sync";
+import { EncryptedStateDiff, StateDiff, SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
 import { ethers } from "ethers";
 import {
   IncludedEncryptedNote,
@@ -15,6 +15,7 @@ import {
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
+import { forEach, fromValue, makeSubject, map, pipe, subscribe, toPromise } from "wonka";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
@@ -36,40 +37,27 @@ export async function syncSDK(
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
-  const nextBlockToSync = (await db.nextBlock()) ?? opts?.startBlock ?? 0;
+  const nextEntityIndexToSync = (await db.totalEntityIndex()) ?? TotalEntityIndexTrait.fromComponents({ blockNumber: BigInt(opts?.startBlock ?? 0) }) + 1n;
   const currentBlock = await provider.getBlockNumber();
+  const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({ blockNumber: BigInt(currentBlock) });
   console.log(
-    `syncing SDK from block ${nextBlockToSync} to ${currentBlock}...`
+    `syncing SDK from entity index ${nextEntityIndexToSync} (block ${Number(TotalEntityIndexTrait.toComponents(nextEntityIndexToSync).blockNumber)}) to ${endTotalEntityIndex} (block ${currentBlock})`
   );
 
-  const newDiffs = adapter.iterStateDiffs(nextBlockToSync, {
-    maxChunkSize: NOTES_MAX_CHUNK_SIZE,
-    endBlock: currentBlock,
-    throttleMs: DEFAULT_THROTTLE_MS,
-  });
-
-  // decrypt notes and compute nullifiers
-  const diffs: ClosableAsyncIterator<StateDiff> = newDiffs.map((diff) =>
-    decryptStateDiff(viewer, diff)
+  // iterate over diffs, decrypt them, and compute nullifiers
+  pipe(
+    adapter.iterStateDiffs(nextEntityIndexToSync, {
+      maxChunkSize: NOTES_MAX_CHUNK_SIZE,
+      endTotalEntityIndex: endTotalEntityIndex,
+      throttleMs: DEFAULT_THROTTLE_MS,
+    }),
+    map(diff => decryptStateDiff(viewer, diff)),
+    forEach(diff => )
   );
 
   // apply diffs
   for await (const diff of diffs.iter) {
-    // update notes in DB
-    const nfIndices = await db.applyStateDiff(diff);
-    console.log("applied state diff for block", diff.blockNumber);
 
-    // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
-
-    if (diff.lastCommittedMerkleIndex) {
-      await updateMerkle(
-        merkle,
-        diff.lastCommittedMerkleIndex,
-        diff.notesAndCommitments.map(({ inner }) => inner),
-        nfIndices
-      );
-    }
-  }
 }
 
 async function updateMerkle(
