@@ -15,7 +15,11 @@ import IORedis from "ioredis";
 import { ethers } from "ethers";
 import { Job, Worker } from "bullmq";
 import { Logger } from "winston";
-import { DepositRequestJobData, getFulfillmentQueueName } from "./types";
+import {
+  ACTOR_NAME,
+  DepositRequestJobData,
+  getFulfillmentQueueName,
+} from "./types";
 import {
   DepositManager,
   DepositManager__factory,
@@ -28,9 +32,30 @@ import {
 } from "./typedData/constants";
 import * as JSON from "bigint-json-serialization";
 import { DepositCompletedEvent } from "@nocturne-xyz/contracts/dist/src/DepositManager";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+import { millisToSeconds } from "./utils";
 
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+const COMPONENT_NAME = "fulfiller";
+
+const meter = ot.metrics.getMeter(COMPONENT_NAME);
+const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
+const createHistogram = makeCreateHistogramFn(
+  meter,
+  ACTOR_NAME,
+  COMPONENT_NAME
+);
+
+interface DepositScreenerFulfillerMetrics {
+  requeueDelayHistogram: ot.Histogram;
+  fulfilledDepositsCounter: ot.Counter;
+  fulfilledDepositsValueCounter: ot.Counter;
+}
 
 export class DepositScreenerFulfiller {
   logger: Logger;
@@ -41,6 +66,7 @@ export class DepositScreenerFulfiller {
   txSigner: ethers.Wallet;
   redis: IORedis;
   db: DepositScreenerDB;
+  metrics: DepositScreenerFulfillerMetrics;
 
   constructor(
     logger: Logger,
@@ -64,6 +90,22 @@ export class DepositScreenerFulfiller {
     );
 
     this.supportedAssets = supportedAssets;
+
+    this.metrics = {
+      requeueDelayHistogram: createHistogram(
+        "fullfiller_requeue_delay.histogram",
+        "Delay between when a deposit is requeued due to hitting global rate limit",
+        "seconds"
+      ),
+      fulfilledDepositsCounter: createCounter(
+        "fulfilled_deposits.counter",
+        "Fulfilled deposits, attributed by asset"
+      ),
+      fulfilledDepositsValueCounter: createCounter(
+        "fulfilled_deposits_value.counter",
+        "Fulfilled deposits value, attributed by asset"
+      ),
+    };
   }
 
   async start(): Promise<ActorHandle> {
@@ -117,6 +159,10 @@ export class DepositScreenerFulfiller {
                 childLogger.debug(`delaying`);
                 await worker.rateLimit(queueDelay);
 
+                this.metrics.requeueDelayHistogram.record(
+                  millisToSeconds(queueDelay)
+                );
+
                 throw Worker.RateLimitError();
               }
 
@@ -128,6 +174,16 @@ export class DepositScreenerFulfiller {
                 childLogger.error(e);
                 throw new Error(e);
               });
+
+              const attributes = {
+                spender: depositRequest.spender,
+                assetAddr: address,
+              };
+              this.metrics.fulfilledDepositsCounter.add(1, attributes);
+              this.metrics.fulfilledDepositsValueCounter.add(
+                Number(depositRequest.value),
+                attributes
+              );
 
               const block = await this.txSigner.provider.getBlock(
                 receipt.blockNumber

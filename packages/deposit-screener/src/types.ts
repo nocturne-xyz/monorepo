@@ -1,5 +1,7 @@
 import { Address } from "@nocturne-xyz/sdk";
 
+export const ACTOR_NAME = "deposit-screener";
+
 export const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 export const SUBMISSION_QUEUE = "DepositSubmissionQueue";

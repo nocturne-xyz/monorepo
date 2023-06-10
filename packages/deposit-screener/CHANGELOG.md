@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- instrument screener and fulfiller components with opentel metrics
 - add health check to server
 - add dummy screening delay option to processor CLI
 - subgraph sync checks if `res.data` undefined

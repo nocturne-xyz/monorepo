@@ -23,13 +23,38 @@ import {
   DELAYED_DEPOSIT_JOB_TAG,
   getFulfillmentJobTag,
   getFulfillmentQueueName,
+  ACTOR_NAME,
 } from "./types";
 import IORedis from "ioredis";
 import { ScreenerDelayCalculator } from "./screenerDelay";
 import * as JSON from "bigint-json-serialization";
 import { secsToMillis } from "./utils";
 import { Logger } from "winston";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+
+const COMPONENT_NAME = "screener";
+const meter = ot.metrics.getMeter(COMPONENT_NAME);
+const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
+const createHistogram = makeCreateHistogramFn(
+  meter,
+  ACTOR_NAME,
+  COMPONENT_NAME
+);
+
+interface DepositScreenerScreenerMetrics {
+  depositInstantiatedValueCounter: ot.Counter;
+  depositInstantiatedEventsCounter: ot.Counter;
+  depositsPassedFirstScreenCounter: ot.Counter;
+  depositsPassedFirstScreenValueCounter: ot.Counter;
+  depositsPassedSecondScreenCounter: ot.Counter;
+  depositsPassedSecondScreenValueCounter: ot.Counter;
+  screeningDelayHistogram: ot.Histogram;
+}
 
 export class DepositScreenerScreener {
   adapter: ScreenerSyncAdapter;
@@ -42,6 +67,7 @@ export class DepositScreenerScreener {
   logger: Logger;
   startBlock: number;
   supportedAssets: Set<Address>;
+  metrics: DepositScreenerScreenerMetrics;
 
   constructor(
     syncAdapter: ScreenerSyncAdapter,
@@ -75,6 +101,38 @@ export class DepositScreenerScreener {
     this.delayCalculator = screenerDelayCalculator;
 
     this.supportedAssets = supportedAssets;
+
+    this.metrics = {
+      depositInstantiatedValueCounter: createCounter(
+        "deposit_instantiated_value.counter",
+        "counter for deposit instantiated value, denominated by asset attribute"
+      ),
+      depositInstantiatedEventsCounter: createCounter(
+        "deposit_instantiated_events.counter",
+        "counter for deposit instantiated events read, denominated by asset attribute"
+      ),
+      depositsPassedFirstScreenCounter: createCounter(
+        "deposits_passed_first_screen.counter",
+        "counter for number of deposits that passed 1st screen"
+      ),
+      depositsPassedFirstScreenValueCounter: createCounter(
+        "deposits_passed_first_screen_value.counter",
+        "counter for value of deposits that passed 1st screen, denominated by asset attribute"
+      ),
+      depositsPassedSecondScreenCounter: createCounter(
+        "deposits_passed_second_screen.counter",
+        "counter for number of deposits that passed 2nd screen"
+      ),
+      depositsPassedSecondScreenValueCounter: createCounter(
+        "deposits_passed_second_screen_value.counter",
+        "counter for value of deposits that passed 2nd screen, denominated by asset attribute"
+      ),
+      screeningDelayHistogram: createHistogram(
+        "screening_delay.histogram",
+        "histogram for screening delay in seconds",
+        "seconds"
+      ),
+    };
   }
 
   async start(queryThrottleMs?: number): Promise<ActorHandle> {
@@ -141,10 +199,25 @@ export class DepositScreenerScreener {
     logger.info("starting screener");
     for await (const batch of depositEvents.iter) {
       for (const event of batch.depositEvents) {
-        logger.info(`received deposit event, storing in DB`, event);
         const depositRequest: DepositRequest = {
           ...event,
         };
+
+        const assetAddr = AssetTrait.decode(
+          depositRequest.encodedAsset
+        ).assetAddr;
+
+        const attributes = {
+          spender: depositRequest.spender,
+          assetAddr: assetAddr,
+        };
+        this.metrics.depositInstantiatedEventsCounter.add(1, attributes);
+        this.metrics.depositInstantiatedValueCounter.add(
+          Number(depositRequest.value),
+          attributes
+        );
+
+        logger.info(`received deposit event, storing in DB`, event);
         await this.db.storeDepositRequest(depositRequest);
 
         const hash = hashDepositRequest(depositRequest);
@@ -172,6 +245,12 @@ export class DepositScreenerScreener {
             depositRequest,
             DepositRequestStatus.PassedFirstScreen
           );
+
+          this.metrics.depositsPassedFirstScreenCounter.add(1, attributes);
+          this.metrics.depositsPassedFirstScreenValueCounter.add(
+            Number(depositRequest.value),
+            attributes
+          );
         } else {
           childLogger.warn(
             `deposit failed first screening stage with reason ${reason}`
@@ -191,9 +270,10 @@ export class DepositScreenerScreener {
     depositRequest: DepositRequest
   ): Promise<void> {
     logger.debug(`calculating delay until second phase of screening`);
+    const assetAddr = AssetTrait.decode(depositRequest.encodedAsset).assetAddr;
     const delaySeconds = await this.delayCalculator.calculateDelaySeconds(
       depositRequest.spender,
-      AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+      assetAddr,
       depositRequest.value
     );
 
@@ -215,6 +295,11 @@ export class DepositScreenerScreener {
         type: "exponential",
         delay: 1000,
       },
+    });
+
+    this.metrics.screeningDelayHistogram.record(delaySeconds, {
+      spender: depositRequest.spender,
+      assetAddr: assetAddr,
     });
   }
 
@@ -262,7 +347,7 @@ export class DepositScreenerScreener {
         );
         const valid = await this.screeningApi.isSafeDepositRequest(
           depositRequest.spender,
-          AssetTrait.decode(depositRequest.encodedAsset).assetAddr,
+          assetAddr,
           depositRequest.value
         );
         if (!valid) {
@@ -290,6 +375,16 @@ export class DepositScreenerScreener {
         await this.db.setDepositRequestStatus(
           depositRequest,
           DepositRequestStatus.AwaitingFulfillment
+        );
+
+        const attributes = {
+          spender: depositRequest.spender,
+          assetAddr: assetAddr,
+        };
+        this.metrics.depositsPassedSecondScreenCounter.add(1, attributes);
+        this.metrics.depositsPassedSecondScreenValueCounter.add(
+          Number(depositRequest.value),
+          attributes
         );
       },
       { connection: this.redis, autorun: true }
