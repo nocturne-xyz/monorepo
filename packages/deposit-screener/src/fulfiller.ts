@@ -46,6 +46,7 @@ const COMPONENT_NAME = "fulfiller";
 interface DepositScreenerFulfillerMetrics {
   requeueDelayHistogram: ot.Histogram;
   fulfilledDepositsCounter: ot.Counter;
+  fulfilledDepositsValueCounter: ot.Counter;
 }
 
 export class DepositScreenerFulfiller {
@@ -103,6 +104,10 @@ export class DepositScreenerFulfiller {
       fulfilledDepositsCounter: createCounter(
         "fulfilled_deposits.counter",
         "Fulfilled deposits, attributed by asset"
+      ),
+      fulfilledDepositsValueCounter: createCounter(
+        "fulfilled_deposits_value.counter",
+        "Fulfilled deposits value, attributed by asset"
       ),
     };
   }
@@ -174,9 +179,15 @@ export class DepositScreenerFulfiller {
                 throw new Error(e);
               });
 
-              this.metrics.fulfilledDepositsCounter.add(1, {
+              const attributes = {
+                spender: depositRequest.spender,
                 assetAddr: address,
-              });
+              };
+              this.metrics.fulfilledDepositsCounter.add(1, attributes);
+              this.metrics.fulfilledDepositsValueCounter.add(
+                Number(depositRequest.value),
+                attributes
+              );
 
               const block = await this.txSigner.provider.getBlock(
                 receipt.blockNumber

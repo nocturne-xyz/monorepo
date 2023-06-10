@@ -212,13 +212,14 @@ export class DepositScreenerScreener {
           depositRequest.encodedAsset
         ).assetAddr;
 
-        this.metrics.depositInstantiatedEventsCounter.add(1, { assetAddr });
+        const attributes = {
+          spender: depositRequest.spender,
+          assetAddr: assetAddr,
+        };
+        this.metrics.depositInstantiatedEventsCounter.add(1, attributes);
         this.metrics.depositInstantiatedValueCounter.add(
           Number(depositRequest.value),
-          {
-            spender: depositRequest.spender,
-            assetAddr,
-          }
+          attributes
         );
 
         logger.info(`received deposit event, storing in DB`, event);
@@ -249,13 +250,15 @@ export class DepositScreenerScreener {
             depositRequest,
             DepositRequestStatus.PassedFirstScreen
           );
-          this.metrics.depositsPassedFirstScreenCounter.add(1, {
+
+          const attributes = {
             spender: depositRequest.spender,
             assetAddr: assetAddr,
-          });
+          };
+          this.metrics.depositsPassedFirstScreenCounter.add(1, attributes);
           this.metrics.depositsPassedFirstScreenValueCounter.add(
             Number(depositRequest.value),
-            { spender: depositRequest.spender, assetAddr: assetAddr }
+            attributes
           );
         } else {
           childLogger.warn(
@@ -383,13 +386,14 @@ export class DepositScreenerScreener {
           DepositRequestStatus.AwaitingFulfillment
         );
 
-        this.metrics.depositsPassedSecondScreenCounter.add(1);
+        const attributes = {
+          spender: depositRequest.spender,
+          assetAddr: assetAddr,
+        };
+        this.metrics.depositsPassedSecondScreenCounter.add(1, attributes);
         this.metrics.depositsPassedSecondScreenValueCounter.add(
           Number(depositRequest.value),
-          {
-            spender: depositRequest.spender,
-            assetAddr: assetAddr,
-          }
+          attributes
         );
       },
       { connection: this.redis, autorun: true }
