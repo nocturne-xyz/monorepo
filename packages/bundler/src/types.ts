@@ -12,3 +12,9 @@ export type ProvenOperationJobData = {
 export type OperationBatchJobData = {
   operationBatchJson: string;
 };
+
+export enum OpValidationFailure {
+  NotEnoughGas = "NotEnoughGas",
+  NullifierConflict = "NullifierConflict",
+  CallRevert = "CallRevert",
+}

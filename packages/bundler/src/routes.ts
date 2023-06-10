@@ -1,6 +1,10 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { ProvenOperationJobData, PROVEN_OPERATION_JOB_TAG } from "./types";
+import {
+  ProvenOperationJobData,
+  PROVEN_OPERATION_JOB_TAG,
+  OpValidationFailure,
+} from "./types";
 import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,
@@ -20,6 +24,7 @@ import { NullifierDB, StatusDB } from "./db";
 import { ethers } from "ethers";
 import { tryParseRelayRequest } from "./request";
 import { Logger } from "winston";
+import { BundlerServerMetrics } from "./server";
 
 export interface HandleRelayDeps {
   queue: Queue<ProvenOperationJobData>;
@@ -29,6 +34,7 @@ export interface HandleRelayDeps {
   tellerContract: Teller;
   provider: ethers.providers.Provider;
   logger: Logger;
+  metrics: BundlerServerMetrics;
   opts: { ignoreGas?: boolean };
 }
 
@@ -40,10 +46,13 @@ export function makeRelayHandler({
   tellerContract,
   provider,
   logger,
+  metrics,
   opts,
 }: HandleRelayDeps): RequestHandler {
   return async (req: Request, res: Response) => {
     logger.debug("validating request");
+    metrics.relayRequestsReceivedCounter.add(1);
+
     const errorOrRelayRequest = tryParseRelayRequest(req.body);
     if (typeof errorOrRelayRequest == "string") {
       logger.warn("request validation failed", errorOrRelayRequest);
@@ -69,6 +78,9 @@ export function makeRelayHandler({
       );
       if (gasPriceErr) {
         logValidationFailure(gasPriceErr);
+        metrics.opValidationFailuresHistogram.record(1, {
+          reason: OpValidationFailure.NotEnoughGas.toString(),
+        });
         res.status(400).json(gasPriceErr);
         return;
       }
@@ -82,6 +94,9 @@ export function makeRelayHandler({
     );
     if (nfConflictErr) {
       logValidationFailure(nfConflictErr);
+      metrics.opValidationFailuresHistogram.record(1, {
+        reason: OpValidationFailure.NullifierConflict.toString(),
+      });
       res.status(400).json(nfConflictErr);
       return;
     }
@@ -95,6 +110,9 @@ export function makeRelayHandler({
     );
     if (revertErr) {
       logValidationFailure(revertErr);
+      metrics.opValidationFailuresHistogram.record(1, {
+        reason: OpValidationFailure.CallRevert.toString(),
+      });
       res.status(400).json(revertErr);
       return;
     }
@@ -110,6 +128,7 @@ export function makeRelayHandler({
         childLogger,
         operation
       );
+      metrics.relayRequestsEnqueuedCounter.add(1);
     } catch (err) {
       const msg = "failed to enqueue operation";
       childLogger.error(msg, err);
