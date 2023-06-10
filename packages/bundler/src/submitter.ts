@@ -10,11 +10,35 @@ import {
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
-import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./types";
+import {
+  ACTOR_NAME,
+  OPERATION_BATCH_QUEUE,
+  OperationBatchJobData,
+} from "./types";
 import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
-import { ActorHandle } from "@nocturne-xyz/offchain-utils";
+import {
+  ActorHandle,
+  makeCreateCounterFn,
+  makeCreateHistogramFn,
+} from "@nocturne-xyz/offchain-utils";
+import * as ot from "@opentelemetry/api";
+
+const COMPONENT_NAME = "submitter";
+const meter = ot.metrics.getMeter(COMPONENT_NAME);
+const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
+const createHistogram = makeCreateHistogramFn(
+  meter,
+  ACTOR_NAME,
+  COMPONENT_NAME
+);
+
+interface BundlerSubmitterMetrics {
+  bundlesSubmittedCounter: ot.Counter;
+  operationsSubmittedCounter: ot.Counter;
+  operationStatusHistogram: ot.Histogram;
+}
 
 export class BundlerSubmitter {
   redis: IORedis;
@@ -23,6 +47,7 @@ export class BundlerSubmitter {
   statusDB: StatusDB;
   nullifierDB: NullifierDB;
   logger: Logger;
+  metrics: BundlerSubmitterMetrics;
 
   readonly INTERVAL_SECONDS: number = 60;
   readonly BATCH_SIZE: number = 8;
@@ -42,6 +67,20 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
+    this.metrics = {
+      bundlesSubmittedCounter: createCounter(
+        "bundles_submitted.counter",
+        "Number of bundles submitted "
+      ),
+      operationsSubmittedCounter: createCounter(
+        "operations_submitted.counter",
+        "Number of operations submitted "
+      ),
+      operationStatusHistogram: createHistogram(
+        "operation_status.histogram",
+        "Histogram of operation statuses after submission"
+      ),
+    };
   }
 
   start(): ActorHandle {
@@ -63,6 +102,9 @@ export class BundlerSubmitter {
         await this.submitBatch(logger, operations).catch((e) => {
           throw new Error(e);
         });
+
+        this.metrics.operationsSubmittedCounter.add(operations.length);
+        this.metrics.bundlesSubmittedCounter.add(1);
       },
       { connection: this.redis, autorun: true }
     );
@@ -185,6 +227,10 @@ export class BundlerSubmitter {
           throw new Error(msg);
         }
       });
+
+      this.metrics.operationStatusHistogram.record(operations.length, {
+        status: OperationStatus.BUNDLE_REVERTED.toString(),
+      });
       return undefined;
     }
   }
@@ -206,7 +252,9 @@ export class BundlerSubmitter {
 
     logger.info("matching events:", matchingEvents);
 
-    const redisTxs = matchingEvents.flatMap(({ args }) => {
+    const redisTxs: RedisTransaction[] = [];
+    const statuses: OperationStatus[] = [];
+    for (const { args } of matchingEvents) {
       const digest = args.operationDigest.toBigInt();
 
       let status: OperationStatus;
@@ -226,6 +274,7 @@ export class BundlerSubmitter {
       redisTxs.push(
         this.statusDB.getSetJobStatusTransaction(digest.toString(), status)
       );
+      statuses.push(status);
 
       if (status == OperationStatus.OPERATION_PROCESSING_FAILED) {
         logger.warn(
@@ -234,8 +283,7 @@ export class BundlerSubmitter {
         const op = digestsToOps.get(args.operationDigest.toBigInt())!;
         redisTxs.push(...this.nullifierDB.getRemoveNullifierTransactions(op));
       }
-      return redisTxs;
-    });
+    }
 
     await this.redis.multi(redisTxs).exec((maybeErr) => {
       if (maybeErr) {
@@ -244,5 +292,12 @@ export class BundlerSubmitter {
         throw new Error(msg);
       }
     });
+
+    // Record op statuses
+    for (const status of statuses) {
+      this.metrics.operationStatusHistogram.record(1, {
+        status: status.toString(),
+      });
+    }
   }
 }
