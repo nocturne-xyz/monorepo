@@ -175,7 +175,7 @@ export class DepositScreenerFulfiller {
               });
 
               this.metrics.fulfilledDepositsCounter.add(1, {
-                assetAddress: address,
+                assetAddr: address,
               });
 
               const block = await this.txSigner.provider.getBlock(
