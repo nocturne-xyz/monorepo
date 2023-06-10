@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add metrics to server, batcher, and submitter components
 - add health check to server
 - fix bug with marking op reverted and NFs unused (redis txs misformatted)
 - bump sdk with joinsplit sorting and note timestamp changes
