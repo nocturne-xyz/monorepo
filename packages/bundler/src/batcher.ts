@@ -12,7 +12,7 @@ import {
   OPERATION_BATCH_JOB_TAG,
   ProvenOperationJobData,
   PROVEN_OPERATION_QUEUE,
-} from "./common";
+} from "./types";
 import * as JSON from "bigint-json-serialization";
 import { actorChain } from "./utils";
 import { Logger } from "winston";

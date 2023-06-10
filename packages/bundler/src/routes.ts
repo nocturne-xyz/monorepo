@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
-import { ProvenOperationJobData, PROVEN_OPERATION_JOB_TAG } from "./common";
+import { ProvenOperationJobData, PROVEN_OPERATION_JOB_TAG } from "./types";
 import { Request, RequestHandler, Response } from "express";
 import {
   OperationStatus,

@@ -6,7 +6,7 @@ import cors from "cors";
 import { Logger } from "winston";
 import morgan from "morgan";
 import { Queue } from "bullmq";
-import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./common";
+import { ProvenOperationJobData, PROVEN_OPERATION_QUEUE } from "./types";
 import { NullifierDB, StatusDB } from "./db";
 import { Teller, Teller__factory } from "@nocturne-xyz/contracts";
 import {

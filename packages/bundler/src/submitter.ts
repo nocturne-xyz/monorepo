@@ -10,7 +10,7 @@ import {
 import { Job, Worker } from "bullmq";
 import IORedis from "ioredis";
 import { ethers } from "ethers";
-import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./common";
+import { OPERATION_BATCH_QUEUE, OperationBatchJobData } from "./types";
 import { NullifierDB, RedisTransaction, StatusDB } from "./db";
 import * as JSON from "bigint-json-serialization";
 import { Logger } from "winston";
