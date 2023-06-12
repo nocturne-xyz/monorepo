@@ -191,9 +191,13 @@ export class SubtreeUpdater {
       PROOF_QUEUE_NAME,
       async (job: Job<SerializedProofJobData>) => {
         const { proofInputs, newRoot } = JSON.parse(job.data) as ProofJobData;
-        logger.info("handling subtree update prover job", job.data);
+        logger.info("handling subtree update prover job", { job: job.data });
 
         const proofWithPis = await this.prover.proveSubtreeUpdate(proofInputs);
+        logger.info("successfully generated proof", {
+          job: job.data,
+          proofWithPis,
+        });
         const jobData: SubmissionJobData = {
           proof: proofWithPis.proof,
           newRoot,
@@ -329,7 +333,6 @@ export class SubtreeUpdater {
           batch,
           oldRoot,
           newRoot,
-          proofInputs,
         });
 
         return { subtreeIndex, proofInputs, newRoot };

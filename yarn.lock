@@ -3707,6 +3707,7 @@ __metadata:
   dependencies:
     "@nocturne-xyz/circuit-utils": ^0.1.12
     "@nocturne-xyz/sdk": "workspace:^"
+    "@nocturne-xyz/subtree-updater": "workspace:^"
     "@types/bn.js": ^5.1.1
     "@types/chai": ^4.3.3
     "@types/mocha": ^10.0.0
