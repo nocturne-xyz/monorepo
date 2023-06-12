@@ -9,7 +9,7 @@ import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
 
 export function setupDefaultInstrumentation(
   serviceName: string,
-  serviceVersion: string = "0.1.0"
+  serviceVersion = "0.1.0"
 ): void {
   const resource = Resource.default().merge(
     new Resource({
