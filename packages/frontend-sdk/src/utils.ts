@@ -10,10 +10,15 @@ export interface TokenDetails {
 }
 
 export const SNAP_ID =
-  process.env.REACT_APP_SNAP_ORIGIN ?? `local:http://localhost:8080`;
+  process.env.NEXT_PUBLIC_SNAP_ORIGIN ??
+  process.env.REACT_APP_SNAP_ORIGIN ??
+  `local:http://localhost:8080`;
 export const SUBGRAPH_URL =
   process.env.NEXT_PUBLIC_SUBGRAPH_URL ??
   "http://localhost:8000/subgraphs/name/nocturne";
+
+console.log("SNAP_ID: ", SNAP_ID);
+console.log("SUBGRAPH_URL: ", SUBGRAPH_URL);
 
 export async function getWindowSigner(): Promise<ethers.Signer> {
   const provider = new ethers.providers.Web3Provider(window.ethereum as any);
