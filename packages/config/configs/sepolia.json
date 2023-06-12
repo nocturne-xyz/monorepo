@@ -4,43 +4,43 @@
       "name": "sepolia",
       "chainId": 11155111
     },
-    "startBlock": 3656252,
+    "startBlock": 3678402,
     "owners": {
       "proxyAdminOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "tellerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "handlerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4",
       "depositManagerOwner": "0x9dD6B628336ECA9a57e534Fb25F1960fA11038f4"
     },
-    "proxyAdmin": "0x849bc22A08eD7D24f1d5a566Ba7125fb671F9c4c",
+    "proxyAdmin": "0x5edCc5B9fB405F6d856223F33d515d6D2135c410",
     "depositManagerProxy": {
       "kind": "Transparent",
-      "proxy": "0x03673107777707DEf977128Fd4B0cDDD92782154",
-      "implementation": "0x832e397117Ac5f74FF624d26e0615d3ECB13e397"
+      "proxy": "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e",
+      "implementation": "0x25e9E0ada551B9Fc027eA1a1A27a5eB74F41857B"
     },
     "tellerProxy": {
       "kind": "Transparent",
-      "proxy": "0xEE420dbDaD442147DE0B9a5b34c84a7FB99E7990",
-      "implementation": "0xc89BEaab219f192a34A86Ac32Cc5FbC92058dDb9"
+      "proxy": "0xFB43BC11cbeBF5A3EFa795a117356E6dFc013DA3",
+      "implementation": "0x29689f3d03435a808c66a6eaa5ef2DB74173389E"
     },
     "handlerProxy": {
       "kind": "Transparent",
-      "proxy": "0x600AFA486eD1c14d97963e32D08d493E884a9363",
-      "implementation": "0x4a4C187398B098D7E808Cb09Df849Ca9Ed4FB096"
+      "proxy": "0x86356407e7412721B582517F06e1793eC82Fb748",
+      "implementation": "0x0a59a156b95D3eb2F3FA9235Cac7180Ab00F3784"
     },
-    "joinSplitVerifierAddress": "0x703acb01576858f6afafED413602Ea9cFc0793De",
-    "subtreeUpdateVerifierAddress": "0xF24D8c0428734519881E9EE110Be7E995479FdBe",
+    "joinSplitVerifierAddress": "0x10FfDc059A723d84baB4B16CEe2c178fEA55853B",
+    "subtreeUpdateVerifierAddress": "0xE6C53026B9b489F9435Df30baf476dBB96ACe07b",
     "screeners": [
       "0x44cD09776A1c3b803A5Fe30660528a61d36653B4"
     ],
     "depositSources": [
-      "0x03673107777707DEf977128Fd4B0cDDD92782154"
+      "0x75C01A4359C98df2cB602313bb989fdf4aC45e5e"
     ]
   },
   "erc20s": [
     [
       "TEST-TOKEN",
       {
-        "address": "0xE9917d5b9351096a445b68528441D61E447155CC",
+        "address": "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd",
         "globalCapWholeTokens": "1000000n",
         "maxDepositSizeWholeTokens": "1000n",
         "precision": "18n",
@@ -70,7 +70,7 @@
   "protocolAllowlist": [
     [
       "TEST-TOKEN",
-      "0xE9917d5b9351096a445b68528441D61E447155CC"
+      "0x4F8988F365a8C73d02e119076Bec71a1265D80Cd"
     ],
     [
       "weth",
