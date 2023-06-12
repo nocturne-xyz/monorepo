@@ -1,4 +1,4 @@
-FROM node:18.12.1
+FROM node
 
 RUN apt update -y && apt install -y build-essential libgmp-dev libsodium-dev nasm nlohmann-json3-dev
 
