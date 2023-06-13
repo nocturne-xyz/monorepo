@@ -23,7 +23,6 @@ import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
 
 // TODO mess with these
-const NOTES_MAX_CHUNK_SIZE = 10000;
 const DEFAULT_THROTTLE_MS = 2000;
 
 export interface SyncOpts {
@@ -45,9 +44,7 @@ export async function syncSDK(
   const currTotalEntityIndex = await db.totalEntityIndex();
   const startTotalEntityIndex = currTotalEntityIndex
     ? currTotalEntityIndex + 1n
-    : TotalEntityIndexTrait.fromComponents({
-        blockNumber: BigInt(opts?.startBlock ?? 0),
-      });
+    : 0n;
 
   const currentBlock = await provider.getBlockNumber();
   const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
@@ -60,7 +57,6 @@ export async function syncSDK(
   );
 
   const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
-    maxChunkSize: NOTES_MAX_CHUNK_SIZE,
     endTotalEntityIndex,
     throttleMs: DEFAULT_THROTTLE_MS,
   });

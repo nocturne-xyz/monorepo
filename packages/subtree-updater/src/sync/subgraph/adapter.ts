@@ -1,8 +1,6 @@
 import {
   ClosableAsyncIterator,
-  SubgraphUtils,
   IterSyncOpts,
-  min,
   sleep,
   fetchNotes,
   IncludedNote,
@@ -10,15 +8,13 @@ import {
   NoteTrait,
   TreeConstants,
   IncludedNoteCommitment,
+  TotalEntityIndex,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import {
   fetchFilledBatchWithZerosEvents,
   fetchLatestSubtreeIndex,
 } from "./fetch";
-const { fetchLatestIndexedBlock } = SubgraphUtils;
-
-const MAX_CHUNK_SIZE = 50;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
@@ -30,37 +26,22 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   }
 
   iterInsertions(
-    startBlock: number,
+    startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
-      : MAX_CHUNK_SIZE;
+    const endpoint = this.graphqlEndpoint;
+    const endTotalEntityIndex = opts?.endTotalEntityIndex;
 
     let closed = false;
-
-    const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      let from = startBlock;
-      while (!closed) {
-        let to = from + chunkSize;
-
-        // Only fetch up to the latest indexed block
-        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
-        to = min(to, latestIndexedBlock);
-
-        // Exceeded tip, sleep
-        if (from > latestIndexedBlock) {
-          await sleep(1_000);
-          continue;
-        }
-
-        console.log(`fetching insertions from ${from} to ${to}...`);
+      let from = startTotalEntityIndex;
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
+        console.log(`fetching insertions from totalEntityIndex ${from} ...`);
 
         const [notesWithTimestamps, filledBatchWithZerosEvents] =
           await Promise.all([
-            fetchNotes(endpoint, from, to),
-            fetchFilledBatchWithZerosEvents(endpoint, from, to),
+            fetchNotes(endpoint, from),
+            fetchFilledBatchWithZerosEvents(endpoint, from),
           ]);
         const notes = notesWithTimestamps.map(({ inner }) => inner);
 

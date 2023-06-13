@@ -180,16 +180,16 @@ interface FetchSubtreeCommitsResponse {
 }
 
 interface FetchSubtreeCommitsVars {
-  toIdx: string;
+  toIdx?: string;
 }
 
 interface SubtreeCommitResponse {
   subtreeBatchOffset: string;
 }
 
-const subtreeCommitQuery = `
-  query fetchSubtreeCommits($toIdx: String!) {
-    subtreeCommits(where: { id_lte: $toIdx }, orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
+const subtreeCommitQuery = (params: string, whereClause: string) => `
+  query fetchSubtreeCommits${params} {
+    subtreeCommits(${whereClause}orderBy: subtreeBatchOffset, orderDirection: desc, first: 1) {
       subtreeBatchOffset
     }
   }
@@ -198,14 +198,27 @@ const subtreeCommitQuery = `
 // gets last committed merkle index on or before a given totalEntityIndex
 export async function fetchLastCommittedMerkleIndex(
   endpoint: string,
-  toTotalEntityIndex: TotalEntityIndex
+  toTotalEntityIndex?: TotalEntityIndex
 ): Promise<number | undefined> {
+  let params = "";
+  let whereClause = "";
+  if (toTotalEntityIndex) {
+    params = "($toIdx: String!)";
+    whereClause = "where: { id_lte: $toIdx }, ";
+  }
+
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
-  >(endpoint, subtreeCommitQuery, "last committed merkle index");
+  >(
+    endpoint,
+    subtreeCommitQuery(params, whereClause),
+    "last committed merkle index"
+  );
 
-  const toIdx = TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex);
+  const toIdx = toTotalEntityIndex
+    ? TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex)
+    : undefined;
   const res = await query({ toIdx });
 
   if (!res.data || res.data.subtreeCommits.length === 0) {

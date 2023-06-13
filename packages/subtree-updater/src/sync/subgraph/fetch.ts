@@ -1,12 +1,10 @@
 import {
-  SubgraphUtils,
   fetchLastCommittedMerkleIndex,
   merkleIndexToSubtreeIndex,
+  TotalEntityIndexTrait,
+  TotalEntityIndex,
 } from "@nocturne-xyz/sdk";
 import { makeSubgraphQuery } from "@nocturne-xyz/sdk/dist/src/sync/subgraph/utils";
-
-const { fetchLatestIndexedBlock, totalEntityIndexFromBlockNumber } =
-  SubgraphUtils;
 
 export interface FilledBatchWithZerosEvent {
   merkleIndex: number; // start index
@@ -26,12 +24,11 @@ interface FetchFilledBatchWithZerosEventsResponse {
 
 interface FetchFilledBatchWithZerosEventsVars {
   fromIdx: string;
-  toIdx: string;
 }
 
 const filledBatchWithZerosQuery = `\
-query fetchFilledBatchWithZerosEvents($fromIdx: Bytes!, $toIdx: Bytes!) {
-  filledBatchWithZerosEvents(where: { idx_gte: $fromIdx, idx_lt: $toIdx}, orderBy: idx) {
+query fetchFilledBatchWithZerosEvents($fromIdx: String!) {
+  filledBatchWithZerosEvents(where: { id_gte: $fromIdx }, first: 100) {
     startIndex
     numZeros
   }
@@ -39,18 +36,15 @@ query fetchFilledBatchWithZerosEvents($fromIdx: Bytes!, $toIdx: Bytes!) {
 
 export async function fetchFilledBatchWithZerosEvents(
   endpoint: string,
-  fromBlock: number,
-  toBlock: number
+  fromTotalEntityIndex: TotalEntityIndex
 ): Promise<FilledBatchWithZerosEvent[]> {
   const query = makeSubgraphQuery<
     FetchFilledBatchWithZerosEventsVars,
     FetchFilledBatchWithZerosEventsResponse
   >(endpoint, filledBatchWithZerosQuery, "filledBatchWithZeros");
 
-  const fromIdx = totalEntityIndexFromBlockNumber(BigInt(fromBlock)).toString();
-  const toIdx = totalEntityIndexFromBlockNumber(BigInt(toBlock + 1)).toString();
-
-  const res = await query({ fromIdx, toIdx });
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
 
   if (!res.data || res.data.filledBatchWithZerosEvents.length === 0) {
     return [];
@@ -67,10 +61,8 @@ export async function fetchFilledBatchWithZerosEvents(
 export async function fetchLatestSubtreeIndex(
   endpoint: string
 ): Promise<number | undefined> {
-  const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
   const lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
-    endpoint,
-    latestIndexedBlock
+    endpoint
   );
   return lastCommittedMerkleIndex
     ? merkleIndexToSubtreeIndex(lastCommittedMerkleIndex)

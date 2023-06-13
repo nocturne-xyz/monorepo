@@ -38,7 +38,6 @@ export interface IterSyncOpts {
   // totalEntityIndex to stop at
   // see `TotalEntityIndex` for more details
   endTotalEntityIndex?: TotalEntityIndex;
-  maxChunkSize?: number;
   // throttle the iterator to it will yield at most once every `throttleMs` milliseconds
   throttleMs?: number;
 }

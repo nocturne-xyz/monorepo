@@ -51,9 +51,6 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
   ): ClosableAsyncIterator<EncryptedStateDiff> {
-    const chunkSize = opts?.maxChunkSize
-      ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
-      : RPC_MAX_CHUNK_SIZE;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
 
@@ -77,7 +74,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       ) {
         // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
-        const to = min(from + chunkSize, currentBlock);
+        const to = min(from + RPC_MAX_CHUNK_SIZE, currentBlock);
 
         // if `from` > `to`, we've caught up to the tip of the chain
         // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
@@ -162,7 +159,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         from = to + 1;
 
         // apply throttle if specified
-        if (opts?.throttleMs && currentBlock - from > chunkSize) {
+        if (opts?.throttleMs && currentBlock - from > RPC_MAX_CHUNK_SIZE) {
           await sleep(opts.throttleMs);
         }
       }
