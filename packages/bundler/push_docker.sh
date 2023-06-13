@@ -1,0 +1,1 @@
+docker push nocturnelabs/bundler:$1

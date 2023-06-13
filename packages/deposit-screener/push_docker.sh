@@ -1,0 +1,1 @@
+docker push nocturnelabs/deposit-screener:$1
