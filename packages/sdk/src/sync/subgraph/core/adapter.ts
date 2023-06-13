@@ -12,7 +12,7 @@ import {
 } from "./fetch";
 import { fetchLatestIndexedBlock } from "../utils";
 
-const MAX_CHUNK_SIZE = 10000;
+const MAX_CHUNK_SIZE = 50;
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
