@@ -19,7 +19,7 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
       [100n, 10n, 20n, 1000n],
       [shitcoin, shitcoin, shitcoin, shitcoin],
       {
-        timestamps: [1000, 2000, 3000, 4000],
+        totalEntityIndices: [1000n, 2000n, 3000n, 4000n],
       }
     );
 

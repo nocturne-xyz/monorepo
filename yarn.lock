@@ -3533,7 +3533,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/contracts@1.0.32-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
+"@nocturne-xyz/config@npm:^1.0.12-alpha":
+  version: 1.0.12-alpha
+  resolution: "@nocturne-xyz/config@npm:1.0.12-alpha"
+  dependencies:
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+  checksum: 6841d54b8adc7e8a81558d22f99d2db0774da0683021f7d1cd9ebfc17ec9cfd65328a7f2927248dbe18a72e5a9014bd2a5e2d7abb1bf0d1ed09170bea4151e91
+  languageName: node
+  linkType: hard
+
+"@nocturne-xyz/contracts@1.0.32-alpha, @nocturne-xyz/contracts@^1.0.32-alpha, @nocturne-xyz/contracts@workspace:^, @nocturne-xyz/contracts@workspace:packages/contracts":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/contracts@workspace:packages/contracts"
   dependencies:
@@ -3595,7 +3605,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.7
-    "@nocturne-xyz/sdk": 1.0.143-alpha
+    "@nocturne-xyz/sdk": 1.0.144-alpha
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0
@@ -3761,7 +3771,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@nocturne-xyz/sdk@1.0.143-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
+"@nocturne-xyz/sdk@1.0.144-alpha, @nocturne-xyz/sdk@workspace:^, @nocturne-xyz/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@nocturne-xyz/sdk@workspace:packages/sdk"
   dependencies:
@@ -3797,6 +3807,25 @@ __metadata:
     typescript: ^4.8.4
   languageName: unknown
   linkType: soft
+
+"@nocturne-xyz/sdk@npm:1.0.143-alpha":
+  version: 1.0.143-alpha
+  resolution: "@nocturne-xyz/sdk@npm:1.0.143-alpha"
+  dependencies:
+    "@nocturne-xyz/circuit-utils": ^0.1.12
+    "@nocturne-xyz/config": ^1.0.12-alpha
+    "@nocturne-xyz/contracts": ^1.0.32-alpha
+    "@types/randombytes": ^2.0.0
+    "@zk-kit/incremental-merkle-tree": ^1.0.0
+    big-integer: ^1.6.42
+    bigint-json-serialization: ^1.0.1
+    ethers: ^5.7.2
+    js-sha256: ^0.9.0
+    randombytes: ^2.1.0
+    sorted-btree: ^1.8.1
+  checksum: 838c848582fc7782d296b894088c4a5b07fee5cbcd58aea159b09d4d9208c3afa77f7122479d10ac4b07415ae715b00f68af679689186d8c4d0ca4d1a48387fc
+  languageName: node
+  linkType: hard
 
 "@nocturne-xyz/site@workspace:packages/site":
   version: 0.0.0-use.local

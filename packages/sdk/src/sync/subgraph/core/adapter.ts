@@ -36,7 +36,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         console.log(`fetching state diff from total entity index ${from}...`);
 
-        // fetch first 100 notes and nfs on or after `from`
+        // fetch notes and nfs on or after `from`, will return at most 100 of each
         const [notes, nullifiers] = await Promise.all([
           fetchNotes(endpoint, from),
           fetchNullifiers(endpoint, from),
