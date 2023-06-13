@@ -17,11 +17,26 @@ import * as JSON from "bigint-json-serialization";
 import { loadNocturneConfigBuiltin } from "@nocturne-xyz/config";
 import { panel, text, heading } from "@metamask/snaps-ui";
 
+// Local
 const RPC_URL = "http://127.0.0.1:8545/";
 const BUNDLER_URL = "http://127.0.0.1:3000";
 const SUBGRAPH_API_URL = "http://127.0.0.1:8000/subgraphs/name/nocturne";
-
 const config = loadNocturneConfigBuiltin("localhost");
+
+/**  https://docs.metamask.io/snaps/how-to/develop-a-snap/#publish-your-snap
+ * At runtime, snaps are pulled down + installed from npm by the MM extension, where we have no control over environment.
+ * So, we need to set the proper values for each environment manually.
+ *  + we publish via tags, (yarn run publish:sepolia)
+ *  and point the frontend at the appropriate tag for the snap to pull at run-time (this is already happening).
+ *  ("npm:@nocturne-xyz/snap@sepolia" | "npm:@nocturne-xyz/snap@mainnet")
+ */
+// Sepolia
+// const RPC_URL =
+//   "https://eth-sepolia.g.alchemy.com/v2/0xjMuoUbPaLxWwD9EqOUFoJTuRh7qh0t";
+// const BUNDLER_URL = "https://bundler.nocturnelabs.xyz";
+// const SUBGRAPH_API_URL =
+//   "https://api.goldsky.com/api/public/project_cldkt6zd6wci33swq4jkh6x2w/subgraphs/nocturne/0.1.7-alpha/gn";
+// const config = loadNocturneConfigBuiltin("sepolia");
 
 const Fr = BabyJubJub.ScalarField;
 

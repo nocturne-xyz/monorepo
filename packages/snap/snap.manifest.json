@@ -1,13 +1,9 @@
 {
-  "version": "1.0.0-alpha",
-  "description": "An example Snap written in TypeScript.",
-  "proposedName": "TypeScript Example Snap",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MetaMask/template-snap-monorepo.git"
-  },
+  "version": "1.0.4-alpha",
+  "description": "Nocturne Snap",
+  "proposedName": "Nocturne Snap",
   "source": {
-    "shasum": "2P1HoQTY2DkAbbsFLGidO6UaA0LycKqwmqASBn9CRYI=",
+    "shasum": "Z1/i2GPLSuA4KmUWhr0jNXzJmJpNWdwNnXZdRGxFe9k=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
