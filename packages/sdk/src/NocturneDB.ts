@@ -136,8 +136,8 @@ export class NocturneDB {
   async removeOptimisticRecordsForOpDigests(
     opDigests: bigint[]
   ): Promise<void> {
-    const opDigestKeys = opDigests.map(
-      NocturneDB.formatOptimisticOpDigestRecordKey
+    const opDigestKeys = opDigests.map((digest) =>
+      NocturneDB.formatOptimisticOpDigestRecordKey(digest)
     );
     const opDigestKvs = await this.kv.getMany(opDigestKeys);
     const opDigestRecords: OptimisticOpDigestRecord[] = opDigestKvs.map(

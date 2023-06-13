@@ -146,7 +146,7 @@ export class NocturneWalletSDK {
     return await getCreationTimestampOfNewestNoteInOp(this.db, op);
   }
 
-  async applyOptimisticNullifiersForOp(
+  async applyOptimisticRecordsForOp(
     op: PreSignOperation | SignedOperation
   ): Promise<void> {
     // Create op digest record

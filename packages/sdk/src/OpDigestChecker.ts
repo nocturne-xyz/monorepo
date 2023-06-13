@@ -1,6 +1,5 @@
 import { OperationStatus } from "./primitives";
 import { OperationStatusResponse } from "./request";
-import * as JSON from "bigint-json-serialization";
 
 export interface OpDigestChecker {
   operationIsInFlight(opDigest: bigint): Promise<boolean>;
@@ -15,7 +14,7 @@ export class BundlerOpDigestChecker implements OpDigestChecker {
 
   async operationIsInFlight(opDigest: bigint): Promise<boolean> {
     const res = await fetch(
-      `${this.endpoint}/operation/${opDigest.toString()}`,
+      `${this.endpoint}/operations/${opDigest.toString()}`,
       {
         method: "GET",
       }
@@ -23,8 +22,8 @@ export class BundlerOpDigestChecker implements OpDigestChecker {
 
     let response: OperationStatusResponse;
     try {
-      const resJson = await res.json();
-      response = JSON.parse(resJson);
+      response = await res.json();
+      console.log("response", response);
     } catch (err) {
       throw new Error(`failed to parse bundler response: ${err}`);
     }

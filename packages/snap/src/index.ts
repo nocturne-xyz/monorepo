@@ -171,7 +171,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           JSON.stringify(signedOp)
         );
 
-        await sdk.applyOptimisticNullifiersForOp(signedOp);
+        await sdk.applyOptimisticRecordsForOp(signedOp);
         return JSON.stringify(signedOp);
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);

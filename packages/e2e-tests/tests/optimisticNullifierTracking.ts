@@ -8,6 +8,7 @@ import {
   NocturneDB,
   NocturneWalletSDK,
   OperationRequestBuilder,
+  computeOperationDigest,
   proveOperation,
 } from "@nocturne-xyz/sdk";
 import { depositFundsSingleToken } from "../src/deposit";
@@ -73,7 +74,7 @@ describe("Optimistic nullifier tracking", () => {
     await teardown();
   });
 
-  it("removes optimistic nullifiers after op succeeds", async () => {
+  it("removes optimistic records when polling op digests", async () => {
     // deposit four 100-token notes
     await depositFundsSingleToken(
       depositManager,
@@ -107,18 +108,42 @@ describe("Optimistic nullifier tracking", () => {
 
     // prepare op
     const preSignOp = await sdk.prepareOperation(opRequest);
-    const signedOp = await sdk.signOperation(preSignOp);
+    const signedOp = sdk.signOperation(preSignOp);
 
     console.log("signedOp", signedOp);
 
     // apply op NFs
-    await sdk.applyOptimisticNullifiersForOp(signedOp);
+    await sdk.applyOptimisticRecordsForOp(signedOp);
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
-    const records = await db.getAllOptimisticNFRecords();
-    expect(records.size).to.eql(2);
-    expect(records.get(0)).to.not.be.undefined;
-    expect(records.get(1)).to.not.be.undefined;
+    const nfRecords = await db.getAllOptimisticNFRecords();
+    expect(nfRecords.size).to.eql(2);
+
+    const nfRecord0 = nfRecords.get(0)!; // for leaf 0
+    const nfRecord1 = nfRecords.get(1)!; // for leaf 1
+
+    const nfSet = new Set([
+      signedOp.joinSplits[0].nullifierA,
+      signedOp.joinSplits[0].nullifierB,
+    ]);
+    expect(nfSet.has(nfRecord0.nullifier)).to.be.true;
+    expect(nfSet.has(nfRecord1.nullifier)).to.be.true;
+    expect(nfRecord0.nullifier).to.not.eql(nfRecord1.nullifier);
+
+    // Check op digest record
+    const opDigest = computeOperationDigest(signedOp);
+    const opDigestRecords = await db.getAllOptimisticOpDigestRecords();
+    expect(opDigestRecords.size).to.eql(1);
+
+    const opDigestRecord = opDigestRecords.get(opDigest)!;
+    expect(opDigestRecord.merkleIndices.length).to.eql(2);
+
+    const leafSet = new Set([0, 1]);
+    expect(leafSet.has(opDigestRecord.merkleIndices[0])).to.be.true;
+    expect(leafSet.has(opDigestRecord.merkleIndices[1])).to.be.true;
+    expect(opDigestRecord.merkleIndices[0]).to.not.eql(
+      opDigestRecord.merkleIndices[1]
+    );
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
@@ -131,12 +156,34 @@ describe("Optimistic nullifier tracking", () => {
     const op = await proveOperation(joinSplitProver, signedOp);
     await submitAndProcessOperation(op);
 
-    // sync sdk again
-    await sdk.sync();
+    // ensure it removes all records when it polls op digest from bundler
+    {
+      await sdk.updateOptimisticNullifiers();
 
-    // DB should have no optimistic NF records
-    const recordsAfter = await db.getAllOptimisticNFRecords();
-    expect(recordsAfter.size).to.equal(0);
+      // DB should have no optimistic records
+      const nfRecordsAfter = await db.getAllOptimisticNFRecords();
+      expect(nfRecordsAfter.size).to.equal(0);
+
+      const opDigestRecordsAfter = await db.getAllOptimisticOpDigestRecords();
+      expect(opDigestRecordsAfter.size).to.equal(0);
+    }
+
+    // ensure it removes NFs when it indexes NFs from events
+    {
+      // reapply old optimistic NFs
+      await sdk.applyOptimisticRecordsForOp(signedOp);
+
+      await sdk.sync();
+
+      // DB should have no optimistic NF records
+      const nfRecordsAfter = await db.getAllOptimisticNFRecords();
+      expect(nfRecordsAfter.size).to.equal(0);
+
+      // DB still has op digest record (doesn't get removed by indexing NFs)
+      const opDigestRecordsAfter = await db.getAllOptimisticOpDigestRecords();
+      expect(opDigestRecordsAfter.size).to.equal(1);
+    }
+
     expect(balances[0].balance).to.equal(200n);
   });
 });
