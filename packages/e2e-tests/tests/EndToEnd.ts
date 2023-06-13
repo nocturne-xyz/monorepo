@@ -172,6 +172,7 @@ describe("full system: contracts, sdk, bundler, subtree updater, and subgraph", 
       aliceEoa,
       nocturneWalletSDKAlice.signer.generateRandomStealthAddress()
     );
+    console.log("fill batch and wait for subtree update");
     await fillSubtreeBatch();
 
     // make an operation with gas price < chain's gas price (1 wei <<< 1 gwei)

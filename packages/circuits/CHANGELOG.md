@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- skip contributions for subtree update circuit in dev
+- clean before building C++ witness generators
 - use compressed encodings of note owners to compute accumulator hashes
 - add other two coordinates of note owners to subtreeupdate circuit for computing NCs
 - compress encSenderCanonAddr in joinsplit circuit:

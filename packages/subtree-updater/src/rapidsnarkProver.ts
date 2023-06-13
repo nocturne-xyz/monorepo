@@ -103,11 +103,13 @@ async function runCommand(cmd: string): Promise<[string, string]> {
       stderr += output;
     });
     child.on("error", () => {
+      console.log(stdout);
       console.error(stderr);
       reject(stderr);
     });
     child.on("exit", () => {
       console.log(stdout);
+      console.error(stderr);
       resolve([stdout, stderr]);
     });
   });

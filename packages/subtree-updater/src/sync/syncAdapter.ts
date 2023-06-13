@@ -1,11 +1,16 @@
-import { ClosableAsyncIterator, IterSyncOpts, Note } from "@nocturne-xyz/sdk";
+import {
+  ClosableAsyncIterator,
+  IncludedNote,
+  IncludedNoteCommitment,
+  IterSyncOpts,
+} from "@nocturne-xyz/sdk";
 
 export interface SubtreeUpdaterSyncAdapter {
   // iterate over insertions, pulling them by merkle index
   iterInsertions(
     startBlock: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<Note | bigint>;
+  ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment>;
 
   fetchLatestSubtreeIndex(): Promise<number | undefined>;
 }
