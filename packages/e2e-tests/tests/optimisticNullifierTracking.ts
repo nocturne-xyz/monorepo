@@ -113,7 +113,8 @@ describe("Optimistic nullifier tracking", () => {
     console.log("signedOp", signedOp);
 
     // apply op NFs
-    await sdk.applyOptimisticRecordsForOp(signedOp);
+    const description = "dummy description";
+    await sdk.applyOptimisticRecordsForOp(signedOp, { description });
 
     // DB should have OptimisticNFRecords for merkle index 0 and 1
     const nfRecords = await db.getAllOptimisticNFRecords();
@@ -144,6 +145,8 @@ describe("Optimistic nullifier tracking", () => {
     expect(opDigestRecord.merkleIndices[0]).to.not.eql(
       opDigestRecord.merkleIndices[1]
     );
+
+    expect(opDigestRecord.metadata!.description).to.eql(description);
 
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();

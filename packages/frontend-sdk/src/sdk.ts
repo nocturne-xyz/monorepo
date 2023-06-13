@@ -12,6 +12,7 @@ import {
   DepositQuoteResponse,
   DepositStatusResponse,
   JoinSplitProofWithPublicSignals,
+  OperationMetadata,
   OperationRequest,
   OperationRequestBuilder,
   ProvenOperation,
@@ -396,7 +397,8 @@ export class NocturneFrontendSDK {
    * @param operationRequest Operation request
    */
   protected async requestSignOperation(
-    operationRequest: OperationRequest
+    operationRequest: OperationRequest,
+    opMetadata?: OperationMetadata
   ): Promise<SignedOperation> {
     const json = (await window.ethereum.request({
       method: "wallet_invokeSnap",
@@ -404,7 +406,10 @@ export class NocturneFrontendSDK {
         snapId: SNAP_ID,
         request: {
           method: "nocturne_signOperation",
-          params: { operationRequest: JSON.stringify(operationRequest) },
+          params: {
+            operationRequest: JSON.stringify(operationRequest),
+            opMetadata: opMetadata ? JSON.stringify(opMetadata) : undefined,
+          },
         },
       },
     })) as string;

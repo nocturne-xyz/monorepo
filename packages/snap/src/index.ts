@@ -7,6 +7,7 @@ import {
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
   BundlerOpDigestChecker,
+  OperationMetadata,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -129,6 +130,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         (request.params as any).operationRequest
       ) as OperationRequest;
 
+      const maybeMetadata = (request.params as any).metadata;
+      const opMetadata: OperationMetadata | undefined = maybeMetadata
+        ? JSON.parse(maybeMetadata)
+        : undefined;
+
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
         throw new Error("Insufficient balance for operation request");
@@ -171,7 +177,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           JSON.stringify(signedOp)
         );
 
-        await sdk.applyOptimisticRecordsForOp(signedOp);
+        await sdk.applyOptimisticRecordsForOp(signedOp, opMetadata);
         return JSON.stringify(signedOp);
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);

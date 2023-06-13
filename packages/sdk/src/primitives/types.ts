@@ -158,9 +158,9 @@ export interface OptimisticNFRecord {
 export interface OptimisticOpDigestRecord {
   merkleIndices: number[];
   expirationDate: number;
-  metadata: OpDigestRecordMeta;
+  metadata?: OperationMetadata;
 }
 
-export interface OpDigestRecordMeta {
+export interface OperationMetadata {
   description: string;
 }

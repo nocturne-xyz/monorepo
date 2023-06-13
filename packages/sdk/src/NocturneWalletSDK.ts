@@ -4,6 +4,7 @@ import {
   AssetWithBalance,
   OptimisticNFRecord,
   computeOperationDigest,
+  OperationMetadata,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -147,7 +148,8 @@ export class NocturneWalletSDK {
   }
 
   async applyOptimisticRecordsForOp(
-    op: PreSignOperation | SignedOperation
+    op: PreSignOperation | SignedOperation,
+    metadata?: OperationMetadata
   ): Promise<void> {
     // Create op digest record
     const opDigest = computeOperationDigest(op);
@@ -167,7 +169,11 @@ export class NocturneWalletSDK {
 
     await this.db.storeOptimisticRecords(
       opDigest,
-      { expirationDate, merkleIndices, metadata: { description: "" } },
+      {
+        expirationDate,
+        merkleIndices,
+        metadata,
+      },
       merkleIndices,
       records
     );
