@@ -14,7 +14,7 @@ services:
   server:
     build:
       context: ../..
-      dockerfile: packages/bundler/Dockerfile
+      dockerfile: packages/deposit-screener/Dockerfile
     restart: always
     command: "run server --config-name-or-path ${CONFIG_NAME_OR_PATH} --port 3001 --log-dir /logs/deposit-screener-server --stdout-log-level info"
     environment:
