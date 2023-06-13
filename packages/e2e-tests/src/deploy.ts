@@ -30,7 +30,7 @@ import {
   AssetType,
   MockEthToTokenConverter,
   RPCSDKSyncAdapter,
-  BundlerNullifierChecker,
+  BundlerOpDigestChecker,
 } from "@nocturne-xyz/sdk";
 
 import {
@@ -564,6 +564,6 @@ function setupNocturneWalletSDK(
     nocturneDB,
     syncAdapter,
     new MockEthToTokenConverter(),
-    new BundlerNullifierChecker(BUNDLER_ENDPOINT)
+    new BundlerOpDigestChecker(BUNDLER_ENDPOINT)
   );
 }

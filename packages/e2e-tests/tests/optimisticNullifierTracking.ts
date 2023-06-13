@@ -73,7 +73,7 @@ describe("Optimistic nullifier tracking", () => {
     await teardown();
   });
 
-  it("removes optimsitic nullifiers after op succeeds", async () => {
+  it("removes optimistic nullifiers after op succeeds", async () => {
     // deposit four 100-token notes
     await depositFundsSingleToken(
       depositManager,

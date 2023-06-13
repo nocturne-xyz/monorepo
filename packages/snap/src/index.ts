@@ -6,7 +6,7 @@ import {
   NocturneDB,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
-  BundlerNullifierChecker,
+  BundlerOpDigestChecker,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -91,7 +91,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     nocturneDB,
     syncAdapter,
     new MockEthToTokenConverter(),
-    new BundlerNullifierChecker(BUNDLER_URL)
+    new BundlerOpDigestChecker(BUNDLER_URL)
   );
 
   console.log("Switching on method: ", request.method);
