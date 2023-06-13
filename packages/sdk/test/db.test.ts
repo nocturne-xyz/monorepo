@@ -431,13 +431,22 @@ describe("NocturneDB", async () => {
         const merkleIndex = note.merkleIndex;
         const record = {
           nullifier: note.nullifier,
-          expirationDate: 1234567890,
         };
 
         return [merkleIndex, record];
       })
     );
-    await db.storeOptimisticNFRecords(merkleIndices, records);
+
+    await db.storeOptimisticRecords(
+      0n,
+      {
+        expirationDate: 1234567890,
+        merkleIndices,
+        metadata: { description: "" },
+      },
+      merkleIndices,
+      records
+    );
 
     // expect to get 5 notes total from `getAllNotes`
     const allNotes = await db.getAllNotes({ includeUncommitted: true });
@@ -465,7 +474,17 @@ describe("NocturneDB", async () => {
         return [merkleIndex, record];
       })
     );
-    await db.storeOptimisticNFRecords(merkleIndices, records);
+
+    await db.storeOptimisticRecords(
+      0n,
+      {
+        expirationDate: 1234567890,
+        merkleIndices,
+        metadata: { description: "" },
+      },
+      merkleIndices,
+      records
+    );
 
     // get all optimistic nullifiers
     const optimisticNFs = await db.getAllOptimisticNFRecords();

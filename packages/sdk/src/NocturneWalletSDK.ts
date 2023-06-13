@@ -2,6 +2,8 @@ import {
   SignedOperation,
   PreSignOperation,
   AssetWithBalance,
+  OptimisticNFRecord,
+  computeOperationDigest,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -19,11 +21,11 @@ import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
-import { NullifierChecker } from "./NullifierChecker";
+import { OpDigestChecker } from "./OpDigestChecker";
 import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
 
 // 10 minutes
-const OPTIMISTIC_NF_TTL: number = 10 * 60 * 1000;
+const OPTIMISTIC_RECORD_TTL: number = 10 * 60 * 1000;
 
 export class NocturneWalletSDK {
   protected provider: ethers.providers.Provider;
@@ -33,7 +35,7 @@ export class NocturneWalletSDK {
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
-  protected nullifierChecker: NullifierChecker;
+  protected opDigestChecker: OpDigestChecker;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
@@ -46,7 +48,7 @@ export class NocturneWalletSDK {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    nulliferChecker: NullifierChecker
+    nulliferChecker: OpDigestChecker
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -73,7 +75,7 @@ export class NocturneWalletSDK {
     this.db = db;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
-    this.nullifierChecker = nulliferChecker;
+    this.opDigestChecker = nulliferChecker;
   }
 
   async sync(): Promise<void> {
@@ -147,43 +149,52 @@ export class NocturneWalletSDK {
   async applyOptimisticNullifiersForOp(
     op: PreSignOperation | SignedOperation
   ): Promise<void> {
+    // Create op digest record
+    const opDigest = computeOperationDigest(op);
+    const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
+
+    // Create NF records
     const [merkleIndices, records] = unzip(
       getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex, nullifier }) => {
         return [
           Number(merkleIndex),
           {
             nullifier,
-            expirationDate: Date.now() + OPTIMISTIC_NF_TTL,
-          },
+          } as OptimisticNFRecord,
         ];
       })
     );
 
-    await this.db.storeOptimisticNFRecords(merkleIndices, records);
+    await this.db.storeOptimisticRecords(
+      opDigest,
+      { expirationDate, merkleIndices, metadata: { description: "" } },
+      merkleIndices,
+      records
+    );
   }
 
   async updateOptimisticNullifiers(): Promise<void> {
-    // get all `OptimisticNFRecord`s from db
-    const optimisticNFRecords = await this.db.getAllOptimisticNFRecords();
+    const optimisticOpDigestRecords =
+      await this.db.getAllOptimisticOpDigestRecords();
 
     // get all of merkle indices of records we want to remove
-    const merkleIndicesToRemove = new Set<number>();
-    for (const [merkleIndex, record] of optimisticNFRecords.entries()) {
+    const opDigestsToRemove = new Set<bigint>();
+    for (const [opDigest, record] of optimisticOpDigestRecords.entries()) {
       // if it's expired, remove it
       if (Date.now() > record.expirationDate) {
-        merkleIndicesToRemove.add(merkleIndex);
+        opDigestsToRemove.add(opDigest);
         continue;
       }
 
       // if bundler doesn't have the nullifier in its DB, remove its
       // OptimisticNFRecord
-      if (
-        !(await this.nullifierChecker.nullifierIsInFlight(record.nullifier))
-      ) {
-        merkleIndicesToRemove.add(merkleIndex);
+      if (!(await this.opDigestChecker.operationIsInFlight(opDigest))) {
+        opDigestsToRemove.add(opDigest);
       }
     }
 
-    await this.db.removeOptimisticNFRecords(Array.from(merkleIndicesToRemove));
+    await this.db.removeOptimisticRecordsForOpDigests(
+      Array.from(opDigestsToRemove)
+    );
   }
 }

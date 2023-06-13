@@ -125,9 +125,15 @@ describe("gatherNotes", () => {
     );
 
     // add optimistic NF records for the 30 token note at merkleIndex 0
-    await nocturneDB.storeOptimisticNFRecords(
+    await nocturneDB.storeOptimisticRecords(
+      0n,
+      {
+        expirationDate: Date.now() + 1_000_000,
+        merkleIndices: [0],
+        metadata: { description: "" },
+      },
       [0],
-      [{ nullifier: 420n, expirationDate: Date.now() + 1_000_000 }]
+      [{ nullifier: 420n }]
     );
 
     // gather notes to spend 30 tokens total
