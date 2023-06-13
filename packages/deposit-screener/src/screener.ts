@@ -39,13 +39,6 @@ import {
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "screener";
-const meter = ot.metrics.getMeter(COMPONENT_NAME);
-const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
-const createHistogram = makeCreateHistogramFn(
-  meter,
-  ACTOR_NAME,
-  COMPONENT_NAME
-);
 
 interface DepositScreenerScreenerMetrics {
   depositInstantiatedValueCounter: ot.Counter;
@@ -102,6 +95,18 @@ export class DepositScreenerScreener {
     this.delayCalculator = screenerDelayCalculator;
 
     this.supportedAssets = supportedAssets;
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
 
     this.metrics = {
       depositInstantiatedValueCounter: createCounter(
