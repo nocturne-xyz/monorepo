@@ -4,12 +4,12 @@ import {
   IterSyncOpts,
   min,
   sleep,
-  Note,
   fetchNotes,
   IncludedNote,
   IncludedEncryptedNote,
   NoteTrait,
   TreeConstants,
+  IncludedNoteCommitment,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import {
@@ -18,7 +18,7 @@ import {
 } from "./fetch";
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
-const MAX_CHUNK_SIZE = 100_000;
+const MAX_CHUNK_SIZE = 50;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
@@ -32,7 +32,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
   iterInsertions(
     startBlock: number,
     opts?: IterSyncOpts
-  ): ClosableAsyncIterator<Note | bigint> {
+  ): ClosableAsyncIterator<IncludedNote | IncludedNoteCommitment> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, MAX_CHUNK_SIZE)
       : MAX_CHUNK_SIZE;
@@ -68,16 +68,26 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           (a, b) => a.merkleIndex - b.merkleIndex
         );
 
-        console.log("yielding sorted insertions:", combined);
-
         for (const insertion of combined) {
           if ("numZeros" in insertion) {
+            const startIndex = insertion.merkleIndex;
             for (let i = 0; i < insertion.numZeros; i++) {
-              yield TreeConstants.ZERO_VALUE;
+              yield {
+                noteCommitment: TreeConstants.ZERO_VALUE,
+                merkleIndex: startIndex + i,
+              };
             }
           } else if (NoteTrait.isEncryptedNote(insertion)) {
-            yield (insertion as IncludedEncryptedNote).commitment;
+            console.log(
+              "yielding commitment of encrypted note at index",
+              insertion.merkleIndex
+            );
+            yield {
+              noteCommitment: (insertion as IncludedEncryptedNote).commitment,
+              merkleIndex: insertion.merkleIndex,
+            };
           } else {
+            console.log("yielding note at index", insertion.merkleIndex);
             yield insertion as IncludedNote;
           }
         }

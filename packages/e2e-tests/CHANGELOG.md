@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add config option to use rapidsnark prover in e2e tests
 - wait more intelligently for deposit completion
 - fix bug in deploy.ts where weth was not being whitelisted
 - remove `makeDepositFn` in place of directly callable function

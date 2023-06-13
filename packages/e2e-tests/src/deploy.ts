@@ -149,6 +149,7 @@ const DEFAULT_SUBTREE_UPDATER_CONFIG: Omit<
   rpcUrl: ANVIL_URL,
   subgraphUrl: SUBGRAPH_URL,
   fillBatchLatency: undefined,
+  // useRapidsnark: true,
 };
 
 const DEFAULT_SUBGRAPH_CONFIG: Omit<SubgraphConfig, "tellerAddress"> = {
@@ -300,8 +301,13 @@ export async function setupTestDeployment(
         throw err;
       }
     }
+
     // wait for subgraph / subtree updater
-    await sleep(10_000);
+    if (config.configs?.subtreeUpdater?.useRapidsnark) {
+      await sleep(30_000);
+    } else {
+      await sleep(10_000);
+    }
   };
 
   return {

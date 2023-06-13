@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- reduce chunk size down from 100000 to 50
+- use merkle index from insertions instead of separate counter
 - subgraph sync checks if `res.data` undefined
 - change sync adapter to use joinsplits, refunds, and fill batch with zero events to yield insertions
 - bump sdk with joinsplit sorting and note timestamp changes

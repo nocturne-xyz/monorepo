@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add "bump configs package` to readme
 - update `README` with better instructions on how to deploy
 - update sepolia deploy config
 - reserve tokens to TX signer when deploying test erc20s
