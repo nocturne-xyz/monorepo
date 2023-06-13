@@ -25,13 +25,6 @@ import {
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "batcher";
-const meter = ot.metrics.getMeter(COMPONENT_NAME);
-const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
-const createHistogram = makeCreateHistogramFn(
-  meter,
-  ACTOR_NAME,
-  COMPONENT_NAME
-);
 
 export interface BundlerBatcherMetrics {
   relayRequestsEnqueuedInBatcherDBCounter: ot.Counter;
@@ -72,6 +65,18 @@ export class BundlerBatcher {
     this.outboundQueue = new Queue(OPERATION_BATCH_QUEUE, {
       connection: redis,
     });
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
 
     this.metrics = {
       relayRequestsEnqueuedInBatcherDBCounter: createCounter(

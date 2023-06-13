@@ -26,13 +26,6 @@ import {
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "submitter";
-const meter = ot.metrics.getMeter(COMPONENT_NAME);
-const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
-const createHistogram = makeCreateHistogramFn(
-  meter,
-  ACTOR_NAME,
-  COMPONENT_NAME
-);
 
 interface BundlerSubmitterMetrics {
   bundlesSubmittedCounter: ot.Counter;
@@ -67,6 +60,19 @@ export class BundlerSubmitter {
       tellerAddress,
       this.signingProvider
     );
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+
     this.metrics = {
       bundlesSubmittedCounter: createCounter(
         "bundles_submitted.counter",

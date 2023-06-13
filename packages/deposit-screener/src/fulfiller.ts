@@ -43,14 +43,6 @@ import { millisToSeconds } from "./utils";
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 const COMPONENT_NAME = "fulfiller";
 
-const meter = ot.metrics.getMeter(COMPONENT_NAME);
-const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
-const createHistogram = makeCreateHistogramFn(
-  meter,
-  ACTOR_NAME,
-  COMPONENT_NAME
-);
-
 interface DepositScreenerFulfillerMetrics {
   requeueDelayHistogram: ot.Histogram;
   fulfilledDepositsCounter: ot.Counter;
@@ -90,6 +82,18 @@ export class DepositScreenerFulfiller {
     );
 
     this.supportedAssets = supportedAssets;
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
 
     this.metrics = {
       requeueDelayHistogram: createHistogram(

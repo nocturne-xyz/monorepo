@@ -27,13 +27,6 @@ import {
 import * as ot from "@opentelemetry/api";
 
 const COMPONENT_NAME = "server";
-const meter = ot.metrics.getMeter(COMPONENT_NAME);
-const createCounter = makeCreateCounterFn(meter, ACTOR_NAME, COMPONENT_NAME);
-const createHistogram = makeCreateHistogramFn(
-  meter,
-  ACTOR_NAME,
-  COMPONENT_NAME
-);
 
 export interface BundlerServerMetrics {
   relayRequestsReceivedCounter: ot.Counter;
@@ -66,6 +59,18 @@ export class BundlerServer {
     this.logger = logger;
     this.provider = provider;
     this.tellerContract = Teller__factory.connect(tellerAddress, provider);
+
+    const meter = ot.metrics.getMeter(COMPONENT_NAME);
+    const createCounter = makeCreateCounterFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
+    const createHistogram = makeCreateHistogramFn(
+      meter,
+      ACTOR_NAME,
+      COMPONENT_NAME
+    );
 
     this.metrics = {
       relayRequestsReceivedCounter: createCounter(
