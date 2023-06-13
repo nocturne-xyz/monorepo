@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+- `sdk.updateOptimisticRecords` now follows pattern of getting all opDigest records then going from opDigest -> opDigestRecord -> merkleIndices -> nfRecords and removing all expired/completed op digest and nf records
+- change `NullifierChecker` and `BundlerNullifierChecker` to be `OpDigestChecker` (since we now poll all info about op digest and nf records solely based on op digest)
+- add methods to `NocturneDB` for storing/getting/removing op digest records
+- move optimistic record types out of nocturne db into `types.ts`
 - add unit tests to ensure no note re-usage and that op request builder consolidates js requests
 - make creating joinsplits for js requests sequential instead of `Promise.all` + keep running list of used note merkle indices (to avoid reusing notes in same op and therefore NF conflicts)
 - fix off by one error in gatherNotes which allowed us to accidentally reuse same note

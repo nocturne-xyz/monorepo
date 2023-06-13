@@ -156,7 +156,7 @@ export class NocturneWalletSDK {
     const expirationDate = Date.now() + OPTIMISTIC_RECORD_TTL;
 
     // Create NF records
-    const [merkleIndices, records] = unzip(
+    const [merkleIndices, nfRecords] = unzip(
       getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex, nullifier }) => {
         return [
           Number(merkleIndex),
@@ -174,8 +174,7 @@ export class NocturneWalletSDK {
         merkleIndices,
         metadata,
       },
-      merkleIndices,
-      records
+      nfRecords
     );
   }
 

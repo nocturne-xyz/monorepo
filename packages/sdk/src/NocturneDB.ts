@@ -158,15 +158,15 @@ export class NocturneDB {
   async storeOptimisticRecords(
     opDigest: bigint,
     opDigestRecord: OptimisticOpDigestRecord,
-    merkleIndices: number[],
-    records: OptimisticNFRecord[]
+    nfRecords: OptimisticNFRecord[]
   ): Promise<void> {
     const opDigestKv = NocturneDB.makeOptimisticOpDigestRecordKV(
       opDigest,
       opDigestRecord
     );
-    const nfKvs = zip(merkleIndices, records).map(([merkleIndex, record]) =>
-      NocturneDB.makeOptimisticNFRecordKV(merkleIndex, record)
+    const nfKvs = zip(opDigestRecord.merkleIndices, nfRecords).map(
+      ([merkleIndex, nfRecord]) =>
+        NocturneDB.makeOptimisticNFRecordKV(merkleIndex, nfRecord)
     );
     await this.kv.putMany([opDigestKv, ...nfKvs]);
   }

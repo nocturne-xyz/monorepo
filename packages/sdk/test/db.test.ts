@@ -444,7 +444,6 @@ describe("NocturneDB", async () => {
         merkleIndices,
         metadata: { description: "" },
       },
-      merkleIndices,
       records
     );
 
@@ -482,7 +481,6 @@ describe("NocturneDB", async () => {
         merkleIndices,
         metadata: { description: "" },
       },
-      merkleIndices,
       records
     );
 

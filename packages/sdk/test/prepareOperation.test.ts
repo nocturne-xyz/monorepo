@@ -132,7 +132,6 @@ describe("gatherNotes", () => {
         merkleIndices: [0],
         metadata: { description: "" },
       },
-      [0],
       [{ nullifier: 420n }]
     );
 
