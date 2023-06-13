@@ -5,8 +5,8 @@ import {
   IncludedNoteCommitment,
   IncludedNoteWithNullifier,
 } from "../primitives";
-import { Source } from "wonka";
-import { TotalEntityIndex } from "./totalEntityIndex";
+import { ClosableAsyncIterator } from "./closableAsyncIterator";
+import { TotalEntityIndex, WithTotalEntityIndex } from "./totalEntityIndex";
 
 interface BaseStateDiff {
   // new nullifiers in arbitrary order
@@ -55,5 +55,5 @@ export interface SDKSyncAdapter {
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): Source<EncryptedStateDiff>;
+  ): ClosableAsyncIterator<EncryptedStateDiff>;
 }

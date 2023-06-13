@@ -10,7 +10,7 @@ import {
   fetchNullifiers,
 } from "./fetch";
 import { TotalEntityIndex } from "../../totalEntityIndex";
-import { Source, fromAsyncIterable } from "wonka";
+import { ClosableAsyncIterator } from "../../closableAsyncIterator";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -22,9 +22,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): Source<EncryptedStateDiff> {
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
-    const closed = false;
+    let closed = false;
 
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
@@ -71,6 +71,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
       }
     };
 
-    return fromAsyncIterable(generator());
+    return new ClosableAsyncIterator(generator(), async () => {
+      closed = true;
+    });
   }
 }

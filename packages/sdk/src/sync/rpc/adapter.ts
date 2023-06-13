@@ -24,12 +24,12 @@ import {
   JoinSplitEvent,
 } from "./fetch";
 import { ethers } from "ethers";
-import { Source, fromAsyncIterable } from "wonka";
 import {
   TotalEntityIndex,
   TotalEntityIndexTrait,
   WithTotalEntityIndex,
 } from "../totalEntityIndex";
+import { ClosableAsyncIterator } from "../closableAsyncIterator";
 
 // TODO: mess with this a bit
 const RPC_MAX_CHUNK_SIZE = 1000;
@@ -50,12 +50,14 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
   iterStateDiffs(
     startTotalEntityIndex: TotalEntityIndex,
     opts?: IterSyncOpts
-  ): Source<EncryptedStateDiff> {
+  ): ClosableAsyncIterator<EncryptedStateDiff> {
     const chunkSize = opts?.maxChunkSize
       ? min(opts.maxChunkSize, RPC_MAX_CHUNK_SIZE)
       : RPC_MAX_CHUNK_SIZE;
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     const handlerContract = this.handlerContract;
+
+    let closed = false;
     const generator = async function* () {
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
@@ -66,10 +68,12 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       );
       let currTotalEntityIndex =
         startTotalEntityIndex !== 0n ? startTotalEntityIndex : undefined;
+
       while (
-        !endTotalEntityIndex ||
-        !currTotalEntityIndex ||
-        currTotalEntityIndex < endTotalEntityIndex
+        !closed &&
+        (!endTotalEntityIndex ||
+          !currTotalEntityIndex ||
+          currTotalEntityIndex < endTotalEntityIndex)
       ) {
         // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
@@ -147,7 +151,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
         // construct a state diff and yield it
         const diff: EncryptedStateDiff = {
-          notes: pluck(filteredNotes, "inner"),
+          notes: filteredNotes,
           nullifiers: pluck(filteredNullifiers, "inner"),
           totalEntityIndex: currTotalEntityIndex,
           lastCommittedMerkleIndex,
@@ -164,7 +168,9 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       }
     };
 
-    return fromAsyncIterable(generator());
+    return new ClosableAsyncIterator(generator(), async () => {
+      closed = true;
+    });
   }
 }
 

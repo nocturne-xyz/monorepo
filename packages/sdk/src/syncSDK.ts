@@ -5,7 +5,13 @@ import {
   StealthAddressTrait,
 } from "./crypto";
 import { NocturneDB } from "./NocturneDB";
-import { EncryptedStateDiff, StateDiff, SDKSyncAdapter, TotalEntityIndexTrait } from "./sync";
+import {
+  ClosableAsyncIterator,
+  EncryptedStateDiff,
+  StateDiff,
+  SDKSyncAdapter,
+  TotalEntityIndexTrait,
+} from "./sync";
 import { ethers } from "ethers";
 import {
   IncludedEncryptedNote,
@@ -15,7 +21,6 @@ import {
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { consecutiveChunks } from "./utils/functional";
-import { forEach, fromValue, makeSubject, map, pipe, subscribe, toPromise } from "wonka";
 
 // TODO mess with these
 const NOTES_MAX_CHUNK_SIZE = 10000;
@@ -37,27 +42,54 @@ export async function syncSDK(
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
-  const nextEntityIndexToSync = (await db.totalEntityIndex()) ?? TotalEntityIndexTrait.fromComponents({ blockNumber: BigInt(opts?.startBlock ?? 0) }) + 1n;
+  const currTotalEntityIndex = await db.totalEntityIndex();
+  const startTotalEntityIndex = currTotalEntityIndex
+    ? currTotalEntityIndex + 1n
+    : TotalEntityIndexTrait.fromComponents({
+        blockNumber: BigInt(opts?.startBlock ?? 0),
+      });
+
   const currentBlock = await provider.getBlockNumber();
-  const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({ blockNumber: BigInt(currentBlock) });
+  const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+    blockNumber: BigInt(currentBlock),
+  });
   console.log(
-    `syncing SDK from entity index ${nextEntityIndexToSync} (block ${Number(TotalEntityIndexTrait.toComponents(nextEntityIndexToSync).blockNumber)}) to ${endTotalEntityIndex} (block ${currentBlock})`
+    `syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${
+      TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
+    }) to ${endTotalEntityIndex} (block ${currentBlock})...`
   );
 
-  // iterate over diffs, decrypt them, and compute nullifiers
-  pipe(
-    adapter.iterStateDiffs(nextEntityIndexToSync, {
-      maxChunkSize: NOTES_MAX_CHUNK_SIZE,
-      endTotalEntityIndex: endTotalEntityIndex,
-      throttleMs: DEFAULT_THROTTLE_MS,
-    }),
-    map(diff => decryptStateDiff(viewer, diff)),
-    forEach(diff => )
+  const newDiffs = adapter.iterStateDiffs(startTotalEntityIndex, {
+    maxChunkSize: NOTES_MAX_CHUNK_SIZE,
+    endTotalEntityIndex,
+    throttleMs: DEFAULT_THROTTLE_MS,
+  });
+
+  // decrypt notes and compute nullifiers
+  const diffs: ClosableAsyncIterator<StateDiff> = newDiffs.map((diff) =>
+    decryptStateDiff(viewer, diff)
   );
 
   // apply diffs
   for await (const diff of diffs.iter) {
+    // update notes in DB
+    const nfIndices = await db.applyStateDiff(diff);
+    console.log(
+      "applied state diff up to totalEntityIndex",
+      diff.totalEntityIndex
+    );
 
+    // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
+
+    if (diff.lastCommittedMerkleIndex) {
+      await updateMerkle(
+        merkle,
+        diff.lastCommittedMerkleIndex,
+        diff.notesAndCommitments.map(({ inner }) => inner),
+        nfIndices
+      );
+    }
+  }
 }
 
 async function updateMerkle(
@@ -111,10 +143,10 @@ function decryptStateDiff(
     notes,
     nullifiers,
     lastCommittedMerkleIndex,
-    blockNumber,
+    totalEntityIndex,
   }: EncryptedStateDiff
 ): StateDiff {
-  const notesAndCommitments = notes.map(({ inner, timestampUnixMillis }) => {
+  const notesAndCommitments = notes.map(({ inner, totalEntityIndex }) => {
     const note = inner;
     const isEncrypted = NoteTrait.isEncryptedNote(note);
     const owner = isEncrypted
@@ -135,7 +167,7 @@ function decryptStateDiff(
       const res = { ...includedNote, nullifier };
       return {
         inner: res,
-        timestampUnixMillis,
+        totalEntityIndex,
       };
     } else if (isOwn && !isEncrypted) {
       // if it's ours and it's not encrypted, get the nullifier and return it
@@ -144,7 +176,7 @@ function decryptStateDiff(
       const res = { ...includedNote, nullifier };
       return {
         inner: res,
-        timestampUnixMillis,
+        totalEntityIndex,
       };
     } else if (!isOwn && isEncrypted) {
       // if it's not ours and it's encrypted, return the given commitment
@@ -156,7 +188,7 @@ function decryptStateDiff(
 
       return {
         inner: nc,
-        timestampUnixMillis,
+        totalEntityIndex,
       };
     } else {
       // otherwise, it's not ours and it's not encrypted. compute and return the commitment
@@ -164,7 +196,7 @@ function decryptStateDiff(
       const nc = NoteTrait.toIncludedCommitment(includedNote);
       return {
         inner: nc,
-        timestampUnixMillis,
+        totalEntityIndex,
       };
     }
   });
@@ -173,6 +205,6 @@ function decryptStateDiff(
     notesAndCommitments,
     nullifiers,
     lastCommittedMerkleIndex,
-    blockNumber,
+    totalEntityIndex,
   };
 }
