@@ -75,7 +75,7 @@ describe("Fetching Deposit Events", function () {
       false
     );
 
-    await sleep(2_000);
+    await sleep(10_000);
 
     // Both deposits should be returned—no filter specified
     let withEntityIndex = await fetchDepositEvents(SUBGRAPH_URL);

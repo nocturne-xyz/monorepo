@@ -11,6 +11,8 @@ import {
   SubtreeCommit,
   Nullifier,
   FilledBatchWithZerosEvent,
+  TreeInsertionEvent,
+  SDKEvent,
 } from "../generated/schema";
 import {
   getTotalLogIndex,
@@ -23,19 +25,35 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
 
   // first old note's nullifier
   let idx = getTotalEntityIndex(totalLogIndex, 0);
-  const nullifierA = new Nullifier(toPaddedHexString(idx));
+  let id = toPaddedHexString(idx);
+  const nullifierA = new Nullifier(id);
   nullifierA.nullifier = event.params.oldNoteANullifier;
   nullifierA.save();
 
+  // make SDK event for old note A's nullifier
+  {
+    const sdkEvent = new SDKEvent(id);
+    sdkEvent.nullifier = id;
+    sdkEvent.save();
+  }
+
   // second old note's nullfier
   idx = getTotalEntityIndex(totalLogIndex, 1);
-  const nullifierB = new Nullifier(toPaddedHexString(idx));
+  id = toPaddedHexString(idx);
+  const nullifierB = new Nullifier(id);
   nullifierB.nullifier = event.params.oldNoteBNullifier;
   nullifierB.save();
 
+  // make SDK event for old note B's nullifier
+  {
+    const sdkEvent = new SDKEvent(id);
+    sdkEvent.nullifier = id;
+    sdkEvent.save();
+  }
+
   // unpack first new note
   idx = getTotalEntityIndex(totalLogIndex, 2);
-  let id = toPaddedHexString(idx);
+  id = toPaddedHexString(idx);
 
   const encryptedNoteA = new EncryptedNote(id);
   const newNoteAEncrypted = event.params.newNoteAEncrypted;
@@ -56,6 +74,20 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   newNoteA.merkleIndex = event.params.newNoteAIndex;
   newNoteA.encryptedNote = id;
   newNoteA.save();
+
+  // make insertion event for new note A
+  {
+    const insertionEvent = new TreeInsertionEvent(id);
+    insertionEvent.encodedOrEncryptedNote = id;
+    insertionEvent.save();
+  }
+
+  // make SDK event for new note A
+  {
+    const sdkEvent = new SDKEvent(id);
+    sdkEvent.encodedOrEncryptedNote = id;
+    sdkEvent.save();
+  }
 
   // unpack second new note
 
@@ -81,6 +113,20 @@ export function handleJoinSplit(event: JoinSplitProcessed): void {
   newNoteB.merkleIndex = event.params.newNoteBIndex;
   newNoteB.encryptedNote = id;
   newNoteB.save();
+
+  // make insertion event for new note B
+  {
+    const insertionEvent = new TreeInsertionEvent(id);
+    insertionEvent.encodedOrEncryptedNote = id;
+    insertionEvent.save();
+  }
+
+  // make SDK event for new note B
+  {
+    const sdkEvent = new SDKEvent(id);
+    sdkEvent.encodedOrEncryptedNote = id;
+    sdkEvent.save();
+  }
 }
 
 export function handleRefund(event: RefundProcessed): void {
@@ -104,6 +150,16 @@ export function handleRefund(event: RefundProcessed): void {
   newNote.merkleIndex = event.params.merkleIndex;
   newNote.note = id;
   newNote.save();
+
+  // make insertion for refund note
+  const insertionEvent = new TreeInsertionEvent(id);
+  insertionEvent.encodedOrEncryptedNote = id;
+  insertionEvent.save();
+
+  // make SDK event for refund note
+  const sdkEvent = new SDKEvent(id);
+  sdkEvent.encodedOrEncryptedNote = id;
+  sdkEvent.save();
 }
 
 export function handleSubtreeUpdate(event: SubtreeUpdate): void {
@@ -128,4 +184,9 @@ export function handleFilledBatchWithZeros(event: FilledBatchWithZeros): void {
   commit.startIndex = event.params.startIndex;
   commit.numZeros = event.params.numZeros;
   commit.save();
+
+  // make insertion for filled batch with zeros
+  const insertionEvent = new TreeInsertionEvent(id);
+  insertionEvent.filledBatchWithZerosEvent = id;
+  insertionEvent.save();
 }

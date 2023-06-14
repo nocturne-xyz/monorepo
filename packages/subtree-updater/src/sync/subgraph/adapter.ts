@@ -2,7 +2,6 @@ import {
   ClosableAsyncIterator,
   IterSyncOpts,
   sleep,
-  fetchNotes,
   IncludedNote,
   IncludedEncryptedNote,
   NoteTrait,
@@ -15,10 +14,7 @@ import {
   TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
-import {
-  fetchFilledBatchWithZerosEvents,
-  fetchLatestSubtreeIndex,
-} from "./fetch";
+import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
 
@@ -63,25 +59,16 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           continue;
         }
 
-        const [notes, filledBatchWithZerosEvents] = await Promise.all([
-          fetchNotes(endpoint, from),
-          fetchFilledBatchWithZerosEvents(endpoint, from),
-        ]);
-
-        const combinedWithEntityIndices = [
-          ...notes,
-          ...filledBatchWithZerosEvents,
-        ];
-        const combined = pluck(combinedWithEntityIndices, "inner").sort(
-          (a, b) => a.merkleIndex - b.merkleIndex
+        const insertions = await fetchTreeInsertions(endpoint, from);
+        const sorted = insertions.sort(
+          ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex
         );
 
         // if we got insertions, get the greatest total entity index we saw and set from to that plus one
-        if (combined.length > 0) {
-          from =
-            maxArray(pluck(combinedWithEntityIndices, "totalEntityIndex")) + 1n;
+        if (insertions.length > 0) {
+          from = maxArray(pluck(sorted, "totalEntityIndex")) + 1n;
 
-          for (const insertion of combined) {
+          for (const { inner: insertion } of sorted) {
             if ("numZeros" in insertion) {
               const startIndex = insertion.merkleIndex;
               for (let i = 0; i < insertion.numZeros; i++) {

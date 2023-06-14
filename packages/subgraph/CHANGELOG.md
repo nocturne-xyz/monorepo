@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- add `SDKEvent` and `TreeInsertionEvent` types that unify events that SDK / subtree updater cares about
 - get rid of all unnecessary `idx` fields
 - make `id` be of type `ID` instead of `Bytes` on all entity schemas
 - add `FilledBatchWithZeros` event

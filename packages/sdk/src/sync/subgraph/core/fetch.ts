@@ -16,6 +16,109 @@ import {
   WithTotalEntityIndex,
 } from "../../totalEntityIndex";
 
+export type SDKEvent = IncludedNote | IncludedEncryptedNote | Nullifier;
+
+export interface SDKEventResponse {
+  id: string;
+  encodedOrEncryptedNote: Omit<EncodedOrEncryptedNoteResponse, "id"> | null;
+  nullifier: Omit<NullifierResponse, "id"> | null;
+}
+
+export interface SDKEventsResponse {
+  data: {
+    sdkEvents: SDKEventResponse[];
+  };
+}
+
+export interface FetchSDKEventsVars {
+  fromIdx: string;
+}
+
+const sdkEventsQuery = `\
+query fetchSDKEvents($fromIdx: String!) {
+  sdkevents(where: { id_gte: $fromIdx }, first: 100) {
+    id
+    encodedOrEncryptedNote {
+      merkleIndex
+      note {
+        ownerH1
+        ownerH2
+        nonce
+        encodedAssetAddr
+        encodedAssetId
+        value
+      }
+      encryptedNote {
+        ownerH1
+        ownerH2
+        encappedKey
+        encryptedNonce
+        encryptedValue
+        encodedAssetAddr
+        encodedAssetId
+        commitment
+      }
+    }
+    nullifier {
+      nullifier
+    }
+  }
+`;
+
+export async function fetchSDKEvents(
+  endpoint: string,
+  fromTotalEntityIndex: TotalEntityIndex
+): Promise<WithTotalEntityIndex<SDKEvent>[]> {
+  const query = makeSubgraphQuery<FetchSDKEventsVars, SDKEventsResponse>(
+    endpoint,
+    sdkEventsQuery,
+    "sdkEvents"
+  );
+
+  const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
+  const res = await query({ fromIdx });
+
+  if (!res.data || res.data.sdkEvents.length === 0) {
+    return [];
+  }
+
+  return res.data.sdkEvents.map(({ id, encodedOrEncryptedNote, nullifier }) => {
+    const totalEntityIndex = BigInt(id);
+
+    // encrypted note
+    if (encodedOrEncryptedNote && encodedOrEncryptedNote.encryptedNote) {
+      const { encryptedNote, merkleIndex } = encodedOrEncryptedNote;
+      return {
+        inner: encryptedNoteFromEncryptedNoteResponse(
+          encryptedNote,
+          parseInt(merkleIndex)
+        ),
+        totalEntityIndex,
+      };
+    }
+
+    // encoded note
+    if (encodedOrEncryptedNote && encodedOrEncryptedNote.note) {
+      const { note, merkleIndex } = encodedOrEncryptedNote;
+      return {
+        inner: includedNoteFromNoteResponse(note, parseInt(merkleIndex)),
+        totalEntityIndex,
+      };
+    }
+
+    // nullifier
+    if (nullifier) {
+      return {
+        inner: BigInt(nullifier.nullifier),
+        totalEntityIndex,
+      };
+    }
+
+    // should never happen
+    throw new Error("invalid sdk event");
+  });
+}
+
 export interface NoteResponse {
   ownerH1: string;
   ownerH2: string;

@@ -4,17 +4,19 @@ import {
   IterSyncOpts,
   SDKSyncAdapter,
 } from "../../syncAdapter";
-import {
-  fetchLastCommittedMerkleIndex,
-  fetchNotes,
-  fetchNullifiers,
-} from "./fetch";
+import { fetchLastCommittedMerkleIndex, fetchSDKEvents } from "./fetch";
 import {
   TotalEntityIndex,
   TotalEntityIndexTrait,
+  WithTotalEntityIndex,
 } from "../../totalEntityIndex";
 import { ClosableAsyncIterator } from "../../closableAsyncIterator";
 import { fetchLatestIndexedBlock } from "../utils";
+import {
+  IncludedEncryptedNote,
+  IncludedNote,
+  Nullifier,
+} from "../../../primitives";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -60,18 +62,21 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         }
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
-        const [notes, nullifiers] = await Promise.all([
-          fetchNotes(endpoint, from),
-          fetchNullifiers(endpoint, from),
-        ]);
+        const notesAndNullifiers = await fetchSDKEvents(endpoint, from);
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
-        if (notes.length + nullifiers.length > 0) {
-          from =
-            maxArray(pluck([...notes, ...nullifiers], "totalEntityIndex")) + 1n;
+        if (notesAndNullifiers.length > 0) {
+          from = maxArray(pluck(notesAndNullifiers, "totalEntityIndex")) + 1n;
           lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
             endpoint
           );
+
+          const notes = notesAndNullifiers.filter(
+            ({ inner }) => typeof inner !== "bigint"
+          ) as WithTotalEntityIndex<IncludedNote | IncludedEncryptedNote>[];
+          const nullifiers = notesAndNullifiers.filter(
+            ({ inner }) => typeof inner === "bigint"
+          ) as WithTotalEntityIndex<Nullifier>[];
 
           const stateDiff: EncryptedStateDiff = {
             notes,

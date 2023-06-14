@@ -62,3 +62,15 @@ type FilledBatchWithZerosEvent @entity(immutable: true) {
   startIndex: BigInt!
   numZeros: BigInt!
 }
+
+type TreeInsertionEvent @entity(immutable: true) {
+  id: ID!
+  encodedOrEncryptedNote: EncodedOrEncryptedNote
+  filledBatchWithZerosEvent: FilledBatchWithZerosEvent
+}
+
+type SDKEvent @entity(immutable: true) {
+  id: ID!
+  encodedOrEncryptedNote: EncodedOrEncryptedNote
+  nullifier: Nullifier
+}

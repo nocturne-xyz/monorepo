@@ -539,3 +539,137 @@ export class FilledBatchWithZerosEvent extends Entity {
     this.set("numZeros", Value.fromBigInt(value));
   }
 }
+
+export class TreeInsertionEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TreeInsertionEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TreeInsertionEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TreeInsertionEvent", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TreeInsertionEvent | null {
+    return changetype<TreeInsertionEvent | null>(
+      store.get("TreeInsertionEvent", id)
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get encodedOrEncryptedNote(): string | null {
+    let value = this.get("encodedOrEncryptedNote");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set encodedOrEncryptedNote(value: string | null) {
+    if (!value) {
+      this.unset("encodedOrEncryptedNote");
+    } else {
+      this.set("encodedOrEncryptedNote", Value.fromString(<string>value));
+    }
+  }
+
+  get filledBatchWithZerosEvent(): string | null {
+    let value = this.get("filledBatchWithZerosEvent");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set filledBatchWithZerosEvent(value: string | null) {
+    if (!value) {
+      this.unset("filledBatchWithZerosEvent");
+    } else {
+      this.set("filledBatchWithZerosEvent", Value.fromString(<string>value));
+    }
+  }
+}
+
+export class SDKEvent extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save SDKEvent entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type SDKEvent must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("SDKEvent", id.toString(), this);
+    }
+  }
+
+  static load(id: string): SDKEvent | null {
+    return changetype<SDKEvent | null>(store.get("SDKEvent", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get encodedOrEncryptedNote(): string | null {
+    let value = this.get("encodedOrEncryptedNote");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set encodedOrEncryptedNote(value: string | null) {
+    if (!value) {
+      this.unset("encodedOrEncryptedNote");
+    } else {
+      this.set("encodedOrEncryptedNote", Value.fromString(<string>value));
+    }
+  }
+
+  get nullifier(): string | null {
+    let value = this.get("nullifier");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set nullifier(value: string | null) {
+    if (!value) {
+      this.unset("nullifier");
+    } else {
+      this.set("nullifier", Value.fromString(<string>value));
+    }
+  }
+}
