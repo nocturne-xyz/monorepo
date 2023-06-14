@@ -2,6 +2,11 @@
 
 ### Unreleased
 
+- rename `getCreationTimestampOfNewestNoteInOp` to `getCreationBlockOfNewestNoteInOp` and make it return block number instead of timestamp.
+- make `NocturneDB` version itself via `TotalEntityIndex` instead of block number
+- replace `WithTimestamp` with `WithTotalEntityIndex`
+- sync by `TotalEntityIndex` instead of block ranges
+- add dedicated module for `TotalLogIndex` and `TotalLogIndexTrait`
 - `sdk.updateOptimisticRecords` now follows pattern of getting all opDigest records then going from opDigest -> opDigestRecord -> merkleIndices -> nfRecords and removing all expired/completed op digest and nf records
 - change `NullifierChecker` and `BundlerNullifierChecker` to be `OpTracker` (since we now poll all info about op digest and nf records solely based on op digest)
 - add methods to `NocturneDB` for storing/getting/removing op digest records

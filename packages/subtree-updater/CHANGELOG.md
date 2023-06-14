@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- sync by TotalEntityIndex instead of block ranges
 - reduce chunk size down from 100000 to 50
 - use merkle index from insertions instead of separate counter
 - subgraph sync checks if `res.data` undefined

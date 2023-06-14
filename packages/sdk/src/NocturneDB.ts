@@ -310,11 +310,12 @@ export class NocturneDB {
    * @returns timestamp the timestamp in unix millis at which the merkleIndex was inserted into the tree,
    *          or undefined if the corresponding note is nullified or not owned
    */
-  async getTimestampForMerkleIndex(
+  async getTotalEntityIndexForMerkleIndex(
     merkleIndex: number
-  ): Promise<number | undefined> {
-    const timestampKey = NocturneDB.formatTotalEntityIndexKey(merkleIndex);
-    return await this.kv.getNumber(timestampKey);
+  ): Promise<bigint | undefined> {
+    const totalEntityIndexKey =
+      NocturneDB.formatTotalEntityIndexKey(merkleIndex);
+    return await this.kv.getBigInt(totalEntityIndexKey);
   }
 
   /// return the totalLogIndex that the DB has been synced to

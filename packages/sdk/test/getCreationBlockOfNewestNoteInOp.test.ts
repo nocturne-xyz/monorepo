@@ -9,8 +9,8 @@ import {
 import { MockEthToTokenConverter, OperationRequestBuilder } from "../src";
 import { handleGasForOperationRequest } from "../src/opRequestGas";
 import { prepareOperation } from "../src/prepareOperation";
-import { getCreationTimestampOfNewestNoteInOp } from "../src/timestampOfNewestNoteInOp";
 import { expect } from "chai";
+import { getTotalEntityIndexOfNewestNoteInOp } from "../src/totalEntityIndexOfNewestNoteInOp";
 
 describe("getCreationTimestampOfNewestNoteInOp", () => {
   it("returns the timetsamp of the newest note in op", async () => {
@@ -55,13 +55,13 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     const op = await prepareOperation(deps, gasAccountedOpRequest);
 
     // get timestamp
-    const timestamp = await getCreationTimestampOfNewestNoteInOp(
+    const totalEntityindex = await getTotalEntityIndexOfNewestNoteInOp(
       nocturneDB,
       op
     );
 
     // we expect it to be 3000, the timestamp of the to 20 token note which we expect should be the
     // newest note in the op
-    expect(timestamp).to.equal(3000);
+    expect(totalEntityindex).to.equal(3000n);
   });
 });
