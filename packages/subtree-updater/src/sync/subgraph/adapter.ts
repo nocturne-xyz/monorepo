@@ -41,7 +41,9 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     let closed = false;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
+      const loopCond = () =>
+        !closed && (!endTotalEntityIndex || from < endTotalEntityIndex);
+      while (loopCond()) {
         console.debug(
           `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
@@ -50,6 +52,16 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           }) ...`
         );
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
+        // if we're caught up, wait for a bit and try again
+        if (
+          from >
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          })
+        ) {
+          await sleep(5000);
+          continue;
+        }
 
         const [notes, filledBatchWithZerosEvents] = await Promise.all([
           fetchNotes(endpoint, from),
@@ -68,38 +80,42 @@ export class SubgraphSubtreeUpdaterSyncAdapter
         if (combined.length > 0) {
           from =
             maxArray(pluck(combinedWithEntityIndices, "totalEntityIndex")) + 1n;
+
+          for (const insertion of combined) {
+            if ("numZeros" in insertion) {
+              const startIndex = insertion.merkleIndex;
+              for (let i = 0; i < insertion.numZeros; i++) {
+                yield {
+                  noteCommitment: TreeConstants.ZERO_VALUE,
+                  merkleIndex: startIndex + i,
+                };
+              }
+            } else if (NoteTrait.isEncryptedNote(insertion)) {
+              console.debug(
+                "yielding commitment of encrypted note at index",
+                insertion.merkleIndex
+              );
+              yield {
+                noteCommitment: (insertion as IncludedEncryptedNote).commitment,
+                merkleIndex: insertion.merkleIndex,
+              };
+            } else {
+              console.debug("yielding note at index", insertion.merkleIndex);
+              yield insertion as IncludedNote;
+            }
+          }
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
-          // set `from` to the entity index corresponding to the latest indexed block, sleep for a bit, and try again
-          from = TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          });
-          await sleep(5_000);
-          continue;
+          // set `from` to the entity index corresponding to the latest indexed block
+          from =
+            TotalEntityIndexTrait.fromComponents({
+              blockNumber: BigInt(currentBlock),
+            }) + 1n;
         }
 
-        for (const insertion of combined) {
-          if ("numZeros" in insertion) {
-            const startIndex = insertion.merkleIndex;
-            for (let i = 0; i < insertion.numZeros; i++) {
-              yield {
-                noteCommitment: TreeConstants.ZERO_VALUE,
-                merkleIndex: startIndex + i,
-              };
-            }
-          } else if (NoteTrait.isEncryptedNote(insertion)) {
-            console.debug(
-              "yielding commitment of encrypted note at index",
-              insertion.merkleIndex
-            );
-            yield {
-              noteCommitment: (insertion as IncludedEncryptedNote).commitment,
-              merkleIndex: insertion.merkleIndex,
-            };
-          } else {
-            console.debug("yielding note at index", insertion.merkleIndex);
-            yield insertion as IncludedNote;
-          }
+        // if we're gonna do another iteration, apply the throttle
+        if (opts?.throttleMs && loopCond()) {
+          await sleep(opts.throttleMs);
         }
       }
     };
