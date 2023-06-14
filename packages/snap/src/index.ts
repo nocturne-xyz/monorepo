@@ -6,7 +6,8 @@ import {
   NocturneDB,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
-  BundlerNullifierChecker,
+  BundlerOpTracker,
+  OperationMetadata,
 } from "@nocturne-xyz/sdk";
 import { BabyJubJub } from "@nocturne-xyz/circuit-utils";
 import { ethers } from "ethers";
@@ -91,7 +92,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
     nocturneDB,
     syncAdapter,
     new MockEthToTokenConverter(),
-    new BundlerNullifierChecker(BUNDLER_URL)
+    new BundlerOpTracker(BUNDLER_URL)
   );
 
   console.log("Switching on method: ", request.method);
@@ -128,6 +129,11 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       const operationRequest = JSON.parse(
         (request.params as any).operationRequest
       ) as OperationRequest;
+
+      const maybeMetadata = (request.params as any).metadata;
+      const opMetadata: OperationMetadata | undefined = maybeMetadata
+        ? JSON.parse(maybeMetadata)
+        : undefined;
 
       // Ensure user has minimum balance for request
       if (!(await sdk.hasEnoughBalanceForOperationRequest(operationRequest))) {
@@ -171,13 +177,16 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
           JSON.stringify(signedOp)
         );
 
-        await sdk.applyOptimisticNullifiersForOp(signedOp);
+        await sdk.applyOptimisticRecordsForOp(signedOp, opMetadata);
         return JSON.stringify(signedOp);
       } catch (err) {
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
-
+    case "nocturne_getInflightOpDigestsWithMetadata":
+      const opDigestsAndMetadata =
+        await sdk.getAllOptimisticOpDigestsWithMetadata();
+      return JSON.stringify(opDigestsAndMetadata);
     case "nocturne_clearDb":
       await kvStore.clear();
       console.log(

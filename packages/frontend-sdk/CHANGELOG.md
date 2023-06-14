@@ -2,6 +2,8 @@
 
 ### Unreleased
 
+- add method to fetch all inflight op digests and metadata `getInflightOpDigestsAndMetadata`
+- `sdk.requestSignOperation` takes optional `OperationMetadata` parameter which is stored in wallet while op is still in flight
 - add `anonTransferErc20` method and call instead of building request in test site index.ts
 - make endpoint passing struct based to avoid future mixups
 - fix DepositForm bugs post adding ETH

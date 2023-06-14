@@ -150,3 +150,22 @@ export interface WithTimestamp<T> {
   timestampUnixMillis: number;
   inner: T;
 }
+
+export interface OptimisticNFRecord {
+  nullifier: bigint;
+}
+
+export interface OptimisticOpDigestRecord {
+  merkleIndices: number[];
+  expirationDate: number;
+  metadata?: OperationMetadata;
+}
+
+export interface OperationMetadata {
+  description: string;
+}
+
+export interface OpDigestWithMetadata {
+  opDigest: bigint;
+  metadata?: OperationMetadata;
+}

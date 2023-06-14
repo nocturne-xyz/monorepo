@@ -11,7 +11,7 @@ import {
   NocturneWalletSDK,
   SubgraphSDKSyncAdapter,
   MockEthToTokenConverter,
-  BundlerNullifierChecker,
+  BundlerOpTracker,
 } from "@nocturne-xyz/sdk";
 import { WasmJoinSplitProver } from "@nocturne-xyz/local-prover";
 import { Command } from "commander";
@@ -102,7 +102,7 @@ export const run = new Command("run")
       db,
       syncAdapter,
       new MockEthToTokenConverter(),
-      new BundlerNullifierChecker(bundlerEndpoint)
+      new BundlerOpTracker(bundlerEndpoint)
     );
 
     const vkeyStr = fs.readFileSync(vkeyPath).toString();

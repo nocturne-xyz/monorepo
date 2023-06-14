@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- modify optimistic record tracking test to check op digest records
 - add config option to use rapidsnark prover in e2e tests
 - wait more intelligently for deposit completion
 - fix bug in deploy.ts where weth was not being whitelisted

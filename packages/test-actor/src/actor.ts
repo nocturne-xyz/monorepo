@@ -195,7 +195,7 @@ export class TestActor {
     // prepare, sign, and prove
     const preSign = await this.sdk.prepareOperation(opRequest);
     const signed = this.sdk.signOperation(preSign);
-    await this.sdk.applyOptimisticNullifiersForOp(signed);
+    await this.sdk.applyOptimisticRecordsForOp(signed);
 
     console.log(`proving operation: ${computeOperationDigest(signed)}`);
     const proven = await proveOperation(this.prover, signed);
