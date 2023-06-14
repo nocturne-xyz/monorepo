@@ -204,7 +204,7 @@ export async function fetchLastCommittedMerkleIndex(
   let whereClause = "";
   if (toTotalEntityIndex) {
     params = "($toIdx: String!)";
-    whereClause = "where: { id_lte: $toIdx }, ";
+    whereClause = "where: { id_lt: $toIdx }, ";
   }
 
   const query = makeSubgraphQuery<

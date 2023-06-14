@@ -66,11 +66,11 @@ function formDepositEventsRawQuery(
   }
 
   const exists = [type, fromTotalEntityIndex, spender].some((x) => x);
-  const paramsString = exists ? `${params.join(", ")}` : "";
-  const whereClause = exists ? `(where: { ${conditions.join(", ")} })` : "";
+  const paramsString = exists ? `(${params.join(", ")})` : "";
+  const whereClause = exists ? `where: { ${conditions.join(", ")} }, ` : "";
   return `\
-    query fetchDepositEvents(first: 100, ${paramsString}) {
-      depositEvents${whereClause} {
+    query fetchDepositEvents${paramsString} {
+      depositEvents(${whereClause}first: 100, orderDirection: asc, orderBy: id) {
         id
         type
         spender

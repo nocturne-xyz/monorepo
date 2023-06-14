@@ -3,6 +3,7 @@ import {
   merkleIndexToSubtreeIndex,
   TotalEntityIndexTrait,
   TotalEntityIndex,
+  WithTotalEntityIndex,
 } from "@nocturne-xyz/sdk";
 import { makeSubgraphQuery } from "@nocturne-xyz/sdk/dist/src/sync/subgraph/utils";
 
@@ -12,6 +13,7 @@ export interface FilledBatchWithZerosEvent {
 }
 
 export interface FilledBatchWithZerosResponse {
+  id: string;
   startIndex: string;
   numZeros: string;
 }
@@ -29,6 +31,7 @@ interface FetchFilledBatchWithZerosEventsVars {
 const filledBatchWithZerosQuery = `\
 query fetchFilledBatchWithZerosEvents($fromIdx: String!) {
   filledBatchWithZerosEvents(where: { id_gte: $fromIdx }, first: 100) {
+    id
     startIndex
     numZeros
   }
@@ -37,7 +40,7 @@ query fetchFilledBatchWithZerosEvents($fromIdx: String!) {
 export async function fetchFilledBatchWithZerosEvents(
   endpoint: string,
   fromTotalEntityIndex: TotalEntityIndex
-): Promise<FilledBatchWithZerosEvent[]> {
+): Promise<WithTotalEntityIndex<FilledBatchWithZerosEvent>[]> {
   const query = makeSubgraphQuery<
     FetchFilledBatchWithZerosEventsVars,
     FetchFilledBatchWithZerosEventsResponse
@@ -51,9 +54,12 @@ export async function fetchFilledBatchWithZerosEvents(
   }
 
   return res.data.filledBatchWithZerosEvents.map(
-    ({ startIndex, numZeros }) => ({
-      merkleIndex: parseInt(startIndex),
-      numZeros: parseInt(numZeros),
+    ({ startIndex, numZeros, id }) => ({
+      inner: {
+        merkleIndex: parseInt(startIndex),
+        numZeros: parseInt(numZeros),
+      },
+      totalEntityIndex: BigInt(id),
     })
   );
 }

@@ -9,12 +9,18 @@ import {
   TreeConstants,
   IncludedNoteCommitment,
   TotalEntityIndex,
+  pluck,
+  maxArray,
+  SubgraphUtils,
+  TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import {
   fetchFilledBatchWithZerosEvents,
   fetchLatestSubtreeIndex,
 } from "./fetch";
+
+const { fetchLatestIndexedBlock } = SubgraphUtils;
 
 export class SubgraphSubtreeUpdaterSyncAdapter
   implements SubtreeUpdaterSyncAdapter
@@ -36,18 +42,41 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     const generator = async function* () {
       let from = startTotalEntityIndex;
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.log(`fetching insertions from totalEntityIndex ${from} ...`);
+        console.debug(
+          `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${
+            TotalEntityIndexTrait.toComponents(from).blockNumber
+          }) ...`
+        );
+        const currentBlock = await fetchLatestIndexedBlock(endpoint);
 
-        const [notesWithTimestamps, filledBatchWithZerosEvents] =
-          await Promise.all([
-            fetchNotes(endpoint, from),
-            fetchFilledBatchWithZerosEvents(endpoint, from),
-          ]);
-        const notes = notesWithTimestamps.map(({ inner }) => inner);
+        const [notes, filledBatchWithZerosEvents] = await Promise.all([
+          fetchNotes(endpoint, from),
+          fetchFilledBatchWithZerosEvents(endpoint, from),
+        ]);
 
-        const combined = [...notes, ...filledBatchWithZerosEvents].sort(
+        const combinedWithEntityIndices = [
+          ...notes,
+          ...filledBatchWithZerosEvents,
+        ];
+        const combined = pluck(combinedWithEntityIndices, "inner").sort(
           (a, b) => a.merkleIndex - b.merkleIndex
         );
+
+        // if we got insertions, get the greatest total entity index we saw and set from to that plus one
+        if (combined.length > 0) {
+          from =
+            maxArray(pluck(combinedWithEntityIndices, "totalEntityIndex")) + 1n;
+        } else {
+          // otherwise, we've caught up and there's nothing more to fetch.
+          // set `from` to the entity index corresponding to the latest indexed block, sleep for a bit, and try again
+          from = TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+          await sleep(5_000);
+          continue;
+        }
 
         for (const insertion of combined) {
           if ("numZeros" in insertion) {
@@ -59,7 +88,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
               };
             }
           } else if (NoteTrait.isEncryptedNote(insertion)) {
-            console.log(
+            console.debug(
               "yielding commitment of encrypted note at index",
               insertion.merkleIndex
             );
@@ -68,15 +97,9 @@ export class SubgraphSubtreeUpdaterSyncAdapter
               merkleIndex: insertion.merkleIndex,
             };
           } else {
-            console.log("yielding note at index", insertion.merkleIndex);
+            console.debug("yielding note at index", insertion.merkleIndex);
             yield insertion as IncludedNote;
           }
-        }
-
-        from = to + 1;
-
-        if (opts?.throttleMs && latestIndexedBlock - from > chunkSize) {
-          await sleep(opts.throttleMs);
         }
       }
     };

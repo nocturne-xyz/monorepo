@@ -27,6 +27,7 @@ import {
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
   joinSplitPublicSignalsToArray,
+  pluck,
   proveOperation,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/sdk";
@@ -404,9 +405,11 @@ export class NocturneFrontendSDK {
    * Query subgraph for all spender's deposits
    */
   async fetchAllDeposits(): Promise<DepositEvent[]> {
-    return await fetchDepositEvents(SUBGRAPH_URL, {
+    const withEntityIndices = await fetchDepositEvents(SUBGRAPH_URL, {
       spender: await (await getWindowSigner()).getAddress(),
     });
+
+    return pluck(withEntityIndices, "inner");
   }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.

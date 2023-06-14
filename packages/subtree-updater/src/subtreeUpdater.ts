@@ -13,6 +13,7 @@ import {
   TreeConstants,
   IncludedNote,
   IncludedNoteCommitment,
+  TotalEntityIndexTrait,
 } from "@nocturne-xyz/sdk";
 import { Mutex } from "async-mutex";
 import IORedis from "ioredis";
@@ -262,8 +263,11 @@ export class SubtreeUpdater {
   ): ClosableAsyncIterator<ProofJobData> {
     logger.info(`subtree updater iterator starting`);
 
+    const startTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+      blockNumber: BigInt(this.startBlock ?? 0),
+    });
     return this.adapter
-      .iterInsertions(this.startBlock, {
+      .iterInsertions(startTotalEntityIndex, {
         throttleMs: queryThrottleMs,
       })
       .tap(({ merkleIndex, ...insertion }) => {

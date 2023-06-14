@@ -56,6 +56,11 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
 
     let closed = false;
     const generator = async function* () {
+      // sync by block, because that's all the chain gives us.
+      // but iterate by total entity index, because that's what logically makes sense for the application
+      // so what we do, is maintain both a block number and a total entity index, and filter out events that are outside of the range we're interested in
+      //
+      // We need to filter because we don't know where the start/end total entity indices will be within a block
       const merkleCount = (await handlerContract.count()).toNumber();
       let lastCommittedMerkleIndex =
         merkleCount !== 0 ? merkleCount - 1 : undefined;
@@ -107,32 +112,29 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // filter out all notes that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
         const filteredNotes = notes.filter(
           ({ totalEntityIndex }) =>
-            currTotalEntityIndex &&
-            totalEntityIndex >= currTotalEntityIndex &&
-            endTotalEntityIndex &&
-            totalEntityIndex <= endTotalEntityIndex
+            !currTotalEntityIndex ||
+            (totalEntityIndex >= currTotalEntityIndex &&
+              endTotalEntityIndex &&
+              totalEntityIndex <= endTotalEntityIndex)
         );
 
         // filter out all nullifiers that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
         const filteredNullifiers = nullifiers.filter(
           ({ totalEntityIndex }) =>
-            currTotalEntityIndex &&
-            totalEntityIndex >= currTotalEntityIndex &&
-            endTotalEntityIndex &&
-            totalEntityIndex <= endTotalEntityIndex
+            !currTotalEntityIndex ||
+            (totalEntityIndex >= currTotalEntityIndex &&
+              endTotalEntityIndex &&
+              totalEntityIndex <= endTotalEntityIndex)
         );
 
-        const totalEntityIndices = pluck(
-          [...filteredNotes, ...filteredNullifiers, ...subtreeUpdateCommits],
-          "totalEntityIndex"
-        );
+        currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
+          blockNumber: BigInt(to),
+        });
 
-        // if there are remaining events after filtering, get the latest merkleIndex among all new notes and set `currMerkleIndex` to that plus one
-        if (totalEntityIndices.length > 0) {
-          currTotalEntityIndex =
-            filteredNotes[filteredNotes.length - 1].totalEntityIndex;
-        } else {
-          // otherwise, the diff is empty, - sleep and continue
+        // if there aren't remaining events after filtering,
+        // sleep, set `currTotalEntityIndex` to the index corresponding to block `to`, and continue
+        if (nullifiers.length === 0 && notes.length === 0) {
+          // otherwise, the diff is empty, -
           await sleep(5_000);
           continue;
         }

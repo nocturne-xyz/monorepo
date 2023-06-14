@@ -85,9 +85,7 @@ export class NocturneWalletSDK {
       provider: this.handlerContract.provider,
       viewer: this.signer,
     };
-    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver, {
-      startBlock: this.config.contracts.startBlock,
-    });
+    await syncSDK(deps, this.syncAdapter, this.db, this.merkleProver);
   }
 
   async prepareOperation(

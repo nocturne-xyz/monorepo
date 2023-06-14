@@ -202,11 +202,11 @@ export class NocturneDB {
   }
 
   async storeNotes(
-    notesWithTotalEntityIndexs: WithTotalEntityIndex<IncludedNoteWithNullifier>[]
+    notesWithTotalEntityIndices: WithTotalEntityIndex<IncludedNoteWithNullifier>[]
   ): Promise<void> {
-    const notes = notesWithTotalEntityIndexs.map(({ inner }) => inner);
+    const notes = notesWithTotalEntityIndices.map(({ inner }) => inner);
     // make note KVs
-    const noteKVs: KV[] = notes.map((note) =>
+    const noteKVs: KV[] = notes.map(({ nullifier, ...note }) =>
       NocturneDB.makeNoteKV(note.merkleIndex, note)
     );
 
@@ -218,7 +218,7 @@ export class NocturneDB {
     // get the updated asset => merkleIndex[] KV pairs
     const assetKVs = await this.getUpdatedAssetKVsWithNotesAdded(notes);
 
-    const timestampKVs = notesWithTotalEntityIndexs.map(
+    const totalEntityIndexKVs = notesWithTotalEntityIndices.map(
       ({ inner, totalEntityIndex }) =>
         NocturneDB.makeTotalEntityIndexKV(inner.merkleIndex, totalEntityIndex)
     );
@@ -228,7 +228,7 @@ export class NocturneDB {
       ...noteKVs,
       ...nullifierKVs,
       ...assetKVs,
-      ...timestampKVs,
+      ...totalEntityIndexKVs,
     ]);
   }
 

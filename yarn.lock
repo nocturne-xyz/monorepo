@@ -3605,7 +3605,7 @@ __metadata:
     "@nocturne-xyz/config": 1.0.14-alpha
     "@nocturne-xyz/contracts": 1.0.32-alpha
     "@nocturne-xyz/offchain-utils": 0.1.7
-    "@nocturne-xyz/sdk": 1.0.145-alpha
+    "@nocturne-xyz/sdk": "workspace:^"
     "@opentelemetry/api": ^1.4.1
     "@opentelemetry/exporter-metrics-otlp-http": ^0.40.0
     "@opentelemetry/instrumentation": ^0.40.0

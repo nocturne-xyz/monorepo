@@ -9,8 +9,12 @@ import {
   fetchNotes,
   fetchNullifiers,
 } from "./fetch";
-import { TotalEntityIndex } from "../../totalEntityIndex";
+import {
+  TotalEntityIndex,
+  TotalEntityIndexTrait,
+} from "../../totalEntityIndex";
 import { ClosableAsyncIterator } from "../../closableAsyncIterator";
+import { fetchLatestIndexedBlock } from "../utils";
 
 export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
   private readonly graphqlEndpoint: string;
@@ -34,7 +38,14 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         from
       );
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.log(`fetching state diff from total entity index ${from}...`);
+        console.debug(
+          `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
+            from
+          )} (block ${
+            TotalEntityIndexTrait.toComponents(from).blockNumber
+          }) ...`
+        );
+        const currentBlock = await fetchLatestIndexedBlock(endpoint);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
         const [notes, nullifiers] = await Promise.all([
@@ -46,11 +57,14 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         if (notes.length + nullifiers.length > 0) {
           from = maxArray(pluck([...notes, ...nullifiers], "totalEntityIndex"));
           lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
-            endpoint,
-            from
+            endpoint
           );
         } else {
-          // otherwise, sleep for a bit and try again
+          // otherwise, we've caught up and there's nothing more to fetch.
+          // set `from` to the entity index corresponding to the latest indexed block, sleep for a bit, and try again
+          from = TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
           await sleep(5_000);
           continue;
         }
@@ -62,7 +76,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
           totalEntityIndex: from,
         };
 
-        console.log("yielding state diff:", stateDiff);
+        console.debug("yielding state diff:", stateDiff);
 
         yield stateDiff;
 

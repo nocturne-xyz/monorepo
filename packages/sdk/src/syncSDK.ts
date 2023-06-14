@@ -20,13 +20,13 @@ import {
   NoteTrait,
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { consecutiveChunks } from "./utils/functional";
+import { consecutiveChunks, pluck } from "./utils/functional";
 
 // TODO mess with these
 const DEFAULT_THROTTLE_MS = 2000;
 
 export interface SyncOpts {
-  startBlock: number;
+  endBlock?: number;
 }
 
 export interface SyncDeps {
@@ -48,10 +48,10 @@ export async function syncSDK(
 
   const currentBlock = await provider.getBlockNumber();
   const endTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
-    blockNumber: BigInt(currentBlock),
+    blockNumber: BigInt(opts?.endBlock ?? currentBlock),
   });
   console.log(
-    `syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${
+    `[syncSDK] syncing SDK from totalEntityIndex ${startTotalEntityIndex} (block ${
       TotalEntityIndexTrait.toComponents(startTotalEntityIndex).blockNumber
     }) to ${endTotalEntityIndex} (block ${currentBlock})...`
   );
@@ -61,6 +61,8 @@ export async function syncSDK(
     throttleMs: DEFAULT_THROTTLE_MS,
   });
 
+  console.log(0);
+
   // decrypt notes and compute nullifiers
   const diffs: ClosableAsyncIterator<StateDiff> = newDiffs.map((diff) =>
     decryptStateDiff(viewer, diff)
@@ -68,12 +70,12 @@ export async function syncSDK(
 
   // apply diffs
   for await (const diff of diffs.iter) {
+    console.log(3);
     // update notes in DB
     const nfIndices = await db.applyStateDiff(diff);
-    console.log(
-      "applied state diff up to totalEntityIndex",
-      diff.totalEntityIndex
-    );
+    console.log("[syncSDK] applied state diff", diff);
+
+    console.log(4);
 
     // TODO: deal with case where we have failure between applying state diff to DB and merkle being persisted
 
@@ -81,11 +83,12 @@ export async function syncSDK(
       await updateMerkle(
         merkle,
         diff.lastCommittedMerkleIndex,
-        diff.notesAndCommitments.map(({ inner }) => inner),
+        pluck(diff.notesAndCommitments, "inner"),
         nfIndices
       );
     }
   }
+  console.log(5);
 }
 
 async function updateMerkle(
@@ -114,22 +117,24 @@ async function updateMerkle(
         includes.push(true);
       }
     }
-    console.log("[syncSdk] got batch", batch);
+    console.log("[syncSDK] got batch", batch);
     merkle.insertBatchUncommitted(startIndex, leaves, includes);
   }
 
   // commit up to latest subtree commit
-  console.log("committing up to index", latestCommittedMerkleIndex);
+  console.log("[syncSDK] committing up to index", latestCommittedMerkleIndex);
   merkle.commitUpToIndex(latestCommittedMerkleIndex);
 
-  console.log("merkle root:", merkle.getRoot());
+  console.log("[syncSDK] merkle root:", merkle.getRoot());
 
   // mark nullified ones for pruning
   for (const index of nfIndices) {
+    console.log(`[syncSDK] marking merkle index ${index} for pruning`);
     merkle.markForPruning(index);
   }
 
   // persist merkle to underlying KV store
+  console.log("[syncSDK] persisting merkle");
   await merkle.persist();
 }
 
@@ -142,6 +147,7 @@ function decryptStateDiff(
     totalEntityIndex,
   }: EncryptedStateDiff
 ): StateDiff {
+  console.log(1);
   const notesAndCommitments = notes.map(({ inner, totalEntityIndex }) => {
     const note = inner;
     const isEncrypted = NoteTrait.isEncryptedNote(note);
@@ -197,6 +203,7 @@ function decryptStateDiff(
     }
   });
 
+  console.log(2);
   return {
     notesAndCommitments,
     nullifiers,
