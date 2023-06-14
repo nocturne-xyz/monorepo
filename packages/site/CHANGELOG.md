@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- console.log in flight op digests with metadata after submitting op
 - fix mixup between screener and bundler endpoints
 - add DepositForm to test site for fe-sdk testing
 - Pass in `chainid` and `deadline` to operation request in test site

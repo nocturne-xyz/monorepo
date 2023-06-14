@@ -216,6 +216,11 @@ const Index = () => {
       receipient
     );
     setInFlightOperationID(opId);
+
+    const inflightOpDigestsWithMeta =
+      await nocturneFrontendSDK!.getInflightOpDigestsWithMetadata();
+    console.log("inflightOpDigestsWithMeta: ", inflightOpDigestsWithMeta);
+
     openTxModal();
   };
 
