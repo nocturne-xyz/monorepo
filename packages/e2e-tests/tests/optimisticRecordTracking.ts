@@ -148,6 +148,13 @@ describe("Optimistic nullifier tracking", () => {
 
     expect(opDigestRecord.metadata!.description).to.eql(description);
 
+    // Check exposed op digest + metadata method on wallet sdk
+    const opDigestsWithMetadata =
+      await sdk.getAllOptimisticOpDigestsWithMetadata();
+    expect(opDigestsWithMetadata.length).to.eql(1);
+    expect(opDigestsWithMetadata[0].opDigest).to.eql(opDigest);
+    expect(opDigestsWithMetadata[0].metadata).to.eql({ description });
+
     // when we get balances, we should only see one asset and only 200 tokens
     const balances = await sdk.getAllAssetBalances();
     expect(balances.length).to.equal(1);

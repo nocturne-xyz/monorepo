@@ -5,6 +5,7 @@ import {
   OptimisticNFRecord,
   computeOperationDigest,
   OperationMetadata,
+  OpDigestWithMetadata,
 } from "./primitives";
 import { NocturneSigner } from "./crypto";
 import { handleGasForOperationRequest } from "./opRequestGas";
@@ -176,6 +177,16 @@ export class NocturneWalletSDK {
       },
       nfRecords
     );
+  }
+
+  async getAllOptimisticOpDigestsWithMetadata(): Promise<
+    OpDigestWithMetadata[]
+  > {
+    const optimisticOpDigestRecords =
+      await this.db.getAllOptimisticOpDigestRecords();
+    return Array.from(optimisticOpDigestRecords).map(([opDigest, record]) => {
+      return { opDigest, metadata: record.metadata };
+    });
   }
 
   async updateOptimisticNullifiers(): Promise<void> {

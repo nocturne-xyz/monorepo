@@ -164,3 +164,8 @@ export interface OptimisticOpDigestRecord {
 export interface OperationMetadata {
   description: string;
 }
+
+export interface OpDigestWithMetadata {
+  opDigest: bigint;
+  metadata?: OperationMetadata;
+}

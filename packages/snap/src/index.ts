@@ -183,7 +183,10 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
         console.log("Error getting pre-proof operation:", err);
         throw err;
       }
-
+    case "nocturne_getInflightOpDigestsWithMetadata":
+      const opDigestsAndMetadata =
+        await sdk.getAllOptimisticOpDigestsWithMetadata();
+      return JSON.stringify(opDigestsAndMetadata);
     case "nocturne_clearDb":
       await kvStore.clear();
       console.log(

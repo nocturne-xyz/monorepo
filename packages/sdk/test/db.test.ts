@@ -456,10 +456,12 @@ describe("NocturneDB", async () => {
     expect(entry!.length).to.eql(5);
   });
 
-  it("gets all optimistic nullifiers", async () => {
+  it("gets all optimistic records", async () => {
     // insert 10 notes
     const [notes, _] = dummyNotesAndNfs(10, shitcoin);
     await db.storeNotes(withDummyTimestamps(notes));
+
+    const expirationDate = 1234567890;
 
     // optimistically nullify 5 of them
     const [merkleIndices, records] = unzip(
@@ -467,7 +469,7 @@ describe("NocturneDB", async () => {
         const merkleIndex = note.merkleIndex;
         const record = {
           nullifier: note.nullifier,
-          expirationDate: 1234567890,
+          expirationDate,
         };
 
         return [merkleIndex, record];
@@ -477,12 +479,21 @@ describe("NocturneDB", async () => {
     await db.storeOptimisticRecords(
       0n,
       {
-        expirationDate: 1234567890,
+        expirationDate,
         merkleIndices,
-        metadata: { description: "" },
+        metadata: undefined,
       },
       records
     );
+
+    const optimisticOpDigestsWithMeta =
+      await db.getAllOptimisticOpDigestRecords();
+    expect(optimisticOpDigestsWithMeta.size).to.eql(1);
+    expect(optimisticOpDigestsWithMeta.get(0n)!.expirationDate);
+    expect(optimisticOpDigestsWithMeta.get(0n)!.merkleIndices).to.eql(
+      merkleIndices
+    );
+    expect(optimisticOpDigestsWithMeta.get(0n)!.metadata).to.be.undefined;
 
     // get all optimistic nullifiers
     const optimisticNFs = await db.getAllOptimisticNFRecords();
