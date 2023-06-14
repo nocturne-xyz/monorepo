@@ -23,7 +23,7 @@ import { getJoinSplitRequestTotalValue, unzip } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
 import { EthToTokenConverter } from "./conversion";
 import { getMerkleIndicesAndNfsFromOp } from "./utils/misc";
-import { OpDigestChecker } from "./OpDigestChecker";
+import { OpTracker } from "./OpTracker";
 import { getCreationTimestampOfNewestNoteInOp } from "./timestampOfNewestNoteInOp";
 
 // 10 minutes
@@ -37,7 +37,7 @@ export class NocturneWalletSDK {
   protected db: NocturneDB;
   protected syncAdapter: SDKSyncAdapter;
   protected tokenConverter: EthToTokenConverter;
-  protected opDigestChecker: OpDigestChecker;
+  protected opTracker: OpTracker;
 
   readonly signer: NocturneSigner;
   readonly gasAssets: Map<string, Asset>;
@@ -50,7 +50,7 @@ export class NocturneWalletSDK {
     db: NocturneDB,
     syncAdapter: SDKSyncAdapter,
     tokenConverter: EthToTokenConverter,
-    nulliferChecker: OpDigestChecker
+    nulliferChecker: OpTracker
   ) {
     if (typeof configOrNetworkName == "string") {
       this.config = loadNocturneConfig(configOrNetworkName);
@@ -77,7 +77,7 @@ export class NocturneWalletSDK {
     this.db = db;
     this.syncAdapter = syncAdapter;
     this.tokenConverter = tokenConverter;
-    this.opDigestChecker = nulliferChecker;
+    this.opTracker = nulliferChecker;
   }
 
   async sync(): Promise<void> {
@@ -204,7 +204,7 @@ export class NocturneWalletSDK {
 
       // if bundler doesn't have the nullifier in its DB, remove its
       // OptimisticNFRecord
-      if (!(await this.opDigestChecker.operationIsInFlight(opDigest))) {
+      if (!(await this.opTracker.operationIsInFlight(opDigest))) {
         opDigestsToRemove.add(opDigest);
       }
     }

@@ -1,11 +1,11 @@
 import { OperationStatus } from "./primitives";
 import { OperationStatusResponse } from "./request";
 
-export interface OpDigestChecker {
+export interface OpTracker {
   operationIsInFlight(opDigest: bigint): Promise<boolean>;
 }
 
-export class BundlerOpDigestChecker implements OpDigestChecker {
+export class BundlerOpTracker implements OpTracker {
   endpoint: string;
 
   constructor(bundlerEndpoint: string) {
@@ -37,7 +37,7 @@ export class BundlerOpDigestChecker implements OpDigestChecker {
   }
 }
 
-export class MockOpDigestChecker implements OpDigestChecker {
+export class MockOpTracker implements OpTracker {
   constructor() {}
 
   async operationIsInFlight(_opDigest: bigint): Promise<boolean> {
