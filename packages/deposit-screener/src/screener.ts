@@ -317,6 +317,10 @@ export class DepositScreenerScreener {
       },
     });
 
+    console.log("[histogram] delaySeconds: ", delaySeconds);
+    console.log("[histogram] spender tag: ", depositRequest.spender);
+    console.log("[histogram] assetAddr tag: ", assetAddr);
+
     this.metrics.screeningDelayHistogram.record(delaySeconds, {
       spender: depositRequest.spender,
       assetAddr: assetAddr,
