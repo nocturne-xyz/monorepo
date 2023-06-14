@@ -227,12 +227,9 @@ export class NocturneFrontendSDK {
   async fetchDepositRequestStatus(
     depositHash: string
   ): Promise<DepositStatusResponse> {
-    const res = await fetch(
-      `http://${this.screenerEndpoint}/status/${depositHash}`,
-      {
-        method: "GET",
-      }
-    );
+    const res = await fetch(`${this.screenerEndpoint}/status/${depositHash}`, {
+      method: "GET",
+    });
     return (await res.json()) as DepositStatusResponse;
   }
 
@@ -249,7 +246,7 @@ export class NocturneFrontendSDK {
     const signer = await getWindowSigner();
     const spender = await signer.getAddress();
 
-    const res = await fetch(`http://${this.screenerEndpoint}/quote`, {
+    const res = await fetch(`${this.screenerEndpoint}/quote`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
