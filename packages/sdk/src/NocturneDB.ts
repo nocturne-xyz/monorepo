@@ -43,7 +43,7 @@ export class NocturneDB {
   //  merkleIndexKey => Note
   //  assetKey => merkleIndex[]
   //  nullifierKey => merkleIndex
-  //  merkleIndexTimestampKey => timestamp
+  //  totalEntityIndexKey (merkleIndex) => totalEntityIndex
   public kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -304,10 +304,10 @@ export class NocturneDB {
   }
 
   /**
-   * Get timestamp at which an owned note with merkleIndex `merkleIndex` was inserted into the tree (not necessarily committed)
+   * Get TotalEntityIndex at which an owned note with merkleIndex `merkleIndex` was inserted into the tree (not necessarily committed)
    *
-   * @param merkleIndex the merkleIndex to get the timestamp for
-   * @returns timestamp the timestamp in unix millis at which the merkleIndex was inserted into the tree,
+   * @param merkleIndex the merkleIndex to get the TotalEntityIndex for
+   * @returns the totalEntityIndex in unix millis at which the merkleIndex was inserted into the tree,
    *          or undefined if the corresponding note is nullified or not owned
    */
   async getTotalEntityIndexForMerkleIndex(

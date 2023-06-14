@@ -134,7 +134,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // if there aren't remaining events after filtering,
         // sleep, set `currTotalEntityIndex` to the index corresponding to block `to`, and continue
         if (nullifiers.length === 0 && notes.length === 0) {
-          // otherwise, the diff is empty, -
+          // otherwise, the diff is empty
           await sleep(5_000);
           continue;
         }

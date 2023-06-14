@@ -12,7 +12,7 @@ export async function getTotalEntityIndexOfNewestNoteInOp(
     getMerkleIndicesAndNfsFromOp(op).map(({ merkleIndex }) => merkleIndex)
   );
 
-  // get the corresponding timestamp
+  // get the corresponding TotalEntityIndex
   const totalEntityIndex = await db.getTotalEntityIndexForMerkleIndex(
     Number(maxMerkleIndex)
   );

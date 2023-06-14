@@ -14,7 +14,7 @@ import { getTotalEntityIndexOfNewestNoteInOp } from "../src/totalEntityIndexOfNe
 
 describe("getCreationTimestampOfNewestNoteInOp", () => {
   it("returns the timetsamp of the newest note in op", async () => {
-    // setup with some tokens and timestamps
+    // setup with some tokens and totalEntityindices
     const [nocturneDB, merkleProver, signer, handlerContract] = await setup(
       [100n, 10n, 20n, 1000n],
       [shitcoin, shitcoin, shitcoin, shitcoin],
@@ -54,13 +54,13 @@ describe("getCreationTimestampOfNewestNoteInOp", () => {
     );
     const op = await prepareOperation(deps, gasAccountedOpRequest);
 
-    // get timestamp
+    // get totalEntityIndex of the newest note in the op
     const totalEntityindex = await getTotalEntityIndexOfNewestNoteInOp(
       nocturneDB,
       op
     );
 
-    // we expect it to be 3000, the timestamp of the to 20 token note which we expect should be the
+    // we expect it to be 3000, the totalEntityIndex of the to 20 token note which we expect should be the
     // newest note in the op
     expect(totalEntityindex).to.equal(3000n);
   });
