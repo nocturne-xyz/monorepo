@@ -9,6 +9,7 @@ import {
   pluck,
   TotalEntityIndexTrait,
   SubgraphUtils,
+  max,
 } from "@nocturne-xyz/sdk";
 
 const { fetchLatestIndexedBlock } = SubgraphUtils;
@@ -33,9 +34,18 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
     let closed = false;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      const loopCond = () =>
-        !closed && (!endTotalEntityIndex || from < endTotalEntityIndex);
-      while (loopCond()) {
+
+      const applyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         console.debug(
           `fetching deposit events from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
@@ -43,17 +53,9 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
             TotalEntityIndexTrait.toComponents(from).blockNumber
           }) ...`
         );
+
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        // if we're caught up, wait for a bit and try again
-        if (
-          from >
-          TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          })
-        ) {
-          await sleep(5000);
-          continue;
-        }
+        await applyThrottle(currentBlock);
 
         // fetch deposit events with total entity index on or after `from`, will return at most 100
         const depositEventsWithTotalEntityIndices = await fetchDepositEvents(
@@ -88,11 +90,6 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
             TotalEntityIndexTrait.fromComponents({
               blockNumber: BigInt(currentBlock),
             }) + 1n;
-        }
-
-        // if we're gonna do another iteration, apply throttle
-        if (opts?.throttleMs && loopCond()) {
-          await sleep(opts.throttleMs);
         }
       }
     };

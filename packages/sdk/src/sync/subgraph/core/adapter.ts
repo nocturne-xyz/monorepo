@@ -1,4 +1,4 @@
-import { pluck, maxArray, sleep } from "../../../utils";
+import { pluck, maxArray, sleep, max } from "../../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -39,9 +39,18 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         endpoint,
         from
       );
-      const loopCond = () =>
-        !closed && (!endTotalEntityIndex || from < endTotalEntityIndex);
-      while (loopCond()) {
+
+      const applyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         console.debug(
           `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
@@ -49,17 +58,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             TotalEntityIndexTrait.toComponents(from).blockNumber
           }) ...`
         );
+
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        // if we're caught up, wait for a bit and try again
-        if (
-          from >
-          TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          })
-        ) {
-          await sleep(5000);
-          continue;
-        }
+        await applyThrottle(currentBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
         const notesAndNullifiers = await fetchSDKEvents(endpoint, from);
@@ -95,11 +96,6 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             TotalEntityIndexTrait.fromComponents({
               blockNumber: BigInt(currentBlock),
             }) + 1n;
-        }
-
-        // if we're gonna do another iteration, apply throttle
-        if (opts?.throttleMs && loopCond()) {
-          await sleep(opts.throttleMs);
         }
       }
     };

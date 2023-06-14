@@ -12,6 +12,7 @@ import {
   maxArray,
   SubgraphUtils,
   TotalEntityIndexTrait,
+  max,
 } from "@nocturne-xyz/sdk";
 import { SubtreeUpdaterSyncAdapter } from "../syncAdapter";
 import { fetchTreeInsertions, fetchLatestSubtreeIndex } from "./fetch";
@@ -37,9 +38,18 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     let closed = false;
     const generator = async function* () {
       let from = startTotalEntityIndex;
-      const loopCond = () =>
-        !closed && (!endTotalEntityIndex || from < endTotalEntityIndex);
-      while (loopCond()) {
+
+      const applyThrottle = async (currentBlock: number) => {
+        const isCaughtUp =
+          from >=
+          TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
+      while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         console.debug(
           `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
@@ -47,19 +57,12 @@ export class SubgraphSubtreeUpdaterSyncAdapter
             TotalEntityIndexTrait.toComponents(from).blockNumber
           }) ...`
         );
+
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        // if we're caught up, wait for a bit and try again
-        if (
-          from >
-          TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          })
-        ) {
-          await sleep(5000);
-          continue;
-        }
+        await applyThrottle(currentBlock);
 
         const insertions = await fetchTreeInsertions(endpoint, from);
+
         const sorted = insertions.sort(
           ({ inner: a }, { inner: b }) => a.merkleIndex - b.merkleIndex
         );
@@ -98,11 +101,6 @@ export class SubgraphSubtreeUpdaterSyncAdapter
             TotalEntityIndexTrait.fromComponents({
               blockNumber: BigInt(currentBlock),
             }) + 1n;
-        }
-
-        // if we're gonna do another iteration, apply the throttle
-        if (opts?.throttleMs && loopCond()) {
-          await sleep(opts.throttleMs);
         }
       }
     };

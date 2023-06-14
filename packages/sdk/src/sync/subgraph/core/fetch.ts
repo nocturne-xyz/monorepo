@@ -26,7 +26,7 @@ export interface SDKEventResponse {
 
 export interface SDKEventsResponse {
   data: {
-    sdkEvents: SDKEventResponse[];
+    sdkevents: SDKEventResponse[];
   };
 }
 
@@ -63,6 +63,7 @@ query fetchSDKEvents($fromIdx: String!) {
       nullifier
     }
   }
+}
 `;
 
 export async function fetchSDKEvents(
@@ -78,11 +79,11 @@ export async function fetchSDKEvents(
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
   const res = await query({ fromIdx });
 
-  if (!res.data || res.data.sdkEvents.length === 0) {
+  if (!res.data || res.data.sdkevents.length === 0) {
     return [];
   }
 
-  return res.data.sdkEvents.map(({ id, encodedOrEncryptedNote, nullifier }) => {
+  return res.data.sdkevents.map(({ id, encodedOrEncryptedNote, nullifier }) => {
     const totalEntityIndex = BigInt(id);
 
     // encrypted note
