@@ -20,7 +20,7 @@ const NOTES_BY_NULLIFIER_PREFIX = "NOTES_BY_NULLIFIER";
 const MERKLE_INDEX_TIMESTAMP_PREFIX = "MERKLE_INDEX_TIMESTAMP";
 const OPTIMISTIC_NF_RECORD_PREFIX = "OPTIMISTIC_NF_RECORD";
 const OPTIMISTIC_OP_DIGEST_RECORD_PREFIX = "OPTIMISTIC_OP_DIGEST_RECORD";
-const NEXT_BLOCK_KEY = "NEXT_BLOCK";
+const CURRENT_TOTAL_ENTITY_INDEX_KEY = "CURRENT_TOTAL_ENTITY_INDEX";
 const LAST_COMMITTED_MERKLE_INDEX_KEY = "LAST_MERKLE_INDEX";
 
 // ceil(log10(2^32))
@@ -40,10 +40,10 @@ export interface GetNotesOpts {
 
 export class NocturneDB {
   // store the following mappings:
-  //  merkleIndexKey => Note
-  //  assetKey => merkleIndex[]
-  //  nullifierKey => merkleIndex
-  //  totalEntityIndexKey (merkleIndex) => totalEntityIndex
+  //  merkleIndex => Note
+  //  merkleIndex => totalEntityIndex
+  //  asset => merkleIndex[]
+  //  nullifier => merkleIndex
   public kv: KVStore;
 
   constructor(kv: KVStore) {
@@ -318,15 +318,17 @@ export class NocturneDB {
     return await this.kv.getBigInt(totalEntityIndexKey);
   }
 
-  /// return the totalLogIndex that the DB has been synced to
+  // return the totalEntityndex that the DB has been synced to
   // this is more/less a "version" number
-  async totalEntityIndex(): Promise<TotalEntityIndex | undefined> {
-    return await this.kv.getBigInt(NEXT_BLOCK_KEY);
+  async currentTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
+    return await this.kv.getBigInt(CURRENT_TOTAL_ENTITY_INDEX_KEY);
   }
 
-  // update `totlEntityIndex()`.
-  async setTotalEntityIndex(totalEntityIndex: TotalEntityIndex): Promise<void> {
-    await this.kv.putBigInt(NEXT_BLOCK_KEY, totalEntityIndex);
+  // update `currentTotallEntityIndex()`.
+  async setCurrentTotalEntityIndex(
+    totalEntityIndex: TotalEntityIndex
+  ): Promise<void> {
+    await this.kv.putBigInt(CURRENT_TOTAL_ENTITY_INDEX_KEY, totalEntityIndex);
   }
 
   // index of the last note (dummy or not) to be committed
@@ -363,7 +365,7 @@ export class NocturneDB {
       await this.setLastCommittedMerkleIndex(lastCommittedMerkleIndex);
     }
 
-    await this.setTotalEntityIndex(totalEntityIndex);
+    await this.setCurrentTotalEntityIndex(totalEntityIndex);
 
     return nfIndices;
   }

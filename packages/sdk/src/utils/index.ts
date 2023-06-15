@@ -19,7 +19,6 @@ export {
   maxArray,
   thunk,
   Thunk,
-  pluck,
 } from "./functional";
 export { numberToStringPadded } from "./strings";
 export { assertOrErr } from "./error";

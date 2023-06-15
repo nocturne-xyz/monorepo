@@ -1,4 +1,4 @@
-import { pluck, maxArray, sleep, max } from "../../../utils";
+import { maxArray, sleep, max } from "../../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -40,7 +40,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         from
       );
 
-      const applyThrottle = async (currentBlock: number) => {
+      const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
           from >=
           TotalEntityIndexTrait.fromComponents({
@@ -60,14 +60,15 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         );
 
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        await applyThrottle(currentBlock);
+        await maybeApplyThrottle(currentBlock);
 
         // fetch notes and nfs on or after `from`, will return at most 100 of each
         const notesAndNullifiers = await fetchSDKEvents(endpoint, from);
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (notesAndNullifiers.length > 0) {
-          from = maxArray(pluck(notesAndNullifiers, "totalEntityIndex")) + 1n;
+          from =
+            maxArray(notesAndNullifiers.map((n) => n.totalEntityIndex)) + 1n;
           lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
             endpoint
           );
@@ -81,7 +82,7 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
           const stateDiff: EncryptedStateDiff = {
             notes,
-            nullifiers: pluck(nullifiers, "inner"),
+            nullifiers: nullifiers.map((n) => n.inner),
             lastCommittedMerkleIndex,
             totalEntityIndex: from - 1n,
           };

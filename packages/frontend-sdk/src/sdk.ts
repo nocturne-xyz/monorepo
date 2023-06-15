@@ -27,7 +27,6 @@ import {
   encodeEncodedAssetAddrWithSignBitsPI,
   fetchDepositEvents,
   joinSplitPublicSignalsToArray,
-  pluck,
   proveOperation,
   unpackFromSolidityProof,
 } from "@nocturne-xyz/sdk";
@@ -409,7 +408,7 @@ export class NocturneFrontendSDK {
       spender: await (await getWindowSigner()).getAddress(),
     });
 
-    return pluck(withEntityIndices, "inner");
+    return withEntityIndices.map(e => e.inner);
   }
   /**
    * Retrieve a `SignedOperation` from the snap given an `OperationRequest`.

@@ -148,13 +148,6 @@ export function consecutiveChunks<T>(
   return chunks;
 }
 
-export function pluck<T extends Record<string, any>, K extends keyof T>(
-  arr: T[],
-  key: K
-): T[K][] {
-  return arr.map((item) => item[key]);
-}
-
 export function dedup<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }

@@ -6,7 +6,6 @@ import {
   DepositEventType,
   TotalEntityIndex,
   maxArray,
-  pluck,
   TotalEntityIndexTrait,
   SubgraphUtils,
   max,
@@ -35,7 +34,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
     const generator = async function* () {
       let from = startTotalEntityIndex;
 
-      const applyThrottle = async (currentBlock: number) => {
+      const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
           from >=
           TotalEntityIndexTrait.fromComponents({
@@ -55,7 +54,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
         );
 
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        await applyThrottle(currentBlock);
+        await maybeApplyThrottle(currentBlock);
 
         // fetch deposit events with total entity index on or after `from`, will return at most 100
         const depositEventsWithTotalEntityIndices = await fetchDepositEvents(
@@ -70,13 +69,12 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
         if (depositEventsWithTotalEntityIndices.length > 0) {
           from =
             maxArray(
-              pluck(depositEventsWithTotalEntityIndices, "totalEntityIndex")
+              depositEventsWithTotalEntityIndices.map((e) => e.totalEntityIndex)
             ) + 1n;
-
-          const depositEvents = pluck(
-            depositEventsWithTotalEntityIndices,
-            "inner"
+          const depositEvents = depositEventsWithTotalEntityIndices.map(
+            (e) => e.inner
           );
+
           console.log("yielding deposit events:", depositEvents);
 
           yield {

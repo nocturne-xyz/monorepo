@@ -8,7 +8,6 @@ import {
   TreeConstants,
   IncludedNoteCommitment,
   TotalEntityIndex,
-  pluck,
   maxArray,
   SubgraphUtils,
   TotalEntityIndexTrait,
@@ -39,7 +38,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
     const generator = async function* () {
       let from = startTotalEntityIndex;
 
-      const applyThrottle = async (currentBlock: number) => {
+      const maybeApplyThrottle = async (currentBlock: number) => {
         const isCaughtUp =
           from >=
           TotalEntityIndexTrait.fromComponents({
@@ -59,7 +58,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
         );
 
         const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        await applyThrottle(currentBlock);
+        await maybeApplyThrottle(currentBlock);
 
         const insertions = await fetchTreeInsertions(endpoint, from);
 
@@ -69,7 +68,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
 
         // if we got insertions, get the greatest total entity index we saw and set from to that plus one
         if (insertions.length > 0) {
-          from = maxArray(pluck(sorted, "totalEntityIndex")) + 1n;
+          from = maxArray(sorted.map((i) => i.totalEntityIndex)) + 1n;
 
           for (const { inner: insertion } of sorted) {
             if ("numZeros" in insertion) {

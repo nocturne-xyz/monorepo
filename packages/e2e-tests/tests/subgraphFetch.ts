@@ -5,7 +5,6 @@ import {
   NocturneWalletSDK,
   StealthAddressTrait,
   fetchDepositEvents,
-  pluck,
   sleep,
 } from "@nocturne-xyz/sdk";
 import { ethers } from "ethers";
@@ -79,7 +78,7 @@ describe("Fetching Deposit Events", function () {
 
     // Both deposits should be returned—no filter specified
     let withEntityIndex = await fetchDepositEvents(SUBGRAPH_URL);
-    const result = pluck(withEntityIndex, "inner");
+    const result = withEntityIndex.map((x) => x.inner);
     console.log("fetchDepositEvents", result);
 
     expect(result.length).to.eql(3);
@@ -96,7 +95,7 @@ describe("Fetching Deposit Events", function () {
     withEntityIndex = await fetchDepositEvents(SUBGRAPH_URL, {
       spender: aliceEoa.address,
     });
-    const aliceQueryResult = pluck(withEntityIndex, "inner");
+    const aliceQueryResult = withEntityIndex.map((x) => x.inner);
 
     expect(aliceQueryResult.length).to.eql(2);
     expect(aliceQueryResult[0]?.depositAddr).to.eql(

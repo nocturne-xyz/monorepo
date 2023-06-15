@@ -20,7 +20,7 @@ import {
   NoteTrait,
 } from "./primitives";
 import { SparseMerkleProver } from "./SparseMerkleProver";
-import { consecutiveChunks, pluck } from "./utils/functional";
+import { consecutiveChunks } from "./utils/functional";
 
 export interface SyncOpts {
   endBlock?: number;
@@ -38,7 +38,7 @@ export async function syncSDK(
   merkle: SparseMerkleProver,
   opts?: SyncOpts
 ): Promise<void> {
-  const currTotalEntityIndex = await db.totalEntityIndex();
+  const currTotalEntityIndex = await db.currentTotalEntityIndex();
   const startTotalEntityIndex = currTotalEntityIndex
     ? currTotalEntityIndex + 1n
     : 0n;
@@ -73,7 +73,7 @@ export async function syncSDK(
       await updateMerkle(
         merkle,
         diff.lastCommittedMerkleIndex,
-        pluck(diff.notesAndCommitments, "inner"),
+        diff.notesAndCommitments.map((n) => n.inner),
         nfIndices
       );
     }

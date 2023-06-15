@@ -5,7 +5,7 @@ import {
   IncludedNote,
   Nullifier,
 } from "../../primitives";
-import { pluck, min } from "../../utils";
+import { min, max } from "../../utils";
 import {
   EncryptedStateDiff,
   IterSyncOpts,
@@ -71,6 +71,12 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
       let currTotalEntityIndex =
         startTotalEntityIndex !== 0n ? startTotalEntityIndex : undefined;
 
+      const maybeApplyThrottle = async (to: number) => {
+        const isCaughtUp = from > to;
+        const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
+        await sleep(sleepDelay);
+      };
+
       while (
         !closed &&
         (!endTotalEntityIndex ||
@@ -80,15 +86,7 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // set `to` to be the min of `from` + `chunkSize` and the current block number
         const currentBlock = await handlerContract.provider.getBlockNumber();
         const to = min(from + RPC_MAX_CHUNK_SIZE, currentBlock);
-
-        // if `from` > `to`, we've caught up to the tip of the chain
-        // `from` can be greater than `to` if `to` was the tip of the chain last iteration,
-        // and no new blocks were produced since then
-        // sleep for a bit and re-try to avoid spamming the RPC endpoint
-        if (from > to) {
-          await sleep(5_000);
-          continue;
-        }
+        await maybeApplyThrottle(to);
 
         // get all events JoinSplit, Refund, and SubtreeUpdate events in the range [`from`, `to`]
         const [includedNotes, joinSplitEvents, subtreeUpdateCommits] =
@@ -97,6 +95,15 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
             fetchJoinSplits(handlerContract, from, to),
             fetchSubtreeUpdateCommits(handlerContract, from, to),
           ]);
+
+        // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
+        if (subtreeUpdateCommits.length > 0) {
+          lastCommittedMerkleIndex = maxArray(
+            subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
+              return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
+            })
+          );
+        }
 
         // extract notes and nullifiers
         const nullifiers =
@@ -112,58 +119,36 @@ export class RPCSDKSyncAdapter implements SDKSyncAdapter {
         // filter out all notes that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
         const filteredNotes = notes.filter(
           ({ totalEntityIndex }) =>
-            !currTotalEntityIndex ||
-            (totalEntityIndex >= currTotalEntityIndex &&
-              endTotalEntityIndex &&
-              totalEntityIndex <= endTotalEntityIndex)
+            (!currTotalEntityIndex ||
+              totalEntityIndex >= currTotalEntityIndex) &&
+            (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
         );
 
         // filter out all nullifiers that dont fall in the range [`currTotalLogIndex`, `endTotalLogIndex`]
         const filteredNullifiers = nullifiers.filter(
           ({ totalEntityIndex }) =>
-            !currTotalEntityIndex ||
-            (totalEntityIndex >= currTotalEntityIndex &&
-              endTotalEntityIndex &&
-              totalEntityIndex <= endTotalEntityIndex)
+            (!currTotalEntityIndex ||
+              totalEntityIndex >= currTotalEntityIndex) &&
+            (!endTotalEntityIndex || totalEntityIndex <= endTotalEntityIndex)
         );
 
         currTotalEntityIndex = TotalEntityIndexTrait.fromComponents({
           blockNumber: BigInt(to),
         });
 
-        // if there aren't remaining events after filtering,
-        // sleep, set `currTotalEntityIndex` to the index corresponding to block `to`, and continue
-        if (nullifiers.length === 0 && notes.length === 0) {
-          // otherwise, the diff is empty
-          await sleep(5_000);
-          continue;
+        // if there are remaining events after filtering, yield a diff
+        if (nullifiers.length + notes.length > 0) {
+          const diff: EncryptedStateDiff = {
+            notes: filteredNotes,
+            nullifiers: filteredNullifiers.map((n) => n.inner),
+            totalEntityIndex: currTotalEntityIndex,
+            lastCommittedMerkleIndex,
+          };
+          yield diff;
         }
-
-        // update `lastCommittedMerkleIndex` according to the `SubtreeUpdate` events received
-        if (subtreeUpdateCommits.length > 0) {
-          lastCommittedMerkleIndex = maxArray(
-            subtreeUpdateCommits.map(({ inner: { subtreeBatchOffset } }) => {
-              return batchOffsetToLatestMerkleIndexInBatch(subtreeBatchOffset);
-            })
-          );
-        }
-
-        // construct a state diff and yield it
-        const diff: EncryptedStateDiff = {
-          notes: filteredNotes,
-          nullifiers: pluck(filteredNullifiers, "inner"),
-          totalEntityIndex: currTotalEntityIndex,
-          lastCommittedMerkleIndex,
-        };
-        yield diff;
 
         // proceed to next block `from` to `to` + 1
         from = to + 1;
-
-        // apply throttle if specified
-        if (opts?.throttleMs && currentBlock - from > RPC_MAX_CHUNK_SIZE) {
-          await sleep(opts.throttleMs);
-        }
       }
     };
 
