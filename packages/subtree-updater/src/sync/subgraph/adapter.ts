@@ -57,8 +57,8 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           }) ...`
         );
 
-        const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        await maybeApplyThrottle(currentBlock);
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        await maybeApplyThrottle(latestIndexedBlock);
 
         const insertions = await fetchTreeInsertions(endpoint, from);
 
@@ -107,7 +107,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           const currentBlockTotalEntityIndex =
             TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(currentBlock),
+              blockNumber: BigInt(latestIndexedBlock),
             });
 
           if (currentBlockTotalEntityIndex > from) {

@@ -53,8 +53,8 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           }) ...`
         );
 
-        const currentBlock = await fetchLatestIndexedBlock(endpoint);
-        await maybeApplyThrottle(currentBlock);
+        const latestIndexedBlock = await fetchLatestIndexedBlock(endpoint);
+        await maybeApplyThrottle(latestIndexedBlock);
 
         // fetch deposit events with total entity index on or after `from`, will return at most 100
         const depositEventsWithTotalEntityIndices = await fetchDepositEvents(
@@ -91,7 +91,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
           const currentBlockTotalEntityIndex =
             TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(currentBlock),
+              blockNumber: BigInt(latestIndexedBlock),
             });
 
           if (currentBlockTotalEntityIndex > from) {
