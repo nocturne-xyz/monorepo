@@ -46,7 +46,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
       };
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.debug(
+        console.log(
           `fetching deposit events from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
           )} (block ${
@@ -77,7 +77,7 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
             depositEventsWithTotalEntityIndices,
             "inner"
           );
-          console.debug("yielding deposit events:", depositEvents);
+          console.log("yielding deposit events:", depositEvents);
 
           yield {
             totalEntityIndex: from - 1n,
@@ -86,10 +86,9 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block and try again
-          from =
-            TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(currentBlock),
-            }) + 1n;
+          from = TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
         }
       }
     };

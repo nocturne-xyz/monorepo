@@ -32,8 +32,11 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     let closed = false;
 
+    console.log("[adapter]", 1);
+
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
+      console.log("[adapter]", 2);
       let from = startTotalEntityIndex;
       let lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
         endpoint,
@@ -50,8 +53,10 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         await sleep(sleepDelay);
       };
 
+      console.log("[adapter]", 3);
+
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.debug(
+        console.log(
           `fetching state diffs from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
           )} (block ${
@@ -86,16 +91,15 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             totalEntityIndex: from - 1n,
           };
 
-          console.debug("yielding state diff:", stateDiff);
+          console.log("yielding state diff:", stateDiff);
 
           yield stateDiff;
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block and continue to avoid emitting empty diff
-          from =
-            TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(currentBlock),
-            }) + 1n;
+          from = TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
         }
       }
     };

@@ -50,7 +50,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
       };
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
-        console.debug(
+        console.log(
           `fetching insertions from totalEntityIndex ${TotalEntityIndexTrait.toStringPadded(
             from
           )} (block ${
@@ -81,7 +81,7 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 };
               }
             } else if (NoteTrait.isEncryptedNote(insertion)) {
-              console.debug(
+              console.log(
                 "yielding commitment of encrypted note at index",
                 insertion.merkleIndex
               );
@@ -90,17 +90,16 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 merkleIndex: insertion.merkleIndex,
               };
             } else {
-              console.debug("yielding note at index", insertion.merkleIndex);
+              console.log("yielding note at index", insertion.merkleIndex);
               yield insertion as IncludedNote;
             }
           }
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block
-          from =
-            TotalEntityIndexTrait.fromComponents({
-              blockNumber: BigInt(currentBlock),
-            }) + 1n;
+          from = TotalEntityIndexTrait.fromComponents({
+            blockNumber: BigInt(currentBlock),
+          });
         }
       }
     };

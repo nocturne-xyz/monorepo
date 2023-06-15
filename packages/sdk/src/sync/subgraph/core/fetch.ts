@@ -79,6 +79,8 @@ export async function fetchSDKEvents(
   const fromIdx = TotalEntityIndexTrait.toStringPadded(fromTotalEntityIndex);
   const res = await query({ fromIdx });
 
+  console.log("res.data", res.data);
+
   if (!res.data || res.data.sdkevents.length === 0) {
     return [];
   }
@@ -311,14 +313,12 @@ export async function fetchLastCommittedMerkleIndex(
     whereClause = "where: { id_lt: $toIdx }, ";
   }
 
+  const rawQuery = subtreeCommitQuery(params, whereClause);
+
   const query = makeSubgraphQuery<
     FetchSubtreeCommitsVars,
     FetchSubtreeCommitsResponse
-  >(
-    endpoint,
-    subtreeCommitQuery(params, whereClause),
-    "last committed merkle index"
-  );
+  >(endpoint, rawQuery, "last committed merkle index");
 
   const toIdx = toTotalEntityIndex
     ? TotalEntityIndexTrait.toStringPadded(toTotalEntityIndex)

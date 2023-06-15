@@ -356,6 +356,7 @@ export class NocturneDB {
         ({ inner }) => !NoteTrait.isCommitment(inner)
       ) as WithTotalEntityIndex<IncludedNoteWithNullifier>[]
     );
+
     const nfIndices = await this.nullifyNotes(nullifiers);
 
     if (lastCommittedMerkleIndex) {
