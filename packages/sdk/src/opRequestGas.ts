@@ -17,7 +17,7 @@ import {
 } from "./primitives";
 import { ERC20_ID } from "./primitives/asset";
 import { SolidityProof } from "./proof";
-import { groupByMap, partition } from "./utils/functional";
+import { groupByMap, max, partition } from "./utils/functional";
 import { prepareOperation } from "./prepareOperation";
 import { getJoinSplitRequestTotalValue } from "./utils";
 import { SparseMerkleProver } from "./SparseMerkleProver";
@@ -277,9 +277,16 @@ async function estimateGasForOperationRequest(
       executionGasLimit = (result.executionGas * 12n) / 10n;
     }
 
-    // set maxNumRefunds to the number of refunds from simulation result
+    // If refunds specified > simulation result, use specified amount
+    // If refunds specified < simulation result, use simulation result
     if (!maxNumRefunds) {
-      maxNumRefunds = result.numRefunds;
+      maxNumRefunds = max(
+        result.numRefunds,
+        BigInt(
+          simulationOp.joinSplits.length +
+            simulationOp.encodedRefundAssets.length
+        )
+      );
     }
   }
 

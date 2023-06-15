@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix sdk bug where using simulation maxNumRefunds was causing "too many refunds" revert
 - fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
 - sync `SDKEvent`s instead of notes and nullifiers individually
 - rename `getCreationTimestampOfNewestNoteInOp` to `getCreationBlockOfNewestNoteInOp` and make it return block number instead of timestamp.
