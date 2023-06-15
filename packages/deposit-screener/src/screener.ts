@@ -227,9 +227,17 @@ export class DepositScreenerScreener {
           depositRequestHash: hash,
         });
 
+        childLogger.debug(`checking if deposit request still outstanding`);
+        const inSet =
+          await this.depositManagerContract._outstandingDepositHashes(hash);
+        if (!inSet) {
+          childLogger.warn(`deposit already retrieved or completed`);
+          continue; // Already retrieved or completed
+        }
+
         childLogger.debug(`checking deposit request`);
         const { isSafe, reason } = await checkDepositRequest(
-          logger,
+          childLogger,
           depositRequest,
           {
             ...this,
