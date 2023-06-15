@@ -276,7 +276,7 @@ export class DepositScreenerScreener {
           );
         }
       }
-      await this.db.setTotalEntityIndex(batch.totalEntityIndex);
+      await this.db.setCurrentTotalEntityIndex(batch.totalEntityIndex);
     }
   }
 
