@@ -32,11 +32,8 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
     const endTotalEntityIndex = opts?.endTotalEntityIndex;
     let closed = false;
 
-    console.log("[adapter]", 1);
-
     const endpoint = this.graphqlEndpoint;
     const generator = async function* () {
-      console.log("[adapter]", 2);
       let from = startTotalEntityIndex;
       let lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
         endpoint,
@@ -52,8 +49,6 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
         const sleepDelay = max(opts?.throttleMs ?? 0, isCaughtUp ? 5000 : 0);
         await sleep(sleepDelay);
       };
-
-      console.log("[adapter]", 3);
 
       while (!closed && (!endTotalEntityIndex || from < endTotalEntityIndex)) {
         console.log(
