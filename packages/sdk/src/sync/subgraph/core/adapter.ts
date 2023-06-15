@@ -67,8 +67,9 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
 
         // if we have notes and/or mullifiers, update from and get the last committed merkle index as of the entity index we saw
         if (notesAndNullifiers.length > 0) {
-          from =
-            maxArray(notesAndNullifiers.map((n) => n.totalEntityIndex)) + 1n;
+          const highestTotalEntityIndex = maxArray(
+            notesAndNullifiers.map((n) => n.totalEntityIndex)
+          );
           lastCommittedMerkleIndex = await fetchLastCommittedMerkleIndex(
             endpoint
           );
@@ -84,12 +85,14 @@ export class SubgraphSDKSyncAdapter implements SDKSyncAdapter {
             notes,
             nullifiers: nullifiers.map((n) => n.inner),
             lastCommittedMerkleIndex,
-            totalEntityIndex: from - 1n,
+            totalEntityIndex: highestTotalEntityIndex,
           };
 
           console.log("yielding state diff:", stateDiff);
 
           yield stateDiff;
+
+          from = highestTotalEntityIndex + 1n;
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block

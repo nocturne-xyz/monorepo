@@ -7,7 +7,7 @@ import {
 import IORedis from "ioredis";
 import * as JSON from "bigint-json-serialization";
 
-const TOTAL_ENTITY_INDEX_KEY = "NEXT_BLOCK";
+const CURRENT_TOTAL_ENTITY_INDEX_KEY = "CURRENT_TOTAL_ENTITY_INDEX";
 
 const DEPOSIT_REQUEST_PREFIX = "DEPOSIT_REQUEST_";
 const DEPOSIT_REQUEST_STATUS_PREFIX = "DEPOSIT_REQUEST_STATUS_";
@@ -44,12 +44,17 @@ export class DepositScreenerDB {
     return PER_ADDR_DEPOSIT_AMOUNT_PREFIX + address;
   }
 
-  async setTotalEntityIndex(totalEntityIndex: TotalEntityIndex): Promise<void> {
-    await this.redis.set(TOTAL_ENTITY_INDEX_KEY, totalEntityIndex.toString());
+  async setCurrentTotalEntityIndex(
+    totalEntityIndex: TotalEntityIndex
+  ): Promise<void> {
+    await this.redis.set(
+      CURRENT_TOTAL_ENTITY_INDEX_KEY,
+      totalEntityIndex.toString()
+    );
   }
 
-  async getTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
-    const val = await this.redis.get(TOTAL_ENTITY_INDEX_KEY);
+  async getCurrentTotalEntityIndex(): Promise<TotalEntityIndex | undefined> {
+    const val = await this.redis.get(CURRENT_TOTAL_ENTITY_INDEX_KEY);
     return val ? BigInt(val) : undefined;
   }
 

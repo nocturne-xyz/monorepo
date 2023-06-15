@@ -140,7 +140,7 @@ export class DepositScreenerScreener {
     this.logger.info(
       `DepositManager contract: ${this.depositManagerContract.address}.`
     );
-    const currentTotalEntityIndex = await this.db.getTotalEntityIndex();
+    const currentTotalEntityIndex = await this.db.getCurrentTotalEntityIndex();
     const nextTotalEntityIndexToSync = currentTotalEntityIndex
       ? currentTotalEntityIndex + 1n
       : 0n;

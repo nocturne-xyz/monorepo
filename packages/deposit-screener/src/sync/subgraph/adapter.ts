@@ -67,10 +67,9 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
 
         // if we have deposit events, get the greatest total entity index we saw and set from to that, and add one after we yield
         if (depositEventsWithTotalEntityIndices.length > 0) {
-          from =
-            maxArray(
-              depositEventsWithTotalEntityIndices.map((e) => e.totalEntityIndex)
-            ) + 1n;
+          const highestTotalEntityIndex = maxArray(
+            depositEventsWithTotalEntityIndices.map((e) => e.totalEntityIndex)
+          );
           const depositEvents = depositEventsWithTotalEntityIndices.map(
             (e) => e.inner
           );
@@ -78,9 +77,11 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           console.log("yielding deposit events:", depositEvents);
 
           yield {
-            totalEntityIndex: from - 1n,
+            totalEntityIndex: highestTotalEntityIndex,
             depositEvents,
           };
+
+          from = highestTotalEntityIndex + 1n;
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block
