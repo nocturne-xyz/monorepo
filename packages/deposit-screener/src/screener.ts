@@ -237,7 +237,7 @@ export class DepositScreenerScreener {
 
         childLogger.debug(`checking deposit request`);
         const { isSafe, reason } = await checkDepositRequest(
-          logger,
+          childLogger,
           depositRequest,
           {
             ...this,
