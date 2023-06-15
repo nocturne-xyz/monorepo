@@ -83,10 +83,19 @@ export class SubgraphScreenerSyncAdapter implements ScreenerSyncAdapter {
           };
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
-          // set `from` to the entity index corresponding to the latest indexed block and try again
-          from = TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          });
+          // set `from` to the entity index corresponding to the latest indexed block
+          // if it's greater than the current `from`.
+
+          // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
+          // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
+          const currentBlockTotalEntityIndex =
+            TotalEntityIndexTrait.fromComponents({
+              blockNumber: BigInt(currentBlock),
+            });
+
+          if (currentBlockTotalEntityIndex > from) {
+            from = currentBlockTotalEntityIndex;
+          }
         }
       }
     };

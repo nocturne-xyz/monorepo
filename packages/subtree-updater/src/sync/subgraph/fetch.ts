@@ -45,7 +45,7 @@ interface FetchTreeInsertionsVars {
 
 const treeInsertionsQuery = `\
 query fetchTreeInsertionEvents($fromIdx: String!) {
-  treeInsertionEvents(where: { id_gte: $fromIdx }, first: 100) {
+  treeInsertionEvents(where: { id_gte: $fromIdx }) {
     id
     encodedOrEncryptedNote {
       merkleIndex

@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- fix edge case that can cause totalEntityIndex to go backwards in subgraph sync adapter
 - sync `SDKEvent`s instead of notes and nullifiers individually
 - rename `getCreationTimestampOfNewestNoteInOp` to `getCreationBlockOfNewestNoteInOp` and make it return block number instead of timestamp.
 - make `NocturneDB` version itself via `TotalEntityIndex` instead of block number

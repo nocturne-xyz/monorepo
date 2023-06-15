@@ -73,6 +73,10 @@ export class SubgraphSubtreeUpdaterSyncAdapter
           for (const { inner: insertion } of sorted) {
             if ("numZeros" in insertion) {
               const startIndex = insertion.merkleIndex;
+              console.log("yielding zeros", {
+                startIndex,
+                numZeros: insertion.numZeros,
+              });
               for (let i = 0; i < insertion.numZeros; i++) {
                 yield {
                   noteCommitment: TreeConstants.ZERO_VALUE,
@@ -80,25 +84,35 @@ export class SubgraphSubtreeUpdaterSyncAdapter
                 };
               }
             } else if (NoteTrait.isEncryptedNote(insertion)) {
-              console.log(
-                "yielding commitment of encrypted note at index",
-                insertion.merkleIndex
-              );
+              console.log("yielding commitment of encrypted note", {
+                merkleIndex: insertion.merkleIndex,
+              });
               yield {
                 noteCommitment: (insertion as IncludedEncryptedNote).commitment,
                 merkleIndex: insertion.merkleIndex,
               };
             } else {
-              console.log("yielding note at index", insertion.merkleIndex);
+              console.log("yielding note", {
+                merkleIndex: insertion.merkleIndex,
+              });
               yield insertion as IncludedNote;
             }
           }
         } else {
           // otherwise, we've caught up and there's nothing more to fetch.
           // set `from` to the entity index corresponding to the latest indexed block
-          from = TotalEntityIndexTrait.fromComponents({
-            blockNumber: BigInt(currentBlock),
-          });
+          // if it's greater than the current `from`.
+
+          // this is to prevent an busy loops in the case where the subgraph has indexed a block corresponding
+          // to a totalEntityIndex > `endTotalEntityIndex` but we haven't found any insertions in that block
+          const currentBlockTotalEntityIndex =
+            TotalEntityIndexTrait.fromComponents({
+              blockNumber: BigInt(currentBlock),
+            });
+
+          if (currentBlockTotalEntityIndex > from) {
+            from = currentBlockTotalEntityIndex;
+          }
         }
       }
     };
