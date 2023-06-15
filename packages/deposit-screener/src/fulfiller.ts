@@ -140,6 +140,16 @@ export class DepositScreenerFulfiller {
                 depositRequestHash: hash,
               });
 
+              logger.debug(`checking if deposit request still outstanding`);
+              const inSet =
+                await this.depositManagerContract._outstandingDepositHashes(
+                  hash
+                );
+              if (!inSet) {
+                logger.warn(`deposit already retrieved or completed`);
+                return; // Already retrieved or completed
+              }
+
               // update rate limit window
               window.removeOldEntries();
 

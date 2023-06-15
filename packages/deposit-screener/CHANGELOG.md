@@ -2,6 +2,7 @@
 
 ### Unreleased
 
+- check in screener and fulfiller that deposit request still outstanding
 - fix bug in docker compose that pointed to bundler package not screener
 - instrument screener and fulfiller components with opentel metrics
 - add health check to server
