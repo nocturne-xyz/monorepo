@@ -127,11 +127,16 @@ export class NocturneWalletSDK {
   async hasEnoughBalanceForOperationRequest(
     opRequest: OperationRequest
   ): Promise<boolean> {
+    const assetRequestedAmounts = new Map<Asset, bigint>();
     for (const joinSplitRequest of opRequest.joinSplitRequests) {
-      const requestedAmount = getJoinSplitRequestTotalValue(joinSplitRequest);
-      // check that the user has enough committed notes to cover the request
-      const notes = await this.db.getNotesForAsset(joinSplitRequest.asset);
-      const balance = notes.reduce((acc, note) => acc + note.value, 0n);
+      const asset = joinSplitRequest.asset;
+      let currentAmount = assetRequestedAmounts.get(asset) || 0n;
+      currentAmount += getJoinSplitRequestTotalValue(joinSplitRequest);
+      assetRequestedAmounts.set(asset, currentAmount);
+    }
+
+    for (const [asset, requestedAmount] of assetRequestedAmounts.entries()) {
+      const balance = await this.db.getBalanceForAsset(asset);
       if (balance < requestedAmount) {
         return false;
       }
