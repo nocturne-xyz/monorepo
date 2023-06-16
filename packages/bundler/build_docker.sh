@@ -1,1 +1,2 @@
-docker build -f ./Dockerfile ../../ -t nocturnelabs/bundler:$1
+COMMIT_HASH=$(git rev-parse --short HEAD)
+docker build -f ./Dockerfile ../../ -t nocturnelabs/bundler:$COMMIT_HASH
